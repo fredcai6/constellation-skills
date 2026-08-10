@@ -1,0 +1,1150 @@
+{
+ "work_id": "epic-418-followon/commander-f2",
+ "type": "gated",
+ "config_ref": "docs/agents/engine-config.json",
+ "items": [
+  "e0-context",
+  "g1-implement",
+  "g1-review",
+  "g1-integrate",
+  "g2-implement",
+  "g2-review",
+  "g2-integrate",
+  "g3-implement",
+  "g3-review",
+  "g3-integrate",
+  "g4a-implement",
+  "g4a-review",
+  "g4a-integrate",
+  "g4b-implement",
+  "g4b-review",
+  "g4b-integrate"
+ ],
+ "tasks": {
+  "e0-context": {
+   "id": "e0-context",
+   "title": "Load execution context",
+   "imperative": "Confirm the frozen plan's intent and scope against LAUNCH_ORDER-F2-mcp-adoption.md, PROBLEM_STATEMENT.md and MISSION_FRAME.md before dispatching any crew. Re-confirm the suite baseline with `python -m pytest` (NOT python3: /usr/bin/python3 has no pytest on this host and returns a non-zero exit that reads as a red suite). Baseline is 2267 passed, 1 skipped, 0 failed. Then attest c1.",
+   "preconditions": [],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "plan intent and scope confirmed against the frozen launch order; suite baseline re-confirmed green",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "constraints": [],
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g1-implement": {
+   "id": "g1-implement",
+   "title": "g1 identity trade: implement",
+   "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate from this gate's plan and anchors block: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, and the map entry point. Before dispatch, fill the Deliverable Path Check: run `git check-ignore <path>` for each committed deliverable and confirm exit 1. Dispatch via `python scripts/run_crew.py` (never hand-launch), Sonnet tier per the standing rule. Wait ACTIVELY inside the turn, polling the result artifact. Integrate the returned IMPLEMENTER_RESULT as evidence.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "e0-context confirmed; no prior gate. This is the FIRST gate deliberately: the identity composition is the fact every later gate writes against.",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "implementer-result"
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "NEVER edit scripts/checklist_engine.py. git diff against it must stay empty.",
+    "Do NOT reintroduce per-dispatch config generation on identity grounds (docs/CHECKLIST_ENGINE_DESIGN.md tombstone).",
+    "The decision itself is the Commander's, stated in the handoff's protected intent. The gate encodes and evidences it; it does not re-decide it.",
+    "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on every write."
+   ],
+   "anchors": {
+    "structural": [
+     "scripts/mcp_spine_server.py:113-115 - SPINE_ENGINE/SPINE_FILE/SPINE_SESSION as module-level constants read at import; no tool takes a spine path",
+     "tests/test_mcp_identity.py - DC2/DC3 classes; the file the new pinning test joins",
+     ".mcp.json - ${VAR} expansion, the per-process identity mechanism"
+    ],
+    "capability": [
+     "Driving a checklist spine through the engine - which door, and whose identity"
+    ],
+    "constraint": [
+     "One process = one server = one spine = one identity, for the life of the process",
+     "The Task-tool harness shares the dispatching process's MCP scope (measured YES; docs/CHECKLIST_ENGINE_DESIGN.md)"
+    ],
+    "decision": [
+     "no-gen-mcp-config - scoped to PER-DISPATCH generation on IDENTITY grounds @grade: settled - leans g1, g3 - override only with a measurement naming a case both ${VAR} and generation reach differently",
+     "identity-trade-is-recorded - the property given up is written down; silence here is a gate failure @grade: settled/human - leans g1",
+     "decision pressure: which of the three options, and what it costs. Carries no grade until g1 records it."
+    ],
+    "evidence": [
+     "The written trade names the option taken AND the property given up, in the same document",
+     "A test that would go RED if a later change moved identity to a per-call argument - the mechanical guard on the decision"
+    ],
+    "confidence_flags": [
+     "The harness-internal reuse seam has no observation point reachable from a subprocess-level test (DC3InheritanceMechanismTests docstring). The gate must NOT claim to have measured it here; it cites the epic's existing measurement and says so."
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g1-review": {
+   "id": "g1-review",
+   "title": "g1 identity trade: review",
+   "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, this gate's anchors block, and the evidence from IMPLEMENTER_RESULT. Require the reviewer to attempt a MUTATION that should turn the gate's own evidence red, and to report whether it did - an assertion nobody has watched fail is not evidence. Dispatch via `python scripts/run_crew.py`. Wait actively. Integrate the returned REVIEW_RESULT as evidence.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "IMPLEMENTER_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "REVIEW_RESULT returned",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result"
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "NEVER edit scripts/checklist_engine.py. git diff against it must stay empty.",
+    "Do NOT reintroduce per-dispatch config generation on identity grounds (docs/CHECKLIST_ENGINE_DESIGN.md tombstone).",
+    "The decision itself is the Commander's, stated in the handoff's protected intent. The gate encodes and evidences it; it does not re-decide it.",
+    "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on every write."
+   ],
+   "anchors": {
+    "structural": [
+     "scripts/mcp_spine_server.py:113-115 - SPINE_ENGINE/SPINE_FILE/SPINE_SESSION as module-level constants read at import; no tool takes a spine path",
+     "tests/test_mcp_identity.py - DC2/DC3 classes; the file the new pinning test joins",
+     ".mcp.json - ${VAR} expansion, the per-process identity mechanism"
+    ],
+    "capability": [
+     "Driving a checklist spine through the engine - which door, and whose identity"
+    ],
+    "constraint": [
+     "One process = one server = one spine = one identity, for the life of the process",
+     "The Task-tool harness shares the dispatching process's MCP scope (measured YES; docs/CHECKLIST_ENGINE_DESIGN.md)"
+    ],
+    "decision": [
+     "no-gen-mcp-config - scoped to PER-DISPATCH generation on IDENTITY grounds @grade: settled - leans g1, g3 - override only with a measurement naming a case both ${VAR} and generation reach differently",
+     "identity-trade-is-recorded - the property given up is written down; silence here is a gate failure @grade: settled/human - leans g1",
+     "decision pressure: which of the three options, and what it costs. Carries no grade until g1 records it."
+    ],
+    "evidence": [
+     "The written trade names the option taken AND the property given up, in the same document",
+     "A test that would go RED if a later change moved identity to a per-call argument - the mechanical guard on the decision"
+    ],
+    "confidence_flags": [
+     "The harness-internal reuse seam has no observation point reachable from a subprocess-level test (DC3InheritanceMechanismTests docstring). The gate must NOT claim to have measured it here; it cites the epic's existing measurement and says so."
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g1-integrate": {
+   "id": "g1-integrate",
+   "title": "g1 identity trade: integrate",
+   "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's claimed side-effects against the world yourself - re-run the verification command in your own hands, confirm the IMPLEMENTER_RESULT is fresh for this attempt (scripts/run_crew.py --verify-result, not a stale leftover), and confirm the pasted evidence reproduces. Then advance; the command postcondition is satisfied by `advance` re-running it, never by `attest`. BLOCK: return the implementer for rework, or raise a blocker if unresolvable. Log out-of-scope finds as triage candidates and harvest the result's Workflow Feedback into the run's lesson-candidate pool. Never pipe a command into head/tail and read the pipe's exit code.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "REVIEW_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "the identity trade is decided, the property given up is written down, and a test pins the invariant the decision rests on; full suite green (0 failed)",
+     "check": {
+      "kind": "command",
+      "command": "python -m pytest -q"
+     },
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c2",
+     "statement": "reviewer verdict is APPROVE",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result",
+      "match": {
+       "verdict": "APPROVE"
+      }
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "NEVER edit scripts/checklist_engine.py. git diff against it must stay empty.",
+    "Do NOT reintroduce per-dispatch config generation on identity grounds (docs/CHECKLIST_ENGINE_DESIGN.md tombstone).",
+    "The decision itself is the Commander's, stated in the handoff's protected intent. The gate encodes and evidences it; it does not re-decide it.",
+    "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on every write."
+   ],
+   "anchors": {
+    "structural": [
+     "scripts/mcp_spine_server.py:113-115 - SPINE_ENGINE/SPINE_FILE/SPINE_SESSION as module-level constants read at import; no tool takes a spine path",
+     "tests/test_mcp_identity.py - DC2/DC3 classes; the file the new pinning test joins",
+     ".mcp.json - ${VAR} expansion, the per-process identity mechanism"
+    ],
+    "capability": [
+     "Driving a checklist spine through the engine - which door, and whose identity"
+    ],
+    "constraint": [
+     "One process = one server = one spine = one identity, for the life of the process",
+     "The Task-tool harness shares the dispatching process's MCP scope (measured YES; docs/CHECKLIST_ENGINE_DESIGN.md)"
+    ],
+    "decision": [
+     "no-gen-mcp-config - scoped to PER-DISPATCH generation on IDENTITY grounds @grade: settled - leans g1, g3 - override only with a measurement naming a case both ${VAR} and generation reach differently",
+     "identity-trade-is-recorded - the property given up is written down; silence here is a gate failure @grade: settled/human - leans g1",
+     "decision pressure: which of the three options, and what it costs. Carries no grade until g1 records it."
+    ],
+    "evidence": [
+     "The written trade names the option taken AND the property given up, in the same document",
+     "A test that would go RED if a later change moved identity to a per-call argument - the mechanical guard on the decision"
+    ],
+    "confidence_flags": [
+     "The harness-internal reuse seam has no observation point reachable from a subprocess-level test (DC3InheritanceMechanismTests docstring). The gate must NOT claim to have measured it here; it cites the epic's existing measurement and says so."
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g2-implement": {
+   "id": "g2-implement",
+   "title": "g2 friction capture (#541): implement",
+   "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate from this gate's plan and anchors block: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, and the map entry point. Before dispatch, fill the Deliverable Path Check: run `git check-ignore <path>` for each committed deliverable and confirm exit 1. Dispatch via `python scripts/run_crew.py` (never hand-launch), Sonnet tier per the standing rule. Wait ACTIVELY inside the turn, polling the result artifact. Integrate the returned IMPLEMENTER_RESULT as evidence.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "g1 closed: whether identity is per-process or per-call decides whether a rejection record can name the run it belongs to at all.",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "implementer-result"
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "NEVER edit scripts/checklist_engine.py.",
+    "episodes/ is written ONLY through scripts/apply_episode_delta.py, with --store-root episodes on every invocation. Never hand-edit under episodes/.",
+    "An episode is a RECORD, never a rule. No statement written into episodes/ may be phrased as guidance for a future agent (docs/agents/ORCHESTRATOR_CONTEXT.md, 'The Retired Learning Playbook').",
+    "The ## Mechanical bin is a CLOSED allowlist (docs/EPISODE_STORE.md section 4). A new key there is a store-contract change and must be argued in the result, not slipped in.",
+    "Fail loud EVERY turn, not once per run and not at exit.",
+    "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on every write."
+   ],
+   "anchors": {
+    "structural": [
+     "scripts/mcp_spine_server.py - call_tool()'s _tool_error() returns, which short-circuit before run_engine() and touch nothing",
+     "scripts/mcp_spine_server.py - _log()/run_engine(), the only path that currently writes mcp_calls.jsonl",
+     "scripts/apply_episode_delta.py - the only write path into episodes/",
+     "scripts/episode_capture.py:430-432 - reads checklist['refusals'] into the Mechanical bin",
+     "docs/EPISODE_STORE.md - the record grammar and the closed Mechanical allowlist"
+    ],
+    "capability": [
+     "Recording what a run cost - the episode store's mechanical half"
+    ],
+    "constraint": [
+     "A capture that fails quietly is the same defect as the door it instruments",
+     "A client-side schema rejection never reaches the server process at all - no server-side instrument can ever see it, and the gate must say so rather than imply full coverage"
+    ],
+    "decision": [
+     "fail-loud-every-turn @grade: settled/human - leans g2",
+     "episodes-are-records-not-rules @grade: settled/human - leans g2",
+     "decision pressure: per-call granularity vs a summary at lease release",
+     "decision pressure: does the CLI arm get the same instrumentation, so the two arms stay comparable",
+     "decision pressure: where a door rejection lands given the closed Mechanical allowlist"
+    ],
+    "evidence": [
+     "A seeded rejection is scored by the instrument - proving it CAN score, so a later zero is a reading and not a blind spot",
+     "The loud-failure path is tested: when the capture cannot write, it says so on every occurrence",
+     "The coverage boundary is stated: which rejection classes this instrument can and cannot see"
+    ],
+    "confidence_flags": [
+     "F measured ZERO malformed calls in both DC5 arms. The gate must not present its instrument as evidence that fumbles exist."
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g2-review": {
+   "id": "g2-review",
+   "title": "g2 friction capture (#541): review",
+   "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, this gate's anchors block, and the evidence from IMPLEMENTER_RESULT. Require the reviewer to attempt a MUTATION that should turn the gate's own evidence red, and to report whether it did - an assertion nobody has watched fail is not evidence. Dispatch via `python scripts/run_crew.py`. Wait actively. Integrate the returned REVIEW_RESULT as evidence.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "IMPLEMENTER_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "REVIEW_RESULT returned",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result"
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "NEVER edit scripts/checklist_engine.py.",
+    "episodes/ is written ONLY through scripts/apply_episode_delta.py, with --store-root episodes on every invocation. Never hand-edit under episodes/.",
+    "An episode is a RECORD, never a rule. No statement written into episodes/ may be phrased as guidance for a future agent (docs/agents/ORCHESTRATOR_CONTEXT.md, 'The Retired Learning Playbook').",
+    "The ## Mechanical bin is a CLOSED allowlist (docs/EPISODE_STORE.md section 4). A new key there is a store-contract change and must be argued in the result, not slipped in.",
+    "Fail loud EVERY turn, not once per run and not at exit.",
+    "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on every write."
+   ],
+   "anchors": {
+    "structural": [
+     "scripts/mcp_spine_server.py - call_tool()'s _tool_error() returns, which short-circuit before run_engine() and touch nothing",
+     "scripts/mcp_spine_server.py - _log()/run_engine(), the only path that currently writes mcp_calls.jsonl",
+     "scripts/apply_episode_delta.py - the only write path into episodes/",
+     "scripts/episode_capture.py:430-432 - reads checklist['refusals'] into the Mechanical bin",
+     "docs/EPISODE_STORE.md - the record grammar and the closed Mechanical allowlist"
+    ],
+    "capability": [
+     "Recording what a run cost - the episode store's mechanical half"
+    ],
+    "constraint": [
+     "A capture that fails quietly is the same defect as the door it instruments",
+     "A client-side schema rejection never reaches the server process at all - no server-side instrument can ever see it, and the gate must say so rather than imply full coverage"
+    ],
+    "decision": [
+     "fail-loud-every-turn @grade: settled/human - leans g2",
+     "episodes-are-records-not-rules @grade: settled/human - leans g2",
+     "decision pressure: per-call granularity vs a summary at lease release",
+     "decision pressure: does the CLI arm get the same instrumentation, so the two arms stay comparable",
+     "decision pressure: where a door rejection lands given the closed Mechanical allowlist"
+    ],
+    "evidence": [
+     "A seeded rejection is scored by the instrument - proving it CAN score, so a later zero is a reading and not a blind spot",
+     "The loud-failure path is tested: when the capture cannot write, it says so on every occurrence",
+     "The coverage boundary is stated: which rejection classes this instrument can and cannot see"
+    ],
+    "confidence_flags": [
+     "F measured ZERO malformed calls in both DC5 arms. The gate must not present its instrument as evidence that fumbles exist."
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g2-integrate": {
+   "id": "g2-integrate",
+   "title": "g2 friction capture (#541): integrate",
+   "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's claimed side-effects against the world yourself - re-run the verification command in your own hands, confirm the IMPLEMENTER_RESULT is fresh for this attempt (scripts/run_crew.py --verify-result, not a stale leftover), and confirm the pasted evidence reproduces. Then advance; the command postcondition is satisfied by `advance` re-running it, never by `attest`. BLOCK: return the implementer for rework, or raise a blocker if unresolvable. Log out-of-scope finds as triage candidates and harvest the result's Workflow Feedback into the run's lesson-candidate pool. Never pipe a command into head/tail and read the pipe's exit code.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "REVIEW_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "the door's own rejections are recorded and reach the run's episode through apply_episode_delta.py, and the door says so loudly on EVERY occurrence when they cannot; full suite green (0 failed)",
+     "check": {
+      "kind": "command",
+      "command": "python -m pytest -q"
+     },
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c2",
+     "statement": "reviewer verdict is APPROVE",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result",
+      "match": {
+       "verdict": "APPROVE"
+      }
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "NEVER edit scripts/checklist_engine.py.",
+    "episodes/ is written ONLY through scripts/apply_episode_delta.py, with --store-root episodes on every invocation. Never hand-edit under episodes/.",
+    "An episode is a RECORD, never a rule. No statement written into episodes/ may be phrased as guidance for a future agent (docs/agents/ORCHESTRATOR_CONTEXT.md, 'The Retired Learning Playbook').",
+    "The ## Mechanical bin is a CLOSED allowlist (docs/EPISODE_STORE.md section 4). A new key there is a store-contract change and must be argued in the result, not slipped in.",
+    "Fail loud EVERY turn, not once per run and not at exit.",
+    "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on every write."
+   ],
+   "anchors": {
+    "structural": [
+     "scripts/mcp_spine_server.py - call_tool()'s _tool_error() returns, which short-circuit before run_engine() and touch nothing",
+     "scripts/mcp_spine_server.py - _log()/run_engine(), the only path that currently writes mcp_calls.jsonl",
+     "scripts/apply_episode_delta.py - the only write path into episodes/",
+     "scripts/episode_capture.py:430-432 - reads checklist['refusals'] into the Mechanical bin",
+     "docs/EPISODE_STORE.md - the record grammar and the closed Mechanical allowlist"
+    ],
+    "capability": [
+     "Recording what a run cost - the episode store's mechanical half"
+    ],
+    "constraint": [
+     "A capture that fails quietly is the same defect as the door it instruments",
+     "A client-side schema rejection never reaches the server process at all - no server-side instrument can ever see it, and the gate must say so rather than imply full coverage"
+    ],
+    "decision": [
+     "fail-loud-every-turn @grade: settled/human - leans g2",
+     "episodes-are-records-not-rules @grade: settled/human - leans g2",
+     "decision pressure: per-call granularity vs a summary at lease release",
+     "decision pressure: does the CLI arm get the same instrumentation, so the two arms stay comparable",
+     "decision pressure: where a door rejection lands given the closed Mechanical allowlist"
+    ],
+    "evidence": [
+     "A seeded rejection is scored by the instrument - proving it CAN score, so a later zero is a reading and not a blind spot",
+     "The loud-failure path is tested: when the capture cannot write, it says so on every occurrence",
+     "The coverage boundary is stated: which rejection classes this instrument can and cannot see"
+    ],
+    "confidence_flags": [
+     "F measured ZERO malformed calls in both DC5 arms. The gate must not present its instrument as evidence that fumbles exist."
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g3-implement": {
+   "id": "g3-implement",
+   "title": "g3 installer ships and wires the door (#542 criterion 3): implement",
+   "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate from this gate's plan and anchors block: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, and the map entry point. Before dispatch, fill the Deliverable Path Check: run `git check-ignore <path>` for each committed deliverable and confirm exit 1. Dispatch via `python scripts/run_crew.py` (never hand-launch), Sonnet tier per the standing rule. Wait ACTIVELY inside the turn, polling the result artifact. Integrate the returned IMPLEMENTER_RESULT as evidence.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "g1 closed: the installed .mcp.json's env block is the identity mechanism, so what it may and may not contain follows from g1's decision. g2 closed: if the capture needs a path or variable, the installed config is where it gets one.",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "implementer-result"
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "NEVER write settings.json at USER scope.",
+    "Do NOT reintroduce a resolved-interpreter FALLBACK. #540 hard-stops when no interpreter probes; keep the hard stop.",
+    "--wire-hooks targets the agent config dir, NOT scripts/hooks/, and writes only PostToolUse for the default 'governor' set. Measure what it actually writes; do not read a flag name as a description of its behaviour.",
+    "Do NOT reintroduce per-dispatch config generation. One project-scope config at install time is a different thing; say why in the result.",
+    "When editing a shipped compact-format JSON template, edit the raw text SURGICALLY. Never round-trip through json.load/json.dump. Re-validate with json.load afterward.",
+    "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on every write."
+   ],
+   "anchors": {
+    "structural": [
+     "scripts/install_constellation.py - SKILL_SCRIPT_BUNDLES / SCRIPT_RUNTIME_COMPANIONS / expand_script_bundle(); required_scripts land FLAT at <target>/scripts/<name>",
+     "scripts/install_constellation.py - installed_path_replacements(), the 3-entry rewrite token map whose insertion order is load-bearing",
+     "scripts/install_constellation.py - the installer writes NO project-root dotfile today; this is new ground",
+     ".mcp.json - the source config, whose args path is relative to THIS repo"
+    ],
+    "capability": [
+     "Installing the corpus into a fresh project"
+    ],
+    "constraint": [
+     "A relative 'scripts/mcp_spine_server.py' does not resolve in a target project that has no such path",
+     "SPINE_ENGINE must name the INSTALLED engine, not this repo's"
+    ],
+    "decision": [
+     "no-gen-mcp-config - install-time is not dispatch-time; state the distinction explicitly @grade: settled - leans g3",
+     "decision pressure: how the installed config names the installed door and engine",
+     "decision pressure: whether writing a project-root dotfile is opt-in or default, given the installer has no precedent for it"
+    ],
+    "evidence": [
+     "An installer test proving the written .mcp.json's paths resolve against the target root, not this repo's",
+     "The three-count re-measurement's second count moves off zero"
+    ],
+    "confidence_flags": [
+     "The installer has no precedent for writing a project-root dotfile. If the honest conclusion is that it should be opt-in behind a flag rather than default, say so and argue it; do not default it silently."
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g3-review": {
+   "id": "g3-review",
+   "title": "g3 installer ships and wires the door (#542 criterion 3): review",
+   "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, this gate's anchors block, and the evidence from IMPLEMENTER_RESULT. Require the reviewer to attempt a MUTATION that should turn the gate's own evidence red, and to report whether it did - an assertion nobody has watched fail is not evidence. Dispatch via `python scripts/run_crew.py`. Wait actively. Integrate the returned REVIEW_RESULT as evidence.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "IMPLEMENTER_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "REVIEW_RESULT returned",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result"
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "NEVER write settings.json at USER scope.",
+    "Do NOT reintroduce a resolved-interpreter FALLBACK. #540 hard-stops when no interpreter probes; keep the hard stop.",
+    "--wire-hooks targets the agent config dir, NOT scripts/hooks/, and writes only PostToolUse for the default 'governor' set. Measure what it actually writes; do not read a flag name as a description of its behaviour.",
+    "Do NOT reintroduce per-dispatch config generation. One project-scope config at install time is a different thing; say why in the result.",
+    "When editing a shipped compact-format JSON template, edit the raw text SURGICALLY. Never round-trip through json.load/json.dump. Re-validate with json.load afterward.",
+    "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on every write."
+   ],
+   "anchors": {
+    "structural": [
+     "scripts/install_constellation.py - SKILL_SCRIPT_BUNDLES / SCRIPT_RUNTIME_COMPANIONS / expand_script_bundle(); required_scripts land FLAT at <target>/scripts/<name>",
+     "scripts/install_constellation.py - installed_path_replacements(), the 3-entry rewrite token map whose insertion order is load-bearing",
+     "scripts/install_constellation.py - the installer writes NO project-root dotfile today; this is new ground",
+     ".mcp.json - the source config, whose args path is relative to THIS repo"
+    ],
+    "capability": [
+     "Installing the corpus into a fresh project"
+    ],
+    "constraint": [
+     "A relative 'scripts/mcp_spine_server.py' does not resolve in a target project that has no such path",
+     "SPINE_ENGINE must name the INSTALLED engine, not this repo's"
+    ],
+    "decision": [
+     "no-gen-mcp-config - install-time is not dispatch-time; state the distinction explicitly @grade: settled - leans g3",
+     "decision pressure: how the installed config names the installed door and engine",
+     "decision pressure: whether writing a project-root dotfile is opt-in or default, given the installer has no precedent for it"
+    ],
+    "evidence": [
+     "An installer test proving the written .mcp.json's paths resolve against the target root, not this repo's",
+     "The three-count re-measurement's second count moves off zero"
+    ],
+    "confidence_flags": [
+     "The installer has no precedent for writing a project-root dotfile. If the honest conclusion is that it should be opt-in behind a flag rather than default, say so and argue it; do not default it silently."
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g3-integrate": {
+   "id": "g3-integrate",
+   "title": "g3 installer ships and wires the door (#542 criterion 3): integrate",
+   "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's claimed side-effects against the world yourself - re-run the verification command in your own hands, confirm the IMPLEMENTER_RESULT is fresh for this attempt (scripts/run_crew.py --verify-result, not a stale leftover), and confirm the pasted evidence reproduces. Then advance; the command postcondition is satisfied by `advance` re-running it, never by `attest`. BLOCK: return the implementer for rework, or raise a blocker if unresolvable. Log out-of-scope finds as triage candidates and harvest the result's Workflow Feedback into the run's lesson-candidate pool. Never pipe a command into head/tail and read the pipe's exit code.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "REVIEW_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "a fresh install gets the door: .mcp.json is written with paths that resolve in the TARGET project, and the door script is bundled alongside the engine; full suite green (0 failed)",
+     "check": {
+      "kind": "command",
+      "command": "python -m pytest -q"
+     },
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c2",
+     "statement": "reviewer verdict is APPROVE",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result",
+      "match": {
+       "verdict": "APPROVE"
+      }
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "NEVER write settings.json at USER scope.",
+    "Do NOT reintroduce a resolved-interpreter FALLBACK. #540 hard-stops when no interpreter probes; keep the hard stop.",
+    "--wire-hooks targets the agent config dir, NOT scripts/hooks/, and writes only PostToolUse for the default 'governor' set. Measure what it actually writes; do not read a flag name as a description of its behaviour.",
+    "Do NOT reintroduce per-dispatch config generation. One project-scope config at install time is a different thing; say why in the result.",
+    "When editing a shipped compact-format JSON template, edit the raw text SURGICALLY. Never round-trip through json.load/json.dump. Re-validate with json.load afterward.",
+    "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on every write."
+   ],
+   "anchors": {
+    "structural": [
+     "scripts/install_constellation.py - SKILL_SCRIPT_BUNDLES / SCRIPT_RUNTIME_COMPANIONS / expand_script_bundle(); required_scripts land FLAT at <target>/scripts/<name>",
+     "scripts/install_constellation.py - installed_path_replacements(), the 3-entry rewrite token map whose insertion order is load-bearing",
+     "scripts/install_constellation.py - the installer writes NO project-root dotfile today; this is new ground",
+     ".mcp.json - the source config, whose args path is relative to THIS repo"
+    ],
+    "capability": [
+     "Installing the corpus into a fresh project"
+    ],
+    "constraint": [
+     "A relative 'scripts/mcp_spine_server.py' does not resolve in a target project that has no such path",
+     "SPINE_ENGINE must name the INSTALLED engine, not this repo's"
+    ],
+    "decision": [
+     "no-gen-mcp-config - install-time is not dispatch-time; state the distinction explicitly @grade: settled - leans g3",
+     "decision pressure: how the installed config names the installed door and engine",
+     "decision pressure: whether writing a project-root dotfile is opt-in or default, given the installer has no precedent for it"
+    ],
+    "evidence": [
+     "An installer test proving the written .mcp.json's paths resolve against the target root, not this repo's",
+     "The three-count re-measurement's second count moves off zero"
+    ],
+    "confidence_flags": [
+     "The installer has no precedent for writing a project-root dotfile. If the honest conclusion is that it should be opt-in behind a flag rather than default, say so and argue it; do not default it silently."
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g4a-implement": {
+   "id": "g4a-implement",
+   "title": "g4a adoption: role spine instructions default to the door (#542 criterion 1): implement",
+   "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate from this gate's plan and anchors block: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, and the map entry point. Before dispatch, fill the Deliverable Path Check: run `git check-ignore <path>` for each committed deliverable and confirm exit 1. Dispatch via `python scripts/run_crew.py` (never hand-launch), Sonnet tier per the standing rule. Wait ACTIVELY inside the turn, polling the result artifact. Integrate the returned IMPLEMENTER_RESULT as evidence.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "g1 closed: if a subagent-dispatching role cannot safely use the door, the instruction that role gets is different. g3 closed: an instruction naming a door a fresh install does not ship is an instruction that cannot be followed.",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "implementer-result"
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "THE CLI DOOR STAYS. An edit that REMOVES the CLI path FAILS this gate. Adoption changes the default, never the availability.",
+    "Cite the canonical shared doctrine source skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md, which install_constellation.py regenerates and silently overwrites.",
+    "When editing a shipped compact-format JSON template, edit the raw text SURGICALLY. Never round-trip through json.load/json.dump - it reflows the whole file and destroys blame. Re-validate with json.load afterward.",
+    "The 5 CLI-only verbs (skip, reopen, append, amend, flag-candidate) have NO door tool. Instructions naming them must keep naming the CLI, and the fallback table in mcp_spine_server.py's docstring is the authority on which those are.",
+    "Do NOT rewrite the 4 incidental narrative mentions in skills/_shared/global-everyone.md and skills/admiral/references/fleet-doctrine.md. They name the engine as an artifact, not as a command.",
+    "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on every write."
+   ],
+   "anchors": {
+    "structural": [
+     "skills/commander/templates/COMMANDER_SPINE.template.json - .tasks.init/.plan/.archive imperatives carry literal engine command lines",
+     "skills/admiral/templates/ADMIRAL_SPINE.template.json - .tasks.init/.closeout imperatives",
+     "skills/explorer/templates/EXPLORER_SPINE.template.json - .tasks.init/.route imperatives",
+     "skills/workbench/references/checklist-engine.md - the canonical invocation and the lease verb table; the single highest-leverage file",
+     "skills/{charter,reviewer,interrogator,implementer,explorer,workbench}/SKILL.md - the drive-through-the-engine default-path prose",
+     "skills/write-a-skill/templates/{gated-engine,survey}-SKILL.template.md - propagate the default to FUTURE skills"
+    ],
+    "capability": [
+     "Driving a checklist spine through the engine - which door the instructions call default"
+    ],
+    "constraint": [
+     "The CLI door stays; F is additive",
+     "13 of 18 verbs are covered by tools; the other 5 are CLI-only by design"
+    ],
+    "decision": [
+     "the-cli-door-stays @grade: settled/human - leans g4a",
+     "decision pressure: which role spines change and in what order"
+    ],
+    "evidence": [
+     "A test asserting BOTH halves: the door named as the default path, AND the CLI still present as the documented fallback. A one-sided test passes a removal.",
+     "Count 1 of the three adoption counts moves off zero"
+    ],
+    "confidence_flags": [
+     "This is a DOC-ONLY gate. Per commander-core, the invariants are pre-authored as explicit postconditions here so the crew verifies a frozen chain rather than inventing a grep-for-marker proxy."
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g4a-review": {
+   "id": "g4a-review",
+   "title": "g4a adoption: role spine instructions default to the door (#542 criterion 1): review",
+   "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, this gate's anchors block, and the evidence from IMPLEMENTER_RESULT. Require the reviewer to attempt a MUTATION that should turn the gate's own evidence red, and to report whether it did - an assertion nobody has watched fail is not evidence. Dispatch via `python scripts/run_crew.py`. Wait actively. Integrate the returned REVIEW_RESULT as evidence.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "IMPLEMENTER_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "REVIEW_RESULT returned",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result"
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "THE CLI DOOR STAYS. An edit that REMOVES the CLI path FAILS this gate. Adoption changes the default, never the availability.",
+    "Cite the canonical shared doctrine source skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md, which install_constellation.py regenerates and silently overwrites.",
+    "When editing a shipped compact-format JSON template, edit the raw text SURGICALLY. Never round-trip through json.load/json.dump - it reflows the whole file and destroys blame. Re-validate with json.load afterward.",
+    "The 5 CLI-only verbs (skip, reopen, append, amend, flag-candidate) have NO door tool. Instructions naming them must keep naming the CLI, and the fallback table in mcp_spine_server.py's docstring is the authority on which those are.",
+    "Do NOT rewrite the 4 incidental narrative mentions in skills/_shared/global-everyone.md and skills/admiral/references/fleet-doctrine.md. They name the engine as an artifact, not as a command.",
+    "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on every write."
+   ],
+   "anchors": {
+    "structural": [
+     "skills/commander/templates/COMMANDER_SPINE.template.json - .tasks.init/.plan/.archive imperatives carry literal engine command lines",
+     "skills/admiral/templates/ADMIRAL_SPINE.template.json - .tasks.init/.closeout imperatives",
+     "skills/explorer/templates/EXPLORER_SPINE.template.json - .tasks.init/.route imperatives",
+     "skills/workbench/references/checklist-engine.md - the canonical invocation and the lease verb table; the single highest-leverage file",
+     "skills/{charter,reviewer,interrogator,implementer,explorer,workbench}/SKILL.md - the drive-through-the-engine default-path prose",
+     "skills/write-a-skill/templates/{gated-engine,survey}-SKILL.template.md - propagate the default to FUTURE skills"
+    ],
+    "capability": [
+     "Driving a checklist spine through the engine - which door the instructions call default"
+    ],
+    "constraint": [
+     "The CLI door stays; F is additive",
+     "13 of 18 verbs are covered by tools; the other 5 are CLI-only by design"
+    ],
+    "decision": [
+     "the-cli-door-stays @grade: settled/human - leans g4a",
+     "decision pressure: which role spines change and in what order"
+    ],
+    "evidence": [
+     "A test asserting BOTH halves: the door named as the default path, AND the CLI still present as the documented fallback. A one-sided test passes a removal.",
+     "Count 1 of the three adoption counts moves off zero"
+    ],
+    "confidence_flags": [
+     "This is a DOC-ONLY gate. Per commander-core, the invariants are pre-authored as explicit postconditions here so the crew verifies a frozen chain rather than inventing a grep-for-marker proxy."
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g4a-integrate": {
+   "id": "g4a-integrate",
+   "title": "g4a adoption: role spine instructions default to the door (#542 criterion 1): integrate",
+   "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's claimed side-effects against the world yourself - re-run the verification command in your own hands, confirm the IMPLEMENTER_RESULT is fresh for this attempt (scripts/run_crew.py --verify-result, not a stale leftover), and confirm the pasted evidence reproduces. Then advance; the command postcondition is satisfied by `advance` re-running it, never by `attest`. BLOCK: return the implementer for rework, or raise a blocker if unresolvable. Log out-of-scope finds as triage candidates and harvest the result's Workflow Feedback into the run's lesson-candidate pool. Never pipe a command into head/tail and read the pipe's exit code.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "REVIEW_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "role spine instructions name the door's tools as the default path AND still document the CLI as the remaining fallback; full suite green (0 failed)",
+     "check": {
+      "kind": "command",
+      "command": "python -m pytest -q"
+     },
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c2",
+     "statement": "reviewer verdict is APPROVE",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result",
+      "match": {
+       "verdict": "APPROVE"
+      }
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "THE CLI DOOR STAYS. An edit that REMOVES the CLI path FAILS this gate. Adoption changes the default, never the availability.",
+    "Cite the canonical shared doctrine source skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md, which install_constellation.py regenerates and silently overwrites.",
+    "When editing a shipped compact-format JSON template, edit the raw text SURGICALLY. Never round-trip through json.load/json.dump - it reflows the whole file and destroys blame. Re-validate with json.load afterward.",
+    "The 5 CLI-only verbs (skip, reopen, append, amend, flag-candidate) have NO door tool. Instructions naming them must keep naming the CLI, and the fallback table in mcp_spine_server.py's docstring is the authority on which those are.",
+    "Do NOT rewrite the 4 incidental narrative mentions in skills/_shared/global-everyone.md and skills/admiral/references/fleet-doctrine.md. They name the engine as an artifact, not as a command.",
+    "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on every write."
+   ],
+   "anchors": {
+    "structural": [
+     "skills/commander/templates/COMMANDER_SPINE.template.json - .tasks.init/.plan/.archive imperatives carry literal engine command lines",
+     "skills/admiral/templates/ADMIRAL_SPINE.template.json - .tasks.init/.closeout imperatives",
+     "skills/explorer/templates/EXPLORER_SPINE.template.json - .tasks.init/.route imperatives",
+     "skills/workbench/references/checklist-engine.md - the canonical invocation and the lease verb table; the single highest-leverage file",
+     "skills/{charter,reviewer,interrogator,implementer,explorer,workbench}/SKILL.md - the drive-through-the-engine default-path prose",
+     "skills/write-a-skill/templates/{gated-engine,survey}-SKILL.template.md - propagate the default to FUTURE skills"
+    ],
+    "capability": [
+     "Driving a checklist spine through the engine - which door the instructions call default"
+    ],
+    "constraint": [
+     "The CLI door stays; F is additive",
+     "13 of 18 verbs are covered by tools; the other 5 are CLI-only by design"
+    ],
+    "decision": [
+     "the-cli-door-stays @grade: settled/human - leans g4a",
+     "decision pressure: which role spines change and in what order"
+    ],
+    "evidence": [
+     "A test asserting BOTH halves: the door named as the default path, AND the CLI still present as the documented fallback. A one-sided test passes a removal.",
+     "Count 1 of the three adoption counts moves off zero"
+    ],
+    "confidence_flags": [
+     "This is a DOC-ONLY gate. Per commander-core, the invariants are pre-authored as explicit postconditions here so the crew verifies a frozen chain rather than inventing a grep-for-marker proxy."
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g4b-implement": {
+   "id": "g4b-implement",
+   "title": "g4b acceptance: a real dispatched agent drives a real role spine through the door alone (#542 criterion 2): implement",
+   "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate from this gate's plan and anchors block: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, and the map entry point. Before dispatch, fill the Deliverable Path Check: run `git check-ignore <path>` for each committed deliverable and confirm exit 1. Dispatch via `python scripts/run_crew.py` (never hand-launch), Sonnet tier per the standing rule. Wait ACTIVELY inside the turn, polling the result artifact. Integrate the returned IMPLEMENTER_RESULT as evidence.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "g4a closed: the acceptance run drives the EDITED instructions, so it cannot precede them. g2 closed: this run's own friction is the capture's live demonstration. remeasure-never-reuse: no baseline crosses a code change, so this runs last.",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "implementer-result"
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "The acceptance run MUST be an EXTERNAL DISPATCH, not an in-session Task-tool subagent. .mcp.json is read at session launch and a live session does not hot-reload it; an in-session subagent shares the parent's process and therefore its MCP scope.",
+    "COUNT FROM THE DRIVING AGENT'S OWN CALL RECORD, NEVER SERVER-SIDE. A client-side schema rejection never arrives at the server. A measure that cannot lose is not a measure.",
+    "REUSE F's archived instrument (.agent-work/archive/2026-08-09-epic-418-followon/commander-424/evidence/g4-dc5/score_arm.py and run_arm.sh) rather than inventing one. Its docstring records two adversarial corrections that both moved the number toward the door.",
+    "prove_headless_dispatch.py calls the REMOVED gen_mcp_config.py. Do not resurrect it; take the ${VAR}-from-environment mechanism run_arm.sh uses instead.",
+    "ZERO IS A RESULT. If the run produces zero rejections, report zero. Do NOT manufacture friction to demonstrate the capture, and do NOT read zero as proof the capture works - that is what g2's seeded control is for.",
+    "A REAL role spine from skills/*/templates/, not a scratch fixture invented for the measurement.",
+    "Never pipe a command into head/tail and read the pipe's exit code. Redirect to a file and capture the command's own $?."
+   ],
+   "anchors": {
+    "structural": [
+     ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/evidence/g4-dc5/ - run_arm.sh (env-keyed external dispatch) and score_arm.py (the scorer)",
+     ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-plans/scratch-mcp/ - F's harness and transcripts",
+     ".mcp.json - the committed project-scope config the dispatch reads at launch"
+    ],
+    "capability": [
+     "Driving a checklist spine through the engine - measured end to end, by a real agent"
+    ],
+    "constraint": [
+     "A live session does not hot-reload .mcp.json",
+     "${VAR} expansion keys SPINE_FILE/SPINE_SESSION from the dispatched process's OWN environment"
+    ],
+    "decision": [
+     "count-from-the-call-record @grade: settled/human - leans g4b",
+     "zero-is-a-result @grade: settled - leans g4b - settle: g2's seeded-rejection control proves the instrument can score",
+     "remeasure-never-reuse @grade: settled - leans g4b",
+     "decision pressure: which real role spine the acceptance run drives, and how the run is staged"
+    ],
+    "evidence": [
+     "The driving agent's own record.jsonl, scored, showing reached_done true",
+     "The three adoption counts re-measured, each with the exact command and its own exit code",
+     "The acceptance run's own friction, reported as measured - including zero, if zero"
+    ],
+    "confidence_flags": [
+     "If the dispatch cannot be made to work, that is an UNMEASURED condition and must be reported as unmeasured - never dressed up as a measured negative."
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g4b-review": {
+   "id": "g4b-review",
+   "title": "g4b acceptance: a real dispatched agent drives a real role spine through the door alone (#542 criterion 2): review",
+   "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, this gate's anchors block, and the evidence from IMPLEMENTER_RESULT. Require the reviewer to attempt a MUTATION that should turn the gate's own evidence red, and to report whether it did - an assertion nobody has watched fail is not evidence. Dispatch via `python scripts/run_crew.py`. Wait actively. Integrate the returned REVIEW_RESULT as evidence.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "IMPLEMENTER_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "REVIEW_RESULT returned",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result"
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "The acceptance run MUST be an EXTERNAL DISPATCH, not an in-session Task-tool subagent. .mcp.json is read at session launch and a live session does not hot-reload it; an in-session subagent shares the parent's process and therefore its MCP scope.",
+    "COUNT FROM THE DRIVING AGENT'S OWN CALL RECORD, NEVER SERVER-SIDE. A client-side schema rejection never arrives at the server. A measure that cannot lose is not a measure.",
+    "REUSE F's archived instrument (.agent-work/archive/2026-08-09-epic-418-followon/commander-424/evidence/g4-dc5/score_arm.py and run_arm.sh) rather than inventing one. Its docstring records two adversarial corrections that both moved the number toward the door.",
+    "prove_headless_dispatch.py calls the REMOVED gen_mcp_config.py. Do not resurrect it; take the ${VAR}-from-environment mechanism run_arm.sh uses instead.",
+    "ZERO IS A RESULT. If the run produces zero rejections, report zero. Do NOT manufacture friction to demonstrate the capture, and do NOT read zero as proof the capture works - that is what g2's seeded control is for.",
+    "A REAL role spine from skills/*/templates/, not a scratch fixture invented for the measurement.",
+    "Never pipe a command into head/tail and read the pipe's exit code. Redirect to a file and capture the command's own $?."
+   ],
+   "anchors": {
+    "structural": [
+     ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/evidence/g4-dc5/ - run_arm.sh (env-keyed external dispatch) and score_arm.py (the scorer)",
+     ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-plans/scratch-mcp/ - F's harness and transcripts",
+     ".mcp.json - the committed project-scope config the dispatch reads at launch"
+    ],
+    "capability": [
+     "Driving a checklist spine through the engine - measured end to end, by a real agent"
+    ],
+    "constraint": [
+     "A live session does not hot-reload .mcp.json",
+     "${VAR} expansion keys SPINE_FILE/SPINE_SESSION from the dispatched process's OWN environment"
+    ],
+    "decision": [
+     "count-from-the-call-record @grade: settled/human - leans g4b",
+     "zero-is-a-result @grade: settled - leans g4b - settle: g2's seeded-rejection control proves the instrument can score",
+     "remeasure-never-reuse @grade: settled - leans g4b",
+     "decision pressure: which real role spine the acceptance run drives, and how the run is staged"
+    ],
+    "evidence": [
+     "The driving agent's own record.jsonl, scored, showing reached_done true",
+     "The three adoption counts re-measured, each with the exact command and its own exit code",
+     "The acceptance run's own friction, reported as measured - including zero, if zero"
+    ],
+    "confidence_flags": [
+     "If the dispatch cannot be made to work, that is an UNMEASURED condition and must be reported as unmeasured - never dressed up as a measured negative."
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g4b-integrate": {
+   "id": "g4b-integrate",
+   "title": "g4b acceptance: a real dispatched agent drives a real role spine through the door alone (#542 criterion 2): integrate",
+   "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's claimed side-effects against the world yourself - re-run the verification command in your own hands, confirm the IMPLEMENTER_RESULT is fresh for this attempt (scripts/run_crew.py --verify-result, not a stale leftover), and confirm the pasted evidence reproduces. Then advance; the command postcondition is satisfied by `advance` re-running it, never by `attest`. BLOCK: return the implementer for rework, or raise a blocker if unresolvable. Log out-of-scope finds as triage candidates and harvest the result's Workflow Feedback into the run's lesson-candidate pool. Never pipe a command into head/tail and read the pipe's exit code.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "REVIEW_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "a real dispatched agent reached DONE on a real role spine through the door alone, scored from ITS OWN call record; and the three adoption counts are re-measured; full suite green (0 failed)",
+     "check": {
+      "kind": "command",
+      "command": "python -m pytest -q"
+     },
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c2",
+     "statement": "reviewer verdict is APPROVE",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result",
+      "match": {
+       "verdict": "APPROVE"
+      }
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "The acceptance run MUST be an EXTERNAL DISPATCH, not an in-session Task-tool subagent. .mcp.json is read at session launch and a live session does not hot-reload it; an in-session subagent shares the parent's process and therefore its MCP scope.",
+    "COUNT FROM THE DRIVING AGENT'S OWN CALL RECORD, NEVER SERVER-SIDE. A client-side schema rejection never arrives at the server. A measure that cannot lose is not a measure.",
+    "REUSE F's archived instrument (.agent-work/archive/2026-08-09-epic-418-followon/commander-424/evidence/g4-dc5/score_arm.py and run_arm.sh) rather than inventing one. Its docstring records two adversarial corrections that both moved the number toward the door.",
+    "prove_headless_dispatch.py calls the REMOVED gen_mcp_config.py. Do not resurrect it; take the ${VAR}-from-environment mechanism run_arm.sh uses instead.",
+    "ZERO IS A RESULT. If the run produces zero rejections, report zero. Do NOT manufacture friction to demonstrate the capture, and do NOT read zero as proof the capture works - that is what g2's seeded control is for.",
+    "A REAL role spine from skills/*/templates/, not a scratch fixture invented for the measurement.",
+    "Never pipe a command into head/tail and read the pipe's exit code. Redirect to a file and capture the command's own $?."
+   ],
+   "anchors": {
+    "structural": [
+     ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/evidence/g4-dc5/ - run_arm.sh (env-keyed external dispatch) and score_arm.py (the scorer)",
+     ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-plans/scratch-mcp/ - F's harness and transcripts",
+     ".mcp.json - the committed project-scope config the dispatch reads at launch"
+    ],
+    "capability": [
+     "Driving a checklist spine through the engine - measured end to end, by a real agent"
+    ],
+    "constraint": [
+     "A live session does not hot-reload .mcp.json",
+     "${VAR} expansion keys SPINE_FILE/SPINE_SESSION from the dispatched process's OWN environment"
+    ],
+    "decision": [
+     "count-from-the-call-record @grade: settled/human - leans g4b",
+     "zero-is-a-result @grade: settled - leans g4b - settle: g2's seeded-rejection control proves the instrument can score",
+     "remeasure-never-reuse @grade: settled - leans g4b",
+     "decision pressure: which real role spine the acceptance run drives, and how the run is staged"
+    ],
+    "evidence": [
+     "The driving agent's own record.jsonl, scored, showing reached_done true",
+     "The three adoption counts re-measured, each with the exact command and its own exit code",
+     "The acceptance run's own friction, reported as measured - including zero, if zero"
+    ],
+    "confidence_flags": [
+     "If the dispatch cannot be made to work, that is an UNMEASURED condition and must be reported as unmeasured - never dressed up as a measured negative."
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  }
+ }
+}

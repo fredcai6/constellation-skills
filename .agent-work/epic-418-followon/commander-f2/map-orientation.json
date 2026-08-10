@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "work_id": "epic-418-followon/commander-f2",
+  "root": "/home/tommy/projects/constellation-skills-wt/f2-mcp-adoption",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/CHECKLIST_ENGINE_DESIGN.md",
+      "content_hash": "2ecf6ac1d58672e348ce15d7a6619457be9d914c5e4d73ae7999e183e5420a9b",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "70fc98d8194a28f9f8fc2be73e8455ba556e15b81e9b28fdd82eeb11883b6b10",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/EPISODE_STORE.md",
+      "content_hash": "144327a1a3fb5fb4bf2e05ca090351b9e159a622dc75ffd30f7e885f1a010e72",
+      "source": "agent-declared"
+    },
+    {
+      "path": "README.md",
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb",
+      "source": "known-fallback"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "This skill-source repo carries no docs/architecture packet map (map/ids.jsonl empty, map/INDEX.md an unfilled template). No structural anchors exist for scripts/mcp_spine_server.py, scripts/install_constellation.py, scripts/apply_episode_delta.py, .mcp.json, or the role spine templates under skills/ - the exact surfaces this run owns. Blast radius and reference edges were derived from source reads and F's archived MEASUREMENT.md instead of from a map."
+  ],
+  "escalation": "Escalated to the Admiral (epic-418-followon) as a standing repo condition, not a defect of this run: the code-map work landed in #527 but map/ids.jsonl is empty on this base, so every Commander in this epic runs map-DEGRADED. Recorded as a triage candidate rather than repaired inside a wave under measurement, per the launch order's cheap-fixes-are-routed-not-implemented rule.",
+  "emitted_at": "2026-08-10T05:32:23.997486+00:00",
+  "root_proof": "positive: .git entry present at root"
+}
