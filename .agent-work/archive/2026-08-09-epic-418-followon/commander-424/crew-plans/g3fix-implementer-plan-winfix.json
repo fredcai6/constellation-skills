@@ -366,7 +366,8 @@
           "id": "c1",
           "statement": "committed to epic-418/f-424-mcp-door; IMPLEMENTER_RESULT written with all required sections",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "committed b9b80316 to epic-418/f-424-mcp-door; IMPLEMENTER_RESULT written at crew-handoffs/g3-implementer-result-winfix.md with all required sections"
         }
       ],
       "constraints": [
@@ -374,7 +375,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -388,13 +389,14 @@
   "refusals": 1,
   "engine_session": {
     "session_id": "constellation/archive/2026-08-09-epic-418-followon/commander-424/g3fix/implementer/attempt-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-10T01:05:42.346916+00:00",
-    "last_heartbeat": "2026-08-10T01:14:54.242910+00:00",
+    "last_heartbeat": "2026-08-10T01:18:28.830412+00:00",
     "claimed_by": "g3fix-implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-10T01:18:34.011460+00:00"
   },
   "why_trail": [
     {
@@ -445,6 +447,13 @@
       "why": "found and fixed a real, in-scope-adjacent regression: adding _read_loop to ServerInstance shifted the code map's entity count by 1, failing test_map_tree_freshness_root_index_matches_a_fresh_build (confirmed via git stash that this failure is absent on the clean tree). Rebuilt map/INDEX.md via python -m scripts.code_map build --root . Full suite now exactly matches baseline: 2177 passed, 1 skipped, 1061 subtests, 0 failed.",
       "mechanical": false,
       "ts": "2026-08-10T01:14:43.778835+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-closeout",
+      "why": "committed b9b80316 (fix) + 8322c270 (result-file commit-hash addendum) to epic-418/f-424-mcp-door. IMPLEMENTER_RESULT written at crew-handoffs/g3-implementer-result-winfix.md with exact commands/output/exit codes for all three identity-file runs, DC2/DC3 subsets, the timeout demonstration with elapsed times, the local-vs-reasoned Windows split, Map Impact, and a blunt Workflow Feedback section.",
+      "mechanical": false,
+      "ts": "2026-08-10T01:18:28.830404+00:00"
     }
   ]
 }
