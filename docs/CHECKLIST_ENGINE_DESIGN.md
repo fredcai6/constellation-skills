@@ -300,6 +300,21 @@ its own values and each gets its own server instance and its own reading. This i
 assumed: two `claude -p` dispatches from one directory through one committed config, differing only
 in their environment, each returned its own spine's reading.
 
+**The interpreter rides the same seam** (#554). `.mcp.json` shipped a fixed `"command": "python3"` —
+the same defect #538 and #540 fixed everywhere else, escaping both because `.mcp.json` is data, not
+generated output. The python.org Windows installer provides `python.exe` and the `py` launcher and no
+`python3.exe`, so that literal cannot start on a stock Windows host; `"python"` only trades one
+platform for the other. The tracked file now names `${CONSTELLATION_PYTHON:-python3}`, which is
+byte-for-byte the old behaviour wherever `python3` already worked and is overridable everywhere else.
+Measured against Claude Code 2.1.226 with marker-writing launcher scripts, so each arm is observed
+rather than inferred: `${VAR:-default}` **does** expand in `command`; a bare `${VAR}` with the
+variable unset is left literal and the client refuses to launch, naming the variable; a variable
+exported as the **empty string wins over the default** (`:-` here means "if set", *not* POSIX "if set
+and non-empty"); and an `env` block in `.claude/settings.local.json` does **not** feed the expansion —
+the expansion environment is the `claude` process's own. `install_constellation.py --wire-mcp` writes
+a target project's `.mcp.json` with the interpreter it probed, and refuses outright when that file is
+git-tracked, the same `is_git_tracked` guard `--wire-hooks --hooks-from source` uses.
+
 **A per-dispatch config generator was built and then removed** (`scripts/gen_mcp_config.py`,
 tombstoned). It was justified by the belief that a shared `.mcp.json` binds one identity for all
 consumers; `${VAR}` expansion disproves that. The last argument for keeping it was that an in-session

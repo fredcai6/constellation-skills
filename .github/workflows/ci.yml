@@ -38,6 +38,17 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pytest coverage
 
+      # Named separately from the suite below purely so the Windows evidence is
+      # LEGIBLE in the log (#554). These same tests run in the full suite; what
+      # this step buys is that "the MCP door launched on Windows and answered a
+      # tool call" is a green step with a name, instead of three dots inside
+      # 2500. The door used to ship a fixed `"command": "python3"`, which is not
+      # a command on a stock Windows host -- and nothing in CI could say so,
+      # because every test around it asserted on the config STRING rather than
+      # launching what the string names.
+      - name: MCP door launches on Windows and answers a real tool call
+        run: python -m pytest tests/test_mcp_spine_server.py tests/test_install_constellation.py -v -k "McpDoorLaunchesFromEmittedConfig or McpJsonVarExpansionLaunch or McpReadiness"
+
       - name: Run full test suite
         run: python -m pytest tests/ -q --junitxml=junit-report.xml
 

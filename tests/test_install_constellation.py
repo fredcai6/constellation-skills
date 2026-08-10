@@ -3904,3 +3904,379 @@ class ReadinessCLITests(unittest.TestCase):
                         env={}, out=lambda _: None,
                     )
             self.assertNotEqual(0, raised.exception.code)
+
+
+class McpPlaceholderExpansionTests(unittest.TestCase):
+    """`expand_mcp_placeholders` reproduces what Claude Code was MEASURED to do
+    with `${VAR}` in `.mcp.json` -- not what a POSIX shell does.
+
+    Each arm below was observed against the real client (2.1.226) with a
+    project-scope `.mcp.json` whose `command` pointed at one of two
+    marker-writing launcher scripts; the marker file said which one actually
+    ran. The arm that matters most is `set_but_empty`: POSIX `${VAR:-default}`
+    falls back to the default on an empty value and this DOES NOT, so a
+    variable exported as "" produces an empty command rather than the default.
+    A helper written from shell habit would get that backwards and would then
+    report a broken door as healthy."""
+
+    def test_a_set_variable_wins_over_the_default(self):
+        installer = load_installer()
+        self.assertEqual(
+            "/opt/py", installer.expand_mcp_placeholders(
+                "${CONSTELLATION_PYTHON:-python3}", {"CONSTELLATION_PYTHON": "/opt/py"}))
+
+    def test_an_absent_variable_falls_back_to_the_default(self):
+        installer = load_installer()
+        self.assertEqual(
+            "python3", installer.expand_mcp_placeholders(
+                "${CONSTELLATION_PYTHON:-python3}", {}))
+
+    def test_a_variable_set_to_empty_wins_over_the_default(self):
+        """The measured surprise. `:-` here means "if set", not POSIX "if set
+        and non-empty" -- Claude Code launched with an empty command and failed
+        with "The argument 'file' cannot be empty" rather than using the
+        default."""
+        installer = load_installer()
+        self.assertEqual(
+            "", installer.expand_mcp_placeholders(
+                "${CONSTELLATION_PYTHON:-python3}", {"CONSTELLATION_PYTHON": ""}))
+
+    def test_a_bare_variable_with_no_default_is_left_literal(self):
+        """Measured: Claude Code leaves it unexpanded, names the missing
+        variable, and refuses to launch. Returning the literal is what lets
+        `check_mcp_launchable` report the variable BY NAME instead of inventing
+        a value for it."""
+        installer = load_installer()
+        self.assertEqual(
+            "${CONSTELLATION_PYTHON}", installer.expand_mcp_placeholders(
+                "${CONSTELLATION_PYTHON}", {}))
+        self.assertEqual(
+            "/opt/py", installer.expand_mcp_placeholders(
+                "${CONSTELLATION_PYTHON}", {"CONSTELLATION_PYTHON": "/opt/py"}))
+
+    def test_an_empty_default_is_a_default_not_an_absent_one(self):
+        """`${SPINE_SESSION:-}` is in the shipped file. Its default is the empty
+        string, which must not be confused with "no default given" -- the two
+        take different arms."""
+        installer = load_installer()
+        self.assertEqual("", installer.expand_mcp_placeholders("${SPINE_SESSION:-}", {}))
+
+
+class _McpWiringFixture(unittest.TestCase):
+    """Every test here works inside a temp project, so it is structurally
+    incapable of touching this repo's own tracked `.mcp.json` -- the same
+    property `_HookWiringFixture` gets from installing under `--dest`."""
+
+    def _project(self, tmp) -> Path:
+        project = Path(tmp) / "project"
+        (project / ".claude" / "skills").mkdir(parents=True, exist_ok=True)
+        return project
+
+    def _target_root(self, tmp) -> Path:
+        return self._project(tmp) / ".claude" / "skills"
+
+    def _probed(self, installer, name=None):
+        return installer.InterpreterResolution(
+            name or sys.executable, installer.INTERPRETER_CANDIDATES, "probe")
+
+    def _wire(self, installer, tmp, **kwargs):
+        lines: list[str] = []
+        installer.wire_mcp(
+            self._target_root(tmp),
+            interpreter=kwargs.pop("interpreter", self._probed(installer)),
+            dry_run=kwargs.pop("dry_run", False),
+            scope=kwargs.pop("scope", "project"),
+            out=lines.append,
+            mcp_from=kwargs.pop("mcp_from", installer.MCP_FROM_SOURCE),
+            **kwargs,
+        )
+        return "\n".join(lines)
+
+    def _config_path(self, tmp) -> Path:
+        return self._project(tmp) / ".mcp.json"
+
+    @staticmethod
+    def _git(cwd, *args):
+        return subprocess.run(
+            ["git", *args], cwd=str(cwd), capture_output=True, text=True, check=True)
+
+
+class McpWiringTests(_McpWiringFixture):
+    def test_wiring_writes_the_probed_interpreter_and_absolute_paths(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._wire(installer, tmp)
+            entry = json.loads(self._config_path(tmp).read_text(encoding="utf-8"))[
+                "mcpServers"][installer.MCP_SERVER_NAME]
+            self.assertEqual(sys.executable, entry["command"])
+            self.assertTrue(Path(entry["args"][0]).is_absolute())
+            self.assertTrue(Path(entry["args"][0]).is_file())
+
+    def test_wiring_keeps_the_per_dispatch_override_seams(self):
+        """Dropping `${SPINE_FILE:-...}` for a bare path would bind ONE spine and
+        ONE identity for every dispatch on the host -- the emitted file must stay
+        rebindable exactly as the tracked one is."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._wire(installer, tmp)
+            env = json.loads(self._config_path(tmp).read_text(encoding="utf-8"))[
+                "mcpServers"][installer.MCP_SERVER_NAME]["env"]
+            for key in ("SPINE_FILE", "SPINE_ENGINE", "SPINE_SESSION"):
+                self.assertRegex(env[key], r"^\$\{" + key + r":-.*\}$")
+                self.assertEqual(
+                    "/bound/by/caller",
+                    installer.expand_mcp_placeholders(env[key], {key: "/bound/by/caller"}))
+
+    def test_wiring_preserves_an_unrelated_server_already_in_the_file(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._config_path(tmp)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                json.dumps({"mcpServers": {"other": {"command": "keep-me"}}}),
+                encoding="utf-8", newline="\n")
+            self._wire(installer, tmp)
+            servers = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]
+            self.assertEqual({"command": "keep-me"}, servers["other"])
+            self.assertIn(installer.MCP_SERVER_NAME, servers)
+
+    def test_rewiring_the_identical_entry_is_a_reported_no_op(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._wire(installer, tmp)
+            before = self._config_path(tmp).read_bytes()
+            output = self._wire(installer, tmp)
+            self.assertIn("unchanged", output)
+            self.assertEqual(before, self._config_path(tmp).read_bytes())
+
+    def test_wiring_refuses_to_overwrite_a_different_existing_entry(self):
+        """No self-healing, the rule `add_hook_entry` follows: a hand-tuned door
+        under this name is somebody's config, and silently rewriting it is how it
+        disappears without a word."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._config_path(tmp)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            payload = json.dumps(
+                {"mcpServers": {installer.MCP_SERVER_NAME: {"command": "hand-tuned"}}})
+            path.write_text(payload, encoding="utf-8", newline="\n")
+            before = path.read_bytes()
+            with self.assertRaises(installer.InstallError) as raised:
+                self._wire(installer, tmp)
+            self.assertIn("hand-tuned", str(raised.exception))
+            self.assertEqual(before, path.read_bytes())
+
+    def test_wiring_refuses_an_unprobed_interpreter_resolution(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            unprobed = installer.InterpreterResolution(
+                "py", installer.INTERPRETER_CANDIDATES, "os-default-fallback")
+            with self.assertRaises(installer.InstallError) as raised:
+                self._wire(installer, tmp, interpreter=unprobed)
+            self.assertIn("os-default-fallback", str(raised.exception))
+            self.assertFalse(self._config_path(tmp).exists())
+
+    def test_wiring_refuses_a_git_tracked_mcp_json_and_names_the_env_seam(self):
+        """The whole point of the tracked/per-machine split. A tracked
+        `.mcp.json` is shared, and this file carries an interpreter probed on
+        ONE host -- committing it is the #538 defect moved one file over. The
+        refusal must also say what to do instead, or it just blocks."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = self._project(tmp)
+            self._git(project, "init", "-q")
+            self._git(project, "config", "user.email", "t@example.com")
+            self._git(project, "config", "user.name", "t")
+            path = self._config_path(tmp)
+            path.write_text("{}\n", encoding="utf-8", newline="\n")
+            self._git(project, "add", ".mcp.json")
+            self._git(project, "commit", "-qm", "track it")
+            before = path.read_bytes()
+
+            with self.assertRaises(installer.InstallError) as raised:
+                self._wire(installer, tmp)
+            message = str(raised.exception)
+            self.assertIn("git-tracked", message)
+            self.assertIn(installer.MCP_INTERPRETER_VAR, message)
+            self.assertEqual(before, path.read_bytes())
+
+    def test_wiring_succeeds_on_the_same_repo_when_the_file_is_untracked(self):
+        """The anti-vacuity twin of the test above: without it, a refusal that
+        fired for some unrelated reason (being inside a git repo at all, say)
+        would read as the tracked-file guard working."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = self._project(tmp)
+            self._git(project, "init", "-q")
+            self._wire(installer, tmp)
+            self.assertTrue(self._config_path(tmp).is_file())
+
+    def test_dry_run_writes_nothing(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            output = self._wire(installer, tmp, dry_run=True)
+            self.assertIn("DRY RUN", output)
+            self.assertFalse(self._config_path(tmp).exists())
+
+    def test_wiring_refuses_a_server_script_that_is_not_there(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            # `installed` mode points into the target tree, which this fixture
+            # never populates -- so the door would name a path with no file.
+            with self.assertRaises(installer.InstallError) as raised:
+                self._wire(installer, tmp, mcp_from=installer.MCP_FROM_INSTALLED)
+            self.assertIn(installer.MCP_SERVER_SCRIPT, str(raised.exception))
+            self.assertFalse(self._config_path(tmp).exists())
+
+    def test_wiring_refuses_a_config_file_it_cannot_read(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._config_path(tmp)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("{ not json", encoding="utf-8", newline="\n")
+            before = path.read_bytes()
+            with self.assertRaises(installer.InstallError):
+                self._wire(installer, tmp)
+            self.assertEqual(before, path.read_bytes())
+
+
+class McpReadinessTests(_McpWiringFixture):
+    """`check_mcp_launchable` answers "will the door start", by starting it --
+    the item whose absence let a door that cannot launch be reported shipped."""
+
+    def _write_config(self, tmp, command: str) -> Path:
+        path = self._config_path(tmp)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps({"mcpServers": {"spine": {"command": command, "args": []}}}),
+            encoding="utf-8", newline="\n")
+        return path
+
+    def test_a_command_that_cannot_start_is_not_ready_and_names_it(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._write_config(tmp, "${CONSTELLATION_PYTHON:-constellation-no-such-interpreter}")
+            check = installer.check_mcp_launchable(self._target_root(tmp), env={})
+            self.assertFalse(check.ready)
+            self.assertIn("constellation-no-such-interpreter", check.reason)
+
+    def test_the_same_file_is_ready_once_the_variable_names_a_real_interpreter(self):
+        """The anti-vacuity twin: same file, same check, only the environment
+        differs. Without it, a check hardwired to NOT READY would pass the test
+        above."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._write_config(tmp, "${CONSTELLATION_PYTHON:-constellation-no-such-interpreter}")
+            check = installer.check_mcp_launchable(
+                self._target_root(tmp), env={"CONSTELLATION_PYTHON": sys.executable})
+            self.assertTrue(check.ready, check.reason)
+            self.assertIn(sys.executable, check.reason)
+
+    def test_a_bare_variable_with_no_default_is_reported_by_name(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._write_config(tmp, "${CONSTELLATION_PYTHON}")
+            check = installer.check_mcp_launchable(self._target_root(tmp), env={})
+            self.assertFalse(check.ready)
+            self.assertIn("CONSTELLATION_PYTHON", check.reason)
+
+    def test_an_exported_but_empty_variable_is_reported_as_empty(self):
+        """The measured arm a POSIX-shaped helper would get wrong: the empty
+        value WINS over the default, so the door launches with no command at
+        all. Reported as its own named condition, not as "not found"."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._write_config(tmp, "${CONSTELLATION_PYTHON:-python3}")
+            check = installer.check_mcp_launchable(
+                self._target_root(tmp), env={"CONSTELLATION_PYTHON": ""})
+            self.assertFalse(check.ready)
+            self.assertIn("EMPTY", check.reason)
+
+    def test_a_project_with_no_door_is_ready_and_says_it_has_none(self):
+        """The door is optional, so its ABSENCE is a measured fact, not a
+        defect -- but the reason must say so out loud. A bare "READY" on an item
+        called `mcp` reads as "the door works", which is the reassuring-failure
+        shape this readiness mode exists to catch."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._target_root(tmp)
+            check = installer.check_mcp_launchable(self._target_root(tmp), env={})
+            self.assertTrue(check.ready)
+            self.assertIn(installer.MCP_CONFIG_FILENAME, check.reason)
+            self.assertIn("configures no", check.reason)
+
+    def test_a_door_that_exists_and_cannot_start_is_not_ready(self):
+        """The twin that keeps the pass above from swallowing the real defect:
+        the same check, with a door present, must fail."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._write_config(tmp, "constellation-no-such-interpreter")
+            check = installer.check_mcp_launchable(self._target_root(tmp), env={})
+            self.assertFalse(check.ready)
+
+    def test_this_repo_s_own_tracked_mcp_json_launches_when_the_seam_is_bound(self):
+        """The shipped file, checked as shipped -- on whatever platform this
+        runs, Windows CI included. `.mcp.json` lives at the repo root, which is
+        `<target_root>/../..` for a project-scope install into `.claude/skills`."""
+        installer = load_installer()
+        check = installer.check_mcp_launchable(
+            ROOT / ".claude" / "skills", env={"CONSTELLATION_PYTHON": sys.executable})
+        self.assertTrue(check.ready, check.reason)
+
+
+class McpCliTests(unittest.TestCase):
+    def test_check_readiness_refuses_combination_with_wire_mcp(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            with contextlib.redirect_stderr(io.StringIO()) as err:
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "claude", "--scope", "project", "--project", tmp,
+                         "--check-readiness", "--wire-mcp"],
+                        env={}, out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)
+            self.assertIn("--wire-mcp", err.getvalue())
+
+    def test_wire_mcp_refuses_user_scope(self):
+        """`~/.mcp.json` is not a file Claude Code reads. Writing one and calling
+        it wiring is the reassuring-failure shape this repo keeps catching."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            with contextlib.redirect_stderr(io.StringIO()) as err:
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "claude", "--scope", "user",
+                         "--dest", str(Path(tmp) / "skills"), "--wire-mcp"],
+                        env={}, out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)
+            self.assertIn("--scope project", err.getvalue())
+
+    def test_installing_without_the_flag_writes_no_mcp_json(self):
+        """Opt-in only, the same ruling `--wire-hooks` carries: an install that
+        was never asked to wire a door must not leave one behind."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "project" / ".claude" / "skills"
+            installer.main(
+                ["--agent", "claude", "--scope", "project", "--dest", str(dest)],
+                env={}, out=lambda _: None,
+            )
+            self.assertFalse((Path(tmp) / "project" / ".mcp.json").exists())
+
+    def test_the_installed_workbench_bundle_carries_the_mcp_server(self):
+        """A fresh install used to place the engine and no way to reach it over
+        MCP: `mcp_spine_server.py` was in no bundle, so `--wire-mcp --mcp-from
+        installed` had nothing to point at."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "project" / ".claude" / "skills"
+            installer.main(
+                ["--agent", "claude", "--scope", "project", "--dest", str(dest),
+                 "--skills", "workbench"],
+                env={}, out=lambda _: None,
+            )
+            self.assertTrue(
+                (dest / "constellation-workbench" / "scripts"
+                 / installer.MCP_SERVER_SCRIPT).is_file())

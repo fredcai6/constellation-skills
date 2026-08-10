@@ -194,7 +194,15 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
     # checklist_engine.py: that would copy the hook into every engine-carrying
     # skill and leave "which copy is canonical?" ambiguous for whatever later
     # wires it into a settings.json.
-    "workbench": ("checklist_engine.py", "gauge_writer_hook.py"),
+    # mcp_spine_server.py rides with workbench for the same reason the gauge
+    # writer does: it is a front door ON checklist_engine.py, and workbench is
+    # the engine's home skill. Before this it was in no bundle at all, so a
+    # fresh install placed the engine and no way to reach it over MCP --
+    # `--wire-mcp --mcp-from installed` had nothing to point at. It needs no
+    # SCRIPT_RUNTIME_COMPANIONS entry: it reaches checklist_engine.py through
+    # the SPINE_ENGINE path this installer writes, not through a sibling load,
+    # and the flat install destination puts the two in one directory anyway.
+    "workbench": ("checklist_engine.py", "gauge_writer_hook.py", "mcp_spine_server.py"),
     "interrogator": ("checklist_engine.py", "verify_interrogation.py"),
     "cartographer": ("checklist_engine.py", "build_architecture_map.py"),
     "docent": ("docent_freshness.py",),
@@ -1361,9 +1369,359 @@ def wire_hooks(
 
 
 # --------------------------------------------------------------------------- #
+# MCP door wiring (#554)
+# --------------------------------------------------------------------------- #
+# The committed `.mcp.json` is what a Claude Code session reads at launch to
+# start the spine door. It used to name a FIXED `"command": "python3"` -- the
+# same defect #538 and #540 were filed for, escaping both because `.mcp.json`
+# is data, not generated output. The python.org Windows installer ships
+# `python.exe` and the `py` launcher and NO `python3.exe`, and a bare `python3`
+# on Windows commonly routes to a Microsoft Store app-execution-alias stub, so
+# that literal cannot start on a stock Windows host. Swapping it for `python`
+# only trades one platform for the other, which is the trade #538 rejected on
+# review.
+#
+# MEASURED, not inferred (this decided the design; see the PR body for the
+# transcript). Against Claude Code 2.1.226, with a project-scope `.mcp.json`
+# whose `command` was `${PROBE_LAUNCHER:-<launcher_B>}` and two marker-writing
+# launcher scripts:
+#   * PROBE_LAUNCHER set to launcher_A  -> launcher_A ran. `command` DOES expand.
+#   * PROBE_LAUNCHER unset              -> launcher_B ran. The default arm works.
+#   * `${PROBE_LAUNCHER}` with no default, unset -> NOT expanded; Claude Code
+#     warns "Missing environment variables: PROBE_LAUNCHER" and refuses to
+#     launch. So a bare `${VAR}` fails LOUDLY rather than silently wrongly.
+#   * PROBE_LAUNCHER set to the EMPTY STRING -> the empty string won, NOT the
+#     default. Claude Code's `:-` is "if set", not POSIX "if set and non-empty".
+#     `expand_mcp_placeholders` below reproduces that, and the readiness check
+#     treats an empty expansion as a named failure rather than a default.
+#   * An `env` block in `.claude/settings.local.json` does NOT feed this
+#     expansion -- the default arm was taken while that same variable was
+#     demonstrably reaching Bash tool subprocesses. The expansion environment
+#     is the `claude` process's own, and only that.
+# The docs agree on all four points, but the measurement is what this rests on.
+#
+# THE SHAPE, and why. `--wire-hooks` solved the identical problem by leaving the
+# TRACKED file naming no interpreter and putting the host-probed one in a
+# per-machine file. That shape transfers here with one substitution forced by
+# the measurement above: there is no per-machine sibling for `.mcp.json` the way
+# `settings.local.json` is a sibling of `settings.json` -- Claude Code reads
+# exactly one project-scope MCP file and no other in-repo file defines a server.
+# So the two halves land as:
+#   1. the tracked `.mcp.json` names no fixed interpreter -- it names the
+#      `${CONSTELLATION_PYTHON:-python3}` seam, which is byte-for-byte the old
+#      behaviour wherever `python3` already worked and is now overridable on
+#      the hosts where it never could;
+#   2. `--wire-mcp` writes the resolved interpreter into the TARGET PROJECT's
+#      own `.mcp.json`, and REFUSES outright when that file is git-tracked --
+#      the same `is_git_tracked` refusal `--wire-hooks --hooks-from source`
+#      uses, for the same reason: a probed interpreter name is wrong for every
+#      other machine by construction, so it must never reach a shared file.
+# In THIS repo `.mcp.json` is tracked and stays tracked, so `--wire-mcp` refuses
+# here by design and the refusal names `CONSTELLATION_PYTHON` plus the probed
+# value as the fix. That is not a gap: it is the tracked/per-machine split doing
+# its job on the one repo that owns the shared file.
+
+MCP_CONFIG_FILENAME = ".mcp.json"
+MCP_SERVER_NAME = "spine"
+MCP_SERVER_SCRIPT = "mcp_spine_server.py"
+MCP_ENGINE_SCRIPT = "checklist_engine.py"
+# The environment variable the tracked `.mcp.json` reads its interpreter from.
+# Named on the CONSTELLATION_ prefix rather than something like PYTHON so it
+# cannot collide with an unrelated variable already on a contributor's box.
+MCP_INTERPRETER_VAR = "CONSTELLATION_PYTHON"
+# Where `--wire-mcp` points the server script, mirroring `--hooks-from`.
+MCP_FROM_INSTALLED = "installed"  # <target_root>/constellation-workbench/scripts/
+MCP_FROM_SOURCE = "source"        # this checkout's own scripts/
+MCP_FROM_CHOICES = (MCP_FROM_INSTALLED, MCP_FROM_SOURCE)
+
+# `.mcp.json` is a Claude Code mechanism. No other supported agent reads one,
+# so writing one under ~/.codex/ would be emitting config nothing ever reads.
+MCP_CAPABLE_AGENT_NAMES = frozenset({AGENT_TARGETS["claude"].name})
+
+_MCP_PLACEHOLDER_RE = re.compile(r"\$\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?::-(?P<default>[^}]*))?\}")
+
+
+def expand_mcp_placeholders(value: str, env: Mapping[str, str]) -> str:
+    """Expand `${VAR}` / `${VAR:-default}` in an `.mcp.json` field the way
+    Claude Code was MEASURED to expand it (see the block comment above).
+
+    Three behaviours, each one of them measured against the real client rather
+    than assumed from shell habit:
+
+    * `${VAR:-default}` with VAR present in `env` -> the env value, EVEN WHEN
+      IT IS EMPTY. This is the one that surprises: POSIX `:-` falls back to the
+      default on an empty value and this does not, so a variable exported as
+      `""` yields an empty command, not the default.
+    * `${VAR:-default}` with VAR absent -> `default`.
+    * `${VAR}` with VAR absent -> LEFT LITERAL. Claude Code then reports the
+      missing variable by name and does not launch. Returning the literal here
+      is what lets `check_mcp_launchable` say "this will not start, and here is
+      the variable that is missing" instead of inventing a value.
+
+    `env` is passed in rather than read from `os.environ` so a caller can ask
+    the question about a host other than this process."""
+    def substitute(match: re.Match) -> str:
+        name = match.group("name")
+        if name in env:
+            return env[name]
+        default = match.group("default")
+        return match.group(0) if default is None else default
+
+    return _MCP_PLACEHOLDER_RE.sub(substitute, value)
+
+
+def mcp_config_path_for_target_root(target_root: Path) -> Path:
+    """The `.mcp.json` governing the PROJECT this install writes into:
+    `<project>/.claude/skills` -> `<project>/.mcp.json`.
+
+    Derived from the resolved target root for the same reason
+    `settings_path_for_target_root` is -- so a `--dest` install (every test in
+    this repo) can never reach past its own tree. Only meaningful at project
+    scope: `~/.claude/skills` would give `~/.mcp.json`, which Claude Code does
+    not read, so `--wire-mcp` refuses at user scope rather than writing a file
+    nothing loads."""
+    return target_root.parent.parent / MCP_CONFIG_FILENAME
+
+
+def mcp_script_path(target_root: Path, script: str, *, mcp_from: str) -> Path:
+    if mcp_from == MCP_FROM_SOURCE:
+        return script_source_path(script, REPO_ROOT / "scripts")
+    return target_root / HOOK_OWNER_INSTALL_NAME / "scripts" / script
+
+
+def build_mcp_server_entry(
+    *, interpreter: str, server_script: Path, engine_script: Path, default_spine: Path
+) -> dict:
+    """The one `mcpServers.<name>` entry `--wire-mcp` emits.
+
+    `command` is the interpreter this run PROBED -- a bare name, never
+    `${CONSTELLATION_PYTHON:-...}`. The variable seam exists for the tracked
+    file, which has to serve every machine; this file is per-machine by
+    construction, so naming the probed value directly is both correct and one
+    fewer thing that can be unset at launch.
+
+    Paths are ABSOLUTE. The tracked `.mcp.json` keeps repo-relative paths
+    because Claude Code resolves them against the project root and that is what
+    makes it portable; an emitted file already carries a host-probed
+    interpreter, so relative paths would buy no portability and would break the
+    moment the door is launched from anywhere but the project root.
+
+    The `${SPINE_*}` override seams are preserved verbatim from the tracked
+    file: per-dispatch identity rides on them (`SPINE_SESSION` is composed
+    `session_id#agentId` by the caller), and dropping them would bind one spine
+    and one identity for every dispatch on this host."""
+    return {
+        "command": interpreter,
+        "args": [str(server_script)],
+        "env": {
+            "SPINE_FILE": f"${{SPINE_FILE:-{default_spine}}}",
+            "SPINE_ENGINE": f"${{SPINE_ENGINE:-{engine_script}}}",
+            "SPINE_SESSION": "${SPINE_SESSION:-}",
+        },
+    }
+
+
+def wire_mcp(
+    target_root: Path,
+    *,
+    interpreter: InterpreterResolution,
+    dry_run: bool,
+    scope: str,
+    out: Callable[[str], object],
+    mcp_from: str = MCP_FROM_INSTALLED,
+    default_spine: Path | None = None,
+) -> None:
+    """The ONE path on which this installer writes an `.mcp.json`. Reached only
+    from the explicit `--wire-mcp` opt-in, and still a no-op under `--dry-run`.
+
+    Every refusal below happens BEFORE anything is written, and the in-memory
+    merge is done first so `--dry-run` can report exactly what a real run would
+    do without touching disk -- the ordering `wire_hooks` established."""
+    # Same loud failure `wire_hooks` takes, for the same reason: an interpreter
+    # that was not probed on THIS host is a guess, and stamping a guess into a
+    # launch command is what #538/#539 were filed for.
+    if interpreter.resolved_via != "probe":
+        raise InstallError(
+            f"--wire-mcp: refusing to wire from an interpreter resolution that was not "
+            f"probed on this host (resolved_via={interpreter.resolved_via!r}, "
+            f"interpreter={interpreter.interpreter!r}). The command written here is "
+            f"launched verbatim by Claude Code at session start; a guessed name fails "
+            f"there, far from its cause."
+        )
+
+    config_path = mcp_config_path_for_target_root(target_root)
+
+    if is_git_tracked(config_path):
+        raise InstallError(
+            f"--wire-mcp: refusing to write {config_path} -- it is git-tracked. This "
+            f"file would carry the interpreter probed on THIS host "
+            f"({interpreter.interpreter!r}) and this checkout's absolute paths, so "
+            f"committing it breaks every other machine -- the defect this flag exists "
+            f"to fix, moved one file over. A tracked {MCP_CONFIG_FILENAME} must name "
+            f"the interpreter through the ${{{MCP_INTERPRETER_VAR}:-python3}} seam "
+            f"instead; set {MCP_INTERPRETER_VAR}={interpreter.interpreter} in the "
+            f"environment you launch Claude Code from and the tracked file resolves "
+            f"correctly on this host with nothing written at all."
+        )
+
+    server_script = mcp_script_path(target_root, MCP_SERVER_SCRIPT, mcp_from=mcp_from)
+    engine_script = mcp_script_path(target_root, MCP_ENGINE_SCRIPT, mcp_from=mcp_from)
+    if not dry_run:
+        for script in (server_script, engine_script):
+            if not script.is_file():
+                raise InstallError(
+                    f"--wire-mcp: no {script.name} at {script}. Refusing to wire a door "
+                    f"onto a path with no file behind it -- Claude Code would report a "
+                    f"failed MCP server at session start with nothing to point at."
+                )
+
+    config: dict = {}
+    if config_path.is_file():
+        try:
+            loaded = json.loads(config_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            raise InstallError(
+                f"--wire-mcp: refusing to touch {config_path} -- it is not valid JSON "
+                f"({exc}). Fix or move it; the installer will not clobber a file it "
+                f"cannot read."
+            )
+        if not isinstance(loaded, dict):
+            raise InstallError(
+                f"--wire-mcp: refusing to touch {config_path} -- its top level is "
+                f"{type(loaded).__name__}, not an object."
+            )
+        config = loaded
+
+    servers = config.setdefault("mcpServers", {})
+    if not isinstance(servers, dict):
+        raise InstallError(
+            f"--wire-mcp: 'mcpServers' in {config_path} is not an object: "
+            f"{type(servers).__name__}"
+        )
+
+    entry = build_mcp_server_entry(
+        interpreter=interpreter.interpreter,
+        server_script=server_script,
+        engine_script=engine_script,
+        # A default of LAST RESORT, and deliberately not the demo spine the
+        # tracked file points at: that example lives in this repo's checkout and
+        # is not installed anywhere. Real use binds a spine per dispatch through
+        # `${SPINE_FILE:-...}`; this only decides what an unbound interactive
+        # session lands on, and the project's own work area is the one place
+        # that is right by convention rather than by accident.
+        default_spine=(
+            default_spine if default_spine is not None
+            else config_path.parent / ".agent-work" / "spine.json"
+        ),
+    )
+    existing = servers.get(MCP_SERVER_NAME)
+    if existing == entry:
+        out(f"- {MCP_SERVER_NAME} MCP server already present in {config_path}; unchanged")
+        return
+    if existing is not None:
+        # No self-healing, the rule `add_hook_entry` follows: a DIFFERENT entry
+        # under this name is somebody's config, and silently rewriting it is how
+        # a hand-tuned door disappears without a word. Report and refuse.
+        raise InstallError(
+            f"--wire-mcp: {config_path} already defines an mcpServers.{MCP_SERVER_NAME} "
+            f"that differs from what this run would write. Refusing to overwrite it -- "
+            f"remove that entry and re-run if you want this one. Present: "
+            f"{json.dumps(existing, sort_keys=True)}"
+        )
+
+    if dry_run:
+        out(f"- DRY RUN: would add mcpServers.{MCP_SERVER_NAME} to {config_path}")
+        out(f"- DRY RUN: would write command: {entry['command']} {entry['args'][0]}")
+        out(f"- DRY RUN: {config_path.name} NOT written")
+        return
+
+    servers[MCP_SERVER_NAME] = entry
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    # newline="\n" is load-bearing on Windows, not hygiene: the default
+    # translation would write CRLF into a file this repo's own tests compare.
+    with config_path.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(config, indent=2) + "\n")
+    out(f"- wired the {MCP_SERVER_NAME} MCP server into {config_path}")
+    out(f"  command: {entry['command']} {entry['args'][0]}")
+    out(
+        f"- NOTE: this file names the interpreter probed here "
+        f"({interpreter.interpreter}) and this host's absolute paths. It is correct on "
+        f"THIS machine only and must never be committed."
+    )
+
+
+def check_mcp_launchable(
+    target_root: Path, *, env: Mapping[str, str], timeout: float = DEFAULT_INTERPRETER_PROBE_TIMEOUT
+) -> ReadinessCheck:
+    """Readiness item 6: can the MCP door actually start from the `.mcp.json`
+    this project ships?
+
+    This is the item whose absence let a door that never launches be reported as
+    shipped. It does not inspect the string for plausibility -- it EXPANDS the
+    `command` exactly as Claude Code does, then launches that command as a real
+    `<command> --version` subprocess, the same probe `probe_host_interpreter`
+    uses. A `command` that expands to something this host cannot start is the
+    whole defect, and nothing short of running it can tell.
+
+    Report-only, and never a raise: an unreadable file and a command that will
+    not start are NOT READY with a named reason.
+
+    A project with NO `.mcp.json` is READY, and that is a determination rather
+    than a shrug: the door is optional, so its absence is a MEASURED fact about
+    a project that configures none, not an unknown laundered into a pass. The
+    reason says exactly that, because a bare "READY" against an item called
+    `mcp` would otherwise read as "the door works". This item fails when a door
+    EXISTS and cannot start -- which is the defect it was added for."""
+    config_path = mcp_config_path_for_target_root(target_root)
+    if not config_path.is_file():
+        return ReadinessCheck(
+            True,
+            f"no {MCP_CONFIG_FILENAME} at {config_path} -- this project configures no "
+            f"MCP door, so there is none to launch (run --wire-mcp to add one)",
+        )
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+        entry = config["mcpServers"][MCP_SERVER_NAME]
+        raw_command = entry["command"]
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        return ReadinessCheck(
+            False, f"{config_path} carries no readable mcpServers.{MCP_SERVER_NAME}.command ({exc})")
+
+    command = expand_mcp_placeholders(raw_command, env)
+    if _MCP_PLACEHOLDER_RE.search(command):
+        missing = sorted({m.group("name") for m in _MCP_PLACEHOLDER_RE.finditer(command)})
+        return ReadinessCheck(
+            False,
+            f"{config_path} names command {raw_command!r}, which still contains "
+            f"{', '.join(missing)} after expansion -- that variable is not set in this "
+            f"environment and has no default, so Claude Code will report a missing "
+            f"environment variable and never start the door",
+        )
+    if not command:
+        # The measured empty-string arm: `${VAR:-default}` with VAR exported as
+        # "" expands to "" and NOT to the default, and Claude Code then fails
+        # with "The argument 'file' cannot be empty".
+        return ReadinessCheck(
+            False,
+            f"{config_path} names command {raw_command!r}, which expands to the EMPTY "
+            f"string here -- an exported-but-empty variable wins over the ${{VAR:-default}} "
+            f"default, so the door cannot launch. Unset it or give it a real value.",
+        )
+    if not _probe_interpreter_candidate(command, timeout=timeout):
+        return ReadinessCheck(
+            False,
+            f"{config_path} names command {raw_command!r} -> {command!r}, which does not "
+            f"start on this host (launched as `{command} --version`; a missing command, a "
+            f"non-zero exit and a timeout all count as failing). Set "
+            f"{MCP_INTERPRETER_VAR} to a working interpreter, or run --wire-mcp.",
+        )
+    return ReadinessCheck(True, f"{config_path} launches via {command!r} (probed)")
+
+
+# --------------------------------------------------------------------------- #
 # readiness check (#458) -- report-only: never repairs, never writes settings.json
 # --------------------------------------------------------------------------- #
-# "Is this project set up to run Constellation" answered as five separately
+# "Is this project set up to run Constellation" answered as six separately
 # testable checks, never a single opaque verdict. Each returns a ReadinessCheck
 # so a failing item always carries a NAMED reason -- a check that can only ever
 # report ready is the exact defect this exists to catch.
@@ -1599,7 +1957,7 @@ def check_hooks_shippable(
 
 
 READINESS_ITEMS: tuple[str, ...] = (
-    "engine", "interpreter", "skills", "hooks", "work_area")
+    "engine", "interpreter", "skills", "hooks", "mcp", "work_area")
 
 
 # Exit code for the roll-up "some item could not be determined, and nothing
@@ -1611,7 +1969,7 @@ READINESS_EXIT_UNDETERMINABLE = 3
 
 @dataclass(frozen=True)
 class ReadinessReport:
-    """One agent target's full readiness verdict: the four ReadinessChecks,
+    """One agent target's full readiness verdict: the six ReadinessChecks,
     keyed by `READINESS_ITEMS` name. `ready` is true only when all of them are."""
 
     checks: Mapping[str, ReadinessCheck]
@@ -1651,7 +2009,7 @@ def build_readiness_report(
     python: str = sys.executable,
     specs: Sequence[HookSpec] = (GAUGE_WRITER_SPEC,),
 ) -> ReadinessReport:
-    """Combine all five readiness checks for one agent target.
+    """Combine all six readiness checks for one agent target.
 
     Hooks are a Claude Code mechanism (`HOOK_CAPABLE_AGENT_NAMES`); for any
     other agent, item 3 is reported READY with an explicit 'not applicable'
@@ -1662,11 +2020,17 @@ def build_readiness_report(
     else:
         hooks = ReadinessCheck(
             True, f"not applicable: {agent.name} has no hook mechanism to check")
+    if agent.name in MCP_CAPABLE_AGENT_NAMES:
+        mcp = check_mcp_launchable(target_root, env=env)
+    else:
+        mcp = ReadinessCheck(
+            True, f"not applicable: {agent.name} reads no {MCP_CONFIG_FILENAME}")
     return ReadinessReport({
         "engine": check_engine_runnable(python=python),
         "interpreter": check_interpreter_resolvable(),
         "skills": check_skills_installed(target_root, expected_skills=expected_skills),
         "hooks": hooks,
+        "mcp": mcp,
         "work_area": check_work_area_present(project_root),
     })
 
@@ -2158,6 +2522,27 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--wire-mcp",
+        action="store_true",
+        help=(
+            f"Write the spine MCP server into the project's {MCP_CONFIG_FILENAME}, naming "
+            f"the interpreter probed on THIS host. Opt-in and project-scope only; refuses "
+            f"outright if that file is git-tracked, because a probed interpreter name is "
+            f"wrong for every other machine. Without this flag the installer writes no "
+            f"{MCP_CONFIG_FILENAME}, and --check-readiness reports on it either way."
+        ),
+    )
+    parser.add_argument(
+        "--mcp-from",
+        choices=MCP_FROM_CHOICES,
+        default=MCP_FROM_INSTALLED,
+        help=(
+            f"Where --wire-mcp points {MCP_SERVER_SCRIPT}. 'installed' (default) points at "
+            f"the installed {HOOK_OWNER_INSTALL_NAME} copy; 'source' points at THIS "
+            f"checkout's own scripts/."
+        ),
+    )
+    parser.add_argument(
         "--baseline-only",
         action="store_true",
         help=(
@@ -2201,9 +2586,23 @@ def main(
                     "--check-readiness cannot be combined with --wire-hooks -- "
                     "readiness reports only and never writes settings.json"
                 )
+            if args.wire_mcp:
+                raise InstallError(
+                    f"--check-readiness cannot be combined with --wire-mcp -- "
+                    f"readiness reports only and never writes {MCP_CONFIG_FILENAME}"
+                )
             if args.baseline_only:
                 raise InstallError(
                     "--check-readiness cannot be combined with --baseline-only"
+                )
+            if args.mcp_from != MCP_FROM_INSTALLED:
+                # Same ruling as --hooks-from below: this mode writes nothing,
+                # so accepting a flag that only changes what gets WRITTEN would
+                # imply it changed what was checked.
+                raise InstallError(
+                    f"--check-readiness cannot be combined with --mcp-from -- readiness "
+                    f"reports only and never writes {MCP_CONFIG_FILENAME}, so there is "
+                    f"nothing for it to change."
                 )
             if args.hooks_from != HOOKS_FROM_INSTALLED:
                 # --hooks-from only affects what gets WRITTEN, and this mode
@@ -2256,6 +2655,45 @@ def main(
                         f"means anything in a checkout that owns scripts/hooks/."
                     )
 
+        if args.wire_mcp:
+            # Refuse EARLY, before anything is written -- same ordering as
+            # --wire-hooks above.
+            if args.baseline_only:
+                raise InstallError(
+                    f"--wire-mcp cannot be combined with --baseline-only (which installs "
+                    f"no skills, so there would be no {MCP_SERVER_SCRIPT} to point at)"
+                )
+            if args.scope != "project":
+                # `mcp_config_path_for_target_root` at user scope would name
+                # `~/.mcp.json`, which Claude Code does not read. Writing it
+                # would be emitting a file nothing loads and calling it wiring.
+                raise InstallError(
+                    f"--wire-mcp requires --scope project: Claude Code reads a "
+                    f"{MCP_CONFIG_FILENAME} from a PROJECT root and nowhere else, so "
+                    f"there is no user-scope file to write."
+                )
+            if (
+                args.mcp_from == MCP_FROM_INSTALLED
+                and HOOK_OWNER_SKILL not in {skill.source_name for skill in skills}
+            ):
+                raise InstallError(
+                    f"--wire-mcp needs the '{HOOK_OWNER_SKILL}' skill -- the canonical owner "
+                    f"of {MCP_SERVER_SCRIPT} -- and this install does not include it. "
+                    f"Refusing to wire a door it cannot locate."
+                )
+            if args.mcp_from == MCP_FROM_SOURCE:
+                missing_sources = [
+                    str(script_source_path(name, REPO_ROOT / "scripts"))
+                    for name in (MCP_SERVER_SCRIPT, MCP_ENGINE_SCRIPT)
+                    if not script_source_path(name, REPO_ROOT / "scripts").is_file()
+                ]
+                if missing_sources:
+                    raise InstallError(
+                        f"--wire-mcp --mcp-from source: this checkout has no "
+                        f"{', '.join(missing_sources)}. Source wiring only means "
+                        f"anything in a checkout that owns those scripts."
+                    )
+
         if args.baseline_only:
             # NO interpreter probe on this path, deliberately. --baseline-only
             # seeds template baselines and working copies, both of which are
@@ -2282,6 +2720,13 @@ def main(
             raise InstallError(
                 f"--wire-hooks wires Claude Code hooks; --agent {args.agent} has no "
                 f"{SETTINGS_FILENAME} hook mechanism to wire into."
+            )
+        if args.wire_mcp and not any(
+            agent.name in MCP_CAPABLE_AGENT_NAMES for agent, _ in target_roots
+        ):
+            raise InstallError(
+                f"--wire-mcp wires a Claude Code MCP server; --agent {args.agent} reads "
+                f"no {MCP_CONFIG_FILENAME}."
             )
         # Resolve ONCE for the whole process here (not per target root / agent) so
         # a `--agent all` run still probes the host exactly once, not once per
@@ -2322,6 +2767,15 @@ def main(
                 # a previously-stale entry to wired.
                 report_hook_wiring(
                     target_root, env=runtime_env, out=out, specs=HOOK_SETS[args.hooks])
+            if args.wire_mcp and agent.name in MCP_CAPABLE_AGENT_NAMES:
+                wire_mcp(
+                    target_root,
+                    interpreter=interpreter,
+                    dry_run=args.dry_run,
+                    scope=args.scope,
+                    out=out,
+                    mcp_from=args.mcp_from,
+                )
         if args.scope == "project" and not args.dry_run and not args.dest:
             project_root = args.project.expanduser() if args.project else runtime_cwd
             seeded = write_template_baselines(skills, project_root, out=out)

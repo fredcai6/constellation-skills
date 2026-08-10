@@ -19,6 +19,7 @@ around; a wrapper is verified by actually calling through it.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import queue
@@ -36,6 +37,27 @@ ROOT = Path(__file__).resolve().parents[1]
 SERVER = ROOT / "scripts" / "mcp_spine_server.py"
 ENGINE = ROOT / "scripts" / "checklist_engine.py"
 MCP_JSON = ROOT / ".mcp.json"
+
+
+def _load_installer():
+    """The installer owns `${VAR}` expansion and the `--wire-mcp` emitter, and
+    this file is where the door is actually launched. Importing it here rather
+    than reimplementing the expansion keeps ONE definition of the semantics
+    Claude Code was measured to have -- a second copy would be free to drift
+    into POSIX `:-` behaviour, which is precisely what the client does NOT do."""
+    spec = importlib.util.spec_from_file_location(
+        "install_constellation_for_mcp_tests", ROOT / "scripts" / "install_constellation.py")
+    module = importlib.util.module_from_spec(spec)
+    # Registered BEFORE exec: `@dataclass` resolves its own module out of
+    # sys.modules while the class body runs, and an unregistered module makes
+    # that lookup return None.
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+INSTALLER = _load_installer()
+expand_mcp_placeholders = INSTALLER.expand_mcp_placeholders
 
 EXPECTED_TOOLS = {
     "spine_status", "spine_lease", "spine_start", "spine_advance",
@@ -483,6 +505,16 @@ class McpJsonVarExpansionLaunchTests(unittest.TestCase):
     def test_var_expansion_path_launches_a_real_server_and_answers_a_tool_call(self):
         config = json.loads(MCP_JSON.read_text(encoding="utf-8"))
         entry = config["mcpServers"]["spine"]
+        # `command` is now `${CONSTELLATION_PYTHON:-python3}` (#554), so it goes
+        # through the same expansion the other three fields already did. Binding
+        # the variable to THIS interpreter is not a convenience: it makes the
+        # test prove the seam rather than the host's luck. The old form launched
+        # the literal `python3`, which is exactly the name a stock Windows host
+        # does not have -- so on Windows this test used to pass or fail on
+        # whether the runner happened to provide one.
+        command = expand_mcp_placeholders(
+            entry["command"], {INSTALLER.MCP_INTERPRETER_VAR: sys.executable})
+        self.assertEqual(sys.executable, command)
         tmp = tempfile.TemporaryDirectory()
         try:
             root = Path(tmp.name)
@@ -498,7 +530,7 @@ class McpJsonVarExpansionLaunchTests(unittest.TestCase):
             env["SPINE_CALLLOG"] = str(root / "mcp_calls.jsonl")
             env["SPINE_START_MARKER"] = str(root / "mcp_server_started")
             proc = subprocess.Popen(
-                [entry["command"], *entry["args"]],
+                [command, *entry["args"]],
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 text=True, encoding="utf-8", bufsize=1, env=env, cwd=str(ROOT),
             )
@@ -543,6 +575,162 @@ class McpJsonVarExpansionLaunchTests(unittest.TestCase):
                     proc.kill()
         finally:
             tmp.cleanup()
+
+
+class McpDoorLaunchesFromEmittedConfigTests(unittest.TestCase):
+    """The door the INSTALLER emits is launched, spoken to, and answered (#554).
+
+    This is the test the epic was missing. `.mcp.json` shipped a fixed
+    `"command": "python3"` and every test around it asserted the emitted JSON
+    contained a plausible string -- which is the measure that counts the thing
+    it hoped for instead of the thing that happens. On a stock Windows host
+    `python3` is not a command, so the door could not start and nothing in the
+    suite could tell.
+
+    So: run the real `wire_mcp`, then launch the process the emitted config
+    NAMES, speak real newline-delimited JSON-RPC to it, and require a real
+    engine result back. This runs on `windows-latest` in `.github/workflows/
+    ci.yml`, so on Windows it is a measurement rather than an assertion.
+
+    ANTI-LUCK, and this is the load-bearing part. A Windows run that passes
+    because the runner happens to provide a working `python3` proves nothing
+    about a host that does not. The probe here therefore runs against a
+    CONTROLLED candidate set whose only working member is `sys.executable` --
+    an absolute path, not a name any host could supply by accident -- and the
+    emitted command is asserted to be THE ONE THAT PROBED. A `wire_mcp` that
+    stamped a hardcoded name, or that fell back to a member of the disproved
+    set (the #538 defect), cannot produce that value, and the launch below
+    would then be launching something the resolution never chose.
+
+    `INTERPRETER_CANDIDATES` itself is untouched -- its order is settled. The
+    controlled set is passed as the `candidates` argument the probe already
+    takes."""
+
+    # Deliberately not "nonexistent": a name that could plausibly exist on some
+    # host would make the "the first candidate was really rejected" assertion
+    # below quietly vacuous on that host.
+    UNRESOLVABLE_A = "constellation-no-such-interpreter-a"
+    UNRESOLVABLE_B = "constellation-no-such-interpreter-b"
+
+    def _emit_config(self, project: Path, interpreter) -> dict:
+        target_root = project / ".claude" / "skills"
+        target_root.mkdir(parents=True, exist_ok=True)
+        INSTALLER.wire_mcp(
+            target_root,
+            interpreter=interpreter,
+            dry_run=False,
+            scope="project",
+            out=lambda _line: None,
+            mcp_from=INSTALLER.MCP_FROM_SOURCE,
+        )
+        config_path = INSTALLER.mcp_config_path_for_target_root(target_root)
+        self.assertTrue(config_path.is_file(), f"wire_mcp wrote no {config_path}")
+        return json.loads(config_path.read_text(encoding="utf-8"))
+
+    def _drive(self, entry: dict, *, root: Path, spine: Path, session: str) -> str:
+        """Launch EXACTLY what `entry` names -- its own command, its own args,
+        its own env, with the `${VAR:-default}` expansion Claude Code was
+        measured to apply -- and drive two real tool calls through it. Returns
+        `spine_status`'s text so the caller asserts on ENGINE output, not on
+        the fact that a process started."""
+        env = dict(os.environ)
+        env["SPINE_FILE"] = str(spine)
+        env["SPINE_SESSION"] = session
+        env["SPINE_CALLLOG"] = str(root / "mcp_calls.jsonl")
+        env["SPINE_START_MARKER"] = str(root / "mcp_server_started")
+        # The emitted env block carries `${SPINE_ENGINE:-<absolute>}`; expanding
+        # it here with SPINE_ENGINE absent exercises the DEFAULT arm, which is
+        # the one the emitted file is responsible for getting right.
+        for key, raw in entry["env"].items():
+            env[key] = expand_mcp_placeholders(raw, env)
+        command = expand_mcp_placeholders(entry["command"], env)
+        try:
+            proc = subprocess.Popen(
+                [command, *entry["args"]],
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                text=True, encoding="utf-8", bufsize=1, env=env, cwd=str(root),
+            )
+        except OSError as exc:
+            # The Windows failure this whole change exists to prevent. Name the
+            # command, or the failure reads as "some test broke".
+            self.fail(
+                f"the emitted MCP door could not be launched on {sys.platform}: "
+                f"command={command!r} args={entry['args']!r} -- {exc}")
+        try:
+            for request in (
+                {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                 "params": {"name": "spine_lease",
+                            "arguments": {"action": "claim", "claimed_by": "emitted-door-tester"}}},
+                {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+                 "params": {"name": "spine_status", "arguments": {}}},
+            ):
+                proc.stdin.write(json.dumps(request) + "\n")
+                proc.stdin.flush()
+                line = proc.stdout.readline()
+                if not line:
+                    # stderr is read ONLY here: proc.stderr.read() blocks to EOF
+                    # and the child keeps it open while stdin is open, so an
+                    # eager message would deadlock the success path.
+                    self.fail(
+                        f"the emitted MCP door started but answered nothing to "
+                        f"{request['params']['name']}; command={command!r} "
+                        f"stderr={proc.stderr.read()}")
+                reply = json.loads(line)
+                self.assertFalse(reply["result"]["isError"], reply)
+            return reply["result"]["content"][0]["text"]
+        finally:
+            proc.stdin.close()
+            try:
+                proc.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+
+    def test_emitted_door_launches_the_interpreter_that_probed_and_answers_a_tool_call(self):
+        candidates = (self.UNRESOLVABLE_A, sys.executable, self.UNRESOLVABLE_B)
+        probed = INSTALLER.probe_host_interpreter(candidates=candidates)
+        # If the probe returned the first candidate, it never launched anything;
+        # if it returned the third, it did not stop at the first that answered.
+        self.assertEqual(
+            sys.executable, probed,
+            "the controlled probe must reject the unresolvable first candidate and "
+            "accept the absolute interpreter that actually answers")
+        resolution = INSTALLER.InterpreterResolution(probed, candidates, "probe")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = self._emit_config(root, resolution)
+            entry = config["mcpServers"][INSTALLER.MCP_SERVER_NAME]
+
+            # The emitted command is the PROBED one -- not a hardcoded name, and
+            # not a member of the disproved candidate set.
+            self.assertEqual(probed, entry["command"])
+            for name in INSTALLER.INTERPRETER_CANDIDATES:
+                self.assertNotEqual(
+                    name, entry["command"],
+                    f"emitted command is the bare name {name!r}, which this run's "
+                    f"controlled probe never selected -- a hardcoded or fallback value")
+            self.assertNotIn(self.UNRESOLVABLE_A, entry["command"])
+
+            spine = write_gated_spine(root)
+            text = self._drive(
+                entry, root=root, spine=spine, session="emitted-sess#emitted-agent")
+            # Real engine output, not "a process started": the gated spine's
+            # first item and the lease the first call actually took.
+            self.assertIn("ACTIVE g1", text)
+            self.assertIn("LEASE active: emitted-sess#emitted-agent", text)
+
+    def test_emitted_config_is_written_with_lf_newlines(self):
+        """Windows-specific and not hygiene: without an explicit newline='\\n'
+        the default translation writes CRLF, and a config this repo's own tests
+        read back byte-wise would differ by platform."""
+        resolution = INSTALLER.InterpreterResolution(
+            sys.executable, INSTALLER.INTERPRETER_CANDIDATES, "probe")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._emit_config(root, resolution)
+            raw = (root / INSTALLER.MCP_CONFIG_FILENAME).read_bytes()
+            self.assertNotIn(b"\r\n", raw)
+            self.assertTrue(raw.endswith(b"\n"))
 
 
 class CliFallbackTableTests(unittest.TestCase):
