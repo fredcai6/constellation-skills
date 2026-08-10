@@ -2735,25 +2735,105 @@ class AllFourHookWiringTests(_MultiHookFixture):
 
     def test_every_wired_command_actually_executes(self):
         """Run each generated command EXACTLY as Claude Code would -- same
-        string, stdin JSON. String-matching a rendered command is not evidence
-        that it runs, and a shipped-but-inert hook is indistinguishable from a
-        working one from the outside. This is the governor test extended to
-        all four, where a wrong event argument or a lost quote would otherwise
-        be invisible."""
+        string, stdin JSON -- and require more than exit 0: exit 0 is also
+        what an INERT hook produces. scripts/hooks/spine_rail.py fail-opens
+        (prints nothing, returns 0) for any event it does not recognize, so a
+        wrong event argument -- or a lost quote that shifts which positional
+        argument lands where -- is invisible to a returncode-only assertion.
+        The three spine_rail.py-backed entries (Stop, SessionStart,
+        PostToolUse) are instead run against a REAL mid-flight project state
+        and their actual stdout/side-effect is asserted. The governor
+        (gauge_writer_hook.py) entry keeps the returncode-only check: it takes
+        no positional event argument at all (HOOK_TIMEOUT/HOOK_MATCHER, no
+        `args`), so a wrong event argument is not a failure mode it has."""
+        installer = load_installer()
         with tempfile.TemporaryDirectory() as tmp:
             self._run(tmp, "--wire-hooks", "--hooks", "all")
-            commands = [c for c, _ in self._all_commands(self._settings_json(tmp)).values()]
-            self.assertEqual(4, len(commands), "nothing was wired, so nothing was run")
-            for command in commands:
-                result = subprocess.run(
-                    command, shell=True, input="{}", capture_output=True, text=True,
-                    env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+            written = self._all_commands(self._settings_json(tmp))
+            self.assertEqual(4, len(written), "nothing was wired, so nothing was run")
+
+            # A real project dir carrying a MID-FLIGHT spine (an in-progress
+            # gate under an active lease) plus a binding for it under
+            # session_id "resume-sid" -- the state Stop/SessionStart actually
+            # act on.
+            project_dir = Path(tmp) / "project"
+            run_dir = project_dir / ".agent-work" / "run1"
+            run_dir.mkdir(parents=True)
+            spine_path = run_dir / "spine.json"
+            spine_path.write_text(json.dumps({
+                "items": ["m1"],
+                "tasks": {"m1": {"id": "m1", "status": "in-progress", "imperative": "do m1"}},
+                "engine_session": {
+                    "session_id": "eng-1", "status": "active",
+                    "claimed_by": "commander", "last_heartbeat": "2026-07-12T00:00:00+00:00",
+                },
+            }), encoding="utf-8", newline="\n")
+            binding_path = project_dir / ".agent-work" / ".spine-rail-binding.json"
+            binding_path.write_text(json.dumps({
+                "resume-sid": {
+                    str(spine_path): {
+                        "spine": str(spine_path), "engine_session": "eng-1",
+                        "worktree": str(project_dir), "claimed_at": "2026-07-27T00:00:00+00:00",
+                    },
+                },
+            }), encoding="utf-8", newline="\n")
+
+            env = {**os.environ, "PYTHONIOENCODING": "utf-8", "CLAUDE_PROJECT_DIR": str(project_dir)}
+
+            def run(command, stdin_payload):
+                return subprocess.run(
+                    command, shell=True, input=json.dumps(stdin_payload),
+                    capture_output=True, text=True, env=env,
                 )
-                self.assertEqual(
-                    0, result.returncode,
-                    f"the wired command did not run: {command!r}\n"
-                    f"stdout={result.stdout!r}\nstderr={result.stderr!r}",
-                )
+
+            for (event, matcher, script), (command, _timeout) in written.items():
+                if script == installer.SPINE_RAIL_HOOK_SCRIPT and event == "Stop":
+                    result = run(command, {"session_id": "resume-sid"})
+                    self.assertEqual(0, result.returncode, result.stderr)
+                    self.assertIn(
+                        "SPINE MID-FLIGHT", result.stdout,
+                        f"Stop against a genuinely mid-flight spine produced no block -- "
+                        f"a wrong event argument would be invisible here: {command!r}\n"
+                        f"stdout={result.stdout!r} stderr={result.stderr!r}",
+                    )
+                elif script == installer.SPINE_RAIL_HOOK_SCRIPT and event == "SessionStart":
+                    result = run(command, {"session_id": "resume-sid"})
+                    self.assertEqual(0, result.returncode, result.stderr)
+                    self.assertIn(
+                        "RESUMING", result.stdout,
+                        f"SessionStart against an active spine produced no resume "
+                        f"context -- a wrong event argument would be invisible here: "
+                        f"{command!r}\nstdout={result.stdout!r} stderr={result.stderr!r}",
+                    )
+                elif script == installer.SPINE_RAIL_HOOK_SCRIPT and event == "PostToolUse":
+                    claim_cmd = (
+                        f'python checklist_engine.py --file "{spine_path}" '
+                        f'claim --session-id eng-9'
+                    )
+                    result = run(command, {
+                        "session_id": "claim-sid",
+                        "tool_input": {"command": claim_cmd},
+                    })
+                    self.assertEqual(0, result.returncode, result.stderr)
+                    written_binding = json.loads(binding_path.read_text(encoding="utf-8"))
+                    self.assertIn(
+                        "claim-sid", written_binding,
+                        f"PostToolUse against a claim command wrote no binding -- a "
+                        f"wrong event argument would be invisible here: {command!r}\n"
+                        f"stdout={result.stdout!r} stderr={result.stderr!r}",
+                    )
+                    self.assertEqual(
+                        str(spine_path),
+                        written_binding["claim-sid"].get(str(spine_path), {}).get("spine"),
+                        "PostToolUse recorded the wrong spine path for the claim",
+                    )
+                else:
+                    result = run(command, {})
+                    self.assertEqual(
+                        0, result.returncode,
+                        f"the wired command did not run: {command!r}\n"
+                        f"stdout={result.stdout!r}\nstderr={result.stderr!r}",
+                    )
 
     def test_all_four_wired_then_detect_as_wired(self):
         installer = load_installer()
