@@ -336,7 +336,8 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute.json is fully driven: all 12 items complete. e0-context, g0-design (reasoning), g1-implement/review/integrate, g2-implement/review/integrate (each reworked once after a cold-review BLOCK), g3-implement (amended to a reasoning gate so a crew would not have to dispatch a crew into the same worktree)/review/integrate, g4-closeout (reasoning). Every crew gate closed on integrated evidence: an implementer-result with status=complete, a review-result with verdict=APPROVE, and command postconditions the engine itself re-ran on each advance -- the full declared test suite plus a sweep guard asserting the shipped corpus still reports exactly 23 fault lines. Three commits: b406cc13, 4333ff84, 0b27b2b8."
         },
         {
           "id": "c2",
@@ -345,7 +346,8 @@
             "kind": "command",
             "command": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id epic-559/c2-generate-the-spine"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-2"
         }
       ],
       "constraints": [],
@@ -372,7 +374,7 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -382,6 +384,17 @@
           "type": "command-output",
           "payload": {
             "cmd": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_state_note.py epic-559/c2-generate-the-spine",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id epic-559/c2-generate-the-spine",
             "exit": 0,
             "shell": "posix"
           },
@@ -400,7 +413,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute is complete: execute.json is driven to completion across all 12 items, three commits are on the branch (b406cc13, 4333ff84, 0b27b2b8), the suite is green at 2788 passed / 3 skipped / 1121 subtests, and the shipped-corpus lint sweep is unchanged at 23 fault lines."
         }
       ],
       "postconditions": [
@@ -408,13 +422,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Reconciled directly, not by dispatching a Cartographer: this repo has NO packet map (map_orient returns DEGRADED-UNPARSEABLE -- docs/architecture/ absent, map/INDEX.md an unfilled template, map/ids.jsonl empty), which the imperative names as the case for direct reconciliation. Two records folded. (1) map/INDEX.md, which IS this repo's structural record, regenerated with `python -m scripts.code_map build --root .` -- twice, because adding scripts/generate_spine.py and then extending it each changed the module/entity counts (56 -> 57 modules, 1113 -> 1134 entities and again after). Both times it surfaced as a red test that a crew reasonably misread as pre-existing; it is now green and committed. (2) docs/CHECKLIST_SCHEMA.md, the schema this change actually touches, gained a \"Who writes a checklist\" section recording that scripts/generate_spine.py is the first PRODUCER of the documented shape, that the on-disk format is unchanged, and -- the part worth more than the announcement -- the three engine behaviours this run measured whose consequences the document did not draw: no artifact-based gate can be enforced on a survey because neither closing verb consults one, config_ref crashes the engine when it exists but is not JSON, and a command check receives no cwd. docs/agents/* is untouched, which is the human's call always. Suite green at 2788 after the edit."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -430,7 +445,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile is complete: map/INDEX.md regenerated and green, docs/CHECKLIST_SCHEMA.md folded with the change and the three measured engine behaviours, docs/agents/* untouched."
         }
       ],
       "postconditions": [
@@ -438,7 +454,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Six candidates, every one routed, none left unrouted: tc1 the door cannot address a second spine; tc2 recover_crews misclassifies a completed spine-only dispatch as NEEDS-ABANDON; tc3 load_config crashes on a config_ref that exists but is not JSON, with no matching lint fault; tc4 this repo's empty map scaffolding makes every Commander structurally DEGRADED; tc5 REVIEW_SURVEY's r6-fowler carries an unsubstituted <work-id>, hit independently by two reviewers; tc6 a dispatched crew inherits the parent's SPINE_FILE, so both my reviewers found the Commander's own spine bound in their environment. Disposition for all six: recommend-and-defer. I checked each against the fix-now ladder rather than defaulting -- tc2 and tc5 are genuinely small diffs and were tempting, but both fail the adjacent-to-scope and no-production-default-impact rungs, and clearing three of four does not qualify. Issue-ready recommendations, each with observations carrying conditions, type and rev, are at .agent-work/epic-559/c2-generate-the-spine/triage-candidates/RECOMMENDATIONS.md."
         },
         {
           "id": "c2",
@@ -447,17 +464,32 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Pre-empted Steps -- 'triage.c2 (user approved issue creation) -- no issues are created this wave. Route every triage candidate to me in your return report instead, and record c2 citing this order.'",
+            "decision": "NO issues filed. Filing authority was not unclear -- it was explicitly withheld by the launch order, so this citation records the DEFERRAL itself, not an approval to file, per the delegated-mode rule for a recommend-and-defer landing.",
+            "recommendations": ".agent-work/epic-559/c2-generate-the-spine/triage-candidates/RECOMMENDATIONS.md",
+            "count": "6 candidates, all recommend-and-defer, all checked against the fix-now ladder and none qualifying",
+            "routed_to": "admiral-epic-418-followon, in COMMANDER_RETURN.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -469,7 +501,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage is complete: six candidates routed, all recommend-and-defer, none filed, recommendations written issue-ready at triage-candidates/RECOMMENDATIONS.md."
         }
       ],
       "postconditions": [
@@ -480,17 +513,32 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape + LAUNCH_ORDER:Pre-empted Steps ('review.c1 -- the Admiral accepts the run summary. The human accepts the epic at closeout, not this wave.')",
+            "summary": ".agent-work/epic-559/c2-generate-the-spine/COMMANDER_RETURN.md",
+            "contains": "all seven required sections: verdict; evidence I personally ran including verify_worktree_isolation --here; the control pairing shown accepted on the pure path and refused by the guard with nothing written; the settling question answered without softening; map impact; six triage candidates routed not filed; workflow feedback",
+            "gates_closed": "spine: init, context, understand, plan, execute, reconcile, triage, review (in progress), feedback, archive pending. execute.json: all 12 items complete across five gates, two of them reasoning gates with the crew waiver stated.",
+            "ratified_by": "the Admiral at the epic return boundary; the human accepts the epic at closeout, not this wave"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -502,7 +550,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Run summary accepted: COMMANDER_RETURN.md written with all seven sections the launch order's Return Shape requires, closed at the review step with e-review-1 citing LAUNCH_ORDER:Return Shape. The Admiral ratifies at the epic return boundary; the human accepts the epic at closeout, not this wave."
         }
       ],
       "postconditions": [
@@ -513,17 +562,30 @@
             "kind": "command",
             "command": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-559/c2-generate-the-spine --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-559/c2-generate-the-spine --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -635,12 +697,12 @@
     }
   ],
   "blockers": [],
-  "refusals": 2,
+  "refusals": 3,
   "engine_session": {
     "session_id": "constellation/epic-559/c2-generate-the-spine/execute/commander",
     "status": "active",
     "claimed_at": "2026-08-11T15:28:53.094722+00:00",
-    "last_heartbeat": "2026-08-11T18:54:33.861168+00:00",
+    "last_heartbeat": "2026-08-11T19:24:58.711458+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -674,6 +736,41 @@
       "why": "The plan I would have frozen after the design-it-twice panel was wrong in two places, and only running the engine found it. Three candidates converged on a hybrid \u2014 a pure translation function separated from every I/O act (C), a closed vocabulary of typed check kinds each with a generation-time probe keyed to one of the four historical defects (B), and an AST scan instead of a live import so generation never executes author-named code (C over B, which is defect 2's own shape one layer up). Then the cold panel took it apart: the `directives.handback` arrays I designed are unwritable \u2014 no engine verb appends to a `directives` field on an active gate, `amend rescope` touches pending gates only \u2014 so they would have rendered empty on every gate forever, which is \"looks like it works\" inside the mechanism built to avoid it. And the `user-decision` escalation I designed for a large claim can be attached and attested by the same session that made the claim, because `attach` takes no authority and stamps `produced_by: \"engine\"` for every caller, while `waive` three functions below it demands one. So the escalation could not fail against the agent it exists to check. Both are fixed: the handback contract now names the three verbs that actually persist (attach, flag-candidate, block) plus the recorded parent, and the escalation is now a review-result matching verdict APPROVE \u2014 a checked property, not bare arrival. The residual is not mine to close: the engine binds no provenance to evidence at all, so every user-decision checkpoint in the corpus is self-satisfiable, and that is floated to the Admiral rather than patched. The panel also cut the plan down \u2014 one file not two, five check kinds not seven, five gates not six \u2014 each on precedent I verified rather than on taste. My own execute.json validates OK with zero faults and zero undecidable, and carries the handback contract on every gate, which is the smallest honest dogfood available before the generator exists.",
       "mechanical": false,
       "ts": "2026-08-11T16:31:35.312357+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "execute.json is driven to completion, and the two things worth carrying forward are both failures the run caught in its own machinery rather than successes. First: one of the mission's two non-optional properties was silently inert on every survey-type role spec, because record() evaluates only command-kind postconditions on a survey item and consolidate() reads only each item's result field. A cold reviewer found it by driving a generated survey to consolidation, not by reading it, and BLOCKED. The generator now refuses to inject a postcondition the engine will never consult and states the non-enforcement instead -- deliberately not taking the tempting command-check fix, which would have invented a convention with no producer and turned a gate that cannot fail into one that cannot pass, which is prior-wave verdict B's exact defect. Second: I authored a check omitting a required flag, the generator emitted it and the oracle accepted it, and only a real dispatch found it -- because the script probe verifies that flags an author NAMED exist and cannot see one they FAILED to name. That is the honest limit on the settling question and it is reported rather than softened. The run packet carries six classified discrepancies as evidence with none auto-filed, and verify_iterative_role_artifacts confirms it is G2-valid.",
+      "mechanical": false,
+      "ts": "2026-08-11T19:15:20.170649+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "Reconciled directly because there is no packet map to hand a Cartographer, which the step itself names as the compliant path. The structural record here is map/INDEX.md, and the reconciliation that mattered was mechanical: a new module and then its extension each staled it, and both times the staleness surfaced as a red test rather than as anything anyone noticed while writing the code -- the authoring-side blind spot, twice, in one run. The judgement part went into docs/CHECKLIST_SCHEMA.md: the format is unchanged and now has its first producer, and the three engine behaviours this run measured are recorded with their consequences drawn rather than left implied -- especially that neither closing verb on a survey consults an artifact postcondition, which is a fact any future role spec has to plan around.",
+      "mechanical": false,
+      "ts": "2026-08-11T19:18:24.762408+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "Six candidates routed, none filed, and the citation records the deferral rather than an approval \u2014 the launch order withheld filing authority explicitly, which is a different thing from authority being unclear. The two most valuable are both about the machinery the corpus uses to police itself rather than about my mission: recover_crews now advises abandoning and relaunching a spine-only crew whose work is already finished, which is precisely the duplication it exists to prevent; and a dispatched crew inherits its dispatcher's SPINE_FILE, so both my reviewers found the Commander's own spine bound in their environment and only their own doctrine stopped them driving it. I checked every candidate against the fix-now ladder rather than defaulting to defer \u2014 tc2 and tc5 are small enough to be tempting and both fail two rungs, and three of four does not qualify.",
+      "mechanical": false,
+      "ts": "2026-08-11T19:20:11.717487+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "The run summary is written and it leads with what did not hold rather than with what did, because that is the more useful half. Property 2 is enforceable on a gated gate and not on a survey; the wrong-invocation class is narrowed and not closed, proven by a defect I authored myself that the generator emitted and the oracle accepted; and the generator cannot author a TDD-shaped plan at all, because a selector for a test that does not yet exist collects zero and the probe refuses it. The control pairing is in the report as three runs with their real output, including test ! -f proving nothing was written on the refusal and the corrected spec being written, because a refusal without the accepted half proves only that the guard fires. Six triage candidates routed to the Admiral with none filed, and three floats recorded rather than patched.",
+      "mechanical": false,
+      "ts": "2026-08-11T19:22:26.934933+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Eight episodes recorded, one per distinct thing that happened, each as a record and none as a rule for a future agent. The reflection is in COMMANDER_RETURN.md section 7 and notes-1.md, and it includes every crew's harvested Workflow Feedback rather than a bare none: two reviewers independently reported that their environment carried MY spine bound; the g1 implementer volunteered that it nearly shipped a guard fixture built on an unmeasured assumption about Path.glob and caught itself; the g2 crew flagged that the config path the design note's own example names does not exist. The capture itself produced a ninth thing worth recording in its own right: I wrote the `run` field kebab-cased, so the capture gate could not resolve the eight episodes it had just written. I did not hand-edit the store to fix it -- the writer is the only write path -- so the eight were retired with the reason stated and eight corrected ones created through the same writer. The gate now passes on the work-id verbatim.",
+      "mechanical": false,
+      "ts": "2026-08-11T19:24:58.711443+00:00"
     }
   ]
 }

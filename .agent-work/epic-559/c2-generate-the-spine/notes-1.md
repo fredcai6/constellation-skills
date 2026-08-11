@@ -127,3 +127,37 @@ alone would be worse than leaving them.
 - Crews dispatched: 3 plan-alternative authors, 3 cold plan critics, 2 implementers (one reworked), 2
   reviewers (one reworked), 1 spine-only probe crew (relaunched once after a block). **Cold review
   blocked once, and that block changed the design.**
+
+## Harvested crew Workflow Feedback (one pool, gathered at each `gN-integrate`)
+
+Required by the `feedback` step. Nothing here is a bare "none".
+
+**g1 implementer.** "The handoff and DESIGN_NOTE.md were unusually well-matched to the work — every
+close criterion had a traceable section, and the 'where the note is silent, decide and say so' framing
+made the silent spots easy to resolve confidently rather than guess-and-hope." Its one friction point
+was self-inflicted and it named it: it built an `ACCEPTED_FALSE_ALARM` fixture on an **assumption**
+about `pathlib.Path.glob`'s dotfile behaviour, extrapolated from prose in my design note describing a
+*different* implementation's disagreement. It measured, found the assumption wrong, and fixed it inside
+the same TDD cycle. Its own words: it "nearly reproduced [this epic's] shape in my own guard fixture."
+
+**g1 reviewer.** `REVIEW_SURVEY.template.json`'s `r6-fowler` postcondition carries a literal `<work-id>`
+and a `scripts/`-relative path, and nothing substitutes them for a survey built by hand from the
+template — it had to `amend --delta ... retext-check` to an absolute path before the Fowler script could
+be found. Also: its environment carried `SPINE_FILE`/`SPINE_SESSION` pointing at **my** spine.
+
+**g2 implementer.** Flagged that `docs/agents/engine-config.json`, used as `config_ref` in the design
+note's own worked example, does not exist in this repo.
+
+**g2 reviewer.** Same `SPINE_FILE` leak, independently. On round 2 it said the "what changed since your
+BLOCK" section made it possible to re-verify precisely the delta rather than redoing the whole review —
+worth keeping in rework handoffs.
+
+**g3 reviewer.** Asked that the distinction it drew — engine-verified versus crew-attested
+postconditions, and what that means for `spine_terminal` — be cited explicitly in any future discussion
+of the dispatch proof, "since it is not obvious from the spine JSON alone." It is now in the return
+report and in the design note. No process friction to report.
+
+**Cross-cutting, and the reason it is worth naming twice:** three of five crews reported something the
+handoff could not have told them, and in each case they found it by running rather than reading. The
+two most consequential findings of this run — the survey escalation being inert, and my own
+missing-required-flag check — came from crews that declined to accept a plausible-looking artifact.
