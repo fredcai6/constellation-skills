@@ -1,21 +1,21 @@
 {
   "contract": 1,
-  "step": "r1-handoff",
+  "step": "w1-fp-rate-independently",
   "mechanical": {
     "run": "epic-559/c1-spine-lint",
     "project": "constellation-skills",
     "role": "reviewer",
     "refusals": 1,
-    "spine-step": "r1-handoff",
+    "spine-step": "w1-fp-rate-independently",
     "rework-count": 0,
     "failed-commands": 0,
     "reopens": 0,
-    "context-manifest-ref": "ctx-epic-559/c1-spine-lint-r1-handoff@b6a3ec6d5ce85f9d090ae70f6e8fd4a96e4fc159",
+    "context-manifest-ref": "ctx-epic-559/c1-spine-lint-w1-fp-rate-independently@52090e72cb645ef7752fa713b828fafd14983ce8",
     "artifact-ref": []
   },
   "refused": [],
   "run": {
     "work_id": "epic-559/c1-spine-lint",
-    "generated_at": "2026-08-11T12:22:39Z"
+    "generated_at": "2026-08-11T12:26:53Z"
   }
 }

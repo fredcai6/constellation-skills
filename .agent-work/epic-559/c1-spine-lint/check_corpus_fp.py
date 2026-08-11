@@ -1,38 +1,48 @@
-"""Admiral-authored check: no zero-collect fault on spines known to be sound.
+"""Admiral-authored check: no zero-collect fault on spines this epic drove.
 
-Every spine this epic drove to a terminal state ran its checks for real, so a
-zero-collect fault on one of them is a false positive by construction. Asserts
-what it examined, so a broken discovery step cannot read as a clean pass.
+Not the crew's to edit; block against it instead.
+
+Population is enumerated by each file's own `type` field (gated | survey), NOT by
+a filename substring. The filename filter this script used first was wrong twice:
+once over-broad (all of .agent-work/, which swept archived epics whose selectors
+point at since-deleted tests -- true positives, not false ones), and once
+under-broad (a "PLAN"/"SPINE" filename match, which silently dropped 11 of 25
+real checklists including every REVIEW_SURVEY). The crew's own resweep had
+already identified filename filtering as unreliable and avoided it; this script
+now uses the method the crew used.
+
+Asserts both halves: what it examined, and that what it examined is the
+population it claims to model.
 """
-import sys, pathlib
+import json, sys, pathlib
 sys.path.insert(0, "scripts")
 import validate_spine as v
 
-# Scope: spines THIS epic drove to a terminal state, whose checks demonstrably ran.
-# A zero-collect fault on one of those is a false positive by construction.
-# Archived spines from earlier epics are deliberately excluded: their selectors
-# point at tests that have since been renamed or deleted, so a zero-collect fault
-# there is a TRUE positive and evidence the lint works. The c1 crew found exactly
-# one such case (epic-298 PLAN-rework1.json, -k 'live_spine') and blocked rather
-# than waiving -- correctly, against this script's earlier over-broad scope.
-roots = [pathlib.Path(".agent-work/epic-559"), pathlib.Path(".agent-work/epic-418-followon")]
-seen, bad = 0, []
-for root in roots:
+ROOTS = [pathlib.Path(".agent-work/epic-559"), pathlib.Path(".agent-work/epic-418-followon")]
+MIN_EXPECTED = 20  # measured population at authoring time was 25; a large drop means discovery broke
+
+population, bad = [], []
+for root in ROOTS:
     for f in sorted(root.rglob("*.json")):
-        if "PLAN" not in f.name.upper() and "SPINE" not in f.name.upper():
-            continue
         try:
-            faults = v.validate_file(str(f))
+            doc = json.loads(f.read_text())
         except Exception:
             continue
-        seen += 1
+        if not isinstance(doc, dict) or doc.get("type") not in ("gated", "survey"):
+            continue
+        population.append(f)
+        try:
+            faults = v.validate_file(str(f))
+        except Exception as exc:
+            bad.append((str(f), "validate raised", repr(exc)[:80]))
+            continue
         for flt in faults:
             if "zero" in flt.code:
                 bad.append((str(f), flt.where, flt.message[:90]))
 
-print(f"examined {seen} spine files")
-if seen < 3:
-    print("REFUSED: discovery found too few spines to be meaningful")
+print(f"examined {len(population)} checklists, discovered by type field")
+if len(population) < MIN_EXPECTED:
+    print(f"REFUSED: discovery found {len(population)} < {MIN_EXPECTED}; the population, not the corpus, changed")
     sys.exit(1)
 for b in bad:
     print("FALSE POSITIVE:", *b)
