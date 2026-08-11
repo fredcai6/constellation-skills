@@ -43,9 +43,6 @@ docs/CONSTELLATION_OVERVIEW.md:accumulator is `episodes/`; the doctrine is `docs
 # design rationale: names what replaced the playbook read, prescribes nothing
 docs/RECURSIVE_IMPROVEMENT_DESIGN.md:> What replaces the read is the **episode store** (`episodes/`, #301): observations
 
-# crew doctrine, Python-invocation example: shows the store's WRITE command being run, and instructs no read
-docs/agents/CREW_CONTEXT.md:python scripts/apply_episode_delta.py ...
-
 # crew doctrine, record-stores table: names the store's ONLY write path, which is the whole point of the table
 docs/agents/CREW_CONTEXT.md:| `episodes/` | `scripts/apply_episode_delta.py` |
 

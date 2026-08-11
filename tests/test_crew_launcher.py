@@ -154,6 +154,22 @@ class SessionNameTests(unittest.TestCase):
         )
         self.assertNotIn("--model", argv)
 
+    def test_build_crew_argv_grants_permission_mode_and_allowed_tools(self):
+        # A dispatch into a worktree with no hand-written .claude/settings.local.json
+        # must be able to do crew work end to end (M2 job 1) -- the launcher, not
+        # the operator, grants what a spawned crew needs.
+        argv = RC.build_crew_argv(
+            "claude", role="implementer", handoff="h.md", model=None, session="s",
+        )
+        self.assertIn("--permission-mode", argv)
+        mode_idx = argv.index("--permission-mode")
+        self.assertEqual(RC.DEFAULT_CREW_PERMISSION_MODE, argv[mode_idx + 1])
+        self.assertIn("--allowedTools", argv)
+        tools_idx = argv.index("--allowedTools")
+        tools = argv[tools_idx + 1:]
+        for expected in ("Bash", "Read", "Write", "Edit", "mcp__spine__spine_advance"):
+            self.assertIn(expected, tools)
+
 
 class CliDriftHintTests(unittest.TestCase):
     def test_unknown_option_stderr_yields_actionable_hint(self):
