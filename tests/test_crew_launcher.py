@@ -832,7 +832,10 @@ class SpineOnlyDispatchTests(unittest.TestCase):
             self.assertIn("REFUSED", stderr.getvalue())
             self.assertEqual([], RC.load_registry(RC.registry_path("issue-1", root)))
 
-    def test_main_cli_spine_only_dispatch_succeeds(self):
+    def test_main_cli_spine_only_dispatch_with_result_still_succeeds(self):
+        # `--result` and `--spine` may both be given (existing behavior, kept
+        # byte-identical): completion is judged on the result artifact, exactly
+        # as before spine-only dispatch existed at all.
         with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             result = result_rel("issue-1", "g1", "implementer")
@@ -885,6 +888,109 @@ class SpineOnlyDispatchTests(unittest.TestCase):
                     handoff=None, result=result, spine=spine_rel,
                     worktree=".", model=None, attempt=1, root=root, entries=[],
                 )
+
+
+def _write_spine(path: Path, *, done: bool) -> None:
+    """A minimal `checklist_engine`-shaped spine with one item, `complete` when
+    `done` else `pending` -- just enough for `checklist_engine.active_id` to
+    read a real terminal/non-terminal state."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({
+        "work_id": "issue-1",
+        "type": "gated",
+        "items": ["w1"],
+        "tasks": {"w1": {"id": "w1", "status": "complete" if done else "pending"}},
+    }), encoding="utf-8")
+
+
+class SpineOnlyCompletionContractTests(unittest.TestCase):
+    """Issue #559 job 2: a spine-only crew (no `--result`) is judged on its
+    BOUND SPINE reaching a terminal state, not on a result artifact it was
+    never told to write. The reviewer's probe crew drove its spine to done,
+    released the lease, exited 0 -- and the launcher recorded it `failed`
+    because `--result` was hard-required and nothing wrote it. These tests
+    never pass `write_result_at`: the real crew is never told to write a
+    result, so a covering test that writes one anyway would pass for a reason
+    that does not exist in production."""
+
+    def test_spine_only_success_is_not_recorded_failed(self):
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            _write_spine(root / spine_rel, done=True)
+            with fake_launch(RC, 0):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--spine", spine_rel,
+                    ])
+            self.assertEqual(0, code)
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("completed", entry["status"])
+            self.assertFalse(entry["result_present"])
+
+    def test_spine_only_dispatch_with_open_gate_is_recorded_failed(self):
+        # Same "no result artifact ever written" setup as the success case
+        # above -- ONLY the spine's terminal-ness differs. Proves the check is
+        # a real read of the spine, not a tautology that always passes a
+        # spine-only dispatch.
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            _write_spine(root / spine_rel, done=False)
+            with fake_launch(RC, 0):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--spine", spine_rel,
+                    ])
+            self.assertEqual(1, code)
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("failed", entry["status"])
+
+    def test_spine_only_dispatch_honors_nonzero_exit_even_when_spine_terminal(self):
+        # A terminal spine alone must not paper over a crashed child: exit
+        # code still matters.
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            _write_spine(root / spine_rel, done=True)
+            with fake_launch(RC, 3):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--spine", spine_rel,
+                    ])
+            self.assertEqual(3, code)
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("failed", entry["status"])
+
+    def test_spine_only_dispatch_with_no_spine_file_at_all_is_recorded_failed(self):
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"  # never written
+            with fake_launch(RC, 0):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--spine", spine_rel,
+                    ])
+            self.assertEqual(1, code)
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("failed", entry["status"])
+
+    def test_main_cli_refuses_neither_result_nor_spine(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                code = RC.main([
+                    "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                    "--role", "implementer", "--handoff", "h.md",
+                ])
+            self.assertEqual(1, code)
+            self.assertIn("REFUSED", stderr.getvalue())
+            self.assertEqual([], RC.load_registry(RC.registry_path("issue-1", root)))
 
 
 class AssignmentKeyedLeaseTests(unittest.TestCase):

@@ -4,11 +4,13 @@
 Commander must never hand-launch crew sessions. This wrapper launches crew work
 FOREGROUND/BLOCKING by default, assigns a deterministic session name, records
 durable launch metadata BEFORE the crew starts, captures stdout/stderr to
-deterministic files, and verifies the expected result artifact exists before it
-reports success. It refuses to launch a DUPLICATE crew for the same active
-work-id/gate/role/worktree unless the prior attempt is explicitly abandoned, and
-it supports explicit recovery (`--resume`/`--abandon --relaunch`) after a parent
-session is lost.
+deterministic files, and verifies completion before it reports success --
+either the expected result artifact exists and is fresh, or (a spine-only
+dispatch, issue #559) the crew's bound spine reached a terminal state. It
+refuses to launch a DUPLICATE crew for the same active work-id/gate/role/
+worktree unless the prior attempt is explicitly abandoned, and it supports
+explicit recovery (`--resume`/`--abandon --relaunch`) after a parent session is
+lost.
 
 Deliberate seams keep the wrapper fully testable without spawning a real agent:
   * `build_crew_argv(...)`  — PURE construction of the launcher command line.
@@ -34,6 +36,9 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import checklist_engine  # noqa: E402 -- spine-only completion reads its `active_id` (#559)
 
 # Registry statuses that mean "this attempt still holds the gate/worktree" and
 # therefore block a duplicate launch until explicitly abandoned.
@@ -305,6 +310,28 @@ def result_fresh(result: str | os.PathLike[str], root: Path, since: str) -> bool
         return False
     floor = datetime.fromisoformat(since).replace(microsecond=0)
     return path.stat().st_mtime >= floor.timestamp()
+
+
+def spine_terminal(spine: str | os.PathLike[str], root: Path) -> bool:
+    """Whether the bound spine at `spine` reached a terminal state: every item
+    `complete`/`skipped` (`checklist_engine.active_id(...) is None`).
+
+    This is the completion contract for a spine-only dispatch (#559): a crew
+    told to drive its bound spine "until it reports done" is judged on the
+    spine reaching done, not on a result artifact it was never told to write.
+    A missing/unparseable/malformed spine is never terminal -- absence of
+    evidence is not evidence of completion."""
+    path = Path(spine)
+    if not path.is_absolute():
+        path = root / path
+    try:
+        checklist = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    try:
+        return checklist_engine.active_id(checklist) is None
+    except (KeyError, TypeError, AttributeError):
+        return False
 
 
 # --------------------------------------------------------------------------- #
@@ -643,7 +670,7 @@ def build_entry(
     attempt: int,
     worktree: str,
     handoff: str | None,
-    result: str,
+    result: str | None,
     root: Path,
     started: str,
     backend: str,
@@ -668,6 +695,9 @@ def build_entry(
       * `handoff`  — nullable (issue #559): recorded as `None` for a spine-only
                      crew, the same "recorded null, not omitted" shape `spine`
                      already uses below.
+      * `result`   — nullable (issue #559 job 2): recorded as `None` for a
+                     crew whose completion contract is its spine reaching a
+                     terminal state, not a result artifact.
       * `spine`    — the spine this crew drives, so a resume can rebind the same
                      door (optional: `None` for a caller with nothing to bind,
                      recorded as `None` rather than omitted — a legacy entry
@@ -686,7 +716,7 @@ def build_entry(
         "pid": pid,
         "worktree": worktree,
         "handoff": _relativize(handoff, root) if handoff is not None else None,
-        "result": _relativize(result, root),
+        "result": _relativize(result, root) if result is not None else None,
         "spine": _relativize(spine, root) if spine is not None else None,
         "stdout": _relativize(str(stdout_path), root),
         "stderr": _relativize(str(stderr_path), root),
@@ -706,25 +736,44 @@ def finalize_from_exit_code(
     entry: dict,
     *,
     exit_code: int,
-    result: str,
+    result: str | None,
     root: Path,
     since: str,
+    spine: str | None = None,
 ) -> int:
-    """Finalize a spawned attempt's entry from the child exit code and result
-    freshness since dispatch. The ONE tail both `CliBackend.dispatch` and
-    `CliBackend.resume` call — no copy-paste of the completed/failed rule.
+    """Finalize a spawned attempt's entry from the child exit code, PLUS either
+    result-artifact freshness or bound-spine completion. The ONE tail both
+    `CliBackend.dispatch` and `CliBackend.resume` call — no copy-paste of the
+    completed/failed rule.
+
+    `result` given (not None): judged exactly as before -- exists AND fresh
+    since dispatch (`result_fresh`). A child that exits 0 but leaves only a
+    STALE prior-attempt result at the path (mtime predates dispatch) is
+    `failed`, not `completed`.
+
+    `result` is `None` (issue #559 job 2): the crew was never given a result
+    artifact to write, so it is judged on its BOUND spine instead -- completed
+    only when the spine reached a terminal state (`spine_terminal`). This is
+    the crew's actual completion contract: a spine-only prompt tells it to
+    drive its spine "until it reports done," never to write a result file, so
+    judging it against a file it was never told about produced a false
+    `failed` for a crew that did everything asked of it.
 
     Sets `completed_at`/`last_heartbeat` (now), `status`, `exit_code`,
-    `result_present`, and `result_fresh`, and returns the process-level exit code
-    to report. Reuses the single canonical `result_fresh` (`since` is the entry's
-    dispatch time): a child that exits 0 but leaves only a STALE prior-attempt
-    result at the path (mtime predates dispatch) is `failed`, not `completed`."""
-    have_result = result_exists(result, root)
-    fresh = result_fresh(result, root, since)
+    `result_present`, and `result_fresh`, and returns the process-level exit
+    code to report."""
+    if result is not None:
+        have_result = result_exists(result, root)
+        fresh = result_fresh(result, root, since)
+        done = fresh
+    else:
+        have_result = False
+        fresh = False
+        done = spine is not None and spine_terminal(spine, root)
     now = _now()
     entry["completed_at"] = now
     entry["last_heartbeat"] = now
-    if exit_code == 0 and fresh:
+    if exit_code == 0 and done:
         entry["status"] = "completed"
         final = 0
     else:
@@ -763,12 +812,19 @@ class CrewSpec:
     is refused here, at construction -- the one choke point every backend
     passes through -- rather than leaving a crew with no job at all. The
     external backend layers its OWN, stricter refusal on top (it always needs
-    a handoff, spine or not, since it cannot bind one)."""
+    a handoff, spine or not, since it cannot bind one).
+
+    `result` is likewise nullable (issue #559 job 2): a crew given `spine` and
+    no `result` is judged on its bound spine reaching a terminal state
+    (`spine_terminal`) instead of a result artifact nobody told it to write. A
+    spec with neither `result` nor `spine` is refused here for the same reason
+    as the handoff/spine pair above -- it would have no completion contract at
+    all."""
     work_id: str
     gate: str
     role: str
     handoff: str | None
-    result: str
+    result: str | None
     worktree: str
     attempt: int
     spine: str | None = None
@@ -783,6 +839,12 @@ class CrewSpec:
             raise CrewLaunchError(
                 "a crew needs a job: refusing a dispatch with neither --handoff "
                 "nor --spine given"
+            )
+        if self.result is None and self.spine is None:
+            raise CrewLaunchError(
+                "a crew needs a completion contract: refusing a dispatch with "
+                "neither --result nor --spine given (a spine-only dispatch is "
+                "judged on its spine reaching a terminal state instead)"
             )
 
 
@@ -880,7 +942,9 @@ class CliBackend(CrewBackend):
         env = _crew_door_env(work_id=spec.work_id, gate=spec.gate, role=spec.role, spine=spec.spine, root=root)
         exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path)
 
-        final = finalize_from_exit_code(entry, exit_code=exit_code, result=spec.result, root=root, since=started)
+        final = finalize_from_exit_code(
+            entry, exit_code=exit_code, result=spec.result, root=root, since=started, spine=spec.spine,
+        )
         save_registry(reg, entries)
         if final != 0:
             _print_drift_hint_if_any(stderr_path)
@@ -935,7 +999,10 @@ class CliBackend(CrewBackend):
         )
         exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path)
 
-        final = finalize_from_exit_code(entry, exit_code=exit_code, result=entry["result"], root=root, since=resumed_at)
+        final = finalize_from_exit_code(
+            entry, exit_code=exit_code, result=entry["result"], root=root, since=resumed_at,
+            spine=entry.get("spine"),
+        )
         save_registry(reg, entries)
         if final != 0:
             _print_drift_hint_if_any(stderr_path)
@@ -1163,7 +1230,16 @@ def build_parser() -> argparse.ArgumentParser:
             "always required on the external backend (it cannot bind a spine)."
         ),
     )
-    p.add_argument("--result")
+    p.add_argument(
+        "--result",
+        help=(
+            "path to the expected result artifact. Optional when --spine is given: "
+            "a spine-only dispatch is judged on its bound spine reaching a terminal "
+            "state (spine_terminal) instead of a result artifact. Refused if "
+            "neither --result nor --spine is given (a crew needs a completion "
+            "contract)."
+        ),
+    )
     p.add_argument(
         "--spine",
         help=(
@@ -1252,19 +1328,28 @@ def main(argv: list[str] | None = None) -> int:
             print(f"resumed {entry['session_name']} -> {entry['status']}")
             return exit_code
 
-        # fresh / abandon+relaunch launch requires work-id/gate/role/result, plus
-        # at least one of handoff/spine (checked separately below -- `handoff` is
-        # NOT in this hard list, issue #559: a spine-only dispatch is legal).
-        missing = [n for n in ("work_id", "gate", "role", "result")
+        # fresh / abandon+relaunch launch requires work-id/gate/role, plus at
+        # least one of handoff/spine and at least one of result/spine (both
+        # checked separately below -- neither `handoff` nor `result` is in this
+        # hard list, issue #559: a spine-only dispatch needs neither, judged
+        # instead on its bound spine reaching a terminal state).
+        missing = [n for n in ("work_id", "gate", "role")
                    if getattr(args, n) in (None, "")]
         if missing and not args.abandon:
             raise CrewLaunchError(
-                "launch requires --work-id --gate --role --result, plus at least "
-                "one of --handoff/--spine (or a recovery flag --resume/--abandon)"
+                "launch requires --work-id --gate --role, plus at least one of "
+                "--handoff/--spine and at least one of --result/--spine (or a "
+                "recovery flag --resume/--abandon)"
             )
         if not args.abandon and not args.handoff and not args.spine:
             raise CrewLaunchError(
                 "launch requires --handoff, --spine, or both (a crew needs a job)"
+            )
+        if not args.abandon and not args.result and not args.spine:
+            raise CrewLaunchError(
+                "launch requires --result, --spine, or both (a crew needs a "
+                "completion contract): a spine-only dispatch is judged on its "
+                "spine reaching a terminal state instead of a result artifact"
             )
 
         # The registry is keyed by work-id; for a bare `--abandon <session>`
