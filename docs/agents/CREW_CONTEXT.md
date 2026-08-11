@@ -16,17 +16,25 @@ change implementation or review.
 
 ## Python Invocation
 
-Use `python`, **not** `py`.
+Which interpreter name has pytest installed varies by host — do not assume the previous
+host's answer holds on this one. Check before you run anything that matters:
 
 ```bash
-python -m pytest -q
-python scripts/apply_episode_delta.py ...
+which py python python3
+py --version && py -m pytest --version
+python --version && python -m pytest --version
+python3 --version && python3 -m pytest --version
 ```
 
-`py` resolves to 3.12.13 (which matches CI's pin) but **has no pytest installed**, so
-`py -m pytest` does not run the suite — it reads as a silently green run. `python` is
-3.14.x with pytest. Neither interpreter reproduces CI, so a local green is evidence, never
-the gate.
+One of these will run pytest; at least one other will fail with `No module named pytest`
+and read as a silently green run if you don't check first. Use whichever name actually
+answers with a pytest version on this host.
+
+Measured on this host on 2026-08-10: `py` and `python` both resolve to
+`/home/tommy/.local/bin/{py,python}`, both report Python 3.12.3, and both have pytest
+9.1.1. `python3` resolves to `/usr/bin/python3.12`, also Python 3.12.3, but has no pytest
+installed. None of this is guaranteed to match CI's pin — a local green is evidence,
+never the gate.
 
 ---
 
