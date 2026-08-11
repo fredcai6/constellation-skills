@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4b-init-check-side-effect",
+  "mechanical": {
+    "run": "epic-559/b-instructions-to-checks",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r4b-init-check-side-effect",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/b-instructions-to-checks-r4b-init-check-side-effect@c9da376cb09603da04c6c5052f6f7b1d70945193",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/b-instructions-to-checks",
+    "generated_at": "2026-08-11T05:34:52Z"
+  }
+}

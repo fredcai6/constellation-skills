@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r1-handoff",
+  "files": [],
+  "repo_rev": {
+    "commit": "0ee69c9487227f920e08f1b901b4761c9a2b19af"
+  },
+  "run": {
+    "work_id": "epic-559/b-instructions-to-checks",
+    "generated_at": "2026-08-11T05:24:10Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/b-instructions-to-checks",
+      "repo": "/home/tommy/projects/constellation-skills-wt/b-instructions-to-checks",
+      "durable": "/home/tommy/projects/constellation-skills-wt/b-instructions-to-checks"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/b-instructions-to-checks"
+    }
+  }
+}

@@ -1,0 +1,8 @@
+The plan is fully driven and the lease released. Summary:
+
+**Committed** (`0ee69c94`): 3 template edits.
+- `ADMIRAL_SPINE.template.json` — `init` gate's `init_work_area.py` run instruction converted to a command postcondition (mirrors Commander/Explorer's already-converted `init` gates; this was the one shipped template that missed it).
+- `EXECUTE_PLAN.template.json` — fixed **#562**: `g1-implement.c1` now carries `match:{"status":"complete"}` so a blocked/failed implementer result can no longer vacuously satisfy "no unresolved blockers".
+- `EXPLORER_SPINE.template.json` — `init.c1`'s statement weakened to drop an overclaimed "spine.json materialized" property its check never tested.
+
+All 22 run-script instructions and 5 statement/check mismatch sites across the six templates were catalogued in `.agent-work/epic-559/b-instructions-to-checks/CENSUS.md`; only the three above needed changes (the rest were already converted, action/mutator scripts, or per-dispatch loop invariants that can't become a single gate check). Every change was demonstrated passing **and** refusing-for-the-right-reason against the real engine in a clean checkout, and the full suite is green (2532 passed, 1 skipped). Full writeup, evidence, and Workflow Feedback (including one flagged out-of-scope doc gap) are in `IMPLEMENTER_RESULT.md`.

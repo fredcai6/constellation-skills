@@ -1,0 +1,9 @@
+The review is complete. **Verdict: BLOCK.**
+
+The engine-driven survey ran all 11 items to a consolidated verdict, and `REVIEWER_RESULT.md` is written at `.agent-work/epic-559/b-instructions-to-checks/REVIEWER_RESULT.md`.
+
+**Why BLOCK:** The decisive question the handoff pointed at (r4a) checks out empirically against real evidence, not just reasoning. I scanned all 119 `implementer-result` evidence records recorded anywhere in this repo's `.agent-work/` history (40+ real Commander runs, archived and live) and found only 24% carry the exact `payload.status == "complete"` shape the #562 fix now requires. The plurality of real runs use a `verdict` field instead (41 vs. 31 for `status`), 36 use neither field, and 11 use a completely different schema. Since `checklist_engine.py` does exact case-sensitive matching, the fix doesn't close the "check that cannot fail" defect — it flips it into a check that fails for most of this repo's own historical Commander conventions, including the single most common one.
+
+Everything else in the diff checked out clean: scope and hard no-gos respected, the full test suite reproduced exactly (2532 passed, 1 skipped, 1102 subtests), the `ADMIRAL_SPINE.init.c1` check verified idempotent and worktree-safe by actually driving it through a real engine in a fresh worktree, and the `EXPLORER_SPINE.init.c1` statement-weakening justified by directly proving the engine can't evaluate that gate without `spine.json` already existing.
+
+Along the way I also hit and repaired a real engine-mechanics gap (an unresolvable placeholder in the reviewer skill's own Fowler-pass check) and filed it as a triage candidate rather than fixing it silently — details are in the Workflow Feedback section of the result file.

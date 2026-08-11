@@ -1,0 +1,262 @@
+{
+  "work_id": "epic-559/b-instructions-to-checks",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a-satisfiable",
+    "r4b-init-check-side-effect",
+    "r4c-census-honest",
+    "r4d-explorer-weakening"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, REVIEW_HANDOFF.md, the diff (git diff 9d593e0a 0ee69c94, 3 files/4+/4-), IMPLEMENTER_RESULT.md, and CENSUS.md.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Scope and mechanics match the handoff (all six templates swept per CENSUS.md, 3 edited, edits match the pre-ruling shape). But the handoff's second, named deliverable -- \"fix the gate that cannot fail (#562)\" -- is not reliably fixed. I scanned every implementer-result evidence record recorded in this repo's .agent-work/ tree (119 records across 40+ real Commander runs, archived and live) for the payload.status field the new match={\"status\":\"complete\"} check requires: only 28/119 (24%) carry status==\"complete\" exactly. 41/119 use a \"verdict\" field instead (more common than \"status\" in this corpus), 36/119 carry neither field, 11/119 use a bespoke schema (gate_id/red_exit/green_exit), and 3 more carry status in the wrong case (\"COMPLETE\"). checklist_engine.py:853-855 does exact case-sensitive dict equality on payload, so all of these except the 28 would fail the new check. The fix does not convert a check that cannot fail into one that reliably passes for legitimate work -- it converts it into one that passes for a minority convention and fails the plurality convention (\"verdict\") along with every Commander that attaches no such field. See r4a for the full evidence and verdict on whether this blocks the change.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Verified independently: `git diff --name-only 9d593e0a 0ee69c94` touches only the 3 named template files; grep for checklist_engine.py, run_crew.py, settings.json, docs/agents/*, and any skills/*/SKILL.md or skills/*/references/* in that diff finds none. `git log --oneline main..HEAD` shows exactly one local commit, not pushed. Diff is 3 files / 4+ / 4- with only the targeted lines changed (no reflowed whitespace elsewhere in the files), consistent with a surgical text edit rather than a json.load/json.dump round-trip; re-ran `python -c \"import json; ...\"` myself against all three edited files -- still valid JSON.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Reproduced the full suite myself: `env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests` -> \"2532 passed, 1 skipped, 1102 subtests passed in 104.68s\", matching IMPLEMENTER_RESULT.md's claimed counts exactly. Confirmed `python`/`py` both resolve to the pytest-equipped interpreter on this host per CREW_CONTEXT.md's Python Invocation section (python3 has no pytest). The before/after table, the shown-passing/shown-failing pair for ADMIRAL_SPINE.init.c1 and EXECUTE_PLAN.g1-implement.c1, and the #562 fix + sweep are all present in IMPLEMENTER_RESULT.md/CENSUS.md. I independently re-drove ADMIRAL_SPINE.init.c1 through the real engine in a fresh worktree (see r4b) rather than trusting the transcript, and it reproduced the same refuse-then-pass sequence claimed. One gap: the required evidence list asks for \"at least one shown failing for the right reason\" -- satisfied for both converted checks, but the deliverable never independently demonstrates the EXECUTE_PLAN.g1-implement.c1 fix against real historical evidence shapes (only a scratch spine with hand-picked status=blocked/complete values); r4a's independent sweep of 119 real implementer-result records is what actually stress-tests that claim, and it overturns the fix's soundness even though the narrow evidence requested was met.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Checked against docs/agents/CREW_CONTEXT.md's Verification Discipline section, rule by rule. \"A check that cannot fail is indistinguishable from one that passed\" -- satisfied: both converted checks are shown failing then passing (verified independently for ADMIRAL_SPINE.init.c1 in r4b; the #562 scratch-spine demo for EXECUTE_PLAN.g1-implement.c1 is in IMPLEMENTER_RESULT.md). \"Assert against behaviour, never text that describes it\" -- satisfied: both are command-exit/artifact-match checks, not string matches. But \"Define a guard by its consumer's behaviour, not by a hand-maintained list\" is violated: match={\"status\":\"complete\"} was defined by analogy to a DIFFERENT evidence type's field name (review-result's verdict), not by consulting what the actual consumer -- a Commander attaching implementer-result evidence -- actually computes. The implementer's own Assumptions section admits this was inference, not derivation from the consumer. r4a's independent sweep of 119 real implementer-result records confirms the guess diverges from actual consumer behavior in 76% of cases (uses \"verdict\", uses neither field, or uses a different schema entirely). This is the same defect class CREW_CONTEXT.md's guard-definition rule exists to prevent, and it is also the mechanism behind the r4a BLOCK finding, not a separate issue -- one root cause, two symptoms.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Verified independently: no docs/architecture directory exists in this repo (`ls docs/architecture` -> No such file or directory), confirming IMPLEMENTER_RESULT.md's Map Impact claim that there is nothing to reconcile against. The change is a behavior change to two gate-close checks, correctly flagged as such in Map Impact rather than silently omitted. No architecture divergence to reconcile.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a <fowler-pass-record-path> placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like <work-id> on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-559/b-instructions-to-checks/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Repaired r6-fowler.c1's unresolved <fowler-pass-record-path> placeholder via `amend --delta` (retext-check, authority=human, CLI fallback after the mcp__spine__spine_amend door tool required interactive permission I could not obtain in this dispatch -- see Workflow Feedback) since no dispatching Commander session was discoverable anywhere in reach to cite as authority instead. Ran the pass over the 3-file/4-line diff: 10 of 12 Fowler baseline smells are genuinely absent from a template-JSON diff this small. duplicated-code is present (ADMIRAL_SPINE.init.c1's new check repeats the same init_work_area.py-as-command-check shape already shipped on Commander/Explorer) but overridden -- logged standard: no shared check-library exists across standalone role-template JSON files, and matching the established convention is the task's own point. primitive-obsession is flagged: match={\"status\":\"complete\"} is a hand-typed string against an undocumented, unenforced field with no shared vocabulary across producers -- the same root cause as the r4a/r4-quality findings, restated here as a design smell rather than a correctness defect. Record at .agent-work/epic-559/b-instructions-to-checks/FOWLER_PASS.json; `python scripts/verify_fowler_pass.py <record>` exits 0 (smells=12, flagged=[primitive-obsession], overridden=[duplicated-code]).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-559/b-instructions-to-checks/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a-satisfiable": {
+      "id": "r4a-satisfiable",
+      "title": "Is g1-implement.c1 now satisfiable by a real Commander?",
+      "imperative": "THE DECISIVE QUESTION. The #562 fix adds match={\"status\":\"complete\"} to the implementer-result artifact check. Nothing in the repo tells a Commander to attach a `status` field when it integrates an IMPLEMENTER_RESULT \u2014 the implementer itself said so in its own Assumptions section. Search the archived spines under .agent-work/ (and any tracked history you can reach) for every implementer-result evidence record actually attached by a real run, and report the exact payload fields found. If real runs attach no `status`, this change turns a check that cannot fail into a check that cannot pass, and every Commander implement gate is permanently blocked. That is a BLOCK. Say which it is, with the payloads you found.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "BLOCK. I scanned every execute.json under .agent-work/ (archived and live, this worktree) for evidence entries with type==\"implementer-result\" and inspected their payload fields with a script, not by sampling: 119 records found across 40+ real Commander runs spanning 2026-07-08 through 2026-08-10. Breakdown of the completion-state field actually used: 31 records use \"status\" (28 exactly ==\"complete\", 3 wrong-case e.g. \"COMPLETE\"), 41 records use \"verdict\" instead (values like \"complete\", \"COMPLETE\", \"COMPLETE -- no unresolved blockers\", or free text like \"WIN - the done-condition is met...\"), 36 records carry NEITHER field (payloads like {path, summary}, {path, blockers, crew}, {path, session, verified, note}), and 11 records use a wholly different bespoke schema ({gate_id, red_exit, green_exit}) from a hand-built execute.json. checklist_engine.py:853-855 does exact case-sensitive dict equality (`ev[\"payload\"].get(k) == v`), confirmed by reading the source. So only 28/119 (24%) of this repo's own real implementer-result evidence history would satisfy the new match={\"status\":\"complete\"}; the plurality convention in actual use is \"verdict\" (41, more common than \"status\"'s 31), which the fix does not recognize at all. This is not \"nothing tells a Commander to attach a status field\" (a documentation gap) -- it is \"Commanders in this repo's own history have never converged on one field name,\" so the fix does not convert a check that cannot fail into one that reliably passes for legitimate completed work. It converts it into one that blocks 76% of the historical shapes outright, including the single MOST COMMON shape (\"verdict\"). Every future Commander implement gate that follows the more common precedent, or any precedent other than exact status==\"complete\", is now permanently blocked at g1-implement.c1 -- reproducing #562's own defect with the sign flipped, exactly as the review handoff warned. Full per-file payload dump available on request; representative examples: commander-424 (status:\"complete\"), commander-f2 (verdict:\"complete\"), r418-460/issue-467-trip-semantics (neither field), issue-418-iterative-planning (gate_id/red_exit/green_exit schema).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b-init-check-side-effect": {
+      "id": "r4b-init-check-side-effect",
+      "title": "Does the Admiral init check refuse a healthy run?",
+      "imperative": "ADMIRAL_SPINE.init.c1 now RUNS init_work_area.py as its check, so the check mutates the repo every time the engine evaluates it, including on re-evaluation after the work area already exists. Confirm it is idempotent. Then confirm the `test -f .agent-work/<work-id>/ADMIRAL_LOG.md` half resolves correctly when the Admiral runs inside a git worktree \u2014 scripts/agent_work_root.py::durable_root deliberately relocates .agent-work depending on whether an epic lease is held, and this check hardcodes a relative path. Drive a real Admiral spine through init in a worktree and say what happened.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Not a defect, tested empirically. Idempotency: init_work_area.py's init_work_area() does `mkdir(parents=True, exist_ok=True)` per subdir and never touches an existing file -- I ran the exact check command (`python ./scripts/init_work_area.py demo-r4b && test -f .agent-work/demo-r4b/ADMIRAL_LOG.md`) twice directly after ADMIRAL_LOG.md existed; both exits were 0 and the log file's md5sum was unchanged, confirming no mutation on re-evaluation. Worktree path resolution: I built a real linked worktree (`git worktree add --detach /tmp/r4b-worktree <snapshot>`), instantiated a scratch ADMIRAL_SPINE.template.json spine there, and drove init.c1 through the real engine end to end (claim -> start -> advance refuses on missing ADMIRAL_LOG.md -> create it -> advance succeeds, \"init -> complete\" exit 0). The work area landed at the worktree's own .agent-work/demo-r4b/, confirmed absent from the main checkout's .agent-work/. On the durable_root concern specifically: I read scripts/agent_work_root.py and confirmed init_work_area.py never imports or calls durable_root() -- its --root defaults to \".\" (cwd) unconditionally. durable_root()'s relocation is scoped, by its own module docstring, to CONSTELLATION_FEEDBACK.md and the episode-store sidecar ledger, not to the general per-work-id .agent-work/<work-id>/ tree. The downstream consumer of ADMIRAL_LOG.md (verify_iterative_role_artifacts.py's _work_area(), used at the already-shipped execute.c3) also resolves via a bare `Path.cwd().joinpath(\".agent-work\", *segments)` -- not durable_root() either. So init.c1's hardcoded relative path is internally consistent with every other reader of ADMIRAL_LOG.md in this pipeline; the concern raised in the handoff does not materialize because durable_root was never in this check's code path to begin with. The existing, documented, out-of-scope fragility (#341: command checks depend on the launcher's cwd generally) is unchanged by this diff and not introduced by it.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4c-census-honest": {
+      "id": "r4c-census-honest",
+      "title": "Are the census's 'already converted' claims true?",
+      "imperative": "CENSUS.md claims 22 run-script instructions of which 19 needed nothing. Spot-check at least 6 of those 19 against the live templates yourself. A census that quietly miscounts is the same defect class this task exists to remove. Also check the claim that only 5 statement/check mismatch sites exist across the six templates \u2014 sweep independently rather than confirming their list.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Spot-checked 12 of the 19 already-converted claims (double the required 6) by reading the live templates directly: ADMIRAL_SPINE execute.c3/closeout.c2, COMMANDER_SPINE init.c1/context.c2/plan.c6/execute.c2/feedback.c1/archive.c1, EXPLORER_SPINE explore.c2/review.c1/confirm.c2/confirm.c3 -- all genuinely carry the command checks CENSUS.md claims, none is a stray null or artifact-only check dressed up as converted. Went further than a shape check on two of the more elaborate statements: COMMANDER_SPINE.archive.c1 claims episodes are \"tracked by git\" and scripts/verify_episode_captured.py --phase archive genuinely calls a `_git_tracked()` helper (git ls-files --error-unmatch) to verify exactly that; ADMIRAL_SPINE.execute.c3's dense multi-clause statement (uniquely audit-recorded, G2-verified, repair-safe, rendered before launch) is verified clause-by-clause by verify_admiral_prelaunch() (verify_replan_result for G2, _verify_transition_audit for uniqueness, render_replan_markdown for rendering, _require_launch_authorization for the repair-stays-refused distinction). Independently swept all postconditions across all six templates (not just confirming the census's 5 rows) for the artifact-no-match shape: found exactly the same 8 user-decision gates census's row C names, no more, no fewer. But the sweep also surfaced a real miscount the census's \"19 already fine, no action\" verdict did not catch: REVIEW_SURVEY.template.json's r6-fowler.c1 check command ships with a literal `<fowler-pass-record-path>` placeholder that resolve_spine's token set (work-id/role-skill-dir/role-session-id/repo-root only) cannot resolve -- unlike the item's own claim that it resolves \"exactly like <work-id>.\" I hit this defect live: my own REVIEW_SURVEY.json was instantiated with it unresolved and I had to repair it via amend mid-review. Flagged as triage candidate tc1 since it is outside this diff's 3-file scope, but it is the exact \"census that quietly miscounts\" defect class r4c exists to catch, so this item fails on that basis even though the diff's own 5 claimed mismatch-shape sites (A-E) all check out correctly.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4d-explorer-weakening": {
+      "id": "r4d-explorer-weakening",
+      "title": "Was weakening EXPLORER_SPINE.init.c1's statement the right call?",
+      "imperative": "The implementer weakened the statement instead of strengthening the check, reasoning that spine.json's existence is a bootstrap invariant. Test that reasoning: can the engine reach this gate with no spine.json? If the claim is right the weakening is right; if it is wrong, the honest fix was to constrain the check.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Tested the implementer's bootstrap-invariant argument directly rather than accepting it. Ran `python scripts/checklist_engine.py --file /tmp/nonexistent-spine.json advance init --mechanical --session-id demo` (and `current`, and `claim`) against a spine.json that does not exist: every verb raises an unhandled FileNotFoundError at `load()` (checklist_engine.py:175, called from main() before any verb-specific logic runs) -- confirmed for three different verbs, all failing identically at the same load step. This means the engine cannot evaluate ANY postcondition, including init.c1, without spine.json already existing on disk; there is no code path where the engine is \"running this advance\" against a file that isn't there. So EXPLORER_SPINE.init.c1's bare command check (`init_work_area.py <work-id>`, no --spine/--skill-dir) can never be evaluated while its statement's dropped clause (\"spine.json materialized\") is false -- the property holds by construction before the check ever runs, making a `test -f spine.json` addition to the check tautological, not a strengthening. Weakening the statement to match what the check actually tests (rather than adding a check that cannot fail) was the correct call, consistent with the already-shipped g1-review.c1 pattern this diff cites as precedent.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r1-handoff: Scope and mechanics match the handoff (all six templates swept per CENSUS.md, 3 edited, edits match the pre-ruling shape). But the handoff's second, named deliverable -- \"fix the gate that cannot fail (#562)\" -- is not reliably fixed. I scanned every implementer-result evidence record recorded in this repo's .agent-work/ tree (119 records across 40+ real Commander runs, archived and live) for the payload.status field the new match={\"status\":\"complete\"} check requires: only 28/119 (24%) carry status==\"complete\" exactly. 41/119 use a \"verdict\" field instead (more common than \"status\" in this corpus), 36/119 carry neither field, 11/119 use a bespoke schema (gate_id/red_exit/green_exit), and 3 more carry status in the wrong case (\"COMPLETE\"). checklist_engine.py:853-855 does exact case-sensitive dict equality on payload, so all of these except the 28 would fail the new check. The fix does not convert a check that cannot fail into one that reliably passes for legitimate work -- it converts it into one that passes for a minority convention and fails the plurality convention (\"verdict\") along with every Commander that attaches no such field. See r4a for the full evidence and verdict on whether this blocks the change.",
+      "r4-quality: Checked against docs/agents/CREW_CONTEXT.md's Verification Discipline section, rule by rule. \"A check that cannot fail is indistinguishable from one that passed\" -- satisfied: both converted checks are shown failing then passing (verified independently for ADMIRAL_SPINE.init.c1 in r4b; the #562 scratch-spine demo for EXECUTE_PLAN.g1-implement.c1 is in IMPLEMENTER_RESULT.md). \"Assert against behaviour, never text that describes it\" -- satisfied: both are command-exit/artifact-match checks, not string matches. But \"Define a guard by its consumer's behaviour, not by a hand-maintained list\" is violated: match={\"status\":\"complete\"} was defined by analogy to a DIFFERENT evidence type's field name (review-result's verdict), not by consulting what the actual consumer -- a Commander attaching implementer-result evidence -- actually computes. The implementer's own Assumptions section admits this was inference, not derivation from the consumer. r4a's independent sweep of 119 real implementer-result records confirms the guess diverges from actual consumer behavior in 76% of cases (uses \"verdict\", uses neither field, or uses a different schema entirely). This is the same defect class CREW_CONTEXT.md's guard-definition rule exists to prevent, and it is also the mechanism behind the r4a BLOCK finding, not a separate issue -- one root cause, two symptoms.",
+      "r4a-satisfiable: BLOCK. I scanned every execute.json under .agent-work/ (archived and live, this worktree) for evidence entries with type==\"implementer-result\" and inspected their payload fields with a script, not by sampling: 119 records found across 40+ real Commander runs spanning 2026-07-08 through 2026-08-10. Breakdown of the completion-state field actually used: 31 records use \"status\" (28 exactly ==\"complete\", 3 wrong-case e.g. \"COMPLETE\"), 41 records use \"verdict\" instead (values like \"complete\", \"COMPLETE\", \"COMPLETE -- no unresolved blockers\", or free text like \"WIN - the done-condition is met...\"), 36 records carry NEITHER field (payloads like {path, summary}, {path, blockers, crew}, {path, session, verified, note}), and 11 records use a wholly different bespoke schema ({gate_id, red_exit, green_exit}) from a hand-built execute.json. checklist_engine.py:853-855 does exact case-sensitive dict equality (`ev[\"payload\"].get(k) == v`), confirmed by reading the source. So only 28/119 (24%) of this repo's own real implementer-result evidence history would satisfy the new match={\"status\":\"complete\"}; the plurality convention in actual use is \"verdict\" (41, more common than \"status\"'s 31), which the fix does not recognize at all. This is not \"nothing tells a Commander to attach a status field\" (a documentation gap) -- it is \"Commanders in this repo's own history have never converged on one field name,\" so the fix does not convert a check that cannot fail into one that reliably passes for legitimate completed work. It converts it into one that blocks 76% of the historical shapes outright, including the single MOST COMMON shape (\"verdict\"). Every future Commander implement gate that follows the more common precedent, or any precedent other than exact status==\"complete\", is now permanently blocked at g1-implement.c1 -- reproducing #562's own defect with the sign flipped, exactly as the review handoff warned. Full per-file payload dump available on request; representative examples: commander-424 (status:\"complete\"), commander-f2 (verdict:\"complete\"), r418-460/issue-467-trip-semantics (neither field), issue-418-iterative-planning (gate_id/red_exit/green_exit schema).",
+      "r4c-census-honest: Spot-checked 12 of the 19 already-converted claims (double the required 6) by reading the live templates directly: ADMIRAL_SPINE execute.c3/closeout.c2, COMMANDER_SPINE init.c1/context.c2/plan.c6/execute.c2/feedback.c1/archive.c1, EXPLORER_SPINE explore.c2/review.c1/confirm.c2/confirm.c3 -- all genuinely carry the command checks CENSUS.md claims, none is a stray null or artifact-only check dressed up as converted. Went further than a shape check on two of the more elaborate statements: COMMANDER_SPINE.archive.c1 claims episodes are \"tracked by git\" and scripts/verify_episode_captured.py --phase archive genuinely calls a `_git_tracked()` helper (git ls-files --error-unmatch) to verify exactly that; ADMIRAL_SPINE.execute.c3's dense multi-clause statement (uniquely audit-recorded, G2-verified, repair-safe, rendered before launch) is verified clause-by-clause by verify_admiral_prelaunch() (verify_replan_result for G2, _verify_transition_audit for uniqueness, render_replan_markdown for rendering, _require_launch_authorization for the repair-stays-refused distinction). Independently swept all postconditions across all six templates (not just confirming the census's 5 rows) for the artifact-no-match shape: found exactly the same 8 user-decision gates census's row C names, no more, no fewer. But the sweep also surfaced a real miscount the census's \"19 already fine, no action\" verdict did not catch: REVIEW_SURVEY.template.json's r6-fowler.c1 check command ships with a literal `<fowler-pass-record-path>` placeholder that resolve_spine's token set (work-id/role-skill-dir/role-session-id/repo-root only) cannot resolve -- unlike the item's own claim that it resolves \"exactly like <work-id>.\" I hit this defect live: my own REVIEW_SURVEY.json was instantiated with it unresolved and I had to repair it via amend mid-review. Flagged as triage candidate tc1 since it is outside this diff's 3-file scope, but it is the exact \"census that quietly miscounts\" defect class r4c exists to catch, so this item fails on that basis even though the diff's own 5 claimed mismatch-shape sites (A-E) all check out correctly."
+    ],
+    "summary": "BLOCK. The decisive item (r4a) is empirically confirmed: I scanned all 119 real implementer-result evidence records recorded anywhere under .agent-work/ in this repo's history and found only 24% (28/119) carry payload.status==\"complete\", the exact literal the new match={\"status\":\"complete\"} check requires (checklist_engine.py does case-sensitive dict equality). The plurality convention in actual use is \"verdict\" (41 records, more common than \"status\"), 36 records carry neither field, and 11 use a wholly different schema. The #562 fix does not convert a check that cannot fail into one that reliably passes for legitimate completed work -- it converts it into one that blocks the majority of this repo's own historical Commander conventions, including the single most common one. This is the same defect with the sign flipped, exactly as the review handoff warned, and it would block real Commander implement gates repo-wide once this template ships. r4-quality and r4c independently corroborate the same root cause (a guessed, unenforced field convention) and a related, previously-uncaught census miscount (REVIEW_SURVEY.template.json's r6-fowler.c1 ships with an unresolvable placeholder), respectively. Everything else checked out clean: scope and hard no-gos respected (r2), full suite reproduced exactly as claimed -- 2532 passed, 1 skipped, 1102 subtests (r3), no architecture to reconcile (r5), Fowler pass clean modulo one flagged primitive-obsession smell tracing to the same root cause (r6), the ADMIRAL_SPINE.init.c1 check is idempotent and resolves correctly in a real linked worktree with no durable_root mismatch (r4b), and the EXPLORER_SPINE.init.c1 statement-weakening argument holds up under direct testing -- the engine provably cannot evaluate that gate without spine.json already existing (r4d). The fix is fixable: either constrain the check to whatever field convention the repo actually documents and enforces (which does not exist yet -- see the flagged triage candidate and the implementer's own Out-of-scope note), or revert to a presence-only check honestly matching g1-review.c1's pattern until that convention is written down and enforced."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r4c-census-honest",
+      "statement": "skills/reviewer/templates/REVIEW_SURVEY.template.json r6-fowler.c1 check command ships with a literal <fowler-pass-record-path> placeholder that scripts/init_work_area.py::resolve_spine does NOT know how to resolve (its token set is only work-id, role-skill-dir, role-session-id, repo-root -- confirmed by reading resolve_spine source). The items own imperative claims this is an instantiation-time substitution exactly like <work-id> on line 2, but unlike work-id it has no automated resolver and must be hand-substituted by whoever instantiates the survey. This is the failure mode this tasks own \"census that quietly miscounts\" warning describes, encountered live: my own REVIEW_SURVEY.json for epic-559/b-instructions-to-checks was instantiated with the placeholder unresolved, and I had to repair it myself via amend --delta (retext-check) mid-review with no discoverable dispatching-Commander authority to cite. CENSUS.md row 21 (Already converted, r6-fowler.c1 command check, No action) is accurate about the checks KIND but does not catch that the checks command text is non-functional out of the box. Recommend teaching resolve_spine a new token for this, or documenting the manual-substitution requirement explicitly next to the NORMAL/REPAIR PATH text."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/epic-559/b-instructions-to-checks/g2-review/reviewer",
+    "status": "released",
+    "claimed_at": "2026-08-11T05:23:21.806898+00:00",
+    "last_heartbeat": "2026-08-11T05:37:39.976688+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "/home/tommy/projects/constellation-skills-wt/b-instructions-to-checks",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-11T05:38:39.252253+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-11T05:34:17.427591+00:00",
+      "reason": "REVIEW_SURVEY.json r6-fowler.c1 shipped with the literal, unresolved <fowler-pass-record-path> placeholder still in the check command. This survey was instantiated for me, not by me, and no Commander/Admiral execute.json or spine.json for epic-559/b-instructions-to-checks exists anywhere reachable (this worktree, main checkout, or sibling worktrees) to name as the dispatching authority. Resolving to the real record path I wrote at .agent-work/epic-559/b-instructions-to-checks/FOWLER_PASS.json is the item's own documented REPAIR PATH for exactly this situation.",
+      "authority": "human",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}
