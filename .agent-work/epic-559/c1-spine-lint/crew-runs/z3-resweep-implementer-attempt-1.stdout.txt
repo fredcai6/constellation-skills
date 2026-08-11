@@ -1,0 +1,6 @@
+The rework spine (`z1`→`z4`) is complete and the lease is released.
+
+Summary:
+- **z1/z2** (already done before this session): fixed the redirect-token and interpreter-resolution bugs in `_pytest_segments`/`_collects_zero`.
+- **z3**: re-swept the full corpus (540 `.agent-work` gated/survey spines + 12 shipped templates). Fault-2 (`falsifiable-zero-collected`) false-positive rate dropped from 8/9 (~88.9%) pre-fix to 0/1 (0%) post-fix. The one remaining hit — an epic-298 archived spine whose selector points at a since-renamed test — is a confirmed true positive, not a defect in the lint. Faults 1/3/4 held their exact reviewer-baseline counts.
+- **z4**: full suite green (2652 passed, 1 skipped), `map/INDEX.md` rebuilt, `IMPLEMENTER_RESULT.md` rewritten from the implementer template, and everything committed in two commits (`8708493b` fix, `96fb9412` chore/agent-work).

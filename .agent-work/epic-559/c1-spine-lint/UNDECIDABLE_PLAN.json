@@ -1,0 +1,158 @@
+{
+  "work_id": "epic-559/c1-spine-lint",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "u1-say-undecidable"
+  ],
+  "tasks": {
+    "u1-say-undecidable": {
+      "id": "u1-say-undecidable",
+      "title": "The lint must be able to say it could not tell",
+      "imperative": "The round-2 reviewer traced every return path. `_collects_zero` returns None when the interpreter cannot be resolved, when pytest is not importable, when there is no -k selector, or on subprocess error; `_fault_zero_collect` only appends a Fault when that value is truthy. So 'could not tell' and 'checked, found real tests' take the identical code path: no fault either way. `validate()` returns only list[Fault] with no companion channel, and main() prints either 'path: OK' or 'path: N fault(s)'. Confirmed live: the same file under two interpreters differing only in whether pytest is importable prints 'OK' for one and '1 fault(s)' for the other. An operator running under the wrong interpreter -- the single most likely way to hit this, and a host hazard CREW_CONTEXT.md documents -- gets a clean OK with no sign anything went unevaluated. This tool exists to refuse things that look fine, so a silence that looks like a pass is its worst possible failure. The rework's rule stands -- an undecidable check is not a failing check -- but the tool must be able to SAY undecidable. Add that channel: report conditions that could not be evaluated, distinctly from faults, in both the library return and the CLI output. A caller must be able to tell 'sound' from 'I could not judge N of these'. Keep the exit code semantics you have -- undecidable is not a failure -- but make it visible. Then run the full suite, rebuild map/INDEX.md, append to IMPLEMENTER_RESULT.md, and commit.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "an unevaluable check is reported as undecidable rather than silently omitted",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import sys,json,tempfile,pathlib;sys.path.insert(0,'scripts');import validate_spine as v;cmd='python3 -m pytest -q tests/test_validate_spine.py -k NoSuchSelectorAnywhere';sp={'work_id':'x','type':'gated','items':['g1'],'tasks':{'g1':{'id':'g1','title':'t','imperative':'i','preconditions':[],'postconditions':[{'id':'c1','statement':'tests pass','check':{'kind':'command','command':cmd},'satisfied':False}],'constraints':[],'directives':None,'child_checklist':None,'status':'pending','status_detail':{},'evidence':[],'rework_count':0}}};p=pathlib.Path(tempfile.mkdtemp())/'s.json';p.write_text(json.dumps(sp));r=v.validate_file(str(p));s=str(r).lower();print(r);sys.exit(0 if ('undecid' in s or 'could not' in s or 'unevaluat' in s or 'skipped' in s) else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-u1-say-undecidable-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the undecidable channel is pinned by tests",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -m pytest -q tests/test_validate_spine.py -k \"Undecid or Unevaluat\" --collect-only 2>/dev/null | grep -c '::') -ge 3 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_validate_spine.py -k \"Undecid or Unevaluat\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-u1-say-undecidable-2"
+        },
+        {
+          "id": "c3",
+          "statement": "no spine this epic drove is flagged zero-collect, over a type-discovered population",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/epic-559/c1-spine-lint/check_corpus_fp.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-u1-say-undecidable-3"
+        },
+        {
+          "id": "c4",
+          "statement": "full suite passes",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-u1-say-undecidable-4"
+        },
+        {
+          "id": "c5",
+          "statement": "the working tree is committed",
+          "check": {
+            "kind": "command",
+            "command": "test -z \"$(git status --porcelain -- scripts tests skills map)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-u1-say-undecidable-5"
+        }
+      ],
+      "constraints": [
+        "Never git add -A. Stage by name.",
+        "Do not modify checklist_engine.py, mcp_spine_server.py, or run_crew.py.",
+        "Do not touch settings.json, docs/agents/*, or any spine template.",
+        "The two Admiral check scripts under .agent-work are not yours to edit; block against them.",
+        "No merge or push to main."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-u1-say-undecidable-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import sys,json,tempfile,pathlib;sys.path.insert(0,'scripts');import validate_spine as v;cmd='python3 -m pytest -q tests/test_validate_spine.py -k NoSuchSelectorAnywhere';sp={'work_id':'x','type':'gated','items':['g1'],'tasks':{'g1':{'id':'g1','title':'t','imperative':'i','preconditions':[],'postconditions':[{'id':'c1','statement':'tests pass','check':{'kind':'command','command':cmd},'satisfied':False}],'constraints':[],'directives':None,'child_checklist':None,'status':'pending','status_detail':{},'evidence':[],'rework_count':0}}};p=pathlib.Path(tempfile.mkdtemp())/'s.json';p.write_text(json.dumps(sp));r=v.validate_file(str(p));s=str(r).lower();print(r);sys.exit(0 if ('undecid' in s or 'could not' in s or 'unevaluat' in s or 'skipped' in s) else 1)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-u1-say-undecidable-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_validate_spine.py -k \"Undecid or Unevaluat\" --collect-only 2>/dev/null | grep -c '::') -ge 3 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_validate_spine.py -k \"Undecid or Unevaluat\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-u1-say-undecidable-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/epic-559/c1-spine-lint/check_corpus_fp.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-u1-say-undecidable-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-u1-say-undecidable-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -z \"$(git status --porcelain -- scripts tests skills map)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/epic-559/c1-spine-lint/u1-say-undecidable/implementer",
+    "status": "released",
+    "claimed_at": "2026-08-11T14:26:38.558182+00:00",
+    "last_heartbeat": "2026-08-11T14:30:39.612551+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-11T14:30:41.430069+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "u1-say-undecidable",
+      "why": "Ran all five postcondition checks independently: c1 (undecidable-zero-collect reported distinctly, not silently omitted) exits 0; c2 (8 tests matching Undecid/Unevaluat, all pass); c3 (corpus FP check over 26 type-discovered checklists finds zero false positives); c4 (full suite: 2658 passed, 1 skipped); c5 (working tree under scripts/tests/skills/map is clean, matching the prior commit 26f2a2f4). No code changes were needed -- the previous instance's implementation was correct; only the engine drive (lease/start/evidence/advance) was missing.",
+      "mechanical": false,
+      "ts": "2026-08-11T14:30:39.612534+00:00"
+    }
+  ]
+}

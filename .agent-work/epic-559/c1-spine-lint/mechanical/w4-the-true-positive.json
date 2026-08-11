@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "w4-the-true-positive",
+  "mechanical": {
+    "run": "epic-559/c1-spine-lint",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "w4-the-true-positive",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c1-spine-lint-w4-the-true-positive@f42125852e4bdf827e7f0d7c819477ee5dcdf144",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c1-spine-lint",
+    "generated_at": "2026-08-11T12:30:53Z"
+  }
+}

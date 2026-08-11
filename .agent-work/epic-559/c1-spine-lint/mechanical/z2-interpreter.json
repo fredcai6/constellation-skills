@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "z2-interpreter",
+  "mechanical": {
+    "run": "epic-559/c1-spine-lint",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 4,
+    "spine-step": "z2-interpreter",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c1-spine-lint-z2-interpreter@765be850a3da619e9c7050013fd37db736fb7843",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c1-spine-lint",
+    "generated_at": "2026-08-11T11:46:05Z"
+  }
+}

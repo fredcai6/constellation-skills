@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "w5-admiral-check-scripts",
+  "mechanical": {
+    "run": "epic-559/c1-spine-lint",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "w5-admiral-check-scripts",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c1-spine-lint-w5-admiral-check-scripts@bffc9ca8f5493f3f26cb5c8bec4bf77307dcffed",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c1-spine-lint",
+    "generated_at": "2026-08-11T12:32:03Z"
+  }
+}
