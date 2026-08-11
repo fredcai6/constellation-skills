@@ -2,9 +2,9 @@
 
 ## packages
 evals: 12 modules, 54 entities
-scripts: 55 modules, 1079 entities
+scripts: 55 modules, 1081 entities
 skills: 1 modules, 18 entities
-tests: 68 modules, 3855 entities
+tests: 68 modules, 3870 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -29,7 +29,7 @@ tests: 68 modules, 3855 entities
 - [evals.euler-5-smallest-multiple.checks.spine_completed](evals.euler-5-smallest-multiple.checks.spine_completed/INDEX.md) (9 entities, 2 holes): PROCESS check (gating): a constellation ENGINE spine reached a terminal state WITH engine-written provenance -- not merely agent-written JSON (issue #127).
 - [evals.euler-5-smallest-multiple.checks.tests_green](evals.euler-5-smallest-multiple.checks.tests_green/INDEX.md) (3 entities, 3 holes): PROCESS check (gating): tests were WRITTEN and PASS in the workspace.
 
-## scripts (55 modules, 1079 entities)
+## scripts (55 modules, 1081 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -62,7 +62,7 @@ tests: 68 modules, 3855 entities
 - [scripts.gauge_reader](scripts.gauge_reader/INDEX.md) (11 entities): Gauge reader -- fail-safe read of the context-fullness gauge file.
 - [scripts.grade_lint](scripts.grade_lint/INDEX.md) (32 entities, 24 holes): Lint `@grade:` decision tags — a plan decision's fixedness as an inline, greppable property of the decision itself, so no second hand-maintained ledger ever has
 - [scripts.init_work_area](scripts.init_work_area/INDEX.md) (7 entities, 2 holes): Scaffold a Constellation work area: .agent-work/<work-id>/ and its subdirs.
-- [scripts.install_constellation](scripts.install_constellation/INDEX.md) (81 entities, 30 holes): HOLE: no docstring
+- [scripts.install_constellation](scripts.install_constellation/INDEX.md) (84 entities, 31 holes): HOLE: no docstring
 - [scripts.map_orient](scripts.map_orient/INDEX.md) (61 entities, 17 holes): Orient an agent against a repo's architecture map -- or REPORT that it cannot.
 - [scripts.mcp_spine_server](scripts.mcp_spine_server/INDEX.md) (10 entities, 4 holes): MCP front door for the checklist engine (issue #424, workstream F of epic #418).
 - [scripts.measure_overread](scripts.measure_overread/INDEX.md) (10 entities, 2 holes): measure_overread.py -- count STRUCTURAL READS per agent run in a transcript.
@@ -91,7 +91,7 @@ tests: 68 modules, 3855 entities
 - [scripts.verify_state_note](scripts.verify_state_note/INDEX.md) (6 entities, 3 holes): Verify a crash-resume state note exists and is filled, before detached work.
 - [scripts.verify_worktree_isolation](scripts.verify_worktree_isolation/INDEX.md) (10 entities, 4 holes): Verify git worktree isolation is real before — and inside — a parallel wave.
 - [scripts.verify_worktree_precondition_coverage](scripts.verify_worktree_precondition_coverage/INDEX.md) (6 entities, 3 holes): Verify every worktree-entering role's spine wires the worktree-isolation gate.
-- [scripts.wire_mcp_interpreter](scripts.wire_mcp_interpreter/INDEX.md) (4 entities, 3 holes): Resolve THIS machine's Python interpreter into `.mcp.json` (M2 job 2).
+- [scripts.wire_mcp_interpreter](scripts.wire_mcp_interpreter/INDEX.md) (3 entities, 3 holes): Resolve THIS machine's Python interpreter into `.mcp.json` (M2 job 2).
 
 ## skills (1 modules, 18 entities)
 
@@ -99,7 +99,7 @@ tests: 68 modules, 3855 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (68 modules, 3855 entities)
+## tests (68 modules, 3870 entities)
 
 ### tests.fixtures (2 modules, 4 entities)
 
@@ -137,7 +137,7 @@ tests: 68 modules, 3855 entities
 - [tests.test_implementer_vocab](tests.test_implementer_vocab/INDEX.md) (7 entities, 7 holes): Light vocabulary assertion for the constellation-implementer sharpening (DESIGN_SPEC Section D2 — vertical-slice vocabulary).
 - [tests.test_init_work_area](tests.test_init_work_area/INDEX.md) (41 entities, 35 holes): HOLE: no docstring
 - [tests.test_initial_issues](tests.test_initial_issues/INDEX.md) (27 entities, 27 holes): Contract tests for the canonical constellation-to-initial-issues seam.
-- [tests.test_install_constellation](tests.test_install_constellation/INDEX.md) (245 entities, 141 holes): HOLE: no docstring
+- [tests.test_install_constellation](tests.test_install_constellation/INDEX.md) (260 entities, 148 holes): HOLE: no docstring
 - [tests.test_interpreter_portability](tests.test_interpreter_portability/INDEX.md) (34 entities, 10 holes): HOLE: no docstring
 - [tests.test_interrogation](tests.test_interrogation/INDEX.md) (40 entities, 36 holes): Tests for the constellation-interrogator sharpening rail (scripts/verify_interrogation.py).
 - [tests.test_iterative_planning_acceptance](tests.test_iterative_planning_acceptance/INDEX.md) (5 entities, 5 holes): Focused tests for the ten-item iterative-planning acceptance verifier.

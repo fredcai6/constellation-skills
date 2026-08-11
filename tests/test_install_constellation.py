@@ -3904,3 +3904,201 @@ class ReadinessCLITests(unittest.TestCase):
                         env={}, out=lambda _: None,
                     )
             self.assertNotEqual(0, raised.exception.code)
+
+
+def _write_mcp_config(path: Path, command: str) -> None:
+    path.write_text(json.dumps({
+        "mcpServers": {
+            "spine": {
+                "command": command,
+                "args": ["scripts/mcp_spine_server.py"],
+                "env": {"SPINE_FILE": "${SPINE_FILE:-examples/mcp-interactive-demo/spine.json}"},
+            }
+        }
+    }, indent=2) + "\n", encoding="utf-8")
+
+
+class RepoMcpConfigWiringTests(unittest.TestCase):
+    """M2 g3-rework: `install_constellation.py` must wire this checkout's own
+    `.mcp.json` (M2 job 2's `MCP_INTERPRETER_PLACEHOLDER`) AS PART OF
+    INSTALLING -- a fresh clone must never need a separate remembered step.
+
+    `wire_repo_mcp_config` / `mcp_config_path` are keyword-only `main()`
+    parameters, not CLI flags: they default to `False` / `None` so every
+    existing direct call to `main()` throughout this file -- the bulk of this
+    suite -- is completely unaffected and NEVER touches a real `.mcp.json`.
+    Only the true CLI entry point (`if __name__ == "__main__":`) sets
+    `wire_repo_mcp_config=True`, so a real install run wires automatically
+    with nothing to remember, while `main()` itself stays exactly as pure as
+    it always was. Every test here passes an explicit `mcp_config_path`
+    pointing at a fixture -- never this repo's own tracked `.mcp.json`."""
+
+    def test_a_plain_main_call_never_touches_an_mcp_config_even_when_one_is_given(self):
+        """The default (`wire_repo_mcp_config=False`, what every other test in
+        this file gets) must be a true no-op on the mcp config path -- this is
+        what keeps the other ~50 real-install tests in this file safe."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            mcp_config = Path(tmp) / ".mcp.json"
+            _write_mcp_config(mcp_config, "<python-interpreter>")
+            before = mcp_config.read_text(encoding="utf-8")
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
+                 "--skills", "workbench"],
+                env={}, out=lambda _: None, mcp_config_path=mcp_config,
+            )
+            self.assertEqual(0, code)
+            self.assertEqual(before, mcp_config.read_text(encoding="utf-8"))
+
+    def test_wire_repo_mcp_config_true_wires_the_placeholder_using_the_same_run_probe(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            mcp_config = Path(tmp) / ".mcp.json"
+            _write_mcp_config(mcp_config, "<python-interpreter>")
+            lines = []
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
+                 "--skills", "workbench"],
+                env={}, out=lines.append, wire_repo_mcp_config=True, mcp_config_path=mcp_config,
+            )
+            self.assertEqual(0, code)
+            written = json.loads(mcp_config.read_text(encoding="utf-8"))
+            resolved = installer.probe_host_interpreter()
+            self.assertEqual(resolved, written["mcpServers"]["spine"]["command"])
+            self.assertIn(str(mcp_config), "\n".join(lines))
+
+    def test_wire_repo_mcp_config_is_a_noop_when_no_placeholder_is_present(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            mcp_config = Path(tmp) / ".mcp.json"
+            _write_mcp_config(mcp_config, "python3")
+            before = mcp_config.read_text(encoding="utf-8")
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
+                 "--skills", "workbench"],
+                env={}, out=lambda _: None, wire_repo_mcp_config=True, mcp_config_path=mcp_config,
+            )
+            self.assertEqual(0, code)
+            self.assertEqual(before, mcp_config.read_text(encoding="utf-8"))
+
+    def test_no_mcp_config_present_is_a_safe_noop_not_a_refusal(self):
+        """An installed copy of this script (write-a-skill bundles it) runs
+        from inside some other skill's tree with no `.mcp.json` beside it --
+        that is not a defect to refuse the whole install over."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            mcp_config = Path(tmp) / "nonexistent" / ".mcp.json"
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
+                 "--skills", "workbench"],
+                env={}, out=lambda _: None, wire_repo_mcp_config=True, mcp_config_path=mcp_config,
+            )
+            self.assertEqual(0, code)
+            self.assertFalse(mcp_config.exists())
+
+    def test_dry_run_reports_would_wire_and_writes_nothing(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            mcp_config = Path(tmp) / ".mcp.json"
+            _write_mcp_config(mcp_config, "<python-interpreter>")
+            before = mcp_config.read_text(encoding="utf-8")
+            lines = []
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
+                 "--skills", "workbench", "--dry-run"],
+                env={}, out=lines.append, wire_repo_mcp_config=True, mcp_config_path=mcp_config,
+            )
+            self.assertEqual(0, code)
+            self.assertEqual(before, mcp_config.read_text(encoding="utf-8"))
+            self.assertIn("DRY RUN", "\n".join(lines))
+
+    def test_check_readiness_never_wires_even_when_flagged(self):
+        """Report-only mode never writes settings.json at any scope -- an
+        mcp config is no exception, even if a caller passed the flag."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            mcp_config = Path(tmp) / ".mcp.json"
+            _write_mcp_config(mcp_config, "<python-interpreter>")
+            before = mcp_config.read_text(encoding="utf-8")
+            subprocess.run(["git", "init", "-q"], cwd=str(Path(tmp)), capture_output=True)
+            installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
+                 "--check-readiness", "--project", tmp],
+                env={}, cwd=Path(tmp), out=lambda _: None,
+                wire_repo_mcp_config=True, mcp_config_path=mcp_config,
+            )
+            self.assertEqual(before, mcp_config.read_text(encoding="utf-8"))
+
+    def test_baseline_only_never_wires_even_when_flagged(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "project"
+            project.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=str(project), capture_output=True)
+            mcp_config = Path(tmp) / ".mcp.json"
+            _write_mcp_config(mcp_config, "<python-interpreter>")
+            before = mcp_config.read_text(encoding="utf-8")
+            code = installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--skills", "workbench", "--baseline-only"],
+                env={}, cwd=project, out=lambda _: None,
+                wire_repo_mcp_config=True, mcp_config_path=mcp_config,
+            )
+            self.assertEqual(0, code)
+            self.assertEqual(before, mcp_config.read_text(encoding="utf-8"))
+
+    def test_hard_stop_when_nothing_probes_leaves_the_mcp_config_untouched(self):
+        """The #539 hard-stop-when-nothing-probes property extends to this
+        write path for free: `resolve_interpreter()` raises before any
+        install work happens, so the mcp config is never reached at all."""
+        installer = load_installer()
+
+        def always_fails(cmd, **kwargs):
+            raise FileNotFoundError(f"no such candidate: {cmd[0]}")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            mcp_config = Path(tmp) / ".mcp.json"
+            _write_mcp_config(mcp_config, "<python-interpreter>")
+            before = mcp_config.read_text(encoding="utf-8")
+            stderr = io.StringIO()
+            with mock.patch.object(installer.subprocess, "run", side_effect=always_fails):
+                with contextlib.redirect_stderr(stderr):
+                    with self.assertRaises(SystemExit) as raised:
+                        installer.main(
+                            ["--agent", "claude", "--scope", "user",
+                             "--dest", str(Path(tmp) / "skills"), "--skills", "workbench"],
+                            env={}, out=lambda _: None,
+                            wire_repo_mcp_config=True, mcp_config_path=mcp_config,
+                        )
+            self.assertNotEqual(0, raised.exception.code)
+            self.assertIn("no working Python interpreter found on this host", stderr.getvalue())
+            self.assertEqual(before, mcp_config.read_text(encoding="utf-8"))
+
+    def test_default_mcp_config_path_points_at_this_checkouts_own_mcp_json(self):
+        """No override at all resolves to REPO_ROOT/.mcp.json -- the same
+        default `wire_mcp_interpreter.py` uses -- so a real CLI run (which
+        never passes `mcp_config_path`) finds this checkout's own file."""
+        installer = load_installer()
+        self.assertEqual(installer.REPO_ROOT / ".mcp.json", installer.default_mcp_config_path())
+
+    def test_the_cli_entry_point_passes_wire_repo_mcp_config_true(self):
+        """The one place `wire_repo_mcp_config=True` may come from by default
+        -- not a `main()` default, which would flip every other test in this
+        file into a real-file write."""
+        text = INSTALLER.read_text(encoding="utf-8")
+        self.assertIn('if __name__ == "__main__":', text)
+        self.assertIn("wire_repo_mcp_config=True", text)
+
+
+class WireMcpInterpreterReuseTests(unittest.TestCase):
+    """`scripts/wire_mcp_interpreter.py` (M2 job 2) must reuse
+    install_constellation.py's rewrite rather than carrying a second copy --
+    the single-source-of-truth this rework's job 1 already established for
+    `resolve_interpreter()` now also covers the pure rewrite function."""
+
+    def test_wire_mcp_interpreter_reuses_the_installers_rewrite_function(self):
+        wire_path = ROOT / "scripts" / "wire_mcp_interpreter.py"
+        wire = load_module("wire_mcp_interpreter_reuse_check", wire_path)
+        installer = wire._install
+        self.assertIs(wire.rewrite_mcp_config_interpreter, installer.rewrite_mcp_config_interpreter)
+        self.assertEqual(wire.MCP_INTERPRETER_PLACEHOLDER, installer.MCP_INTERPRETER_PLACEHOLDER)

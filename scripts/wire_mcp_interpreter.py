@@ -20,15 +20,12 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
-import json
 import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parent
 DEFAULT_MCP_CONFIG = REPO_ROOT / ".mcp.json"
-
-MCP_INTERPRETER_PLACEHOLDER = "<python-interpreter>"
 
 
 def _load_install_constellation():
@@ -45,25 +42,12 @@ def _load_install_constellation():
 
 _install = _load_install_constellation()
 
-
-def rewrite_mcp_config_interpreter(mcp_config_path: Path, interpreter) -> bool:
-    """Rewrite every `mcpServers[*].command` equal to the placeholder to
-    `interpreter.interpreter`. Returns whether the file changed.
-
-    `interpreter` is threaded in, never re-probed here -- mirrors
-    `resolve_interpreter`'s "call once per run, thread the result through"
-    contract, so this function stays a pure rewrite over an already-resolved
-    value and never second-guesses the probe (e.g. by preferring a candidate
-    with pytest -- that is not `resolve_interpreter`'s contract)."""
-    config = json.loads(mcp_config_path.read_text(encoding="utf-8"))
-    changed = False
-    for server in config.get("mcpServers", {}).values():
-        if server.get("command") == MCP_INTERPRETER_PLACEHOLDER:
-            server["command"] = interpreter.interpreter
-            changed = True
-    if changed:
-        mcp_config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
-    return changed
+# Single source of truth lives on install_constellation.py (M2 g3-rework),
+# which also calls it automatically from its own CLI entry point. Aliased
+# here, never redefined, so this standalone script and the installer's
+# automatic wiring can never drift apart.
+MCP_INTERPRETER_PLACEHOLDER = _install.MCP_INTERPRETER_PLACEHOLDER
+rewrite_mcp_config_interpreter = _install.rewrite_mcp_config_interpreter
 
 
 def build_parser() -> argparse.ArgumentParser:

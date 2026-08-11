@@ -485,6 +485,93 @@ def resolve_interpreter(
     return InterpreterResolution(probed, tuple(candidates), "probe")
 
 
+# --------------------------------------------------------------------------- #
+# .mcp.json interpreter wiring (M2 g3-rework) -- CLI-entry-point-only
+# --------------------------------------------------------------------------- #
+# `.mcp.json` is git-tracked (like settings.json, #539), so it may never carry
+# a literal interpreter name: it ships `MCP_INTERPRETER_PLACEHOLDER` as each
+# server's `command`, and this is the ONE write path -- shared with
+# scripts/wire_mcp_interpreter.py, which reuses `rewrite_mcp_config_interpreter`
+# by reference rather than carrying a second copy -- that resolves it to the
+# interpreter THIS run already probed. Never a second probe.
+#
+# `wire_repo_mcp_config`/`mcp_config_path` are keyword-only `main()` parameters,
+# not CLI flags: they default to `False`/`None` so a direct call to `main()`
+# (every test in this suite, and any other library caller) never touches this
+# checkout's own tracked `.mcp.json`. Only `if __name__ == "__main__":` passes
+# `wire_repo_mcp_config=True`, so a real install run wires it automatically --
+# nothing to remember -- while `main()` itself stays exactly as pure as it
+# always was.
+MCP_CONFIG_FILENAME = ".mcp.json"
+MCP_INTERPRETER_PLACEHOLDER = "<python-interpreter>"
+
+
+def default_mcp_config_path(repo_root: Path = REPO_ROOT) -> Path:
+    return repo_root / MCP_CONFIG_FILENAME
+
+
+def rewrite_mcp_config_interpreter(mcp_config_path: Path, interpreter: InterpreterResolution) -> bool:
+    """Rewrite every `mcpServers[*].command` equal to the placeholder to
+    `interpreter.interpreter`. Returns whether the file changed.
+
+    `interpreter` is threaded in, never re-probed here -- mirrors
+    `resolve_interpreter`'s "call once per run, thread the result through"
+    contract, so this stays a pure rewrite over an already-resolved value and
+    never second-guesses the probe."""
+    config = json.loads(mcp_config_path.read_text(encoding="utf-8"))
+    changed = False
+    for server in config.get("mcpServers", {}).values():
+        if server.get("command") == MCP_INTERPRETER_PLACEHOLDER:
+            server["command"] = interpreter.interpreter
+            changed = True
+    if changed:
+        mcp_config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+    return changed
+
+
+def apply_repo_mcp_config_wiring(
+    mcp_config_path: Path,
+    interpreter: InterpreterResolution,
+    *,
+    dry_run: bool,
+    out: Callable[[str], object],
+) -> None:
+    """Report-and-wire step for THIS checkout's own `.mcp.json`, run once per
+    CLI invocation after skills install successfully.
+
+    A missing file is a silent, named no-op rather than a refusal: an
+    installed copy of this script (write-a-skill bundles it) runs from inside
+    some other skill's tree with no `.mcp.json` beside it, and that is not a
+    defect to abort an otherwise-successful install over."""
+    if not mcp_config_path.is_file():
+        out(f"- {MCP_CONFIG_FILENAME}: none at {mcp_config_path}; nothing to wire")
+        return
+    if dry_run:
+        config = json.loads(mcp_config_path.read_text(encoding="utf-8"))
+        placeholder_count = sum(
+            1 for server in config.get("mcpServers", {}).values()
+            if server.get("command") == MCP_INTERPRETER_PLACEHOLDER
+        )
+        if placeholder_count:
+            out(
+                f"- DRY RUN: would wire {placeholder_count} {mcp_config_path} "
+                f"server command(s) -> {interpreter.interpreter!r} (probed)"
+            )
+        else:
+            out(
+                f"- DRY RUN: {mcp_config_path} carries no {MCP_INTERPRETER_PLACEHOLDER!r} "
+                f"command; nothing to wire"
+            )
+        return
+    if rewrite_mcp_config_interpreter(mcp_config_path, interpreter):
+        out(f"- {mcp_config_path}: wired command -> {interpreter.interpreter!r} (probed)")
+    else:
+        out(
+            f"- {mcp_config_path}: no {MCP_INTERPRETER_PLACEHOLDER!r} command found; "
+            f"nothing to wire"
+        )
+
+
 def installed_path_replacements(
     target: Path, skill: Skill, interpreter: InterpreterResolution
 ) -> dict[str, str]:
@@ -2184,6 +2271,8 @@ def main(
     env: Mapping[str, str] | None = None,
     cwd: Path | None = None,
     out: Callable[[str], object] = print,
+    wire_repo_mcp_config: bool = False,
+    mcp_config_path: Path | None = None,
 ) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -2322,6 +2411,16 @@ def main(
                 # a previously-stale entry to wired.
                 report_hook_wiring(
                     target_root, env=runtime_env, out=out, specs=HOOK_SETS[args.hooks])
+        if wire_repo_mcp_config:
+            # Same `interpreter` this run already resolved above -- never a
+            # second probe. Runs once per process regardless of --agent all,
+            # since this checkout's own .mcp.json is not per-agent-target.
+            apply_repo_mcp_config_wiring(
+                mcp_config_path if mcp_config_path is not None else default_mcp_config_path(),
+                interpreter,
+                dry_run=args.dry_run,
+                out=out,
+            )
         if args.scope == "project" and not args.dry_run and not args.dest:
             project_root = args.project.expanduser() if args.project else runtime_cwd
             seeded = write_template_baselines(skills, project_root, out=out)
@@ -2333,4 +2432,7 @@ def main(
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # wire_repo_mcp_config=True ONLY here: a real process invocation wires this
+    # checkout's own .mcp.json automatically, with nothing to remember, while a
+    # direct library/test call to main() (every other caller) never touches it.
+    raise SystemExit(main(wire_repo_mcp_config=True))
