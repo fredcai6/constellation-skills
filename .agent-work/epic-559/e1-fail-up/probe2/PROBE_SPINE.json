@@ -1,0 +1,58 @@
+{
+  "work_id": "epic-559/e1-probe2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "p1-reach"
+  ],
+  "tasks": {
+    "p1-reach": {
+      "id": "p1-reach",
+      "title": "Try to reach your parent",
+      "imperative": "You are a probe. Do exactly this and nothing else. (1) Call ListAgents. (2) SendMessage to the peer named exactly \"mcp cs\" with message text \"PROBE2-REACHED-PARENT from crew epic-559/e1-probe2\" and summary \"crew fail-up reachability probe\". (3) Write to .agent-work/epic-559/e1-fail-up/probe2/REACH.md: whether SendMessage succeeded, and the verbatim tool result. Do not fix anything, do not dispatch anything, do not read other files. Then advance this gate.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the reach attempt is recorded verbatim",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/epic-559/e1-fail-up/probe2/REACH.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-p1-reach-1"
+        }
+      ],
+      "constraints": [
+        "Do not modify any tracked file."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-p1-reach-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/epic-559/e1-fail-up/probe2/REACH.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "p1-reach",
+      "why": "Probe complete: ListAgents output written verbatim to REACH.md; searched for a peer matching SPINE_PARENT (\"Admiral session 717403d3\") and found none among the 6 listed sessions; attempted SendMessage anyway and it failed with \"No agent named 'Admiral session 717403d3' is reachable\"; the failure was appended verbatim to REACH.md as instructed. No other files touched, nothing dispatched.",
+      "mechanical": false,
+      "ts": "2026-08-11T10:40:21.430876+00:00"
+    }
+  ]
+}

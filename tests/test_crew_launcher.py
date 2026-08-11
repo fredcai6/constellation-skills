@@ -102,6 +102,20 @@ def no_ambient_spine_env():
                 os.environ[k] = v
 
 
+@contextlib.contextmanager
+def no_ambient_parent_env():
+    """Strip SPINE_PARENT from THIS process's environment for the duration of
+    the block -- the parent analog of `no_ambient_spine_env`, for tests that
+    must observe a dispatched child's SPINE_PARENT unpolluted by whatever
+    parent the TEST-RUNNING process itself happens to carry."""
+    saved = os.environ.pop("SPINE_PARENT", None)
+    try:
+        yield
+    finally:
+        if saved is not None:
+            os.environ["SPINE_PARENT"] = saved
+
+
 INSTALLER_PY = ROOT / "scripts" / "install_constellation.py"
 
 
@@ -237,7 +251,9 @@ class SpineOwnershipPromptTests(unittest.TestCase):
     def test_control_handoff_branch_is_byte_identical_to_the_pre_559_prompt(self):
         # CONTROL, recorded verbatim against a1-control: today's -- i.e.
         # pre-#559 -- prompt names the handoff path and never mentions the
-        # spine or spine_status anywhere.
+        # spine or spine_status anywhere. Updated for E1 fail-up (#559
+        # follow-on): every prompt now also names the crew's parent (or says
+        # plainly it is unknown), so the pin includes that clause too.
         argv = RC.build_crew_argv(
             "claude", role="reviewer", handoff="/abs/g2-reviewer.md",
             model=None, session="s",
@@ -245,6 +261,7 @@ class SpineOwnershipPromptTests(unittest.TestCase):
         prompt = argv[2]
         self.assertEqual(
             "You are the constellation reviewer crew for session s. "
+            "Your parent is unknown: never invent one. "
             "Read the handoff at /abs/g2-reviewer.md and execute it exactly. "
             "The run is only complete when the result artifact the handoff names exists.",
             prompt,
@@ -292,6 +309,54 @@ class SpineOwnershipPromptTests(unittest.TestCase):
                 "claude", role="implementer", handoff=None, spine=None,
                 model=None, session="s",
             )
+
+
+class ParentPromptTests(unittest.TestCase):
+    """E1 fail-up (#559 follow-on): a crew that hits a check it cannot
+    satisfy must have somewhere to ask up. `build_crew_argv` names the
+    dispatching parent (or plainly says it is unknown) on BOTH prompt
+    branches -- handoff and spine-only -- so a crew reading either one
+    always knows who to ask, or that nobody said."""
+
+    def test_handoff_branch_names_the_given_parent(self):
+        argv = RC.build_crew_argv(
+            "claude", role="implementer", handoff="/abs/h.md", model=None,
+            session="s", parent="constellation/epic-1/commander",
+        )
+        self.assertIn("constellation/epic-1/commander", argv[2])
+
+    def test_handoff_branch_says_unknown_when_parent_omitted(self):
+        argv = RC.build_crew_argv(
+            "claude", role="implementer", handoff="/abs/h.md", model=None, session="s",
+        )
+        self.assertIn(f"parent is {RC.UNKNOWN_PARENT}", argv[2])
+
+    def test_spine_only_branch_names_the_given_parent(self):
+        argv = RC.build_crew_argv(
+            "claude", role="implementer", handoff=None, spine="/abs/spine.json",
+            model=None, session="s", parent="constellation/epic-1/commander",
+        )
+        self.assertIn("constellation/epic-1/commander", argv[2])
+
+    def test_spine_only_branch_says_unknown_when_parent_omitted(self):
+        argv = RC.build_crew_argv(
+            "claude", role="implementer", handoff=None, spine="/abs/spine.json",
+            model=None, session="s",
+        )
+        self.assertIn(f"parent is {RC.UNKNOWN_PARENT}", argv[2])
+
+    def test_no_parent_given_never_invents_one(self):
+        # The ruling this whole gate exists for: a dispatch with no --parent
+        # must say plainly it does not know, never guess a name (e.g. the
+        # role, the session, or some other in-scope string) that reads as a
+        # real identity.
+        argv = RC.build_crew_argv(
+            "claude", role="implementer", handoff="/abs/h.md", model=None, session="s",
+        )
+        prompt = argv[2]
+        self.assertIn("never invent", prompt.lower())
+        self.assertNotIn("Your parent is implementer", prompt)
+        self.assertNotIn("Your parent is s.", prompt)
 
 
 class WaiveHookTests(unittest.TestCase):
@@ -641,6 +706,69 @@ class LaunchTests(unittest.TestCase):
             self.assertEqual(1, code)
 
 
+class ParentCliTests(unittest.TestCase):
+    """`--parent` end to end through the CLI: a dispatch with no --parent
+    still works (default it sensibly, never require it) and records/binds/
+    names an honest unknown rather than inventing one."""
+
+    def test_fresh_launch_with_parent_records_it_in_the_registry(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "reviewer")
+            result = result_rel("issue-1", "g1", "reviewer")
+            with fake_launch(RC, 0, write_result_at=root / result):
+                code = RC.main([
+                    "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                    "--role", "reviewer", "--handoff", handoff, "--result", result,
+                    "--parent", "constellation/epic-1/commander",
+                ])
+            self.assertEqual(0, code)
+            reg = RC.load_registry(RC.registry_path("issue-1", root))
+            self.assertEqual("constellation/epic-1/commander", reg[0]["parent"])
+
+    def test_fresh_launch_with_no_parent_still_works_and_records_none(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "reviewer")
+            result = result_rel("issue-1", "g1", "reviewer")
+            with fake_launch(RC, 0, write_result_at=root / result):
+                code = RC.main([
+                    "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                    "--role", "reviewer", "--handoff", handoff, "--result", result,
+                ])
+            self.assertEqual(0, code)
+            reg = RC.load_registry(RC.registry_path("issue-1", root))
+            self.assertIsNone(reg[0]["parent"])
+
+    def test_abandon_relaunch_inherits_stored_parent_when_not_reasserted(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "reviewer")
+            result = result_rel("issue-1", "g1", "reviewer")
+            entries = [{
+                "session_name": "constellation/issue-1/g1/reviewer/attempt-1",
+                "crew_id": "constellation/issue-1/g1/reviewer/attempt-1",
+                "work_id": "issue-1", "gate": "g1", "role": "reviewer", "attempt": 1,
+                "worktree": ".", "status": "running", "abandoned": False,
+                "handoff": handoff, "result": result, "parent": "constellation/epic-1/commander",
+            }]
+            RC.save_registry(RC.registry_path("issue-1", root), entries)
+            with fake_launch(RC, 0, write_result_at=root / result):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root),
+                        "--abandon", "constellation/issue-1/g1/reviewer/attempt-1",
+                        "--relaunch", "--handoff", handoff, "--result", result,
+                    ])
+            self.assertEqual(0, code)
+            reg = RC.load_registry(RC.registry_path("issue-1", root))
+            by_name = {e["session_name"]: e for e in reg}
+            self.assertEqual(
+                "constellation/epic-1/commander",
+                by_name["constellation/issue-1/g1/reviewer/attempt-2"]["parent"],
+            )
+
+
 class CrewEnvSpineBindingTests(unittest.TestCase):
     """CONTROL A, made green: `crew_env()` must bind SPINE_FILE/SPINE_SESSION to
     the crew it is actually building an environment FOR, not silently omit them
@@ -870,6 +998,115 @@ class DispatchDoorBindingTests(unittest.TestCase):
             self.assertNotIn("SPINE_SESSION", env)
 
 
+class ParentEnvBindingTests(unittest.TestCase):
+    """`crew_env()`'s own contract for SPINE_PARENT: bound when given, left
+    untouched when not (the plain-optional half of the contract; the
+    "always resolve to a definite value" half lives one level up, in
+    `_crew_door_env`, covered by `ParentDoorBindingTests` below)."""
+
+    def test_no_parent_requested_leaves_spine_parent_unset(self):
+        env = RC.crew_env({"PATH": "/usr/bin"})
+        self.assertNotIn("SPINE_PARENT", env)
+
+    def test_binds_spine_parent_when_given(self):
+        env = RC.crew_env({"PATH": "/usr/bin"}, parent="constellation/epic-1/commander")
+        self.assertEqual("constellation/epic-1/commander", env["SPINE_PARENT"])
+
+
+class ParentDoorBindingTests(unittest.TestCase):
+    """A crew dispatched (or resumed) through `launch_crew`/`resume_crew` gets
+    a definitive SPINE_PARENT -- the given `--parent`, or plainly
+    `UNKNOWN_PARENT` -- never the ambient value of whatever parent the
+    DISPATCHING process itself happens to carry (that would silently name
+    the wrong rung: the dispatcher's own parent, not the dispatcher)."""
+
+    def test_fresh_dispatch_binds_given_parent(self):
+        with no_ambient_parent_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                RC.launch_crew(
+                    work_id="issue-1", gate="g1", role="implementer",
+                    handoff=handoff, result=result, parent="constellation/epic-1/commander",
+                    worktree=".", model=None, launcher="claude", attempt=1,
+                    root=root, entries=[],
+                )
+            env = calls[0]["env"]
+            self.assertEqual("constellation/epic-1/commander", env["SPINE_PARENT"])
+            self.assertIn("constellation/epic-1/commander", calls[0]["argv"][2])
+
+    def test_fresh_dispatch_with_no_parent_binds_unknown_not_ambient(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            saved = os.environ.pop("SPINE_PARENT", None)
+            try:
+                os.environ["SPINE_PARENT"] = "constellation/some-other/dispatcher"
+                root = Path(tmp)
+                handoff = write_handoff(root, "issue-1", "g1", "implementer")
+                result = result_rel("issue-1", "g1", "implementer")
+                with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                    RC.launch_crew(
+                        work_id="issue-1", gate="g1", role="implementer",
+                        handoff=handoff, result=result,
+                        worktree=".", model=None, launcher="claude", attempt=1,
+                        root=root, entries=[],
+                    )
+                env = calls[0]["env"]
+                self.assertEqual(RC.UNKNOWN_PARENT, env["SPINE_PARENT"])
+                self.assertNotEqual("constellation/some-other/dispatcher", env["SPINE_PARENT"])
+            finally:
+                if saved is None:
+                    os.environ.pop("SPINE_PARENT", None)
+                else:
+                    os.environ["SPINE_PARENT"] = saved
+
+    def test_resume_rebinds_the_stored_parent(self):
+        with no_ambient_parent_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            session = "constellation/issue-1/g1/implementer/attempt-1"
+            stdout, stderr = RC.run_log_paths("issue-1", "g1", "implementer", 1, root)
+            entries = [{
+                "session_name": session, "crew_id": session,
+                "work_id": "issue-1", "gate": "g1", "role": "implementer", "attempt": 1,
+                "worktree": ".", "status": "running", "abandoned": False,
+                "handoff": handoff, "result": result, "parent": "constellation/epic-1/commander",
+                "stdout": RC._relativize(str(stdout), root),
+                "stderr": RC._relativize(str(stderr), root),
+            }]
+            RC.save_registry(RC.registry_path("issue-1", root), entries)
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                RC.resume_crew(session=session, root=root, entries=entries)
+            env = calls[0]["env"]
+            self.assertEqual("constellation/epic-1/commander", env["SPINE_PARENT"])
+            self.assertIn("constellation/epic-1/commander", calls[0]["argv"][2])
+
+    def test_resume_of_legacy_entry_without_parent_key_says_unknown(self):
+        # An entry recorded before this field existed has no "parent" key at
+        # all (not even None) -- resume must degrade to UNKNOWN_PARENT, not
+        # KeyError and not a leaked ambient value.
+        with no_ambient_parent_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            session = "constellation/issue-1/g1/implementer/attempt-1"
+            stdout, stderr = RC.run_log_paths("issue-1", "g1", "implementer", 1, root)
+            entries = [{
+                "session_name": session, "crew_id": session,
+                "work_id": "issue-1", "gate": "g1", "role": "implementer", "attempt": 1,
+                "worktree": ".", "status": "running", "abandoned": False,
+                "handoff": handoff, "result": result,
+                "stdout": RC._relativize(str(stdout), root),
+                "stderr": RC._relativize(str(stderr), root),
+            }]
+            RC.save_registry(RC.registry_path("issue-1", root), entries)
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                RC.resume_crew(session=session, root=root, entries=entries)
+            env = calls[0]["env"]
+            self.assertEqual(RC.UNKNOWN_PARENT, env["SPINE_PARENT"])
+
+
 class SpineOnlyDispatchTests(unittest.TestCase):
     """Issue #559: `--handoff` becomes optional -- a crew with a bound `--spine`
     and no `--handoff` is a legal dispatch on the cli backend, refused only when
@@ -993,6 +1230,25 @@ def _write_spine(path: Path, *, done: bool) -> None:
         "type": "gated",
         "items": ["w1"],
         "tasks": {"w1": {"id": "w1", "status": "complete" if done else "pending"}},
+    }), encoding="utf-8")
+
+
+def _write_blocked_spine(path: Path, *, blocked_id: str = "w1") -> None:
+    """A minimal `checklist_engine`-shaped spine with one BLOCKED gate --
+    what a real crew's spine looks like right after `spine_halt block`."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({
+        "work_id": "issue-1",
+        "type": "gated",
+        "items": [blocked_id],
+        "tasks": {blocked_id: {
+            "id": blocked_id, "status": "blocked",
+            "status_detail": {
+                "blocker": "cannot satisfy check c1",
+                "authority_needed": "human",
+                "next_action": "ask parent",
+            },
+        }},
     }), encoding="utf-8")
 
 
@@ -1159,6 +1415,165 @@ class SpineOnlyCompletionContractTests(unittest.TestCase):
             self.assertEqual(1, code)
             self.assertIn("REFUSED", stderr.getvalue())
             self.assertEqual([], RC.load_registry(RC.registry_path("issue-1", root)))
+
+
+class SpineBlockedIdTests(unittest.TestCase):
+    """`spine_blocked_id` reads the same file `spine_terminal` reads, with the
+    same defensive parse -- a missing/unparseable/malformed spine has no
+    blocked gate to report, never a raise."""
+
+    def test_finds_the_blocked_gate(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            _write_blocked_spine(root / spine_rel, blocked_id="f3-can-it-reach")
+            self.assertEqual("f3-can-it-reach", RC.spine_blocked_id(spine_rel, root))
+
+    def test_no_blocked_gate_returns_none(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            _write_spine(root / spine_rel, done=False)
+            self.assertIsNone(RC.spine_blocked_id(spine_rel, root))
+
+    def test_terminal_spine_returns_none(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            _write_spine(root / spine_rel, done=True)
+            self.assertIsNone(RC.spine_blocked_id(spine_rel, root))
+
+    def test_missing_spine_file_returns_none(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertIsNone(
+                RC.spine_blocked_id(".agent-work/issue-1/NEVER_WRITTEN.json", root)
+            )
+
+    def test_malformed_spine_returns_none(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/BAD.json"
+            (root / spine_rel).parent.mkdir(parents=True, exist_ok=True)
+            (root / spine_rel).write_text("not json", encoding="utf-8")
+            self.assertIsNone(RC.spine_blocked_id(spine_rel, root))
+
+
+class BlockedOutcomeTests(unittest.TestCase):
+    """E1 fail-up (#559 follow-on): a crew that hits a check it cannot
+    satisfy and calls `spine_halt block` before returning did exactly the
+    right thing. `blocked` must be recorded as its OWN outcome -- distinct
+    from `completed` and from `failed` (which keeps meaning the crew died or
+    produced nothing) -- naming the gate and the parent it is asking, said
+    plainly in the launcher's own output. Includes the negative control: a
+    spine with no blocked gate must never record `blocked`."""
+
+    def test_blocked_gate_is_recorded_blocked_not_failed(self):
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            _write_blocked_spine(root / spine_rel, blocked_id="f3-can-it-reach")
+            with fake_launch(RC, 0):
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--spine", spine_rel,
+                        "--parent", "constellation/epic-1/commander",
+                    ])
+            self.assertEqual(0, code)
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("blocked", entry["status"])
+            self.assertEqual("f3-can-it-reach", entry["blocked_gate"])
+            # said plainly in the launcher's own output: gate AND parent
+            self.assertIn("f3-can-it-reach", out.getvalue())
+            self.assertIn("constellation/epic-1/commander", out.getvalue())
+            self.assertIn("blocked", out.getvalue())
+
+    def test_blocked_with_unknown_parent_says_so_plainly(self):
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            _write_blocked_spine(root / spine_rel)
+            with fake_launch(RC, 0):
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--spine", spine_rel,
+                    ])
+            self.assertEqual(0, code)
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("blocked", entry["status"])
+            self.assertIn(RC.UNKNOWN_PARENT, out.getvalue())
+
+    def test_negative_control_no_blocked_gate_never_records_blocked(self):
+        # Same spine shape, ONLY the gate's status differs (pending, not
+        # blocked) -- proves the check is a real read of the spine, not a
+        # tautology that always reports blocked for a spine-only dispatch.
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            _write_spine(root / spine_rel, done=False)
+            with fake_launch(RC, 0):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--spine", spine_rel,
+                    ])
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertNotEqual("blocked", entry["status"])
+            self.assertEqual("failed", entry["status"])
+
+    def test_negative_control_terminal_spine_never_records_blocked(self):
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            _write_spine(root / spine_rel, done=True)
+            with fake_launch(RC, 0):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--spine", spine_rel,
+                    ])
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("completed", entry["status"])
+
+    def test_blocked_takes_priority_over_a_given_result_artifact(self):
+        # A crew given BOTH --handoff/--result and --spine (today's normal
+        # combined dispatch) that blocks its spine must still record
+        # `blocked`, even though no result artifact was ever written.
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            _write_blocked_spine(root / spine_rel)
+            with fake_launch(RC, 0):  # no write_result_at: nothing lands
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--handoff", handoff, "--result", result,
+                        "--spine", spine_rel,
+                    ])
+            self.assertEqual(0, code)
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("blocked", entry["status"])
+
+    def test_blocked_reports_success_exit_code_not_failure(self):
+        # blocked is a legitimate, deliberate outcome, not a launcher error --
+        # a polling parent reads the durable registry, not the exit code.
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            _write_blocked_spine(root / spine_rel)
+            with fake_launch(RC, 0):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--spine", spine_rel,
+                    ])
+            self.assertEqual(0, code)
 
 
 class AssignmentKeyedLeaseTests(unittest.TestCase):
@@ -1695,6 +2110,20 @@ class BuildEntryTests(unittest.TestCase):
         entry = RC.build_entry(backend="external", pid=None, model=None, **self._kwargs())
         self.assertNotIn("model", entry)
 
+    def test_parent_is_recorded_when_given(self):
+        entry = RC.build_entry(
+            backend="cli", pid=1, parent="constellation/epic-1/commander", **self._kwargs(),
+        )
+        self.assertEqual("constellation/epic-1/commander", entry["parent"])
+
+    def test_parent_is_recorded_as_none_not_omitted_when_absent(self):
+        # Nullable-but-present, matching handoff/result/spine's own shape: a
+        # reader can distinguish "no parent given" from "field predates this
+        # feature" (KeyError on the latter, None on the former).
+        entry = RC.build_entry(backend="cli", pid=1, **self._kwargs())
+        self.assertIn("parent", entry)
+        self.assertIsNone(entry["parent"])
+
 
 class FinalizeFromExitCodeTests(unittest.TestCase):
     """The ONE finalize tail both CliBackend.dispatch and .resume call — no forked
@@ -1741,6 +2170,34 @@ class FinalizeFromExitCodeTests(unittest.TestCase):
             self.assertEqual("failed", entry["status"])
             self.assertTrue(entry["result_present"])
             self.assertFalse(entry["result_fresh"])
+
+    def test_blocked_spine_is_recorded_blocked_with_exit0_final(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = "spine.json"
+            _write_blocked_spine(root / spine_rel, blocked_id="c1")
+            entry = {}
+            final = RC.finalize_from_exit_code(
+                entry, exit_code=0, result=None, root=root, since=iso(self.BASE),
+                spine=spine_rel,
+            )
+            self.assertEqual(0, final)
+            self.assertEqual("blocked", entry["status"])
+            self.assertEqual("c1", entry["blocked_gate"])
+
+    def test_no_blocked_gate_and_no_spine_given_is_unaffected(self):
+        # Negative control at the unit level: `spine=None` never consults a
+        # blocked gate at all.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_result_with_mtime(root / "r.md", self.BASE + 60)
+            entry = {}
+            RC.finalize_from_exit_code(
+                entry, exit_code=0, result="r.md", root=root, since=iso(self.BASE),
+                spine=None,
+            )
+            self.assertEqual("completed", entry["status"])
+            self.assertNotIn("blocked_gate", entry)
 
 
 class EntryBackendTests(unittest.TestCase):

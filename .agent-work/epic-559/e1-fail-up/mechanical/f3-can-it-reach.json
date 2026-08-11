@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "f3-can-it-reach",
+  "mechanical": {
+    "run": "epic-559/e1-fail-up",
+    "project": "constellation-skills",
+    "spine-step": "f3-can-it-reach",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/e1-fail-up-f3-can-it-reach@1f33f8be9f4fe7c6b8a761f0b309711c2e7c6fcb",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "epic-559/e1-fail-up",
+    "generated_at": "2026-08-11T10:35:25Z"
+  }
+}

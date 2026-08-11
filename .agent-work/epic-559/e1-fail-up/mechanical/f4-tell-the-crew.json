@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "f4-tell-the-crew",
+  "mechanical": {
+    "run": "epic-559/e1-fail-up",
+    "project": "constellation-skills",
+    "spine-step": "f4-tell-the-crew",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/e1-fail-up-f4-tell-the-crew@2f6e35d5b7229f92db1065ad8c7b0de307e5c54a",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "epic-559/e1-fail-up",
+    "generated_at": "2026-08-11T11:44:17Z"
+  }
+}

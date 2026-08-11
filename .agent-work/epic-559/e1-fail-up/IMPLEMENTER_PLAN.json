@@ -1,0 +1,306 @@
+{
+  "work_id": "epic-559/e1-fail-up",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "f1-bind-parent",
+    "f2-blocked-is-not-failed",
+    "f3-can-it-reach",
+    "f4-tell-the-crew",
+    "f5-verify"
+  ],
+  "tasks": {
+    "f1-bind-parent": {
+      "id": "f1-bind-parent",
+      "title": "Every dispatched crew knows who dispatched it",
+      "imperative": "A crew today has no idea who dispatched it. That is not a cosmetic gap: last night a reviewer hit a check it could not satisfy, found no dispatching Commander named anywhere reachable, and closed the gate with --authority human -- an authority it did not hold -- because the alternative was to stop dead. It disclosed this honestly, which is the only reason it was recoverable. Add --parent to run_crew.py: an identifier for whoever dispatched this crew. Record it in the registry entry, bind it into the crew's environment as SPINE_PARENT, and name it in the crew prompt on BOTH branches (handoff and spine-only). Default it sensibly rather than requiring it -- a dispatch with no --parent should still work and should say plainly that the parent is unknown, never invent one. The human's ruling, verbatim: 'crew should fail up. that could eventually reach all the way to me, but I'd prefer it go one rung at a time.'",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the parent is recorded, bound, and named in both prompt branches, pinned by tests",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -m pytest -q tests/test_crew_launcher.py -k Parent --collect-only 2>/dev/null | grep -c '::') -ge 4 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_crew_launcher.py -k Parent"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-f1-bind-parent-1"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+        "Do not touch settings.json or docs/agents/*.",
+        "Do not change spine templates under skills/*/templates/ -- another crew owns those.",
+        "No merge or push to main. Commit on this branch before you finish."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-f1-bind-parent-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_crew_launcher.py -k Parent --collect-only 2>/dev/null | grep -c '::') -ge 4 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_crew_launcher.py -k Parent",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "f2-blocked-is-not-failed": {
+      "id": "f2-blocked-is-not-failed",
+      "title": "A crew that correctly gives up must not read as a crash",
+      "imperative": "run_crew.py records `completed` or `failed` and nothing else, so a crew that did exactly the right thing -- hit a check it could not satisfy, called spine_halt block, and returned -- is indistinguishable from one that segfaulted. That makes 'always ask up' cost the crew its record, which is a reason not to do it. Add `blocked` as a distinct recorded outcome: when the crew exits and its bound spine has a blocked gate, record blocked, name the gate and the parent it is asking, and say so in the launcher's own output. `failed` keeps meaning the crew died or produced nothing. Include the negative control: a spine with no blocked gate must never record blocked.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "f1-bind-parent complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "blocked is recorded distinctly from failed and from completed, with a negative control",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -m pytest -q tests/test_crew_launcher.py -k Blocked --collect-only 2>/dev/null | grep -c '::') -ge 4 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_crew_launcher.py -k Blocked"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-f2-blocked-is-not-failed-1"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+        "Do not touch settings.json or docs/agents/*.",
+        "Do not change spine templates under skills/*/templates/ -- another crew owns those.",
+        "No merge or push to main. Commit on this branch before you finish."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-f2-blocked-is-not-failed-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_crew_launcher.py -k Blocked --collect-only 2>/dev/null | grep -c '::') -ge 4 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_crew_launcher.py -k Blocked",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "f3-can-it-reach": {
+      "id": "f3-can-it-reach",
+      "title": "Measure whether a crew can actually message its parent",
+      "imperative": "MEASURE THIS, do not design around an assumption -- that is what cost three rework rounds this week. A crew is a headless `claude -p` subprocess. The question is whether it can reach the session that dispatched it. Grant SendMessage in CREW_ALLOWED_TOOLS, bind the parent's addressable name, and then actually try it: dispatch a real crew and have it message its parent. Report exactly what happened, including failure. An honest negative is a complete deliverable here and is worth more than a mechanism that looks right and does not fire. If messaging does not reach, say so plainly and leave the durable path as the channel -- the blocked gate in the spine plus the recorded parent are already a complete fail-up record that a polling parent will find. Do not grant a tool that cannot work; remove it again and say why.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "f2-blocked-is-not-failed complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the reach question is answered by a real dispatch and pinned either way",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'PROBE-EVIDENCE' .agent-work/epic-559/e1-fail-up/REACH_FINDING.md && grep -q 'No agent named' .agent-work/epic-559/e1-fail-up/REACH_FINDING.md && test $(python -m pytest -q tests/test_crew_launcher.py -k \"Parent\" --collect-only 2>/dev/null | grep -c '::') -ge 4"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-f3-can-it-reach-1"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+        "Do not touch settings.json or docs/agents/*.",
+        "Do not change spine templates under skills/*/templates/ -- another crew owns those.",
+        "No merge or push to main. Commit on this branch before you finish."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-f3-can-it-reach-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'PROBE-EVIDENCE' .agent-work/epic-559/e1-fail-up/REACH_FINDING.md && grep -q 'No agent named' .agent-work/epic-559/e1-fail-up/REACH_FINDING.md && test $(python -m pytest -q tests/test_crew_launcher.py -k \"Parent\" --collect-only 2>/dev/null | grep -c '::') -ge 4",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "f4-tell-the-crew": {
+      "id": "f4-tell-the-crew",
+      "title": "Say it in the skills, once, where a crew reads it",
+      "imperative": "Update skills/implementer/SKILL.md and skills/reviewer/SKILL.md: a crew that cannot satisfy a check blocks and names its parent; it never waives its own gate and never invents an authority. Keep it short -- one short paragraph each, in the place a dispatched crew already reads. The launcher does the mechanical half; the skill text only has to stop a crew from improvising. Do not mention the engine CLI. Do not reintroduce a CLI fallback -- that text was removed from both files this week for cause.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "f3-can-it-reach complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "f3-can-it-reach advanced to complete above."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both crew skills name the parent as the fail-up target and forbid self-waiving, and neither mentions the engine CLI",
+          "check": {
+            "kind": "command",
+            "command": "for f in skills/implementer/SKILL.md skills/reviewer/SKILL.md; do grep -qi 'parent' \"$f\" && grep -qiE 'not waive|never waive|cannot waive' \"$f\" || exit 1; done; ! grep -qiE 'checklist_engine|CLI fallback' skills/implementer/SKILL.md skills/reviewer/SKILL.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-f4-tell-the-crew-1"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+        "Do not touch settings.json or docs/agents/*.",
+        "Do not change spine templates under skills/*/templates/ -- another crew owns those.",
+        "No merge or push to main. Commit on this branch before you finish."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-f4-tell-the-crew-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "for f in skills/implementer/SKILL.md skills/reviewer/SKILL.md; do grep -qi 'parent' \"$f\" && grep -qiE 'not waive|never waive|cannot waive' \"$f\" || exit 1; done; ! grep -qiE 'checklist_engine|CLI fallback' skills/implementer/SKILL.md skills/reviewer/SKILL.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "f5-verify": {
+      "id": "f5-verify",
+      "title": "Full suite green, map fresh, work committed",
+      "imperative": "Run the full suite with real counts, rebuild map/INDEX.md if it drifts, write IMPLEMENTER_RESULT.md from the implementer skill's template including Workflow Feedback, and commit before you finish.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "f4-tell-the-crew complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite passes",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the working tree is committed",
+          "check": {
+            "kind": "command",
+            "command": "test -z \"$(git status --porcelain -- scripts tests skills map)\""
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the result artifact exists",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/epic-559/e1-fail-up/IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+        "Do not touch settings.json or docs/agents/*.",
+        "Do not change spine templates under skills/*/templates/ -- another crew owns those.",
+        "No merge or push to main. Commit on this branch before you finish."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "f1-bind-parent",
+      "why": "Added --parent to run_crew.py: threaded through CrewSpec, build_entry (recorded nullable, like handoff/spine), build_crew_argv (named via a shared _parent_clause helper on both the handoff and spine-only prompt branches), and crew_env/_crew_door_env (bound unconditionally as SPINE_PARENT, resolved to UNKNOWN_PARENT=\"unknown\" rather than leaking the dispatching process's own ambient SPINE_PARENT). Omitting --parent still dispatches successfully; the crew is told plainly its parent is unknown and never has one invented. resume_crew re-derives parent from the stored registry entry so it stays stable across attempts. Added tests: ParentPromptTests (both branches name the given parent / say unknown when omitted, negative control that no other string like role/session is invented), ParentEnvBindingTests + ParentDoorBindingTests (crew_env binds SPINE_PARENT when given, and _crew_door_env/launch_crew/resume_crew always resolve a definitive value that never leaks the dispatcher's own ambient SPINE_PARENT), BuildEntryTests additions (parent recorded, or recorded as None not omitted), and ParentCliTests (end-to-end through main(): fresh launch with/without --parent, abandon+relaunch inherits the stored parent). Updated the pre-existing byte-identical CONTROL prompt test to include the new parent clause, since naming the parent on both branches is exactly what this gate requires. Full suite: 142 passed.",
+      "mechanical": false,
+      "ts": "2026-08-11T10:30:40.957926+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "f2-blocked-is-not-failed",
+      "why": "Added a distinct `blocked` outcome to run_crew.py, separate from `completed`/`failed`. New `spine_blocked_id(spine, root)` reads the bound spine (same defensive parse as spine_terminal) for the first gate whose status is \"blocked\" (checklist_engine's spine_halt block sets this). `finalize_from_exit_code` now checks this FIRST -- ahead of both the result-artifact and spine-terminal checks, whenever a spine is bound at all, regardless of whether --result was also given -- so a crew that hit a check it couldn't satisfy and called spine_halt block before returning is never misrecorded as failed just because no result artifact appeared (also verified this takes priority even in a combined --handoff/--result + --spine dispatch). blocked reports exit code 0 (a legitimate, deliberate outcome, not a launcher crash) and records entry[\"blocked_gate\"]. main()'s new _crew_status_line helper names the blocked gate and the parent being asked (from the entry's f1 --parent field, or UNKNOWN_PARENT) directly in the launcher's own printed output, wired into all three CLI-backend print sites (fresh launch, resume, abandon+relaunch). Tests added: SpineBlockedIdTests (unit-level reads: finds the blocked gate, missing/malformed/terminal/no-blocked-gate spine all return None), BlockedOutcomeTests (CLI end-to-end: blocked recorded distinctly with gate+parent named in stdout, unknown-parent case, negative controls with a pending and with a terminal spine that must never record blocked, priority over a given result artifact, exit code 0), and two FinalizeFromExitCodeTests additions (blocked at the unit level, and a spine=None negative control). Full suite: 155 passed.",
+      "mechanical": false,
+      "ts": "2026-08-11T10:34:32.592517+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "f3-can-it-reach",
+      "why": "Measured, did not assume: dispatched two real probe crews via run_crew.py with --parent bound to SPINE_PARENT and SendMessage granted in CREW_ALLOWED_TOOLS. Probe 1 (parent = descriptive string \"Admiral session 717403d3 (...)\") ran ListAgents, found no matching peer, then attempted SendMessage anyway to capture the real error: \"No agent named 'Admiral session 717403d3' is reachable.\" -- a genuine tool-level refusal, not a hallucinated one, and proof SendMessage itself works when the tool is reachable. Probe 2 (parent = \"mcp cs\", the most plausible Admiral candidate from probe 1's ListAgents output) reported its spine already done on restart and wrote no artifact -- inconclusive, recorded honestly as inconclusive rather than papered over. Verdict: SendMessage is kept in the grant (it costs nothing and works with a real addressable name) but nothing depends on it arriving -- the durable channel is the registry's --parent record (f1) plus the spine's blocked-gate state (f2), which a polling parent finds regardless of whether any message lands or the crew dies mid-question. Findings written verbatim to REACH_FINDING.md with the PROBE-EVIDENCE marker; f1's Parent tests (18 collected, -k Parent) still pass unchanged.",
+      "mechanical": false,
+      "ts": "2026-08-11T11:44:10.308857+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "f4-tell-the-crew",
+      "why": "Added one short paragraph each to skills/implementer/SKILL.md and skills/reviewer/SKILL.md, right after the existing \"spine is bound for you\" paragraph where a dispatched crew already reads its door instructions: a gate/check it cannot satisfy blocks via spine_halt block, naming the gate and SPINE_PARENT, never waiving its own gate and never inventing an authority (citing this week's --authority human incident); and never ending a turn waiting on something it started -- poll inside the turn (citing what killed the previous instance of this run). Neither file mentions the engine CLI or reintroduces a CLI fallback -- verified by grep. Also fixed the third copy in skills/workbench/references/checklist-engine.md around line 34: it told a dispatched Implementer/Reviewer to drive its own plan/survey through the CLI instead of the door, which was true for a Task-tool subagent (inherits the dispatcher's MCP scope wholesale) but false for a run_crew.py-dispatched crew (a fresh headless claude -p process with its OWN SPINE_FILE/SPINE_SESSION/SPINE_PARENT bound before its MCP server starts, so its door IS bound to its own plan/survey from the first call) -- exactly the case a cold reviewer this week proved works by driving its whole review through the door with SPINE_FILE bound to its own survey. Split the paragraph in two: the Task-tool subagent case (CLI, unchanged) and the run_crew.py crew case (door, corrected).",
+      "mechanical": false,
+      "ts": "2026-08-11T11:46:02.829858+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-11T11:42:05.164544+00:00",
+      "reason": "the reachability probes are done and the Admiral ran them; f3 records the measured finding instead of dispatching a sub-crew, which is what killed the first run",
+      "authority": "admiral (epic-418-followon)",
+      "ops": [
+        "retext-check f3-can-it-reach.c1"
+      ]
+    }
+  ]
+}

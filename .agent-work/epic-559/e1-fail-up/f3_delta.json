@@ -1,0 +1,2 @@
+{"ops": [{"op": "retext-check", "id": "f3-can-it-reach", "which": "postconditions", "cond": "c1",
+  "command": "grep -q 'PROBE-EVIDENCE' .agent-work/epic-559/e1-fail-up/REACH_FINDING.md && grep -q 'No agent named' .agent-work/epic-559/e1-fail-up/REACH_FINDING.md && test $(python -m pytest -q tests/test_crew_launcher.py -k \"Parent\" --collect-only 2>/dev/null | grep -c '::') -ge 4"}]}

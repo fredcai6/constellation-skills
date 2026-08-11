@@ -1,0 +1,9 @@
+The probe gate is complete. Summary:
+
+- **p1-reach**: `ListAgents` output written verbatim to `.agent-work/epic-559/e1-fail-up/probe/REACH.md`.
+- Searched for a peer matching `SPINE_PARENT` ("Admiral session 717403d3") among the 6 listed sessions — no match found.
+- Attempted `SendMessage(to="Admiral session 717403d3", message="PROBE-REACHED-PARENT")` anyway to capture the real error; it failed with `"No agent named 'Admiral session 717403d3' is reachable."` — recorded verbatim in REACH.md.
+- Gate advanced; `spine_status` now reports `DONE: no open items`.
+- Attempted `spine_lease release` as the final step; the engine refused with `"no active lease to release"` — no lease was ever claimed in this session, so there's nothing to give back. No tracked files were modified; only the new REACH.md was written, as instructed.
+
+The spine is done — no open items remain, and no leftover lease to release.

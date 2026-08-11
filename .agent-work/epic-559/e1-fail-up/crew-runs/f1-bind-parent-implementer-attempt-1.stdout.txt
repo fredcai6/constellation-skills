@@ -1,0 +1,1 @@
+I'll pause here and wait for the background dispatch to finish — it runs a real `claude -p` headless session so it may take a few minutes.
