@@ -310,6 +310,28 @@ def result_fresh(result: str | os.PathLike[str], root: Path, since: str) -> bool
 # --------------------------------------------------------------------------- #
 # injectable seams — argv construction (pure) and the real launch
 # --------------------------------------------------------------------------- #
+# Headless agents (`claude -p`) have no interactive approver, so without an
+# explicit permission mode every tool action needing approval is DENIED and a
+# spawned crew can write nothing (same wall run_skill_eval.py's EXEC_ALLOWED_TOOLS
+# / DEFAULT_PERMISSION_MODE document for the narrower eval case — issue #115
+# tc2). Every dispatch in this epic worked around it by hand-writing a
+# gitignored `.claude/settings.local.json` into the worktree first; the
+# launcher grants it instead, so no operator has to remember to. acceptEdits is
+# the least-powerful documented mode that clears the file-write wall.
+DEFAULT_CREW_PERMISSION_MODE = "acceptEdits"
+
+# A crew's work is a full bounded engineering task (unlike the eval harness's
+# python/pytest-only need), so the grant is broad: unrestricted Bash plus the
+# core file/search tools, and the MCP spine door tools a crew drives its own
+# checklist through (`mcp_spine_server.py`).
+CREW_ALLOWED_TOOLS = (
+    "Bash", "Read", "Write", "Edit", "Glob", "Grep", "TodoWrite", "ToolSearch",
+    "mcp__spine__spine_status", "mcp__spine__spine_lease", "mcp__spine__spine_start",
+    "mcp__spine__spine_advance", "mcp__spine__spine_evidence", "mcp__spine__spine_halt",
+    "mcp__spine__spine_survey_result",
+)
+
+
 def build_crew_argv(launcher: str, *, role: str, handoff: str, model: str | None, session: str) -> list[str]:
     """PURE construction of the agent-CLI command line from role/handoff/model.
 
@@ -320,7 +342,12 @@ def build_crew_argv(launcher: str, *, role: str, handoff: str, model: str | None
     The claude CLI has no `--session`/`--role`/`--handoff` flags (issue #91: the
     old flag form fails with `unknown option '--session'` on current CLIs), so
     role, session name, and handoff path travel inside the headless `-p` prompt;
-    the registry — not the CLI — owns crew identity."""
+    the registry — not the CLI — owns crew identity.
+
+    Always appends `--permission-mode` + `--allowedTools` (M2 job 1): a dispatch
+    into a worktree with no hand-written settings file must complete crew work
+    end to end, so the launcher grants what a crew needs instead of an operator
+    remembering to."""
     prompt = (
         f"You are the constellation {role} crew for session {session}. "
         f"Read the handoff at {handoff} and execute it exactly. "
@@ -329,6 +356,8 @@ def build_crew_argv(launcher: str, *, role: str, handoff: str, model: str | None
     argv: list[str] = [launcher, "-p", prompt]
     if model:
         argv += ["--model", model]
+    argv += ["--permission-mode", DEFAULT_CREW_PERMISSION_MODE]
+    argv += ["--allowedTools", *CREW_ALLOWED_TOOLS]
     return argv
 
 

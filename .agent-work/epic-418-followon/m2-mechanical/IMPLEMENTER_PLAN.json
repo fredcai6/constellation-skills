@@ -1,0 +1,169 @@
+{
+  "work_id": "epic-418-followon/m2-mechanical",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-control",
+    "m2-implement",
+    "m3-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load context",
+      "imperative": "Read your inherited global doctrine and the handoff at .agent-work/epic-418-followon/m2-mechanical/HANDOFF.md. NOTE docs/agents/CREW_CONTEXT.md's Python section is wrong on this host (#561): run the suite with `python`, never `python3`. Verify the handoff is complete; block and return if not.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gate work done with evidence recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-control": {
+      "id": "m1-control",
+      "title": "Reproduce both defects first",
+      "imperative": "CONTROL 1: dispatch (or observe the dispatch environment for) a crew into a worktree with NO .claude/settings.local.json and show it cannot do crew work, because build_crew_argv passes no --allowedTools and no --permission-mode. CONTROL 2: show .mcp.json's hardcoded python3 resolving to an interpreter without pytest on this host. Record verbatim output. If either does not reproduce, STOP and report.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "previous gate complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: handoff read and verified complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gate work done with evidence recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "CONTROL1: fresh git worktree (git worktree add /tmp/m2-control-check HEAD@27a5adf5, no .claude/settings.local.json) + claude -p with today's build_crew_argv-shaped argv (no --allowedTools/--permission-mode) asked to Write CONTROL_MARKER.txt. Result: file NOT created; stdout verbatim: 'I wrote the marker as instructed, but the write was blocked by the permission system... this session is non-interactive so I can't prompt for approval.' CONTROL2: which python3 -> /usr/bin/python3 (3.12.3); python3 -m pytest --version -> 'No module named pytest' exit 1 -- matches .mcp.json's hardcoded command."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-implement": {
+      "id": "m2-implement",
+      "title": "Make both mechanical",
+      "imperative": "Job 1: the launcher grants a spawned crew its tools and permission mode, so no operator writes a settings file first. Job 2: no literal interpreter in any shipped path - reuse install_constellation.py's per-machine resolution from #539/#540, keeping its hard-stop-when-nothing-probes property. Hard no-gos per the handoff. Tests that go red without the change.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "previous gate complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-control complete, both controls reproduced"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gate work done with evidence recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Job1: build_crew_argv now appends --permission-mode acceptEdits + --allowedTools (Bash/Read/Write/Edit/Glob/Grep/TodoWrite/ToolSearch + mcp__spine__* tool names), mirroring run_skill_eval.py's build_eval_argv/EXEC_ALLOWED_TOOLS precedent. TDD red->green in tests/test_crew_launcher.py (new test_build_crew_argv_grants_permission_mode_and_allowed_tools). Job2: new scripts/wire_mcp_interpreter.py reuses install_constellation.resolve_interpreter() (no new probe), rewrites .mcp.json's MCP_INTERPRETER_PLACEHOLDER command to the probed interpreter, hard-stops (propagates InstallError) when nothing probes. TDD red->green in tests/test_wire_mcp_interpreter.py (5 tests: rewrite/noop/hard-stop/python3-only/python-only). BLOCKER: the committed .mcp.json itself could not be edited -- Edit and Write tools both refuse it as a Claude Code 'sensitive file' regardless of my settings.local.json permissions (tried Edit twice, Write once, all refused identically; this is a harness-level protection, not a project setting, so no amount of allowedTools lifts it). This is a genuine authority boundary, not a no-go from the handoff's list -- reported honestly, not routed around (no Bash-based file-write workaround attempted, matching Control 1's own observed refusal posture). Exact 1-line diff and the follow-up /home/tommy/projects/constellation-skills-wt/m2-mechanical/.mcp.json: no '<python-interpreter>' command found; nothing to wire command are documented for a human to apply in IMPLEMENTER_RESULT.md."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-verify": {
+      "id": "m3-verify",
+      "title": "Verify and commit",
+      "imperative": "Re-run both controls unchanged; both must now pass, same commands, before and after shown. Full suite: env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests (baseline 2494 passed, 1 skipped). COMMIT on your branch, then write IMPLEMENTER_RESULT.md with Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "previous gate complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-implement complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gate work done with evidence recorded",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "implementer-m2-mechanical-attempt-3",
+    "status": "active",
+    "claimed_at": "2026-08-11T00:09:44.880335+00:00",
+    "last_heartbeat": "2026-08-11T00:29:21.005493+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff confirms two jobs: (1) build_crew_argv in scripts/run_crew.py must grant --allowedTools/--permission-mode so a clean worktree with no hand-written settings.local.json can do crew work; (2) .mcp.json's hardcoded python3 must resolve per-machine, reusing install_constellation.py's #539/#540 interpreter probe rather than a new one. No-gos: checklist_engine.py::claim, _identity_violation/from_child confinement, settings.json, docs/agents/*. Test mode uses python not python3 per CREW_CONTEXT.md #561 confirmation.",
+      "mechanical": false,
+      "ts": "2026-08-11T00:10:07.455374+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-control",
+      "why": "Both controls reproduced with verbatim evidence. Control 1: clean worktree, no settings.local.json, claude -p Write attempt blocked (non-interactive, no approval possible). Control 2: python3 -m pytest fails 'No module named pytest' on this host, confirming .mcp.json's hardcoded python3 is not the interpreter with pytest (python is). Proceeding to implement both fixes.",
+      "mechanical": false,
+      "ts": "2026-08-11T00:13:29.470760+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-implement",
+      "why": "Job1 landed and tested (green). Job2's resolution+wiring mechanism landed and tested (green) but the literal .mcp.json edit is blocked by a harness-level sensitive-file protection this session cannot lift; documenting the exact diff for a human rather than routing around the block. Proceeding to m3-verify to re-run both controls honestly (job1 after=pass expected; job2 after=unchanged, same failure, documented) and run the full suite before committing.",
+      "mechanical": false,
+      "ts": "2026-08-11T00:29:17.642874+00:00"
+    }
+  ]
+}
