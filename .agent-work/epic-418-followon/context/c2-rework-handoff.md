@@ -19,6 +19,34 @@ lines, so no shipped template moved.
 
 None of that is in question. Four things are.
 
+## Read this first — the `g3` fix was symptomatic, and proving that took a violating case
+
+`g3`'s live probe crew blocked on a real defect: `m1.c2` compiled to a `generate_spine.py ...
+--check-only` command with no `--out`, and `--out` is `required=True` unconditionally, so the check
+exited 2 on usage before opening any spec. **A check that cannot pass** — the exact mirror of
+Blocker 1's check that cannot fail.
+
+The fix added `--out` to that spec. The probe was re-dispatched and **completed**.
+
+It looked fixed. It is not. Measured after the pass, with a fresh spec omitting `--out`:
+
+- `generate_spine.py` emitted the spine with **exit 0** — no refusal
+- the compiled command runs `rc=2`, `error: the following arguments are required: --out`
+- `validate_spine.py` reports the resulting spine **`OK`**
+
+**A green light after a symptomatic fix is indistinguishable from a green light after a real one.**
+The probe completing is exactly what a genuine fix would have looked like from outside. The only
+thing that separated them was authoring a new violating case.
+
+That is Blocker 2, demonstrated on the defect that motivated it — which is why Blocker 2 now leads
+this handoff rather than trailing it. **Do not fix an instance. Fix the kind, and prove it with a
+case that was never fixed.**
+
+The `script` probe did gain something real this round: every `--flag` in `args` is now checked
+against the target's `add_argument` literals. So it validates what argparse **accepts** and still
+never asks what argparse **requires**. The two are one `ast.parse` pass apart — fix them together,
+with a VIOLATING fixture in each direction.
+
 ## First: what the Commander already reworked — verify, do not redo
 
 C2's own `g2` cold reviewer returned **BLOCK** and the Commander ran its own rework round before this
