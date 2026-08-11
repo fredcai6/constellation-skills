@@ -115,13 +115,14 @@
           "id": "c1",
           "statement": "gate work done with evidence recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Control1 re-run: fails before (verbatim in IMPLEMENTER_RESULT.md), passes after with build_crew_argv's real argv against a clean worktree. Control2 re-run: unchanged/still fails (python3 -m pytest: No module named pytest) -- .mcp.json edit blocked by tool-level sensitive-file guard (Edit x2, Write x1, all refused identically). Full suite: 2500 passed, 1 skipped, 1089 subtests passed (baseline 2494 passed/1 skipped + 6 new tests, 0 regressions). Committed 832aeee7 on epic-418/m2-mechanical (16 files, no no-gos touched, no .mcp.json, no settings.local.json). IMPLEMENTER_RESULT.md written with Workflow Feedback, Map Impact, exact human-diff for the blocked edit."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -135,13 +136,14 @@
   "refusals": 2,
   "engine_session": {
     "session_id": "implementer-m2-mechanical-attempt-3",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-11T00:09:44.880335+00:00",
-    "last_heartbeat": "2026-08-11T00:29:21.005493+00:00",
+    "last_heartbeat": "2026-08-11T00:36:24.919530+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-11T00:36:30.700247+00:00"
   },
   "why_trail": [
     {
@@ -164,6 +166,13 @@
       "why": "Job1 landed and tested (green). Job2's resolution+wiring mechanism landed and tested (green) but the literal .mcp.json edit is blocked by a harness-level sensitive-file protection this session cannot lift; documenting the exact diff for a human rather than routing around the block. Proceeding to m3-verify to re-run both controls honestly (job1 after=pass expected; job2 after=unchanged, same failure, documented) and run the full suite before committing.",
       "mechanical": false,
       "ts": "2026-08-11T00:29:17.642874+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-verify",
+      "why": "Both controls re-run: control 1 fails-before/passes-after confirmed with real argv on a clean worktree; control 2 honestly unchanged (still fails) since the .mcp.json edit is blocked by a tool-level guard, documented as a partial with exact human next-step. Full suite green at 2500/1 skipped (baseline+6, 0 regressions). Committed 832aeee7. IMPLEMENTER_RESULT.md written. Run complete as an honest partial.",
+      "mechanical": false,
+      "ts": "2026-08-11T00:36:24.919521+00:00"
     }
   ]
 }
