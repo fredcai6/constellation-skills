@@ -3,6 +3,7 @@ import contextlib
 import io
 import json
 import os
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -263,16 +264,20 @@ class WaiveHookTests(unittest.TestCase):
         settings = json.loads(argv[argv.index("--settings") + 1])
         pre_tool_use = settings["hooks"]["PreToolUse"][0]
         self.assertEqual("mcp__spine__spine_evidence", pre_tool_use["matcher"])
-        command = pre_tool_use["hooks"][0]["command"]
-        self.assertEqual("command", pre_tool_use["hooks"][0]["type"])
-        # `command` is `python3 -c '<script>'`; extract `<script>` rather than
-        # asking a shell to parse the quoting, so this test does not depend on
-        # a shell being on PATH the same way the real hook runner does.
-        self.assertTrue(command.startswith("python3 -c '"))
+        hook = pre_tool_use["hooks"][0]
+        command = hook["command"]
+        self.assertEqual("command", hook["type"])
+        self.assertEqual("bash", hook["shell"])
+        # `command` is `<quoted sys.executable> -c '<script>'`; extract
+        # `<script>` rather than asking a shell to parse the quoting, so this
+        # test does not depend on a shell being on PATH the same way the real
+        # hook runner does.
+        prefix = f"{shlex.quote(sys.executable)} -c '"
+        self.assertTrue(command.startswith(prefix))
         self.assertTrue(command.endswith("'"))
-        script = command[len("python3 -c '"):-1]
+        script = command[len(prefix):-1]
         proc = subprocess.run(
-            ["python3", "-c", script],
+            [sys.executable, "-c", script],
             input=json.dumps({
                 "tool_name": "mcp__spine__spine_evidence",
                 "tool_input": {"action": action, "task_id": "g1"},
@@ -300,6 +305,49 @@ class WaiveHookTests(unittest.TestCase):
         # (`crew_settings_json`); a literal apostrophe would terminate that
         # quoting early and corrupt the emitted hook command.
         self.assertNotIn("'", RC.WAIVE_DENY_REASON)
+
+
+class HookPortabilityTests(unittest.TestCase):
+    """#539: a hardcoded `python3` fails OPEN, not loud, on a host where that
+    name is not on PATH -- the hook command cannot run, the harness treats a
+    non-JSON/erroring hook as no opinion, and a crew can waive its own bound
+    spine check with nothing to say so. The fix names no interpreter but
+    `sys.executable` (this process's own, present by construction) and pins
+    `shell: bash` so the single-quoted inline program survives a non-POSIX
+    parse."""
+
+    def _hook_entry(self) -> dict:
+        settings = json.loads(RC.crew_settings_json())
+        return settings["hooks"]["PreToolUse"][0]["hooks"][0]
+
+    def test_hook_interpreter_is_sys_executable_not_a_hardcoded_name(self):
+        command = self._hook_entry()["command"]
+        interpreter = shlex.split(command)[0]
+        self.assertEqual(sys.executable, interpreter)
+        self.assertNotIn(interpreter, ("python3", "python", "py"))
+
+    def test_hook_entry_carries_shell_bash(self):
+        # Matches every hook entry in this repo's own .claude/settings.json:
+        # without it, `shlex.split(cmd, posix=False)` leaves the quotes on and
+        # a non-POSIX shell (cmd.exe) reads a program starting with an
+        # apostrophe and dies -- another silent fail-open.
+        self.assertEqual("bash", self._hook_entry()["shell"])
+
+    def test_crew_settings_json_actually_calls_the_shell_safety_guard(self):
+        # Proves the guard is wired in, not decorative dead code: force it to
+        # raise and confirm `crew_settings_json` propagates that failure
+        # instead of swallowing it or never calling it.
+        original = RC.install_constellation.assert_shell_safe_command
+
+        def boom(command):
+            raise RC.install_constellation.InstallError("forced for test")
+
+        RC.install_constellation.assert_shell_safe_command = boom
+        try:
+            with self.assertRaises(RC.install_constellation.InstallError):
+                RC.crew_settings_json()
+        finally:
+            RC.install_constellation.assert_shell_safe_command = original
 
 
 class CrewGrantTiesToDoorTests(unittest.TestCase):

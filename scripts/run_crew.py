@@ -30,6 +30,7 @@ import argparse
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -39,6 +40,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import checklist_engine  # noqa: E402 -- spine-only completion reads its `active_id` (#559)
+import install_constellation  # noqa: E402 -- shell-safety guard for the waive-deny hook (#539)
 
 # Registry statuses that mean "this attempt still holds the gate/worktree" and
 # therefore block a duplicate launch until explicitly abandoned.
@@ -386,10 +388,15 @@ WAIVE_DENY_REASON = (
     "spine_halt with action=block, name what you cannot satisfy, and return; "
     "only a human or commander waives it from there."
 )
-assert "'" not in WAIVE_DENY_REASON, (
-    "WAIVE_DENY_REASON is interpolated into a single-quoted shell command; a "
-    "literal single-quote would terminate that quoting early"
-)
+# A bare `assert` is stripped under `python -O`, which would silently drop this
+# check on exactly the class of host most likely to run it that way -- so this
+# raises instead. See `crew_settings_json` below for the sibling #539 guard
+# (`assert_shell_safe_command`) on the composed hook command itself.
+if "'" in WAIVE_DENY_REASON:
+    raise CrewLaunchError(
+        "WAIVE_DENY_REASON is interpolated into a single-quoted shell command; a "
+        "literal single-quote would terminate that quoting early"
+    )
 
 # The PreToolUse hook command itself: reads the tool call's stdin JSON, denies
 # only when `tool_input.action == "waive"`, and is silent (`{}`, no opinion --
@@ -416,12 +423,32 @@ def crew_settings_json() -> str:
     accepts a file path OR a JSON string), so this needs no new file and never
     touches the repo's own `.claude/settings.json` -- it merges with it and with
     the worktree's project settings, which cover different hook events (Stop /
-    SessionStart / PostToolUse), so nothing collides."""
+    SessionStart / PostToolUse), so nothing collides.
+
+    The interpreter is `sys.executable`, never a hardcoded `python3` -- this
+    process IS a running Python process, so the interpreter that launched it is
+    present BY CONSTRUCTION and needs no probe. A hardcoded `python3` silently
+    fails-open on a host where that name is not on PATH: the hook command
+    cannot run, Claude Code treats a non-JSON/erroring hook as no opinion, and
+    a crew can waive its own bound spine check with nothing to say so (#539:
+    `install_constellation.py::build_hook_command` documents the same rule --
+    "never re-probed here, never hardcoded" -- for the installer's own hooks).
+    `shlex.quote` covers an interpreter path containing spaces; `shell: bash`
+    matches every entry in this repo's own `.claude/settings.json`, and without
+    it a single-quoted inline program does not survive a non-POSIX parse
+    (`shlex.split(cmd, posix=False)` leaves the quotes on, so `cmd.exe` reads a
+    program starting with an apostrophe and dies -- another silent fail-open).
+    `assert_shell_safe_command` is the same #539 guard `build_hook_command`
+    applies to its own composed command: it raises (never a bare `assert`) if
+    the command does not start with a bare command word, which a badly-quoted
+    interpreter path could produce."""
+    command = f"{shlex.quote(sys.executable)} -c '{_WAIVE_HOOK_PY}'"
+    install_constellation.assert_shell_safe_command(command)
     return json.dumps({
         "hooks": {
             "PreToolUse": [{
                 "matcher": "mcp__spine__spine_evidence",
-                "hooks": [{"type": "command", "command": f"python3 -c '{_WAIVE_HOOK_PY}'"}],
+                "hooks": [{"type": "command", "command": command, "shell": "bash"}],
             }],
         },
     })
