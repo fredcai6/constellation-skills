@@ -1,15 +1,20 @@
 """Resolve THIS machine's Python interpreter into `.mcp.json` (M2 job 2).
 
-`.mcp.json` is git-tracked, so by #539's ruling (see install_constellation.py's
-`resolve_interpreter`) it may never carry a literal interpreter name: no single
-name works on every platform, and stamping one anyway just moves the failure
-somewhere later and harder to trace. The committed file therefore carries
-`MCP_INTERPRETER_PLACEHOLDER` as each server's `command`; this script is the one
-write path that resolves it to a real, working interpreter for the machine it
-runs on -- reusing `install_constellation.py`'s `resolve_interpreter()` (the
-same probe hook wiring already uses for #539/#540) rather than a second one.
-Hard-stops (propagates `InstallError`) when nothing probes; never stamps a
-known-broken name.
+`.mcp.json` is git-tracked, and by #539's ruling (see install_constellation.py's
+`resolve_interpreter`) the tracked file must be launchable AS COMMITTED: a
+test, a fresh clone, or a harness reading `.mcp.json` before wiring ever runs
+sees whatever is there verbatim. So the committed file carries a real, bare
+interpreter name (`python3`, the PEP 394 guarantee on POSIX) rather than an
+unresolvable placeholder; `MCP_INTERPRETER_PLACEHOLDER` still exists for a
+config that has not been through this repo's own commit. Which commands
+wiring may touch -- the placeholder, or a bare `python`/`python3`/`py` (and
+`.exe` forms) -- is `is_rewritable_mcp_command`, the one predicate for that
+question; a path or any other program name is left alone. This script is the
+one write path that resolves a rewritable command to a real, working
+interpreter for the machine it runs on -- reusing `install_constellation.py`'s
+`resolve_interpreter()` (the same probe hook wiring already uses for
+#539/#540) rather than a second one. Hard-stops (propagates `InstallError`)
+when nothing probes; never stamps a known-broken name.
 
 Run once per machine, in a checkout of this repo:
 
@@ -47,6 +52,7 @@ _install = _load_install_constellation()
 # here, never redefined, so this standalone script and the installer's
 # automatic wiring can never drift apart.
 MCP_INTERPRETER_PLACEHOLDER = _install.MCP_INTERPRETER_PLACEHOLDER
+is_rewritable_mcp_command = _install.is_rewritable_mcp_command
 rewrite_mcp_config_interpreter = _install.rewrite_mcp_config_interpreter
 
 
@@ -68,7 +74,7 @@ def main(argv: list[str] | None = None) -> int:
     if changed:
         print(f"wired {args.mcp_config}: command -> {interpreter.interpreter!r} (probed)")
     else:
-        print(f"{args.mcp_config}: no {MCP_INTERPRETER_PLACEHOLDER!r} command found; nothing to wire")
+        print(f"{args.mcp_config}: no rewritable interpreter command found; nothing to wire")
     return 0
 
 

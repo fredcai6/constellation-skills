@@ -3967,11 +3967,15 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             self.assertEqual(resolved, written["mcpServers"]["spine"]["command"])
             self.assertIn(str(mcp_config), "\n".join(lines))
 
-    def test_wire_repo_mcp_config_is_a_noop_when_no_placeholder_is_present(self):
+    def test_wire_repo_mcp_config_is_a_noop_when_the_command_is_not_rewritable(self):
+        """A path or another program's name is left alone regardless of what
+        this run probes -- the genuine no-op case, unlike a bare name that
+        merely happens to match the local probe (host-dependent, so not
+        asserted here)."""
         installer = load_installer()
         with tempfile.TemporaryDirectory() as tmp:
             mcp_config = Path(tmp) / ".mcp.json"
-            _write_mcp_config(mcp_config, "python3")
+            _write_mcp_config(mcp_config, "/usr/bin/python3.12")
             before = mcp_config.read_text(encoding="utf-8")
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
@@ -3980,6 +3984,32 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             )
             self.assertEqual(0, code)
             self.assertEqual(before, mcp_config.read_text(encoding="utf-8"))
+
+    def test_wire_repo_mcp_config_rewrites_a_bare_name_that_differs_from_the_probe(self):
+        """M2 g4-repair: the bug this gate fixes. A committed bare name
+        (`python3`) that is not what this run's probe resolves to must be
+        rewritten, not silently left as a no-op -- reproduced against a real
+        `.mcp.json` copy in r1-control; this exercises the same path through
+        the CLI entry point's own `main()`."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            mcp_config = Path(tmp) / ".mcp.json"
+            _write_mcp_config(mcp_config, "python3")
+
+            def only_py_answers(cmd, **kwargs):
+                if cmd[0] == "py":
+                    return subprocess.CompletedProcess(cmd, 0, stdout="Python 3.x\n", stderr="")
+                raise FileNotFoundError(f"no such candidate: {cmd[0]}")
+
+            with mock.patch.object(installer.subprocess, "run", side_effect=only_py_answers):
+                code = installer.main(
+                    ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
+                     "--skills", "workbench"],
+                    env={}, out=lambda _: None, wire_repo_mcp_config=True, mcp_config_path=mcp_config,
+                )
+            self.assertEqual(0, code)
+            written = json.loads(mcp_config.read_text(encoding="utf-8"))
+            self.assertEqual("py", written["mcpServers"]["spine"]["command"])
 
     def test_no_mcp_config_present_is_a_safe_noop_not_a_refusal(self):
         """An installed copy of this script (write-a-skill bundles it) runs
@@ -4102,3 +4132,67 @@ class WireMcpInterpreterReuseTests(unittest.TestCase):
         installer = wire._install
         self.assertIs(wire.rewrite_mcp_config_interpreter, installer.rewrite_mcp_config_interpreter)
         self.assertEqual(wire.MCP_INTERPRETER_PLACEHOLDER, installer.MCP_INTERPRETER_PLACEHOLDER)
+        self.assertIs(wire.is_rewritable_mcp_command, installer.is_rewritable_mcp_command)
+
+
+class IsRewritableMcpCommandTests(unittest.TestCase):
+    """M2 g4-repair: the matcher must widen past placeholder-equality to any
+    bare interpreter name, while leaving paths and other programs alone."""
+
+    def test_accepts_the_placeholder(self):
+        installer = load_installer()
+        self.assertTrue(installer.is_rewritable_mcp_command(installer.MCP_INTERPRETER_PLACEHOLDER))
+
+    def test_accepts_bare_python_names_and_their_exe_forms(self):
+        installer = load_installer()
+        for name in ("python", "python3", "py", "python.exe", "python3.exe", "py.exe"):
+            with self.subTest(name=name):
+                self.assertTrue(installer.is_rewritable_mcp_command(name))
+
+    def test_rejects_a_path_even_when_its_final_component_is_a_bare_name(self):
+        installer = load_installer()
+        for command in ("/usr/bin/python3.12", "/usr/bin/python3", r"C:\Python312\python.exe"):
+            with self.subTest(command=command):
+                self.assertFalse(installer.is_rewritable_mcp_command(command))
+
+    def test_rejects_a_different_program_name(self):
+        installer = load_installer()
+        for command in ("uv", "node", "run-server.sh"):
+            with self.subTest(command=command):
+                self.assertFalse(installer.is_rewritable_mcp_command(command))
+
+    def test_rejects_non_string_commands(self):
+        installer = load_installer()
+        self.assertFalse(installer.is_rewritable_mcp_command(None))
+
+
+class RewriteMcpConfigInterpreterBareNameTests(unittest.TestCase):
+    """M2 g4-repair: `rewrite_mcp_config_interpreter` must rewrite a bare
+    interpreter name, not just the placeholder -- the silent no-op reproduced
+    against a real `.mcp.json` copy in the r1-control gate."""
+
+    def test_rewrites_a_bare_name_that_differs_from_the_resolved_interpreter(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            mcp_config = Path(tmp) / ".mcp.json"
+            _write_mcp_config(mcp_config, "python3")
+            interpreter = installer.InterpreterResolution("py", ("py", "python3", "python"), "probe")
+
+            changed = installer.rewrite_mcp_config_interpreter(mcp_config, interpreter)
+
+            self.assertTrue(changed)
+            written = json.loads(mcp_config.read_text(encoding="utf-8"))
+            self.assertEqual("py", written["mcpServers"]["spine"]["command"])
+
+    def test_leaves_an_absolute_path_alone(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            mcp_config = Path(tmp) / ".mcp.json"
+            _write_mcp_config(mcp_config, "/usr/bin/python3.12")
+            before = mcp_config.read_text(encoding="utf-8")
+            interpreter = installer.InterpreterResolution("python3", ("py", "python3", "python"), "probe")
+
+            changed = installer.rewrite_mcp_config_interpreter(mcp_config, interpreter)
+
+            self.assertFalse(changed)
+            self.assertEqual(before, mcp_config.read_text(encoding="utf-8"))

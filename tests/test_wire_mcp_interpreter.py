@@ -1,10 +1,10 @@
-"""Tests for scripts/wire_mcp_interpreter.py (M2 job 2).
+"""Tests for scripts/wire_mcp_interpreter.py (M2 job 2, widened M2 g4-repair).
 
-`.mcp.json` is git-tracked and must never carry a literal interpreter name --
-the same #539 ruling install_constellation.py's hook wiring already follows
-("no single interpreter name works on every platform, which is why the
-git-tracked settings.json names none"). This script is the one write path that
-resolves the committed placeholder to a real, per-machine interpreter, reusing
+`.mcp.json` is git-tracked and must be launchable AS COMMITTED (#539): it now
+carries a bare interpreter name (`python3`), not the unresolvable
+`<python-interpreter>` placeholder. This script is the one write path that
+resolves any rewritable command -- the placeholder, or a bare
+`python`/`python3`/`py` name -- to a real, per-machine interpreter, reusing
 install_constellation.py's `resolve_interpreter()` rather than a second probe.
 """
 
@@ -59,13 +59,59 @@ class RewriteMcpConfigInterpreterTests(unittest.TestCase):
             written = json.loads(config_path.read_text(encoding="utf-8"))
             self.assertEqual("python", written["mcpServers"]["spine"]["command"])
 
-    def test_is_a_noop_when_no_placeholder_is_present(self):
-        # An already-wired (or hand-authored, non-placeholder) config is left
-        # alone -- this is a targeted rewrite, not a blanket stamp.
+    def test_rewrites_a_bare_name_that_differs_from_the_resolved_interpreter(self):
+        # The bug this gate exists to fix: a committed bare name (`python3`,
+        # `python`, `py`) is not the placeholder, but it is still a name this
+        # run may need to resolve to something else on this machine.
+        wire = load_wire()
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / ".mcp.json"
+            write_mcp_config(config_path, "python3")
+            interpreter = wire._install.InterpreterResolution("py", ("py", "python3", "python"), "probe")
+
+            changed = wire.rewrite_mcp_config_interpreter(config_path, interpreter)
+
+            self.assertTrue(changed)
+            written = json.loads(config_path.read_text(encoding="utf-8"))
+            self.assertEqual("py", written["mcpServers"]["spine"]["command"])
+
+    def test_is_a_noop_when_the_bare_name_already_matches_the_resolved_interpreter(self):
+        # Already-correct is a true no-op: rewriting a value onto itself must
+        # not report `changed` just because the command was eligible.
         wire = load_wire()
         with tempfile.TemporaryDirectory() as tmp:
             config_path = Path(tmp) / ".mcp.json"
             write_mcp_config(config_path, "python")
+            before = config_path.read_text(encoding="utf-8")
+            interpreter = wire._install.InterpreterResolution("python", ("py", "python3", "python"), "probe")
+
+            changed = wire.rewrite_mcp_config_interpreter(config_path, interpreter)
+
+            self.assertFalse(changed)
+            self.assertEqual(before, config_path.read_text(encoding="utf-8"))
+
+    def test_leaves_an_absolute_path_alone(self):
+        # A caller who pinned an absolute path meant it -- stomping that is a
+        # worse bug than the silent no-op this gate fixes.
+        wire = load_wire()
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / ".mcp.json"
+            write_mcp_config(config_path, "/usr/bin/python3.12")
+            before = config_path.read_text(encoding="utf-8")
+            interpreter = wire._install.InterpreterResolution("python3", ("py", "python3", "python"), "probe")
+
+            changed = wire.rewrite_mcp_config_interpreter(config_path, interpreter)
+
+            self.assertFalse(changed)
+            self.assertEqual(before, config_path.read_text(encoding="utf-8"))
+
+    def test_leaves_a_different_program_name_alone(self):
+        # Not ours to guess at: a wrapper script or another interpreter is a
+        # different program, not a bare Python name.
+        wire = load_wire()
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / ".mcp.json"
+            write_mcp_config(config_path, "uv")
             before = config_path.read_text(encoding="utf-8")
             interpreter = wire._install.InterpreterResolution("python3", ("py", "python3", "python"), "probe")
 

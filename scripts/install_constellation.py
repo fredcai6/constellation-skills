@@ -486,14 +486,25 @@ def resolve_interpreter(
 
 
 # --------------------------------------------------------------------------- #
-# .mcp.json interpreter wiring (M2 g3-rework) -- CLI-entry-point-only
+# .mcp.json interpreter wiring (M2 g3-rework, widened g4-repair) -- CLI-entry-point-only
 # --------------------------------------------------------------------------- #
-# `.mcp.json` is git-tracked (like settings.json, #539), so it may never carry
-# a literal interpreter name: it ships `MCP_INTERPRETER_PLACEHOLDER` as each
-# server's `command`, and this is the ONE write path -- shared with
-# scripts/wire_mcp_interpreter.py, which reuses `rewrite_mcp_config_interpreter`
-# by reference rather than carrying a second copy -- that resolves it to the
-# interpreter THIS run already probed. Never a second probe.
+# `.mcp.json` is git-tracked (like settings.json, #539). #539 also records the
+# rule that governs it: a tracked config that code also reads directly cannot
+# hold an unresolvable value, because anything that consumes the file before
+# wiring runs -- a test, a fresh clone, a harness reading `.mcp.json` at
+# session start -- sees it verbatim. So the committed file carries a real,
+# launchable bare interpreter name (`python3` here; the PEP 394 guarantee on
+# POSIX) rather than staying on `MCP_INTERPRETER_PLACEHOLDER` forever, and
+# wiring's job is to rewrite that bare name -- or the placeholder, for a
+# config that has not been through this repo's own commit -- to the
+# interpreter THIS run actually probed. `is_rewritable_mcp_command` is the one
+# predicate for "which commands wiring may touch": the placeholder plus bare
+# `python`/`python3`/`py` (and their `.exe` forms); anything with a path
+# separator, or naming any other program, is left alone on purpose -- a caller
+# who pinned a path meant it, and a wrapper script is not ours to guess at.
+# This is the ONE write path -- shared with scripts/wire_mcp_interpreter.py,
+# which reuses `rewrite_mcp_config_interpreter` (and this predicate) by
+# reference rather than carrying a second copy.
 #
 # `wire_repo_mcp_config`/`mcp_config_path` are keyword-only `main()` parameters,
 # not CLI flags: they default to `False`/`None` so a direct call to `main()`
@@ -505,14 +516,44 @@ def resolve_interpreter(
 MCP_CONFIG_FILENAME = ".mcp.json"
 MCP_INTERPRETER_PLACEHOLDER = "<python-interpreter>"
 
+# Bare names wiring may resolve, beyond the placeholder -- exactly the
+# interpreter launcher names `resolve_interpreter` itself probes, plus their
+# Windows `.exe` forms. Nothing else: a bare `uv`, `node`, or wrapper script
+# name is a different program and not ours to guess at.
+MCP_REWRITABLE_BARE_NAMES: frozenset[str] = frozenset({
+    "python", "python3", "py",
+    "python.exe", "python3.exe", "py.exe",
+})
+
+
+def is_rewritable_mcp_command(command: object) -> bool:
+    """Whether `command` is something `rewrite_mcp_config_interpreter` may
+    replace with the resolved interpreter: the placeholder, or a bare name in
+    `MCP_REWRITABLE_BARE_NAMES`. A path -- anything containing `/` or `\\` --
+    is never rewritable regardless of its final component: a caller who
+    pinned `/usr/bin/python3.12` meant it, and stomping that is a worse bug
+    than the silent no-op this predicate exists to fix. Any other program
+    name is likewise left alone."""
+    if not isinstance(command, str):
+        return False
+    if command == MCP_INTERPRETER_PLACEHOLDER:
+        return True
+    if "/" in command or "\\" in command:
+        return False
+    return command in MCP_REWRITABLE_BARE_NAMES
+
 
 def default_mcp_config_path(repo_root: Path = REPO_ROOT) -> Path:
     return repo_root / MCP_CONFIG_FILENAME
 
 
 def rewrite_mcp_config_interpreter(mcp_config_path: Path, interpreter: InterpreterResolution) -> bool:
-    """Rewrite every `mcpServers[*].command` equal to the placeholder to
-    `interpreter.interpreter`. Returns whether the file changed.
+    """Rewrite every `mcpServers[*].command` that `is_rewritable_mcp_command`
+    accepts -- the placeholder, or a bare `python`/`python3`/`py` name -- to
+    `interpreter.interpreter`. Returns whether the file changed; a command
+    that is already the resolved interpreter counts as unchanged, so a
+    correctly-wired config stays a true no-op rather than a same-value
+    rewrite.
 
     `interpreter` is threaded in, never re-probed here -- mirrors
     `resolve_interpreter`'s "call once per run, thread the result through"
@@ -521,7 +562,8 @@ def rewrite_mcp_config_interpreter(mcp_config_path: Path, interpreter: Interpret
     config = json.loads(mcp_config_path.read_text(encoding="utf-8"))
     changed = False
     for server in config.get("mcpServers", {}).values():
-        if server.get("command") == MCP_INTERPRETER_PLACEHOLDER:
+        command = server.get("command")
+        if is_rewritable_mcp_command(command) and command != interpreter.interpreter:
             server["command"] = interpreter.interpreter
             changed = True
     if changed:
@@ -548,18 +590,19 @@ def apply_repo_mcp_config_wiring(
         return
     if dry_run:
         config = json.loads(mcp_config_path.read_text(encoding="utf-8"))
-        placeholder_count = sum(
+        rewritable_count = sum(
             1 for server in config.get("mcpServers", {}).values()
-            if server.get("command") == MCP_INTERPRETER_PLACEHOLDER
+            if is_rewritable_mcp_command(server.get("command"))
+            and server.get("command") != interpreter.interpreter
         )
-        if placeholder_count:
+        if rewritable_count:
             out(
-                f"- DRY RUN: would wire {placeholder_count} {mcp_config_path} "
+                f"- DRY RUN: would wire {rewritable_count} {mcp_config_path} "
                 f"server command(s) -> {interpreter.interpreter!r} (probed)"
             )
         else:
             out(
-                f"- DRY RUN: {mcp_config_path} carries no {MCP_INTERPRETER_PLACEHOLDER!r} "
+                f"- DRY RUN: {mcp_config_path} carries no rewritable interpreter "
                 f"command; nothing to wire"
             )
         return
@@ -567,7 +610,7 @@ def apply_repo_mcp_config_wiring(
         out(f"- {mcp_config_path}: wired command -> {interpreter.interpreter!r} (probed)")
     else:
         out(
-            f"- {mcp_config_path}: no {MCP_INTERPRETER_PLACEHOLDER!r} command found; "
+            f"- {mcp_config_path}: no rewritable interpreter command found; "
             f"nothing to wire"
         )
 
