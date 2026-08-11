@@ -1,0 +1,271 @@
+{
+  "work_id": "epic-559/c1-spine-lint",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "z1-idiom",
+    "z2-interpreter",
+    "z3-resweep",
+    "z4-verify"
+  ],
+  "tasks": {
+    "z1-idiom": {
+      "id": "z1-idiom",
+      "title": "Stop refusing the repo's own self-checking idiom",
+      "imperative": "Fault 2 (zero-collect) has an 8-in-9 false-positive rate on the real archive, and the cause is precise. `_pytest_segments` splits a command on bare `|`, so in the corpus's own recommended idiom -- `test $(pytest ... --collect-only 2>/dev/null | grep -c '::') -ge N && pytest ...` -- the token `2>/dev/null` lands inside the first segment. shlex tokenizes it as one opaque non-flag token, `_pytest_targets` folds it in as a positional pytest target (a path that does not exist), `_collects_zero` runs pytest against that bogus path, gets nothing back, and reports zero-collect. `_fault_zero_collect` dedupes by selector text in command order, so the corrupted first-segment verdict wins before the real second segment is ever reached. The result is that the lint refuses checks that run 32 passing tests, and it fires on this epic's own spines every time an author follows the documented best practice. It penalizes the diligent author and rewards the naive one-liner that skips the self-check. Fix: skip shell-redirect-shaped tokens when collecting pytest targets. Add a regression test using the exact idiom, verbatim.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the documented self-checking idiom is not flagged as zero-collect",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/epic-559/c1-spine-lint/check_idiom.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-z1-idiom-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the idiom is pinned by tests",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -m pytest -q tests/test_validate_spine.py -k \"Idiom or Redirect\" --collect-only 2>/dev/null | grep -c '::') -ge 3 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_validate_spine.py -k \"Idiom or Redirect\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-z1-idiom-2"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify checklist_engine.py, mcp_spine_server.py, or run_crew.py.",
+        "Do not touch settings.json, docs/agents/*, or any spine template.",
+        "No merge or push to main. Commit on this branch before you finish."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-z1-idiom-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/epic-559/c1-spine-lint/check_idiom.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-z1-idiom-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_validate_spine.py -k \"Idiom or Redirect\" --collect-only 2>/dev/null | grep -c '::') -ge 3 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_validate_spine.py -k \"Idiom or Redirect\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "z2-interpreter": {
+      "id": "z2-interpreter",
+      "title": "Never report zero-collect when pytest did not run",
+      "imperative": "`_collects_zero` invokes pytest with sys.executable, discarding whatever interpreter the check's own command names, and never confirms pytest is importable there before treating an empty result as zero-collect. On this host `python3` has no pytest, so `python3 -m scripts.validate_spine .agent-work/w5-gates/execute.json` reports 6 spurious faults while `python -m scripts.validate_spine` on the same file reports 0. Nothing distinguishes 'pytest did not run' from 'genuinely collected zero'. Make that distinction explicit: confirm pytest is importable, or invoke the interpreter the command itself names, and when you cannot tell, say you cannot tell rather than reporting a fault. An undecidable check is not a failing check.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "z1-idiom complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "z1-idiom closed complete: check_idiom.py exits 0, 11 tests under -k \"Idiom or Redirect\" pass"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "an unusable interpreter yields no zero-collect fault, pinned by tests",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -m pytest -q tests/test_validate_spine.py -k \"Interpreter or Unavailable\" --collect-only 2>/dev/null | grep -c '::') -ge 2 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_validate_spine.py -k \"Interpreter or Unavailable\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-z2-interpreter-1"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify checklist_engine.py, mcp_spine_server.py, or run_crew.py.",
+        "Do not touch settings.json, docs/agents/*, or any spine template.",
+        "No merge or push to main. Commit on this branch before you finish."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-z2-interpreter-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_validate_spine.py -k \"Interpreter or Unavailable\" --collect-only 2>/dev/null | grep -c '::') -ge 2 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_validate_spine.py -k \"Interpreter or Unavailable\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "z3-resweep": {
+      "id": "z3-resweep",
+      "title": "Re-run the corpus sweep and report the real false-positive rate",
+      "imperative": "Re-run the lint over every gated-or-survey spine under .agent-work/ (the reviewer counted 539 files) plus the shipped templates, with both fixes in. Report the fault counts per fault class and the false-positive rate for fault 2 specifically. Hand-inspect every distinct remaining zero-collect trigger -- not a sample -- and say for each whether it is real. The reviewer found faults 1, 3 and 4 clean: zero false positives across the whole sweep, with all 3 distinct fault-3 statement texts hand-verified as genuine #562-shaped defects and every distinct fault-4 placeholder confirmed unresolved. Do not re-litigate those; confirm they stayed clean and spend your effort on fault 2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "z2-interpreter complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "z2-interpreter closed complete: python3-vs-python invocation now produces identical output on .agent-work/w5-gates/execute.json, 4 regression tests pass"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no spine this epic drove to terminal is flagged zero-collect, over an asserted count",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/epic-559/c1-spine-lint/check_corpus_fp.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-z3-resweep-1"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify checklist_engine.py, mcp_spine_server.py, or run_crew.py.",
+        "Do not touch settings.json, docs/agents/*, or any spine template.",
+        "No merge or push to main. Commit on this branch before you finish."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "blocker": "check_corpus_fp.py exits 1 with exactly ONE remaining zero-collect finding across the full sweep (540 gated/survey .agent-work spines + 12 shipped templates = 552 files): .agent-work/epic-298/harvest/300-full/archive/2026-08-01-300/g1-implement/PLAN-rework1.json, task m1-blocker-skiptest.postconditions.c2, selector -k 'live_spine' against tests/test_context_manifest.py.\n\nHand-inspected and confirmed REAL, not a false positive of either fixed mechanism: the check's command is `cd C:/Programs/constellation-skills-wt/298-300 && python -m pytest tests/test_context_manifest.py -q -k 'live_spine' --no-header` -- no redirect token, interpreter is literally \"python\" and resolves fine with pytest importable. The selector genuinely, verifiably collects zero tests against this repo's CURRENT tests/test_context_manifest.py because the referenced test (`test_a_live_spine_in_this_work_area_also_projects`, added in 75ee317a) was renamed away in 0b15d5b8 (\"fix(context): make the acceptance test and the /run exclusion actually falsify (#300)\") -- an unrelated commit, not part of epic-559 or fault 2. This is a frozen historical record from epic-298's own archive (folder literally named \"archive/2026-08-01-300\", authored on a different machine per the Windows cd path), bulk-committed later via c2e16a87 (\"track .agent-work/ -- run history is project history\"). It is not a spine epic-559 drove to terminal.\n\nThis lines up exactly with the handoff's own arithmetic: the original archive sweep found 9 zero-collect hits, \"8 of the 9 ... are false positives, all from one mechanism\" (the redirect bug, now fixed) -- implying the 9th was already known to be a genuine, non-false-positive finding. 9 - 8 fixed = 1 remaining, and I measured exactly 1. I believe that 9th finding IS this epic-298 record, and check_corpus_fp.py's docstring assumption (\"every spine THIS epic drove to a terminal state ran its checks for real, so a zero-collect fault on one of them is a false positive by construction\") does not hold for it: it is neither this epic's spine nor a false positive -- it is real, out-of-scope drift in a foreign epic's frozen archive. check_corpus_fp.py's actual glob (all of .agent-work, filtered only by filename containing PLAN/SPINE) is broader than what its own docstring justifies.\n\nPer the handoff (\"If you believe either script is wrong, block and say so -- do not change it\"), I am not editing check_corpus_fp.py, the epic-298 archived record, or anything to force this specific case clean. scripts/validate_spine.py and tests/test_validate_spine.py are otherwise complete and green for both fault-2 mechanisms (0 remaining false positives from either), with faults 1/3/4 confirmed unaffected (128 fault-3 hits, same count as the original reviewer's; 637 fault-1, 45 fault-4 -- both code paths untouched by this rework).",
+        "authority_needed": "Admiral/human",
+        "next_action": "Rule on one of: (a) scope check_corpus_fp.py's population to epic-559's own spines (or exclude epic-298/harvest archive), (b) waive z3-resweep.c1 as a known, out-of-scope, real finding, or (c) confirm this IS the expected 9th finding and the postcondition's bar should read \"0 false positives\" rather than \"0 zero-collect hits.\"",
+        "resume_reason": "the blocker was correct: the single remaining finding is a TRUE positive in an archived epic-298 spine whose selector points at a deleted test. The Admiral's check script was over-broad and is now scoped to spines this epic drove; the archived finding is recorded as evidence the lint works."
+      },
+      "evidence": [
+        {
+          "id": "e-z3-resweep-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/epic-559/c1-spine-lint/check_corpus_fp.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "z4-verify": {
+      "id": "z4-verify",
+      "title": "Full suite green, map fresh, work committed",
+      "imperative": "Run the full suite with real counts, rebuild map/INDEX.md, overwrite IMPLEMENTER_RESULT.md from the implementer skill's template including Workflow Feedback, and commit before you finish. Say in your result what the false-positive rate was before and after.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "z3-resweep complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "z3-resweep closed complete: check_corpus_fp.py exits 0 (14 epic-559/epic-418-followon spines), full-corpus resweep matches reviewer baseline for faults 1/3/4, fault 2 dropped from 9 hits (8 FP) to 1 hit (0 FP, true positive)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite passes",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the working tree is committed",
+          "check": {
+            "kind": "command",
+            "command": "test -z \"$(git status --porcelain -- scripts tests skills map)\""
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the result artifact exists",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/epic-559/c1-spine-lint/IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify checklist_engine.py, mcp_spine_server.py, or run_crew.py.",
+        "Do not touch settings.json, docs/agents/*, or any spine template.",
+        "No merge or push to main. Commit on this branch before you finish."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "refusals": 8,
+  "engine_session": {
+    "session_id": "constellation/epic-559/c1-spine-lint/z3-resweep/implementer",
+    "status": "active",
+    "claimed_at": "2026-08-11T11:56:48.651730+00:00",
+    "last_heartbeat": "2026-08-11T11:58:51.324898+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": "constellation/epic-559/c1-spine-lint/z1-idiom/implementer",
+    "takeover_reason": "resuming z3-resweep implementer after session restart/compaction; prior lease session is stale (z1-idiom stage, work has since progressed to z3)"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "z1-idiom",
+      "why": "_pytest_targets now excludes shell-redirect-shaped tokens (2>/dev/null, >file, 2>&1, &>file, bare operator + separate destination) so the documented self-checking idiom's redirect no longer gets folded in as a bogus positional pytest target. Also fixed a second bug the same fix surfaced: the interpreter token extracted from a $(...)  command-substitution segment carried the literal \"$(\" prefix (e.g. \"$(python\"), which never resolves on PATH -- stripped that prefix so the idiom's first segment resolves the real interpreter. check_idiom.py exits 0; 11 regression tests under -k \"Idiom or Redirect\" pass, including a control proving the idiom still catches a genuine zero-collect selector.",
+      "mechanical": false,
+      "ts": "2026-08-11T11:45:59.672347+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "z2-interpreter",
+      "why": "_collects_zero now resolves the interpreter the check's command text names (via _resolve_interpreter), confirming pytest is importable there before ever treating an empty collection result as a real zero -- it never falls back silently to sys.executable when the command names one. Reproduced the reported host bug directly: before the fix, `python3 -m scripts.validate_spine .agent-work/w5-gates/execute.json` (sys.executable=python3, no pytest) produced 6 spurious zero-collect faults while `python -m scripts.validate_spine` on the same file produced 0; after the fix both invocations produce identical output (0 zero-collect faults, diff empty), because the interpreter resolved is the one the check text names (\"python\") regardless of which interpreter runs validate_spine.py itself. An unresolvable/no-pytest interpreter now returns None (undecidable) from _collects_zero, not a fault. 4 regression tests under -k \"Interpreter or Unavailable\" pass, using a fabricated fake interpreter for host portability plus a control proving a real zero-collect selector is still caught when the named interpreter does have pytest.",
+      "mechanical": false,
+      "ts": "2026-08-11T11:47:30.666035+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "z3-resweep",
+      "why": "Re-swept the full population by type field (gated-or-survey, 540 .agent-work spines + 12 shipped templates = 552 files, matching the reviewer's 539+12 baseline within one file of drift). Fault counts hold exactly against the reviewer's pre-fix baseline for the unaffected families: fault-1 (falsifiable-all-null) 637, fault-3 (falsifiable-artifact-asserts-property) 128, fault-4 (falsifiable-unresolved-placeholder) 45 -- all identical counts, confirming faults 1/3/4 stayed clean and neither fix touched their code paths. Fault-2 (falsifiable-zero-collected) dropped from 9 hits pre-fix (8 false positives / 1 true positive, ~88.9% FP rate) to exactly 1 hit post-fix (0 false positives / 1 true positive, 0% FP rate). The single remaining hit is .agent-work/epic-298/harvest/300-full/archive/2026-08-01-300/g1-implement/PLAN-rework1.json, selector -k 'live_spine' -- hand-inspected and confirmed a genuine true positive: no redirect token, interpreter resolves and has pytest, and the referenced test (test_a_live_spine_in_this_work_area_also_projects) was verifiably renamed away in commit 0b15d5b8, unrelated to epic-559. check_corpus_fp.py is now scoped to this epic's own spines (epic-559 + epic-418-followon, 14 files) rather than the whole archive, and exits 0 -- the epic-298 finding is retained as evidence the lint works, not forced clean.",
+      "mechanical": false,
+      "ts": "2026-08-11T11:58:42.788128+00:00"
+    }
+  ],
+  "blockers": []
+}

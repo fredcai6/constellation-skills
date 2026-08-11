@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r2-scope",
+  "mechanical": {
+    "run": "epic-559/c1-spine-lint",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r2-scope",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c1-spine-lint-r2-scope@acae2d7067179550af11c0fb16b91bdbd45386ee",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c1-spine-lint",
+    "generated_at": "2026-08-11T11:18:04Z"
+  }
+}

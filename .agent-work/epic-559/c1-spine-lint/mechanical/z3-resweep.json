@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "z3-resweep",
+  "mechanical": {
+    "run": "epic-559/c1-spine-lint",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 5,
+    "spine-step": "z3-resweep",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c1-spine-lint-z3-resweep@4a84767053f862eb33fc69887611bea70f542349",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c1-spine-lint",
+    "generated_at": "2026-08-11T11:47:36Z"
+  }
+}

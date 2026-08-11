@@ -1,0 +1,266 @@
+{
+  "work_id": "epic-559/c1-spine-lint",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "v1-false-positives",
+    "v2-does-it-catch-real-ones",
+    "v3-two-faults-it-may-not-have",
+    "v4-is-it-usable-as-a-module",
+    "v5-corpus-honesty"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded skills/_shared/global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, REVIEW_HANDOFF.md, IMPLEMENTER_RESULT.md, full diff (303b7f19, 9aa094dd against main@90b39e2b), and scripts/validate_spine.py source (484 lines).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The change matches the handoff's ask: scripts/validate_spine.py (484 lines) is an importable validate(spine)->list[Fault] checker covering shape faults (wrong top-level key, items/tasks mismatch, unimplemented check kind, gated-missing-postconditions, survey-missing-result) plus the four named falsifiability faults (all-null postconditions, zero-collect pytest selector run live via subprocess, artifact-no-match-asserts-property, unresolved &lt;placeholder&gt;). tests/test_validate_spine.py (539 lines) + tests/fixtures/spine_lint/fixture_tests.py match the commit's claimed line counts exactly. Full test suite reproduced: 2638 passed, 1 skipped, 1121 subtests in 106s -- matches IMPLEMENTER_RESULT.md's claim verbatim. Corpus sweep still finds 12 templates today. IMPLEMENTER_RESULT.md is present and detailed. Minor: the TDD-evidence section's \"61 passed\" for tests/test_validate_spine.py alone is now 62 passed on a clean re-run -- stale by one test, not a functional gap (noting for r4/workflow feedback, not a block).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All named no-gos confirmed untouched by empty `git diff main...HEAD --stat` for each: scripts/checklist_engine.py, scripts/mcp_spine_server.py, scripts/run_crew.py, skills/implementer/*, skills/reviewer/SKILL.md, settings.json, docs/agents/*, and every skills/*/templates/* file (all spine templates untouched -- g3 measured, did not fix, as required). No push to main: origin/main is at 90b39e2b, exactly the base commit the handoff cites; branch epic-559/c1-spine-lint sits 2 commits ahead locally, unpushed. Only files touched: scripts/validate_spine.py (new), tests/test_validate_spine.py (new), tests/fixtures/spine_lint/fixture_tests.py (new), map/INDEX.md (regenerated), plus .agent-work/epic-559/c1-spine-lint/* workflow artifacts -- exactly the implementer's declared scope.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently reproduced both headline evidence claims. (1) Full suite: `env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests` -> 2638 passed, 1 skipped, 1121 subtests in 106.47s, matching IMPLEMENTER_RESULT.md verbatim. (2) Sweep: `python -m scripts.validate_spine --sweep` -> 12 templates discovered, 4 clean (ADMIRAL_SPINE, CYCLE, INTERROGATION, REVIEW_SURVEY), 8 with faults; hand-summed the printed faults to 21 falsifiable-all-null + 2 falsifiable-unresolved-placeholder = 23 total, matching the result doc's \"21 all-null gates across 8 templates, 2 unresolved &lt;exact test command&gt; placeholders\" exactly. Evidence is present, reproducible, and demonstrates the claimed behavior -- not a description of it.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Checked against docs/agents/CREW_CONTEXT.md's \"Verification Discipline\" rules, which this very change is meant to embody: (1) \"a check that cannot fail is indistinguishable from passed\" -- satisfied; fault 2 is verified live via a real pytest --collect-only subprocess against a real fixture, not string-matched, and every fault has both a VIOLATING and INNOCENT/ACCEPTED fixture proving it can go both ways. (2) \"assert against behaviour, never text\" -- satisfied, same reason. (3) \"any guard that loops must assert what it looped over\" -- satisfied: TestCorpusSweepPopulation and TestCorpusSweepFindings assert the discovered count (12) and per-fault-code totals, not just \"0 faults\". (4) \"define a guard by consumer behaviour, not a hand-maintained list\" -- mostly satisfied (fault 4's ACCEPTED set imports init_work_area._RESOLVER_OWNED_TOKEN_RE rather than re-declaring it), with one disclosed, narrow exception: _BARE_RESOLVER_TOKENS = {'&lt;skill-dir&gt;'} is a one-item hand-maintained workaround for a gap in that regex, explicitly commented, documented in IMPLEMENTER_RESULT.md, and flagged as a triage candidate -- an honest, scoped exception rather than a silent one. (5) round-trip + adversarial fixtures paired -- satisfied (TestShapeAcceptsEveryShippedTemplate is the round-trip; the three-way VIOLATING/INNOCENT/ACCEPTED classes for faults 3 and 4 are the adversarial fixtures). Naming observation (non-blocking): scripts/ has an established verify_*.py convention (20 scripts) plus 2 check_*.py; this module is validate_spine.py -- a reasonable departure given it exposes a richer importable API (validate/discover_checklist_templates/validate_file) than a typical boolean verify_*.py gate script, but worth naming for the record.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "map/INDEX.md diff correctly reflects the change: scripts 55->56 modules (+validate_spine, 16 entities), tests 71->73 modules (+test_validate_spine 63 entities, +fixtures.spine_lint.fixture_tests 2 entities); no existing structural anchor's shape changed, matching the implementer's Map Impact claim. `python scripts/build_architecture_map.py --root . --source-root scripts --source-root tests --source-root skills --source-root evals --check` reports inputs valid. The one process deviation (the g2-falsifiable gate's own frozen postcondition had an unquoted two-word `-k` selector that word-split under POSIX shell) was corrected through the sanctioned `spine_amend`/`retext-check` path, not a hand-edit -- verified live: `.agent-work/epic-559/c1-spine-lint/mcp_amend_delta_20260811T103802357365.json` holds the delta (quoting only, intent unchanged) and the journal records an `amend` verb at seq 5. No undisclosed architectural divergence; nothing here needs Commander reconciliation beyond the two already-logged triage candidates (init_work_area token-regex gap; checklist-engine.md's stale Template-set table).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/epic-559/c1-spine-lint/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/epic-559/c1-spine-lint/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from epic-559/c1-spine-lint alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-559/c1-spine-lint/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Ran the full Fowler baseline catalog (12 smells) against scripts/validate_spine.py + tests/test_validate_spine.py + tests/fixtures/spine_lint/fixture_tests.py. Recorded to .agent-work/epic-559/c1-spine-lint/FOWLER_PASS.json. `python scripts/verify_fowler_pass.py .agent-work/epic-559/c1-spine-lint/FOWLER_PASS.json` -> exit 0: \"fowler pass ok ... (smells=12, flagged=['long-method'], overridden=['feature-envy'])\". long-method flagged as an observation (_shape_faults, 58 lines, 5 bundled validation concerns) -- not blocking. feature-envy overridden: the module imports init_work_area's private _RESOLVER_OWNED_TOKEN_RE rather than re-declaring it, justified by CREW_CONTEXT.md's 'define a guard by the consumer's own computed property, not a hand-maintained list' and precedented by scripts/run_skill_eval.py:73-74's identical pattern. All other 10 smells absent.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-559/c1-spine-lint/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "v1-false-positives": {
+      "id": "v1-false-positives",
+      "title": "How many legitimate spines does this lint refuse?",
+      "imperative": "THE DECISIVE ITEM. A lint that refuses good spines is worse than no lint -- it blocks every real run and gets switched off. Run validate_spine.py over EVERY spine and template you can find: the shipped templates, and every archived spine under .agent-work/ across the repo (there are over a hundred). Report the refusal rate and read a sample of the refusals by hand. For each one decide: true fault, or false positive? Fault 3 in particular (an artifact check with no match whose statement asserts a property) is a heuristic over English and is where false positives will live. If the lint refuses spines that are actually fine, say so with counts and examples -- that is a BLOCK and it is the most useful thing you can find.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "BLOCK-caliber false positives confirmed in fault 2 (zero-collect). Swept every gated/survey instance under .agent-work/ (539 files, correct `python` interpreter) plus the 12 shipped templates. Archive: 204 clean, 335 faulty (62%); templates: 4/12 clean (matches r3's reproduced sweep). Hand-checked every distinct trigger, not just counts.\n\nFault 3 (artifact-asserts-property, 128 hits): only 3 distinct statement texts across all 128; hand-verified all 3 are true vacuous-check defects (126 are the same real #562 pattern -- 'IMPLEMENTER_RESULT returned with no unresolved blockers' with no `match`, baked into a widely-copied template gate; the other 2 are unique and equally real). Zero false positives found.\n\nFault 4 (unresolved-placeholder, 43 hits): sampled every distinct token (&lt;branch&gt;, &lt;fowler-pass-record-path&gt;, &lt;exact test command&gt;, &lt;epic-id&gt;, &lt;interrogation-record-path&gt;) -- all genuine unresolved/scaffold placeholders (confirmed init_work_area has no substitution mechanism for any of them). Zero false positives found.\n\nFault 2 (zero-collected, 9 hits under the correct interpreter -- see Workflow Feedback for how I nearly mis-measured this at 175): CONFIRMED REAL BUG. 8 of the 9 are false positives from the same mechanism: `_pytest_segments` splits the command on bare `|`, so the corpus's own self-checking idiom -- `test $(pytest ... --collect-only 2>/dev/null | grep -c '::') -ge N && pytest ...`, the exact pattern CREW_CONTEXT.md's Verification Discipline recommends ('demonstrate it can reach a failing state') -- puts `2>/dev/null` inside the FIRST segment. shlex tokenizes `2>/dev/null` as one opaque token that doesn't start with `-`, so `_pytest_targets` treats it as a positional pytest target (a nonexistent path). `_collects_zero` then runs pytest against that bogus path and gets empty output -> misreported as zero-collect. `_fault_zero_collect` dedupes by selector text and processes segments in command order, so this corrupted FIRST-segment verdict wins before the correct second (real-run) segment is ever reached. Minimal repro: a check running 32 real, passing tests (`pytest tests/test_validate_spine.py -k Shape`), wrapped in the idiom above, is flagged `falsifiable-zero-collected` -- identical severity to `check: null` -- for a check that not only can fail, but demonstrably passes. This is not a corner case: it fires on this very epic's own g1/g2/g3 gates and on 3 other real spines (epic-559/a-spine-is-the-job's REWORK/REWORK2 plans) every time the idiom is used, and would fire on ANY future spine that follows the repo's own documented best practice for this exact fault family. It penalizes the most diligent authors and rewards the naive one-liner that skips the self-check.\n\nSecond, related false-positive mechanism found by accident while investigating the first: `_collects_zero` uses `sys.executable` for its own subprocess pytest re-invocation rather than respecting the interpreter named in the check's own command text, and never confirms pytest is importable there before trusting an empty/failed subprocess as 'collects zero'. On this very host, `python3` has no pytest installed (CREW_CONTEXT.md documents this exact hazard). Reproduced live through the actual CLI: `python3 -m scripts.validate_spine .agent-work/w5-gates/execute.json` -> 6 spurious zero-collect faults; `python -m scripts.validate_spine` on the identical file -> 0. No message, returncode check, or doc anywhere distinguishes 'pytest didn't run' from 'genuinely 0 collected' -- an operator typing the more literal-looking `python3` silently gets false BLOCKs on every pytest-based check in the file.\n\nVerdict: this is exactly the failure mode the handoff calls decisive -- a lint that refuses spines that are actually fine. Both mechanisms are narrow and named precisely enough to fix (skip shell-redirect-shaped tokens in `_pytest_targets`; verify pytest importability, or better, invoke the command's own interpreter, before trusting an empty collect result) but as shipped, fault 2 is not safe to trust on a self-checking command, which is the corpus's own recommended idiom.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "v2-does-it-catch-real-ones": {
+      "id": "v2-does-it-catch-real-ones",
+      "title": "Mutate real spines and confirm each fault is caught",
+      "imperative": "Take a shipped template, break it four ways -- null every check on a gate; point a pytest selector at a name that collects nothing; strip the match off an artifact check whose statement claims a property; leave a <placeholder> in a command -- and confirm the lint catches each with a message that names the specific fault. A checker that says only 'invalid' teaches nothing. Then confirm the unmutated original passes clean.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Used skills/admiral/templates/ADMIRAL_SPINE.template.json (a real shipped gated template, its 'init' gate). Baseline: validate() on the unmutated file returns 0 faults (confirmed under the correct `python` interpreter, per v1's lesson). Four independent single-mutation runs, each against a fresh deep copy of the original: (1) null both postconditions on 'init' -> caught: `[falsifiable-all-null] init: every postcondition's check is null ...`. (2) replaced c1's check with a plain `pytest -q tests -k this_selector_matches_absolutely_nothing_zzz_mutation` (no shell-redirect wrapping, so unaffected by the v1 bug) -> caught: `[falsifiable-zero-collected] init.postconditions.c1: the pytest selector -k '...' collects zero tests ...`. (3) replaced c2 (a null-check condition) with an artifact check, no `match`, statement 'reviewer verdict is APPROVE' -> caught: `[falsifiable-artifact-asserts-property] init.postconditions.c2: statement '...' asserts a property but the artifact check carries no `match` ...`. (4) replaced c1's command with `python scripts/check_something.py <TODO-fill-me-in>` -> caught: `[falsifiable-unresolved-placeholder] init.postconditions.c1: command still carries the literal placeholder '<TODO-fill-me-in>' ...`. All four messages name the specific fault code, the exact condition id, and the concrete text that triggered it -- none says merely 'invalid'. The unmutated original passes clean, independently confirmed (matches TestShapeAcceptsEveryShippedTemplate's own claim). Mutation testing confirms the checker's core detection logic works correctly for straightforward (non-idiom-wrapped) inputs; v1's finding is specific to the self-checking `2>/dev/null` idiom, not a general failure of fault detection.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "v3-two-faults-it-may-not-have": {
+      "id": "v3-two-faults-it-may-not-have",
+      "title": "Two real defects from this week that the lint should probably catch",
+      "imperative": "Both are checks the Admiral authored that could never pass, which is a distinct fault class from a check that can never fail -- safe in direction, but useless and blocking. (1) A command check reading `-k Door or Tie or Registry` with the selector unquoted, so the shell splits it and the command means something else entirely. (2) A check whose python -c body imports mcp_spine_server, which reads SPINE_FILE and SPINE_ENGINE at import time and raises KeyError without them, so the check errors every time regardless of the repo's state. Run the lint against both. Report whether it catches them, and give your judgment on whether it SHOULD -- this is a scope question, not a defect, and an argued no is a fine answer.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Both reproduced directly, one caught, one not -- exactly the split the handoff frames as a scope question.\n\n(1) Unquoted `-k Door or Tie or Registry`: confirmed the raw shell failure first -- `pytest --collect-only -q tests -k Door or Tie or Registry` really does error `ERROR: file or directory not found: or` (0 collected), because the shell splits the selector into '-k Door' plus bareword positional args 'or'/'Tie'/'or'/'Registry'. Ran validate_spine.validate() against a spine carrying this exact command: CAUGHT -- `[falsifiable-zero-collected] g1.postconditions.c1: the pytest selector -k 'Door' ... collects zero tests`. Mechanism note (quality observation, not a block): the checker's own `_pytest_targets` also sweeps up the stray 'or'/'Tie'/'or'/'Registry' tokens as bogus positional targets when it reconstructs its own collect-only invocation, so its reconstructed command fails with the same pytest usage error as the original -- it reaches the right refusal, but the message ('selector collects zero tests') misdescribes the actual defect (an unquoted multi-word -k value), which could mislead whoever reads it into 'quoting' fix vs a 'narrow the selector' fix. Still: caught, correctly refused.\n\n(2) `python -c \"import mcp_spine_server; ...\"`, which reads SPINE_FILE/SPINE_ENGINE at import and raises KeyError without them: NOT CAUGHT -- validate() returns zero faults for this check. This is expected: none of the four named falsifiability faults describe it (it is not all-null, not a pytest selector, not an artifact check, not an unresolved &lt;placeholder&gt;) -- it is the opposite failure direction from what c1 was scoped to find (a check that can never PASS, vs. one that can never FAIL), which the handoff itself names as a distinct class.\n\nJudgment: a defensible scope exclusion, not a defect in this gate's delivery. General detection of 'this arbitrary python -c body will always raise' is undecidable by static analysis; the only sound way to catch it is live execution (which fault 2 already does, narrowly, for read-only `pytest --collect-only`) -- extending that to arbitrary command checks changes the lint's risk profile (running arbitrary, possibly slow or side-effecting shell text during a static lint pass) and was never in c1's named fault list. I would NOT block on this. I would flag it as a triage candidate for a future fault family scoped specifically to environment-dependent `python -c` import checks, since the handoff states the Admiral authored this exact defect this week and it is evidently a recurring pattern worth a narrowly-scoped future fault (e.g., detect `import <module>` in a `python -c` command body where that module is known to read a required env var at import time) rather than a general live-execution sweep.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "v4-is-it-usable-as-a-module": {
+      "id": "v4-is-it-usable-as-a-module",
+      "title": "The next wave imports this; is the seam clean?",
+      "imperative": "A later wave generates spines from a spec file and refuses to emit anything the lint rejects. Check that validate_spine exposes a clean function taking a parsed spine and returning structured faults, that the CLI is a thin wrapper over it, and that importing it has no side effects and needs no environment -- the door module's import-time environment read is exactly the trap to avoid here.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Seam checked directly, not read off the docstring. (1) Clean function: `validate(spine: dict, *, repo_root: Path | None = None) -> list[Fault]` takes an already-parsed spine dict, not a file path, and returns a list of structured `Fault` dataclass instances (`.code`/`.where`/`.message` as separate fields, not a pre-formatted string blob) -- a caller can filter/group/render without re-parsing text. `discover_checklist_templates(root)` and `validate_file(path, *, repo_root=None)` are the two other public entry points, both equally clean. (2) CLI is a thin wrapper: `main()` only does argparse, calls `discover_checklist_templates`/`validate_file`, and prints -- no fault-detection logic lives in `main()` itself. (3) Import has no side effects and needs no environment: `env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE python -c \"import validate_spine\"` succeeds cleanly (confirmed with all three spine env vars unset), and so does importing `init_work_area` directly -- neither module reads an environment variable at import time, unlike the exact `mcp_spine_server.py` trap v3 named (SPINE_FILE/SPINE_ENGINE read at import, raising KeyError). The `sys.path.insert` at module top is a load-bearing but harmless import-time mutation (matches 10 other scripts/*.py that do the same to resolve sibling imports when run as a script rather than a package) -- not an environment requirement. Calling `validate()` does launch pytest subprocesses (fault 2's live collect-only check) -- that is call-time behavior, not an import-time hazard, and is exactly what the module documents itself as doing. The seam is clean and ready for a later wave's spine generator to import directly.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "v5-corpus-honesty": {
+      "id": "v5-corpus-honesty",
+      "title": "Is the corpus sweep's own count real?",
+      "imperative": "Gate g3 was told to enumerate the population from each file's own type field, not from the Template set table in checklist-engine.md, because a reviewer counted twelve real checklists against that table's six. Verify the number the crew reports by counting yourself, and confirm the sweep test asserts how many templates it examined rather than only that it found no faults.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently hand-counted the population myself, not reusing discover_checklist_templates: walked every skills/*/templates/*.json (19 files total) and printed each file's own `type` field. 12 carry `type` in (gated, survey): ADMIRAL_SPINE, CARTOGRAPHER, CHARTER, COMMANDER_SPINE, EXECUTE_PLAN, CYCLE, EXPLORER_SPINE, IMPLEMENTER_PLAN, INTERROGATION, REVIEW_SURVEY, SCOUT, DEFAULT. The other 7 (ENGINE_CONFIG, FINDING, INTERROGATION_RECORD, REPLAN_INPUT, REPLAN_RESULT, FOWLER_PASS, INITIAL_ISSUE_SET, SHAPED_BRIEF) are data-record templates with type null/other, correctly excluded. Matches the crew's claimed 12 exactly. Cross-checked skills/workbench/references/checklist-engine.md's 'Template set' table directly: it lists 6 rows, of which only 5 are actually gated/survey (COMMANDER_SPINE, EXECUTE_PLAN, INTERROGATION, REVIEW_SURVEY, IMPLEMENTER_PLAN -- the 6th, ENGINE_CONFIG, is type '\u2014', not a checklist at all) -- confirms the handoff's cited '12 real checklists against that table's six' discrepancy is real and the table is stale by 7 missing templates (ADMIRAL_SPINE, CARTOGRAPHER, CHARTER, CYCLE, EXPLORER_SPINE, SCOUT, DEFAULT never listed). Confirmed the sweep test asserts the count, not just cleanliness: test_population_matches_measured_gated_and_survey_types pins `len(SHIPPED_TEMPLATES) == 12` (strict, not a floor) plus a set-equality cross-check against an independently-walked glob; test_discovery_would_not_be_fooled_by_the_stale_table asserts `> 6` specifically so a regression toward the stale table's count is visible; test_every_template_is_actually_validated asserts the sweep produced a result for every discovered path (`len(results) == len(SHIPPED_TEMPLATES)`), so a short-circuited sweep cannot read as complete. The corpus count is honest and independently reproducible.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "v1-false-positives: BLOCK-caliber false positives confirmed in fault 2 (zero-collect). Swept every gated/survey instance under .agent-work/ (539 files, correct `python` interpreter) plus the 12 shipped templates. Archive: 204 clean, 335 faulty (62%); templates: 4/12 clean (matches r3's reproduced sweep). Hand-checked every distinct trigger, not just counts.\n\nFault 3 (artifact-asserts-property, 128 hits): only 3 distinct statement texts across all 128; hand-verified all 3 are true vacuous-check defects (126 are the same real #562 pattern -- 'IMPLEMENTER_RESULT returned with no unresolved blockers' with no `match`, baked into a widely-copied template gate; the other 2 are unique and equally real). Zero false positives found.\n\nFault 4 (unresolved-placeholder, 43 hits): sampled every distinct token (&lt;branch&gt;, &lt;fowler-pass-record-path&gt;, &lt;exact test command&gt;, &lt;epic-id&gt;, &lt;interrogation-record-path&gt;) -- all genuine unresolved/scaffold placeholders (confirmed init_work_area has no substitution mechanism for any of them). Zero false positives found.\n\nFault 2 (zero-collected, 9 hits under the correct interpreter -- see Workflow Feedback for how I nearly mis-measured this at 175): CONFIRMED REAL BUG. 8 of the 9 are false positives from the same mechanism: `_pytest_segments` splits the command on bare `|`, so the corpus's own self-checking idiom -- `test $(pytest ... --collect-only 2>/dev/null | grep -c '::') -ge N && pytest ...`, the exact pattern CREW_CONTEXT.md's Verification Discipline recommends ('demonstrate it can reach a failing state') -- puts `2>/dev/null` inside the FIRST segment. shlex tokenizes `2>/dev/null` as one opaque token that doesn't start with `-`, so `_pytest_targets` treats it as a positional pytest target (a nonexistent path). `_collects_zero` then runs pytest against that bogus path and gets empty output -> misreported as zero-collect. `_fault_zero_collect` dedupes by selector text and processes segments in command order, so this corrupted FIRST-segment verdict wins before the correct second (real-run) segment is ever reached. Minimal repro: a check running 32 real, passing tests (`pytest tests/test_validate_spine.py -k Shape`), wrapped in the idiom above, is flagged `falsifiable-zero-collected` -- identical severity to `check: null` -- for a check that not only can fail, but demonstrably passes. This is not a corner case: it fires on this very epic's own g1/g2/g3 gates and on 3 other real spines (epic-559/a-spine-is-the-job's REWORK/REWORK2 plans) every time the idiom is used, and would fire on ANY future spine that follows the repo's own documented best practice for this exact fault family. It penalizes the most diligent authors and rewards the naive one-liner that skips the self-check.\n\nSecond, related false-positive mechanism found by accident while investigating the first: `_collects_zero` uses `sys.executable` for its own subprocess pytest re-invocation rather than respecting the interpreter named in the check's own command text, and never confirms pytest is importable there before trusting an empty/failed subprocess as 'collects zero'. On this very host, `python3` has no pytest installed (CREW_CONTEXT.md documents this exact hazard). Reproduced live through the actual CLI: `python3 -m scripts.validate_spine .agent-work/w5-gates/execute.json` -> 6 spurious zero-collect faults; `python -m scripts.validate_spine` on the identical file -> 0. No message, returncode check, or doc anywhere distinguishes 'pytest didn't run' from 'genuinely 0 collected' -- an operator typing the more literal-looking `python3` silently gets false BLOCKs on every pytest-based check in the file.\n\nVerdict: this is exactly the failure mode the handoff calls decisive -- a lint that refuses spines that are actually fine. Both mechanisms are narrow and named precisely enough to fix (skip shell-redirect-shaped tokens in `_pytest_targets`; verify pytest importability, or better, invoke the command's own interpreter, before trusting an empty collect result) but as shipped, fault 2 is not safe to trust on a self-checking command, which is the corpus's own recommended idiom."
+    ],
+    "summary": "BLOCK. Handoff compliance, scope, evidence, quality, reconciliation, and the Fowler pass all pass; v2 (mutation testing), v3 (the two named real defects, one caught/one an argued scope exclusion), v4 (module seam), and v5 (corpus count honesty) all pass. v1, the decisive item, fails: swept all 539 archived spine/survey instances plus the 12 shipped templates and hand-verified every distinct fault trigger. Faults 1, 3, 4 have zero confirmed false positives. Fault 2 (zero-collect) does not hold up -- 8 of 9 zero-collect findings in the correctly-run sweep are false positives from one confirmed, reproduced mechanism: the corpus's own recommended self-checking idiom (`test $(pytest ... --collect-only 2>/dev/null | grep -c '::') -ge N && pytest ...`, which CREW_CONTEXT.md's own doctrine recommends authors write) gets misparsed -- `2>/dev/null` is swept up as a bogus positional pytest target, corrupting the first segment's collect-only verdict, which then wins over the correct second segment via selector-text dedup. Minimal repro: a check running 32 real passing tests is flagged as vacuous. A second, related mechanism (`_collects_zero` trusts `sys.executable` rather than the command's own named interpreter, and never confirms pytest is importable before trusting an empty subprocess result) produces the same false-BLOCK outcome whenever validate_spine.py itself is run under an interpreter lacking pytest -- a real, host-documented hazard (CREW_CONTEXT.md), reproduced live through the actual CLI. Full detail, reproduction commands, and out-of-scope observations are in .agent-work/epic-559/c1-spine-lint/REVIEWER_RESULT.md."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "v3-two-faults-it-may-not-have",
+      "statement": "validate_spine.py has no fault family for a command check that can never PASS (opposite direction from the four shipped falsifiability faults, which all catch checks that can never FAIL). Confirmed live: a `python -c \"import mcp_spine_server; ...\"` check, which reads SPINE_FILE/SPINE_ENGINE at import and raises KeyError without them, produces zero faults from validate(). This is a real, recurring pattern (the handoff cites the Admiral authoring it this week) and a narrowly-scoped future fault -- detect `import <module>` in a `python -c` command body where that module reads a required env var at import time -- is a defensible, bounded next step, distinct from a general live-execution sweep of arbitrary command checks."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/epic-559/c1-spine-lint/g5-review/reviewer",
+    "status": "released",
+    "claimed_at": "2026-08-11T11:14:40.209783+00:00",
+    "last_heartbeat": "2026-08-11T11:34:05.871075+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-11T11:34:28.651497+00:00"
+  }
+}

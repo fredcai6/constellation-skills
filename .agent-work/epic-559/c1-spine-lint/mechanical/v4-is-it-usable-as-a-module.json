@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "v4-is-it-usable-as-a-module",
+  "mechanical": {
+    "run": "epic-559/c1-spine-lint",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "v4-is-it-usable-as-a-module",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c1-spine-lint-v4-is-it-usable-as-a-module@5b7fa7b744403eae6c01357da7cf0cb888612256",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c1-spine-lint",
+    "generated_at": "2026-08-11T11:32:26Z"
+  }
+}

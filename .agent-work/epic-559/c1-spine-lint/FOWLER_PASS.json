@@ -1,0 +1,20 @@
+{
+  "work_id": "epic-559/c1-spine-lint",
+  "diff_ref": "303b7f19 and 9aa094dd against main@90b39e2b (scripts/validate_spine.py, tests/test_validate_spine.py, tests/fixtures/spine_lint/fixture_tests.py, map/INDEX.md)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, skills/_shared/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "flagged", "finding": "_shape_faults (scripts/validate_spine.py:74-131) is 58 lines and bundles five distinct validation concerns sequentially: missing/wrong-type `items`, missing/wrong-type `tasks`, dangling/orphan item-task cross-check, `type` validation, and per-task delegation. Each block is readable and blank-line-separated, but the function could be split into named helpers the way `_shape_task_faults` already was, one level down. Not blocking -- readability is still fine at this length -- but worth naming as the pass's job is to look, not to stay silent.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "feature-envy", "verdict": "overridden", "finding": "validate_spine.py imports the private `_RESOLVER_OWNED_TOKEN_RE` directly from init_work_area rather than through a public API, which reaches into another module's internals.", "override": {"repo_standard": "docs/agents/CREW_CONTEXT.md Verification Discipline: 'Define a guard by its consumer's behaviour, not by a hand-maintained list ... express the guard as the property the consumer itself computes.'", "reason": "Fault 4's ACCEPTED set must track exactly which <placeholder> families init_work_area.resolve_spine actually substitutes; re-declaring that regex in validate_spine.py would let the two drift silently, which is precisely the hand-maintained-list failure the standard forbids. Importing the single source of truth is the standard's own remedy, and it is not a novel pattern here -- scripts/run_skill_eval.py:73-74 already aliases install_constellation's private `_hash_file`/`_source_commit` for the same reason (avoid re-declaring a sibling module's logic)."}},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}
