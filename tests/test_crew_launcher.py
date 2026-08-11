@@ -359,6 +359,51 @@ class ParentPromptTests(unittest.TestCase):
         self.assertNotIn("Your parent is s.", prompt)
 
 
+class BlankParentTests(unittest.TestCase):
+    """The one hole a cold reviewer found in E1 (#559 follow-on): both
+    `_parent_clause` and `_crew_door_env` used plain truthiness on `parent`,
+    so `""` correctly collapsed to the unknown marker but a WHITESPACE-ONLY
+    string (`"   "`) is truthy and sailed straight through -- into the
+    prompt (naming a parent with no real identity) and into the durable
+    registry (recorded verbatim, so a resume would read it back as if it
+    were a real parent). `_normalize_parent` strips first: a parent that is
+    blank after stripping is treated exactly like an omitted one, in both
+    places, and in `_crew_door_env`'s SPINE_PARENT binding too."""
+
+    def test_whitespace_only_parent_reads_as_unknown_in_the_prompt(self):
+        argv = RC.build_crew_argv(
+            "claude", role="implementer", handoff="/abs/h.md", model=None,
+            session="s", parent="   ",
+        )
+        self.assertIn(f"parent is {RC.UNKNOWN_PARENT}", argv[2])
+        self.assertNotIn("Your parent is    :", argv[2])
+
+    def test_whitespace_only_parent_is_recorded_as_none_not_verbatim(self):
+        entry = RC.build_entry(
+            work_id="issue-1", gate="g1", role="implementer", attempt=1,
+            worktree=".", handoff="h.md", result="r.md", root=Path("."),
+            started="2026-07-07T00:00:00+00:00", backend="cli", pid=1,
+            parent="   ",
+        )
+        self.assertIsNone(entry["parent"])
+
+    def test_whitespace_only_parent_binds_unknown_in_the_door_env(self):
+        with no_ambient_parent_env():
+            env = RC._crew_door_env(
+                work_id="issue-1", gate="g1", role="implementer", spine=None,
+                root=Path("."), parent="   ",
+            )
+        self.assertEqual(RC.UNKNOWN_PARENT, env["SPINE_PARENT"])
+
+    def test_non_blank_parent_with_padding_is_unaffected(self):
+        argv = RC.build_crew_argv(
+            "claude", role="implementer", handoff="/abs/h.md", model=None,
+            session="s", parent="  constellation/epic-1/commander  ",
+        )
+        self.assertIn("constellation/epic-1/commander", argv[2])
+        self.assertNotIn(RC.UNKNOWN_PARENT, argv[2])
+
+
 class WaiveHookTests(unittest.TestCase):
     """Ruling (human, verbatim): "agent cannot waive itself... always ask up."
     A crew keeps `mcp__spine__spine_evidence` (attest/attach still need it),

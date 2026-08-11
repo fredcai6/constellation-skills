@@ -520,10 +520,22 @@ def crew_settings_json() -> str:
 UNKNOWN_PARENT = "unknown"
 
 
+def _normalize_parent(parent: str | None) -> str | None:
+    """A parent that is blank after stripping is an omitted parent (#559
+    follow-on, E1 fail-up): whitespace is not an identity to ask up to, so
+    it collapses to the same `None` a caller who passed nothing gets, rather
+    than surviving plain-truthiness checks into a prompt or the registry."""
+    if parent is None:
+        return None
+    stripped = parent.strip()
+    return stripped if stripped else None
+
+
 def _parent_clause(parent: str | None) -> str:
     """The sentence naming a crew's parent, or plainly saying it is unknown.
     PURE, shared by both `build_crew_argv` prompt branches so the wording can
     never drift between them."""
+    parent = _normalize_parent(parent)
     if parent:
         return f"Your parent is {parent}: if you cannot satisfy a check, ask up to it."
     return f"Your parent is {UNKNOWN_PARENT}: never invent one."
@@ -730,7 +742,7 @@ def _crew_door_env(
     `UNKNOWN_PARENT`, never the ambient value of whatever this DISPATCHING
     process's own `SPINE_PARENT` happens to be (that would name the wrong
     rung: the dispatcher's own parent, not the dispatcher itself)."""
-    resolved_parent = parent if parent else UNKNOWN_PARENT
+    resolved_parent = _normalize_parent(parent) or UNKNOWN_PARENT
     if spine is None:
         return crew_env(parent=resolved_parent)
     return crew_env(
@@ -859,7 +871,7 @@ def build_entry(
         "handoff": _relativize(handoff, root) if handoff is not None else None,
         "result": _relativize(result, root) if result is not None else None,
         "spine": _relativize(spine, root) if spine is not None else None,
-        "parent": parent,
+        "parent": _normalize_parent(parent),
         "stdout": _relativize(str(stdout_path), root),
         "stderr": _relativize(str(stderr_path), root),
         "started_at": started,

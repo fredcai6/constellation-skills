@@ -71,3 +71,42 @@ env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 pytho
 
 ## Return status
 `complete`
+
+---
+
+## Addendum — k1-blank-parent (fix pass)
+
+**Assigned gate:** `k1-blank-parent`, per `FIX_HANDOFF.md`.
+
+**Fix:** `_parent_clause` and `_crew_door_env` (and `build_entry`'s `parent` field) used plain
+truthiness on `parent`, so an empty string collapsed to `UNKNOWN_PARENT` but a whitespace-only
+string (`"   "`) was truthy and passed straight through — into the crew prompt and into the
+durable registry verbatim. Added `_normalize_parent(parent)` (strips, returns `None` if the
+result is empty) in `scripts/run_crew.py` and routed all three call sites through it: a parent
+that is blank after stripping is now treated exactly like an omitted one, everywhere.
+
+**Tests:** added `BlankParentTests` in `tests/test_crew_launcher.py` (4 tests, `-k BlankParent`
+selects all 4): whitespace-only parent reads as unknown in the prompt, is recorded as `None`
+(not verbatim) in `build_entry`'s output, binds `UNKNOWN_PARENT` in `_crew_door_env`'s
+`SPINE_PARENT`, and a non-blank parent with incidental padding is unaffected (still names the
+real parent, stripped).
+
+**Suite:** full suite green after the fix — 2609 passed, 1 skipped, 1121 subtests passed.
+`map/INDEX.md` was stale (unrelated entity-count drift) and was rebuilt via
+`python -m scripts.code_map build --root .`.
+
+**Discrepancy — c1's check command has a pre-existing, unrelated bug:** `FIX_PLAN.json`'s `c1`
+check calls `r.build_entry(session='s', ...)`, but `build_entry`'s signature has never had a
+`session` parameter — only `work_id` (confirmed via `git log -p` on `scripts/run_crew.py`; no
+prior revision added then removed one). Run verbatim, the check raises
+`TypeError: build_entry() got an unexpected keyword argument 'session'` and exits 1 regardless
+of this fix. Substituting the one kwarg name (`work_id='s'` for `session='s'`, everything else
+byte-identical, including `parent='   '`) and running the identical logic exits 0: prompt
+contains `unknown`, registry `parent` is `None`. This confirms the fix is correct; the check
+text itself needs `session=` corrected to `work_id=`. `FIX_PLAN.json` is outside this session's
+scope (`scripts/run_crew.py` and `tests/test_crew_launcher.py` only), so the check was not
+edited — flagging this up to the parent (Admiral epic-418-followon) rather than routing around
+it.
+
+**Scope:** `scripts/run_crew.py`, `tests/test_crew_launcher.py`, `map/INDEX.md` (rebuild). No
+other files touched; no merge or push to `main`.
