@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4a-satisfiable",
+  "mechanical": {
+    "run": "epic-559/b-instructions-to-checks",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r4a-satisfiable",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/b-instructions-to-checks-r4a-satisfiable@815ef94a8ed7e8999e8ca7711bd804f12fc60ea3",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/b-instructions-to-checks",
+    "generated_at": "2026-08-11T05:34:37Z"
+  }
+}

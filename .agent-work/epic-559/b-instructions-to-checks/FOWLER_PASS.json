@@ -1,0 +1,20 @@
+{
+  "work_id": "epic-559/b-instructions-to-checks",
+  "diff_ref": "git diff 9d593e0a..0ee69c94 -- skills/admiral/templates/ADMIRAL_SPINE.template.json skills/commander/templates/EXECUTE_PLAN.template.json skills/explorer/templates/EXPLORER_SPINE.template.json (3 files, 4 insertions, 4 deletions)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "overridden", "finding": "ADMIRAL_SPINE.init.c1's new check (`init_work_area.py <work-id> && test -f ... ADMIRAL_LOG.md`) repeats the same 'run init_work_area.py as a command check' shape already shipped on COMMANDER_SPINE.init.c1 and EXPLORER_SPINE.init.c1 before this diff -- three near-identical strings across three files.", "override": {"repo_standard": "Each shipped role template (skills/<role>/templates/*.json) is a standalone, independently-instantiated JSON spine with no shared check-library mechanism -- confirmed by reading all three init gates, which already carried the identical shape pre-diff. There is no code to factor the duplication into.", "reason": "The task itself (converting a mandatory run-script instruction to a command postcondition) is what CENSUS.md documents as already done twice (Commander, Explorer) before this diff closed the third case (Admiral) the same way -- matching an established, repo-wide convention is the correct move, not a new duplication this diff introduces."}},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "flagged", "finding": "EXECUTE_PLAN.g1-implement.c1's new match={\"status\": \"complete\"} treats the implementer-result payload's completion state as a bare, hand-typed string key with no shared vocabulary or schema across producers. r4a's independent sweep of 119 real implementer-result evidence records in .agent-work/ found at least three incompatible conventions in live use (status, verdict, and no field at all, plus case variants), because nothing in this repo defines the payload as a typed contract -- each Commander run invents its own shape. The fix hard-codes one guessed primitive value against an unenforced, undocumented field, which is exactly how primitive obsession bites: a string is standing in for a contract that was never written down anywhere a producer could read it (IMPLEMENTER_RESULT.md's own Out-of-scope section says the same).", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

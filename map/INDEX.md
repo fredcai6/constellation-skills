@@ -4,7 +4,7 @@
 evals: 12 modules, 54 entities
 scripts: 55 modules, 1086 entities
 skills: 1 modules, 18 entities
-tests: 68 modules, 3950 entities
+tests: 71 modules, 3980 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -99,7 +99,7 @@ tests: 68 modules, 3950 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (68 modules, 3950 entities)
+## tests (71 modules, 3980 entities)
 
 ### tests.fixtures (2 modules, 4 entities)
 
@@ -112,6 +112,7 @@ tests: 68 modules, 3950 entities
 - [tests.test_checklist_engine](tests.test_checklist_engine/INDEX.md) (612 entities, 481 holes): HOLE: no docstring
 - [tests.test_clamp_presence](tests.test_clamp_presence/INDEX.md) (3 entities, 3 holes): Presence test for issue #142 clamp restoration.
 - [tests.test_code_map](tests.test_code_map/INDEX.md) (348 entities, 191 holes): Tests for scripts/code_map/ — the derived code map (issue #456, gate g0).
+- [tests.test_commander_evidence_convention](tests.test_commander_evidence_convention/INDEX.md) (8 entities, 8 holes): Pin the g1-implement evidence convention (epic-559/b-instructions-to-checks, rework).
 - [tests.test_context_declaration_lint](tests.test_context_declaration_lint/INDEX.md) (22 entities, 18 holes): Tests for `scripts/verify_context_declaration.py` -- the mechanical lint pinning every declared `context_refs` path against the step's own imperative prose.
 - [tests.test_context_determinism](tests.test_context_determinism/INDEX.md) (25 entities, 21 holes): The acceptance test for issue #300: the projection manifest's *content* is identical across environments.
 - [tests.test_context_manifest](tests.test_context_manifest/INDEX.md) (97 entities, 85 holes): Tests for `scripts/context_manifest.py` — the deterministic projection substrate.
@@ -158,6 +159,8 @@ tests: 68 modules, 3950 entities
 - [tests.test_replan](tests.test_replan/INDEX.md) (28 entities, 28 holes): Strict public-interface tests for evidence-driven wave replanning.
 - [tests.test_retirement_guard](tests.test_retirement_guard/INDEX.md) (22 entities, 3 holes): Red-proofs for `scripts/verify_retirement.py` — the #403 retirement guard.
 - [tests.test_run_skill_eval](tests.test_run_skill_eval/INDEX.md) (121 entities, 106 holes): Agent-free unit layer for scripts/run_skill_eval.py (#106, gate g2).
+- [tests.test_shipped_check_commands_resolve](tests.test_shipped_check_commands_resolve/INDEX.md) (14 entities, 10 holes): Every shipped command check must actually run after instantiation (epic-559/b-instructions-to-checks, rework r3).
+- [tests.test_shipped_template_gates_satisfiable](tests.test_shipped_template_gates_satisfiable/INDEX.md) (8 entities, 7 holes): Prove the shipped EXECUTE_PLAN.template.json's g1-implement gate is actually satisfiable by a real drive of the real engine (epic-559/b-instructions-to-checks, 
 - [tests.test_spine_provenance_check](tests.test_spine_provenance_check/INDEX.md) (34 entities, 32 holes): Provenance hardening for the eval `spine_completed` process check (issue #127).
 - [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (135 entities, 70 holes): Unit tests for scripts/hooks/spine_rail.py.
 - [tests.test_state_note](tests.test_state_note/INDEX.md) (15 entities, 15 holes): HOLE: no docstring

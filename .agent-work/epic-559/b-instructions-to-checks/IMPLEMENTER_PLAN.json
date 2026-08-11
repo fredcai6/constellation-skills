@@ -1,0 +1,146 @@
+{
+  "work_id": "epic-559/b-instructions-to-checks",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "b1-census",
+    "b2-implement",
+    "b3-verify"
+  ],
+  "tasks": {
+    "b1-census": {
+      "id": "b1-census",
+      "title": "List every instruction that should become a check",
+      "imperative": "Read all six shipped role templates and list every imperative sentence that tells an agent to run a script. For each, name the gate, the script, and whether it is mandatory-before-proceeding (converts) or deliberately advisory (stays). Apply the handoff's pre-ruling rather than deliberating each case. Also list every postcondition whose statement asserts a property while its check only proves an artifact of some type arrived. Record the list verbatim; it is the control for the next gate.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "previous gate complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "First gate of this spine; no upstream gate exists to complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gate work done with evidence recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read all six templates in full; recorded verbatim census at .agent-work/epic-559/b-instructions-to-checks/CENSUS.md: 22 run-script instructions (only #1, ADMIRAL_SPINE.init, unconverted; rest already-converted/action-scripts/per-dispatch loop invariants), 5 statement/check mismatch sites (A=#562 constrain, B=weaken, C/D/E already correct or by-design)."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "b2-implement": {
+      "id": "b2-implement",
+      "title": "Convert them, and fix the checks that cannot fail",
+      "imperative": "Turn each mandatory instruction into a command postcondition on its gate, using the same <work-id> style placeholders the template already resolves through init_work_area.resolve_spine, never a path from this worktree. Remove the now-redundant run-this-script sentence but keep the intent that says why the gate exists. Fix EXECUTE_PLAN g1-implement c1 (#562) and every other statement/check mismatch the census found. Edit compact JSON templates surgically as raw text, never through json.load/json.dump, then re-validate with json.load. Do not modify checklist_engine.py, run_crew.py, or the crew skill files. Do not git add -A.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "previous gate complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "b1-census complete; census control list at CENSUS.md."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gate work done with evidence recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Edited 3 files surgically as raw text (re-validated with json.load): (1) ADMIRAL_SPINE.template.json init gate -- removed the 'Run: python init_work_area.py' sentence, gave c1 a command check chaining init_work_area.py + test -f ADMIRAL_LOG.md (mirrors commander/explorer's already-converted init gates). (2) EXECUTE_PLAN.template.json g1-implement.c1 -- fixed #562 by adding match:{status:complete} to the implementer-result artifact check so a blocked/failed/partial result no longer vacuously satisfies 'no unresolved blockers'. (3) EXPLORER_SPINE.template.json init.c1 -- weakened the overclaiming 'and spine.json materialized' statement clause to match what the bare command check actually proves. Full pytest suite green (2532 passed, 1 skipped) after the edits -- no shipped-template structure test broke."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "b3-verify": {
+      "id": "b3-verify",
+      "title": "Run every converted check for real, then commit",
+      "imperative": "Run every converted command in a clean checkout and show it passing \u2014 a check that refuses a healthy repo is worse than the instruction it replaced. Show at least one failing for the right reason when its precondition is genuinely unmet. Report the #562 fix and the full sweep result for all six templates, saying for each whether you constrained the check or weakened the statement, and why. Full suite: env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests. Commit only the files you changed, by name, then write IMPLEMENTER_RESULT.md with its Workflow Feedback section.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "previous gate complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "b2-implement complete: 3 templates edited, JSON re-validated, full suite green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gate work done with evidence recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Every converted command demonstrated both passing and refusing-for-the-right-reason in a clean checkout (git worktree add --detach off a git stash create snapshot), driven through the real engine CLI end to end. ADMIRAL init.c1: refused (exit 1, unmet ['c1','c2']) with no ADMIRAL_LOG.md, then advanced clean after creating it. #562 (EXECUTE_PLAN g1-implement.c1): refused (exit 1) on status=blocked implementer-result, advanced clean on status=complete; replayed the pre-fix (no-match) check shape against the same blocked evidence to reproduce #562 exactly (wrongly passed) confirming the fix closes it. EXPLORER init.c1 (statement-only fix): check behavior unchanged, re-confirmed passing. Full pytest suite: 2532 passed, 1 skipped, 1102 subtests passed. Committed the 3 changed template files by name (commit 0ee69c94), .agent-work left unstaged. IMPLEMENTER_RESULT.md written with before/after table, evidence, and Workflow Feedback."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/epic-559/b-instructions-to-checks/g1-implement/implementer",
+    "status": "released",
+    "claimed_at": "2026-08-11T05:03:17.928792+00:00",
+    "last_heartbeat": "2026-08-11T05:20:49.094035+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-11T05:20:55.945739+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "b1-census",
+      "why": "Census complete: only ADMIRAL_SPINE.init's init_work_area.py run is an unconverted mandatory instruction (commander/explorer already convert the identical instruction on their own init gates \u2014 same slip shape as #562). Five statement/check sites reviewed for the #562 shape; #562 itself (g1-implement.c1) needs constraining, EXPLORER init.c1 overclaims \"spine.json materialized\" and needs weakening, the four user-decision-artifact families are presence-only by design per commander-core.md, and g1-review.c1/g1-integrate.c2 are already correct. This is the control list for b2.",
+      "mechanical": false,
+      "ts": "2026-08-11T05:11:43.254351+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "b2-implement",
+      "why": "All 22 census run-script instructions resolved: 21 already converted or intentionally left (action scripts, per-dispatch loop invariants); 1 (ADMIRAL_SPINE.init) converted with a new command postcondition. The #562 statement/check mismatch fixed by constraining the check (match on return status). One more mismatch (EXPLORER init.c1 overclaiming spine.json materialization) fixed by weakening the statement to what the check proves. The three documented-by-design user-decision presence-only checks and the two already-correct EXECUTE_PLAN checks were left untouched. Full suite green post-edit.",
+      "mechanical": false,
+      "ts": "2026-08-11T05:15:23.416692+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "b3-verify",
+      "why": "All required evidence produced and verified live against the real engine: the ADMIRAL init conversion and the #562 fix each shown genuinely refusing an unmet precondition and genuinely passing a met one, in a clean checkout using resolver-style placeholders, never a worktree-hardcoded path. Full suite green at real counts. Changes committed by name, .agent-work left out of the commit per the archive-owns-that-step convention. IMPLEMENTER_RESULT.md written with the before/after table, the #562 before/after replay, and Workflow Feedback naming the one real gap found (undocumented implementer-result attach-fields convention) as a triage candidate outside my six-file scope. This closes the plan.",
+      "mechanical": false,
+      "ts": "2026-08-11T05:20:49.094024+00:00"
+    }
+  ]
+}

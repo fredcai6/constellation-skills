@@ -7,10 +7,10 @@
     "init": {
       "id": "init",
       "title": "Set up epic work area",
-      "imperative": "Run: python <admiral-skill-dir>/scripts/init_work_area.py <work-id>. Claim the engine session lease on this spine: by default call the spine_lease MCP tool with action=claim, claimed_by=admiral, worktree=. -- this is your own spine, so the door needs no session id argument. CLI fallback: <engine> claim --session-id <admiral-session-id> --claimed-by admiral --worktree . From here on, pass --session-id on every mutating CLI call against this spine (the door tools never take one). Create the ADMIRAL_LOG from templates/ADMIRAL_LOG.template.md at .agent-work/<work-id>/ADMIRAL_LOG.md.",
+      "imperative": "Claim the engine session lease on this spine: by default call the spine_lease MCP tool with action=claim, claimed_by=admiral, worktree=. -- this is your own spine, so the door needs no session id argument. CLI fallback: <engine> claim --session-id <admiral-session-id> --claimed-by admiral --worktree . From here on, pass --session-id on every mutating CLI call against this spine (the door tools never take one). Create the ADMIRAL_LOG from templates/ADMIRAL_LOG.template.md at .agent-work/<work-id>/ADMIRAL_LOG.md.",
       "preconditions": [],
       "postconditions": [
-        {"id": "c1", "statement": "work area scaffolded and ADMIRAL_LOG created", "check": null, "satisfied": false},
+        {"id": "c1", "statement": "work area scaffolded and ADMIRAL_LOG created", "check": {"kind": "command", "command": "python <admiral-skill-dir>/scripts/init_work_area.py <work-id> && test -f .agent-work/<work-id>/ADMIRAL_LOG.md"}, "satisfied": false},
         {"id": "c2", "statement": "engine session lease claimed for this spine", "check": null, "satisfied": false}
       ],
       "constraints": [], "directives": null, "child_checklist": null,

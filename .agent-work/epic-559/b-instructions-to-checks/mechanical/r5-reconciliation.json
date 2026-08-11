@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r5-reconciliation",
+  "mechanical": {
+    "run": "epic-559/b-instructions-to-checks",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r5-reconciliation",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/b-instructions-to-checks-r5-reconciliation@752447c3c83b225086b7e349722c01ec166e39fa",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/b-instructions-to-checks",
+    "generated_at": "2026-08-11T05:31:38Z"
+  }
+}

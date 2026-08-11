@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r3-evidence",
+  "mechanical": {
+    "run": "epic-559/b-instructions-to-checks",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r3-evidence",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/b-instructions-to-checks-r3-evidence@5b0860522ed0d5f5461fa0ed4adc39ff2c87d8b0",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/b-instructions-to-checks",
+    "generated_at": "2026-08-11T05:26:23Z"
+  }
+}

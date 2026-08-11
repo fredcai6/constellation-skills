@@ -1,0 +1,9 @@
+The rework run is complete. All four gates (`r1-convention` → `r4-verify`) drove clean through the real engine, the lease is released, and the deliverable exists.
+
+Summary:
+- **r1**: Documented the `implementer-result` evidence convention (field `status`, sourced from IMPLEMENTER_RESULT's `Return status`, lowercase) in `EXECUTE_PLAN.template.json`, `commander-core.md`, and `IMPLEMENTER_HANDOFF.template.md`; pinned with 4 tests.
+- **r2**: Wrote a test that instantiates `EXECUTE_PLAN.template.json` into a scratch dir and drives `g1-implement` through the real CLI — `status=complete` advances, `status=blocked` refuses (2 tests).
+- **r3**: Fixed the reported `<fowler-pass-record-path>` placeholder in `REVIEW_SURVEY.template.json`, and found + fixed a second, previously unreported instance of the identical bug (`<interrogation-record-path>`) in `INTERROGATION.template.json`. Both now resolve from `<work-id>` alone. Swept all six templates from `checklist-engine.md`'s Template set table with a new test (4 tests).
+- **r4**: Full suite green — 2542 passed, 1 skipped — and `IMPLEMENTER_RESULT.md` written, including Workflow Feedback and an honest accounting of what the first census missed (it checked check-shape, never check-resolvability) and that the new r3 test caught a real second instance directly.
+
+One incidental fix along the way: `REWORK_PLAN.json` itself used the key `"gates"` instead of the engine's required `"items"`, which threw a bare `KeyError` on the very first `current` call — fixed as a one-line raw-text edit before anything else could proceed (noted in Workflow Feedback).
