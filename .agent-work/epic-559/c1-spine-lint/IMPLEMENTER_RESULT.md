@@ -95,3 +95,65 @@ Fault 2's single remaining hit, hand-inspected (not sampled — it is the only d
 
 ## Return status
 `complete`
+
+---
+
+# u1: the lint must be able to say it could not tell
+
+## Assigned gate
+`epic-559/c1-spine-lint` `UNDECIDABLE_PLAN.json`, `u1-say-undecidable` — a finding the round-2 cold reviewer raised on the approved rework and judged non-blocking, promoted because it is this epic's own subject: `_collects_zero` returns `None` for two different reasons ("checked, found real tests" is not one of them, but "could not tell" and "found nothing wrong" shared the identical `None` return and neither `validate()` nor `main()` distinguished them), so an operator running under the wrong interpreter got a clean `OK` with no sign anything went unevaluated.
+
+## Completed slice
+Added a second return channel, threaded through every place a caller reads a result:
+
+1. **`_collects_zero`** now returns `(_CollectOutcome, reason)` instead of `bool | None`. The old three-ways-in-one `None` is split into two real states: `NOT_APPLICABLE` (no `-k` selector in this segment — nothing to evaluate, not this fault's concern) and `UNDECIDABLE` (there was something to evaluate and pytest could not be run to find out — no interpreter with pytest importable resolved, or the subprocess itself failed/timed out), each carrying a human-readable reason for the latter.
+2. **`_fault_zero_collect`** now returns `(faults, undecidable)` — a segment that reads `UNDECIDABLE` produces an `Undecidable` (new dataclass, same shape as `Fault`: `code`/`where`/`message`), never folded into the fault list and never dropped.
+3. **`validate()`** returns a `ValidationResult` — a `list` subclass containing exactly the `Fault`s it always did (every existing caller that iterates/indexes/truthiness-tests it needs no change), plus a `.undecidable: list[Undecidable]` attribute and a `__str__` that names both counts, so `str(result)` cannot read as a clean pass when something went unevaluated.
+4. **`main()`** prints the undecidable count and each `Undecidable` right after its existing `OK`/`N fault(s)` line — exit-code semantics are unchanged (undecidable never flips `any_faults`), but the CLI output for a run with zero faults and nonzero undecidables is no longer bare `OK`.
+5. Regression coverage: `_collects_zero`'s three-way split (`ZERO`/`NOT_APPLICABLE`/`UNDECIDABLE`) is pinned directly; a new `TestUndecidableChannelIsReportedNotOmitted` class pins `ValidationResult.undecidable`, its `str()` output, `validate_file`'s propagation of the same channel, and the CLI's undecidable line via `capsys`.
+
+## Scope
+**Files changed:**
+- `scripts/validate_spine.py` (`Undecidable` dataclass, `_CollectOutcome` enum, `_collects_zero`/`_fault_zero_collect` return-shape change, `ValidationResult`, `validate()`/`main()` updated to thread and print it)
+- `tests/test_validate_spine.py` (existing `_collects_zero` call sites updated to the new tuple return; new `TestUndecidableChannelIsReportedNotOmitted` class)
+- `map/INDEX.md` (rebuilt)
+
+**Specific exclusions touched:** no. `check_corpus_fp.py` was not edited (the handoff notes the Admiral already fixed it a second time, to discover its population by each file's own `type` field rather than a filename substring) — `c3` passes unchanged against it, now examining 26 checklists. `checklist_engine.py`, `mcp_spine_server.py`, `run_crew.py`, `settings.json`, `docs/agents/*`, and every shipped spine template are untouched.
+
+## Behavior changed
+Yes, but narrowly: `validate()`/`validate_file()` still return something that behaves exactly like `list[Fault]` for every existing reader, and `main()`'s exit code and `OK`/`N fault(s)` line are unchanged for the common case. The new behavior is additive — a `.undecidable` attribute, an augmented `str()`, and an extra CLI line — visible only when a condition actually could not be evaluated.
+
+## Map Impact
+- **Structural anchors touched:** `scripts.validate_spine` (same module, no new public entry points besides `Undecidable`/`ValidationResult`/`_CollectOutcome`; `validate`/`validate_file`/`discover_checklist_templates` keep their names and call signatures).
+- **Capabilities added/changed/affected:** a caller of `validate()`/`validate_file()` can now distinguish "sound" from "N conditions could not be judged" without re-deriving it from exit code or fault count; `main()`'s CLI output carries the same distinction.
+- **Constraints/assumptions touched:** `_collects_zero`'s return shape changed from `bool | None` to `(_CollectOutcome, str | None)` — any future caller of that private helper (there are none outside this module and its tests) must be updated alongside. `validate()`'s return value is now a `ValidationResult`, not a bare `list`; it remains list-compatible by construction (`list` subclass) specifically so no other reader needed to change.
+- **Trust limitations / drift found:** none new.
+- **Triage candidates:** none new. The two already carried forward from earlier waves (`init_work_area._RESOLVER_OWNED_TOKEN_RE`'s bare `<skill-dir>` gap; `checklist-engine.md`'s stale Template-set table) are unaffected by this change.
+
+## TDD evidence, if required
+- Failing test observed: before the fix, `vs.validate(spine, repo_root=ROOT)` on a spine whose command names an interpreter with no pytest importable had no way to express "undecidable" at all — there was no `.undecidable` attribute to assert against, and `str()` of the plain `list[Fault]` never mentioned it. `main()`'s output for that spine was bare `path: OK`.
+- Passing test observed: `env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_validate_spine.py -k "Undecid or Unevaluat"` — 8 collected, all green. `c1`'s library-side probe (a spine whose check names `python3`, which lacks pytest on this host) confirms `validate_file()`'s result mentions "could not" in its own `str()`. `main()`'s CLI output for the same shape now reads `path: OK` followed by `path: 1 undecidable` and the `Undecidable` detail line, with exit code `0`.
+- Refactor while green: no separate pass — the `_CollectOutcome` enum and `ValidationResult` class were the direct, minimal shape needed to carry the second channel through every existing call site without breaking any of them; verified by the full suite staying green throughout (`tests/test_validate_spine.py` first, then the repo-wide suite).
+
+## Docs/contracts touched
+- none — `map/INDEX.md` is regenerated output, not an authored contract.
+
+## Assumptions
+- `check_corpus_fp.py`'s population and scope are the Admiral's own prior decision (fixed a second time per the handoff, now discovered by `type` field); not mine to second-guess further. Ran as given, `c3` exits 0 against 26 checklists.
+- "Undecidable" is scoped to the one mechanism the handoff named (`_collects_zero`'s pytest-selector evaluation) — the other three falsifiability faults (`falsifiable-all-null`, `falsifiable-artifact-asserts-property`, `falsifiable-unresolved-placeholder`) are read-only walks over the spine's own JSON with no external process to fail, so they have no undecidable state to report; only fault 2's mechanism spawns a subprocess whose success is not guaranteed.
+
+## Stop conditions hit
+- None. The rework's rule (undecidable is not a failing check, exit code does not change) held throughout; no blocker was raised.
+
+## Out-of-scope observations
+- None new.
+
+## Workflow Feedback
+
+- **Handoff gaps:** none — `UNDECIDABLE_HANDOFF.md` named the exact mechanism (`_collects_zero`'s four `None`-returning branches), the exact live reproduction (same file, two interpreters, `OK` vs `N fault(s)`), and the exact shape of the fix ("add that channel in both places a caller reads: the library return and the CLI output"), directly actionable without rediscovery.
+- **Context rediscovered:** none.
+- **Instructions improvised around:** the handoff did not specify whether `NOT_APPLICABLE` (no `-k` selector at all) should also read as undecidable. Judged it should not — reporting "undecidable" for a segment that was never asking the zero-collect question in the first place would itself be a false undecidable, the same class of misleading signal this fix exists to remove. Kept it a silent, unreported third state, distinct from both `Fault` and `Undecidable`.
+- **What would have made this easier:** nothing concrete; this handoff was unusually precise.
+
+## Return status
+`complete`

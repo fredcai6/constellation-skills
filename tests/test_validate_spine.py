@@ -410,7 +410,9 @@ class TestFalsifiabilityZeroCollectInterpreterUnavailable:
         # that simply cannot `import pytest`.
         fake = self._fake_interpreter(tmp_path, "import sys\nsys.exit(1)\n")
         assert vs._resolve_interpreter(fake) is None
-        assert vs._collects_zero(fake, ["-k", "alpha"], ROOT) is None
+        outcome, reason = vs._collects_zero(fake, ["-k", "alpha"], ROOT)
+        assert outcome is vs._CollectOutcome.UNDECIDABLE
+        assert reason and fake in reason
 
     def test_a_name_not_found_on_path_at_all_is_undecidable_not_a_fault(self):
         assert vs._resolve_interpreter("this-interpreter-does-not-exist-zzz") is None
@@ -420,16 +422,94 @@ class TestFalsifiabilityZeroCollectInterpreterUnavailable:
         # (this very test process) must still behave exactly as before --
         # the fix narrows false positives, it does not blind the checker.
         assert vs._resolve_interpreter(sys.executable) == sys.executable
-        assert vs._collects_zero(sys.executable, ["-k", "this_matches_nothing_zzz", FIXTURE_TESTS.as_posix()], ROOT) is True
+        outcome, reason = vs._collects_zero(
+            sys.executable, ["-k", "this_matches_nothing_zzz", FIXTURE_TESTS.as_posix()], ROOT
+        )
+        assert outcome is vs._CollectOutcome.ZERO
+        assert reason is None
+
+    def test_no_selector_segment_is_not_applicable_not_undecidable(self):
+        # A pytest segment with no -k at all has nothing for this fault to
+        # evaluate -- that is a different kind of "no fault" than genuinely
+        # trying and failing, and must not be reported on either channel.
+        outcome, reason = vs._collects_zero(sys.executable, [FIXTURE_TESTS.as_posix()], ROOT)
+        assert outcome is vs._CollectOutcome.NOT_APPLICABLE
+        assert reason is None
 
     def test_unresolvable_interpreter_yields_no_fault_end_to_end(self, tmp_path):
         # Full validate() path: a command naming an interpreter that cannot
         # run pytest must not read as `check: null`-equivalent vacuous, nor
-        # as a fault -- it is undecidable, and undecidable is silence.
+        # as a fault -- it is undecidable, and undecidable must still be
+        # visible on the result's own undecidable channel, not silence.
         fake = self._fake_interpreter(tmp_path, "import sys\nsys.exit(1)\n")
         spine = _spine_with_command(f"{fake} -m pytest -q {FIXTURE_TESTS.as_posix()} -k alpha")
-        faults = vs.validate(spine, repo_root=ROOT)
-        assert "falsifiable-zero-collected" not in _codes(faults)
+        result = vs.validate(spine, repo_root=ROOT)
+        assert "falsifiable-zero-collected" not in _codes(result)
+        assert "undecidable-zero-collect" in {u.code for u in result.undecidable}
+
+
+# --------------------------------------------------------------------------- #
+# The undecidable channel itself (UNDECIDABLE_HANDOFF.md, C1): "could not
+# tell" and "checked, found nothing wrong" must never share a code path.
+# --------------------------------------------------------------------------- #
+
+class TestUndecidableChannelIsReportedNotOmitted:
+    """`validate()`'s return value must be able to SAY undecidable, in a
+    place a caller actually reads: `.undecidable` on the returned
+    `ValidationResult`, and its `str()` -- the same channel `main()`'s CLI
+    output and any future library caller both go through."""
+
+    @staticmethod
+    def _fake_interpreter_without_pytest(tmp_path: Path) -> str:
+        script = tmp_path / "fake-interpreter-no-pytest"
+        script.write_text("#!/usr/bin/env python3\nimport sys\nsys.exit(1)\n")
+        script.chmod(script.stat().st_mode | stat.S_IEXEC)
+        return str(script)
+
+    def test_validation_result_undecidable_attribute_is_populated(self, tmp_path):
+        fake = self._fake_interpreter_without_pytest(tmp_path)
+        spine = _spine_with_command(f"{fake} -m pytest -q {FIXTURE_TESTS.as_posix()} -k alpha")
+        result = vs.validate(spine, repo_root=ROOT)
+        assert len(result.undecidable) == 1
+        assert isinstance(result.undecidable[0], vs.Undecidable)
+
+    def test_str_of_a_clean_result_says_undecidable_when_present(self, tmp_path):
+        # This is the exact defect: two runs that both print "no faults"
+        # must not be allowed to look identical when one of them also could
+        # not evaluate something. str() must name the difference.
+        fake = self._fake_interpreter_without_pytest(tmp_path)
+        spine = _spine_with_command(f"{fake} -m pytest -q {FIXTURE_TESTS.as_posix()} -k alpha")
+        result = vs.validate(spine, repo_root=ROOT)
+        assert not result  # zero faults -- the misleading-silence case
+        text = str(result).lower()
+        assert "undecid" in text
+
+    def test_str_of_a_genuinely_sound_result_does_not_claim_undecidable(self):
+        result = vs.validate(_valid_gated(), repo_root=ROOT)
+        assert not result
+        assert not result.undecidable
+        assert "undecid" not in str(result).lower()
+
+    def test_validate_file_result_also_carries_the_channel(self, tmp_path):
+        fake = self._fake_interpreter_without_pytest(tmp_path)
+        spine = _spine_with_command(f"{fake} -m pytest -q {FIXTURE_TESTS.as_posix()} -k alpha")
+        p = tmp_path / "spine.json"
+        p.write_text(json.dumps(spine))
+        result = vs.validate_file(p, repo_root=ROOT)
+        assert result.undecidable
+        assert "undecid" in str(result).lower()
+
+    def test_cli_output_names_the_undecidable_count_even_when_no_faults(self, tmp_path, capsys):
+        fake = self._fake_interpreter_without_pytest(tmp_path)
+        spine = _spine_with_command(f"{fake} -m pytest -q {FIXTURE_TESTS.as_posix()} -k alpha")
+        p = tmp_path / "spine.json"
+        p.write_text(json.dumps(spine))
+        exit_code = vs.main([str(p), "--root", str(ROOT)])
+        out = capsys.readouterr().out
+        # Undecidable is not a failure -- exit code semantics are unchanged.
+        assert exit_code == 0
+        assert "OK" in out
+        assert "undecidable" in out.lower()
 
 
 # --------------------------------------------------------------------------- #

@@ -6,8 +6,9 @@ Nothing in the corpus looked at a spine's own checks before this (issue
 epic-559/c1, #518, #562): `checklist_engine.py` trusts the file it is handed
 and only discovers a malformed shape or a vacuous check live, at the gate that
 tries to close over it. This module is importable (`validate(spine)` returns
-a list of `Fault`s) so a future spine generator can refuse to emit past it;
-the CLI below is a thin wrapper.
+a `ValidationResult`, a `list[Fault]` with an added `.undecidable` channel) so
+a future spine generator can refuse to emit past it; the CLI below is a thin
+wrapper.
 
 Two families of fault:
 
@@ -19,6 +20,13 @@ Two families of fault:
 - **Falsifiability** (`falsifiable-*`): the file the engine walks fine but
   whose check can never demonstrate a failure -- see `references/` in the g2
   handoff for the four faults and the incidents that motivated each.
+
+Some conditions cannot be evaluated at all -- e.g. a `command` check's pytest
+`-k` selector, run under an interpreter that cannot import pytest. That is
+not a `Fault` (the check may be perfectly sound) and it is not silence
+either: it is reported on `ValidationResult.undecidable`, distinctly, so a
+caller can tell "sound" from "I could not judge N of these" (#518's own
+undecidable-silence defect, C1 of this epic).
 """
 
 from __future__ import annotations
@@ -31,6 +39,7 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -53,6 +62,23 @@ class Fault:
     """One refusal reason. `where` is a task id, or `<top-level>` for a
     file-wide shape fault, or `<task>.<preconditions|postconditions>.<cond-id>`
     for a condition-scoped fault."""
+
+    code: str
+    where: str
+    message: str
+
+    def __str__(self) -> str:
+        return f"[{self.code}] {self.where}: {self.message}"
+
+
+@dataclass(frozen=True)
+class Undecidable:
+    """One condition `validate()` could not evaluate -- not a `Fault` (the
+    check might be perfectly sound), and not silence either. "Could not
+    tell" and "checked, found nothing wrong" must never share a code path:
+    the same file, run under two interpreters differing only in whether
+    pytest is importable, must not print a clean `OK` under one and a real
+    fault count under the other with no sign anything went unevaluated."""
 
     code: str
     where: str
@@ -326,52 +352,83 @@ def _resolve_interpreter(named: str | None) -> str | None:
     return resolved
 
 
-def _collects_zero(interpreter: str | None, args: list[str], repo_root: Path) -> bool | None:
+class _CollectOutcome(Enum):
+    """The result of trying to find out whether one pytest -k segment
+    collects zero tests. `NOT_APPLICABLE` (no -k selector at all) and
+    `UNDECIDABLE` (pytest could not be run to find out) both mean "no
+    fault", but they are not the same thing and must not be reported the
+    same way: `NOT_APPLICABLE` is "nothing to check here", `UNDECIDABLE` is
+    "there was something to check and I could not check it"."""
+
+    ZERO = "zero"
+    SOME = "some"
+    NOT_APPLICABLE = "not-applicable"
+    UNDECIDABLE = "undecidable"
+
+
+def _collects_zero(interpreter: str | None, args: list[str], repo_root: Path) -> tuple[_CollectOutcome, str | None]:
     """Actually run `pytest --collect-only` with this segment's own `-k`
     selector and targets, using the interpreter the check's command names
     (never a silent `sys.executable` fallback -- see `_resolve_interpreter`).
-    Returns True if it collects nothing, False if it collects at least one
-    test, None if it could not be run at all -- no interpreter with pytest
-    importable resolved, no subprocess spawned, or a timeout: environment
-    trouble, not a verdict, and undecidable is not a fault."""
+    Returns `(outcome, reason)`: `reason` is only set for `UNDECIDABLE` --
+    no interpreter with pytest importable resolved, or the subprocess
+    itself failed/timed out: environment trouble, not a verdict, and
+    undecidable is not a fault. `NOT_APPLICABLE` (no `-k` in this segment)
+    is a different kind of nothing-to-report and carries no reason."""
     selector = _selector(args)
     if selector is None:
-        return None
+        return _CollectOutcome.NOT_APPLICABLE, None
     python = _resolve_interpreter(interpreter)
     if python is None:
-        return None
+        named = interpreter or sys.executable
+        return _CollectOutcome.UNDECIDABLE, (
+            f"no interpreter named {named!r} resolved with pytest importable"
+        )
     targets = _pytest_targets(args)
     cmd = [python, "-m", "pytest", "--collect-only", "-q", "-k", selector, *targets]
     try:
         proc = subprocess.run(cmd, cwd=str(repo_root), capture_output=True, text=True, timeout=120)
-    except (OSError, subprocess.TimeoutExpired):
-        return None
-    return "::" not in proc.stdout
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return _CollectOutcome.UNDECIDABLE, f"{python} -m pytest --collect-only failed to run: {exc}"
+    if "::" in proc.stdout:
+        return _CollectOutcome.SOME, None
+    return _CollectOutcome.ZERO, None
 
 
-def _fault_zero_collect(where: str, check: dict, repo_root: Path) -> list[Fault]:
+def _fault_zero_collect(where: str, check: dict, repo_root: Path) -> tuple[list[Fault], list[Undecidable]]:
     """Fault 2: a `command` check's pytest `-k` selector collects zero tests
-    -- the issue-456 recurrence, mechanical and needing no semantics (#518)."""
+    -- the issue-456 recurrence, mechanical and needing no semantics (#518).
+    A segment whose outcome could not be determined at all (no interpreter
+    with pytest importable resolved, or the subprocess failed) is reported
+    on the second, `Undecidable` return value instead -- never folded into
+    the fault list, and never silently dropped either."""
+    faults: list[Fault] = []
+    undecidable: list[Undecidable] = []
     if check.get("kind") != "command":
-        return []
+        return faults, undecidable
     command = check.get("command")
     if not isinstance(command, str):
-        return []
-    faults = []
+        return faults, undecidable
     seen = set()
     for interpreter, args in _pytest_segments(command):
         sel = _selector(args)
         if sel is None or sel in seen:
             continue
         seen.add(sel)
-        if _collects_zero(interpreter, args, repo_root):
+        outcome, reason = _collects_zero(interpreter, args, repo_root)
+        if outcome is _CollectOutcome.ZERO:
             faults.append(Fault(
                 "falsifiable-zero-collected", where,
                 f"the pytest selector -k {sel!r} in this check collects zero "
                 f"tests -- it can never fail, which is exactly as vacuous as "
                 f"`check: null`",
             ))
-    return faults
+        elif outcome is _CollectOutcome.UNDECIDABLE:
+            undecidable.append(Undecidable(
+                "undecidable-zero-collect", where,
+                f"could not evaluate whether -k {sel!r} collects any tests: {reason}",
+            ))
+    return faults, undecidable
 
 
 #: A statement asserting a PROPERTY (a specific value/outcome), not mere
@@ -475,16 +532,45 @@ def _fault_unresolved_placeholder(where: str, check: dict) -> list[Fault]:
 # Entry point
 # --------------------------------------------------------------------------- #
 
-def validate(spine: dict, *, repo_root: Path | None = None) -> list[Fault]:
+class ValidationResult(list):
+    """`validate()`'s return value. Behaves exactly like the `list[Fault]` it
+    used to be -- every existing caller iterates it, indexes it, or tests its
+    truthiness -- but carries a second channel, `.undecidable`, for
+    conditions `validate()` could not evaluate at all (see `Undecidable`).
+    `str()` names both, so a caller that only ever prints the result cannot
+    mistake "0 faults, 3 undecidable" for a clean pass."""
+
+    def __init__(self, faults=(), undecidable=()):
+        super().__init__(faults)
+        self.undecidable: list[Undecidable] = list(undecidable)
+
+    def __str__(self) -> str:
+        base = f"{len(self)} fault(s)" if self else "0 fault(s)"
+        if not self.undecidable:
+            return base
+        detail = "; ".join(str(u) for u in self.undecidable)
+        return f"{base}, {len(self.undecidable)} undecidable: {detail}"
+
+    __repr__ = __str__
+
+
+def validate(spine: dict, *, repo_root: Path | None = None) -> ValidationResult:
     """Every fault in `spine` (a parsed spine or spine template): shape faults
     first, then falsifiability faults over every condition the shape allows
     the walk to reach. Never raises on a malformed shape -- that IS what shape
     faults report; the falsifiability walk below is fully defensive so a
-    badly-shaped file still gets whatever falsifiability faults it can."""
+    badly-shaped file still gets whatever falsifiability faults it can.
+
+    The returned `ValidationResult` also carries `.undecidable`: conditions
+    that could not be evaluated at all (e.g. a pytest `-k` selector whose
+    interpreter cannot be resolved). Undecidable is not a fault -- the exit
+    code does not change for it -- but it must never be indistinguishable
+    from "checked, found nothing wrong"."""
     faults = list(_shape_faults(spine))
+    undecidable: list[Undecidable] = []
 
     if not isinstance(spine, dict):
-        return faults
+        return ValidationResult(faults, undecidable)
     repo_root = repo_root or Path.cwd()
     spine_type = spine.get("type")
     items = spine.get("items")
@@ -507,10 +593,12 @@ def validate(spine: dict, *, repo_root: Path | None = None) -> list[Fault]:
                 if not isinstance(check, dict):
                     continue
                 where = f"{tid}.{which}.{cond.get('id', '?')}"
-                faults.extend(_fault_zero_collect(where, check, repo_root))
+                seg_faults, seg_undecidable = _fault_zero_collect(where, check, repo_root)
+                faults.extend(seg_faults)
+                undecidable.extend(seg_undecidable)
                 faults.extend(_fault_artifact_no_match(where, cond, check))
                 faults.extend(_fault_unresolved_placeholder(where, check))
-    return faults
+    return ValidationResult(faults, undecidable)
 
 
 GATED_OR_SURVEY_TYPES = (GATED, SURVEY)
@@ -531,7 +619,7 @@ def discover_checklist_templates(root: Path) -> list[Path]:
     return found
 
 
-def validate_file(path: Path, *, repo_root: Path | None = None) -> list[Fault]:
+def validate_file(path: Path, *, repo_root: Path | None = None) -> ValidationResult:
     spine = json.loads(Path(path).read_text(encoding="utf-8"))
     return validate(spine, repo_root=repo_root)
 
@@ -551,16 +639,25 @@ def main(argv: list[str] | None = None) -> int:
     if not paths:
         parser.error("pass at least one path, or --sweep")
 
+    # Exit-code semantics are unchanged: undecidable conditions never flip
+    # `any_faults`. But the same run that would have printed a bare `OK`
+    # -- the exact silence the operator-under-the-wrong-interpreter case
+    # hides inside -- now also names how many conditions it could not judge,
+    # so "sound" and "I could not tell" never look identical on screen.
     any_faults = False
     for path in paths:
-        faults = validate_file(path, repo_root=root)
-        if not faults:
+        result = validate_file(path, repo_root=root)
+        if result:
+            any_faults = True
+            print(f"{path}: {len(result)} fault(s)")
+            for f in result:
+                print(f"  {f}")
+        else:
             print(f"{path}: OK")
-            continue
-        any_faults = True
-        print(f"{path}: {len(faults)} fault(s)")
-        for f in faults:
-            print(f"  {f}")
+        if result.undecidable:
+            print(f"{path}: {len(result.undecidable)} undecidable")
+            for u in result.undecidable:
+                print(f"  {u}")
     return 1 if any_faults else 0
 
 
