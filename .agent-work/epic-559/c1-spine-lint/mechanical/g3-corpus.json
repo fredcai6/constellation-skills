@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g3-corpus",
+  "mechanical": {
+    "run": "epic-559/c1-spine-lint",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "g3-corpus",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c1-spine-lint-g3-corpus@70540eed72b9cbeb0bff61ab7eb0cb340fe59333",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c1-spine-lint",
+    "generated_at": "2026-08-11T10:38:28Z"
+  }
+}

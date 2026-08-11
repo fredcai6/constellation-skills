@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g2-falsifiable",
+  "mechanical": {
+    "run": "epic-559/c1-spine-lint",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "g2-falsifiable",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c1-spine-lint-g2-falsifiable@63ce1006e0944dbc95aa52913964f346cae6f934",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c1-spine-lint",
+    "generated_at": "2026-08-11T10:36:20Z"
+  }
+}

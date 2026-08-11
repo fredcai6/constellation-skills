@@ -1,0 +1,23 @@
+[
+  {
+    "crew_id": "constellation/epic-559/c1-spine-lint/g1-shape/implementer/attempt-1",
+    "work_id": "epic-559/c1-spine-lint",
+    "gate": "g1-shape",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/epic-559/c1-spine-lint/g1-shape/implementer/attempt-1",
+    "backend": "cli",
+    "pid": 534137,
+    "worktree": "/home/tommy/projects/constellation-skills-wt/c1-spine-lint",
+    "handoff": ".agent-work/epic-559/c1-spine-lint/HANDOFF.md",
+    "result": ".agent-work/epic-559/c1-spine-lint/IMPLEMENTER_RESULT.md",
+    "spine": ".agent-work/epic-559/c1-spine-lint/IMPLEMENTER_PLAN.json",
+    "stdout": ".agent-work/epic-559/c1-spine-lint/crew-runs/g1-shape-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/epic-559/c1-spine-lint/crew-runs/g1-shape-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-08-11T10:23:54.098982+00:00",
+    "last_heartbeat": "2026-08-11T10:23:54.098982+00:00",
+    "completed_at": null,
+    "abandoned": false
+  }
+]
