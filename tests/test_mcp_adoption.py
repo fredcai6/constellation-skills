@@ -82,16 +82,31 @@ the fact, or where the thing pinned is an exact string:
 """
 from __future__ import annotations
 
+import contextlib
+import importlib.util
+import io
 import json
+import os
 import re
+import sys
 from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# The 7 door tools (scripts/mcp_spine_server.py TOOLS list). A door-tool mention is any of
+# The 9 door tools (scripts/mcp_spine_server.py TOOLS list). A door-tool mention is any of
 # these bare names, or the fully-qualified `mcp__spine__<name>` form used to actually call one.
+#
+# Hand-typed here on purpose, not imported at module scope -- `mcp_spine_server` reads
+# SPINE_FILE/SPINE_ENGINE from the environment at IMPORT time and raises KeyError without
+# both set (its own module docstring says so), so importing it here would make collecting
+# this file itself require a bound spine. Tied instead by
+# `TestDoorSurfaceTiesToTheEngineRegistry::test_door_tool_names_tie_to_mcp_spine_servers_own_registry`,
+# which imports it inside a test with a scratch env -- the same shape
+# `tests/test_crew_launcher.py`'s `CrewGrantTiesToDoorTests` already uses for
+# `CREW_ALLOWED_TOOLS`, so a tool the door adds or drops goes red here instead of leaving a
+# stale count.
 DOOR_TOOL_NAMES = (
     "spine_status",
     "spine_lease",
@@ -100,13 +115,30 @@ DOOR_TOOL_NAMES = (
     "spine_evidence",
     "spine_halt",
     "spine_survey_result",
+    "spine_capture",
+    "spine_amend",
 )
 DOOR_TOOL_RE = re.compile(r"\b(?:mcp__spine__)?(" + "|".join(DOOR_TOOL_NAMES) + r")\b")
 
-# The 5 verbs with NO door tool -- authority is mcp_spine_server.py's own module docstring
-# fallback table. An instruction naming these must keep naming the CLI; there is nothing
-# else for it to reach for.
-CLI_ONLY_VERBS = ("skip", "reopen", "append", "amend", "flag-candidate")
+# No verb is CLI-only anymore. Issue #559, N1 overturned the "roughly seven tools, five
+# verbs left CLI-only" budget: the door grew to 9 tools and now covers all 18 of the
+# engine's verbs (mcp_spine_server.py's own module docstring: "18 of 18 verbs covered.
+# There is no CLI-fallback table below this one"). Kept as an empty tuple rather than
+# deleted, so `_cli_only_verb_violations` and the corpus-wide guard built on it
+# (`TestCLIOnlyVerbsAcrossEveryInstructionFile`) stay meaningful -- and immediately
+# protective again -- the moment a future verb ships without a door tool. Tied to the
+# engine's own argparse registry and the door's own dispatch code (never hand-typed
+# alongside a hand-typed gap) by
+# `TestDoorSurfaceTiesToTheEngineRegistry::test_cli_only_verbs_tie_to_the_gap_between_engine_and_door`.
+CLI_ONLY_VERBS = ()
+
+#: A representative CLI-only-verb set used ONLY to exercise `_cli_only_verb_violations`'s
+#: own mechanism (unit width, abbreviation handling, verb-name matching) in
+#: `TestTheViolationPredicateItself`. Deliberately decoupled from the real, now-empty
+#: `CLI_ONLY_VERBS`: the predicate's self-test must stay meaningful regardless of how many
+#: verbs are genuinely CLI-only today, while the corpus guard below keeps running against
+#: the real list.
+_PREDICATE_SELFTEST_VERBS = ("skip", "reopen", "append", "amend", "flag-candidate")
 
 # The CLI marker used throughout the spine templates for "the engine, invoked as a command
 # line" -- resolved to an absolute `python .../checklist_engine.py ...` invocation at
@@ -129,6 +161,108 @@ def _field(data: dict, *keys: str) -> str:
 
 def _text(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
+
+
+def _load_mcp_spine_server(scratch_root: Path):
+    """Import `mcp_spine_server` fresh, under a scratch `SPINE_FILE`/`SPINE_ENGINE`/
+    `SPINE_SESSION` env. It reads those from the environment at IMPORT time and raises
+    KeyError without both `SPINE_FILE`/`SPINE_ENGINE` set (its own module docstring), so
+    it is never imported at this file's module scope -- only here, on demand, inside a
+    test. Same shape as `tests/test_crew_launcher.py`'s `CrewGrantTiesToDoorTests.
+    _load_mcp_spine_server`, which ties `CREW_ALLOWED_TOOLS` the same way. A fresh module
+    name per call, so a cached `sys.modules` entry from a prior call in the same test
+    process cannot carry a stale binding forward."""
+    spine_file = scratch_root / "scratch-spine.json"
+    spine_file.write_text("{}", encoding="utf-8")
+    saved = {k: os.environ.get(k) for k in ("SPINE_FILE", "SPINE_ENGINE", "SPINE_SESSION")}
+    os.environ["SPINE_FILE"] = str(spine_file)
+    os.environ["SPINE_ENGINE"] = str(ROOT / "scripts" / "checklist_engine.py")
+    os.environ.setdefault("SPINE_SESSION", "")
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "mcp_spine_server_adoption_tie_check", ROOT / "scripts" / "mcp_spine_server.py"
+        )
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        return module
+    finally:
+        for k, v in saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+
+
+def _engine_verbs() -> set[str]:
+    """The engine's own verb registry, read from its argparse subparsers -- never
+    hand-typed. `checklist_engine.parse_args` builds the whole subparser tree in one
+    function and returns `p.parse_args(argv)` on its last line, so there is no
+    module-level list to import; handing it one bogus verb makes argparse itself print
+    every valid choice to stderr before exiting, which is what this reads. Needs no
+    `SPINE_FILE`/`SPINE_ENGINE` env -- unlike `mcp_spine_server`, `checklist_engine` reads
+    neither at import time."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import checklist_engine  # noqa: E402 -- see docstring above for why this is safe here
+
+    buf = io.StringIO()
+    with contextlib.redirect_stderr(buf):
+        try:
+            checklist_engine.parse_args(["--file", "/dev/null", "__not_a_real_verb__"])
+        except SystemExit:
+            pass
+    match = re.search(r"\{([\w,-]+)\}", buf.getvalue())
+    assert match, f"could not read the engine's verb list from argparse stderr:\n{buf.getvalue()}"
+    return set(match.group(1).split(","))
+
+
+def _door_reachable_verbs() -> set[str]:
+    """Every engine verb `mcp_spine_server.call_tool` actually reaches, read from its own
+    source TEXT via the literal first argument to every `run_engine(...)` call -- never
+    hand-typed, and read as text (not imported) so it needs no scratch env either."""
+    text = _text("scripts/mcp_spine_server.py")
+    return set(re.findall(r'run_engine\(\s*"([\w-]+)"', text))
+
+
+class TestDoorSurfaceTiesToTheEngineRegistry:
+    """`DOOR_TOOL_NAMES` and `CLI_ONLY_VERBS` used to be hand-typed and froze at 7 tools /
+    5 CLI-only verbs while the door grew to 9 tools covering all 18 of the engine's verbs
+    (issue #559, N1: "anything that we can only do via the cli is a defect"). Both are
+    tied here to their sources so a future door or engine change goes red instead of
+    leaving a pin that reads as coverage while asserting a false fact."""
+
+    def test_door_tool_names_tie_to_mcp_spine_servers_own_registry(self, tmp_path):
+        server = _load_mcp_spine_server(tmp_path)
+        assert set(DOOR_TOOL_NAMES) == server.TOOL_NAMES, (
+            "DOOR_TOOL_NAMES has drifted from mcp_spine_server.TOOL_NAMES -- a tool the "
+            "door added or removed is not reflected in this file's pin"
+        )
+
+    def test_door_has_all_nine_tools_todays_pin_expects(self, tmp_path):
+        # CONTROL for the tie test above: pins the count so a future door regression
+        # (e.g. a tool silently dropped) cannot slip through by shrinking both sides of
+        # the comparison in lockstep.
+        server = _load_mcp_spine_server(tmp_path)
+        assert len(server.TOOL_NAMES) == 9
+
+    def test_engine_has_all_eighteen_verbs_todays_pins_expect(self):
+        # CONTROL for the gap test below, same reason: pins the engine's own verb count
+        # so both sides of the gap comparison cannot shrink together unnoticed.
+        assert len(_engine_verbs()) == 18
+
+    def test_cli_only_verbs_tie_to_the_gap_between_engine_and_door(self):
+        engine_verbs = _engine_verbs()
+        door_reachable = _door_reachable_verbs()
+        assert door_reachable <= engine_verbs, (
+            f"mcp_spine_server.call_tool reaches a verb the engine does not have: "
+            f"{sorted(door_reachable - engine_verbs)}"
+        )
+        gap = engine_verbs - door_reachable
+        assert gap == set(CLI_ONLY_VERBS), (
+            f"CLI_ONLY_VERBS ({sorted(CLI_ONLY_VERBS)}) no longer matches the verbs the "
+            f"door does not reach ({sorted(gap)}) -- the door grew or shrank coverage and "
+            f"this file's pin was not updated with it"
+        )
 
 
 def _paragraphs(text: str) -> list[str]:
@@ -169,8 +303,15 @@ def _verb_name_re(verb: str) -> re.Pattern:
     return re.compile(rf"[`'\"]{re.escape(verb)}[`'\"]")
 
 
-def _cli_only_verb_violations(where: str, text: str) -> list[str]:
+def _cli_only_verb_violations(
+    where: str, text: str, verbs: tuple[str, ...] = CLI_ONLY_VERBS
+) -> list[str]:
     """Every place `text` routes a CLI-only verb through a door tool.
+
+    `verbs` defaults to the real `CLI_ONLY_VERBS` (empty today) for every production
+    caller. `TestTheViolationPredicateItself` passes `_PREDICATE_SELFTEST_VERBS` instead,
+    so this predicate's own mechanism stays exercised independent of how many verbs are
+    genuinely CLI-only right now.
 
     A violation is a STRUCTURAL FACT about one unit: it names a door tool, and
     it names a verb for which no such tool exists. **No polarity judgement is
@@ -221,7 +362,7 @@ def _cli_only_verb_violations(where: str, text: str) -> list[str]:
             door = DOOR_TOOL_RE.search(unit)
             if not door:
                 continue
-            for verb in CLI_ONLY_VERBS:
+            for verb in verbs:
                 if _verb_name_re(verb).search(unit):
                     found.append(
                         f"  {where}: verb {verb!r} + door tool {door.group(0)!r}\n"
@@ -399,14 +540,18 @@ class TestTheViolationPredicateItself:
 
     @pytest.mark.parametrize("label", sorted(VIOLATING))
     def test_a_violating_instruction_is_caught(self, label):
-        assert _cli_only_verb_violations("<case>", self.VIOLATING[label]), (
+        assert _cli_only_verb_violations(
+            "<case>", self.VIOLATING[label], verbs=_PREDICATE_SELFTEST_VERBS
+        ), (
             f"the predicate did not catch {label!r} -- it routes a CLI-only verb through "
             f"a door tool, which is the whole defect this check exists for"
         )
 
     @pytest.mark.parametrize("label", sorted(INNOCENT))
     def test_an_innocent_instruction_is_left_alone(self, label):
-        found = _cli_only_verb_violations("<case>", self.INNOCENT[label])
+        found = _cli_only_verb_violations(
+            "<case>", self.INNOCENT[label], verbs=_PREDICATE_SELFTEST_VERBS
+        )
         assert not found, (
             f"the predicate flagged {label!r}, which is a CORRECT statement of the rule "
             f"it enforces. A check that fails on the best statement of its own rule gets "
@@ -418,7 +563,9 @@ class TestTheViolationPredicateItself:
         """Not a defect being hidden -- a cost being recorded where it can be
         read. If this ever stops firing the predicate has changed shape, and the
         false-alarm table in this class's docstring is stale."""
-        assert _cli_only_verb_violations("<case>", self.ACCEPTED_FALSE_ALARM[label]), (
+        assert _cli_only_verb_violations(
+            "<case>", self.ACCEPTED_FALSE_ALARM[label], verbs=_PREDICATE_SELFTEST_VERBS
+        ), (
             f"{label!r} is no longer flagged. That is an improvement, not a failure -- but "
             f"it means the predicate changed, so re-measure the false-alarm table above "
             f"and move this case into INNOCENT in the same edit."
@@ -430,7 +577,9 @@ class TestTheViolationPredicateItself:
         keeps it visible: a reader of this file learns what the check does NOT
         do from the check itself, not from a paragraph somebody has to remember
         to update."""
-        found = _cli_only_verb_violations("<case>", self.NOT_CAUGHT_AT_THIS_WIDTH[label])
+        found = _cli_only_verb_violations(
+            "<case>", self.NOT_CAUGHT_AT_THIS_WIDTH[label], verbs=_PREDICATE_SELFTEST_VERBS
+        )
         assert not found, (
             f"{label!r} is now caught, which means the unit was widened. That is allowed, "
             f"but the false alarms it buys back are the reason it was narrowed -- "
@@ -874,10 +1023,26 @@ def _verb_token_re(verb: str) -> re.Pattern:
 
 
 class TestTier3CLIOnlyVerbsStayCLI:
-    """Close criterion 3: the 5 CLI-only verbs have NO door tool. The `## MCP door`
-    section must keep documenting them as CLI-only, and must never attribute a door
-    tool to them (no door tool name in the same sentence as the verb)."""
+    """Close criterion 3, as it stood while `CLI_ONLY_VERBS` was non-empty: any verb it
+    names has NO door tool, and the `## MCP door` section must keep documenting it as
+    CLI-only, never attribute a door tool to it (no door tool name in the same sentence
+    as the verb).
 
+    `CLI_ONLY_VERBS` is empty today (issue #559: the door covers all 18 engine verbs), so
+    there is no CLI-only-verb doctrine sentence left to require -- `test_the_cli_only_rule_
+    itself_is_present` below is skipped rather than deleted, and
+    `test_verb_still_documented` collects zero parametrizations, both of which reactivate
+    the moment a verb regresses to CLI-only. `test_verb_never_routed_through_a_door_tool`
+    stays live either way: it is a structural guard, not a doctrine-presence check, so
+    running it against an empty `CLI_ONLY_VERBS` is simply honest -- no violation is
+    possible."""
+
+    @pytest.mark.skipif(
+        not CLI_ONLY_VERBS,
+        reason="CLI_ONLY_VERBS is empty -- no CLI-only-verb doctrine sentence is required "
+               "while there is nothing CLI-only to document (issue #559: the door reaches "
+               "all 18 engine verbs). Reactivates the moment CLI_ONLY_VERBS is non-empty.",
+    )
     def test_the_cli_only_rule_itself_is_present(self):
         """The rule sentence, not just the words. FAILS IF: the `## MCP door`
         section stops saying these verbs have no door tool -- which is the
@@ -1001,6 +1166,11 @@ class TestCLIOnlyVerbsAcrossEveryInstructionFile:
     false alarm pinned in `ACCEPTED_FALSE_ALARM` and remedied by splitting the
     sentence. The pairing IS the defect: it is what makes a reader take the door
     tool as the route for that verb.
+
+    `CLI_ONLY_VERBS` is empty today (issue #559: the door reaches all 18 engine
+    verbs), so this guard currently finds nothing by construction -- that is
+    honest, not vacuous: it stands ready to catch the day a verb regresses to
+    CLI-only again, without anyone having to remember to re-add the check.
     """
 
     @pytest.mark.parametrize("path", INSTRUCTION_FILES)

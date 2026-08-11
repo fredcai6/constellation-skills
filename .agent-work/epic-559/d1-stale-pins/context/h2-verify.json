@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "h2-verify",
+  "files": [],
+  "repo_rev": {
+    "commit": "90b39e2bb5009fa4f61c2a6ed196453ba6de0e63"
+  },
+  "run": {
+    "work_id": "epic-559/d1-stale-pins",
+    "generated_at": "2026-08-11T10:44:04Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/d1-stale-pins",
+      "repo": "/home/tommy/projects/constellation-skills-wt/d1-stale-pins",
+      "durable": "/home/tommy/projects/constellation-skills-wt/d1-stale-pins"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/d1-stale-pins"
+    }
+  }
+}

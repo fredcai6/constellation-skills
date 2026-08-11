@@ -1,0 +1,1 @@
+{"ops": [{"op": "retext-check", "id": "h1-pins", "which": "postconditions", "cond": "c1", "command": "test $(python -m pytest -q tests/test_mcp_adoption.py -k \"Door or Tie or Registry\" --collect-only 2>/dev/null | grep -c '::') -ge 3 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_mcp_adoption.py -k \"Door or Tie or Registry\""}]}

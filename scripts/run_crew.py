@@ -361,6 +361,39 @@ def spine_terminal(spine: str | os.PathLike[str], root: Path) -> bool:
     return True
 
 
+def spine_blocked_id(spine: str | os.PathLike[str], root: Path) -> str | None:
+    """The id of the first gate in the bound spine whose status is `blocked`
+    (`checklist_engine.STATUS_VALUES` includes it; `spine_halt block` is what
+    sets it), or `None` if no gate is blocked.
+
+    This is the distinguishing signal `finalize_from_exit_code` needs (E1
+    fail-up, issue #559): a crew that hits a check it cannot satisfy and calls
+    `spine_halt block` before returning did EXACTLY the right thing, but with
+    no way to tell that apart from a crash, it used to be recorded `failed`
+    either way -- making the right behavior cost the crew its record. Reading
+    the same file `spine_terminal` reads (same defensive parse: a missing/
+    unparseable/malformed spine has no blocked gate to report, `None`, not a
+    raise) keeps the two checks from ever disagreeing about what the spine
+    file actually contains."""
+    path = Path(spine)
+    if not path.is_absolute():
+        path = root / spine
+    try:
+        checklist = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(checklist, dict):
+        return None
+    tasks = checklist.get("tasks")
+    if not isinstance(tasks, dict):
+        return None
+    for iid in checklist.get("items", []):
+        task = tasks.get(iid)
+        if isinstance(task, dict) and task.get("status") == "blocked":
+            return iid
+    return None
+
+
 # --------------------------------------------------------------------------- #
 # injectable seams — argv construction (pure) and the real launch
 # --------------------------------------------------------------------------- #
@@ -390,6 +423,7 @@ DEFAULT_CREW_PERMISSION_MODE = "acceptEdits"
 # apart silently the way they did when the door grew from 7 to 9 tools.
 CREW_ALLOWED_TOOLS = (
     "Bash", "Read", "Write", "Edit", "Glob", "Grep", "TodoWrite", "ToolSearch",
+    "SendMessage",
     "mcp__spine__spine_status", "mcp__spine__spine_lease", "mcp__spine__spine_start",
     "mcp__spine__spine_advance", "mcp__spine__spine_evidence", "mcp__spine__spine_halt",
     "mcp__spine__spine_survey_result", "mcp__spine__spine_capture", "mcp__spine__spine_amend",
@@ -479,9 +513,37 @@ def crew_settings_json() -> str:
     })
 
 
+#: What a crew is told about its parent when none was given. Never invented --
+#: a plain, honest "I don't know" is the whole point (#559 follow-on, "fail
+#: up"): a crew that cannot satisfy a check must ask up to a REAL parent, and
+#: guessing one would be worse than saying it has none.
+UNKNOWN_PARENT = "unknown"
+
+
+def _normalize_parent(parent: str | None) -> str | None:
+    """A parent that is blank after stripping is an omitted parent (#559
+    follow-on, E1 fail-up): whitespace is not an identity to ask up to, so
+    it collapses to the same `None` a caller who passed nothing gets, rather
+    than surviving plain-truthiness checks into a prompt or the registry."""
+    if parent is None:
+        return None
+    stripped = parent.strip()
+    return stripped if stripped else None
+
+
+def _parent_clause(parent: str | None) -> str:
+    """The sentence naming a crew's parent, or plainly saying it is unknown.
+    PURE, shared by both `build_crew_argv` prompt branches so the wording can
+    never drift between them."""
+    parent = _normalize_parent(parent)
+    if parent:
+        return f"Your parent is {parent}: if you cannot satisfy a check, ask up to it."
+    return f"Your parent is {UNKNOWN_PARENT}: never invent one."
+
+
 def build_crew_argv(
     launcher: str, *, role: str, handoff: str | None, model: str | None, session: str,
-    spine: str | None = None,
+    spine: str | None = None, parent: str | None = None,
 ) -> list[str]:
     """PURE construction of the agent-CLI command line from role/handoff/model.
 
@@ -492,12 +554,18 @@ def build_crew_argv(
 
     `handoff` is nullable: a crew with a bound `spine` and no `handoff` is told
     to drive the spine instead of reading a document (issue #559) -- the
-    existing handoff branch is kept byte-identical whenever `handoff` IS given
-    (even alongside a `spine`), so every current dispatch and test is
-    untouched. Refuses (rather than emitting a document-less, spine-less
-    prompt) when neither is given; callers refuse this combination earlier too
-    (`CrewSpec.__post_init__`), so this is a second, cheaper backstop on the
-    pure function itself.
+    existing handoff branch is kept byte-identical (module the new `parent`
+    clause, below) whenever `handoff` IS given (even alongside a `spine`), so
+    every current dispatch and test is otherwise untouched. Refuses (rather
+    than emitting a document-less, spine-less prompt) when neither is given;
+    callers refuse this combination earlier too (`CrewSpec.__post_init__`), so
+    this is a second, cheaper backstop on the pure function itself.
+
+    `parent` is nullable and named in BOTH prompt branches (`_parent_clause`):
+    an identifier for whoever dispatched this crew, so a crew that hits a
+    check it cannot satisfy has somewhere to ask up. `None` renders as a plain
+    "unknown", never a guess -- the crew is not left believing it has no
+    parent, it is told honestly that this dispatch did not say who it is.
 
     The claude CLI has no `--session`/`--role`/`--handoff` flags (issue #91: the
     old flag form fails with `unknown option '--session'` on current CLIs), so
@@ -509,15 +577,18 @@ def build_crew_argv(
     settings file must complete crew work end to end, so the launcher grants
     what a crew needs (and denies what it must ask up for) instead of an
     operator remembering to."""
+    parent_clause = _parent_clause(parent)
     if handoff is not None:
         prompt = (
             f"You are the constellation {role} crew for session {session}. "
+            f"{parent_clause} "
             f"Read the handoff at {handoff} and execute it exactly. "
             "The run is only complete when the result artifact the handoff names exists."
         )
     elif spine is not None:
         prompt = (
             f"You are the constellation {role} crew for session {session}. "
+            f"{parent_clause} "
             "Call mcp__spine__spine_status first: your spine is already bound. "
             "Drive it gate by gate through the door -- do not author a plan of "
             "your own -- until it reports done."
@@ -605,6 +676,7 @@ def crew_env(
     *,
     spine_file: str | None = None,
     spine_session: str | None = None,
+    parent: str | None = None,
 ) -> dict[str, str]:
     """UTF-8-safe environment defaults for the child, PLUS the MCP door binding.
 
@@ -625,7 +697,16 @@ def crew_env(
     child claimed the DISPATCHER's lease instead of its own — a caller-supplied
     `--spine` was silently ignored. Assigning closes that hijack; a caller with
     nothing to bind still leaves the inherited value untouched, exactly as
-    before."""
+    before.
+
+    `parent` is ASSIGNED the same way, for the same reason: a dispatching
+    process that is itself a crew already has its OWN `SPINE_PARENT` (its own
+    parent) sitting in `os.environ`, and that must never leak to a child as
+    the child's parent -- it names the grandparent, not the dispatcher. Unlike
+    `spine_file`/`spine_session`, `omitted` here (`None`) genuinely means "no
+    binding requested" (matched by callers who pre-resolve `None` to
+    `UNKNOWN_PARENT` before calling in, e.g. `_crew_door_env`), so this stays a
+    plain optional rather than a second untouched-inherited-route case."""
     env = dict(os.environ if base_env is None else base_env)
     env.setdefault("PYTHONUTF8", "1")
     env.setdefault("PYTHONIOENCODING", "utf-8")
@@ -633,13 +714,19 @@ def crew_env(
         env["SPINE_FILE"] = spine_file
     if spine_session is not None:
         env["SPINE_SESSION"] = spine_session
+    if parent is not None:
+        env["SPINE_PARENT"] = parent
     return env
 
 
-def _crew_door_env(*, work_id: str, gate: str, role: str, spine: str | None, root: Path) -> dict[str, str]:
+def _crew_door_env(
+    *, work_id: str, gate: str, role: str, spine: str | None, root: Path,
+    parent: str | None = None,
+) -> dict[str, str]:
     """The env every dispatched/resumed crew gets: its OWN spine (if any),
-    resolved absolute against `root`, and its assignment-keyed lease identity —
-    built in one place so `dispatch` and `resume` cannot drift apart.
+    resolved absolute against `root`, its assignment-keyed lease identity, and
+    its parent -- built in one place so `dispatch` and `resume` cannot drift
+    apart.
 
     `spine_file` and `spine_session` are bound as a PAIR, and ONLY when `spine`
     was given. Deriving `spine_session` unconditionally (even with `spine=None`)
@@ -648,12 +735,20 @@ def _crew_door_env(*, work_id: str, gate: str, role: str, spine: str | None, roo
     to a freshly-derived SPINE_SESSION belonging to a different spine entirely —
     a file/identity pair that never matched each other. No `spine` means the
     inherited-environment route is genuinely untouched, both variables together,
-    exactly as `crew_env()`'s own contract already promises."""
+    exactly as `crew_env()`'s own contract already promises.
+
+    `SPINE_PARENT`, unlike the spine pair, is bound UNCONDITIONALLY -- every
+    crew this launches gets a definitive answer, `parent` if given else
+    `UNKNOWN_PARENT`, never the ambient value of whatever this DISPATCHING
+    process's own `SPINE_PARENT` happens to be (that would name the wrong
+    rung: the dispatcher's own parent, not the dispatcher itself)."""
+    resolved_parent = _normalize_parent(parent) or UNKNOWN_PARENT
     if spine is None:
-        return crew_env()
+        return crew_env(parent=resolved_parent)
     return crew_env(
         spine_file=_resolve_optional_path(spine, root),
         spine_session=assignment_session_name(work_id, gate, role),
+        parent=resolved_parent,
     )
 
 
@@ -730,6 +825,7 @@ def build_entry(
     dispatch: str | None = None,
     model: str | None = None,
     spine: str | None = None,
+    parent: str | None = None,
 ) -> dict:
     """Construct the base `crew-runs.json` entry shared by BOTH backends (the
     consolidation the wave-1 triage named). One place builds the durable record so
@@ -753,7 +849,12 @@ def build_entry(
       * `spine`    — the spine this crew drives, so a resume can rebind the same
                      door (optional: `None` for a caller with nothing to bind,
                      recorded as `None` rather than omitted — a legacy entry
-                     predating this field is the only case with no key at all)."""
+                     predating this field is the only case with no key at all).
+      * `parent`   — who dispatched this crew (optional: `None`, recorded not
+                     omitted, when no `--parent` was given -- a resume reads
+                     this back so the SPINE_PARENT binding and prompt clause
+                     stay stable across attempts instead of re-deriving from
+                     whatever the RESUMING process's own environment carries)."""
     name = session_name(work_id, gate, role, attempt)
     stdout_path, stderr_path = run_log_paths(work_id, gate, role, attempt, root)
     entry = {
@@ -770,6 +871,7 @@ def build_entry(
         "handoff": _relativize(handoff, root) if handoff is not None else None,
         "result": _relativize(result, root) if result is not None else None,
         "spine": _relativize(spine, root) if spine is not None else None,
+        "parent": _normalize_parent(parent),
         "stdout": _relativize(str(stdout_path), root),
         "stderr": _relativize(str(stderr_path), root),
         "started_at": started,
@@ -811,8 +913,21 @@ def finalize_from_exit_code(
     judging it against a file it was never told about produced a false
     `failed` for a crew that did everything asked of it.
 
-    Sets `completed_at`/`last_heartbeat` (now), `status`, `exit_code`,
-    `result_present`, and `result_fresh`, and returns the process-level exit
+    `blocked` is checked FIRST, ahead of both the result-artifact and
+    spine-terminal checks, whenever a `spine` is bound at all (regardless of
+    whether `result` was also given): a crew that hit a check it could not
+    satisfy and called `spine_halt block` before returning did exactly the
+    right thing (E1 fail-up, issue #559 follow-on), and that must never read
+    as `failed` just because no result artifact showed up. `blocked` is a
+    legitimate, deliberate outcome, not a launcher error, so it reports
+    success (`final = 0`) the same as `completed` -- a polling parent reads
+    the DURABLE registry status, not the process exit code, to find it.
+
+    Sets `completed_at`/`last_heartbeat` (now), `status` (`completed` |
+    `blocked` | `failed`), `exit_code`, `result_present`, and `result_fresh`
+    (blocked/no-spine cases leave the latter two at their `result`-based or
+    `False` default, computed before the blocked check so they still reflect
+    reality), plus `blocked_gate` when blocked. Returns the process-level exit
     code to report."""
     if result is not None:
         have_result = result_exists(result, root)
@@ -822,10 +937,15 @@ def finalize_from_exit_code(
         have_result = False
         fresh = False
         done = spine is not None and spine_terminal(spine, root)
+    blocked_gate = spine_blocked_id(spine, root) if spine is not None else None
     now = _now()
     entry["completed_at"] = now
     entry["last_heartbeat"] = now
-    if exit_code == 0 and done:
+    if blocked_gate is not None:
+        entry["status"] = "blocked"
+        entry["blocked_gate"] = blocked_gate
+        final = 0
+    elif exit_code == 0 and done:
         entry["status"] = "completed"
         final = 0
     else:
@@ -871,7 +991,11 @@ class CrewSpec:
     (`spine_terminal`) instead of a result artifact nobody told it to write. A
     spec with neither `result` nor `spine` is refused here for the same reason
     as the handoff/spine pair above -- it would have no completion contract at
-    all."""
+    all.
+
+    `parent` is nullable and never required (E1 fail-up, issue #559): a
+    dispatch with no `--parent` must still work -- it is recorded, bound, and
+    named as `UNKNOWN_PARENT`, never invented as some other identity."""
     work_id: str
     gate: str
     role: str
@@ -880,6 +1004,7 @@ class CrewSpec:
     worktree: str
     attempt: int
     spine: str | None = None
+    parent: str | None = None
     model: str | None = None
     launcher: str = DEFAULT_LAUNCHER
 
@@ -978,6 +1103,7 @@ class CliBackend(CrewBackend):
             work_id=spec.work_id, gate=spec.gate, role=spec.role, attempt=spec.attempt,
             worktree=spec.worktree, handoff=spec.handoff, result=spec.result, root=root,
             started=started, backend=self.name, pid=os.getpid(), spine=spec.spine,
+            parent=spec.parent,
         )
         # Durable record BEFORE the crew starts (so a parent loss leaves a durable
         # `running` record).
@@ -990,8 +1116,12 @@ class CliBackend(CrewBackend):
             spec.launcher, role=spec.role,
             handoff=(str(handoff_path) if handoff_path is not None else None),
             model=spec.model, session=entry["session_name"], spine=spec.spine,
+            parent=spec.parent,
         )
-        env = _crew_door_env(work_id=spec.work_id, gate=spec.gate, role=spec.role, spine=spec.spine, root=root)
+        env = _crew_door_env(
+            work_id=spec.work_id, gate=spec.gate, role=spec.role, spine=spec.spine, root=root,
+            parent=spec.parent,
+        )
         exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path)
 
         final = finalize_from_exit_code(
@@ -1044,10 +1174,11 @@ class CliBackend(CrewBackend):
             model=entry.get("model"),
             session=entry["session_name"],
             spine=entry.get("spine"),
+            parent=entry.get("parent"),
         )
         env = _crew_door_env(
             work_id=entry["work_id"], gate=entry["gate"], role=entry["role"],
-            spine=entry.get("spine"), root=root,
+            spine=entry.get("spine"), root=root, parent=entry.get("parent"),
         )
         exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path)
 
@@ -1099,6 +1230,7 @@ class ExternalBackend(CrewBackend):
             worktree=spec.worktree, handoff=spec.handoff, result=spec.result, root=root,
             started=started, backend=self.name, pid=None,
             dispatch=DISPATCH_EXTERNAL, model=spec.model, spine=spec.spine,
+            parent=spec.parent,
         )
         # Durable record — the crew is dispatched by the caller out-of-band, so
         # unlike the spawn path there is no child to run and no completion to
@@ -1167,6 +1299,7 @@ def launch_crew(
     root: Path,
     entries: list[dict],
     spine: str | None = None,
+    parent: str | None = None,
     launch: "callable | None" = None,
 ) -> tuple[int, dict]:
     """Record the durable entry BEFORE launching, run the crew foreground, then
@@ -1179,6 +1312,7 @@ def launch_crew(
     spec = CrewSpec(
         work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
         worktree=worktree, attempt=attempt, model=model, launcher=launcher, spine=spine,
+        parent=parent,
     )
     return CliBackend().dispatch(spec, root=root, entries=entries, launch=launch)
 
@@ -1222,6 +1356,7 @@ def record_external_attempt(
     root: Path,
     entries: list[dict],
     spine: str | None = None,
+    parent: str | None = None,
 ) -> dict:
     """Record a durable crew-runs.json entry for an EXTERNALLY-dispatched crew
     WITHOUT spawning a subprocess. Thin wrapper over `ExternalBackend.dispatch`
@@ -1234,10 +1369,14 @@ def record_external_attempt(
     PID-less (`pid=None`) so downstream tooling (recover_crews) can tell it apart
     from a spawned crew; it starts `running` so the duplicate-guard/recovery
     classifier treat it like an in-flight attempt until its result is verified
-    (see `verify_external_result`). Refuses if the handoff file is missing."""
+    (see `verify_external_result`). Refuses if the handoff file is missing.
+
+    `parent` is recorded (nullable, like `spine`) so the durable registry entry
+    still names who dispatched this crew even though nothing here binds an
+    environment or builds a prompt -- the out-of-band caller does that itself."""
     spec = CrewSpec(
         work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
-        worktree=worktree, attempt=attempt, model=model, spine=spine,
+        worktree=worktree, attempt=attempt, model=model, spine=spine, parent=parent,
     )
     _, entry = ExternalBackend().dispatch(spec, root=root, entries=entries)
     return entry
@@ -1266,6 +1405,19 @@ def abandon_crew(entries: list[dict], session: str, root: Path) -> dict:
 # --------------------------------------------------------------------------- #
 # CLI
 # --------------------------------------------------------------------------- #
+def _crew_status_line(prefix: str, entry: dict) -> str:
+    """The launcher's own report of one crew's outcome. `blocked` names the
+    gate and the parent being asked, right in this line -- the launcher must
+    say so plainly, not just leave it to the durable registry record."""
+    line = f"{prefix} {entry['session_name']} -> {entry['status']}"
+    if entry.get("status") == "blocked":
+        line += (
+            f" (blocked at {entry.get('blocked_gate')}, asking parent "
+            f"{entry.get('parent') or UNKNOWN_PARENT})"
+        )
+    return line
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Safe foreground crew launcher with a durable recovery registry.")
     p.add_argument("--work-id", dest="work_id")
@@ -1301,6 +1453,17 @@ def build_parser() -> argparse.ArgumentParser:
             "--work-id/--gate/--role) so the door resolves to this crew's own spine "
             "instead of .mcp.json's demo default. REFUSED on the external backend, "
             "which spawns no process and so binds nothing."
+        ),
+    )
+    p.add_argument(
+        "--parent",
+        help=(
+            "identifier for whoever dispatched this crew (e.g. a Commander/Admiral "
+            "session name). Recorded in the registry entry, bound into the crew's "
+            "environment as SPINE_PARENT, and named in the crew prompt on both the "
+            "handoff and spine-only branches. Optional and never required -- a "
+            "dispatch with no --parent still works, and the crew is told plainly "
+            f"its parent is {UNKNOWN_PARENT!r} rather than having one invented."
         ),
     )
     p.add_argument("--root", default=".", type=Path, help="repo root (default: cwd)")
@@ -1377,7 +1540,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.resume:
             entries = load_registry_for_resume(args.resume, root)
             exit_code, entry = resume_crew(session=args.resume, root=root, entries=entries)
-            print(f"resumed {entry['session_name']} -> {entry['status']}")
+            print(_crew_status_line("resumed", entry))
             return exit_code
 
         # fresh / abandon+relaunch launch requires work-id/gate/role, plus at
@@ -1435,18 +1598,19 @@ def main(argv: list[str] | None = None) -> int:
             handoff = args.handoff or abandoned["handoff"]
             result = args.result or abandoned["result"]
             spine = args.spine or abandoned.get("spine")
+            parent = args.parent or abandoned.get("parent")
             entries = load_registry(registry_path(work_id, root))
             attempt = next_attempt(entries, work_id, gate, role, worktree)
             spec = CrewSpec(
                 work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
                 worktree=worktree, attempt=attempt, model=args.model, launcher=args.command,
-                spine=spine,
+                spine=spine, parent=parent,
             )
             exit_code, entry = backend.dispatch(spec, root=root, entries=entries)
             if backend.name == BACKEND_EXTERNAL:
                 print(f"relaunched {entry['session_name']} -> {entry['status']} (external)")
                 return 0
-            print(f"relaunched {entry['session_name']} -> {entry['status']}")
+            print(_crew_status_line("relaunched", entry))
             return exit_code
 
         # --- fresh launch --------------------------------------------------- #
@@ -1462,7 +1626,7 @@ def main(argv: list[str] | None = None) -> int:
         spec = CrewSpec(
             work_id=args.work_id, gate=args.gate, role=args.role, handoff=args.handoff,
             result=args.result, worktree=args.worktree, attempt=attempt,
-            model=args.model, launcher=args.command, spine=args.spine,
+            model=args.model, launcher=args.command, spine=args.spine, parent=args.parent,
         )
         exit_code, entry = backend.dispatch(spec, root=root, entries=entries)
         if backend.name == BACKEND_EXTERNAL:
@@ -1470,7 +1634,7 @@ def main(argv: list[str] | None = None) -> int:
                   f"(external: dispatched out-of-band; verify with "
                   f"--verify-result {entry['session_name']})")
             return 0
-        print(f"crew {entry['session_name']} -> {entry['status']}")
+        print(_crew_status_line("crew", entry))
         return exit_code
     except CrewLaunchError as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
