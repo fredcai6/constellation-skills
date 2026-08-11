@@ -19,6 +19,43 @@ lines, so no shipped template moved.
 
 None of that is in question. Four things are.
 
+## The one that matters most — the artifact diverged from its source
+
+The `g3` `--out` fix was applied by `amend` to the **generated spine**. The source spec was left
+alone: `.agent-work/epic-559/c2-generate-the-spine/dispatch-proof/probe.spine.toml:153` still reads
+
+```toml
+args = ["specs/reviewer.spine.toml", "--check-only", "--root", "."]
+```
+
+with no `--out`. **Regenerate from that TOML today and the broken check comes back.**
+
+That inverts the property this whole mission exists to establish. Compiling a spine from a spec is
+worth doing because **the spec becomes the source of truth**: you fix the spec, regenerate, and the
+artifact follows. Patch the artifact and leave the spec stale and you have hand-authored a spine, one
+layer removed — the generator's output is now a thing a human edits.
+
+**Fix the source spec and regenerate. Never patch a generated spine.** If a generated spine is wrong,
+exactly one of two things is true: the spec is wrong, or the compiler is wrong. Here it was both — the
+spec omitted a required flag and the probe could not see that it had. Fix both, regenerate, and let
+the artifact be output again.
+
+### Why this was not carelessness, and what it tells you
+
+The diagnosis in the amendment record is **excellent**, verbatim:
+
+> *"This is my authoring defect, not the crew's work, and it is the twin of the epic's own defect 3:
+> the script probe verifies that every flag an author NAMED exists, and cannot see a required flag
+> the author FAILED to name."*
+
+Root cause identified exactly, and named as the twin of the epic's own defect — then the instance
+fixed anyway. `amend` is a legitimate verb doing exactly what it is built for. **Nothing in the loop
+asks whether a fix belongs upstream of the artifact it is being applied to**, so the easiest correct-
+looking action was the local one.
+
+That is the same shape as everything else on this list, and it is why the deliverable is never the
+patch.
+
 ## Read this first — the `g3` fix was symptomatic, and proving that took a violating case
 
 `g3`'s live probe crew blocked on a real defect: `m1.c2` compiled to a `generate_spine.py ...
