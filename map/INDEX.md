@@ -4,7 +4,7 @@
 evals: 12 modules, 54 entities
 scripts: 55 modules, 1086 entities
 skills: 1 modules, 18 entities
-tests: 71 modules, 3980 entities
+tests: 71 modules, 3988 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -99,7 +99,7 @@ tests: 71 modules, 3980 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (71 modules, 3980 entities)
+## tests (71 modules, 3988 entities)
 
 ### tests.fixtures (2 modules, 4 entities)
 
@@ -145,7 +145,7 @@ tests: 71 modules, 3980 entities
 - [tests.test_iterative_planning_doctrine](tests.test_iterative_planning_doctrine/INDEX.md) (90 entities, 58 holes): Parsed role-doctrine invariants for the G1 -> G2 iterative planning chain.
 - [tests.test_map_contract_wiring](tests.test_map_contract_wiring/INDEX.md) (27 entities, 11 holes): The map-first contract as it is actually SERVED to a Commander run.
 - [tests.test_map_orient](tests.test_map_orient/INDEX.md) (125 entities, 91 holes): The falsification floor for scripts/map_orient.py.
-- [tests.test_mcp_adoption](tests.test_mcp_adoption/INDEX.md) (64 entities, 32 holes): Adoption gate for the MCP door (issue #542 criterion 1, epic-418-followon g4a).
+- [tests.test_mcp_adoption](tests.test_mcp_adoption/INDEX.md) (72 entities, 36 holes): Adoption gate for the MCP door (issue #542 criterion 1, epic-418-followon g4a).
 - [tests.test_mcp_friction_capture](tests.test_mcp_friction_capture/INDEX.md) (23 entities, 12 holes): Tests for the MCP door's own rejection capture (issue #541, epic-418-followon wave 2, gate g2).
 - [tests.test_mcp_identity](tests.test_mcp_identity/INDEX.md) (65 entities, 23 holes): DC2 (separation) and DC3 (inheritance fails closed) acceptance tests for the MCP front door (issue #424, workstream F, gate g3).
 - [tests.test_mcp_imperative_equivalence](tests.test_mcp_imperative_equivalence/INDEX.md) (23 entities, 12 holes): DC4 acceptance test for the MCP front door (issue #424, workstream F, gate g2): the CLI projection and the MCP tool result carry the SAME imperative text for EV
