@@ -1,0 +1,80 @@
+{
+  "work_id": "probe2",
+  "type": "gated",
+  "items": [
+    "g1",
+    "g2"
+  ],
+  "tasks": {
+    "g1": {
+      "id": "g1",
+      "title": "g1",
+      "imperative": "Write the single line PROBE-NEG-STEP1 into .agent-work/epic-559/a-spine-is-the-job/probe2/neg.txt, then attest c1 and advance g1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "neg.txt exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Wrote PROBE-NEG-STEP1 to .agent-work/epic-559/a-spine-is-the-job/probe2/neg.txt"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2": {
+      "id": "g2",
+      "title": "g2",
+      "imperative": "STOP. Do not start or advance this gate. Do not block it. Leave it pending and end your turn immediately -- this gate is a deliberate negative control for a launcher test.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "never satisfied -- negative control",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/probe2-rev2/p2neg/implementer",
+    "status": "active",
+    "claimed_at": "2026-08-11T06:37:44.675271+00:00",
+    "last_heartbeat": "2026-08-11T06:37:54.698082+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "g1",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-11T06:37:54.698071+00:00"
+    }
+  ]
+}

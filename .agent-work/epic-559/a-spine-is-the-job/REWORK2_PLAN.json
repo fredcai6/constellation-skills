@@ -1,0 +1,217 @@
+{
+  "work_id": "epic-559/a-spine-is-the-job",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "x1-installed-bundle",
+    "x2-survey-terminal",
+    "x3-verify"
+  ],
+  "tasks": {
+    "x1-installed-bundle": {
+      "id": "x1-installed-bundle",
+      "title": "run_crew.py must work from an installed bundle",
+      "imperative": "Commit 2152ded3 added `import install_constellation` at module scope in run_crew.py, for assert_shell_safe_command. install_constellation.py ships in no bundle that carries run_crew.py, so run_crew.py raises ModuleNotFoundError at import from every installed Commander and Explorer bundle -- they can launch no crew at all. Reproduced two-sidedly by the reviewer against real installs. Fix the import so an installed bundle works. The repo already documents this exact drift class at install_constellation.py:80-88, and its guard reads SCRIPT_RUNTIME_COMPANIONS.get('checklist_engine.py', ()) -- a literal, so it is blind to a sibling import added to any other script. Generalize the guard to key on every declared script, so the next occurrence is caught rather than documented after the fact.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "run_crew.py imports and runs --help from a simulated installed bundle, pinned by tests",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -m pytest -q tests/test_crew_launcher.py -k InstalledBundle --collect-only 2>/dev/null | grep -c '::') -ge 2 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_crew_launcher.py -k InstalledBundle"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-x1-installed-bundle-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the companion guard covers every declared script, pinned by tests",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -m pytest -q tests/test_install_constellation.py -k CompanionGuardCoversEveryScript --collect-only 2>/dev/null | grep -c '::') -ge 1 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_install_constellation.py -k CompanionGuardCoversEveryScript"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-x1-installed-bundle-2"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+        "Do not touch settings.json or docs/agents/*.",
+        "No merge or push to main. Commit on this branch."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-x1-installed-bundle-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_crew_launcher.py -k InstalledBundle --collect-only 2>/dev/null | grep -c '::') -ge 2 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_crew_launcher.py -k InstalledBundle",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-x1-installed-bundle-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_install_constellation.py -k CompanionGuardCoversEveryScript --collect-only 2>/dev/null | grep -c '::') -ge 1 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_install_constellation.py -k CompanionGuardCoversEveryScript",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "x2-survey-terminal": {
+      "id": "x2-survey-terminal",
+      "title": "A survey with no consolidation is not terminal",
+      "imperative": "spine_terminal answers a survey question with checklist_engine.active_id, which walks item statuses and never looks at consolidation. The reviewer dispatched a real reviewer crew whose survey had every item recorded and NO consolidation, and run_crew recorded it `completed` -- a Commander told the review is done when no verdict exists anywhere. That is the false positive in the one role whose entire deliverable is the verdict. Require consolidation is not None for type == survey. checklist_engine.py is a hard no-go, so the guard lives in run_crew for now; note the seam in a comment -- a type-aware is_terminal owned by the engine is the cleaner shape. Same function, smaller: spine_terminal returns True for {} and {'items': []}, contradicting its own docstring that a malformed spine is never terminal. Valid-JSON-wrong-shape leaks while missing and unparseable files correctly return False. Fix both, with a negative control for each.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "x1-installed-bundle complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "x1-installed-bundle is complete: both postconditions (InstalledBundleTests, CompanionGuardCoversEveryScriptTests) verified green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "a survey without consolidation and an empty/malformed spine are not terminal, pinned by tests",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -m pytest -q tests/test_crew_launcher.py -k \"SurveyTerminal or MalformedSpine\" --collect-only 2>/dev/null | grep -c '::') -ge 4 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_crew_launcher.py -k \"SurveyTerminal or MalformedSpine\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-x2-survey-terminal-1"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+        "Do not touch settings.json or docs/agents/*.",
+        "No merge or push to main. Commit on this branch."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-x2-survey-terminal-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_crew_launcher.py -k \"SurveyTerminal or MalformedSpine\" --collect-only 2>/dev/null | grep -c '::') -ge 4 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_crew_launcher.py -k \"SurveyTerminal or MalformedSpine\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "x3-verify": {
+      "id": "x3-verify",
+      "title": "Full suite green, map fresh, result written",
+      "imperative": "Run the full suite with real counts. Regenerate map/INDEX.md (python -m scripts.code_map build --root .) if the entity count drifted -- a sibling crew shipped a stale map this round and its suite went red. Overwrite IMPLEMENTER_RESULT.md from the implementer skill's template including Workflow Feedback. Commit before you finish: the last crew on this branch's sibling left its work uncommitted.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "x2-survey-terminal complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "x2-survey-terminal is complete: c1 (SurveyTerminalTests + MalformedSpineTests, 4 tests) verified green after the shell-quoting amendment."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite passes",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the working tree is committed",
+          "check": {
+            "kind": "command",
+            "command": "test -z \"$(git status --porcelain -- scripts tests skills map)\""
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the result artifact exists",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/epic-559/a-spine-is-the-job/IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+        "Do not touch settings.json or docs/agents/*.",
+        "No merge or push to main. Commit on this branch."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/epic-559/a-spine-is-the-job/x1-installed-bundle/implementer",
+    "status": "active",
+    "claimed_at": "2026-08-11T06:53:34.118890+00:00",
+    "last_heartbeat": "2026-08-11T07:02:51.403759+00:00",
+    "claimed_by": "implementer",
+    "worktree": "/home/tommy/projects/constellation-skills-wt/a-spine-is-the-job",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "x1-installed-bundle",
+      "why": "Root cause: run_crew.py imports install_constellation at module scope for assert_shell_safe_command, but no bundle carrying run_crew.py shipped install_constellation.py -- verified two-sidedly with a real install (commander/explorer bundles raised ModuleNotFoundError before argparse ran). Fixed by declaring run_crew.py -> install_constellation.py in SCRIPT_RUNTIME_COMPANIONS (install_constellation.py:89-110), which expand_script_bundle already applies automatically to every skill bundle carrying run_crew.py -- no hand-edit of SKILL_SCRIPT_BUNDLES needed. Pinned with two new tests (InstalledBundleTests) that build a real installed commander/explorer bundle via the installer and run the installed run_crew.py --help as a real subprocess. Generalized the companion guard per the second half of the imperative: added CompanionGuardCoversEveryScriptTests, which derives every script bundled by any skill from SKILL_SCRIPT_BUNDLES (not a hardcoded literal) and asserts each script's actual runtime-reachable closure lands in that skill's expanded bundle. Generalizing surfaced a real pre-existing false positive in the shared AST/regex helper: its mechanism-1 regex scanned raw text including comments, so install_constellation.py's own comment describing checklist_engine's dynamic gauge_reader.py load was misread as install_constellation.py performing that load itself. Fixed by blanking comment text (via tokenize, not a naive #-split, since a # inside a string is not a comment) before the regex runs. Did not touch checklist_engine.py or gauge_writer_hook.py sources or SKILL_SCRIPT_BUNDLES by hand -- both fixes are data-table/test-helper changes only, in scope (run_crew.py, install_constellation.py, tests/).",
+      "mechanical": false,
+      "ts": "2026-08-11T07:00:19.379445+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "x2-survey-terminal",
+      "why": "spine_terminal answered a survey question with checklist_engine.active_id alone, which walks item statuses only and never reads consolidation, so a reviewer/interrogator survey with every item recorded but no verdict yet was recorded completed -- the false positive in the one role whose entire deliverable is the verdict. Fixed: require checklist.get(\"type\") == checklist_engine.SURVEY implies consolidation is not None, with the type-aware check living in run_crew.py (checklist_engine.py is out of scope) and a comment noting the cleaner shape is a type-aware is_terminal owned by the engine. Same function, smaller bug: active_id walks cl.get(\"items\", []), so {} and {\"items\": []} (valid JSON, wrong shape) found no non-terminal item and returned None -- terminal by vacuity, contradicting the docstring's own claim that a malformed spine is never terminal. Fixed by requiring a non-empty items list before consulting active_id at all; missing-file and unparseable-JSON cases (already correct) are untouched. Pinned with SurveyTerminalTests (negative: every item recorded + consolidation None -> not terminal; positive control: same spine with consolidation set -> terminal, proving the check reads real data) and MalformedSpineTests (negative controls for {} and {\"items\": []}). Also corrected a shell-quoting bug in this gate's own c1 check text via spine_amend/retext-check before advancing: the authored `-k SurveyTerminal or MalformedSpine` was unquoted, so checklist_engine._run_check_command's `[shell, \"-c\", command]` invocation split \"or\"/\"MalformedSpine\" into bogus positional pytest arguments and errored unconditionally, independent of the implementation. Quoted the -k expression in both the collect-only precheck and the main run; verified it now collects exactly 4 tests, all passing.",
+      "mechanical": false,
+      "ts": "2026-08-11T07:02:44.433358+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-11T07:02:27.552945+00:00",
+      "reason": "The authored check text `-k SurveyTerminal or MalformedSpine` (unquoted) is a shell-quoting bug, not a legitimate gate on the implementation: checklist_engine._run_check_command runs the string via `subprocess.run([shell, \"-c\", command], ...)`, so the unquoted `or`/`MalformedSpine` become bogus positional path args to pytest (\"file or directory not found: or\") -- verified this fails identically regardless of test content. pytest's own -k boolean-expression syntax (`SurveyTerminal or MalformedSpine`) requires the whole expression as ONE quoted argument, which is what the intent (count >= 4 tests matching either name) clearly needed. Corrected by quoting the -k argument in both the collect-only precheck and the main run; verified the corrected command collects exactly 4 tests and both pass.",
+      "authority": "implementer (mechanical shell-quoting correction, verified against checklist_engine._run_check_command's actual invocation; the intent -- count>=4 tests matching SurveyTerminal or MalformedSpine, all green -- is unchanged)",
+      "ops": [
+        "retext-check x2-survey-terminal.c1"
+      ]
+    }
+  ]
+}

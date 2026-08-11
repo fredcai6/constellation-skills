@@ -4,11 +4,13 @@
 Commander must never hand-launch crew sessions. This wrapper launches crew work
 FOREGROUND/BLOCKING by default, assigns a deterministic session name, records
 durable launch metadata BEFORE the crew starts, captures stdout/stderr to
-deterministic files, and verifies the expected result artifact exists before it
-reports success. It refuses to launch a DUPLICATE crew for the same active
-work-id/gate/role/worktree unless the prior attempt is explicitly abandoned, and
-it supports explicit recovery (`--resume`/`--abandon --relaunch`) after a parent
-session is lost.
+deterministic files, and verifies completion before it reports success --
+either the expected result artifact exists and is fresh, or (a spine-only
+dispatch, issue #559) the crew's bound spine reached a terminal state. It
+refuses to launch a DUPLICATE crew for the same active work-id/gate/role/
+worktree unless the prior attempt is explicitly abandoned, and it supports
+explicit recovery (`--resume`/`--abandon --relaunch`) after a parent session is
+lost.
 
 Deliberate seams keep the wrapper fully testable without spawning a real agent:
   * `build_crew_argv(...)`  — PURE construction of the launcher command line.
@@ -28,12 +30,17 @@ import argparse
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import checklist_engine  # noqa: E402 -- spine-only completion reads its `active_id` (#559)
+import install_constellation  # noqa: E402 -- shell-safety guard for the waive-deny hook (#539)
 
 # Registry statuses that mean "this attempt still holds the gate/worktree" and
 # therefore block a duplicate launch until explicitly abandoned.
@@ -307,6 +314,53 @@ def result_fresh(result: str | os.PathLike[str], root: Path, since: str) -> bool
     return path.stat().st_mtime >= floor.timestamp()
 
 
+def spine_terminal(spine: str | os.PathLike[str], root: Path) -> bool:
+    """Whether the bound spine at `spine` reached a terminal state: every item
+    `complete`/`skipped` (`checklist_engine.active_id(...) is None`) AND, for
+    a survey checklist, a recorded verdict.
+
+    This is the completion contract for a spine-only dispatch (#559): a crew
+    told to drive its bound spine "until it reports done" is judged on the
+    spine reaching done, not on a result artifact it was never told to write.
+    A missing/unparseable/malformed spine is never terminal -- absence of
+    evidence is not evidence of completion. That includes a well-formed-JSON
+    spine of the WRONG SHAPE (`{}`, `{"items": []}`): `active_id` walks
+    `cl.get("items", [])`, so an empty/missing `items` list makes it return
+    `None` (no non-terminal item found) rather than raise -- `{}` and
+    `{"items": []}` both read as terminal by vacuity, contradicting this
+    function's own contract above. Requiring a non-empty `items` list closes
+    that leak while leaving the missing/unparseable-file cases (already
+    correctly `False`) untouched.
+
+    `checklist_engine.active_id` answers a GATED question -- every item
+    terminal -- and has no opinion on whether a SURVEY (reviewer/
+    interrogator) ever recorded a verdict: `checklist_engine.py` tracks
+    `consolidation` separately and `active_id` never reads it. A survey whose
+    every item is recorded but `consolidation` is still `None` is NOT
+    terminal: the crew's entire deliverable IS the verdict, and none exists
+    yet. `checklist_engine.py` is out of scope for this fix, so the
+    type-aware check lives here rather than there -- the cleaner shape is a
+    type-aware `is_terminal` owned by the engine itself, noted as a seam for
+    whoever picks that up."""
+    path = Path(spine)
+    if not path.is_absolute():
+        path = root / path
+    try:
+        checklist = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    if not isinstance(checklist, dict) or not checklist.get("items"):
+        return False
+    try:
+        if checklist_engine.active_id(checklist) is not None:
+            return False
+    except (KeyError, TypeError, AttributeError):
+        return False
+    if checklist.get("type") == checklist_engine.SURVEY and checklist.get("consolidation") is None:
+        return False
+    return True
+
+
 # --------------------------------------------------------------------------- #
 # injectable seams — argv construction (pure) and the real launch
 # --------------------------------------------------------------------------- #
@@ -324,39 +378,160 @@ DEFAULT_CREW_PERMISSION_MODE = "acceptEdits"
 # python/pytest-only need), so the grant is broad: unrestricted Bash plus the
 # core file/search tools, and the MCP spine door tools a crew drives its own
 # checklist through (`mcp_spine_server.py`).
+#
+# The `mcp__spine__*` entries are hand-typed here on purpose, not imported from
+# `mcp_spine_server.TOOL_NAMES` at module scope: that module reads `SPINE_FILE`
+# and `SPINE_ENGINE` straight out of the environment at import time (raises
+# `KeyError` if either is unset) so importing it here would make importing
+# `run_crew` itself require a bound spine even for callers -- the CLI, the test
+# suite -- that have no spine to bind. `tests/test_crew_launcher.py` instead
+# imports `mcp_spine_server` (with a scratch env) and asserts this tuple's
+# `mcp__spine__*` entries equal its `TOOL_NAMES`, so the two lists cannot drift
+# apart silently the way they did when the door grew from 7 to 9 tools.
 CREW_ALLOWED_TOOLS = (
     "Bash", "Read", "Write", "Edit", "Glob", "Grep", "TodoWrite", "ToolSearch",
     "mcp__spine__spine_status", "mcp__spine__spine_lease", "mcp__spine__spine_start",
     "mcp__spine__spine_advance", "mcp__spine__spine_evidence", "mcp__spine__spine_halt",
-    "mcp__spine__spine_survey_result",
+    "mcp__spine__spine_survey_result", "mcp__spine__spine_capture", "mcp__spine__spine_amend",
+)
+
+# Ruling (human, verbatim): "agent cannot waive itself. I'll allow commander to
+# waive crew, admiral to waive commander, human for admiral. always ask up."
+# `spine_evidence` bundles `attest`/`attach`/`waive` behind one tool name, so
+# `--allowedTools` (which grants/denies a whole tool, not one of its actions)
+# cannot admit attest/attach while refusing waive on its own. A `PreToolUse`
+# hook can: it sees the actual call, including `tool_input.action`, before the
+# tool runs, and can `deny` just that one action. `WAIVE_DENY_REASON` is what
+# the crew sees on the denied call -- it names the blocked path (`spine_halt`
+# block) so a crew that hits a check it cannot satisfy is told how to ask up
+# instead of reading the denial as a dead end.
+# No apostrophes/single-quotes in this string: it is interpolated into a
+# single-quoted shell command below (`crew_settings_json`), where a literal
+# single-quote character would terminate the quoting early.
+WAIVE_DENY_REASON = (
+    "A crew must not waive its own bound spine check -- always ask up. Call "
+    "spine_halt with action=block, name what you cannot satisfy, and return; "
+    "only a human or commander waives it from there."
+)
+# A bare `assert` is stripped under `python -O`, which would silently drop this
+# check on exactly the class of host most likely to run it that way -- so this
+# raises instead. See `crew_settings_json` below for the sibling #539 guard
+# (`assert_shell_safe_command`) on the composed hook command itself.
+if "'" in WAIVE_DENY_REASON:
+    raise CrewLaunchError(
+        "WAIVE_DENY_REASON is interpolated into a single-quoted shell command; a "
+        "literal single-quote would terminate that quoting early"
+    )
+
+# The PreToolUse hook command itself: reads the tool call's stdin JSON, denies
+# only when `tool_input.action == "waive"`, and is silent (`{}`, no opinion --
+# `--allowedTools` still decides) for every other action, including attest and
+# attach. Written to be invoked directly by tests too (`subprocess.run(["python3",
+# "-c", _WAIVE_HOOK_PY], input=<json>, ...)`), so the behavior this grants is
+# checked without spawning a real agent CLI.
+_WAIVE_HOOK_PY = (
+    "import json,sys\n"
+    "d=json.load(sys.stdin)\n"
+    'a=(d.get("tool_input") or {}).get("action")\n'
+    'if a=="waive":\n'
+    '    print(json.dumps({"hookSpecificOutput":{"hookEventName":"PreToolUse",'
+    '"permissionDecision":"deny","permissionDecisionReason":' + json.dumps(WAIVE_DENY_REASON) + '}}))\n'
+    "else:\n"
+    '    print("{}")\n'
 )
 
 
-def build_crew_argv(launcher: str, *, role: str, handoff: str, model: str | None, session: str) -> list[str]:
+def crew_settings_json() -> str:
+    """The `--settings` JSON blob every spawned crew gets: a `PreToolUse` hook on
+    `mcp__spine__spine_evidence` that denies only `action=waive` (see
+    `WAIVE_DENY_REASON` above). Passed as an inline JSON string (`--settings`
+    accepts a file path OR a JSON string), so this needs no new file and never
+    touches the repo's own `.claude/settings.json` -- it merges with it and with
+    the worktree's project settings, which cover different hook events (Stop /
+    SessionStart / PostToolUse), so nothing collides.
+
+    The interpreter is `sys.executable`, never a hardcoded `python3` -- this
+    process IS a running Python process, so the interpreter that launched it is
+    present BY CONSTRUCTION and needs no probe. A hardcoded `python3` silently
+    fails-open on a host where that name is not on PATH: the hook command
+    cannot run, Claude Code treats a non-JSON/erroring hook as no opinion, and
+    a crew can waive its own bound spine check with nothing to say so (#539:
+    `install_constellation.py::build_hook_command` documents the same rule --
+    "never re-probed here, never hardcoded" -- for the installer's own hooks).
+    `shlex.quote` covers an interpreter path containing spaces; `shell: bash`
+    matches every entry in this repo's own `.claude/settings.json`, and without
+    it a single-quoted inline program does not survive a non-POSIX parse
+    (`shlex.split(cmd, posix=False)` leaves the quotes on, so `cmd.exe` reads a
+    program starting with an apostrophe and dies -- another silent fail-open).
+    `assert_shell_safe_command` is the same #539 guard `build_hook_command`
+    applies to its own composed command: it raises (never a bare `assert`) if
+    the command does not start with a bare command word, which a badly-quoted
+    interpreter path could produce."""
+    command = f"{shlex.quote(sys.executable)} -c '{_WAIVE_HOOK_PY}'"
+    install_constellation.assert_shell_safe_command(command)
+    return json.dumps({
+        "hooks": {
+            "PreToolUse": [{
+                "matcher": "mcp__spine__spine_evidence",
+                "hooks": [{"type": "command", "command": command, "shell": "bash"}],
+            }],
+        },
+    })
+
+
+def build_crew_argv(
+    launcher: str, *, role: str, handoff: str | None, model: str | None, session: str,
+    spine: str | None = None,
+) -> list[str]:
     """PURE construction of the agent-CLI command line from role/handoff/model.
 
     Kept separate so tests can assert on the argv without spawning anything. The
-    real launcher binary is configurable (`--command`) and defaults sensibly; the
-    handoff is passed by path (the wrapper has already refused a missing one).
+    real launcher binary is configurable (`--command`) and defaults sensibly; a
+    given handoff is passed by path (the wrapper has already refused a missing
+    one).
+
+    `handoff` is nullable: a crew with a bound `spine` and no `handoff` is told
+    to drive the spine instead of reading a document (issue #559) -- the
+    existing handoff branch is kept byte-identical whenever `handoff` IS given
+    (even alongside a `spine`), so every current dispatch and test is
+    untouched. Refuses (rather than emitting a document-less, spine-less
+    prompt) when neither is given; callers refuse this combination earlier too
+    (`CrewSpec.__post_init__`), so this is a second, cheaper backstop on the
+    pure function itself.
 
     The claude CLI has no `--session`/`--role`/`--handoff` flags (issue #91: the
     old flag form fails with `unknown option '--session'` on current CLIs), so
     role, session name, and handoff path travel inside the headless `-p` prompt;
     the registry — not the CLI — owns crew identity.
 
-    Always appends `--permission-mode` + `--allowedTools` (M2 job 1): a dispatch
-    into a worktree with no hand-written settings file must complete crew work
-    end to end, so the launcher grants what a crew needs instead of an operator
-    remembering to."""
-    prompt = (
-        f"You are the constellation {role} crew for session {session}. "
-        f"Read the handoff at {handoff} and execute it exactly. "
-        "The run is only complete when the result artifact the handoff names exists."
-    )
+    Always appends `--permission-mode` + `--allowedTools` + `--settings` (M2 job
+    1, issue #559 job 4): a dispatch into a worktree with no hand-written
+    settings file must complete crew work end to end, so the launcher grants
+    what a crew needs (and denies what it must ask up for) instead of an
+    operator remembering to."""
+    if handoff is not None:
+        prompt = (
+            f"You are the constellation {role} crew for session {session}. "
+            f"Read the handoff at {handoff} and execute it exactly. "
+            "The run is only complete when the result artifact the handoff names exists."
+        )
+    elif spine is not None:
+        prompt = (
+            f"You are the constellation {role} crew for session {session}. "
+            "Call mcp__spine__spine_status first: your spine is already bound. "
+            "Drive it gate by gate through the door -- do not author a plan of "
+            "your own -- until it reports done."
+        )
+    else:
+        raise CrewLaunchError(
+            "build_crew_argv requires a handoff, a spine, or both -- refusing to "
+            "build a prompt that names neither"
+        )
     argv: list[str] = [launcher, "-p", prompt]
     if model:
         argv += ["--model", model]
     argv += ["--permission-mode", DEFAULT_CREW_PERMISSION_MODE]
+    argv += ["--settings", crew_settings_json()]
     argv += ["--allowedTools", *CREW_ALLOWED_TOOLS]
     return argv
 
@@ -546,8 +721,8 @@ def build_entry(
     role: str,
     attempt: int,
     worktree: str,
-    handoff: str,
-    result: str,
+    handoff: str | None,
+    result: str | None,
     root: Path,
     started: str,
     backend: str,
@@ -569,6 +744,12 @@ def build_entry(
                      the cli backend passes `None` (no marker, as before).
       * `model`    — recorded only when the caller stored it (external), matching
                      the prior per-path shape; the cli path does not store it.
+      * `handoff`  — nullable (issue #559): recorded as `None` for a spine-only
+                     crew, the same "recorded null, not omitted" shape `spine`
+                     already uses below.
+      * `result`   — nullable (issue #559 job 2): recorded as `None` for a
+                     crew whose completion contract is its spine reaching a
+                     terminal state, not a result artifact.
       * `spine`    — the spine this crew drives, so a resume can rebind the same
                      door (optional: `None` for a caller with nothing to bind,
                      recorded as `None` rather than omitted — a legacy entry
@@ -586,8 +767,8 @@ def build_entry(
         "backend": backend,
         "pid": pid,
         "worktree": worktree,
-        "handoff": _relativize(handoff, root),
-        "result": _relativize(result, root),
+        "handoff": _relativize(handoff, root) if handoff is not None else None,
+        "result": _relativize(result, root) if result is not None else None,
         "spine": _relativize(spine, root) if spine is not None else None,
         "stdout": _relativize(str(stdout_path), root),
         "stderr": _relativize(str(stderr_path), root),
@@ -607,25 +788,44 @@ def finalize_from_exit_code(
     entry: dict,
     *,
     exit_code: int,
-    result: str,
+    result: str | None,
     root: Path,
     since: str,
+    spine: str | None = None,
 ) -> int:
-    """Finalize a spawned attempt's entry from the child exit code and result
-    freshness since dispatch. The ONE tail both `CliBackend.dispatch` and
-    `CliBackend.resume` call — no copy-paste of the completed/failed rule.
+    """Finalize a spawned attempt's entry from the child exit code, PLUS either
+    result-artifact freshness or bound-spine completion. The ONE tail both
+    `CliBackend.dispatch` and `CliBackend.resume` call — no copy-paste of the
+    completed/failed rule.
+
+    `result` given (not None): judged exactly as before -- exists AND fresh
+    since dispatch (`result_fresh`). A child that exits 0 but leaves only a
+    STALE prior-attempt result at the path (mtime predates dispatch) is
+    `failed`, not `completed`.
+
+    `result` is `None` (issue #559 job 2): the crew was never given a result
+    artifact to write, so it is judged on its BOUND spine instead -- completed
+    only when the spine reached a terminal state (`spine_terminal`). This is
+    the crew's actual completion contract: a spine-only prompt tells it to
+    drive its spine "until it reports done," never to write a result file, so
+    judging it against a file it was never told about produced a false
+    `failed` for a crew that did everything asked of it.
 
     Sets `completed_at`/`last_heartbeat` (now), `status`, `exit_code`,
-    `result_present`, and `result_fresh`, and returns the process-level exit code
-    to report. Reuses the single canonical `result_fresh` (`since` is the entry's
-    dispatch time): a child that exits 0 but leaves only a STALE prior-attempt
-    result at the path (mtime predates dispatch) is `failed`, not `completed`."""
-    have_result = result_exists(result, root)
-    fresh = result_fresh(result, root, since)
+    `result_present`, and `result_fresh`, and returns the process-level exit
+    code to report."""
+    if result is not None:
+        have_result = result_exists(result, root)
+        fresh = result_fresh(result, root, since)
+        done = fresh
+    else:
+        have_result = False
+        fresh = False
+        done = spine is not None and spine_terminal(spine, root)
     now = _now()
     entry["completed_at"] = now
     entry["last_heartbeat"] = now
-    if exit_code == 0 and fresh:
+    if exit_code == 0 and done:
         entry["status"] = "completed"
         final = 0
     else:
@@ -657,12 +857,26 @@ class CrewSpec:
     Identity is checked HERE, at construction, rather than deeper in `session_name`:
     every dispatch path builds a spec before it touches the filesystem, so an
     unparseable identity is refused before a handoff is read or a registry is
-    written, and the refusal names the id rather than a missing file."""
+    written, and the refusal names the id rather than a missing file.
+
+    `handoff` is nullable (issue #559): a crew given `spine` and no `handoff`
+    drives its bound spine instead of reading a document. A spec with NEITHER
+    is refused here, at construction -- the one choke point every backend
+    passes through -- rather than leaving a crew with no job at all. The
+    external backend layers its OWN, stricter refusal on top (it always needs
+    a handoff, spine or not, since it cannot bind one).
+
+    `result` is likewise nullable (issue #559 job 2): a crew given `spine` and
+    no `result` is judged on its bound spine reaching a terminal state
+    (`spine_terminal`) instead of a result artifact nobody told it to write. A
+    spec with neither `result` nor `spine` is refused here for the same reason
+    as the handoff/spine pair above -- it would have no completion contract at
+    all."""
     work_id: str
     gate: str
     role: str
-    handoff: str
-    result: str
+    handoff: str | None
+    result: str | None
     worktree: str
     attempt: int
     spine: str | None = None
@@ -673,6 +887,17 @@ class CrewSpec:
         validate_work_id(self.work_id)
         _validate_session_component(self.gate, "gate")
         _validate_session_component(self.role, "role")
+        if self.handoff is None and self.spine is None:
+            raise CrewLaunchError(
+                "a crew needs a job: refusing a dispatch with neither --handoff "
+                "nor --spine given"
+            )
+        if self.result is None and self.spine is None:
+            raise CrewLaunchError(
+                "a crew needs a completion contract: refusing a dispatch with "
+                "neither --result nor --spine given (a spine-only dispatch is "
+                "judged on its spine reaching a terminal state instead)"
+            )
 
 
 # --------------------------------------------------------------------------- #
@@ -742,7 +967,11 @@ class CliBackend(CrewBackend):
         # Resolve the seam at CALL time so a monkeypatched module-level
         # `launch_process` (tests, or the CLI) takes effect.
         launch = launch if launch is not None else launch_process
-        handoff_path = _require_handoff(spec.handoff, root, action="launch")
+        # `_require_handoff` only runs when a handoff was actually given: a
+        # spine-only spec (`spec.handoff is None`) has already cleared
+        # `CrewSpec.__post_init__`'s "needs a job" check, so there is nothing to
+        # require here.
+        handoff_path = _require_handoff(spec.handoff, root, action="launch") if spec.handoff is not None else None
 
         started = _now()
         entry = build_entry(
@@ -758,13 +987,16 @@ class CliBackend(CrewBackend):
 
         stdout_path, stderr_path = run_log_paths(spec.work_id, spec.gate, spec.role, spec.attempt, root)
         argv = build_crew_argv(
-            spec.launcher, role=spec.role, handoff=str(handoff_path),
-            model=spec.model, session=entry["session_name"],
+            spec.launcher, role=spec.role,
+            handoff=(str(handoff_path) if handoff_path is not None else None),
+            model=spec.model, session=entry["session_name"], spine=spec.spine,
         )
         env = _crew_door_env(work_id=spec.work_id, gate=spec.gate, role=spec.role, spine=spec.spine, root=root)
         exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path)
 
-        final = finalize_from_exit_code(entry, exit_code=exit_code, result=spec.result, root=root, since=started)
+        final = finalize_from_exit_code(
+            entry, exit_code=exit_code, result=spec.result, root=root, since=started, spine=spec.spine,
+        )
         save_registry(reg, entries)
         if final != 0:
             _print_drift_hint_if_any(stderr_path)
@@ -779,11 +1011,14 @@ class CliBackend(CrewBackend):
             raise CrewLaunchError(f"cannot resume an abandoned crew {session!r}; use --abandon --relaunch instead")
 
         work_id = entry["work_id"]
-        handoff_path = Path(entry["handoff"])
-        if not handoff_path.is_absolute():
-            handoff_path = root / entry["handoff"]
-        if not handoff_path.is_file():
-            raise CrewLaunchError(f"cannot resume: stored handoff is missing: {handoff_path}")
+        stored_handoff = entry.get("handoff")
+        handoff_path: Path | None = None
+        if stored_handoff is not None:
+            handoff_path = Path(stored_handoff)
+            if not handoff_path.is_absolute():
+                handoff_path = root / stored_handoff
+            if not handoff_path.is_file():
+                raise CrewLaunchError(f"cannot resume: stored handoff is missing: {handoff_path}")
 
         stdout_path = Path(entry["stdout"])
         stderr_path = Path(entry["stderr"])
@@ -805,9 +1040,10 @@ class CliBackend(CrewBackend):
         argv = build_crew_argv(
             entry.get("launcher", DEFAULT_LAUNCHER),
             role=entry["role"],
-            handoff=str(handoff_path),
+            handoff=(str(handoff_path) if handoff_path is not None else None),
             model=entry.get("model"),
             session=entry["session_name"],
+            spine=entry.get("spine"),
         )
         env = _crew_door_env(
             work_id=entry["work_id"], gate=entry["gate"], role=entry["role"],
@@ -815,7 +1051,10 @@ class CliBackend(CrewBackend):
         )
         exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path)
 
-        final = finalize_from_exit_code(entry, exit_code=exit_code, result=entry["result"], root=root, since=resumed_at)
+        final = finalize_from_exit_code(
+            entry, exit_code=exit_code, result=entry["result"], root=root, since=resumed_at,
+            spine=entry.get("spine"),
+        )
         save_registry(reg, entries)
         if final != 0:
             _print_drift_hint_if_any(stderr_path)
@@ -842,8 +1081,14 @@ class ExternalBackend(CrewBackend):
                 f"refusing --spine {spec.spine!r} on the external backend: "
                 f"ExternalBackend spawns no process and builds no environment, so "
                 f"nothing binds the value into a child's SPINE_FILE/SPINE_SESSION. "
-                f"--spine is only meaningful on the cli backend (--backend cli)."
+                f"--spine is only meaningful on the cli backend (--backend cli). A "
+                f"spine-only dispatch here would leave the crew with no job at "
+                f"all -- pass --handoff instead."
             )
+        # `spec.spine is None` (checked above) plus `CrewSpec.__post_init__`'s
+        # "needs a job" refusal together guarantee `spec.handoff` is not None by
+        # this point -- the external backend never relaxes the handoff
+        # requirement the cli backend does, since it cannot bind a spine.
         # Refuses if the handoff is missing, matching the spawn path's
         # precondition (with the external path's "record" wording).
         _require_handoff(spec.handoff, root, action="record")
@@ -913,7 +1158,7 @@ def launch_crew(
     work_id: str,
     gate: str,
     role: str,
-    handoff: str,
+    handoff: str | None,
     result: str,
     worktree: str,
     model: str | None,
@@ -1028,8 +1273,25 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--role")
     p.add_argument("--model")
     p.add_argument("--worktree", default=".")
-    p.add_argument("--handoff")
-    p.add_argument("--result")
+    p.add_argument(
+        "--handoff",
+        help=(
+            "path to the handoff document. Optional when --spine is given: a "
+            "spine-only dispatch drives its bound spine instead of reading a "
+            "document. Refused if neither --handoff nor --spine is given, and "
+            "always required on the external backend (it cannot bind a spine)."
+        ),
+    )
+    p.add_argument(
+        "--result",
+        help=(
+            "path to the expected result artifact. Optional when --spine is given: "
+            "a spine-only dispatch is judged on its bound spine reaching a terminal "
+            "state (spine_terminal) instead of a result artifact. Refused if "
+            "neither --result nor --spine is given (a crew needs a completion "
+            "contract)."
+        ),
+    )
     p.add_argument(
         "--spine",
         help=(
@@ -1118,13 +1380,28 @@ def main(argv: list[str] | None = None) -> int:
             print(f"resumed {entry['session_name']} -> {entry['status']}")
             return exit_code
 
-        # fresh / abandon+relaunch launch requires the launch quartet
-        missing = [n for n in ("work_id", "gate", "role", "handoff", "result")
+        # fresh / abandon+relaunch launch requires work-id/gate/role, plus at
+        # least one of handoff/spine and at least one of result/spine (both
+        # checked separately below -- neither `handoff` nor `result` is in this
+        # hard list, issue #559: a spine-only dispatch needs neither, judged
+        # instead on its bound spine reaching a terminal state).
+        missing = [n for n in ("work_id", "gate", "role")
                    if getattr(args, n) in (None, "")]
         if missing and not args.abandon:
             raise CrewLaunchError(
-                "launch requires --work-id --gate --role --handoff --result "
-                "(or a recovery flag --resume/--abandon)"
+                "launch requires --work-id --gate --role, plus at least one of "
+                "--handoff/--spine and at least one of --result/--spine (or a "
+                "recovery flag --resume/--abandon)"
+            )
+        if not args.abandon and not args.handoff and not args.spine:
+            raise CrewLaunchError(
+                "launch requires --handoff, --spine, or both (a crew needs a job)"
+            )
+        if not args.abandon and not args.result and not args.spine:
+            raise CrewLaunchError(
+                "launch requires --result, --spine, or both (a crew needs a "
+                "completion contract): a spine-only dispatch is judged on its "
+                "spine reaching a terminal state instead of a result artifact"
             )
 
         # The registry is keyed by work-id; for a bare `--abandon <session>`

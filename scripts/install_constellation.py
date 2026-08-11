@@ -107,6 +107,15 @@ SCRIPT_RUNTIME_COMPANIONS: dict[str, tuple[str, ...]] = {
     # where neither can find the other and NOTHING raises -- the hook just stops
     # resolving gauge paths. Co-location is the whole contract here.
     "gauge_writer_hook.py": ("spine_rail.py",),
+    # run_crew.py: `sys.path.insert(0, <own parent>)` + a plain top-level
+    # `import install_constellation` (#539, for `assert_shell_safe_command`).
+    # Exactly the #305 mechanism this dict exists to catch -- and it did not,
+    # because the guard that pins this dict against reality was keyed to the
+    # literal `"checklist_engine.py"` and watched no other script (#559 pass
+    # 3). No bundle carrying `run_crew.py` shipped this companion, so
+    # Commander and Explorer, installed, raised `ModuleNotFoundError` at
+    # import -- before argparse ever ran -- and could launch no crew at all.
+    "run_crew.py": ("install_constellation.py",),
 }
 
 # SOURCE SUBDIRECTORIES: scripts whose source lives under a subdirectory of

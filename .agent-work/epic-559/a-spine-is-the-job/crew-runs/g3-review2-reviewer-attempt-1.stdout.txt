@@ -1,0 +1,17 @@
+## Verdict: `BLOCK`
+
+Result artifact written to `.agent-work/epic-559/a-spine-is-the-job/REVIEWER_RESULT2.md`. Survey: 12/12 items recorded, consolidated `BLOCK`, lease released.
+
+**The question the handoff said would decide it answers safely.** `checklist_engine.TERMINAL` is `{"complete","skipped"}` — `blocked` is not in it. Driven on real spines: blocked mid-spine → `False`, blocked at the last gate → `False`. A crew that correctly gives up is recorded `failed`, never `completed`.
+
+**The verdict turns on two things I found by widening from that one status.**
+
+1. **`run_crew.py` is dead on every installed skill bundle.** `2152ded3` added `import install_constellation` at module scope; that file ships in no bundle carrying `run_crew.py`. The installed commander and explorer launchers die with `ModuleNotFoundError` before argparse — Commander and Explorer can launch no crew at all. Proven two-sided: `main@9d593e0a`'s installed launcher runs the identical invocation at exit 0. The repo documents this exact drift class at `install_constellation.py:80-88`; the guard meant to prevent it is hardcoded to `checklist_engine.py`, so it is structurally blind. One `SCRIPT_RUNTIME_COMPANIONS` entry fixes it.
+
+2. **A reviewer crew that produces no verdict is recorded `completed`.** `spine_terminal` answers a survey question with `active_id`, which never reads `consolidation`. Reproduced with a real spine-only dispatch: registry `completed`, survey `consolidation: None`. That is the false-positive class you named as worse than the round-1 bug, in the role whose whole deliverable is the verdict.
+
+**The rework itself works.** Real spine-only dispatch, no `--handoff`, no `--result` → `completed`; negative control (open gate, child exit 0) → `failed`. Round 1's bug is fixed and I confirmed it by running one.
+
+Also failing, non-blocking alone: a `sys.executable` containing a space makes `crew_settings_json` raise, so **no** dispatch works on a stock Windows Python-under-`Program Files` install (v5); the waive-deny hook is bypassable by a crew shelling out to `checklist_engine.py waive --force`, which I drove end to end (v4). Two triage candidates flagged. Scope is clean — all five no-gos respected, map reproduces byte-exact, nothing pushed to `main`.
+
+One disclosure per your instruction: I used the engine CLI for the v1 state-manufacturing probes, because my door is pinned to `SPINE_FILE` and cannot bind a scratch spine. Every claim about the branch's own behaviour came from `run_crew` and real dispatches.

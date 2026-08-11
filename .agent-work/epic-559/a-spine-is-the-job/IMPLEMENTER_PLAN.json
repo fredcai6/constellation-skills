@@ -1,0 +1,194 @@
+{
+  "work_id": "epic-559/a-spine-is-the-job",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "a1-control",
+    "a2-implement",
+    "a3-verify"
+  ],
+  "tasks": {
+    "a1-control": {
+      "id": "a1-control",
+      "title": "Show the crew is pointed at a document, not its spine",
+      "imperative": "Show today's behaviour before changing it. build_crew_argv is pure, so assert on the argv it returns: the prompt names the handoff path and never mentions the spine or spine_status. Then show a crew grant that currently permits waive. Record both verbatim. If either does not reproduce, STOP and report.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "previous gate complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "First gate; no previous gate to complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gate work done with evidence recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-a1-control-1",
+          "type": "control-result",
+          "payload": {
+            "prompt": "You are the constellation implementer crew for session constellation/w/g1/implementer/attempt-1. Read the handoff at /abs/HANDOFF.md and execute it exactly. The run is only complete when the result artifact the handoff names exists.",
+            "prompt_names_handoff_path": "true",
+            "prompt_mentions_spine_or_spine_status": "false",
+            "crew_allowed_tools_mcp_count": "7",
+            "crew_allowed_tools_missing": "mcp__spine__spine_capture,mcp__spine__spine_amend",
+            "crew_grant_permits_waive": "true (mcp__spine__spine_evidence grants attest/attach/waive wholesale, no hook blocks waive)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "a2-implement": {
+      "id": "a2-implement",
+      "title": "Point the crew at its spine, and take waive away from it",
+      "imperative": "Add the spine-carried prompt branch; make --handoff optional with a refusal when neither spine nor handoff is given; keep the external backend requiring a handoff. Rewrite the CLI-fallback paragraph in skills/implementer/SKILL.md and skills/reviewer/SKILL.md so a crew is told its spine is already bound and never told about the engine CLI. Make waive unreachable for a crew while attest and attach still work, and make the refusal tell the crew to block and return. Derive the mcp__spine__ entries of CREW_ALLOWED_TOOLS from the door's own tool list, or tie them with a test. Do not modify checklist_engine.py or mcp_spine_server.py. Do not git add -A.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "previous gate complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "a1-control complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gate work done with evidence recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-a2-implement-1",
+          "type": "implementation-result",
+          "payload": {
+            "files_changed": "scripts/run_crew.py, skills/implementer/SKILL.md, skills/reviewer/SKILL.md, tests/test_crew_launcher.py, tests/test_mcp_adoption.py, map/INDEX.md",
+            "waive_mechanism": "PreToolUse hook (via --settings inline JSON, no new file, no settings.json edit) denies mcp__spine__spine_evidence action=waive; attest/attach pass through via --allowedTools as before",
+            "handoff_optional": "true; refusal when neither --handoff nor --spine given, at CrewSpec.__post_init__ and build_crew_argv; external backend still refuses handoff-less dispatch",
+            "crew_grant_tie": "CREW_ALLOWED_TOOLS hand-typed but tied to mcp_spine_server.TOOL_NAMES by tests/test_crew_launcher.py::CrewGrantTiesToDoorTests (module-scope import of mcp_spine_server was ruled out: it reads SPINE_FILE/SPINE_ENGINE from env at import time and raises KeyError without them)",
+            "new_tests_red_on_old_code": "14 of the new tests fail against unmodified scripts/run_crew.py (verified via git stash), confirming they are not vacuous",
+            "full_suite": "2548 passed, 1 skipped, 1101 subtests passed (env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "a3-verify": {
+      "id": "a3-verify",
+      "title": "Prove the old path is untouched, then commit",
+      "imperative": "Show the handoff branch is byte-identical to today's so existing dispatches are unaffected. Show the new branch names no file path and names spine_status. Show waive refused and attest/attach working. Show the crew-grant tie goes red when the two lists diverge. Show your new tests fail without the production change. Full suite: env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests. Commit only the files you changed, by name, then write IMPLEMENTER_RESULT.md with its Workflow Feedback section.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "previous gate complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "a2-implement complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gate work done with evidence recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-a3-verify-1",
+          "type": "final-result",
+          "payload": {
+            "result_path": ".agent-work/epic-559/a-spine-is-the-job/IMPLEMENTER_RESULT.md",
+            "commit": "6fc83013",
+            "commit_files": "scripts/run_crew.py, skills/implementer/SKILL.md, skills/reviewer/SKILL.md, tests/test_crew_launcher.py, tests/test_mcp_adoption.py, map/INDEX.md",
+            "full_suite": "2548 passed, 1 skipped, 1101 subtests passed",
+            "waive_refused_attest_attach_work": "true (WaiveHookTests)",
+            "handoff_byte_identical": "true (test_control_handoff_branch_is_byte_identical_to_the_pre_559_prompt)",
+            "new_branch_no_path_names_spine_status": "true (test_spine_only_branch_names_no_document_and_names_spine_status)",
+            "tie_test_goes_red_on_drift": "true, verified by mutating CREW_ALLOWED_TOOLS and rerunning CrewGrantTiesToDoorTests",
+            "new_tests_red_without_change": "14 failed against unmodified scripts/run_crew.py"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/epic-559/a-spine-is-the-job/g1-implement/implementer",
+    "status": "released",
+    "claimed_at": "2026-08-11T05:03:24.941593+00:00",
+    "last_heartbeat": "2026-08-11T05:31:33.571632+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-11T05:31:35.680891+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "a1-control",
+      "why": "Control reproduced exactly as the handoff described: build_crew_argv's prompt today names the handoff path verbatim and never mentions \"spine\" or \"spine_status\" anywhere; CREW_ALLOWED_TOOLS grants mcp__spine__spine_evidence wholesale (7 of 9 mcp door tools -- spine_capture and spine_amend are the two missing, confirming the frozen-at-seven drift), so waive is reachable today with no hook or gate stopping it. Both facts recorded verbatim in the attached control-result evidence. Proceeding to a2-implement with this baseline established.",
+      "mechanical": false,
+      "ts": "2026-08-11T05:10:35.596730+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "a2-implement",
+      "why": "All four required changes are in, all in the three named files plus tests: (1) build_crew_argv's spine-carried prompt branch, byte-identical handoff branch preserved; (2) --handoff optional with a CrewSpec-level refusal when neither handoff nor spine is given, external backend still refuses a handoff-less dispatch; (3) both SKILL.md CLI-fallback paragraphs replaced with spine-is-bound instructions, no CLI/checklist_engine.py mention left in either file; (4) waive made unreachable via a PreToolUse hook embedded in --settings (no new file, no settings.json edit, no mcp_spine_server.py/checklist_engine.py touch) while attest/attach still work, refusal names spine_halt block. CREW_ALLOWED_TOOLS grown from 7 to the door's real 9 mcp tools and tied to mcp_spine_server.TOOL_NAMES by a new test (module-scope import was ruled out as awkward -- explained in evidence -- so the smallest honest thing, a drift test, was built instead). Full suite green at 2548 passed, 1 skipped; 14 new tests independently verified red against the unmodified production code. Discovered along the way: editing run_crew.py and test_mcp_adoption.py required regenerating map/INDEX.md (mechanical, code_map's own build command) and updating two pre-existing test_mcp_adoption.py invariants that literally pinned the CLI-fallback fact this task was asked to remove -- both replaced with a new test class pinning the opposite, superseding fact for exactly the two files in scope. Proceeding to a3-verify to prove the old path untouched and commit.",
+      "mechanical": false,
+      "ts": "2026-08-11T05:28:00.470167+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "a3-verify",
+      "why": "All required proofs verified: the handoff branch is byte-identical to the pre-#559 prompt (literal-string assertion), the new spine-only branch names no file path and names spine_status, waive is refused while attest/attach still work (verified by invoking the exact hook command the argv carries), the crew-grant/door tie test goes red when the lists are made to diverge (verified by mutation), and all 14 new tests go red against the unmodified production code (verified by stashing scripts/run_crew.py alone). Full suite green at 2548 passed, 1 skipped. Committed exactly the six changed files by name (scripts/run_crew.py, skills/implementer/SKILL.md, skills/reviewer/SKILL.md, tests/test_crew_launcher.py, tests/test_mcp_adoption.py, map/INDEX.md) -- no git add -A, .agent-work/ left untracked. IMPLEMENTER_RESULT.md written with its Workflow Feedback section, including the escape-hatch decision on the mcp_spine_server module-scope import (confirmed awkward: KeyError on missing SPINE_FILE/SPINE_ENGINE at import time) and the discovery that fixing skills/implementer|reviewer/SKILL.md required updating two pre-existing tests in tests/test_mcp_adoption.py that pinned exactly the fact this task was asked to remove. This is the last gate.",
+      "mechanical": false,
+      "ts": "2026-08-11T05:31:33.571621+00:00"
+    }
+  ]
+}

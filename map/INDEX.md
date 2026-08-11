@@ -2,9 +2,9 @@
 
 ## packages
 evals: 12 modules, 54 entities
-scripts: 55 modules, 1084 entities
+scripts: 55 modules, 1086 entities
 skills: 1 modules, 18 entities
-tests: 68 modules, 3897 entities
+tests: 68 modules, 3950 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -29,7 +29,7 @@ tests: 68 modules, 3897 entities
 - [evals.euler-5-smallest-multiple.checks.spine_completed](evals.euler-5-smallest-multiple.checks.spine_completed/INDEX.md) (9 entities, 2 holes): PROCESS check (gating): a constellation ENGINE spine reached a terminal state WITH engine-written provenance -- not merely agent-written JSON (issue #127).
 - [evals.euler-5-smallest-multiple.checks.tests_green](evals.euler-5-smallest-multiple.checks.tests_green/INDEX.md) (3 entities, 3 holes): PROCESS check (gating): tests were WRITTEN and PASS in the workspace.
 
-## scripts (55 modules, 1084 entities)
+## scripts (55 modules, 1086 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -69,7 +69,7 @@ tests: 68 modules, 3897 entities
 - [scripts.prove_docstring_only](scripts.prove_docstring_only/INDEX.md) (3 entities, 1 holes): Decide — not assert — whether a Python file's change is docstring-only.
 - [scripts.query_episodes](scripts.query_episodes/INDEX.md) (22 entities, 7 holes): Deterministic retrieval over the episode store (docs/EPISODE_STORE.md section 8).
 - [scripts.recover_crews](scripts.recover_crews/INDEX.md) (8 entities, 3 holes): Recovery classifier over the durable crew-run registry.
-- [scripts.run_crew](scripts.run_crew/INDEX.md) (53 entities, 11 holes): Safe crew launcher with a durable session-recovery registry.
+- [scripts.run_crew](scripts.run_crew/INDEX.md) (55 entities, 11 holes): Safe crew launcher with a durable session-recovery registry.
 - [scripts.run_skill_eval](scripts.run_skill_eval/INDEX.md) (42 entities, 10 holes): Corpus skill-eval runner — the PURE, agent-free core (#106, gate g2).
 - [scripts.verify_context_declaration](scripts.verify_context_declaration/INDEX.md) (7 entities, 1 holes): Lint: every declared `context_refs` path must appear verbatim in its own task's `imperative` prose.
 - [scripts.verify_coverage_ledger](scripts.verify_coverage_ledger/INDEX.md) (6 entities, 2 holes): Verify the removability coverage ledger against the installed-externals manifest.
@@ -99,7 +99,7 @@ tests: 68 modules, 3897 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (68 modules, 3897 entities)
+## tests (68 modules, 3950 entities)
 
 ### tests.fixtures (2 modules, 4 entities)
 
@@ -116,7 +116,7 @@ tests: 68 modules, 3897 entities
 - [tests.test_context_determinism](tests.test_context_determinism/INDEX.md) (25 entities, 21 holes): The acceptance test for issue #300: the projection manifest's *content* is identical across environments.
 - [tests.test_context_manifest](tests.test_context_manifest/INDEX.md) (97 entities, 85 holes): Tests for `scripts/context_manifest.py` — the deterministic projection substrate.
 - [tests.test_crew_delivery_addressing](tests.test_crew_delivery_addressing/INDEX.md) (11 entities, 7 holes): Relaunch acceptance test for #507 / #370 / #413 (crew delivery addressing).
-- [tests.test_crew_launcher](tests.test_crew_launcher/INDEX.md) (135 entities, 105 holes): HOLE: no docstring
+- [tests.test_crew_launcher](tests.test_crew_launcher/INDEX.md) (183 entities, 142 holes): HOLE: no docstring
 - [tests.test_curate_corpus](tests.test_curate_corpus/INDEX.md) (40 entities, 23 holes): Golden-fixture suite for scripts/curate_corpus.py.
 - [tests.test_diagnose](tests.test_diagnose/INDEX.md) (32 entities, 27 holes): Tests for the constellation-diagnose skill's rail (scripts/verify_diagnosis.py).
 - [tests.test_docent_freshness](tests.test_docent_freshness/INDEX.md) (18 entities, 17 holes): Unit tests for scripts/docent_freshness.py.
@@ -137,14 +137,14 @@ tests: 68 modules, 3897 entities
 - [tests.test_implementer_vocab](tests.test_implementer_vocab/INDEX.md) (7 entities, 7 holes): Light vocabulary assertion for the constellation-implementer sharpening (DESIGN_SPEC Section D2 — vertical-slice vocabulary).
 - [tests.test_init_work_area](tests.test_init_work_area/INDEX.md) (41 entities, 35 holes): HOLE: no docstring
 - [tests.test_initial_issues](tests.test_initial_issues/INDEX.md) (27 entities, 27 holes): Contract tests for the canonical constellation-to-initial-issues seam.
-- [tests.test_install_constellation](tests.test_install_constellation/INDEX.md) (271 entities, 155 holes): HOLE: no docstring
+- [tests.test_install_constellation](tests.test_install_constellation/INDEX.md) (274 entities, 156 holes): HOLE: no docstring
 - [tests.test_interpreter_portability](tests.test_interpreter_portability/INDEX.md) (34 entities, 10 holes): HOLE: no docstring
 - [tests.test_interrogation](tests.test_interrogation/INDEX.md) (40 entities, 36 holes): Tests for the constellation-interrogator sharpening rail (scripts/verify_interrogation.py).
 - [tests.test_iterative_planning_acceptance](tests.test_iterative_planning_acceptance/INDEX.md) (5 entities, 5 holes): Focused tests for the ten-item iterative-planning acceptance verifier.
 - [tests.test_iterative_planning_doctrine](tests.test_iterative_planning_doctrine/INDEX.md) (90 entities, 58 holes): Parsed role-doctrine invariants for the G1 -> G2 iterative planning chain.
 - [tests.test_map_contract_wiring](tests.test_map_contract_wiring/INDEX.md) (27 entities, 11 holes): The map-first contract as it is actually SERVED to a Commander run.
 - [tests.test_map_orient](tests.test_map_orient/INDEX.md) (125 entities, 91 holes): The falsification floor for scripts/map_orient.py.
-- [tests.test_mcp_adoption](tests.test_mcp_adoption/INDEX.md) (62 entities, 30 holes): Adoption gate for the MCP door (issue #542 criterion 1, epic-418-followon g4a).
+- [tests.test_mcp_adoption](tests.test_mcp_adoption/INDEX.md) (64 entities, 32 holes): Adoption gate for the MCP door (issue #542 criterion 1, epic-418-followon g4a).
 - [tests.test_mcp_friction_capture](tests.test_mcp_friction_capture/INDEX.md) (23 entities, 12 holes): Tests for the MCP door's own rejection capture (issue #541, epic-418-followon wave 2, gate g2).
 - [tests.test_mcp_identity](tests.test_mcp_identity/INDEX.md) (65 entities, 23 holes): DC2 (separation) and DC3 (inheritance fails closed) acceptance tests for the MCP front door (issue #424, workstream F, gate g3).
 - [tests.test_mcp_imperative_equivalence](tests.test_mcp_imperative_equivalence/INDEX.md) (23 entities, 12 holes): DC4 acceptance test for the MCP front door (issue #424, workstream F, gate g2): the CLI projection and the MCP tool result carry the SAME imperative text for EV

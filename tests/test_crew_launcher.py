@@ -3,6 +3,8 @@ import contextlib
 import io
 import json
 import os
+import shlex
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -100,6 +102,51 @@ def no_ambient_spine_env():
                 os.environ[k] = v
 
 
+INSTALLER_PY = ROOT / "scripts" / "install_constellation.py"
+
+
+class InstalledBundleTests(unittest.TestCase):
+    """#559 pass 3, blocker 1: `2152ded3` added `import install_constellation`
+    at module scope in `run_crew.py` (#539's `assert_shell_safe_command`), but
+    no bundle carrying `run_crew.py` shipped `install_constellation.py` as a
+    companion -- every installed Commander and Explorer raised
+    `ModuleNotFoundError` at import, before argparse ever ran, and could
+    launch no crew at all. Reproduced two-sidedly against real installs.
+
+    These build a REAL installed bundle through the installer itself (never a
+    hand-picked file copy, which could pass by accident) and run the
+    INSTALLED `run_crew.py --help` as a real subprocess -- only a real
+    subprocess proves the import resolves in the tree the installer actually
+    produces."""
+
+    def _installed_run_crew_help(self, skill: str, installed_name: str) -> subprocess.CompletedProcess:
+        installer = load_module("install_constellation", INSTALLER_PY)
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "skills"
+            rc = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                 "--skills", skill],
+                env={}, out=lambda _line: None,
+            )
+            self.assertEqual(0, rc)
+            run_crew = dest / installed_name / "scripts" / "run_crew.py"
+            self.assertTrue(run_crew.is_file(), f"{run_crew} was not installed")
+            return subprocess.run(
+                [sys.executable, str(run_crew), "--help"],
+                capture_output=True, text=True,
+            )
+
+    def test_installed_commander_bundle_run_crew_help_works(self):
+        result = self._installed_run_crew_help("commander", "constellation-commander")
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertNotIn("ModuleNotFoundError", result.stderr)
+
+    def test_installed_explorer_bundle_run_crew_help_works(self):
+        result = self._installed_run_crew_help("explorer", "constellation-explorer")
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertNotIn("ModuleNotFoundError", result.stderr)
+
+
 class SessionNameTests(unittest.TestCase):
     def test_session_name_is_deterministic(self):
         name = RC.session_name("issue-420", "g2", "reviewer", 1)
@@ -169,6 +216,229 @@ class SessionNameTests(unittest.TestCase):
         tools = argv[tools_idx + 1:]
         for expected in ("Bash", "Read", "Write", "Edit", "mcp__spine__spine_advance"):
             self.assertIn(expected, tools)
+
+    def test_build_crew_argv_adds_settings_before_allowed_tools(self):
+        # --settings must land BEFORE --allowedTools so the open-ended
+        # `argv[tools_idx + 1:]` slice other tests use to read "the granted
+        # tools" is never polluted by an unrelated flag.
+        argv = RC.build_crew_argv(
+            "claude", role="implementer", handoff="h.md", model=None, session="s",
+        )
+        self.assertIn("--settings", argv)
+        self.assertLess(argv.index("--settings"), argv.index("--allowedTools"))
+
+
+class SpineOwnershipPromptTests(unittest.TestCase):
+    """Issue #559: a dispatched crew's whole job used to be "read this
+    document". These pin the pre-#559 handoff prompt byte for byte (the
+    CONTROL) and the new spine-carried branch that replaces the CLI-fallback
+    instruction with a direct instruction to drive the bound spine."""
+
+    def test_control_handoff_branch_is_byte_identical_to_the_pre_559_prompt(self):
+        # CONTROL, recorded verbatim against a1-control: today's -- i.e.
+        # pre-#559 -- prompt names the handoff path and never mentions the
+        # spine or spine_status anywhere.
+        argv = RC.build_crew_argv(
+            "claude", role="reviewer", handoff="/abs/g2-reviewer.md",
+            model=None, session="s",
+        )
+        prompt = argv[2]
+        self.assertEqual(
+            "You are the constellation reviewer crew for session s. "
+            "Read the handoff at /abs/g2-reviewer.md and execute it exactly. "
+            "The run is only complete when the result artifact the handoff names exists.",
+            prompt,
+        )
+        self.assertNotIn("spine", prompt.lower())
+
+    def test_handoff_branch_unaffected_by_an_also_bound_spine(self):
+        # A crew given BOTH a handoff and a spine (today's normal combined
+        # dispatch, e.g. this very implementer run) still gets the handoff
+        # prompt, byte for byte: the new branch only fires when handoff is
+        # ABSENT, not merely when a spine happens to also be bound.
+        with_spine = RC.build_crew_argv(
+            "claude", role="reviewer", handoff="/abs/g2-reviewer.md",
+            spine="/abs/spine.json", model=None, session="s",
+        )
+        without_spine = RC.build_crew_argv(
+            "claude", role="reviewer", handoff="/abs/g2-reviewer.md",
+            model=None, session="s",
+        )
+        self.assertEqual(without_spine[2], with_spine[2])
+
+    def test_spine_only_branch_names_no_document_and_names_spine_status(self):
+        argv = RC.build_crew_argv(
+            "claude", role="implementer", handoff=None,
+            spine="/abs/.agent-work/w/IMPLEMENTER_PLAN.json",
+            model=None, session="constellation/w/g1/implementer/attempt-1",
+        )
+        prompt = argv[2]
+        self.assertNotIn("/abs/.agent-work/w/IMPLEMENTER_PLAN.json", prompt)
+        self.assertNotIn(".json", prompt)
+        self.assertNotIn(".md", prompt)
+        self.assertIn("spine_status", prompt)
+        self.assertIn("constellation/w/g1/implementer/attempt-1", prompt)
+
+    def test_spine_only_branch_tells_crew_not_to_author_its_own_plan(self):
+        argv = RC.build_crew_argv(
+            "claude", role="implementer", handoff=None, spine="/abs/spine.json",
+            model=None, session="s",
+        )
+        self.assertIn("do not author a plan", argv[2].lower())
+
+    def test_neither_handoff_nor_spine_is_refused(self):
+        with self.assertRaises(RC.CrewLaunchError):
+            RC.build_crew_argv(
+                "claude", role="implementer", handoff=None, spine=None,
+                model=None, session="s",
+            )
+
+
+class WaiveHookTests(unittest.TestCase):
+    """Ruling (human, verbatim): "agent cannot waive itself... always ask up."
+    A crew keeps `mcp__spine__spine_evidence` (attest/attach still need it),
+    but a PreToolUse hook denies the one action inside it -- `waive` -- that
+    would let a crew close its own bound spine's check. These invoke the exact
+    hook command `build_crew_argv` embeds, piping fake tool-call JSON at it, so
+    the behavior is checked without spawning a real agent CLI."""
+
+    def _run_hook(self, action: str) -> dict:
+        argv = RC.build_crew_argv(
+            "claude", role="implementer", handoff="h.md", model=None, session="s",
+        )
+        settings = json.loads(argv[argv.index("--settings") + 1])
+        pre_tool_use = settings["hooks"]["PreToolUse"][0]
+        self.assertEqual("mcp__spine__spine_evidence", pre_tool_use["matcher"])
+        hook = pre_tool_use["hooks"][0]
+        command = hook["command"]
+        self.assertEqual("command", hook["type"])
+        self.assertEqual("bash", hook["shell"])
+        # `command` is `<quoted sys.executable> -c '<script>'`; extract
+        # `<script>` rather than asking a shell to parse the quoting, so this
+        # test does not depend on a shell being on PATH the same way the real
+        # hook runner does.
+        prefix = f"{shlex.quote(sys.executable)} -c '"
+        self.assertTrue(command.startswith(prefix))
+        self.assertTrue(command.endswith("'"))
+        script = command[len(prefix):-1]
+        proc = subprocess.run(
+            [sys.executable, "-c", script],
+            input=json.dumps({
+                "tool_name": "mcp__spine__spine_evidence",
+                "tool_input": {"action": action, "task_id": "g1"},
+            }),
+            capture_output=True, text=True,
+        )
+        self.assertEqual(0, proc.returncode, proc.stderr)
+        return json.loads(proc.stdout)
+
+    def test_waive_is_denied(self):
+        out = self._run_hook("waive")
+        specific = out["hookSpecificOutput"]
+        self.assertEqual("deny", specific["permissionDecision"])
+        self.assertIn("spine_halt", specific["permissionDecisionReason"])
+        self.assertIn("block", specific["permissionDecisionReason"].lower())
+
+    def test_attest_carries_no_opinion(self):
+        self.assertEqual({}, self._run_hook("attest"))
+
+    def test_attach_carries_no_opinion(self):
+        self.assertEqual({}, self._run_hook("attach"))
+
+    def test_waive_deny_reason_has_no_apostrophe(self):
+        # The reason string is interpolated into a single-quoted shell command
+        # (`crew_settings_json`); a literal apostrophe would terminate that
+        # quoting early and corrupt the emitted hook command.
+        self.assertNotIn("'", RC.WAIVE_DENY_REASON)
+
+
+class HookPortabilityTests(unittest.TestCase):
+    """#539: a hardcoded `python3` fails OPEN, not loud, on a host where that
+    name is not on PATH -- the hook command cannot run, the harness treats a
+    non-JSON/erroring hook as no opinion, and a crew can waive its own bound
+    spine check with nothing to say so. The fix names no interpreter but
+    `sys.executable` (this process's own, present by construction) and pins
+    `shell: bash` so the single-quoted inline program survives a non-POSIX
+    parse."""
+
+    def _hook_entry(self) -> dict:
+        settings = json.loads(RC.crew_settings_json())
+        return settings["hooks"]["PreToolUse"][0]["hooks"][0]
+
+    def test_hook_interpreter_is_sys_executable_not_a_hardcoded_name(self):
+        command = self._hook_entry()["command"]
+        interpreter = shlex.split(command)[0]
+        self.assertEqual(sys.executable, interpreter)
+        self.assertNotIn(interpreter, ("python3", "python", "py"))
+
+    def test_hook_entry_carries_shell_bash(self):
+        # Matches every hook entry in this repo's own .claude/settings.json:
+        # without it, `shlex.split(cmd, posix=False)` leaves the quotes on and
+        # a non-POSIX shell (cmd.exe) reads a program starting with an
+        # apostrophe and dies -- another silent fail-open.
+        self.assertEqual("bash", self._hook_entry()["shell"])
+
+    def test_crew_settings_json_actually_calls_the_shell_safety_guard(self):
+        # Proves the guard is wired in, not decorative dead code: force it to
+        # raise and confirm `crew_settings_json` propagates that failure
+        # instead of swallowing it or never calling it.
+        original = RC.install_constellation.assert_shell_safe_command
+
+        def boom(command):
+            raise RC.install_constellation.InstallError("forced for test")
+
+        RC.install_constellation.assert_shell_safe_command = boom
+        try:
+            with self.assertRaises(RC.install_constellation.InstallError):
+                RC.crew_settings_json()
+        finally:
+            RC.install_constellation.assert_shell_safe_command = original
+
+
+class CrewGrantTiesToDoorTests(unittest.TestCase):
+    """`CREW_ALLOWED_TOOLS` used to restate the door's tool names by hand and
+    froze at 7 while `mcp_spine_server.TOOLS` grew to 9 -- two tools silently
+    denied to every crew. This ties the two lists so that drift fails loudly
+    instead of reading as an agent's CLI preference."""
+
+    def _load_mcp_spine_server(self, scratch_root: Path):
+        spine_file = scratch_root / "scratch-spine.json"
+        spine_file.write_text("{}", encoding="utf-8")
+        saved = {k: os.environ.get(k) for k in ("SPINE_FILE", "SPINE_ENGINE", "SPINE_SESSION")}
+        os.environ["SPINE_FILE"] = str(spine_file)
+        os.environ["SPINE_ENGINE"] = str(ROOT / "scripts" / "checklist_engine.py")
+        os.environ.setdefault("SPINE_SESSION", "")
+        try:
+            # A fresh module name each call: mcp_spine_server reads SPINE_FILE
+            # at IMPORT time, so a cached `sys.modules` entry would carry a
+            # stale binding on a second load in the same test process.
+            return load_module("mcp_spine_server_tie_check", ROOT / "scripts" / "mcp_spine_server.py")
+        finally:
+            for k, v in saved.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+
+    def test_crew_grant_mcp_entries_equal_the_doors_own_tool_names(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            server = self._load_mcp_spine_server(Path(tmp))
+        door_tools = {f"mcp__spine__{name}" for name in server.TOOL_NAMES}
+        grant_tools = {t for t in RC.CREW_ALLOWED_TOOLS if t.startswith("mcp__spine__")}
+        self.assertEqual(
+            door_tools, grant_tools,
+            "CREW_ALLOWED_TOOLS's mcp__spine__* entries have drifted from "
+            "mcp_spine_server.TOOL_NAMES -- a tool the door added (or removed) "
+            "is not reflected in the crew grant"
+        )
+
+    def test_door_has_all_nine_tools_todays_grant_expects(self):
+        # CONTROL for the tie test above: pins the count so a future door
+        # regression (e.g. a tool silently dropped) cannot slip through by
+        # shrinking BOTH sides of the comparison in lockstep.
+        with tempfile.TemporaryDirectory() as tmp:
+            server = self._load_mcp_spine_server(Path(tmp))
+        self.assertEqual(9, len(server.TOOL_NAMES))
 
 
 class CliDriftHintTests(unittest.TestCase):
@@ -598,6 +868,297 @@ class DispatchDoorBindingTests(unittest.TestCase):
             env = calls[0]["env"]
             self.assertNotIn("SPINE_FILE", env)
             self.assertNotIn("SPINE_SESSION", env)
+
+
+class SpineOnlyDispatchTests(unittest.TestCase):
+    """Issue #559: `--handoff` becomes optional -- a crew with a bound `--spine`
+    and no `--handoff` is a legal dispatch on the cli backend, refused only when
+    NEITHER is given. The external backend keeps requiring a handoff (it cannot
+    bind a spine, so a spine-only dispatch there would leave the crew with no
+    job at all)."""
+
+    def test_cli_backend_spine_only_dispatch_records_null_handoff(self):
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = result_rel("issue-1", "g1", "implementer")
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            (root / spine_rel).parent.mkdir(parents=True, exist_ok=True)
+            (root / spine_rel).write_text("{}", encoding="utf-8")
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                exit_code, entry = RC.launch_crew(
+                    work_id="issue-1", gate="g1", role="implementer",
+                    handoff=None, result=result, spine=spine_rel,
+                    worktree=".", model=None, launcher="claude", attempt=1,
+                    root=root, entries=[],
+                )
+            self.assertEqual(0, exit_code)
+            self.assertIsNone(entry["handoff"])
+            reg = RC.load_registry(RC.registry_path("issue-1", root))
+            self.assertIsNone(reg[0]["handoff"])
+            prompt = calls[0]["argv"][2]
+            self.assertIn("spine_status", prompt)
+            self.assertNotIn(spine_rel, prompt)
+
+    def test_cli_backend_neither_handoff_nor_spine_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = result_rel("issue-1", "g1", "implementer")
+            with self.assertRaises(RC.CrewLaunchError):
+                RC.launch_crew(
+                    work_id="issue-1", gate="g1", role="implementer",
+                    handoff=None, result=result, spine=None,
+                    worktree=".", model=None, launcher="claude", attempt=1,
+                    root=root, entries=[],
+                )
+
+    def test_main_cli_neither_handoff_nor_spine_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = result_rel("issue-1", "g1", "implementer")
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                code = RC.main([
+                    "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                    "--role", "implementer", "--result", result,
+                ])
+            self.assertEqual(1, code)
+            self.assertIn("REFUSED", stderr.getvalue())
+            self.assertEqual([], RC.load_registry(RC.registry_path("issue-1", root)))
+
+    def test_main_cli_spine_only_dispatch_with_result_still_succeeds(self):
+        # `--result` and `--spine` may both be given (existing behavior, kept
+        # byte-identical): completion is judged on the result artifact, exactly
+        # as before spine-only dispatch existed at all.
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = result_rel("issue-1", "g1", "implementer")
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            (root / spine_rel).parent.mkdir(parents=True, exist_ok=True)
+            (root / spine_rel).write_text("{}", encoding="utf-8")
+            with fake_launch(RC, 0, write_result_at=root / result):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--result", result, "--spine", spine_rel,
+                    ])
+            self.assertEqual(0, code)
+            self.assertIsNone(RC.load_registry(RC.registry_path("issue-1", root))[0]["handoff"])
+
+    def test_resume_of_spine_only_entry_does_not_crash_on_null_handoff(self):
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = result_rel("issue-1", "g1", "implementer")
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            (root / spine_rel).parent.mkdir(parents=True, exist_ok=True)
+            (root / spine_rel).write_text("{}", encoding="utf-8")
+            with fake_launch(RC, 0, write_result_at=root / result):
+                RC.launch_crew(
+                    work_id="issue-1", gate="g1", role="implementer",
+                    handoff=None, result=result, spine=spine_rel,
+                    worktree=".", model=None, launcher="claude", attempt=1,
+                    root=root, entries=[],
+                )
+            entries = RC.load_registry(RC.registry_path("issue-1", root))
+            session = entries[0]["session_name"]
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                exit_code, entry = RC.resume_crew(session=session, root=root, entries=entries)
+            self.assertEqual(0, exit_code)
+            self.assertIsNone(entry["handoff"])
+            prompt = calls[0]["argv"][2]
+            self.assertIn("spine_status", prompt)
+
+    def test_external_backend_refuses_spine_only_with_no_handoff(self):
+        # A spine-only dispatch on `external` would leave the crew with no job
+        # at all: the backend cannot bind a spine (spawns no process), and now
+        # there is also no handoff document to read.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            result = result_rel("issue-1", "g1", "implementer")
+            with self.assertRaises(RC.CrewLaunchError):
+                RC.record_external_attempt(
+                    work_id="issue-1", gate="g1", role="implementer",
+                    handoff=None, result=result, spine=spine_rel,
+                    worktree=".", model=None, attempt=1, root=root, entries=[],
+                )
+
+
+def _write_spine(path: Path, *, done: bool) -> None:
+    """A minimal `checklist_engine`-shaped spine with one item, `complete` when
+    `done` else `pending` -- just enough for `checklist_engine.active_id` to
+    read a real terminal/non-terminal state."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({
+        "work_id": "issue-1",
+        "type": "gated",
+        "items": ["w1"],
+        "tasks": {"w1": {"id": "w1", "status": "complete" if done else "pending"}},
+    }), encoding="utf-8")
+
+
+def _write_survey_spine(path: Path, *, consolidation) -> None:
+    """A minimal `checklist_engine`-shaped SURVEY spine (reviewer/interrogator
+    shape): every item recorded terminal, `consolidation` set to whatever the
+    caller passes (`None` for "no verdict yet")."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({
+        "work_id": "issue-1",
+        "type": "survey",
+        "items": ["i1", "i2"],
+        "tasks": {
+            "i1": {"id": "i1", "status": "complete", "result": "pass"},
+            "i2": {"id": "i2", "status": "complete", "result": "pass"},
+        },
+        "consolidation": consolidation,
+    }), encoding="utf-8")
+
+
+class SurveyTerminalTests(unittest.TestCase):
+    """#559 pass 3, blocker 2: `spine_terminal` answered a survey question
+    with `checklist_engine.active_id`, which walks item statuses and never
+    looks at `consolidation`. A real reviewer crew's survey had every item
+    recorded and NO consolidation, and `run_crew` recorded it `completed` --
+    a Commander told the review is done when no verdict exists anywhere, in
+    the one role whose entire deliverable IS the verdict."""
+
+    def test_survey_with_every_item_recorded_but_no_consolidation_is_not_terminal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/REVIEW_SURVEY.json"
+            _write_survey_spine(root / spine_rel, consolidation=None)
+            self.assertFalse(RC.spine_terminal(spine_rel, root))
+
+    def test_survey_with_consolidation_recorded_is_terminal(self):
+        # Positive control: same spine, ONLY consolidation differs -- proves
+        # the check is a real read of `consolidation`, not a tautology that
+        # always refuses a survey.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/REVIEW_SURVEY.json"
+            _write_survey_spine(
+                root / spine_rel,
+                consolidation={"verdict": "APPROVE", "summary": "both items pass"},
+            )
+            self.assertTrue(RC.spine_terminal(spine_rel, root))
+
+
+class MalformedSpineTests(unittest.TestCase):
+    """#559 pass 3, blocker 2 (same function, smaller): `spine_terminal`
+    returned `True` for `{}` and `{"items": []}`, directly contradicting its
+    own docstring -- "a missing/unparseable/malformed spine is never
+    terminal". `checklist_engine.active_id` walks `cl.get("items", [])`, so a
+    missing/empty `items` list finds no non-terminal item and returns `None`
+    -- terminal by vacuity. Missing files and unparseable JSON already
+    correctly returned `False` (covered by `SpineOnlyCompletionContractTests`
+    above); this pins the valid-JSON-wrong-shape leak specifically."""
+
+    def test_empty_dict_spine_is_not_terminal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/EMPTY.json"
+            path = root / spine_rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("{}", encoding="utf-8")
+            self.assertFalse(RC.spine_terminal(spine_rel, root))
+
+    def test_empty_items_list_spine_is_not_terminal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/EMPTY_ITEMS.json"
+            path = root / spine_rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps({"items": []}), encoding="utf-8")
+            self.assertFalse(RC.spine_terminal(spine_rel, root))
+
+
+class SpineOnlyCompletionContractTests(unittest.TestCase):
+    """Issue #559 job 2: a spine-only crew (no `--result`) is judged on its
+    BOUND SPINE reaching a terminal state, not on a result artifact it was
+    never told to write. The reviewer's probe crew drove its spine to done,
+    released the lease, exited 0 -- and the launcher recorded it `failed`
+    because `--result` was hard-required and nothing wrote it. These tests
+    never pass `write_result_at`: the real crew is never told to write a
+    result, so a covering test that writes one anyway would pass for a reason
+    that does not exist in production."""
+
+    def test_spine_only_success_is_not_recorded_failed(self):
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            _write_spine(root / spine_rel, done=True)
+            with fake_launch(RC, 0):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--spine", spine_rel,
+                    ])
+            self.assertEqual(0, code)
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("completed", entry["status"])
+            self.assertFalse(entry["result_present"])
+
+    def test_spine_only_dispatch_with_open_gate_is_recorded_failed(self):
+        # Same "no result artifact ever written" setup as the success case
+        # above -- ONLY the spine's terminal-ness differs. Proves the check is
+        # a real read of the spine, not a tautology that always passes a
+        # spine-only dispatch.
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            _write_spine(root / spine_rel, done=False)
+            with fake_launch(RC, 0):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--spine", spine_rel,
+                    ])
+            self.assertEqual(1, code)
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("failed", entry["status"])
+
+    def test_spine_only_dispatch_honors_nonzero_exit_even_when_spine_terminal(self):
+        # A terminal spine alone must not paper over a crashed child: exit
+        # code still matters.
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            _write_spine(root / spine_rel, done=True)
+            with fake_launch(RC, 3):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--spine", spine_rel,
+                    ])
+            self.assertEqual(3, code)
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("failed", entry["status"])
+
+    def test_spine_only_dispatch_with_no_spine_file_at_all_is_recorded_failed(self):
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"  # never written
+            with fake_launch(RC, 0):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--spine", spine_rel,
+                    ])
+            self.assertEqual(1, code)
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("failed", entry["status"])
+
+    def test_main_cli_refuses_neither_result_nor_spine(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                code = RC.main([
+                    "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                    "--role", "implementer", "--handoff", "h.md",
+                ])
+            self.assertEqual(1, code)
+            self.assertIn("REFUSED", stderr.getvalue())
+            self.assertEqual([], RC.load_registry(RC.registry_path("issue-1", root)))
 
 
 class AssignmentKeyedLeaseTests(unittest.TestCase):

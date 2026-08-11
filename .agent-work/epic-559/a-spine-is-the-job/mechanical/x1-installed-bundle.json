@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "x1-installed-bundle",
+  "mechanical": {
+    "run": "epic-559/a-spine-is-the-job",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "x1-installed-bundle",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/a-spine-is-the-job-x1-installed-bundle@08423991c5bacc97a613a7b745b4a3d2d64b04ec",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/a-spine-is-the-job",
+    "generated_at": "2026-08-11T06:53:37Z"
+  }
+}

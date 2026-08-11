@@ -8,6 +8,7 @@ import json
 import subprocess
 import sys
 import tempfile
+import tokenize
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -1366,6 +1367,28 @@ class InterpreterProbeTests(unittest.TestCase):
         self.assertEqual("os-default-fallback", resolution.as_sidecar()["resolved_via"])
 
 
+def _without_comments(src: str) -> str:
+    """`src` with every `#` comment's text blanked out (line/column preserved).
+
+    Mechanism 1 below (`_direct_runtime_siblings`) regex-scans raw text for a
+    dynamic-load SHAPE; without this it cannot tell a line of code performing
+    a load from a `#`-comment merely describing one elsewhere. `tokenize`
+    (not a naive `line.split('#', 1)`) is what makes that distinction safe: a
+    `#` inside a string literal is not a comment, and only `tokenize` knows
+    the difference."""
+    lines = src.splitlines(keepends=True)
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(src).readline):
+            if tok.type == tokenize.COMMENT:
+                row, col = tok.start
+                line = lines[row - 1]
+                trailing = line[len(line.rstrip("\r\n")):]
+                lines[row - 1] = line[:col] + trailing
+    except (tokenize.TokenizeError, SyntaxError, IndentationError):
+        pass
+    return "".join(lines)
+
+
 def _direct_runtime_siblings(module_path: Path, scripts_root: Path) -> set[str]:
     """Sibling modules under scripts/ that `module_path` can reach at runtime.
 
@@ -1385,9 +1408,20 @@ def _direct_runtime_siblings(module_path: Path, scripts_root: Path) -> set[str]:
     counts only if `scripts/<name>.py` actually exists -- that single test is
     what separates a co-located sibling from stdlib/third-party without a
     hand-kept denylist that could rot.
+
+    Mechanism 1's regex scans TEXT, so it has to be run against source with
+    comments blanked out (#559 pass 3): `install_constellation.py` merely
+    DESCRIBES the engine's and the hook's dynamic loads in a `#`-comment
+    (`# checklist_engine._load_gauge_reader() -> Path(__file__).parent/
+    "gauge_reader.py"`), and an unfiltered scan misread that prose as
+    `install_constellation.py` itself performing the load -- a false sibling
+    that then dragged `gauge_reader.py` into every script transitively
+    reaching `install_constellation.py`, once this helper was generalized
+    beyond the two modules whose own source happened to carry no such
+    commentary about itself.
     """
     src = module_path.read_text(encoding="utf-8")
-    names = set(re.findall(r'parent\s*/\s*"([A-Za-z0-9_]+\.py)"', src))
+    names = set(re.findall(r'parent\s*/\s*"([A-Za-z0-9_]+\.py)"', _without_comments(src)))
     for node in ast.walk(ast.parse(src)):
         if isinstance(node, ast.Import):
             for alias in node.names:
@@ -1583,6 +1617,73 @@ class RuntimeCompanionBundleTests(unittest.TestCase):
                         sys.modules.pop(name, None)
                     else:
                         sys.modules[name] = prior
+
+
+class CompanionGuardCoversEveryScriptTests(unittest.TestCase):
+    """#559 pass 3: the guard above (`test_engine_runtime_siblings_are_declared_
+    as_companions`) reads `SCRIPT_RUNTIME_COMPANIONS.get('checklist_engine.py', ())`
+    -- a LITERAL, so it watches exactly one script. `gauge_writer_hook.py` got its
+    own, separately hand-written copy of the same check. Neither generalizes, so
+    when `run_crew.py` grew a bare module-scope `import install_constellation`
+    (#539's `assert_shell_safe_command`), the exact defect class this dict exists
+    to catch (a bundled script's runtime sibling shipping nowhere) recurred one
+    file over from where it is documented (`SCRIPT_RUNTIME_COMPANIONS` above), and
+    the suite stayed green: no test ever looked at `run_crew.py`. Every installed
+    Commander/Explorer bundle raised `ModuleNotFoundError` at import, before
+    argparse ever ran.
+
+    This test keys on every script actually bundled by any skill (derived from
+    `SKILL_SCRIPT_BUNDLES`, not a hand-picked name), and requires that whatever a
+    script reaches at runtime lands in the SAME skill's expanded bundle --
+    whether that arrival is via a declared `SCRIPT_RUNTIME_COMPANIONS` entry (the
+    mechanism the neighbour import needed) or an explicit hand-listed sibling
+    already sharing the bundle (the mechanism `checklist_engine.py` already used,
+    correctly, before this pass). Either is a real ship; only an absence is a bug."""
+
+    SCRIPTS_ROOT = ROOT / "scripts"
+
+    def test_every_bundled_script_ships_its_runtime_closure(self):
+        installer = load_installer()
+        bundled_scripts = sorted({
+            script
+            for scripts in installer.SKILL_SCRIPT_BUNDLES.values()
+            for script in scripts
+        })
+        self.assertTrue(bundled_scripts, "no skill bundles any script?")
+        checked = 0
+        for name, scripts in installer.SKILL_SCRIPT_BUNDLES.items():
+            expanded = set(installer.expand_script_bundle(scripts))
+            for script in scripts:
+                # `_direct_runtime_siblings`/`engine_runtime_closure` read
+                # source and resolve sibling existence directly under
+                # `scripts_root`, so they only see the FLAT layout most
+                # scripts live in. A script whose source is a subdirectory
+                # (`SCRIPT_SOURCE_SUBDIRS`, today just the hook pair) is
+                # covered by its own dedicated, layout-aware check in
+                # `HookScriptBundleTests` below instead of being silently
+                # skipped as "no runtime siblings".
+                if script in installer.SCRIPT_SOURCE_SUBDIRS:
+                    continue
+                reachable = engine_runtime_closure(script, self.SCRIPTS_ROOT)
+                if not reachable:
+                    continue
+                checked += 1
+                missing = reachable - expanded
+                with self.subTest(skill=name, script=script):
+                    self.assertEqual(
+                        set(), missing,
+                        f"{script!r} (bundled by skill {name!r}) reaches "
+                        f"{sorted(missing)} at runtime, but that skill's expanded "
+                        f"bundle does not ship {sorted(missing)} -- installed, "
+                        f"{script!r}'s import of it fails",
+                    )
+        self.assertGreater(
+            checked, 0,
+            "no bundled script reached any local sibling at runtime -- this test "
+            "would pass vacuously; the fixture premise (run_crew.py -> "
+            "install_constellation.py, checklist_engine.py -> gauge_reader.py) "
+            "changed",
+        )
 
 
 class HookScriptBundleTests(unittest.TestCase):

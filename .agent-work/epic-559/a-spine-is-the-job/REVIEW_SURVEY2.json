@@ -1,0 +1,276 @@
+{
+  "work_id": "epic-559/a-spine-is-the-job",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "v1-blocked-is-not-complete",
+    "v2-real-spine-only-run",
+    "v3-engine-import",
+    "v4-hook-still-fails-open",
+    "v5-no-regression"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, REVIEW_HANDOFF2.md, and the branch diff (6 files, +814/-93 vs main@9d593e0a). Under review: 554c553a (spine_terminal completion contract), 2152ded3 (hook portability), 99336f96 (map regen). CREW_CONTEXT pins this host: `python` has pytest 9.1.1, `python3` does not \u2014 matches the handoff's test mode.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Both requested fixes are present and demonstrated. (1) `--result` is optional wherever `--spine` is given (CrewSpec, build_entry, finalize_from_exit_code, argparse), and completion for a spine-only dispatch is `spine_terminal` \u2014 proven live by a real dispatch recorded `completed` with `handoff: null, result: null` (v2). (2) The hook emits `shlex.quote(sys.executable)` with `\"shell\": \"bash\"`, and the bare `assert` on WAIVE_DENY_REASON now raises. The delivery is what was asked. Its cost is recorded under v3/v4/v5, which own the regressions it introduced.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All five hard no-gos confirmed by `git diff --name-only 9d593e0a..HEAD`: the branch touches only map/INDEX.md, scripts/run_crew.py, skills/{implementer,reviewer}/SKILL.md, tests/test_crew_launcher.py, tests/test_mcp_adoption.py. checklist_engine.py, mcp_spine_server.py, settings.json, docs/agents/*, and skills/*/templates/ are all untouched. No push to main: `git log origin/main..HEAD` shows the four branch commits ahead of origin/main@9d593e0a and nothing on main moved. The two SKILL.md edits are the spine-is-bound paragraph, not the regenerated `skills/<role>/references/` copies CREW_CONTEXT forbids editing.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "The evidence present is honest \u2014 SpineOnlyCompletionContractTests never writes a result artifact and carries a real negative control (open gate -> failed) plus exit-code and missing-file controls; HookPortabilityTests proves the shell-safety guard is wired by forcing it to raise. Suite is green: 2556 passed, 1 skipped, 1101 subtests. map/INDEX.md reproduces byte-exact from `python -m scripts.code_map build --root .` (clean `git status map/`). What is MISSING is evidence for every state the completion decider can actually reach. `_write_spine(done=False)` only ever produces `pending`. Nothing covers: a `blocked` spine, a `skipped` spine, a `survey`-typed spine with no consolidation, or a structurally-malformed spine \u2014 and the last two are false-positive completions I reproduced (v1). Nothing covers importing run_crew from an installed skill bundle (v3, a hard regression) or a `sys.executable` containing a space (v4/v5, dispatch dies). Four of the five states the change's own docstring makes claims about are untested.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Rule-by-rule against the inherited rules. PASS \u2014 \"assert against behaviour, never text\": the new tests assert registry status and hook stdout, not message strings. PASS \u2014 \"a check that cannot fail\": the spine-only test is proven two-sided by its open-gate control. PASS \u2014 \"record stores never hand-edited\": every probe went through engine verbs. PASS \u2014 \"encoding/newline on writes\": no new file writes. FAIL \u2014 global-everyone.md \"enumerate the blast radius of your own change, by command, never by memory\": 2152ded3 added `import install_constellation` at module scope to run_crew.py and did not enumerate who ships run_crew.py. install_constellation.py:80-88 states this exact rule in the repo's own words \u2014 \"if a script reaches a sibling by `sys.path.insert` + a plain import, ship that sibling too, or the feature silently no-ops wherever the skill is actually installed\" \u2014 and records that the last drift of this kind left the Context Governor inert in every install since it shipped. No `\"run_crew.py\": (...)` entry was added to SCRIPT_RUNTIME_COMPANIONS, and the guard test is hardcoded to `SCRIPT_RUNTIME_COMPANIONS.get(\"checklist_engine.py\", ())`, so it structurally cannot catch a sibling import added to any other script. The documented defect recurred one file over from where it was documented. FAIL \u2014 \"fail visibly, no hidden fallback\" is met in letter but the crew_settings_json docstring asserts \"`shlex.quote` covers an interpreter path containing spaces\" when it produces the opposite outcome (v4).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "map/INDEX.md is current: I re-ran `python -m scripts.code_map build --root .` and `git status map/` is clean, so the recorded entity counts (scripts.run_crew 53->55) are reproduced, not asserted. No divergence from recorded architecture that Commander must reconcile. One durable-context item routes to Cartographer rather than blocking: the launcher now depends on `checklist_engine` and `install_constellation` at module scope, which is a new script->script edge the map's module-level INDEX does not express; if the companion declaration is added as part of the fix (v3), that edge becomes an install-time contract worth recording.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a .agent-work/epic-559/a-spine-is-the-job/FOWLER_PASS2.json placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like epic-559/a-spine-is-the-job on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-559/a-spine-is-the-job/FOWLER_PASS2.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Full Fowler pass recorded at .agent-work/epic-559/a-spine-is-the-job/FOWLER_PASS2.json; `python scripts/verify_fowler_pass.py` exits 0 (smells=12, flagged=6, overridden=1 with a logged standard). Six flagged: long-method, duplicated-code, feature-envy, long-parameter-list, shotgun-surgery, comments-as-deodorant. One override: primitive-obsession, subordinated to global-crew.md's no-speculative-abstraction standard. Two of the flags are load-bearing rather than stylistic. FEATURE ENVY: spine_terminal lives in run_crew.py but decides what \"terminal\" means for a checklist by calling a gated-spine-only API (active_id) that never reads `consolidation` \u2014 the caller could not see that limit from outside the seam, and that is exactly how the survey false positive (v1) got in. COMMENTS-AS-DEODORANT: two docstrings assert properties I disproved by running them \u2014 spine_terminal's \"a malformed spine is never terminal\" (`{}` returns True) and crew_settings_json's \"shlex.quote covers an interpreter path containing spaces\" (it makes the dispatch raise). The pass item passes; the smells it found feed the blocking findings rather than standing alone.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-559/a-spine-is-the-job/FOWLER_PASS2.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "v1-blocked-is-not-complete": {
+      "id": "v1-blocked-is-not-complete",
+      "title": "Does a crew that BLOCKS get recorded as completed?",
+      "imperative": "THE DECISIVE ITEM. Completion for a spine-only dispatch is now spine_terminal(), which returns True when checklist_engine.active_id(...) is None. A crew that hits a check it cannot satisfy is supposed to block and ask up (human ruling: 'always ask up'). Determine exactly what active_id returns for a spine whose gate is BLOCKED, HALTED, or skipped-with-refusals. If a blocked spine reads terminal, then a crew that correctly gave up is recorded as a clean success and the dispatching Commander is told the work is done. That is worse than the bug this rework fixed, and it is a BLOCK. Drive real spines into each of those states and report what happened.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "THE NAMED FEAR IS UNFOUNDED; TWO OTHER FALSE POSITIVES ARE REAL. checklist_engine.TERMINAL = {\"complete\",\"skipped\"} \u2014 `blocked` is NOT in it. I drove real spines through the engine CLI (justified below) and read spine_terminal on each: [A] all gates complete -> True. [B] g1 blocked mid-spine, g2 pending -> False. [C] g1 complete, LAST gate blocked -> False. So a crew that correctly blocks and asks up is recorded `failed`, not `completed`. The decisive question answers correctly and does not block. What DOES read terminal: [D] every gate `skipped` -> True. [E] g1 complete, g2's postcondition REFUSED then `skip`ped with a reason -> True. `skip` is in the crew tool grant (spine_halt), needs only a reason and no authority, so a crew that hits a check it cannot satisfy has a self-serve exit that records as clean success \u2014 against the human ruling \"always ask up\". Journaled with a mandatory reason and visible in the spine, so: observation + triage candidate, not the blocker. [F] BLOCKING, reproduced with a REAL DISPATCH: a `survey`-typed spine whose every item is recorded but which was never consolidated reads terminal True. Live run \u2014 `run_crew.py --role reviewer --spine SURVEY.json` with no --handoff/--result \u2014 registry: `status: completed, result: null`; survey: both items `complete`, `consolidation: None`. A reviewer crew that produced NO VERDICT is reported to the dispatching Commander as done, with the verdict nowhere. active_id only walks item statuses and never looks at `consolidation`; it is a gated-spine API used to answer a survey question. Reachability is high: --spine accepts any checklist type, the spine-only prompt is type-agnostic (\"Drive it gate by gate ... until it reports done\"), reviewer/interrogator checklists ARE surveys (this very survey is one), and reviewer/SKILL.md names stopping-before-consolidate as \"the single most common failure at this tier\". [G] Also terminal: `{}` and `{\"items\": []}` \u2014 directly contradicting spine_terminal's own docstring, \"A missing/unparseable/malformed spine is never terminal\". Genuinely-missing and unparseable files DO return False; it is the valid-JSON-wrong-shape case that leaks. CLI DISCLOSURE: probes ran through `scripts/checklist_engine.py` because my door is bound to my own survey via SPINE_FILE and cannot bind a scratch spine \u2014 a tooling limit, not a preference. Every claim about the branch's own behaviour came from run_crew and real dispatches.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "v2-real-spine-only-run": {
+      "id": "v2-real-spine-only-run",
+      "title": "Run a real spine-only crew and confirm it is now recorded completed",
+      "imperative": "The previous reviewer's probe found the failed-status bug by dispatching a real crew. Do it again against the fixed code: scratch spine, real dispatch with --spine and NO --handoff and no --result, and confirm the registry records completed. Then run the negative: a crew that leaves a gate open must still record failed. Both directions.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Both directions proven by real dispatches against the fixed code, no fakes. POSITIVE: scratch 1-gate spine, `python scripts/run_crew.py --work-id probe2-rev2 --gate p1 --role implementer --model sonnet --spine .../probe2/POS.json --backend cli` with NO --handoff and NO --result -> printed `crew constellation/probe2-rev2/p1/implementer/attempt-1 -> completed`. Registry entry: handoff null, result null, spine bound, exit_code 0, result_present false, result_fresh false, status completed. The crew really drove the spine: g1 complete with c1 satisfied, and it wrote the file the imperative asked for (pos.txt = PROBE-POS-OK). This is the round-1 bug, now fixed and reproduced live \u2014 the same shape that was recorded `failed` before. NEGATIVE: 2-gate spine whose g2 imperative told the crew to leave the gate pending -> `crew .../p2neg/implementer/attempt-1 -> failed`, exit_code 0, spine statuses {g1: complete, g2: pending}. So the launcher recorded `failed` on a child that exited 0, purely on the spine read. The check is not a check that cannot fail.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "v3-engine-import": {
+      "id": "v3-engine-import",
+      "title": "run_crew.py now imports checklist_engine at module scope",
+      "imperative": "New coupling between the launcher and the engine. The last module-scope import question in this wave was load-bearing -- importing mcp_spine_server requires a bound spine because it reads SPINE_FILE at import. Check what checklist_engine does at import time, whether run_crew can still be imported and run in every context that used to work (installed skills, a bare checkout, no spine bound), and whether any import cycle exists.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "BLOCKING REGRESSION \u2014 but not the import the item names. `checklist_engine` is clean at import: stdlib-only top-level imports, no os.environ/SPINE_FILE read at module scope (grep finds none), no reference to run_crew so no cycle, and it IS an explicitly listed companion of both bundles that ship run_crew.py. The load-bearing one is its neighbour. The SAME commit (2152ded3) also added `import install_constellation` at module scope \u2014 and install_constellation.py is NOT in any bundle that carries run_crew.py. Proven by running the real installer, not by reading it: `python scripts/install_constellation.py --agent claude --scope project --dest /tmp/instsim/skills --skills commander --force` produces a scripts/ dir with checklist_engine.py and no install_constellation.py; invoking that installed launcher from an unrelated directory gives `ModuleNotFoundError: No module named 'install_constellation'` at run_crew.py line 43, exit 1, before argparse. Same for the explorer bundle. TWO-SIDED: I installed main@9d593e0a the same way and ran the identical command \u2014 usage text, exit 0. So run_crew.py works from an installed skill on main and is dead on this branch. This is not a corner: global-everyone.md tells every role to \"reference bundled scripts by their absolute installed path\", and the Commander skill's standing instruction is to run every crew dispatch through run_crew.py. Commander and Explorer cannot launch any crew from an installed install. It survives the suite because the companion guard is hardcoded \u2014 tests/test_install_constellation.py reads `SCRIPT_RUNTIME_COMPANIONS.get(\"checklist_engine.py\", ())`, so it can only ever check that one script's siblings. The fix is one entry: `\"run_crew.py\": (\"install_constellation.py\",)` in SCRIPT_RUNTIME_COMPANIONS (plus whatever install_constellation itself pulls in), and a guard keyed on every declared script rather than one literal.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "v4-hook-still-fails-open": {
+      "id": "v4-hook-still-fails-open",
+      "title": "The hook is portable now; is it still silent when it breaks?",
+      "imperative": "sys.executable and shell:bash fix the two known failure paths. The underlying property remains: a PreToolUse hook that errors lets the call through. Say what residual failure modes still fail open, whether any of them are reachable, and whether the change acknowledges that anywhere a future author would see it. An accepted risk stated is fine; an unstated one is not.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "The two named modes are genuinely fixed. Four residual modes remain; one is reachable and defeats the mechanism outright, and NONE is acknowledged where a future author would see it. (1) REACHABLE, and the big one \u2014 SCOPE, not fail-open: the hook matcher is `mcp__spine__spine_evidence`, but `Bash` is in CREW_ALLOWED_TOOLS and checklist_engine.py has a `waive` verb. I drove it: a crew shelling out to `checklist_engine.py waive g1 --cond c1 --authority crew --reason ... --force` waived its own unsatisfiable check, then advanced the gate to `complete`, and spine_terminal reads True. The hook guards the door while the crew holds the key to the side entrance. The human ruling this hook implements \u2014 \"agent cannot waive itself, always ask up\" \u2014 is not enforced, and the handoff itself records that the previous crew used the CLI for everything. Arguably pre-existing (Bash was granted in 832aeee7), but 2152ded3's commit subject claims the hook \"cannot fail open\", which is a stronger claim than the code supports. (2) REACHABLE: malformed or empty stdin to the hook program -> `json.load` raises, rc=1; an erroring PreToolUse hook is treated as no opinion, so the call proceeds. I ran the hook program directly: waive->deny JSON rc=0, attest->`{}` rc=0, malformed stdin->rc=1 JSONDecodeError, empty stdin->rc=1. (3) `\"shell\": \"bash\"` requires bash on PATH; on a Windows host without Git Bash the hook cannot run at all -> fail open. The docstring justifies adding shell:bash by the non-POSIX parse hazard but never notes that it trades that for a hard bash dependency. (4) An interpreter moved/removed between dispatch and hook fire -> cannot run -> fail open. ACKNOWLEDGEMENT: run_crew.py says \"fail open\" only about the two modes it FIXED (lines 431-432, 440). Nothing states the standing property \u2014 a PreToolUse hook that errors permits the call, so this denial is best-effort \u2014 and nothing mentions the Bash/CLI bypass. The item says an accepted risk stated is fine; it is not stated, so this records fail. A comment block naming (1) and (2) as accepted, plus dropping the overclaim in the commit-message-derived docstring, would satisfy it without new machinery.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "v5-no-regression": {
+      "id": "v5-no-regression",
+      "title": "Existing dispatches must be untouched",
+      "imperative": "The handoff-branch prompt was byte-identical before; the argv is not (shell key, settings, two more granted tools, optional --result). Prove no existing dispatch path changed behaviour. Include: --result still required when no --spine is given, and both-given still judged the old way.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "The COMPLETION-JUDGMENT contract is clean; the ARGV path is not. Judgment matrix, driven directly through finalize_from_exit_code (exit 0 / exit 1 each): result-only + fresh -> completed/failed; result-only + missing -> failed/failed; BOTH given, spine terminal but result missing -> failed (result still rules); BOTH given, spine blocked but result fresh -> completed (result still rules); spine-only terminal -> completed/failed; spine-only blocked -> failed. Exactly the claim: --result given is judged as before, both-given keeps the old result-based rule, nonzero exit always fails. CLI refusals also hold: --handoff with no --result and no --spine is REFUSED. Handoff-branch prompt is byte-identical to main (asserted by comparing build_crew_argv output against main@9d593e0a's module). WHAT DID MOVE, for EVERY dispatch and not just spine-only ones: build_crew_argv now calls crew_settings_json() unconditionally, and crew_settings_json calls assert_shell_safe_command on `shlex.quote(sys.executable) + \" -c '...'\"`. When sys.executable contains a space, shlex.quote wraps it in single quotes, the guard refuses any command not starting with a bare word, and crew_settings_json RAISES. I reproduced it: '/opt/Program Files/py/python.exe' and 'C:\\\\Program Files\\\\Python312\\\\python.exe' both -> InstallError. Python under Program Files is a stock Windows install. On such a host NO crew can be dispatched at all \u2014 classic --handoff --result dispatches included. It is fail-closed and loud, not silent, which is why it is a regression rather than a safety hole; but it is a total-loss regression on a platform this repo documents at length, it contradicts the docstring's own claim that shlex.quote \"covers an interpreter path containing spaces\", and HookPortabilityTests only ever exercises the running host's own space-free sys.executable, so nothing catches it. Combined with v3, two of the three argv/settings changes made this dispatch path strictly worse than main on hosts other than this one.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r3-evidence: The evidence present is honest \u2014 SpineOnlyCompletionContractTests never writes a result artifact and carries a real negative control (open gate -> failed) plus exit-code and missing-file controls; HookPortabilityTests proves the shell-safety guard is wired by forcing it to raise. Suite is green: 2556 passed, 1 skipped, 1101 subtests. map/INDEX.md reproduces byte-exact from `python -m scripts.code_map build --root .` (clean `git status map/`). What is MISSING is evidence for every state the completion decider can actually reach. `_write_spine(done=False)` only ever produces `pending`. Nothing covers: a `blocked` spine, a `skipped` spine, a `survey`-typed spine with no consolidation, or a structurally-malformed spine \u2014 and the last two are false-positive completions I reproduced (v1). Nothing covers importing run_crew from an installed skill bundle (v3, a hard regression) or a `sys.executable` containing a space (v4/v5, dispatch dies). Four of the five states the change's own docstring makes claims about are untested.",
+      "r4-quality: Rule-by-rule against the inherited rules. PASS \u2014 \"assert against behaviour, never text\": the new tests assert registry status and hook stdout, not message strings. PASS \u2014 \"a check that cannot fail\": the spine-only test is proven two-sided by its open-gate control. PASS \u2014 \"record stores never hand-edited\": every probe went through engine verbs. PASS \u2014 \"encoding/newline on writes\": no new file writes. FAIL \u2014 global-everyone.md \"enumerate the blast radius of your own change, by command, never by memory\": 2152ded3 added `import install_constellation` at module scope to run_crew.py and did not enumerate who ships run_crew.py. install_constellation.py:80-88 states this exact rule in the repo's own words \u2014 \"if a script reaches a sibling by `sys.path.insert` + a plain import, ship that sibling too, or the feature silently no-ops wherever the skill is actually installed\" \u2014 and records that the last drift of this kind left the Context Governor inert in every install since it shipped. No `\"run_crew.py\": (...)` entry was added to SCRIPT_RUNTIME_COMPANIONS, and the guard test is hardcoded to `SCRIPT_RUNTIME_COMPANIONS.get(\"checklist_engine.py\", ())`, so it structurally cannot catch a sibling import added to any other script. The documented defect recurred one file over from where it was documented. FAIL \u2014 \"fail visibly, no hidden fallback\" is met in letter but the crew_settings_json docstring asserts \"`shlex.quote` covers an interpreter path containing spaces\" when it produces the opposite outcome (v4).",
+      "v1-blocked-is-not-complete: THE NAMED FEAR IS UNFOUNDED; TWO OTHER FALSE POSITIVES ARE REAL. checklist_engine.TERMINAL = {\"complete\",\"skipped\"} \u2014 `blocked` is NOT in it. I drove real spines through the engine CLI (justified below) and read spine_terminal on each: [A] all gates complete -> True. [B] g1 blocked mid-spine, g2 pending -> False. [C] g1 complete, LAST gate blocked -> False. So a crew that correctly blocks and asks up is recorded `failed`, not `completed`. The decisive question answers correctly and does not block. What DOES read terminal: [D] every gate `skipped` -> True. [E] g1 complete, g2's postcondition REFUSED then `skip`ped with a reason -> True. `skip` is in the crew tool grant (spine_halt), needs only a reason and no authority, so a crew that hits a check it cannot satisfy has a self-serve exit that records as clean success \u2014 against the human ruling \"always ask up\". Journaled with a mandatory reason and visible in the spine, so: observation + triage candidate, not the blocker. [F] BLOCKING, reproduced with a REAL DISPATCH: a `survey`-typed spine whose every item is recorded but which was never consolidated reads terminal True. Live run \u2014 `run_crew.py --role reviewer --spine SURVEY.json` with no --handoff/--result \u2014 registry: `status: completed, result: null`; survey: both items `complete`, `consolidation: None`. A reviewer crew that produced NO VERDICT is reported to the dispatching Commander as done, with the verdict nowhere. active_id only walks item statuses and never looks at `consolidation`; it is a gated-spine API used to answer a survey question. Reachability is high: --spine accepts any checklist type, the spine-only prompt is type-agnostic (\"Drive it gate by gate ... until it reports done\"), reviewer/interrogator checklists ARE surveys (this very survey is one), and reviewer/SKILL.md names stopping-before-consolidate as \"the single most common failure at this tier\". [G] Also terminal: `{}` and `{\"items\": []}` \u2014 directly contradicting spine_terminal's own docstring, \"A missing/unparseable/malformed spine is never terminal\". Genuinely-missing and unparseable files DO return False; it is the valid-JSON-wrong-shape case that leaks. CLI DISCLOSURE: probes ran through `scripts/checklist_engine.py` because my door is bound to my own survey via SPINE_FILE and cannot bind a scratch spine \u2014 a tooling limit, not a preference. Every claim about the branch's own behaviour came from run_crew and real dispatches.",
+      "v3-engine-import: BLOCKING REGRESSION \u2014 but not the import the item names. `checklist_engine` is clean at import: stdlib-only top-level imports, no os.environ/SPINE_FILE read at module scope (grep finds none), no reference to run_crew so no cycle, and it IS an explicitly listed companion of both bundles that ship run_crew.py. The load-bearing one is its neighbour. The SAME commit (2152ded3) also added `import install_constellation` at module scope \u2014 and install_constellation.py is NOT in any bundle that carries run_crew.py. Proven by running the real installer, not by reading it: `python scripts/install_constellation.py --agent claude --scope project --dest /tmp/instsim/skills --skills commander --force` produces a scripts/ dir with checklist_engine.py and no install_constellation.py; invoking that installed launcher from an unrelated directory gives `ModuleNotFoundError: No module named 'install_constellation'` at run_crew.py line 43, exit 1, before argparse. Same for the explorer bundle. TWO-SIDED: I installed main@9d593e0a the same way and ran the identical command \u2014 usage text, exit 0. So run_crew.py works from an installed skill on main and is dead on this branch. This is not a corner: global-everyone.md tells every role to \"reference bundled scripts by their absolute installed path\", and the Commander skill's standing instruction is to run every crew dispatch through run_crew.py. Commander and Explorer cannot launch any crew from an installed install. It survives the suite because the companion guard is hardcoded \u2014 tests/test_install_constellation.py reads `SCRIPT_RUNTIME_COMPANIONS.get(\"checklist_engine.py\", ())`, so it can only ever check that one script's siblings. The fix is one entry: `\"run_crew.py\": (\"install_constellation.py\",)` in SCRIPT_RUNTIME_COMPANIONS (plus whatever install_constellation itself pulls in), and a guard keyed on every declared script rather than one literal.",
+      "v4-hook-still-fails-open: The two named modes are genuinely fixed. Four residual modes remain; one is reachable and defeats the mechanism outright, and NONE is acknowledged where a future author would see it. (1) REACHABLE, and the big one \u2014 SCOPE, not fail-open: the hook matcher is `mcp__spine__spine_evidence`, but `Bash` is in CREW_ALLOWED_TOOLS and checklist_engine.py has a `waive` verb. I drove it: a crew shelling out to `checklist_engine.py waive g1 --cond c1 --authority crew --reason ... --force` waived its own unsatisfiable check, then advanced the gate to `complete`, and spine_terminal reads True. The hook guards the door while the crew holds the key to the side entrance. The human ruling this hook implements \u2014 \"agent cannot waive itself, always ask up\" \u2014 is not enforced, and the handoff itself records that the previous crew used the CLI for everything. Arguably pre-existing (Bash was granted in 832aeee7), but 2152ded3's commit subject claims the hook \"cannot fail open\", which is a stronger claim than the code supports. (2) REACHABLE: malformed or empty stdin to the hook program -> `json.load` raises, rc=1; an erroring PreToolUse hook is treated as no opinion, so the call proceeds. I ran the hook program directly: waive->deny JSON rc=0, attest->`{}` rc=0, malformed stdin->rc=1 JSONDecodeError, empty stdin->rc=1. (3) `\"shell\": \"bash\"` requires bash on PATH; on a Windows host without Git Bash the hook cannot run at all -> fail open. The docstring justifies adding shell:bash by the non-POSIX parse hazard but never notes that it trades that for a hard bash dependency. (4) An interpreter moved/removed between dispatch and hook fire -> cannot run -> fail open. ACKNOWLEDGEMENT: run_crew.py says \"fail open\" only about the two modes it FIXED (lines 431-432, 440). Nothing states the standing property \u2014 a PreToolUse hook that errors permits the call, so this denial is best-effort \u2014 and nothing mentions the Bash/CLI bypass. The item says an accepted risk stated is fine; it is not stated, so this records fail. A comment block naming (1) and (2) as accepted, plus dropping the overclaim in the commit-message-derived docstring, would satisfy it without new machinery.",
+      "v5-no-regression: The COMPLETION-JUDGMENT contract is clean; the ARGV path is not. Judgment matrix, driven directly through finalize_from_exit_code (exit 0 / exit 1 each): result-only + fresh -> completed/failed; result-only + missing -> failed/failed; BOTH given, spine terminal but result missing -> failed (result still rules); BOTH given, spine blocked but result fresh -> completed (result still rules); spine-only terminal -> completed/failed; spine-only blocked -> failed. Exactly the claim: --result given is judged as before, both-given keeps the old result-based rule, nonzero exit always fails. CLI refusals also hold: --handoff with no --result and no --spine is REFUSED. Handoff-branch prompt is byte-identical to main (asserted by comparing build_crew_argv output against main@9d593e0a's module). WHAT DID MOVE, for EVERY dispatch and not just spine-only ones: build_crew_argv now calls crew_settings_json() unconditionally, and crew_settings_json calls assert_shell_safe_command on `shlex.quote(sys.executable) + \" -c '...'\"`. When sys.executable contains a space, shlex.quote wraps it in single quotes, the guard refuses any command not starting with a bare word, and crew_settings_json RAISES. I reproduced it: '/opt/Program Files/py/python.exe' and 'C:\\\\Program Files\\\\Python312\\\\python.exe' both -> InstallError. Python under Program Files is a stock Windows install. On such a host NO crew can be dispatched at all \u2014 classic --handoff --result dispatches included. It is fail-closed and loud, not silent, which is why it is a regression rather than a safety hole; but it is a total-loss regression on a platform this repo documents at length, it contradicts the docstring's own claim that shlex.quote \"covers an interpreter path containing spaces\", and HookPortabilityTests only ever exercises the running host's own space-free sys.executable, so nothing catches it. Combined with v3, two of the three argv/settings changes made this dispatch path strictly worse than main on hosts other than this one."
+    ],
+    "summary": "BLOCK on two reproduced defects, one of them a total-loss regression. The question the handoff said would decide the verdict answers SAFELY: `blocked` is not in checklist_engine.TERMINAL, so a crew that correctly blocks and asks up is recorded `failed`, never `completed` (driven on real spines, mid-spine and last-gate). The spine-only contract itself works \u2014 a real dispatch with no --handoff and no --result recorded `completed`, and the negative control (open gate, exit 0) recorded `failed`. BLOCKER 1 (v3): commit 2152ded3 added `import install_constellation` at module scope to run_crew.py, but install_constellation.py ships in no bundle that carries run_crew.py. The installed commander and explorer launchers die with ModuleNotFoundError at import, before argparse; main@9d593e0a's installed launcher runs fine from the identical invocation. Every Commander and Explorer running from an installed install can launch no crew at all. The repo documents this exact drift class at install_constellation.py:80-88 and the guard that should catch it is hardcoded to checklist_engine.py. One SCRIPT_RUNTIME_COMPANIONS entry fixes it. BLOCKER 2 (v1): spine_terminal answers a `survey` question with `active_id`, a gated-spine API that never reads `consolidation`. A real reviewer crew dispatched spine-only that recorded every item and produced no verdict was recorded `completed`. That is the false-positive class the handoff named as worse than the round-1 bug, in the role whose entire deliverable is the verdict, and it is the failure reviewer/SKILL.md calls the most common at this tier. ALSO FAILING, non-blocking on their own: v5 \u2014 a `sys.executable` containing a space makes crew_settings_json raise, so no dispatch of any kind works on a stock Windows Python-under-Program-Files install, contradicting the docstring's claim that shlex.quote covers it; v4 \u2014 the waive-deny hook is bypassable by a crew shelling out to the engine CLI with `waive --force` (reproduced), and no residual fail-open mode is acknowledged anywhere a future author would see; r3/r4 \u2014 no test reaches blocked, skipped, unconsolidated-survey, malformed-spine, installed-bundle import, or a spaced interpreter. Two triage candidates flagged (crew self-serve `skip`; the Bash waive bypass). Scope is clean: all five hard no-gos respected, map/INDEX.md reproduces byte-exact, nothing pushed to main."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "v1-blocked-is-not-complete",
+      "statement": "A crew can `skip` a gate whose check it cannot satisfy and be recorded `completed`. `spine_halt action=skip` is in CREW_ALLOWED_TOOLS and needs only a reason, no authority; `skipped` is in checklist_engine.TERMINAL, so an all-skipped or partly-skipped spine reads terminal (reproduced: gate whose postcondition REFUSED, then skipped -> spine_terminal True). This is a self-serve exit from the human ruling \"a crew that hits a check it cannot satisfy must block and ask up\". Out of scope for this change (it is the crew tool grant and the engine's TERMINAL set, both no-go files here), but it is the same shape as the waive-deny hook and deserves the same treatment: deny `skip` to a crew, or require an authority the crew does not have."
+    },
+    {
+      "id": "tc2",
+      "from": "v4-hook-still-fails-open",
+      "statement": "The waive-deny hook is bypassable via Bash. `Bash` is in CREW_ALLOWED_TOOLS and the PreToolUse matcher covers only `mcp__spine__spine_evidence`, so a crew can run `python scripts/checklist_engine.py waive <gate> --cond <c> --authority crew --reason ... --force` and waive its own bound check; I reproduced it end to end (waive accepted, gate advanced to complete, spine_terminal True). The human ruling the hook implements is therefore unenforced against any crew that reaches for the CLI \u2014 which the handoff records the previous crew doing. Out of scope for this change (fixing it means touching the tool grant, the engine, or adding a Bash-matcher hook). Candidate fixes: a second PreToolUse hook matching Bash that denies engine `waive` invocations, or teaching checklist_engine to refuse `waive` when the caller's session is a crew-keyed SPINE_SESSION."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/epic-559/a-spine-is-the-job/g3-review2/reviewer",
+    "status": "released",
+    "claimed_at": "2026-08-11T06:31:31.807895+00:00",
+    "last_heartbeat": "2026-08-11T06:46:20.570641+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "/home/tommy/projects/constellation-skills-wt/a-spine-is-the-job",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-11T06:48:02.308383+00:00"
+  }
+}
