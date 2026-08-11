@@ -872,6 +872,8 @@ class IdentityBindingPinTests(unittest.TestCase):
         "spine_evidence": {"action": "attest", "task_id": "g1", "condition_id": "c1"},
         "spine_halt": {"action": "block", "task_id": "g1", "blocker": "x"},
         "spine_survey_result": {"action": "record", "task_id": "r1", "result": "pass"},
+        "spine_capture": {"action": "append", "task_id": "new1", "title": "t", "imperative": "i"},
+        "spine_amend": {"delta": {"ops": []}, "reason": "r", "authority": "human"},
     }
 
     @staticmethod
@@ -1332,6 +1334,92 @@ class IdentityBindingPinTests(unittest.TestCase):
                 )
                 state = json.loads(Path(module.SPINE).read_text(encoding="utf-8"))
                 self.assertEqual("complete", state["tasks"]["g1"]["status"])
+
+    @staticmethod
+    def _delta(gate_id: str) -> dict:
+        return {"ops": [{"op": "add", "id": gate_id, "title": "t", "imperative": "i",
+                          "postconditions": [{"id": "c1", "statement": "s", "check": None}]}]}
+
+    def test_the_runtime_guard_refuses_a_delta_outside_the_bound_spine(self):
+        """Live, through `run_engine`, no mutation of the door required:
+        `amend`'s `--delta` (added by issue #559, N1) is the SAME shape of
+        hazard `--from-child` is -- a filesystem path the engine reads and
+        acts on. This door only ever writes that path itself, beside the
+        bound spine (`_write_amend_delta` in `call_tool`), so this test is
+        defense in depth: it calls `run_engine` directly, the way a future
+        bug in that call site could, and proves the guard refuses a `--delta`
+        outside the binding regardless of who builds the argv."""
+        module = self._load_module(self.spine, "amend-guard#agent")
+        with tempfile.TemporaryDirectory() as elsewhere:
+            outside = Path(elsewhere) / "delta.json"
+            outside.write_text(json.dumps(self._delta("sneaky")), encoding="utf-8")
+            rec = module.run_engine("amend", "--delta", str(outside), "--reason", "r",
+                                     "--authority", "human", mutating=False)
+        result = module.as_result(rec)
+        text = result["content"][0]["text"]
+        self.assertIs(True, result.get("isError"),
+                      "the door applied a delta read from outside its binding")
+        self.assertIn("REFUSED", text)
+        state = json.loads(Path(module.SPINE).read_text(encoding="utf-8"))
+        self.assertNotIn("sneaky", state["tasks"],
+                          "an amend op read from outside the binding was applied to the bound spine")
+
+    def test_the_runtime_guard_leaves_an_absolute_delta_inside_the_bound_spine_alone(self):
+        """The other half: a genuine delta beside the bound spine, as an
+        ABSOLUTE path -- the only form `_write_amend_delta` ever actually
+        produces (`SPINE.parent` is resolved at import, so joining a filename
+        onto it is always absolute) -- is applied, not refused."""
+        module = self._load_module(self.spine, "amend-guard-ok#agent")
+        bound_dir = Path(module.SPINE).parent
+        path = bound_dir / "delta-genuine-abs.json"
+        path.write_text(json.dumps(self._delta("genuine-abs")), encoding="utf-8")
+
+        rec = module.run_engine("amend", "--delta", str(path), "--reason", "r",
+                                 "--authority", "human", mutating=False)
+        result = module.as_result(rec)
+        self.assertFalse(
+            result.get("isError"),
+            f"the guard refused a legitimate, absolute delta file inside the bound "
+            f"spine's own work area:\n{result['content'][0]['text']}",
+        )
+        state = json.loads(Path(module.SPINE).read_text(encoding="utf-8"))
+        self.assertIn("genuine-abs", state["tasks"])
+
+    def test_the_runtime_guard_refuses_a_relative_delta_because_amend_resolves_it_against_cwd_not_the_spine(self):
+        """The asymmetry with `--from-child`, made an explicit, tested boundary
+        rather than a silent gap: `advance()` resolves a relative `from_child`
+        against the parent checklist's own directory (its own documented rule),
+        but `amend()` does a bare `Path(args.delta).read_text()` with no such
+        join, so a relative `--delta` resolves against the process's cwd. A
+        file that GENUINELY sits beside the bound spine, named relatively, is
+        therefore refused here -- not because it is unsafe in itself, but
+        because `_resolve_confined` (matching `amend()` faithfully rather than
+        asserting a base directory `amend()` never uses) cannot vouch for what
+        a relative value will resolve to without knowing the caller's cwd. The
+        door itself never triggers this: `_write_amend_delta` always hands the
+        engine an absolute path."""
+        module = self._load_module(self.spine, "amend-guard-relative#agent")
+        bound_dir = Path(module.SPINE).parent
+        path = bound_dir / "delta-relative.json"
+        path.write_text(json.dumps(self._delta("should-not-land")), encoding="utf-8")
+
+        rec = module.run_engine("amend", "--delta", path.name, "--reason", "r",
+                                 "--authority", "human", mutating=False)
+        result = module.as_result(rec)
+        text = result["content"][0]["text"]
+        self.assertIs(True, result.get("isError"),
+                      "a relative --delta was accepted even though its cwd-based resolution "
+                      "is not provably inside the bound spine")
+        # Specifically the GUARD's own refusal, not the engine's `cannot read
+        # delta ... No such file or directory` -- the file genuinely exists
+        # beside the spine, so an unguarded call would reach the engine and
+        # fail there instead, for an unrelated reason (this is what happens
+        # without `_resolve_confined`'s `--delta` branch: measured directly
+        # against the pre-N1 door). Pinning the DOOR's text is what proves the
+        # guard fired before the engine was ever called.
+        self.assertIn("REFUSED: --delta names a delta file INSIDE the bound spine's own directory", text)
+        state = json.loads(Path(module.SPINE).read_text(encoding="utf-8"))
+        self.assertNotIn("should-not-land", state["tasks"])
 
     def test_the_runtime_guard_leaves_honest_calls_and_error_text_alone(self):
         """The guard must be invisible on every legitimate call. Three things
