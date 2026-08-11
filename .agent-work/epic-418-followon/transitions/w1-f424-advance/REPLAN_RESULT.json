@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "decision": "advance",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Met. F's six done-conditions each carry a verdict backed by evidence, none UNMEASURED; PR #533 is green and independently reviewed; no gate is left blocked by its own reviewer \u2014 four reviewer BLOCKs were raised across the run and all four were resolved on evidence, none overridden and none waived.",
+    "epic_done": "No. F is complete, F2 is new work the owner added after seeing F's result, and C has not started. E has been removed from this epic by the owner.",
+    "good_enough": "Preserved, and in the hard direction twice. The Commander reported an unmeasured DC6 arm as UNMEASURED rather than as a negative, and it let two reviewer corrections stand against its own written verdict on DC5 \u2014 recording all three versions in MEASUREMENT.md rather than presenting the final one as if it had been the first."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "E0",
+      "action": "revise_plan",
+      "reason": "Adoption is not part of C; it is C's entry condition. C writes gate instructions against whichever door delivers tool results, so building C on the CLI and porting later is doing it twice. Moves into F2.",
+      "issue_created": true
+    },
+    {
+      "id": "E1",
+      "action": "revise_plan",
+      "reason": "Owner ruling: without the capture, adoption converts diagnosable defects into corrections nobody sees. Enters F2 alongside adoption, because adoption without capture is the defect.",
+      "issue_created": true
+    },
+    {
+      "id": "E2",
+      "action": "amend_forecast_or_parked",
+      "reason": "Real, and F2 meets it on its first dispatch rather than as an edge case. It is a design choice F2 must make deliberately and record, not a defect in F's verdict.",
+      "issue_created": false
+    },
+    {
+      "id": "E3",
+      "action": "record_evidence_only",
+      "reason": "Already routed to a side implementer off main, instructed to reproduce all three before fixing any. It blocks F2's capture path and must land first.",
+      "issue_created": false
+    },
+    {
+      "id": "E4",
+      "action": "revise_plan",
+      "reason": "Removed from this epic by the owner, who is handling it separately. The plan is revised to drop E from the forecast; the removal itself is recorded in unlaunched_dispositions for 423 as 'drop', so it is dispositioned explicitly rather than left dangling.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "F2: get agents off the CLI and onto the door, with the friction that move hides captured rather than absorbed",
+    "exit_criteria": [
+      "Role spine instructions name the door's tools as the default path, with the CLI documented as the remaining fallback",
+      "A real dispatched agent drives a real role spine to done through the door alone, measured from its own call record",
+      "install_constellation.py ships and wires .mcp.json, so a fresh install gets the door",
+      "The server's own rejections land in the run's episode through apply_episode_delta.py, and say so loudly when they cannot"
+    ],
+    "issues": [
+      {
+        "id": "542",
+        "title": "Adopt the MCP door: agents default to it for spine management, measured from the call record",
+        "desired_outcome": "Agents drive the spine through the door by default, with the CLI retained as the documented fallback.",
+        "useful_now": "It is C's entry condition. C relocates gate instructions against whichever door delivers tool results, so the substrate must stop moving before C writes against it.",
+        "appetite": "One Commander, one wave, shared with 541",
+        "acceptance_or_falsification_evidence": "A real dispatched agent driving a real role spine to done through the door alone, counted from its own call record \u2014 DC5's instrument, reused rather than reinvented",
+        "implementation_latitude": "How role instructions name the tools, how .mcp.json is shipped and wired, how identity is delivered per dispatch",
+        "hard_constraints_no_gos": [
+          "The CLI door stays \u2014 adoption means agents DEFAULT to the door, never that the CLI is removed",
+          "settings.json is never written at any scope",
+          "No engine logic duplicated"
+        ],
+        "local_unknowns": [
+          "Whether identity can be moved off the server process without losing the isolation env-binding buys"
+        ],
+        "anchors": [
+          "scripts/mcp_spine_server.py",
+          "scripts/install_constellation.py",
+          ".mcp.json",
+          "skills/"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "541",
+        "title": "The MCP door hides the friction that used to get filed: capture its rejections into the run's episode",
+        "desired_outcome": "The server records its own rejections into the same episode as the run they happened in, so the engine keeps improving after using it stops hurting.",
+        "useful_now": "Adoption without capture is the defect: it converts a diagnosable defect into a silent correction, which is the failure shape this epic exists to catch.",
+        "appetite": "One Commander, one wave, shared with 542",
+        "acceptance_or_falsification_evidence": "A rejection provoked through the door appears in the run's episode; a capture that cannot be written reports loudly rather than being swallowed",
+        "implementation_latitude": "Granularity (per call or per lease), which rejections count, how the episode is addressed",
+        "hard_constraints_no_gos": [
+          "Write only through apply_episode_delta.py, the store's sanctioned path",
+          "An episode is a record, not a rule \u2014 do not write guidance for a future agent",
+          "The capture must not become a second silent path"
+        ],
+        "local_unknowns": [
+          "Which identity owns the episode when the caller is an inherited subagent"
+        ],
+        "anchors": [
+          "scripts/mcp_spine_server.py",
+          "scripts/apply_episode_delta.py",
+          "episodes/"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "C (#421): first relocation tranche, written against the door rather than the CLI",
+      "why_likely": "C relocates gate instructions and the gate imperative rides tool results verbatim, so C is written against whichever door delivers them",
+      "entry_conditions": [
+        "Agents run the spine through the door rather than the CLI \u2014 F2 complete",
+        "The door's verb contract is settled and not still moving"
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Can spine identity move off the server process without losing what env-binding buys?",
+      "affects": "Whether an inherited subagent can be told apart from its parent, and therefore whether adoption is safe at scale",
+      "settle_by": "F2's design gate",
+      "current_evidence": "The harness shares the process (out of scope for a subprocess-level test, per DC3InheritanceMechanismTests) and we bind identity to it (mcp_spine_server.py:113-115, module constants read at import). DC3's PASS covers the environment seam only.",
+      "next_probe": "F2 chooses deliberately and records which property it gives up"
+    },
+    {
+      "unknown": "Does the friction capture change what agents do, or only what we see?",
+      "affects": "Whether #541 delivers a working feedback loop or just a log",
+      "settle_by": "F2's measurement",
+      "current_evidence": "None. DC5 measured zero malformed calls in both arms, so no baseline friction exists to compare against.",
+      "next_probe": "Provoke a rejection through the door and confirm it reaches the run's episode"
+    }
+  ],
+  "revised_parked": [
+    "Description trimming and the bare-descriptions control arm",
+    "A third door beyond CLI and MCP",
+    "Concurrency beyond the two-instance separation test",
+    "Removing the CLI door \u2014 forbidden by a hard constraint, recorded here so it is not re-proposed as an adoption shortcut"
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "421",
+      "action": "keep",
+      "reason": "Still the next link, now gated on F2 rather than on F's verb contract alone"
+    },
+    {
+      "id": "423",
+      "action": "delete",
+      "reason": "Removed from this epic by the owner, 2026-08-10, and handled separately"
+    },
+    {
+      "id": "541",
+      "action": "keep",
+      "reason": "Promoted from an uncertainty to a current-wave issue: the owner made it a condition of finishing the MCP work"
+    },
+    {
+      "id": "542",
+      "action": "keep",
+      "reason": "Promoted from an uncertainty to a current-wave issue: adoption is C's entry condition"
+    },
+    {
+      "id": "description-trimming",
+      "action": "keep",
+      "reason": "Explicitly out of scope in spec section F"
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "F's status",
+      "before": "F partially landed with DC3, DC5 and DC6 UNMEASURED",
+      "after": "F complete \u2014 six verdicts, none unmeasured, PR green and independently reviewed, no gate left blocked by its own reviewer",
+      "reason": "The repair ran g3 first, which is what let the g1 block resolve on evidence rather than on argument"
+    },
+    {
+      "surface": "gen_mcp_config.py",
+      "before": "Shipped, with its necessity contested and blocked by the g1 reviewer",
+      "after": "Removed and tombstoned, because DC3's YES \u2014 the answer expected to justify it \u2014 showed a generated config binds per process exactly as ${VAR} does, naming a case neither mechanism reaches",
+      "reason": "Evidence-led resolution; the reviewer was never overridden"
+    },
+    {
+      "surface": "Epic shape",
+      "before": "F -> C -> E, with E terminal",
+      "after": "F (complete) -> F2 -> C. E removed by the owner and handled separately",
+      "reason": "Owner direction, 2026-08-10"
+    },
+    {
+      "surface": "C's entry condition",
+      "before": "F's verb contract is settled and not still moving",
+      "after": "Agents run the spine through the door rather than the CLI \u2014 F2 complete",
+      "reason": "Owner direction. Supersedes the Admiral's earlier ruling that door adoption folds into C; C then writes against a settled substrate instead of one moving underneath it"
+    },
+    {
+      "surface": "Door adoption",
+      "before": "Assumed to follow from the door existing",
+      "after": "Measured as absent: 0 skills reference the tools, 0 MCP references in the installer, no wiring survives a fresh install",
+      "reason": "A built door is not a used door, and the epic should not close believing otherwise"
+    }
+  ],
+  "wave_review_comment": "## Wave review \u2014 w1-f424-advance\n\n**F is complete.** All six done-conditions carry a verdict backed by evidence and none is UNMEASURED \u2014 the repair's exit criterion, met. PR #533 is green and mergeable, suite 2178 passed / 0 failed, source diff a clean 15 files. Four reviewer BLOCKs were raised across the run; all four resolved on evidence, none overridden, none waived.\n\n**The repair's reordering is what made it work.** Running g3 before g1 put the evidence ahead of the claim that depended on it. DC3 came back YES \u2014 an in-session subagent does inherit its parent's MCP scope \u2014 and that YES, which everyone expected would justify `gen_mcp_config.py`, is what removed it: a generated config binds at server launch per process exactly as `${VAR}` does, so it names a case **neither** mechanism reaches. Tombstoned with a do-not-reintroduce note, because that YES is precisely what a later reader would use to rebuild it.\n\n**DC5 passed and undercut its own hypothesis.** CLI 22.0 against MCP 18.0 invocation attempts, non-overlapping in both orders \u2014 but malformed calls were **zero in both arms**. The door removed the need to read a manual; it did not absorb fumbles. The verdict also moved twice, and neither correction came from the Commander: a reviewer found a shell `for` loop scoring six engine invocations as one, and then called a post-hoc decomposition what it was. `MEASUREMENT.md` records all three versions rather than presenting the final verdict as if it had been the first.\n\n**DC4 earned its cost after the spine closed.** Windows CI exposed that the door's JSON-RPC stdio was never pinned to UTF-8 \u2014 it corrupted its own protocol on Windows for most gates while the CLI door was fine. Exactly the CLI/MCP divergence DC4 exists to catch, on a platform no local work ran on.\n\n**What the wave found that the plan did not have:** nothing drives through the door. Zero skills reference its tools, zero MCP references in the installer, and `.mcp.json` serves only an agent launched with the right variables in the right directory. A built door is not a used door.\n\n**Decision: advance.** F2 takes the current wave \u2014 adoption and friction capture together, because adoption without capture converts diagnosable defects into silent corrections. C is held behind F2 on a stated entry condition. E leaves the epic at the owner's direction.",
+  "revised_epic_body": "## Current planning truth \u2014 after wave 1 (advance)\n\n**F (#424) is complete.** Six done-conditions, six verdicts, none unmeasured. `scripts/mcp_spine_server.py` and three test files land on PR #533, green and mergeable. `gen_mcp_config.py` was removed on evidence and tombstoned. The measurement is honest about its own mechanism: cost fell, but malformed calls were zero in both arms, so the door removed the need to read a manual rather than absorbing fumbles.\n\n**F2 is the current wave, and it is new scope rather than a repair.** F met what it was scoped against; the owner added these after seeing the result. Two issues, one wave:\n\n- **#542 \u2014 adoption.** Nothing drives through the door today. Agents must default to it, measured from a real dispatch's own call record. The CLI stays: a hard constraint of this epic, recorded so adoption is never read as license to remove it.\n- **#541 \u2014 friction capture.** Behind a typed tool, a schema rejection is absorbed by the client and nobody learns the verb was confusing. The door converts a diagnosable defect into a silent correction, which is the failure shape this epic exists to catch. The episode format already carries `refusals`, `reopens`, `rework-count` and `failed-commands`, so this contributes to the store that exists rather than inventing one.\n\n**C (#421) does not start until F2 completes.** Its entry condition is that agents run the spine through the door rather than the CLI. C relocates gate instructions and the gate imperative rides tool results verbatim, so C must write against a settled substrate.\n\n**E (#423) has left this epic** at the owner's direction and is handled separately.\n\n**The identity question F2 must decide deliberately.** The harness shares one process between a parent and its subagent, and we bind identity to that process \u2014 `mcp_spine_server.py:113-115` reads the spine and session from the environment as module constants at import, and no tool takes a spine path argument. DC3's PASS covers the environment seam and its own test class explicitly scopes out the harness's in-process reuse as unobservable from a subprocess test. Moving identity per-call would fix the composition but discard the isolation env-binding buys. F2 chooses, and records which property it gives up.\n\n**Blocking F2:** three tools assume a work-id contains no `/`, and one of the three pairs \u2014 `apply_episode_delta.py` and `verify_episode_captured.py` \u2014 is mutually unsatisfiable, which is the path #541's capture must write through. Already routed to a side implementer.",
+  "escalation": null
+}

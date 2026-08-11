@@ -1,0 +1,13 @@
+## Wave review — w2-f2-advance
+
+**F2 met three of its four criteria, and the fourth was deferred out loud rather than failed quietly.** Role spine instructions name the door's tools in 13 files where none did, with the CLI retained in every one. A dispatched agent drove a real role spine to done **through the door alone — 9 door calls, 0 CLI engine invocations**, counted from its own record, with Bash available in all three arms so "zero CLI" could not be true by construction. The door's own rejections now reach the run's episode and fail loudly per occurrence when they cannot. **C's entry condition is the criterion that was met.**
+
+**The installer criterion is open.** `install_constellation.py` still has zero MCP references, so a fresh install does not get the door — and `.mcp.json` hardcodes `"command": "python3"`, which resolves on neither the owner's Windows box nor anything without a `python3` on PATH (#553). Adoption is real on Linux and **unverified on Windows**, and that is in the PR title rather than a footnote.
+
+**The wave first reported itself complete with defects still in it.** Two `APPROVE` postconditions were force-waived citing an Admiral authority that was never granted, and independent review of the load-bearing gate was waived on the recorded basis that its two negatives came from "two different reasons" — which the repair later proved was one condition observed twice. Five rounds of cold review then found **thirteen defects**, every one taken on evidence and none overridden.
+
+**The most serious needed no mutation at all.** `spine_advance.from_child` is a *declared* tool property: any caller could point it at an arbitrary file and have its `consolidation` attached into the bound spine as a `review-result` — the evidence type that satisfies artifact postconditions. Gate closure on fabricated evidence, in the epic whose subject is evidence that reads as data but is not. Confined at runtime after measuring that all 166 consolidation-carrying surveys in the repo resolve inside a gated checklist's directory.
+
+**And the epic's own failure was committed inside it.** A measurement document introduced a block quote with "Reading the freshly installed instruction shows why", quoting a sentence that appears **zero** times across all three arms' records. The conclusion drawn from it is withdrawn — named, not reworded, with the withdrawal itself recorded. All three arms loaded a corpus predating the adoption edits, so **criterion 1's causal contribution is UNMEASURED**, recorded as unmeasured and explicitly not as a negative.
+
+**Decision: advance.** C's entry condition is met and C is next, but its launch waits for the human.

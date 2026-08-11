@@ -1,0 +1,285 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "epic-418-followon \u2014 make agents use the MCP door instead of the CLI",
+      "spec_path": ".agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md",
+      "intent_and_why": "Agents drive their spines through the MCP door and never touch the engine CLI directly; the CLI is an implementation detail behind the door. Entry definitions stay configurable so the work is OS-agnostic by construction. Anything an operator must remember to do by hand is a defect in the tool."
+    },
+    "definition_of_done": [
+      "A dispatched crew drives its own spine through the door, measured from its own call record.",
+      "A respawned agent on the same assignment resumes its lease rather than force-claiming it.",
+      "Constellation agent instructions name the door and not the engine CLI.",
+      "No shipped entry definition hardcodes an interpreter or an absolute path."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Every claim about what happened brings its evidence; a control must reproduce the defect before a fix is believed.",
+      "sufficient_evidence": "Measured from the driving agent's own call record, never from the engine's refusals counter.",
+      "appetite": "One bounded wave; keep out the easy failures rather than making it foolproof."
+    },
+    "hard_constraints": [
+      "settings.json is never touched",
+      "docs/agents/* edits are a human's call",
+      "No merge or push to main while the human is AFK",
+      "Planning makes no direct gh or network mutation"
+    ],
+    "fixed_decisions": [
+      "Launched identities remain stable",
+      "The lease keys on the assignment, not the process instance",
+      "Identity is derived from the spine's own work_id, never hand-typed",
+      "The CLI door stays as a fallback; F is additive",
+      "Agents do not know about the engine CLI; the CLI is used only behind the MCP door",
+      "Mechanical setup is the tool's job, not the operator's"
+    ],
+    "current_wave": {
+      "objective": "Make running things require no thought: the launcher grants what a crew needs, entry definitions resolve per machine, and the documentation stops being wrong.",
+      "exit_criteria": [
+        "A crew dispatched through run_crew.py receives its tools and permission mode from the launcher, with no hand-written per-dispatch settings file required.",
+        "No shipped entry definition hardcodes an interpreter; the value resolves per machine at install time and the committed file still works as committed.",
+        "docs/agents/CREW_CONTEXT.md's Python guidance teaches a reader to measure their own host rather than restating another host's answer.",
+        "A cold reviewer independent of the implementer has approved each change.",
+        "#555 is carried unchanged and unworked; its terms are preserved verbatim, no spend is authorized against it, and its disposition returns to the human."
+      ],
+      "issues": [
+        {
+          "id": "M2",
+          "title": "run_crew.py grants crew tools and permissions; .mcp.json's interpreter resolves per machine",
+          "desired_outcome": "A dispatch needs no hand-written settings file, and a fresh clone on any host gets a launchable door.",
+          "useful_now": "Every dispatch needed a hand-written settings file first, and that file was written wrong once and killed two crews on arrival.",
+          "appetite": "One implementer plus a cold reviewer.",
+          "acceptance_or_falsification_evidence": "A crew dispatched into a clean worktree with no settings file can do crew work; a fresh clone's .mcp.json launches a real server.",
+          "implementation_latitude": "Choose the grant's contents and the wiring's shape; preserve the single resolve_interpreter() probe.",
+          "hard_constraints_no_gos": [
+            "checklist_engine.py::claim unmodified",
+            "_identity_violation not weakened",
+            "settings.json untouched",
+            "no merge or push to main"
+          ],
+          "local_unknowns": [
+            "Whether a tracked .mcp.json can carry a placeholder at all"
+          ],
+          "anchors": [
+            "scripts/run_crew.py",
+            "scripts/install_constellation.py",
+            ".mcp.json"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "M3",
+          "title": "CREW_CONTEXT.md's Python Invocation section states a measurement, not a guess",
+          "desired_outcome": "A reader learns how to check their own host and sees this host's dated answer.",
+          "useful_now": "The doc named the wrong interpreter as the broken one, so a crew following it runs a suite that cannot collect.",
+          "appetite": "One implementer plus a cold reviewer.",
+          "acceptance_or_falsification_evidence": "Every command the section instructs, re-run on this host, matches what the section claims.",
+          "implementation_latitude": "Wording is the implementer's.",
+          "hard_constraints_no_gos": [
+            "docs/agents/* edited only under this explicit human authorization",
+            "no merge or push to main"
+          ],
+          "local_unknowns": [
+            "Whether the section should teach measurement or state an answer"
+          ],
+          "anchors": [
+            "docs/agents/CREW_CONTEXT.md"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "555",
+          "title": "Make the door launch where python3 is not a command (carried, unworked)",
+          "desired_outcome": "Carried verbatim; disposition returns to the human.",
+          "useful_now": "It is a launched identity and may not be silently dropped.",
+          "appetite": "No spend authorized this wave.",
+          "acceptance_or_falsification_evidence": "None sought this wave.",
+          "implementation_latitude": "None.",
+          "hard_constraints_no_gos": [
+            "terms preserved byte-identical",
+            "no spend"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/install_constellation.py",
+            ".mcp.json"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Measure whether a dispatched crew actually uses the door once its binding is correct",
+        "why_likely": "F2 already measured that an agent owning its binding uses the door; this extends that condition to crew",
+        "entry_conditions": [
+          "M1 lands and a crew dispatch is observed with a correct binding"
+        ]
+      },
+      {
+        "outcome": "#559 \u2014 remove the CLI fallback for agents",
+        "why_likely": "It only becomes honest once the door is reachable on every dispatch path",
+        "entry_conditions": [
+          "Crew are measured using the door by default"
+        ]
+      },
+      {
+        "outcome": "#421 (C) relocation tranche",
+        "why_likely": "Its entry condition was a settled verb contract and a usable door",
+        "entry_conditions": [
+          "The door is usable by dispatched agents, not merely launchable"
+        ]
+      },
+      {
+        "outcome": "#555 \u2014 Windows launch, resumed with the cold review it is owed",
+        "why_likely": "The fix at 6b947546 is promising and CI-green, but unverified and unreviewed",
+        "entry_conditions": [
+          "The human returns and rules on whether Windows re-enters scope"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether role-spine instructions cause adoption, as distinct from tool availability",
+        "affects": "Whether further instruction investment is warranted",
+        "settle_by": "A measurement whose arms load a corpus containing the edits AND whose door is correctly bound",
+        "current_evidence": "All three F2 arms loaded a pre-edit corpus; arm 3 found the door via ToolSearch, not via any instruction. Recorded as UNMEASURED, not as a negative.",
+        "next_probe": "Re-measure after M1, when a dispatched crew has a working binding"
+      },
+      {
+        "unknown": "Whether a derived identity is reachable at every claim site, or only at crew dispatch",
+        "affects": "Whether the Admiral and Commander spines also stop hand-typing identities",
+        "settle_by": "M1's implementation finding out where claims actually originate",
+        "current_evidence": "Four spines carry four hand-typed conventions, including one never claimed at all",
+        "next_probe": "M1's implementer reports which call sites it could not reach"
+      },
+      {
+        "unknown": "Whether stale leases (#552: 43 on disk, 41 stale, 17 inside archive) share this root cause",
+        "affects": "Whether #552 is absorbed or stays separate",
+        "settle_by": "Inspecting whether the stale leases carry process-scoped identities",
+        "current_evidence": "Hand-typed and UUID identities cannot be resumed, so every recovery mints a new lease and abandons the old one",
+        "next_probe": "Sample the 41 stale leases for identity shape after M1"
+      }
+    ],
+    "parked_possibilities": [
+      "#560 \u2014 --wire-hooks writes the user settings.json under a --scope project flag",
+      "#553/#555 \u2014 Windows launch; parked with status written on the PR, cold review owed",
+      "#556 \u2014 spine conditions should declare their basis at plan time",
+      "#557 \u2014 one append-only override ledger",
+      "#558 \u2014 what each review level checks",
+      "Per-call spine addressing in the door, if a genuine cross-spine mutation ever appears"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "M2",
+      "outcome": "run_crew.py grants every crew its tools and permission mode, and install_constellation.py wires .mcp.json's interpreter per machine; merged to main as 8ddea47d.",
+      "evidence": "Cold review APPROVE. Three controls re-run red-before/green-after; a real server launched from the committed .mcp.json and handshaked; the shared predicate confirmed by object identity; main's files restored to confirm the new tests fail (36 failed / 3 passed). Suite on merged main: 2522 passed, 1 skipped, 1101 subtests."
+    },
+    {
+      "issue_id": "M3",
+      "outcome": "docs/agents/CREW_CONTEXT.md's Python Invocation section teaches a reader to measure their own host, then records this host's dated answer; merged to main as 724e6f87.",
+      "evidence": "Cold review re-ran every command the section instructs and every claim in its dated block, with no mismatch."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "Agents choose the CLI even when the door is bound for them",
+      "expected": "A correctly bound crew still prefers the CLI, so adoption needs more than binding",
+      "observed": "RETRACTED, and the opposite is now measured. grep SPINE_FILE across this epic's ten dispatch scripts: one BOUND, nine UNBOUND. Every crew previously read as 'choosing the CLI' had a door bound to a wave-1 scratch demo spine, so the CLI was the only path to its own spine. After M1 merged, the very next two dispatches -- with no SPINE_FILE in their scripts -- drove their whole spines through the door, one of them a reviewer, with zero CLI calls.",
+      "source": "the ten *-dispatch.sh scripts; mcp_calls.jsonl and the engine_session block of REPAIR_PLAN.json and REVIEW_SURVEY.json"
+    },
+    {
+      "claim": "Binding the door is sufficient for adoption",
+      "expected": "A bound crew uses the door",
+      "observed": "SUPPORTED so far, on two of two post-M1 dispatches, both of which also released their leases. Two dispatches is a weak base and the CLI remained reachable to both, so this does not yet separate 'the door is convenient' from 'the door is the only thing bound'. N2 removes that confound by withholding the engine.",
+      "source": "mcp_calls.jsonl for g4-repair and g5-review"
+    },
+    {
+      "claim": "A tracked config may never name an interpreter (#539)",
+      "expected": "Shipping a placeholder is strictly safer than shipping a name",
+      "observed": "FALSIFIED as stated. The placeholder broke test_mcp_spine_server.py's var-expansion launch test, which starts a real server from the committed .mcp.json. The rule needs a second half: a tracked config that code also reads directly must be launchable as committed, and the per-machine correction belongs at install time.",
+      "source": "the failing test on 7995ec5e; the human's ruling of 2026-08-10; #539 comment 5248339534"
+    },
+    {
+      "claim": "Omitting a tool from the crew allow-list withholds the capability",
+      "expected": "Not granting the engine withholds the engine",
+      "observed": "FALSE. CREW_ALLOWED_TOOLS grants unrestricted Bash, which reaches checklist_engine.py regardless of which MCP tools are granted. N2 needs a real mechanism, not an omission.",
+      "source": "the M2 cold reviewer's out-of-scope observations"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "The wave-4 basis for 'binding is not sufficient' was wrong",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth",
+      "evidence": "Nine of ten dispatch scripts never set SPINE_FILE; the crews read as CLI-preferring had no working door",
+      "reason": "The wave-4 packet recorded a partly-falsified adoption claim on a basis that does not hold, and planning must not carry it forward"
+    },
+    {
+      "id": "D1",
+      "signal": "Withholding the engine cannot be done by omission from an allow-list",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "N2's design",
+      "evidence": "CREW_ALLOWED_TOOLS grants unrestricted Bash, which reaches the engine CLI",
+      "reason": "The mechanical-enforcement ruling needs a deny mechanism, and knowing this before dispatch avoids a mid-flight discovery"
+    },
+    {
+      "id": "D2",
+      "signal": "A fixed decision now contradicts a human ruling",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "fixed_decisions",
+      "evidence": "fixed_decisions carried 'The CLI door stays as a fallback; F is additive' alongside 'Agents do not know about the engine CLI'",
+      "reason": "The human ruled the door is the only interface, which replaces the fallback decision; a fixed boundary may not be reinterpreted silently"
+    },
+    {
+      "id": "D3",
+      "signal": "main was red and reported green",
+      "classification": "evidence_only",
+      "affects": "Admiral practice",
+      "evidence": "M3 deleted a CREW_CONTEXT.md line that tests/data/store_mentions.approved.txt approves verbatim; the retirement guard failed on merged main",
+      "reason": "The batched re-verification rule says to run the suite on the final merged main, and it was not run"
+    },
+    {
+      "id": "D4",
+      "signal": "A duplicated-path work directory is being minted",
+      "classification": "later_only",
+      "affects": "Parked possibilities",
+      "evidence": ".agent-work/epic-418-followon/epic-418-followon/ appeared untracked in the M2 worktree",
+      "reason": "Adjacent to #478 and outside this epic's intent"
+    }
+  ],
+  "open_current_wave_issue_ids": [
+    "555"
+  ],
+  "unlaunched_items": [
+    {
+      "id": "559",
+      "kind": "issue"
+    },
+    {
+      "id": "560",
+      "kind": "parked"
+    },
+    {
+      "id": "421",
+      "kind": "issue"
+    },
+    {
+      "id": "instruction-causes-adoption",
+      "kind": "uncertainty"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/mcp_spine_server.py",
+      "scripts/run_crew.py",
+      "skills/_shared/global-everyone.md",
+      "skills/"
+    ],
+    "map_status": "map/INDEX.md regenerated on the M2 merge; main at 8ddea47d, suite green on merged main"
+  }
+}

@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "epic-418-followon — make agents use the MCP door instead of the CLI",
+      "spec_path": ".agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md",
+      "intent_and_why": "Agents drive their spines through the MCP door rather than the CLI, with per-task spine ownership and an identity that survives an agent dropping off and respawning. Cross-platform usability matters but is explicitly not this round's problem."
+    },
+    "definition_of_done": [
+      "An agent dispatched through run_crew.py drives its own spine through the door, measured from its own call record: door calls > 0 and CLI engine invocations == 0.",
+      "A respawned agent on the same assignment resumes its lease instead of force-claiming it."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Every claim about what happened brings its evidence; a control must reproduce the defect before a fix is believed.",
+      "sufficient_evidence": "Measured from the driving agent's own call record, never from the engine's refusals counter.",
+      "appetite": "One bounded wave; keep out the easy failures rather than making it foolproof."
+    },
+    "hard_constraints": [
+      "settings.json is never touched",
+      "docs/agents/* edits are a human's call",
+      "No merge or push to main while the human is AFK",
+      "Planning makes no direct gh or network mutation"
+    ],
+    "fixed_decisions": [
+      "Launched identities remain stable",
+      "The lease keys on the assignment, not the process instance",
+      "Identity is derived from the spine's own work_id, never hand-typed",
+      "The CLI door stays as a fallback; F is additive"
+    ],
+    "current_wave": {
+      "objective": "Make the door launchable where the owner works (PR #555), on the assumption that Windows launch was the blocker on adoption.",
+      "exit_criteria": [
+        "The door launches from a fresh install on Windows and POSIX, proven in CI"
+      ],
+      "issues": [
+        {
+          "id": "555",
+          "title": "Make the MCP door launch where python3 is not a command",
+          "desired_outcome": "The door launches from a fresh install on both platforms.",
+          "useful_now": "It was believed to be the blocker on adoption.",
+          "appetite": "One bounded wave",
+          "acceptance_or_falsification_evidence": "Green CI on windows-latest plus a cold review.",
+          "implementation_latitude": "Choose the interpreter resolution; no literal interpreter in the shipped path.",
+          "hard_constraints_no_gos": ["No user-scope writes under a project-scope flag"],
+          "local_unknowns": ["Whether --wire-mcp writes only where the caller named"],
+          "anchors": ["scripts/install_constellation.py", ".mcp.json"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "#421 (C) relocation tranche",
+        "why_likely": "It was gated on a settled verb contract and a launchable door",
+        "entry_conditions": ["The door launches from a fresh install on Windows and POSIX"]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether role-spine instructions cause adoption",
+        "affects": "Whether instruction edits are worth further investment",
+        "settle_by": "A measurement whose arms load a corpus containing the edits",
+        "current_evidence": "All three F2 arms loaded a pre-edit corpus; arm 3 found the door via ToolSearch, not via any instruction",
+        "next_probe": "Re-measure once a launchable, correctly-bound door exists"
+      }
+    ],
+    "parked_possibilities": [
+      "Removing the CLI fallback for agents entirely (#559)",
+      "--wire-hooks scope defect (#560)"
+    ]
+  },
+  "completed_outcomes": [],
+  "wave_evidence": [
+    {
+      "claim": "The MCP door does not work in this environment",
+      "expected": "The door fails to launch or fails to serve here",
+      "observed": "FALSIFIED. `claude mcp list` reports the spine server Connected, all 7 tools are present in an interactive session, and a direct JSON-RPC handshake with SPINE_FILE set returns this epic's own execute gate and live lease. The server is sound.",
+      "source": "claude mcp list; direct initialize + tools/call handshake against scripts/mcp_spine_server.py, 2026-08-10"
+    },
+    {
+      "claim": "Windows launch (#553) is the blocker on door adoption",
+      "expected": "Fixing the launch line unblocks agents using the door",
+      "observed": "FALSIFIED for this host. The door launches fine here and still cannot be used, because it binds to examples/mcp-interactive-demo/spine.json. Windows launch is a real and separate defect.",
+      "source": "spine_status through the approved door returned the demo's gate g1, not this epic's execute step"
+    },
+    {
+      "claim": "Nothing in any shipped launch path binds the door to the caller's spine",
+      "expected": "Some shipped script sets SPINE_FILE per dispatch",
+      "observed": "CONFIRMED. `grep -rln SPINE_FILE scripts/` returns exactly one file, mcp_spine_server.py, which only reads it. run_crew.py has zero MCP references. The only places it has ever been set are three throwaway measurement scripts under commander-f2/evidence/g4b/run_arm*.sh.",
+      "source": "grep over scripts/; read of run_crew.py crew_env() at line 388"
+    },
+    {
+      "claim": "In-session subagents cannot own a spine binding, so per-task binding is impossible",
+      "expected": "Every dispatched agent inherits the parent's bound spine",
+      "observed": "FALSIFIED as stated. It holds only for in-session Agent-tool subagents (F2 arms 1 and 2: 0 door calls against 21 and 20 CLI). run_crew.py spawns crew as separate `claude -p` processes whose environment is built by crew_env(), so each could bind its own spine.",
+      "source": "read of run_crew.py build_crew_argv/launch_process/crew_env; commander-f2/evidence/g4b/MEASUREMENT.md"
+    },
+    {
+      "claim": "Lease identity is stable across a respawn",
+      "expected": "A resumed agent re-claims the same identity idempotently",
+      "observed": "FALSIFIED. Four live spines in this epic carry four different ad-hoc identities: a session UUID (admiral), None/never-claimed (commander-f2 execute.json), and hand-typed `g2-implement-session` and `g4a-implement-session`. This spine's own init imperative asks for the stable `admiral-epic-418-followon`; two successive sessions typed UUIDs instead.",
+      "source": "read of the four spine files' engine_session and work_id fields, 2026-08-10"
+    },
+    {
+      "claim": "The mechanism for respawn-safe ownership must be built from scratch",
+      "expected": "No existing construct provides it",
+      "observed": "FALSIFIED. run_crew.py::session_name already mints the deterministic nesting-aware name constellation/<work-id>/<gate>/<role>/attempt-<n>, and checklist_engine.py::claim already gives idempotent same-id resume, refusal on a different active id, force-with-reason takeover recording previous_session_id, and staleness self-yield. The two halves were never connected.",
+      "source": "read of run_crew.py lines 148-206 and checklist_engine.py claim() lines 960-1018"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "The door is connected and correct but binds to the demo example spine, because nothing in any shipped launch path sets SPINE_FILE",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth",
+      "evidence": "spine_status through the approved door returned the demo's gate g1; grep -rln SPINE_FILE scripts/ returns only the server that reads it",
+      "reason": "It does not block #555's own exit criterion — that wave could pass on its own terms and still leave adoption impossible. It invalidates the decomposition, because the wave was aimed at the wrong axis"
+    },
+    {
+      "id": "D1",
+      "signal": "The planned wave targets Windows launch (#555), which is not what blocks adoption",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth",
+      "evidence": "The door launches correctly on this host and is still unusable; #421's entry condition was written against the launch axis",
+      "reason": "The decomposition was built on a falsified premise about which defect gates adoption"
+    },
+    {
+      "id": "D2",
+      "signal": "Lease identity is hand-typed and has drifted four times in this epic, so a respawn cannot resume its own assignment",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth",
+      "evidence": "Four spines, four conventions; this spine's own imperative asks for a stable id that two sessions overrode with UUIDs",
+      "reason": "The human specified respawn-safe identity as a from-the-beginning requirement, so it belongs in the current wave rather than the forecast"
+    },
+    {
+      "id": "D3",
+      "signal": "Windows launch remains a genuine defect with a promising but unverified fix parked on PR #555 at 6b947546",
+      "classification": "later_only",
+      "affects": "Current planning truth",
+      "evidence": "CI green on that commit (run 31405772388, windows-latest); the suite never completed under supervision and no cold reviewer has seen it",
+      "reason": "Real, but not on the path to this round's goal, and the human accepted being broken on Windows for now"
+    },
+    {
+      "id": "D4",
+      "signal": "The claim that dispatched agents must inherit the parent's bound spine",
+      "classification": "drop",
+      "affects": "Current planning truth",
+      "evidence": "run_crew.py spawns separate claude processes with an environment built by crew_env(); only in-session Agent-tool subagents share the parent's servers",
+      "reason": "The evidence falsified it as a general constraint"
+    }
+  ],
+  "open_current_wave_issue_ids": ["555"],
+  "unlaunched_items": [
+    {"id": "421", "kind": "issue"},
+    {"id": "559", "kind": "parked"},
+    {"id": "560", "kind": "parked"},
+    {"id": "instruction-causes-adoption", "kind": "uncertainty"}
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/run_crew.py",
+      "scripts/checklist_engine.py",
+      "scripts/mcp_spine_server.py",
+      ".mcp.json"
+    ],
+    "map_status": "map/INDEX.md present and generated; not consulted for this transition"
+  }
+}

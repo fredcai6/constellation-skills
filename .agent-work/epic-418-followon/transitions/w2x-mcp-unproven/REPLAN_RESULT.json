@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "decision": "replan",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Not met, and the previous transition said otherwise. The wave was recorded as advance with C's entry condition met; the door does not launch on the platform the repo owner uses and no fresh install wires it, so the entry condition is not met and the exit was mis-recorded.",
+    "epic_done": "Not complete. F2's door is built and serves correctly once launched, but launching it is the unfinished half.",
+    "good_enough": "The quality boundary is being enforced now rather than at exit, which is late. The evidence that contradicted the ranking existed before the ruling was made -- #553 was filed mid-wave and states plainly that the door does not launch on the owner's machine."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "X0",
+      "action": "revise_plan",
+      "reason": "The decomposition split 'the door works' from 'agents use the door' and treated only the second as C's gate. They are one condition: C is written against a door, and a door that cannot be opened on the author's machine is not a contract C can be written against.",
+      "issue_created": false
+    },
+    {
+      "id": "X1",
+      "action": "record_evidence_only",
+      "reason": "An Admiral error for the retrospective. A requirement phrased as a question is still a requirement, and I held the measurement that contradicted my own ranking before I ruled. No rule for future agents is written here; that belongs in docs/agents/* and is the human's call.",
+      "issue_created": false
+    },
+    {
+      "id": "X2",
+      "action": "amend_forecast_or_parked",
+      "reason": "Measuring whether role-spine instructions CAUSE adoption needs a launchable door and a corpus that actually loads the edits. It follows this wave rather than sharing it.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Make the MCP door launchable on any machine and prove it on Windows CI. C (#421) stays in this wave but DOES NOT BEGIN until that is proven -- it is written against the door, and a door its author cannot open is not a contract to write against.",
+    "exit_criteria": [
+      "install_constellation.py ships and wires the door's configuration, with the interpreter resolved per machine and no literal interpreter name anywhere in the shipped path",
+      "A test on Windows CI launches the door through the emitted configuration and drives a real tool call through it, failing loudly if the process cannot start",
+      "The resolution is proven to be resolution -- the emitted command is the candidate that probed successfully, not a name that happened to work on the runner",
+      "The CLI door is untouched and still available",
+      "ONLY THEN: C's relocation tranche, against a door that opens"
+    ],
+    "issues": [
+      {
+        "id": "542",
+        "title": "Adopt the MCP door: agents default to it for spine management, measured from the call record",
+        "desired_outcome": "Agents default to the door, with the CLI kept as the documented fallback, and adoption measured from the driving agent's own call record.",
+        "useful_now": "C relocates gate instructions against whichever door delivers them; doing C against the CLI and porting after is doing it twice.",
+        "appetite": "One Commander, one wave",
+        "acceptance_or_falsification_evidence": "A dispatched agent's own call record showing door calls and zero CLI engine invocations, with Bash available so zero-CLI cannot be true by construction",
+        "implementation_latitude": "Which role spines change and in what order, how the acceptance run is staged, test structure",
+        "hard_constraints_no_gos": [
+          "The CLI door stays; F is additive",
+          "settings.json untouched at user scope",
+          "no engine logic duplicated"
+        ],
+        "local_unknowns": [
+          "whether identity can be bound to a container the harness shares"
+        ],
+        "anchors": [
+          "scripts/mcp_spine_server.py",
+          "scripts/install_constellation.py",
+          "skills/workbench/references/checklist-engine.md"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "421",
+        "title": "C: first relocation tranche — move gate-specific instruction out of the launch order and into the spine",
+        "desired_outcome": "An agent receives what its current gate needs, when it needs it, rather than the whole spec at dispatch.",
+        "useful_now": "F2 settled which door delivers gate results, so the relocation is written once rather than written and ported.",
+        "appetite": "One Commander, one wave",
+        "acceptance_or_falsification_evidence": "Per-run delivered tokens measured across arms, and gate-N+k work counted from an agent's own record",
+        "implementation_latitude": "Tranche boundary, which roles move first, how the measure is staged",
+        "hard_constraints_no_gos": [
+          "The gate imperative rides tool results verbatim",
+          "The CLI door stays; adoption changed the default, not the availability",
+          "settings.json is never written at user scope"
+        ],
+        "local_unknowns": [
+          "whether the tranche boundary is costly to revert once instructions move"
+        ],
+        "anchors": [
+          "scripts/checklist_engine.py",
+          "scripts/mcp_spine_server.py",
+          "skills/commander/templates/EXECUTE_PLAN.template.json"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "C (#421): first relocation tranche, against a door that opens",
+      "why_likely": "C relocates gate instructions into the spine and is written against whichever door delivers them",
+      "entry_conditions": [
+        "the door launches from a fresh install on Windows and POSIX, proven in CI",
+        "the human clears the launch"
+      ]
+    },
+    {
+      "outcome": "Measure whether role-spine instructions cause adoption, rather than merely accompany it",
+      "why_likely": "The adoption claim currently rests on an arm that found the door by tool discovery, not by instruction",
+      "entry_conditions": [
+        "a launchable door",
+        "a corpus arm that genuinely loads the adoption edits"
+      ]
+    },
+    {
+      "outcome": "Close the epic: episodes, cartographer reconcile, harvest before sweep, user acceptance",
+      "why_likely": "C is the last workstream; E was removed from this epic at the human's direction",
+      "entry_conditions": [
+        "C has landed or been dispositioned"
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether MCP ${VAR} expansion applies to a server's `command`, or only to `env` values",
+      "affects": "Whether one tracked config can serve every machine, or the interpreter must be written into a per-machine artifact",
+      "settle_by": "This wave, before the design is chosen",
+      "current_evidence": "The env values demonstrably expand. Nothing has been measured about `command`.",
+      "next_probe": "Direct measurement; design for the pessimistic answer if it cannot be measured"
+    },
+    {
+      "unknown": "Whether role-spine instructions cause adoption or merely accompany it",
+      "affects": "Whether criterion 1 of #542 bought anything",
+      "settle_by": "The follow-on measurement wave",
+      "current_evidence": "All three g4b arms loaded a pre-edit corpus; the accepting arm used ToolSearch.",
+      "next_probe": "An arm that genuinely loads the edited corpus"
+    }
+  ],
+  "revised_parked": [
+    "Description trimming and the bare-descriptions control arm",
+    "A third door beyond CLI and MCP",
+    "Concurrency beyond the two-instance separation test"
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "553",
+      "action": "keep",
+      "reason": "It is this wave's subject: the hardcoded interpreter in the door's launch line."
+    },
+    {
+      "id": "description-trimming",
+      "action": "keep",
+      "reason": "Out of scope in spec section F and untouched."
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "C's entry condition",
+      "before": "Agents running the spine through the door rather than the CLI -- recorded as MET",
+      "after": "The door launching from a fresh install on Windows and POSIX, proven in CI -- NOT met",
+      "reason": "One agent drove one spine through the door on one platform, having found the tools by discovery rather than by instruction, against a config that does not resolve on the owner's machine. That is not the door working."
+    },
+    {
+      "surface": "The current wave",
+      "before": "#542's installer criterion plus C (#421)",
+      "after": "#542's installer criterion alone; C returns to the forecast behind a tightened entry condition",
+      "reason": "C cannot be written against a door its author cannot open, and pairing them invited the same deferral again."
+    },
+    {
+      "surface": "How the installer criterion is ranked",
+      "before": "The Admiral's own draft criterion, deferrable on budget",
+      "after": "The epic's gating condition, and the answer to the owner's actual question",
+      "reason": "The owner asked 'with reinstall will we start driving through the mcp server?' and the measured answer on their machine is no."
+    }
+  ],
+  "wave_review_comment": "## Material exception — w2x-mcp-unproven\n\n**The wave-2 transition recorded C's entry condition as met. It is not.**\n\nWhat was measured: one dispatched agent drove one role spine to done through the door, on Linux, having found the tools via `ToolSearch` against `--allowedTools`. What was claimed from it: that agents now run the spine through the door, which was C's gate.\n\nWhat is also true, and was known before the ruling:\n\n- `.mcp.json` hardcodes `\"command\": \"python3\"`. The python.org Windows installer ships `python.exe` and `py`, not `python3.exe`, and App Execution Aliases route a bare `python3` to a Store stub. On the repo owner's own machine `py` is an extensionless `#!/bin/sh` wrapper PowerShell cannot execute and `python` is not on PATH. **The door does not launch there.**\n- `install_constellation.py` has **zero** MCP references. A fresh install never wires the door at all.\n- All three acceptance arms loaded a skills corpus predating the adoption edits, so **whether the role-spine instructions cause adoption is unmeasured** — the accepting arm found the door by tool discovery.\n\n**The Admiral error is the ranking, not the measurement.** The owner asked *\"with reinstall will we start driving through the mcp server?\"* I classified that as a question rather than an instruction, deprioritised the installer criterion on that basis, then measured mid-wave that the answer was no, filed #553 saying so, and recorded `advance` anyway. The evidence that contradicted the ranking existed before the ruling was made.\n\n**Decision: replan.** The current wave becomes making the door launchable and proving it on Windows CI — the door serves correctly once started, so the defect is the launch line, not the server. C returns to the forecast behind an entry condition stated as a property that can be checked: the door launches from a fresh install on Windows and POSIX, proven in CI.",
+  "revised_epic_body": "## Current planning truth — material exception after wave 2\n\n**The door is built, serves correctly, and does not launch where the owner works.** `initialize` returns `serverInfo`, `tools/list` returns all 7 tools, and a real `spine_status` call returns real engine content — so the server is sound. The defect is its launch line: `.mcp.json` hardcodes `\"command\": \"python3\"`, which resolves on neither the owner's Windows box nor anything without a `python3` on PATH, and `install_constellation.py` has zero MCP references so a fresh install never wires it.\n\n**C (#421) does not launch, and its entry condition is restated as something checkable:** the door launches from a fresh install on Windows and POSIX, proven in CI — not \"an agent drove it once on one platform\". The previous transition recorded that condition as met; that was wrong and this record supersedes it.\n\n**The current wave is one issue:** finish #542's installer criterion. Reuse the per-machine interpreter resolution the installer already carries from #539/#540, which hard-stops when nothing probes rather than stamping a known-broken name. No literal interpreter anywhere in the shipped path.\n\n**Also unmeasured, and now forecast rather than claimed:** whether role-spine instructions *cause* adoption. All three acceptance arms loaded a corpus predating the edits and the accepting arm found the door through `ToolSearch`. That is recorded as unmeasured, not as a negative, and it needs a launchable door before it can be measured honestly.\n\n**E (#423) is out of this epic** at the human's direction.",
+  "escalation": null
+}

@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "decision": "repair",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Not met, and measurably so. Three of F's six done-conditions are UNMEASURED (DC3, DC5, DC6) because gates g2, g3 and g4 were never reached, and g1-integrate is blocked by its own cold reviewer. The exit criteria remain measurable and the blocking evidence is obtainable, so this is a repair rather than a replan.",
+    "epic_done": "The epic is not complete. F is partially landed, C and E are unstarted.",
+    "good_enough": "The mandatory quality boundary is preserved, and preserved in the hard direction: the Commander refused to dress three unmeasured conditions as honest nulls, stating 'this is unmeasured, not a measured negative, and I'm not dressing it up as one'. That is the standard the contract asked for, applied against its own interest."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "D0",
+      "action": "repair_current_wave",
+      "reason": "The reviewer's BLOCK stands and was not overridden by the Commander — correctly. It resolves by measuring one fact, whose gate already has a written handoff. Repair, not waiver.",
+      "issue_created": false
+    },
+    {
+      "id": "D1",
+      "action": "revise_plan",
+      "reason": "Gate order is inverted: the claim sits at g1 and its evidence at g3. The repair reorders to run g3 first. The Commander identified this as its own defect, which is the cheapest possible way for it to surface.",
+      "issue_created": false
+    },
+    {
+      "id": "D2",
+      "action": "amend_forecast_or_parked",
+      "reason": "map_orient.py's DEGRADED-NO-MAP on a repo with a live map is a real defect and a confident wrong negative — the expensive kind. Outside F's scope; goes to the board, not into this wave.",
+      "issue_created": true
+    },
+    {
+      "id": "D3",
+      "action": "record_evidence_only",
+      "reason": "The heartbeat-is-not-liveness finding is an observation for the epic retrospective. Promoting it to a rule belongs in docs/agents/* and is the human's call.",
+      "issue_created": false
+    },
+    {
+      "id": "D4",
+      "action": "drop",
+      "reason": "The server-side DC5 numerator was falsified and already replaced with a sound design before any number was published. Nothing survives to carry forward except the corrected design itself.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Land F: the MCP front door, with its acceptance measured rather than asserted",
+    "exit_criteria": [
+      "F's six done-conditions each carry a verdict backed by evidence",
+      "PR green and independently reviewed",
+      "no gate left blocked by its own reviewer"
+    ],
+    "issues": [
+      {
+        "id": "424",
+        "title": "MCP front door for the engine — ~7 typed tools wrapping the dispatch loop",
+        "desired_outcome": "A second front door that moves spine-management cost off the working agent's attention, with the cost drop measured.",
+        "useful_now": "F settles the verb contract C must relocate against, and it is the epic's least-proven piece — finding out early is the point of the reorder.",
+        "appetite": "One Commander, one wave",
+        "acceptance_or_falsification_evidence": "DC5 counted from the call record, both arms, both sides of the door, CLI baseline re-measured rather than reused",
+        "implementation_latitude": "Tool grouping, argument shapes, delivery mechanism, tracer protocol and n, what is lifted from the prototype",
+        "hard_constraints_no_gos": [
+          "settings.json untouched",
+          "no engine logic duplicated",
+          "do not gold-plate the tool grouping"
+        ],
+        "local_unknowns": [
+          "whether an in-session Task-tool subagent shares its parent's already-launched MCP server"
+        ],
+        "anchors": [
+          "scripts/checklist_engine.py",
+          "scripts/mcp_spine_server.py",
+          "skills/workbench/references/checklist-engine.md"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "C (#421): first relocation tranche against F's settled verb contract",
+      "why_likely": "F is the stated dependency and its verb surface is what C writes against",
+      "entry_conditions": [
+        "F's verb contract is settled and not still moving"
+      ]
+    },
+    {
+      "outcome": "E (#423): re-cut the survivors and run the terminal shipped-vs-obligation check",
+      "why_likely": "E is terminal by its own body and runs on what survives",
+      "entry_conditions": [
+        "every other issue in the epic has landed"
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Does an in-session Task-tool subagent share its parent's already-launched MCP server?",
+      "affects": "Whether per-dispatch config generation is necessary at all; DC3's verdict; and whether the door can fail closed for the one shape env vars cannot reach",
+      "settle_by": "g3, run first in the repair",
+      "current_evidence": "External-process dispatch IS served by ${VAR} expansion in one shared committed config — two dispatches, two identities, reviewer-verified and reproduced. The in-session case is untested and is the only case that could still justify generation.",
+      "next_probe": "g3, handoff already written"
+    },
+    {
+      "unknown": "Whether the corrected DC5 design survives contact with a real run",
+      "affects": "F's acceptance measure",
+      "settle_by": "g4",
+      "current_evidence": "The design was corrected after a cold critic showed the original numerator could not lose. No counts exist yet.",
+      "next_probe": "g4"
+    }
+  ],
+  "revised_parked": [
+    "Description trimming and the bare-descriptions control arm",
+    "A third door beyond CLI and MCP",
+    "Concurrency beyond the two-instance separation test"
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "421",
+      "action": "keep",
+      "reason": "Still the next link; entry condition tightened to F's repair completing"
+    },
+    {
+      "id": "423",
+      "action": "keep",
+      "reason": "Terminal by its own body; unchanged"
+    },
+    {
+      "id": "in-session-mcp-sharing",
+      "action": "keep",
+      "reason": "Promoted from a local unknown to the repair's first exit criterion"
+    },
+    {
+      "id": "description-trimming",
+      "action": "keep",
+      "reason": "Explicitly out of scope in spec section F"
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "F done-condition status",
+      "before": "F's six done-conditions expected to carry verdicts at wave exit",
+      "after": "DC3, DC5 and DC6 are UNMEASURED — their gates were never reached — and are reported as unmeasured rather than as measured negatives",
+      "reason": "g2, g3 and g4 were not reached before the Commander returned; the honest-null clause does not apply to work that was never run"
+    },
+    {
+      "surface": "F delivery path",
+      "before": "per-dispatch config generation is required because project-scope .mcp.json cannot serve a cold agent or key identity per agent",
+      "after": "contested — live sessions do not hot-reload .mcp.json (holds), but --allowedTools was omitted from the cold-agent test, and ${VAR} expansion does key identity per agent across external dispatches",
+      "reason": "falsified twice, once by the Commander's own omission and once by the g1 cold reviewer, then reproduced"
+    },
+    {
+      "surface": "F gate order",
+      "before": "the necessity claim sits at g1-integrate and its evidence at g3",
+      "after": "g3 runs first in the repair, so the evidence precedes the claim that depends on it",
+      "reason": "the g1 reviewer's BLOCK is unresolvable without a fact scheduled two gates later; the Commander named the ordering as its own defect"
+    },
+    {
+      "surface": "wave-1 test baseline",
+      "before": "six pinned known-red tests on this host, gate is 'the set has not grown'",
+      "after": "the suite is green on Linux and on Windows CI at the same commit; gate is simply 'the suite is green'",
+      "reason": "#531 merged to main at 8db47044 and the baseline was retired mid-wave"
+    }
+  ],
+  "wave_review_comment": "## Wave review — w1-f424-repair\n\n**F did not complete, and the report of it is the wave's best artifact.** Three of six done-conditions (DC3, DC5, DC6) are **unmeasured** because gates g2, g3 and g4 were never reached. The Commander refused to record them as honest nulls: *\"this is unmeasured, not a measured negative, and I'm not dressing it up as one.\"* An unmeasured condition dressed as a measured negative is the failure this epic exists to catch, and it was declined against the reporter's own interest.\n\n**What landed:** `mcp_spine_server.py` (575), `test_mcp_spine_server.py` (528), `gen_mcp_config.py` (107), `.mcp.json` — PR #533, open, mergeable, suite green at 2163 passed / 0 failed after merging main.\n\n**What blocked it:** the g1 cold reviewer's BLOCK stands, unwaived and unoverridden. It targets `gen_mcp_config.py`'s *justification*, not its code — protected-intent items verified, engine diff empty. Necessity turns on one unmeasured fact: does an in-session Task-tool subagent share its parent's already-launched MCP server? That fact **is DC3**, and the plan put the claim at g1 with its evidence at g3. The Commander named that ordering as its own defect.\n\n**Two falsifications, both self-corrected:** the delivery-path conclusion fell twice — first because `--allowedTools` was omitted and a per-tool permission gate was misread as MCP failure, then because \"a shared file cannot key identity per agent\" is untrue under `${VAR}` expansion. And DC5's original numerator counted server-side, where a client-side schema rejection never arrives — a measure that structurally could not lose. All three were caught by cold review, and the corrected DC5 design is the run's most reusable output.\n\n**Decision: repair.** The forecast and the current wave are held; C does not launch. A continuation runs g3 first, then resolves the block on evidence, then g2 and g4.",
+  "revised_epic_body": "## Current planning truth — after wave 1 (repair)\n\n**F (#424) is partially landed and is being repaired, not advanced past.** The MCP door exists and serves: `scripts/mcp_spine_server.py`, `tests/test_mcp_spine_server.py`, `scripts/gen_mcp_config.py` and `.mcp.json` are on PR #533, green and mergeable. Three of six done-conditions are **unmeasured** — DC3, DC5 and DC6 — because their gates were never reached. They are not negatives and are not reported as such.\n\n**The repair has one ordering fix at its centre.** The plan asserted at g1 that per-dispatch config generation is necessary, and scheduled the evidence for that claim at g3. The g1 reviewer blocked on exactly that gap. The continuation runs **g3 first**: does an in-session Task-tool subagent share its parent's already-launched MCP server? External-process dispatch is already known to be served by `${VAR}` expansion in a single committed config — two dispatches, two identities, independently verified — so the in-session case is the only one that could still justify generation.\n\n**C (#421) does not launch.** A repair holds the forecast and the current wave; C's entry condition is F's verb contract being settled rather than still moving, and it is still moving.\n\n**E (#423) is unchanged and terminal by its own body.**\n\n**Retired this wave:** the six-failure known-red baseline. #531 merged; the suite is green on Linux and on Windows CI at the same commit for the first time, so the gate is now simply that the suite is green.\n\n**Carried to the human at the checkpoint:** the `py`-first interpreter candidate order (a cross-device production default with two known victims); the Context Governor unwired at user scope; 40 stale `active` leases in `.agent-work`, none with a heartbeat under an hour; and #530, #532 and the map_orient defect as filed or filing work.",
+  "escalation": null
+}

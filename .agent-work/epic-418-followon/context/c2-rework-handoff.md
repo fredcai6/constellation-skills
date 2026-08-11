@@ -100,6 +100,34 @@ changed — and that refusal is filed as a triage candidate on `run_crew.py`, so
 build here.** Your job is to pass the flags and to say in your result whether you think the refusal
 is the right remedy.
 
+## Blocker 4 — the wrong parent is baked into two shipped role specs
+
+`specs/implementer.spine.toml:4` and `specs/reviewer.spine.toml:4` both carry:
+
+```toml
+parent = "admiral-epic-418-followon"
+```
+
+That is one specific Admiral session id, hardcoded into two **reusable role templates**, and
+`generate_spine.py:372` feeds it into the handback contract via
+`hand_back_to = spec.get("parent") or "unknown"`. Every future implementer instantiated from that
+spec would be told to hand back to a session that ceased to exist when this epic closed.
+
+This is worse than the dispatch-flag miss in Blocker 3, because that one is per-run and ephemeral
+while this ships. It is the same root value, leaked one layer further.
+
+**The design around it is right and stays.** `or "unknown"` is the correct honest-null default: a
+crew that does not know its parent should say so rather than guess. It was handed a wrong value, not
+built wrong.
+
+**The fix follows from the placeholder ruling you are already implementing.** These files are
+templates, and a placeholder in a template is a legitimate slot — so `parent = "<parent>"`, resolved
+at instantiation, is the correct form. Omitting the line entirely is also acceptable, because
+defaulting to `unknown` is a *true* statement where the current value is a stale one.
+
+Add a check that a shipped spec under `specs/` carries no session-specific literal. A VIOLATING
+fixture proves it, per Blocker 2.
+
 ## What this whole finding is evidence for — say something about it
 
 The mission's settling question was whether the spec format removes the hand-authored-check defect or
