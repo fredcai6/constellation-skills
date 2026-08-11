@@ -1,0 +1,227 @@
+{
+  "work_id": "<work-id>",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and\nreferences/global-everyone.md), then the project deltas if present:\ndocs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the\ndiff, and the relevant packet. Record pass when loaded.\n",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + glossary + handoff + diff + packet loaded -- QUALITATIVE: no doctrine mechanically verifies an agent's comprehension of prose it read; this stated form is what `record --result pass` points at, since a survey item's postcondition list is otherwise empty here",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent named below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent named below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent named below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent named below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent named below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent named below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a\nverdict on each Fowler baseline smell (long method, large class, duplicated\ncode, feature envy, data clumps, primitive obsession, long parameter list,\nshotgun surgery, divergent change, message chains, speculative generality,\ncomments-as-deodorant): flagged / overridden / absent. Smells are judgment\ncalls, ALWAYS subordinate to the repo's documented standards -- an override\nneeds a logged standard + reason. Record the pass to\n.agent-work/<work-id>/FOWLER_PASS.json (from\ntemplates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py\n.agent-work/<work-id>/FOWLER_PASS.json (it refuses a skipped smell or an\nunlogged override), then record pass/fail with a finding. This item's\npostcondition command resolves the record path from <work-id> alone -- the\nsame substitution you already make everywhere else in this survey -- so no\nseparate placeholder to fill and no way to leave it stale. REPAIR PATH -- only\nif the record path ever needs to move off that fixed convention, correct it\nthrough the engine with `amend --delta <file>` whose single op is\n`retext-check` on this item's c1, never by hand-editing this survey. There,\n--authority is the dispatching Commander named in your reviewer handoff (never\na string you invent), and --reason is why the path changed. Do NOT silently\nskip this item.\n",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "cd <repo-root> && python scripts/verify_fowler_pass.py '.agent-work/<work-id>/FOWLER_PASS.json'"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent named below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        },
+        "claim": {
+          "magnitude": "large",
+          "text": "The Fowler-pass verdict spans the ENTIRE diff, not one narrow question the way the survey's other six items do -- a false 'absent' or an unlogged override lets a real code smell through with no other checkpoint behind it. It is the one item in either role spec whose scope is genuinely broad rather than narrowly targeted, which is why the escalation belongs here and not on a throwaway stand-in.",
+          "enforcement": "NOT machine-enforced here -- no postcondition is injected for a large claim on a `survey` spec. `checklist_engine.record()` on a survey item evaluates only command-kind postconditions (survey-record-check-scope, #422) and leaves an artifact-kind postcondition like the one `gated` specs inject permanently unevaluated; `checklist_engine.consolidate()` reads only each item's stored `result` field and nothing else (#328). An injected postcondition here would be silently inert, not a real gate -- so none is injected. The tier this gate hands back to (see `directives.handback.hand_back_to`) must adjudicate this claim itself.",
+          "note": "no postcondition was injected -- this gate carries a large claim on a `survey` spec, and nothing on a survey item's execution path would ever consult an injected one; see directives.claim.enforcement"
+        },
+        "claims_rollup": {
+          "r6-fowler": {
+            "magnitude": "large",
+            "text": "The Fowler-pass verdict spans the ENTIRE diff, not one narrow question the way the survey's other six items do -- a false 'absent' or an unlogged override lets a real code smell through with no other checkpoint behind it. It is the one item in either role spec whose scope is genuinely broad rather than narrowly targeted, which is why the escalation belongs here and not on a throwaway stand-in.",
+            "enforcement": "NOT machine-enforced here -- no postcondition is injected for a large claim on a `survey` spec. `checklist_engine.record()` on a survey item evaluates only command-kind postconditions (survey-record-check-scope, #422) and leaves an artifact-kind postcondition like the one `gated` specs inject permanently unevaluated; `checklist_engine.consolidate()` reads only each item's stored `result` field and nothing else (#328). An injected postcondition here would be silently inert, not a real gate -- so none is injected. The tier this gate hands back to (see `directives.handback.hand_back_to`) must adjudicate this claim itself."
+          }
+        }
+      },
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

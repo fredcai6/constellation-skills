@@ -97,6 +97,22 @@ class TestCheckKinds:
 
 
 # --------------------------------------------------------------------------- #
+# _RESOLVER_OWNED_TOKEN_RE -- carried finding from g1's cold review: the
+# import from init_work_area sat unused (an ast.Name walk found no reference
+# to it anywhere in generate_spine.py). DESIGN_NOTE.md section 4 cites it in
+# prose to justify emitting "<repo-root>" unresolved; this pins that claim as
+# a runtime-checked fact rather than a sentence.
+# --------------------------------------------------------------------------- #
+
+class TestResolverOwnedTokenRegex:
+    def test_repo_root_token_matches(self):
+        assert gs._RESOLVER_OWNED_TOKEN_RE.fullmatch("<repo-root>")
+
+    def test_non_resolver_token_does_not_match(self):
+        assert gs._RESOLVER_OWNED_TOKEN_RE.fullmatch("<exact test command>") is None
+
+
+# --------------------------------------------------------------------------- #
 # compile_condition -- one class per kind, exact compiled output
 # --------------------------------------------------------------------------- #
 
@@ -308,7 +324,11 @@ class TestHandback:
 
 
 # --------------------------------------------------------------------------- #
-# Claim escalation (DESIGN_NOTE.md section 6)
+# Claim escalation (DESIGN_NOTE.md section 6) -- `type_="gated"` (the `_spec()`
+# default) throughout this class. `gated` behaviour is UNCHANGED by the g2
+# rework round 2 fix below: `advance()` checks every postcondition with no
+# kind filter, so injecting c-escalation here is genuinely load-bearing. The
+# `survey` side (where it is NOT) is TestClaimEscalationOnSurvey below.
 # --------------------------------------------------------------------------- #
 
 class TestClaimEscalation:
@@ -333,6 +353,10 @@ class TestClaimEscalation:
         claim = spine["tasks"]["m1"]["directives"]["claim"]
         assert claim["magnitude"] == "large"
         assert claim["text"] == "this rewires the auth layer"
+        # g2 rework round 2: the enforced reading, naming the injected condition.
+        assert claim["enforcement"] == gs.CLAIM_ENFORCEMENT_GATED
+        assert "c-escalation" in claim["enforcement"]
+        assert "advance()" in claim["enforcement"]
 
     def test_normal_magnitude_injects_nothing(self):
         spec = _spec(gates=[_gate(
@@ -362,6 +386,7 @@ class TestClaimEscalation:
         rollup = spine["tasks"]["m3"]["directives"]["claims_rollup"]
         assert "m1" in rollup
         assert rollup["m1"]["text"] == "claim one"
+        assert rollup["m1"]["enforcement"] == gs.CLAIM_ENFORCEMENT_GATED
 
     def test_no_rollup_key_when_no_large_claims(self):
         spec = _spec(gates=[
@@ -370,6 +395,124 @@ class TestClaimEscalation:
         ])
         spine = gs.compile_spec(spec)
         assert "claims_rollup" not in spine["tasks"]["m2"]["directives"]
+
+
+# --------------------------------------------------------------------------- #
+# Claim escalation on a `survey` spec (g2 rework round 2) -- the cold review's
+# finding: `checklist_engine.record()` on a survey item evaluates only
+# command-kind postconditions and `consolidate()` reads only `result`, so an
+# injected artifact-kind c-escalation would be silently inert there. The fix:
+# inject NOTHING on a survey spec, and make the non-enforcement loud in
+# `directives.claim.enforcement` / `directives.claims_rollup[*].enforcement`
+# instead of enforcing it falsely.
+# --------------------------------------------------------------------------- #
+
+class TestClaimEscalationOnSurvey:
+    def test_large_claim_injects_no_postcondition(self):
+        spec = _spec(type_="survey", gates=[_gate(
+            postconditions=[_qualitative_cond()],
+            claim={"magnitude": "large", "text": "the Fowler-pass verdict spans the entire diff"},
+        )])
+        spine = gs.compile_spec(spec)
+        posts = spine["tasks"]["m1"]["postconditions"]
+        assert not any(c["id"] == "c-escalation" for c in posts)
+        assert len(posts) == 1  # only the qualitative postcondition the fixture already carried
+
+    def test_large_claim_renders_directives_claim_with_non_enforcement(self):
+        spec = _spec(type_="survey", gates=[_gate(
+            postconditions=[_qualitative_cond()],
+            claim={"magnitude": "large", "text": "the Fowler-pass verdict spans the entire diff"},
+        )])
+        spine = gs.compile_spec(spec)
+        claim = spine["tasks"]["m1"]["directives"]["claim"]
+        assert claim["magnitude"] == "large"
+        assert claim["text"] == "the Fowler-pass verdict spans the entire diff"
+        assert claim["enforcement"] == gs.CLAIM_ENFORCEMENT_SURVEY
+        # Names the actual mechanism, not just "not enforced" -- the whole
+        # point of stating a limit truthfully instead of a vague disclaimer.
+        assert "record()" in claim["enforcement"]
+        assert "command-kind" in claim["enforcement"]
+        assert "consolidate()" in claim["enforcement"]
+        assert "result" in claim["enforcement"]
+
+    def test_rollup_carries_enforcement_on_survey(self):
+        spec = _spec(type_="survey", gates=[
+            _gate(id_="m1", postconditions=[_qualitative_cond()],
+                  claim={"magnitude": "large", "text": "claim one"}),
+            _gate(id_="m2", postconditions=[_qualitative_cond()]),
+        ])
+        spine = gs.compile_spec(spec)
+        rollup = spine["tasks"]["m2"]["directives"]["claims_rollup"]
+        assert rollup["m1"]["text"] == "claim one"
+        assert rollup["m1"]["enforcement"] == gs.CLAIM_ENFORCEMENT_SURVEY
+
+    def test_gated_and_survey_enforcement_text_differ(self):
+        # The two cases must be told apart by CONTENT, not by absence (the
+        # handoff's explicit ask) -- the two constants must genuinely diverge.
+        assert gs.CLAIM_ENFORCEMENT_GATED != gs.CLAIM_ENFORCEMENT_SURVEY
+
+
+# --------------------------------------------------------------------------- #
+# Driven proof (g2 rework round 2, close criterion 4): the round-1 evidence
+# gap this rework answers is that the escalation's SHAPE was dumped from
+# compile_spec's output but never actually driven through
+# checklist_engine.record/consolidate/advance. This drives both a `survey`
+# spec and a `gated` spec through the REAL engine verbs and asserts the
+# outcome matches what directives.claim.enforcement says it will be -- not
+# what compile_spec's dict shape merely suggests it will be.
+# --------------------------------------------------------------------------- #
+
+class TestClaimEnforcementDrivenThroughEngine:
+    def test_survey_large_claim_consolidates_approve_with_nothing_attached(self):
+        # CLAIM_ENFORCEMENT_SURVEY says this is exactly what happens: no
+        # postcondition was injected, so nothing on the record()/consolidate()
+        # path ever looks for a review-result -- consolidate() APPROVEs a
+        # survey whose large-claim item was never independently reviewed.
+        spec = _spec(type_="survey", gates=[_gate(
+            id_="r1",
+            postconditions=[_qualitative_cond()],
+            claim={"magnitude": "large", "text": "the Fowler-pass verdict spans the entire diff"},
+        )])
+        spine = gs.compile_spec(spec)
+        assert not any(c["id"] == "c-escalation" for c in spine["tasks"]["r1"]["postconditions"])
+        # No evidence attached anywhere -- exactly the "no independent reviewer
+        # ever approved this" scenario the cold review flagged as silently
+        # passing on a survey gate.
+        assert spine["tasks"]["r1"]["evidence"] == []
+
+        msg = checklist_engine.record(spine, "r1", "pass", None)
+        assert msg == "r1 recorded pass"
+        assert spine["tasks"]["r1"]["status"] == "complete"
+
+        msg = checklist_engine.consolidate(spine, "APPROVE", None, None)
+        assert spine["consolidation"]["verdict"] == "APPROVE"
+        assert "APPROVE" in msg
+        # This is the measured behaviour CLAIM_ENFORCEMENT_SURVEY describes,
+        # not a hoped-for one: consolidate() never raised, never asked for an
+        # override, never looked at a (nonexistent) c-escalation.
+
+    def test_gated_large_claim_blocks_advance_until_review_result_attached(self):
+        # The contrasting, enforced case: CLAIM_ENFORCEMENT_GATED says
+        # advance() checks every postcondition with no kind filter, so this
+        # gate genuinely cannot close without an attached APPROVE.
+        spec = _spec(type_="gated", gates=[_gate(
+            id_="m1",
+            postconditions=[_qualitative_cond()],
+            claim={"magnitude": "large", "text": "this rewires the auth layer"},
+        )])
+        spine = gs.compile_spec(spec)
+        assert any(c["id"] == "c-escalation" for c in spine["tasks"]["m1"]["postconditions"])
+
+        checklist_engine.start(spine, "m1")
+        checklist_engine.attest(spine, "m1", "c1", "postconditions", "verified by hand")
+        with pytest.raises(checklist_engine.EngineError) as excinfo:
+            checklist_engine.advance(spine, "m1", mechanical=True)
+        assert "c-escalation" in str(excinfo.value)
+
+        checklist_engine.attach(spine, "m1", "review-result", {"verdict": "APPROVE"})
+        msg = checklist_engine.advance(spine, "m1", mechanical=True)  # no longer raises
+        assert spine["tasks"]["m1"]["status"] == "complete"
+        assert "complete" in msg
 
 
 # --------------------------------------------------------------------------- #
@@ -902,14 +1045,7 @@ class TestHandbackVerbs:
 # --------------------------------------------------------------------------- #
 
 class TestFalsificationFloor:
-    INJECTION_SNIPPET = (
-        '        postconditions.append({\n'
-        '            "id": RESERVED_CONDITION_ID,\n'
-        '            "statement": f"LARGE CLAIM -- an independent reviewer must approve this gate before it closes: {text}",\n'
-        '            "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}},\n'
-        '            "satisfied": False,\n'
-        '        })\n'
-    )
+    INJECTION_SNIPPET = '            postconditions.append(_escalation_postcondition(text))\n'
 
     _THROWAWAY_TEST = (
         "import sys\n"
@@ -947,7 +1083,7 @@ class TestFalsificationFloor:
         original = (ROOT / "scripts" / "generate_spine.py").read_text(encoding="utf-8")
         before = original.count(self.INJECTION_SNIPPET)
         assert before == 1, "harness error: injection snippet not found exactly once in the real source"
-        mutated = original.replace(self.INJECTION_SNIPPET, "        pass  # MUTATED: injection removed\n")
+        mutated = original.replace(self.INJECTION_SNIPPET, "            pass  # MUTATED: injection removed\n")
         after = mutated.count(self.INJECTION_SNIPPET)
         assert after == 0
         assert before - after == 1  # the mutation landed -- prove it before comparing red/green
@@ -964,6 +1100,73 @@ class TestFalsificationFloor:
             "changes nothing is the defect this epic exists to find\n" + proc.stdout + proc.stderr
         )
         assert "test_large_claim_injects_c_escalation_postcondition" in proc.stdout
+
+
+# --------------------------------------------------------------------------- #
+# Falsification floor for the survey/gated distinction itself (g2 rework
+# round 2, close criterion 5): same style as TestFalsificationFloor above, but
+# the mutation removes the `if spec_type == "gated":` branch entirely (so a
+# `survey` spec's large claim would ALSO get c-escalation injected, exactly
+# the cold-review-found defect this rework fixes). A named test asserting the
+# `survey` side stays clean must go red.
+# --------------------------------------------------------------------------- #
+
+class TestSurveyGatedDistinctionFloor:
+    DISTINCTION_SNIPPET = '        if spec_type == "gated":\n'
+
+    _THROWAWAY_TEST = (
+        "import sys\n"
+        "sys.path.insert(0, {scripts_dir!r})\n"
+        "import generate_spine as gs\n"
+        "\n"
+        "def test_survey_large_claim_injects_no_postcondition():\n"
+        "    spec = {{\n"
+        '        "work_id": "w1", "type": "survey", "config_ref": None,\n'
+        '        "gate": [{{\n'
+        '            "id": "r1", "title": "t", "imperative": "i",\n'
+        '            "postconditions": [{{"id": "c1", "statement": "s", "kind": "artifact", "evidence_type": "user-decision"}}],\n'
+        '            "claim": {{"magnitude": "large", "text": "big claim"}},\n'
+        "        }}],\n"
+        "    }}\n"
+        "    spine = gs.compile_spec(spec)\n"
+        '    posts = spine["tasks"]["r1"]["postconditions"]\n'
+        '    assert not any(c["id"] == "c-escalation" for c in posts)\n'
+    )
+
+    def _run_against(self, scripts_dir: Path, work_dir: Path):
+        work_dir.mkdir(parents=True, exist_ok=True)
+        test_file = work_dir / "test_floor_throwaway.py"
+        test_file.write_text(self._THROWAWAY_TEST.format(scripts_dir=str(scripts_dir)), encoding="utf-8")
+        return subprocess.run(
+            [sys.executable, "-m", "pytest", "-q", str(test_file)],
+            capture_output=True, text=True, timeout=60,
+        )
+
+    def test_baseline_is_green(self, tmp_path):
+        proc = self._run_against(ROOT / "scripts", tmp_path / "baseline")
+        assert proc.returncode == 0, "harness error, not a kill:\n" + proc.stdout + proc.stderr
+
+    def test_mutation_kills_it(self, tmp_path):
+        original = (ROOT / "scripts" / "generate_spine.py").read_text(encoding="utf-8")
+        before = original.count(self.DISTINCTION_SNIPPET)
+        assert before == 1, "harness error: distinction snippet not found exactly once in the real source"
+        mutated = original.replace(self.DISTINCTION_SNIPPET, '        if True:  # MUTATED: survey/gated distinction removed\n')
+        after = mutated.count(self.DISTINCTION_SNIPPET)
+        assert after == 0
+        assert before - after == 1  # the mutation landed -- prove it before comparing red/green
+
+        mutant_dir = tmp_path / "mutant_scripts"
+        mutant_dir.mkdir()
+        (mutant_dir / "generate_spine.py").write_text(mutated, encoding="utf-8")
+        for name in ("init_work_area.py", "validate_spine.py"):
+            (mutant_dir / name).write_text((ROOT / "scripts" / name).read_text(encoding="utf-8"), encoding="utf-8")
+
+        proc = self._run_against(mutant_dir, tmp_path / "mutant")
+        assert proc.returncode != 0, (
+            "the mutation did NOT turn the floor red -- a guard whose own removal "
+            "changes nothing is the defect this epic exists to find\n" + proc.stdout + proc.stderr
+        )
+        assert "test_survey_large_claim_injects_no_postcondition" in proc.stdout
 
 
 class TestPureBoundary:

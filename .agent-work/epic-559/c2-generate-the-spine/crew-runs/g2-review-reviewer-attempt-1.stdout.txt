@@ -1,0 +1,7 @@
+The g2 reviewer run is complete. Summary:
+
+**Verdict: BLOCK**
+
+I drove the full review survey through the engine (all 7 items visited, consolidated), verifying all 12 close criteria by actually running commands rather than reading claims. 11 of 12 held up cleanly on independent reproduction. The one blocking finding: DESIGN_NOTE.md's "large-claim escalation" mechanism (Property 2 — "an independent reviewer must approve this gate before it closes") is **mechanically inert** whenever the claiming gate sits on a `survey` checklist, which `reviewer.spine.toml`'s `r6-fowler` does. I proved this by driving a scratch copy of the generated spine through `record`/`consolidate` with the escalation's artifact postcondition never satisfied — the engine accepted `APPROVE` anyway. Root cause is a pre-existing `checklist_engine.py` scoping decision (`record()` only checks command-kind postconditions on surveys), predating this epic and out of the crew's fixable scope — so I routed it to the Admiral as a contract decision rather than crew rework, and flagged it as a triage candidate.
+
+The result is written to `.agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g2-review-result.md`, and the engine lease is released.

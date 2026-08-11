@@ -1,0 +1,110 @@
+{
+  "work_id": "<work-id>",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and\nreferences/global-everyone.md), then the project deltas if present:\ndocs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff and the\nrelevant packet. Verify the handoff is complete (task, intent, scope,\nexclusions, required evidence, test mode, stop conditions); if incomplete,\nblock and return. Attest c1.\n",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete -- QUALITATIVE: no doctrine mechanically verifies an agent's comprehension of prose it read -- verified downstream by m1's own precondition, which depends on this having actually happened and doubles as a second check on it",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the inherited global-crew doctrine file exists on disk to be read",
+          "check": {
+            "kind": "command",
+            "command": "cd <repo-root> && test $(python -c 'import pathlib,sys;print(sum(1 for _ in pathlib.Path(sys.argv[1]).glob(sys.argv[2])))' skills/_shared global-crew.md) -eq 1"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the inherited global-everyone doctrine file exists on disk to be read",
+          "check": {
+            "kind": "command",
+            "command": "cd <repo-root> && test $(python -c 'import pathlib,sys;print(sum(1 for _ in pathlib.Path(sys.argv[1]).glob(sys.argv[2])))' skills/_shared global-everyone.md) -eq 1"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent named below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1": {
+      "id": "m1",
+      "title": "Turn the unused _RESOLVER_OWNED_TOKEN_RE import into a real assertion (carried finding)",
+      "imperative": "Make the minimal change for this step. scripts/generate_spine.py:51 imports\n_RESOLVER_OWNED_TOKEN_RE from init_work_area and no ast.Name node anywhere in\nthe module referenced it -- DESIGN_NOTE.md section 4 cites the regex in prose\n(\"`<repo-root>` is resolver-owned -- verified,\n`_RESOLVER_OWNED_TOKEN_RE.fullmatch(\"<repo-root>\")` is true\") but the\njustification was wired to nothing. Do not simply delete the import. Add a\nmodule-level assertion next to `_REPO_ROOT_TOKEN` that actually calls\n`_RESOLVER_OWNED_TOKEN_RE.fullmatch(_REPO_ROOT_TOKEN)` and fails import if it\nis ever false, then pin it with a test asserting\n`_RESOLVER_OWNED_TOKEN_RE.fullmatch(\"<repo-root>\")` is truthy and that a\nnon-resolver token like `<exact test command>` is not. Attest any\ncheck:null precondition BEFORE start -- the engine refuses `start <id>` while\na precondition is unmet, so the order is attest-precondition -> start. This is\na test-after/inspection change (the assertion is a one-line invariant with no\nmeaningful failing-red state to encode), so collapse to the single\ngreen/observable postcondition (c2) rather than a separate TDD-red attest.\n",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete -- QUALITATIVE: asserted by the depending step itself, per DESIGN_NOTE.md section 11's trust-but-verify precedent for preconditions -- m0-context's own postconditions are the mechanical half of this check",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "_RESOLVER_OWNED_TOKEN_RE is genuinely referenced in scripts/generate_spine.py and the pinning assertion is covered by a real, currently-collecting test",
+          "check": {
+            "kind": "command",
+            "command": "cd <repo-root> && test $(python -m pytest -q -k TestResolverOwnedTokenRegex --collect-only tests/test_generate_spine.py 2>/dev/null | grep -c '::') -ge 2 && python -m pytest -q -k TestResolverOwnedTokenRegex tests/test_generate_spine.py"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Only scripts/generate_spine.py and tests/test_generate_spine.py may change for this step (Allowed Scope)",
+        "Do not delete the import without a documented reason -- turn it into a real assertion first, per the carried finding",
+        "A -k selector is a typed `selector` field on the pytest kind, never raw shell text -- there is no shell-text field to leave unquoted"
+      ],
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent named below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

@@ -241,6 +241,46 @@ says. The escalation could not fail against the very agent it exists to check. A
 matching `verdict: APPROVE` is a **checked property** rather than bare arrival, and its natural producer
 is a survey's consolidation — a different checklist driven by a different agent.
 
+### CORRECTION, after the g2 cold review — §6 was wrong about where this holds
+
+The paragraphs above describe the **`gated`** case, where they are accurate. They were **wrong as a
+general claim**, and the g2 cold reviewer proved it by driving the mechanism instead of reading it: it
+resolved the generated reviewer survey, drove every item through `record`, and consolidated — and the
+survey reached `APPROVE` with the injected `c-escalation` **still unsatisfied and no `review-result`
+ever attached**.
+
+The engine explains it, and the behaviour is deliberate and pre-existing (#422/#328):
+
+- `record()` on a **survey** item evaluates **only `command`-kind** postconditions; `artifact`-kind and
+  `null`-kind are left unevaluated.
+- `consolidate()` reads only each item's `result` field.
+- `advance()` — the **gated** closing verb — checks every postcondition with no kind filter.
+
+So the escalation fires on a gated gate and is **silently inert on a survey gate**. That is not a narrow
+residual; it is Property 2 failing for *every* survey-type role spec the format will ever generate.
+
+**What the generator does now.** On a `gated` spec, unchanged. On a `survey` spec it **injects nothing**
+— refusing to emit a postcondition the engine provably never consults — and instead states the
+non-enforcement in `directives.claim.enforcement` and in the matching `claims_rollup` entry, naming the
+mechanism, so a reader of the rendered gate is told which claims are gated and which are not.
+
+**Why not emit a `command`-kind check instead**, since `record` does evaluate those: no artifact exists
+in this corpus that a command could honestly check for "an independent reviewer approved this survey
+item", so the check would have to invent a file convention with **no producer** — turning a gate that
+cannot fail into one that cannot pass. That is prior-wave verdict B's exact defect, and it shipped in a
+template every Commander instantiates. Stating a limit truthfully beats enforcing it falsely.
+
+**Floated to the Admiral:** `record`/`consolidate` never evaluate artifact-kind postconditions on a
+survey item, so **no artifact-based gate can be enforced on any survey in this corpus** — reviewer and
+interrogator checklists included. Changing that is a `checklist_engine.py` change, outside a Commander's
+latitude.
+
+**A second correction, of fact.** §4 and the plan asserted that the shipped `r0-context` gate carries
+`falsifiable-all-null`. It does not, and the g2 implementer was right to say so: `_fault_all_null`
+returns early for any non-`gated` spine, and shipped `r0-context` carries an **empty** postcondition
+list rather than an all-null one. `REVIEW_SURVEY.template.json` sweeps clean. Only `m0-context` is among
+the 23 baseline faults.
+
 **The residual, stated plainly and floated, not patched:** the engine binds no provenance to evidence
 at all. A determined single agent can still attach a `review-result` claiming APPROVE. Closing that
 needs a `checklist_engine.py` change, which is outside a Commander's latitude, and it affects **every**

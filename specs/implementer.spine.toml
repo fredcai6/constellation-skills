@@ -1,0 +1,88 @@
+work_id    = "<work-id>"
+type       = "gated"
+config_ref = "docs/agents/engine-config.json"
+parent     = "admiral-epic-418-followon"
+
+# g2 of epic-559/c2-generate-the-spine: the first real gated role spec written
+# against scripts/generate_spine.py. Its intent matches the shipped
+# skills/implementer/templates/IMPLEMENTER_PLAN.template.json -- load context,
+# then do one bounded implementation step -- but every field below is typed
+# and probed, not a bracket a human fills in from memory. `m1` is not a
+# stand-in example: it IS this gate's own carried-over cleanup (turn the dead
+# `_RESOLVER_OWNED_TOKEN_RE` import into a real assertion), so its postcondition
+# points at a test that genuinely collects and passes on this repo right now.
+
+[[gate]]
+id    = "m0-context"
+title = "Load baseline context"
+imperative = """
+Read your inherited global doctrine (this skill's references/global-crew.md and
+references/global-everyone.md), then the project deltas if present:
+docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff and the
+relevant packet. Verify the handoff is complete (task, intent, scope,
+exclusions, required evidence, test mode, stop conditions); if incomplete,
+block and return. Attest c1.
+"""
+
+  [[gate.postconditions]]
+  id        = "c1"
+  statement = "crew context + glossary + handoff loaded; handoff complete"
+  kind      = "qualitative"
+  because   = "no doctrine mechanically verifies an agent's comprehension of prose it read -- verified downstream by m1's own precondition, which depends on this having actually happened and doubles as a second check on it"
+
+  [[gate.postconditions]]
+  id        = "c2"
+  statement = "the inherited global-crew doctrine file exists on disk to be read"
+  kind      = "population"
+  root      = "skills/_shared"
+  glob      = "global-crew.md"
+  expected  = 1
+
+  [[gate.postconditions]]
+  id        = "c3"
+  statement = "the inherited global-everyone doctrine file exists on disk to be read"
+  kind      = "population"
+  root      = "skills/_shared"
+  glob      = "global-everyone.md"
+  expected  = 1
+
+[[gate]]
+id    = "m1"
+title = "Turn the unused _RESOLVER_OWNED_TOKEN_RE import into a real assertion (carried finding)"
+imperative = """
+Make the minimal change for this step. scripts/generate_spine.py:51 imports
+_RESOLVER_OWNED_TOKEN_RE from init_work_area and no ast.Name node anywhere in
+the module referenced it -- DESIGN_NOTE.md section 4 cites the regex in prose
+("`<repo-root>` is resolver-owned -- verified,
+`_RESOLVER_OWNED_TOKEN_RE.fullmatch(\"<repo-root>\")` is true") but the
+justification was wired to nothing. Do not simply delete the import. Add a
+module-level assertion next to `_REPO_ROOT_TOKEN` that actually calls
+`_RESOLVER_OWNED_TOKEN_RE.fullmatch(_REPO_ROOT_TOKEN)` and fails import if it
+is ever false, then pin it with a test asserting
+`_RESOLVER_OWNED_TOKEN_RE.fullmatch("<repo-root>")` is truthy and that a
+non-resolver token like `<exact test command>` is not. Attest any
+check:null precondition BEFORE start -- the engine refuses `start <id>` while
+a precondition is unmet, so the order is attest-precondition -> start. This is
+a test-after/inspection change (the assertion is a one-line invariant with no
+meaningful failing-red state to encode), so collapse to the single
+green/observable postcondition (c2) rather than a separate TDD-red attest.
+"""
+constraints = [
+  "Only scripts/generate_spine.py and tests/test_generate_spine.py may change for this step (Allowed Scope)",
+  "Do not delete the import without a documented reason -- turn it into a real assertion first, per the carried finding",
+  "A -k selector is a typed `selector` field on the pytest kind, never raw shell text -- there is no shell-text field to leave unquoted",
+]
+
+  [[gate.preconditions]]
+  id        = "p1"
+  statement = "context loaded and handoff complete"
+  kind      = "qualitative"
+  because   = "asserted by the depending step itself, per DESIGN_NOTE.md section 11's trust-but-verify precedent for preconditions -- m0-context's own postconditions are the mechanical half of this check"
+
+  [[gate.postconditions]]
+  id        = "c2"
+  statement = "_RESOLVER_OWNED_TOKEN_RE is genuinely referenced in scripts/generate_spine.py and the pinning assertion is covered by a real, currently-collecting test"
+  kind      = "pytest"
+  selector  = "TestResolverOwnedTokenRegex"
+  min_collect = 2
+  targets   = ["tests/test_generate_spine.py"]

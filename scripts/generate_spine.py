@@ -60,7 +60,53 @@ CHECK_KINDS = ("qualitative", "pytest", "script", "population", "artifact")
 #: that declares a condition with this id is refused at spec-shape time.
 RESERVED_CONDITION_ID = "c-escalation"
 
+#: `directives.claim.enforcement` on a `gated` spec (g2 rework round 2, the
+#: DESIGN_NOTE.md section 6 defect the cold review found): `c-escalation` IS
+#: injected here, and `checklist_engine.advance()` -- the `gated` closing verb
+#: -- checks every postcondition with no kind filter, so this text states a
+#: mechanism that is genuinely load-bearing.
+CLAIM_ENFORCEMENT_GATED = (
+    "enforced -- postcondition `c-escalation` (kind=artifact, evidence_type=review-result, "
+    "match {\"verdict\": \"APPROVE\"}) is injected into this gate's postconditions. "
+    "`checklist_engine.advance()`, the `gated` closing verb, checks every postcondition "
+    "with no kind filter, so this gate cannot close until an independent reviewer's "
+    "APPROVE is attached and c-escalation is satisfied."
+)
+
+#: `directives.claim.enforcement` on a `survey` spec: no postcondition is injected
+#: here at all, because nothing on a survey item's execution path would ever
+#: consult it. `checklist_engine.record()` evaluates only command-kind
+#: postconditions on a survey item (the survey-record-check-scope ruling,
+#: #422) -- an artifact-kind postcondition would sit unevaluated forever.
+#: `checklist_engine.consolidate()` reads only each item's own stored `result`
+#: field and nothing else (#328). Injecting `c-escalation` here would not fail
+#: loudly; it would pass silently, which is worse than not injecting it -- see
+#: the cold review this round-2 rework answers.
+CLAIM_ENFORCEMENT_SURVEY = (
+    "NOT machine-enforced here -- no postcondition is injected for a large claim on a "
+    "`survey` spec. `checklist_engine.record()` on a survey item evaluates only "
+    "command-kind postconditions (survey-record-check-scope, #422) and leaves an "
+    "artifact-kind postcondition like the one `gated` specs inject permanently "
+    "unevaluated; `checklist_engine.consolidate()` reads only each item's stored "
+    "`result` field and nothing else (#328). An injected postcondition here would be "
+    "silently inert, not a real gate -- so none is injected. The tier this gate hands "
+    "back to (see `directives.handback.hand_back_to`) must adjudicate this claim itself."
+)
+
 _REPO_ROOT_TOKEN = "<repo-root>"
+
+#: Pins DESIGN_NOTE.md section 4's own claim -- "`<repo-root>` is resolver-owned
+#: -- verified, `_RESOLVER_OWNED_TOKEN_RE.fullmatch("<repo-root>")` is true --
+#: so it is legitimate in output and is not the placeholder class the generator
+#: refuses." Without this, that sentence was argued in prose while the import
+#: that could check it sat unused (g1's cold review, carried into g2). If
+#: `_REPO_ROOT_TOKEN` is ever edited to something outside the resolver-owned
+#: families, this fails at import time instead of silently emitting a spine the
+#: resolver can never finish resolving.
+assert _RESOLVER_OWNED_TOKEN_RE.fullmatch(_REPO_ROOT_TOKEN), (
+    f"{_REPO_ROOT_TOKEN!r} is not a resolver-owned token per "
+    f"_RESOLVER_OWNED_TOKEN_RE -- DESIGN_NOTE.md section 4 depends on this"
+)
 
 
 @dataclass(frozen=True)
@@ -307,7 +353,17 @@ def _handback_contract(hand_back_to: str) -> dict:
     }
 
 
-def _compile_gate(g: dict, *, hand_back_to: str, is_last: bool, large_claims: list[tuple[str, str]]) -> dict:
+def _escalation_postcondition(text: str) -> dict:
+    return {
+        "id": RESERVED_CONDITION_ID,
+        "statement": f"LARGE CLAIM -- an independent reviewer must approve this gate before it closes: {text}",
+        "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}},
+        "satisfied": False,
+    }
+
+
+def _compile_gate(g: dict, *, hand_back_to: str, is_last: bool,
+                   large_claims: list[tuple[str, str, str]], spec_type: str) -> dict:
     preconditions = [compile_condition(c, repo_root_token=_REPO_ROOT_TOKEN) for c in g.get("preconditions") or []]
     postconditions = [compile_condition(c, repo_root_token=_REPO_ROOT_TOKEN) for c in g.get("postconditions") or []]
 
@@ -316,24 +372,40 @@ def _compile_gate(g: dict, *, hand_back_to: str, is_last: bool, large_claims: li
     claim = g.get("claim")
     if claim and claim.get("magnitude") == "large":
         text = claim["text"]
-        postconditions.append({
-            "id": RESERVED_CONDITION_ID,
-            "statement": f"LARGE CLAIM -- an independent reviewer must approve this gate before it closes: {text}",
-            "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}},
-            "satisfied": False,
-        })
+        if spec_type == "gated":
+            # Unchanged from round 1: `advance()` (the `gated` closing verb)
+            # checks every postcondition with no kind filter, so injecting
+            # c-escalation here genuinely blocks close.
+            postconditions.append(_escalation_postcondition(text))
+            enforcement = CLAIM_ENFORCEMENT_GATED
+            note = (
+                f"postcondition {RESERVED_CONDITION_ID} was injected because this gate carries "
+                f"a large claim on a `gated` spec -- see directives.claim.enforcement for why "
+                f"that injection is genuinely load-bearing here"
+            )
+        else:
+            # g2 rework round 2: on a `survey` spec, `record()`/`consolidate()`
+            # never consult an artifact-kind postcondition (see
+            # CLAIM_ENFORCEMENT_SURVEY) -- injecting c-escalation here would be
+            # silently inert, not a real gate. Say so instead of injecting it.
+            enforcement = CLAIM_ENFORCEMENT_SURVEY
+            note = (
+                "no postcondition was injected -- this gate carries a large claim on a "
+                "`survey` spec, and nothing on a survey item's execution path would ever "
+                "consult an injected one; see directives.claim.enforcement"
+            )
         directives["claim"] = {
             "magnitude": "large",
             "text": text,
-            "note": (
-                f"postcondition {RESERVED_CONDITION_ID} was injected because this gate carries "
-                f"a large claim -- an unexplained injected condition is a comprehension cost "
-                f"paid down deliberately"
-            ),
+            "enforcement": enforcement,
+            "note": note,
         }
 
     if is_last and large_claims:
-        directives["claims_rollup"] = {gid: {"magnitude": "large", "text": text} for gid, text in large_claims}
+        directives["claims_rollup"] = {
+            gid: {"magnitude": "large", "text": text, "enforcement": enforcement}
+            for gid, text, enforcement in large_claims
+        }
 
     return {
         "id": g["id"],
@@ -357,16 +429,18 @@ def compile_spec(spec: dict) -> dict:
     """The full spec -> engine-native spine, PURE: no Path, no open, no
     subprocess call. Assumes `spec` already passed `spec_shape_faults`."""
     hand_back_to = spec.get("parent") or "unknown"
+    spec_type = spec.get("type", "gated")
     gates = spec.get("gate") or []
     large_claims = [
-        (g["id"], g["claim"]["text"])
+        (g["id"], g["claim"]["text"], CLAIM_ENFORCEMENT_GATED if spec_type == "gated" else CLAIM_ENFORCEMENT_SURVEY)
         for g in gates
         if (g.get("claim") or {}).get("magnitude") == "large"
     ]
     tasks = {}
     for idx, g in enumerate(gates):
         is_last = idx == len(gates) - 1
-        tasks[g["id"]] = _compile_gate(g, hand_back_to=hand_back_to, is_last=is_last, large_claims=large_claims)
+        tasks[g["id"]] = _compile_gate(g, hand_back_to=hand_back_to, is_last=is_last,
+                                        large_claims=large_claims, spec_type=spec_type)
     return {
         "work_id": spec["work_id"],
         "type": spec.get("type", "gated"),

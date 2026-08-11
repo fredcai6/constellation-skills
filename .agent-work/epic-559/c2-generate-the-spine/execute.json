@@ -462,7 +462,8 @@
           "id": "p1",
           "statement": "g2's upstream dependency is satisfied (see this gate's imperative)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Rework round 2 after a cold-review BLOCK. The dependency is unchanged (g1 complete, committed b406cc13); what changed is my own DESIGN_NOTE section 6, which promised an escalation the engine provably never consults on a survey. The rework handoff carries the decision and the reason NOT to take the tempting command-check fix (it would flip the defect's sign, which is prior-wave verdict B's exact lesson)."
         }
       ],
       "postconditions": [
@@ -476,7 +477,8 @@
               "status": "complete"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-2"
         }
       ],
       "constraints": [
@@ -530,12 +532,41 @@
         }
       },
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Rework round 2. Property 2 must not ship silently inert on survey-type role specs. The generator will stop injecting an artifact postcondition the engine provably never consults on a survey, and will instead state the non-enforcement in the rendered gate. Engine behaviour is not changed -- that is a float to the Admiral, not a patch."
+      },
       "result": null,
       "finding": null,
-      "evidence": [],
-      "rework_count": 0
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "path": ".agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g2-implement-result.md"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g2-implement",
+            "reason": "Rework round 2. Property 2 must not ship silently inert on survey-type role specs. The generator will stop injecting an artifact postcondition the engine provably never consults on a survey, and will instead state the non-enforcement in the rendered gate. Engine behaviour is not changed -- that is a float to the Admiral, not a patch.",
+            "ts": "2026-08-11T18:03:09.309621+00:00"
+          }
+        },
+        {
+          "id": "e-g2-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "path": ".agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g2-implement-result.md",
+            "round": "2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
     },
     "g2-review": {
       "id": "g2-review",
@@ -546,7 +577,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g2",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Round-2 IMPLEMENTER_RESULT received and verified fresh via run_crew.py --verify-result."
         }
       ],
       "postconditions": [
@@ -557,7 +589,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-2"
         }
       ],
       "constraints": [],
@@ -575,11 +608,41 @@
         }
       },
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "complete",
+      "status_detail": {
+        "superseded_by_reopen": "g2-implement"
+      },
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "path": ".agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g2-review-result.md",
+            "blocking": "1"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g2-implement",
+            "reason": "Rework round 2. Property 2 must not ship silently inert on survey-type role specs. The generator will stop injecting an artifact postcondition the engine provably never consults on a survey, and will instead state the non-enforcement in the rendered gate. Engine behaviour is not changed -- that is a float to the Admiral, not a patch.",
+            "ts": "2026-08-11T18:03:09.309638+00:00"
+          }
+        },
+        {
+          "id": "e-g2-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g2-review-result.md",
+            "round": "2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-integrate": {
@@ -591,7 +654,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for g2",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Round-2 REVIEW_RESULT received, verified fresh, verdict APPROVE."
         }
       ],
       "postconditions": [
@@ -602,12 +666,13 @@
             "kind": "command",
             "command": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-g2-integrate-1"
         },
         {
           "id": "c2",
@@ -619,7 +684,12 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-2",
+          "attested": {
+            "evidence": "e-g2-review-2",
+            "note": null
+          }
         },
         {
           "id": "c3",
@@ -628,7 +698,8 @@
             "kind": "command",
             "command": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && test $(python scripts/validate_spine.py .agent-work/epic-559/c2-generate-the-spine/generated/implementer.spine.json .agent-work/epic-559/c2-generate-the-spine/generated/reviewer.spine.json --root /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine | grep -cE 'OK$') -eq 2"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
         }
       ],
       "constraints": [],
@@ -646,11 +717,34 @@
         }
       },
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && test $(python scripts/validate_spine.py .agent-work/epic-559/c2-generate-the-spine/generated/implementer.spine.json .agent-work/epic-559/c2-generate-the-spine/generated/reviewer.spine.json --root /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine | grep -cE 'OK$') -eq 2",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-implement": {
@@ -988,6 +1082,55 @@
       "why": "Verified the crew's claimed side-effects against the world rather than accepting the claim. I re-ran the control pairing with MY OWN spec (a script check carrying <not-a-resolver-token>): the pure path translates it without complaint and spec_shape_faults returns [], the guarded CLI refuses it with the oracle's own falsifiable-unresolved-placeholder text at exit 4, and test ! -f confirmed nothing was written; the same spec corrected is written, anchored cd <repo-root> &&, carrying the handback contract. I also compiled my own two-gate large-claim spec and confirmed c-escalation is injected with check artifact/review-result match verdict APPROVE, that the rollup lands on the LAST gate keyed by source, and that it is absent from the earlier gate. The engine re-ran both command postconditions on this advance: the full suite in the declared test mode and the sweep guard asserting the shipped corpus still reports exactly 23 fault lines. The generator exists, refuses what the oracle would refuse, and carries both non-optional properties -- but it is wired to nothing outside its own tests, which the crew said plainly and which g2 is what closes.",
       "mechanical": false,
       "ts": "2026-08-11T17:20:38.365785+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-implement",
+      "why": "Both role specs exist, both generate, both generated spines are OK under the oracle with zero undecidable, and the shipped <exact test command> placeholder is gone -- replaced by a selector and a number. The crew reported the suite as 1 failed and judged the failure pre-existing by stashing its own changes; I checked that inference rather than accepting it, and it was subtly wrong in the direction that matters. The failure is map/INDEX.md staleness at 57 modules vs 56 committed, and the extra module is scripts/generate_spine.py -- added by g1, i.e. caused by THIS run, not by the branch base. Stashing g2's changes could never have revealed that, because g1 was already committed underneath. I regenerated with python -m scripts.code_map build and the suite is now fully green at 2767 passed / 3 skipped / 1121 subtests. The lesson is the authoring-side twin of verify-side-effects: adding a module silently invalidates every artifact that asserts something about the module set, and the author is the one who does not look. The settling question came back answered with a real residual: the script kind's probe never inspects POSITIONAL arguments, only --flag tokens, so r6-fowler's path argument is still only as good as the author's own reading of the target script.",
+      "mechanical": false,
+      "ts": "2026-08-11T17:44:15.148371+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-review",
+      "why": "The cold reviewer returned BLOCK and earned it by driving the mechanism rather than inspecting its shape. It copied the generated reviewer survey to scratch, resolved the tokens, drove every item through record, and consolidated -- and the survey consolidated APPROVE with the injected c-escalation postcondition still unsatisfied and no review-result ever attached. Reading the engine explains it: record() filters to command-kind postconditions on a survey item (#422/#328) and consolidate() reads only each item's result field, while advance() on a gated gate checks every postcondition with no kind filter. So Property 2 -- one of the two non-optional properties of this whole mission -- is enforced on gated gates and SILENTLY INERT on survey gates, which is where this spec's own author put the claim. My own DESIGN_NOTE named a narrower residual (a determined agent could attach a spoofed APPROVE); the real gap is worse -- nothing needs to be attached at all. Neither the implementer's JSON-shape evidence nor its Finding 6 caught it, because both looked at the artifact instead of running it.",
+      "mechanical": false,
+      "ts": "2026-08-11T18:03:09.251548+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g2-implement",
+      "reopen": true,
+      "reason": "Rework round 2. Property 2 must not ship silently inert on survey-type role specs. The generator will stop injecting an artifact postcondition the engine provably never consults on a survey, and will instead state the non-enforcement in the rendered gate. Engine behaviour is not changed -- that is a float to the Admiral, not a patch.",
+      "ts": "2026-08-11T18:03:09.309643+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g2-review",
+      "reopen": true,
+      "reason": "Rework round 2. Property 2 must not ship silently inert on survey-type role specs. The generator will stop injecting an artifact postcondition the engine provably never consults on a survey, and will instead state the non-enforcement in the rendered gate. Engine behaviour is not changed -- that is a float to the Admiral, not a patch.",
+      "ts": "2026-08-11T18:03:09.309645+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g2-implement",
+      "why": "Rework round 2 landed the honest version of Property 2. On a gated spec the escalation still injects and advance() genuinely refuses until an APPROVE review-result is attached -- the crew proved that direction too, which round 1 never did. On a survey spec nothing is injected, and the non-enforcement is stated in directives.claim.enforcement and in the rollup, naming record()'s command-kind-only scope and consolidate()'s result-only read. The two cases are told apart by CONTENT -- both carry an enforcement field with different text, asserted unequal by test -- rather than by one silently lacking a field. Eight new tests, including one that drives record/consolidate against the real engine so the round-1 evidence gap (shape dumped, behaviour never driven) cannot reopen silently, and a floor test that mutates  to  and proves a named test goes red. Suite 2775 passed, sweep still 23. I also corrected DESIGN_NOTE section 6 myself and recorded the r0-context factual error the reviewer confirmed the crew was right about.",
+      "mechanical": false,
+      "ts": "2026-08-11T18:24:35.004524+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g2-review",
+      "why": "Round 2 APPROVE from the same cold reviewer that blocked round 1, and it re-ran the delta rather than inheriting round 1: it drove the survey again and confirmed the non-enforcement is now stated rather than silent, drove the GATED side for the first time and confirmed advance() really refuses until an APPROVE review-result is attached, hand-verified that the new floor mutation actually lands instead of trusting the test's own claim, judged the enforcement prose against what it had independently measured, and grepped every command-emission site to confirm no producerless command check was smuggled in. It also confirmed the committed generated spines regenerate byte-identical, so the artifacts are current rather than stale.",
+      "mechanical": false,
+      "ts": "2026-08-11T18:37:38.945648+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g2-integrate",
+      "why": "Verified the crew against the world rather than the report: I loaded both generated spines myself and confirmed the handback contract is on all 9 gates across a gated and a survey spine, that the survey claim carries the non-enforcement reading and injects no postcondition, and that both spines are OK under the oracle. The engine re-ran both command postconditions on this advance -- the full suite in the declared test mode and the sweep guard asserting the shipped corpus still reports exactly 23 fault lines. This gate cost one cold-review BLOCK and it was worth it: the block found that one of the mission's two non-optional properties was silently inert on every survey-type role spec, which no amount of reading the JSON would have shown.",
+      "mechanical": false,
+      "ts": "2026-08-11T18:39:37.411790+00:00"
     }
   ]
 }
