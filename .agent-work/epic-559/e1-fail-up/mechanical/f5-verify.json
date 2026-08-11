@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "f5-verify",
+  "mechanical": {
+    "run": "epic-559/e1-fail-up",
+    "project": "constellation-skills",
+    "spine-step": "f5-verify",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/e1-fail-up-f5-verify@53ed19afdbfe99ff2fce4b4f7ecfdf6765a4add8",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "epic-559/e1-fail-up",
+    "generated_at": "2026-08-11T11:46:08Z"
+  }
+}
