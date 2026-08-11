@@ -30,6 +30,22 @@ Two site classes survive that substitution and both are asserted here:
 
 A future author who ships a new phantom placeholder, or drops one of these two
 off the allowlist without fixing it, turns this test red.
+
+The allowlist is scoped by SITE -- `(template file, task id, condition id)` --
+not by the token's spelling alone. A round-2 cold review built a synthetic
+case: `<exact test command>` embedded in a different, genuinely broken gate
+passed silently under a spelling-only allowlist, because nothing checked
+*where* the token was permitted. `AllowlistBoundaryTests` below pins that
+boundary the way `tests/test_mcp_adoption.py::_cli_only_verb_violations` pins
+its own: a synthetic offender that must be caught, an innocent case that must
+not be flagged, and the accepted sites named explicitly so the allowlist
+cannot grow without a deliberate edit here.
+
+`test_no_unresolved_token_survives_instantiation` also asserts how many
+command checks it examined (`EXPECTED_COMMAND_CHECK_COUNT`). A loop that only
+asserts `offenders == []` reads as a clean pass even if an extraction break --
+a key rename, a shape change -- makes it examine zero checks and find zero
+offenders.
 """
 
 import importlib.util
@@ -58,7 +74,35 @@ TOKEN_RE = re.compile(r"<[^<>\n]{1,80}>")
 # Intentional authoring-time fill-in slots: the authoring agent writes real,
 # per-plan content here (there is no fixed value resolve_spine could derive),
 # and each gate's own imperative instructs exactly that.
-ALLOWED_SURVIVORS = {"<exact test command>"}
+#
+# Scoped by SITE -- (template file name, task id, condition id) -- not by the
+# token's spelling. Matching on spelling alone lets `<exact test command>`
+# planted in an unrelated, genuinely broken gate pass silently; scoping to the
+# exact two sites that are supposed to carry it closes that gap and pins the
+# allowlist against silent growth (`AllowlistBoundaryTests` below asserts this
+# dict's exact contents).
+ALLOWED_SURVIVOR_SITES = {
+    ("EXECUTE_PLAN.template.json", "g1-integrate", "c1"): "<exact test command>",
+    ("IMPLEMENTER_PLAN.template.json", "m1", "c2"): "<exact test command>",
+}
+
+# How many command-kind pre/postconditions the six shipped templates carry
+# today. A silent extraction break -- a key rename, a shape change in
+# command_checks() -- would make the sweep below examine zero and find zero
+# offenders, which reads as a clean pass. Asserting the count catches that.
+EXPECTED_COMMAND_CHECK_COUNT = 13
+
+
+def unresolved_offenders(template_name, resolved_commands):
+    """Return one message per (site, token) where an unresolved bracket token
+    survives instantiation and the site is not the token's allowlisted home."""
+    offenders = []
+    for tid, kind, cid, command in resolved_commands:
+        for token in TOKEN_RE.findall(command):
+            if ALLOWED_SURVIVOR_SITES.get((template_name, tid, cid)) == token:
+                continue
+            offenders.append(f"{template_name}::{tid}.{cid} ({kind}): {token!r} in {command!r}")
+    return offenders
 
 
 def load_resolve_spine():
@@ -95,11 +139,18 @@ class ShippedCheckCommandsResolveTests(unittest.TestCase):
 
     def test_no_unresolved_token_survives_instantiation(self):
         offenders = []
+        examined = 0
         for path in TEMPLATES:
-            for tid, kind, cid, command in self._resolved_commands(path):
-                for token in TOKEN_RE.findall(command):
-                    if token not in ALLOWED_SURVIVORS:
-                        offenders.append(f"{path.relative_to(ROOT)}::{tid}.{cid} ({kind}): {token!r} in {command!r}")
+            resolved = self._resolved_commands(path)
+            examined += len(resolved)
+            offenders.extend(unresolved_offenders(path.name, resolved))
+        self.assertEqual(
+            examined, EXPECTED_COMMAND_CHECK_COUNT,
+            f"expected to examine {EXPECTED_COMMAND_CHECK_COUNT} command-kind checks across "
+            f"the six shipped templates, examined {examined} -- either a template gained/lost "
+            f"a command check (update EXPECTED_COMMAND_CHECK_COUNT) or the extraction broke "
+            f"(command_checks() silently found fewer/more than it should)",
+        )
         self.assertEqual(
             offenders, [],
             "shipped command check(s) still carry an unresolved, non-allowlisted "
@@ -125,6 +176,64 @@ class ShippedCheckCommandsResolveTests(unittest.TestCase):
         command = c1["check"]["command"]
         self.assertIn("<work-id>", command)
         self.assertNotIn("interrogation-record-path", command)
+
+
+class AllowlistBoundaryTests(unittest.TestCase):
+    """Pins the false-positive / false-negative boundary of
+    `unresolved_offenders`, the same three-way shape
+    `tests/test_mcp_adoption.py::_cli_only_verb_violations` pins its own with:
+    a synthetic offender that must be caught, an innocent case that must not
+    be flagged, and the accepted exceptions named explicitly."""
+
+    # A synthetic offender: `<exact test command>` (or any other unresolved
+    # token) at a site NOT in ALLOWED_SURVIVOR_SITES. Proves the detector
+    # fires on a real offender instead of accepting the token everywhere it
+    # appears -- the gap the round-2 cold review found.
+    VIOLATING = {
+        "the allowlisted token planted in a different, unrelated gate":
+            ("EXECUTE_PLAN.template.json", "g9-bogus", "c1", "<exact test command>"),
+        "an ordinary unresolved token at an allowlisted site's neighbor":
+            ("IMPLEMENTER_PLAN.template.json", "m1", "c1", "<work-id>"),
+    }
+
+    # The two real, accepted sites -- exactly what ships today.
+    INNOCENT = {
+        "the real EXECUTE_PLAN g1-integrate site":
+            ("EXECUTE_PLAN.template.json", "g1-integrate", "c1", "<exact test command>"),
+        "the real IMPLEMENTER_PLAN m1 site":
+            ("IMPLEMENTER_PLAN.template.json", "m1", "c2", "<exact test command>"),
+    }
+
+    def test_a_violating_site_is_caught(self):
+        for label, (template_name, tid, cid, command) in self.VIOLATING.items():
+            found = unresolved_offenders(template_name, [(tid, "postconditions", cid, command)])
+            self.assertTrue(
+                found,
+                f"{label!r} was not caught -- the allowlist accepted an unresolved token "
+                f"outside its pinned site, which is the whole defect this boundary exists "
+                f"to catch",
+            )
+
+    def test_an_innocent_site_is_left_alone(self):
+        for label, (template_name, tid, cid, command) in self.INNOCENT.items():
+            found = unresolved_offenders(template_name, [(tid, "postconditions", cid, command)])
+            self.assertEqual(
+                found, [],
+                f"{label!r} was flagged, but it is the correct, accepted authoring-time slot "
+                f"named in this file's own allowlist:\n" + "\n".join(found),
+            )
+
+    def test_the_allowlist_is_pinned_and_does_not_silently_grow(self):
+        """Nothing else guards ALLOWED_SURVIVOR_SITES from growing -- a future
+        edit that adds a third site changes this dict, and this equality is
+        the thing that forces a deliberate look at that change."""
+        self.assertEqual(
+            ALLOWED_SURVIVOR_SITES,
+            {
+                ("EXECUTE_PLAN.template.json", "g1-integrate", "c1"): "<exact test command>",
+                ("IMPLEMENTER_PLAN.template.json", "m1", "c2"): "<exact test command>",
+            },
+        )
 
 
 if __name__ == "__main__":
