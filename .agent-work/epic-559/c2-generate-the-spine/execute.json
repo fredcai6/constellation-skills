@@ -1,0 +1,993 @@
+{
+  "work_id": "epic-559/c2-generate-the-spine",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g0-design",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-closeout"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read the inherited global doctrine (references/global-orchestrator.md, references/global-everyone.md) and the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and -- because docs/agents/engine-config.json does not exist in this repo -- docs/CHECKLIST_SCHEMA.md in its place. Confirm the frozen plan's intent and scope against .agent-work/epic-559/c2-generate-the-spine/MISSION_FRAME.md and .agent-work/epic-559/c2-generate-the-spine/plan-critic.md (the three cold critics' findings and my triage of every one). Then attest c2. c1 re-runs verify-frame so this plan cannot be executed against a frame that no longer resolves.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the mission frame this plan is cut from still resolves against the orientation receipt (verify-frame FRAME-OK)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && python /home/tommy/.claude/skills/constellation-commander/scripts/map_orient.py verify-frame --root /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine --work-id epic-559/c2-generate-the-spine"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-e0-context-1"
+        },
+        {
+          "id": "c2",
+          "statement": "orchestrator context, glossary and the schema substitute loaded; plan intent, scope and the critic triage confirmed -- QUALITATIVE by choice: this gate carries no deliverable a command can inspect, and saying so is the stated form the lint asks for",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded at the spine's own context step and re-confirmed here: global-orchestrator.md, global-everyone.md, docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and docs/CHECKLIST_SCHEMA.md standing in for the absent docs/agents/engine-config.json. Plan intent and scope confirmed against MISSION_FRAME.md and plan-critic.md, whose 13 findings I triaged individually. Two pre-flight corrections recorded before any gate began: config_ref pointed at a markdown file, which crashed the engine with an unhandled JSONDecodeError in load_config (it json.loads any config_ref that EXISTS), so it now points at docs/agents/engine-config.json exactly as all 12 shipped templates do -- absent, so config falls through to defaults."
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "structural": [
+          "scripts/validate_spine.py -- the acceptance oracle; imported and called, never modified",
+          "scripts/checklist_engine.py -- the consumer; _render_directive_lines (2104) and render_human (2189) decide whether a generated gate's contract reaches the agent",
+          "scripts/init_work_area.py -- owns _RESOLVER_OWNED_TOKEN_RE, the single source of truth for which <token> families are legitimately unresolved",
+          "scripts/generate_spine.py -- NEW, one file: pure compile_spec/compile_condition plus the CLI, probes and main() below them"
+        ],
+        "capability": [
+          "driving a gated plan -- this run adds a PRODUCER of the shape docs/CHECKLIST_SCHEMA.md defines and changes nothing about the consumer",
+          "refusing a bad spine -- this run becomes validate_spine.py's first in-repo caller"
+        ],
+        "constraint": [
+          "the engine's on-disk format does not change",
+          "validate_spine.py's fault set and acceptance boundary do not move -- moving the oracle is a float, not a patch",
+          "no shipped template is edited to make generator output validate; a disagreement is a finding",
+          "beliefs/concerns/open questions ride in constraints/directives, never a new field"
+        ],
+        "decision": [
+          "spec-has-no-raw-command-field -- the spec offers a closed vocabulary of typed check kinds and NO free-text shell field @grade: guess . leans g1-implement,g2-implement . settle: author the implementer and reviewer role specs and see whether either needs a shell string the vocabulary cannot express",
+          "notes-live-in-directives-not-constraints -- constraints already means 'rules this gate must respect' on 970 live tasks; directives means 'a standing contract' and is populated on 22 @grade: settled/measured . leans g1-implement",
+          "handback-names-verbs-not-arrays -- the handback contract names attach/flag-candidate/block, because no engine verb appends to a directives field on an active gate @grade: settled/measured . leans g1-implement . settle: rerun the cold critic's render_human probe",
+          "escalation-is-review-result-APPROVE -- a large claim injects an artifact/review-result check matching verdict APPROVE, not a match-less user-decision @grade: settled/measured . leans g1-implement",
+          "placeholder-template-vs-instance -- the generator refuses an instance carrying a placeholder; resolver-owned families are not placeholders in that sense @grade: settled/admiral . leans g1-implement,g2-implement",
+          "decision pressure: whether the four unresolvable <engine> tokens in the orchestrator-tier templates are fixed this wave -- carried to g4-closeout, not decided here"
+        ],
+        "evidence": [
+          "the control pairing: one spec whose translation completes on the pure path and which the guarded CLI refuses, plus the same spec corrected and written",
+          "the handback contract verified against BEHAVIOUR -- each named verb driven against a generated spine, and the record found where the contract says it lands",
+          "the shipped-corpus lint fault set unchanged: 23 fault lines from --sweep, before and after"
+        ],
+        "confidence_flags": [
+          "no architecture map exists in this repo (map_orient DEGRADED-UNPARSEABLE, discharged with six hash-pinned substitutes) -- no gate below trusts a map area; every structural fact was read from source or measured"
+        ]
+      },
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-e0-context-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && python /home/tommy/.claude/skills/constellation-commander/scripts/map_orient.py verify-frame --root /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine --work-id epic-559/c2-generate-the-spine",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g0-design": {
+      "id": "g0-design",
+      "title": "Freeze the vocabulary and the two property mechanisms (reasoning gate, no crew)",
+      "imperative": "Author .agent-work/epic-559/c2-generate-the-spine/DESIGN_NOTE.md: the closed check-kind vocabulary (qualitative, pytest, script, population, artifact -- five, after the panel cut git_change_policy and recorded), the exact fields of the handback contract, what a large claim injects, the argued TOML-over-JSON choice with its measurement, and for each of the four historical defects the kind that forecloses it AND the residual it does not. CREW WAIVER, stated: this is a naming-and-authority decision that is the Commander's to make and there is no code or independently-verifiable change for a reviewer to run; a crew here would relay this reading back. c1 asserts ARRIVAL only and I am saying so rather than dressing it up -- the note's kind list is machine-pinned one gate later, at g1-integrate.c3, which asserts it equals the compiler's own constant. That deferral is the honest answer to the cold critic's finding that a prose gate's close criteria assert against text.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "DESIGN_NOTE.md exists -- arrival only; the pin against the compiler's own constant lands at g1-integrate.c3",
+          "check": {
+            "kind": "command",
+            "command": "test -f /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine/.agent-work/epic-559/c2-generate-the-spine/DESIGN_NOTE.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g0-design-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the vocabulary, the handback contract, the escalation mechanism and the TOML choice are recorded with their evidence, and each of the four historical defects is matched to the kind that forecloses it and the residual it does not",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "DESIGN_NOTE.md records: the five-kind closed vocabulary with the exact TOML fields and the exact compiled output for each; the handback contract's exact fields and why the earlier array shape was deleted; what magnitude=large injects and why it is review-result/APPROVE rather than a match-less user-decision; the TOML-over-JSON choice argued with its measurement (14 of 61 shipped imperatives over 1000 chars, longest 3534); the nine spec-shape faults including spec-config-ref-not-json, which I hit live in this run; the CLI order of operations and exit codes; the guard-fixture rule; and section 10, a table matching each of the four historical defects to the kind that forecloses it AND the residual it does not. Two decisions recorded that are mine and were not in the launch order: the qualitative 'because' is APPENDED to the emitted statement, which turns decision:qualitative-must-be-stated from advisory into mechanical; and hand_back_to defaults to the literal string 'unknown' per E1's ruling that unknown is a real answer."
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "structural": [
+          "scripts/validate_spine.py -- the acceptance oracle; imported and called, never modified",
+          "scripts/checklist_engine.py -- the consumer; _render_directive_lines (2104) and render_human (2189) decide whether a generated gate's contract reaches the agent",
+          "scripts/init_work_area.py -- owns _RESOLVER_OWNED_TOKEN_RE, the single source of truth for which <token> families are legitimately unresolved",
+          "scripts/generate_spine.py -- NEW, one file: pure compile_spec/compile_condition plus the CLI, probes and main() below them"
+        ],
+        "capability": [
+          "driving a gated plan -- this run adds a PRODUCER of the shape docs/CHECKLIST_SCHEMA.md defines and changes nothing about the consumer",
+          "refusing a bad spine -- this run becomes validate_spine.py's first in-repo caller"
+        ],
+        "constraint": [
+          "the engine's on-disk format does not change",
+          "validate_spine.py's fault set and acceptance boundary do not move -- moving the oracle is a float, not a patch",
+          "no shipped template is edited to make generator output validate; a disagreement is a finding",
+          "beliefs/concerns/open questions ride in constraints/directives, never a new field"
+        ],
+        "decision": [
+          "spec-has-no-raw-command-field -- the spec offers a closed vocabulary of typed check kinds and NO free-text shell field @grade: guess . leans g1-implement,g2-implement . settle: author the implementer and reviewer role specs and see whether either needs a shell string the vocabulary cannot express",
+          "notes-live-in-directives-not-constraints -- constraints already means 'rules this gate must respect' on 970 live tasks; directives means 'a standing contract' and is populated on 22 @grade: settled/measured . leans g1-implement",
+          "handback-names-verbs-not-arrays -- the handback contract names attach/flag-candidate/block, because no engine verb appends to a directives field on an active gate @grade: settled/measured . leans g1-implement . settle: rerun the cold critic's render_human probe",
+          "escalation-is-review-result-APPROVE -- a large claim injects an artifact/review-result check matching verdict APPROVE, not a match-less user-decision @grade: settled/measured . leans g1-implement",
+          "placeholder-template-vs-instance -- the generator refuses an instance carrying a placeholder; resolver-owned families are not placeholders in that sense @grade: settled/admiral . leans g1-implement,g2-implement",
+          "decision pressure: whether the four unresolvable <engine> tokens in the orchestrator-tier templates are fixed this wave -- carried to g4-closeout, not decided here"
+        ],
+        "evidence": [
+          "the control pairing: one spec whose translation completes on the pure path and which the guarded CLI refuses, plus the same spec corrected and written",
+          "the handback contract verified against BEHAVIOUR -- each named verb driven against a generated spine, and the record found where the contract says it lands",
+          "the shipped-corpus lint fault set unchanged: 23 fault lines from --sweep, before and after"
+        ],
+        "confidence_flags": [
+          "no architecture map exists in this repo (map_orient DEGRADED-UNPARSEABLE, discharged with six hash-pinned substitutes) -- no gate below trusts a map area; every structural fact was read from source or measured"
+        ]
+      },
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g0-design-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine/.agent-work/epic-559/c2-generate-the-spine/DESIGN_NOTE.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "The generator: implement",
+      "imperative": "Fill the implementer handoff from this gate plan and dispatch a Sonnet implementer through scripts/run_crew.py. Deliverable: ONE file, scripts/generate_spine.py -- pure compile_spec/compile_condition (dict in, dict out; no Path, no open, no subprocess) with the CLI, the generation-time probes and main() below them, matching the function-granularity pure/impure split validate_spine.py and checklist_engine.py already use. Five closed check kinds: qualitative (requires a non-empty `because`), pytest (selector + min_collect + targets -> the corpus self-checking idiom, selector shlex.quote'd, anchored `cd <repo-root> &&`), script (path + args -> shlex.join, anchored, probed by ast.parse of the target's add_argument literals, NEVER importing it), population (root + glob + expected band, probed by EXECUTING the compiled command itself so the thing probed is the thing shipped), artifact (evidence_type + match). No raw-command field exists anywhere in the format. Every gate gets the handback directives contract; a [gate.claim] magnitude=large injects an artifact/review-result check matching verdict APPROVE plus a claims_rollup on the terminal gate. validate() is called as the literal last statement before success and any Fault or any .undecidable entry refuses with nothing written. Read .agent-work/epic-559/c2-generate-the-spine/DESIGN_NOTE.md first; it is frozen.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1's upstream dependency is satisfied (see this gate's imperative)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1's upstream dependency is g0-design, which is complete: DESIGN_NOTE.md is frozen at .agent-work/epic-559/c2-generate-the-spine/DESIGN_NOTE.md and is the implementer's contract. Deliverable path check done: git check-ignore scripts/generate_spine.py exits 1 (not ignored). recover_crews.py reports no unresolved crew for this work-id/gate/role/worktree -- the one ACTIVE entry is this Commander's own execute/commander registry row."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with the return status complete",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "Sonnet crew (decision:sonnet-crews -- the human's instruction is verbatim 'prefer sonnet crews')",
+        "no shipped template under skills/*/templates/ is edited to make generator output validate",
+        "validate_spine.py is imported and called, never re-implemented and never modified",
+        "every guard gets a three-way fixture set: >=2 VIOLATING it must catch, >=2 INNOCENT it must not, and a POPULATED accepted-false-alarm bucket"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/validate_spine.py -- the acceptance oracle; imported and called, never modified",
+          "scripts/checklist_engine.py -- the consumer; _render_directive_lines (2104) and render_human (2189) decide whether a generated gate's contract reaches the agent",
+          "scripts/init_work_area.py -- owns _RESOLVER_OWNED_TOKEN_RE, the single source of truth for which <token> families are legitimately unresolved",
+          "scripts/generate_spine.py -- NEW, one file: pure compile_spec/compile_condition plus the CLI, probes and main() below them"
+        ],
+        "capability": [
+          "driving a gated plan -- this run adds a PRODUCER of the shape docs/CHECKLIST_SCHEMA.md defines and changes nothing about the consumer",
+          "refusing a bad spine -- this run becomes validate_spine.py's first in-repo caller"
+        ],
+        "constraint": [
+          "the engine's on-disk format does not change",
+          "validate_spine.py's fault set and acceptance boundary do not move -- moving the oracle is a float, not a patch",
+          "no shipped template is edited to make generator output validate; a disagreement is a finding",
+          "beliefs/concerns/open questions ride in constraints/directives, never a new field"
+        ],
+        "decision": [
+          "spec-has-no-raw-command-field -- the spec offers a closed vocabulary of typed check kinds and NO free-text shell field @grade: guess . leans g1-implement,g2-implement . settle: author the implementer and reviewer role specs and see whether either needs a shell string the vocabulary cannot express",
+          "notes-live-in-directives-not-constraints -- constraints already means 'rules this gate must respect' on 970 live tasks; directives means 'a standing contract' and is populated on 22 @grade: settled/measured . leans g1-implement",
+          "handback-names-verbs-not-arrays -- the handback contract names attach/flag-candidate/block, because no engine verb appends to a directives field on an active gate @grade: settled/measured . leans g1-implement . settle: rerun the cold critic's render_human probe",
+          "escalation-is-review-result-APPROVE -- a large claim injects an artifact/review-result check matching verdict APPROVE, not a match-less user-decision @grade: settled/measured . leans g1-implement",
+          "placeholder-template-vs-instance -- the generator refuses an instance carrying a placeholder; resolver-owned families are not placeholders in that sense @grade: settled/admiral . leans g1-implement,g2-implement",
+          "decision pressure: whether the four unresolvable <engine> tokens in the orchestrator-tier templates are fixed this wave -- carried to g4-closeout, not decided here"
+        ],
+        "evidence": [
+          "the control pairing: one spec whose translation completes on the pure path and which the guarded CLI refuses, plus the same spec corrected and written",
+          "the handback contract verified against BEHAVIOUR -- each named verb driven against a generated spine, and the record found where the contract says it lands",
+          "the shipped-corpus lint fault set unchanged: 23 fault lines from --sweep, before and after"
+        ],
+        "confidence_flags": [
+          "no architecture map exists in this repo (map_orient DEGRADED-UNPARSEABLE, discharged with six hash-pinned substitutes) -- no gate below trusts a map area; every structural fact was read from source or measured"
+        ]
+      },
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "path": ".agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g1-implement-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "The generator: review",
+      "imperative": "Fill the reviewer handoff from the gate plan and the IMPLEMENTER_RESULT. Dispatch a COLD reviewer, independent of the implementer, on Sonnet, through scripts/run_crew.py. Tell it what last wave measured: three of six workstreams were blocked on first review and two of those blocks caught a fix that had FLIPPED its defect's sign -- and neither was found by reading the diff. Both were found by RUNNING something. Reproduce the control pairing yourself rather than reading it: run the bad spec through compile_spec directly (translation completes) and through the CLI (refused, nothing written), and confirm the file really is absent. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for g1 and verified fresh by run_crew.py --verify-result (fresh, completed), attached as e-g1-implement-1 with status=complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g1-review-result.md",
+            "blockers": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "The generator: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's claimed side-effects against the world yourself -- re-run the verification commands, confirm the result artifact is fresh (scripts/run_crew.py --verify-result), and only then advance; a command-kind postcondition is satisfied by advance re-running it, never by attest. BLOCK: return the implementer for rework, or raise a blocker if unresolvable. Log out-of-scope finds as triage candidates and harvest the result's Workflow Feedback section into the lesson pool.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received for g1, verified fresh via run_crew.py --verify-result, verdict APPROVE, blockers none."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the full suite passes in the project's declared test mode",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied_by": "e-g1-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": null
+          }
+        },
+        {
+          "id": "c3",
+          "statement": "the sweep over the shipped corpus reports the same 23 fault lines as the baseline -- no shipped template moved, and the generator did not change what the oracle says about them",
+          "check": {
+            "kind": "command",
+            "command": "test $(cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && python scripts/validate_spine.py --sweep --root /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine | grep -cE '^  \\[') -eq 23"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && python scripts/validate_spine.py --sweep --root /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine | grep -cE '^  \\[') -eq 23",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "The role specs: implement",
+      "imperative": "Dispatch a Sonnet implementer to author specs/implementer.spine.toml and specs/reviewer.spine.toml in the frozen format, generate a spine from each with scripts/generate_spine.py, and commit both specs and both generated spines. Every place a generated spine and the corresponding shipped template disagree is written up as a FINDING in .agent-work/epic-559/c2-generate-the-spine/notes-2.md -- no shipped template is edited. The generated spines must be clean under validate_spine.py with ZERO undecidable.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2's upstream dependency is satisfied (see this gate's imperative)",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with the return status complete",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Sonnet crew (decision:sonnet-crews -- the human's instruction is verbatim 'prefer sonnet crews')",
+        "no shipped template under skills/*/templates/ is edited to make generator output validate",
+        "validate_spine.py is imported and called, never re-implemented and never modified",
+        "every guard gets a three-way fixture set: >=2 VIOLATING it must catch, >=2 INNOCENT it must not, and a POPULATED accepted-false-alarm bucket"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/validate_spine.py -- the acceptance oracle; imported and called, never modified",
+          "scripts/checklist_engine.py -- the consumer; _render_directive_lines (2104) and render_human (2189) decide whether a generated gate's contract reaches the agent",
+          "scripts/init_work_area.py -- owns _RESOLVER_OWNED_TOKEN_RE, the single source of truth for which <token> families are legitimately unresolved",
+          "scripts/generate_spine.py -- NEW, one file: pure compile_spec/compile_condition plus the CLI, probes and main() below them"
+        ],
+        "capability": [
+          "driving a gated plan -- this run adds a PRODUCER of the shape docs/CHECKLIST_SCHEMA.md defines and changes nothing about the consumer",
+          "refusing a bad spine -- this run becomes validate_spine.py's first in-repo caller"
+        ],
+        "constraint": [
+          "the engine's on-disk format does not change",
+          "validate_spine.py's fault set and acceptance boundary do not move -- moving the oracle is a float, not a patch",
+          "no shipped template is edited to make generator output validate; a disagreement is a finding",
+          "beliefs/concerns/open questions ride in constraints/directives, never a new field"
+        ],
+        "decision": [
+          "spec-has-no-raw-command-field -- the spec offers a closed vocabulary of typed check kinds and NO free-text shell field @grade: guess . leans g1-implement,g2-implement . settle: author the implementer and reviewer role specs and see whether either needs a shell string the vocabulary cannot express",
+          "notes-live-in-directives-not-constraints -- constraints already means 'rules this gate must respect' on 970 live tasks; directives means 'a standing contract' and is populated on 22 @grade: settled/measured . leans g1-implement",
+          "handback-names-verbs-not-arrays -- the handback contract names attach/flag-candidate/block, because no engine verb appends to a directives field on an active gate @grade: settled/measured . leans g1-implement . settle: rerun the cold critic's render_human probe",
+          "escalation-is-review-result-APPROVE -- a large claim injects an artifact/review-result check matching verdict APPROVE, not a match-less user-decision @grade: settled/measured . leans g1-implement",
+          "placeholder-template-vs-instance -- the generator refuses an instance carrying a placeholder; resolver-owned families are not placeholders in that sense @grade: settled/admiral . leans g1-implement,g2-implement",
+          "decision pressure: whether the four unresolvable <engine> tokens in the orchestrator-tier templates are fixed this wave -- carried to g4-closeout, not decided here"
+        ],
+        "evidence": [
+          "the control pairing: one spec whose translation completes on the pure path and which the guarded CLI refuses, plus the same spec corrected and written",
+          "the handback contract verified against BEHAVIOUR -- each named verb driven against a generated spine, and the record found where the contract says it lands",
+          "the shipped-corpus lint fault set unchanged: 23 fault lines from --sweep, before and after"
+        ],
+        "confidence_flags": [
+          "no architecture map exists in this repo (map_orient DEGRADED-UNPARSEABLE, discharged with six hash-pinned substitutes) -- no gate below trusts a map area; every structural fact was read from source or measured"
+        ]
+      },
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "The role specs: review",
+      "imperative": "Fill the reviewer handoff from the gate plan and the IMPLEMENTER_RESULT. Dispatch a COLD reviewer, independent of the implementer, on Sonnet, through scripts/run_crew.py. Tell it what last wave measured: three of six workstreams were blocked on first review and two of those blocks caught a fix that had FLIPPED its defect's sign -- and neither was found by reading the diff. Both were found by RUNNING something. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g2",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "The role specs: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's claimed side-effects against the world yourself -- re-run the verification commands, confirm the result artifact is fresh (scripts/run_crew.py --verify-result), and only then advance; a command-kind postcondition is satisfied by advance re-running it, never by attest. BLOCK: return the implementer for rework, or raise a blocker if unresolvable. Log out-of-scope finds as triage candidates and harvest the result's Workflow Feedback section into the lesson pool.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g2",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the full suite passes in the project's declared test mode",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": false,
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          }
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "both generated spines validate clean with zero faults and zero undecidable",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && test $(python scripts/validate_spine.py .agent-work/epic-559/c2-generate-the-spine/generated/implementer.spine.json .agent-work/epic-559/c2-generate-the-spine/generated/reviewer.spine.json --root /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine | grep -cE 'OK$') -eq 2"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "A generated spine drives, for real: implement",
+      "imperative": "Dispatch a Sonnet implementer to prove protected intent #4: generate a spine from specs/implementer.spine.toml into the scratch work area .agent-work/epic-559/c2-generate-the-spine/dispatch-proof/, then dispatch a crew against it with scripts/run_crew.py --spine (no --handoff, no --result), so run_crew judges it on spine_terminal rather than on a result artifact. Paste the dispatch transcript and the driven spine's final state. The task the driven spine carries must be genuine work, not a throwaway.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3's upstream dependency is satisfied (see this gate's imperative)",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with the return status complete",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Sonnet crew (decision:sonnet-crews -- the human's instruction is verbatim 'prefer sonnet crews')",
+        "no shipped template under skills/*/templates/ is edited to make generator output validate",
+        "validate_spine.py is imported and called, never re-implemented and never modified",
+        "every guard gets a three-way fixture set: >=2 VIOLATING it must catch, >=2 INNOCENT it must not, and a POPULATED accepted-false-alarm bucket"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/validate_spine.py -- the acceptance oracle; imported and called, never modified",
+          "scripts/checklist_engine.py -- the consumer; _render_directive_lines (2104) and render_human (2189) decide whether a generated gate's contract reaches the agent",
+          "scripts/init_work_area.py -- owns _RESOLVER_OWNED_TOKEN_RE, the single source of truth for which <token> families are legitimately unresolved",
+          "scripts/generate_spine.py -- NEW, one file: pure compile_spec/compile_condition plus the CLI, probes and main() below them"
+        ],
+        "capability": [
+          "driving a gated plan -- this run adds a PRODUCER of the shape docs/CHECKLIST_SCHEMA.md defines and changes nothing about the consumer",
+          "refusing a bad spine -- this run becomes validate_spine.py's first in-repo caller"
+        ],
+        "constraint": [
+          "the engine's on-disk format does not change",
+          "validate_spine.py's fault set and acceptance boundary do not move -- moving the oracle is a float, not a patch",
+          "no shipped template is edited to make generator output validate; a disagreement is a finding",
+          "beliefs/concerns/open questions ride in constraints/directives, never a new field"
+        ],
+        "decision": [
+          "spec-has-no-raw-command-field -- the spec offers a closed vocabulary of typed check kinds and NO free-text shell field @grade: guess . leans g1-implement,g2-implement . settle: author the implementer and reviewer role specs and see whether either needs a shell string the vocabulary cannot express",
+          "notes-live-in-directives-not-constraints -- constraints already means 'rules this gate must respect' on 970 live tasks; directives means 'a standing contract' and is populated on 22 @grade: settled/measured . leans g1-implement",
+          "handback-names-verbs-not-arrays -- the handback contract names attach/flag-candidate/block, because no engine verb appends to a directives field on an active gate @grade: settled/measured . leans g1-implement . settle: rerun the cold critic's render_human probe",
+          "escalation-is-review-result-APPROVE -- a large claim injects an artifact/review-result check matching verdict APPROVE, not a match-less user-decision @grade: settled/measured . leans g1-implement",
+          "placeholder-template-vs-instance -- the generator refuses an instance carrying a placeholder; resolver-owned families are not placeholders in that sense @grade: settled/admiral . leans g1-implement,g2-implement",
+          "decision pressure: whether the four unresolvable <engine> tokens in the orchestrator-tier templates are fixed this wave -- carried to g4-closeout, not decided here"
+        ],
+        "evidence": [
+          "the control pairing: one spec whose translation completes on the pure path and which the guarded CLI refuses, plus the same spec corrected and written",
+          "the handback contract verified against BEHAVIOUR -- each named verb driven against a generated spine, and the record found where the contract says it lands",
+          "the shipped-corpus lint fault set unchanged: 23 fault lines from --sweep, before and after"
+        ],
+        "confidence_flags": [
+          "no architecture map exists in this repo (map_orient DEGRADED-UNPARSEABLE, discharged with six hash-pinned substitutes) -- no gate below trusts a map area; every structural fact was read from source or measured"
+        ]
+      },
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "A generated spine drives, for real: review",
+      "imperative": "Fill the reviewer handoff from the gate plan and the IMPLEMENTER_RESULT. Dispatch a COLD reviewer, independent of the implementer, on Sonnet, through scripts/run_crew.py. Tell it what last wave measured: three of six workstreams were blocked on first review and two of those blocks caught a fix that had FLIPPED its defect's sign -- and neither was found by reading the diff. Both were found by RUNNING something. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g3",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "A generated spine drives, for real: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's claimed side-effects against the world yourself -- re-run the verification commands, confirm the result artifact is fresh (scripts/run_crew.py --verify-result), and only then advance; a command-kind postcondition is satisfied by advance re-running it, never by attest. BLOCK: return the implementer for rework, or raise a blocker if unresolvable. Log out-of-scope finds as triage candidates and harvest the result's Workflow Feedback section into the lesson pool.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g3",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the full suite passes in the project's declared test mode",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": false,
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          }
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the driven spine reached a terminal state: every item is complete or skipped, read from the spine the dispatch actually drove",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -c \"import json;d=json.load(open('/home/tommy/projects/constellation-skills-wt/c2-generate-the-spine/.agent-work/epic-559/c2-generate-the-spine/dispatch-proof/spine.json'));print(sum(1 for i in d['items'] if d['tasks'][i]['status'] not in ('complete','skipped')))\") -eq 0"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-closeout": {
+      "id": "g4-closeout",
+      "title": "Closeout, the honest answer, and the floats (reasoning gate, no crew)",
+      "imperative": "CREW WAIVER, stated: the deliverable is the Commander's own evidence packet and float list, which is not a diff a reviewer can run. Write .agent-work/epic-559/c2-generate-the-spine/REPLAN_INPUT.json in the exact ../constellation-replan/templates/REPLAN_INPUT.template.json fields -- completed outcomes, observed-vs-expected wave evidence, and every discrepancy classified as blocks_current_wave_exit / invalidates_forecast_or_decomposition / later_only / evidence_only / drop. Discrepancies stay evidence and are NOT auto-filed as issues. Then answer the settling question honestly in the return: does the role spec still ask its author to type a shell command from memory? Record the floats: the engine binds no provenance to evidence (attach takes no authority and stamps produced_by 'engine' for every caller, while waive demands one), and the four unresolvable <engine> tokens in the orchestrator-tier templates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3 integrated: a generated spine has been proven to drive to a terminal state",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the commander run packet is present and G2-valid",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && python /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id epic-559/c2-generate-the-spine"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the full suite passes in the project's declared test mode",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": false,
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          }
+        },
+        {
+          "id": "c3",
+          "statement": "the settling question is answered without softening, and the two floats are recorded for the Admiral rather than patched",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "structural": [
+          "scripts/validate_spine.py -- the acceptance oracle; imported and called, never modified",
+          "scripts/checklist_engine.py -- the consumer; _render_directive_lines (2104) and render_human (2189) decide whether a generated gate's contract reaches the agent",
+          "scripts/init_work_area.py -- owns _RESOLVER_OWNED_TOKEN_RE, the single source of truth for which <token> families are legitimately unresolved",
+          "scripts/generate_spine.py -- NEW, one file: pure compile_spec/compile_condition plus the CLI, probes and main() below them"
+        ],
+        "capability": [
+          "driving a gated plan -- this run adds a PRODUCER of the shape docs/CHECKLIST_SCHEMA.md defines and changes nothing about the consumer",
+          "refusing a bad spine -- this run becomes validate_spine.py's first in-repo caller"
+        ],
+        "constraint": [
+          "the engine's on-disk format does not change",
+          "validate_spine.py's fault set and acceptance boundary do not move -- moving the oracle is a float, not a patch",
+          "no shipped template is edited to make generator output validate; a disagreement is a finding",
+          "beliefs/concerns/open questions ride in constraints/directives, never a new field"
+        ],
+        "decision": [
+          "spec-has-no-raw-command-field -- the spec offers a closed vocabulary of typed check kinds and NO free-text shell field @grade: guess . leans g1-implement,g2-implement . settle: author the implementer and reviewer role specs and see whether either needs a shell string the vocabulary cannot express",
+          "notes-live-in-directives-not-constraints -- constraints already means 'rules this gate must respect' on 970 live tasks; directives means 'a standing contract' and is populated on 22 @grade: settled/measured . leans g1-implement",
+          "handback-names-verbs-not-arrays -- the handback contract names attach/flag-candidate/block, because no engine verb appends to a directives field on an active gate @grade: settled/measured . leans g1-implement . settle: rerun the cold critic's render_human probe",
+          "escalation-is-review-result-APPROVE -- a large claim injects an artifact/review-result check matching verdict APPROVE, not a match-less user-decision @grade: settled/measured . leans g1-implement",
+          "placeholder-template-vs-instance -- the generator refuses an instance carrying a placeholder; resolver-owned families are not placeholders in that sense @grade: settled/admiral . leans g1-implement,g2-implement",
+          "decision pressure: whether the four unresolvable <engine> tokens in the orchestrator-tier templates are fixed this wave -- carried to g4-closeout, not decided here"
+        ],
+        "evidence": [
+          "the control pairing: one spec whose translation completes on the pure path and which the guarded CLI refuses, plus the same spec corrected and written",
+          "the handback contract verified against BEHAVIOUR -- each named verb driven against a generated spine, and the record found where the contract says it lands",
+          "the shipped-corpus lint fault set unchanged: 23 fault lines from --sweep, before and after"
+        ],
+        "confidence_flags": [
+          "no architecture map exists in this repo (map_orient DEGRADED-UNPARSEABLE, discharged with six hash-pinned substitutes) -- no gate below trusts a map area; every structural fact was read from source or measured"
+        ]
+      },
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent below",
+          "hand_back_to": "admiral-epic-418-followon",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "The plan's first act found a defect in the plan's own machinery, twice. The MCP door binds exactly one spine at import time (mcp_spine_server.py:106) and offers no per-call addressing, so a Commander cannot drive its own execute.json through the door at all -- the very step the shipped Commander spine tells it to. Flagged as tc1 on my spine and floated; execute.json is driven through checklist_engine.py directly, journaled, as the closest compliant thing. Second: config_ref pointing at a file that EXISTS but is not JSON crashes load_config with an unhandled JSONDecodeError before any rail text prints, and validate_spine.py does not catch that shape -- a fault class the lint misses and my generator should refuse. Both are recorded rather than smoothed over, and the second is now a design input for g0.",
+      "mechanical": false,
+      "ts": "2026-08-11T16:33:25.349023+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g0-design",
+      "why": "Freezing the vocabulary surfaced two things the plan had not settled. First, decision:qualitative-must-be-stated had no mechanism -- the lint's message offers the stated form as an out but nothing makes an author take it. Appending the required 'because' text into the emitted statement makes it mechanical: a gate with no checkable postcondition cannot be emitted without saying in the spine itself that it is qualitative and why. Second, I hit spec-config-ref-not-json live while wiring this very plan: load_config json.loads ANY config_ref that exists, so pointing it at a markdown file crashed the engine with an unhandled JSONDecodeError before any rail text could print, and validate_spine.py has no fault for that shape. That is a real gap in the oracle, and it becomes a spec-shape fault the generator refuses -- without moving the oracle, which is not mine to move.",
+      "mechanical": false,
+      "ts": "2026-08-11T16:35:47.358751+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-implement",
+      "why": "The implementer built scripts/generate_spine.py (597 lines) and tests/test_generate_spine.py (76 tests), suite 2765 passed / 3 skipped / 1121 subtests, sweep still 23. The result is honest in the two places that matter most: the wiring grep says plainly that NOTHING outside its own test file calls the generator yet, and the ACCEPTED_FALSE_ALARM for the population probe was corrected mid-cycle because the crew had assumed Path.glob excludes dotfiles, measured it, and found the opposite -- it nearly reproduced this epic's own defect shape inside its guard fixture and said so. Seven decisions were made where DESIGN_NOTE.md was silent; all seven look right to me and none contradicts the note. Not yet reviewed: a cold reviewer runs next, and I will not accept the control pairing until someone other than its author has re-run it.",
+      "mechanical": false,
+      "ts": "2026-08-11T17:03:32.140561+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-review",
+      "why": "Cold reviewer independent of the implementer returned APPROVE with no blockers, and it earned the verdict by RUNNING things rather than reading: it built its own control-pairing fixture rather than re-running the implementer's, proved purity with an independent ast.walk instead of eyeballing, gave the script probe a target whose import-time code both raises AND writes a sentinel file and confirmed neither happened, re-ran the mutation floor with its own harness, and measured both ACCEPTED_FALSE_ALARM premises live instead of trusting the docstring. It found one thing the implementer had not claimed: _RESOLVER_OWNED_TOKEN_RE is imported and never used, so the design note's justification for emitting <repo-root> is asserted in prose and wired to nothing. Carried into g2 as a required cleanup -- turned into a real assertion rather than deleted, so the claim gets pinned by a test.",
+      "mechanical": false,
+      "ts": "2026-08-11T17:18:38.920123+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g1-integrate",
+      "why": "Verified the crew's claimed side-effects against the world rather than accepting the claim. I re-ran the control pairing with MY OWN spec (a script check carrying <not-a-resolver-token>): the pure path translates it without complaint and spec_shape_faults returns [], the guarded CLI refuses it with the oracle's own falsifiable-unresolved-placeholder text at exit 4, and test ! -f confirmed nothing was written; the same spec corrected is written, anchored cd <repo-root> &&, carrying the handback contract. I also compiled my own two-gate large-claim spec and confirmed c-escalation is injected with check artifact/review-result match verdict APPROVE, that the rollup lands on the LAST gate keyed by source, and that it is absent from the earlier gate. The engine re-ran both command postconditions on this advance: the full suite in the declared test mode and the sweep guard asserting the shipped corpus still reports exactly 23 fault lines. The generator exists, refuses what the oracle would refuse, and carries both non-optional properties -- but it is wired to nothing outside its own tests, which the crew said plainly and which g2 is what closes.",
+      "mechanical": false,
+      "ts": "2026-08-11T17:20:38.365785+00:00"
+    }
+  ]
+}

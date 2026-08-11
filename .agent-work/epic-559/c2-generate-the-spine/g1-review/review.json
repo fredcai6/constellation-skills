@@ -1,0 +1,194 @@
+{
+  "work_id": "epic-559/c2-generate-the-spine/g1-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, g1-review-handoff.md, DESIGN_NOTE.md (full), g1-implement-result.md (full), generate_spine.py (full, 597 lines), test_generate_spine.py (full, 978 lines).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 12 close criteria independently re-run (not read): (1) control pairing reproduced with my own spec/script fixture -- bad spec translates via compile_spec but CLI refuses (exit 4, nothing written), corrected spec accepted and written; probe-layer vs oracle-layer fault-code prefixes ('probe-*' vs 'falsifiable-*') confirm the refusal is genuinely the oracle, not a no-op guard, since the same code path also genuinely writes a good spec. (2) validate() confirmed literal last statement before write via source read + the printed fault text matched validate_spine.Fault.__str__ verbatim. (3) AST-scanned compile_condition/compile_spec and every _compile_* helper -- zero Path/open/subprocess references outside spec_shape_faults's documented config_ref exception. (4) all 5 kinds compiled independently and diffed char-for-char against DESIGN_NOTE.md section 4; pytest round-trip verified against validate_spine._pytest_segments/_selector with my own selector containing spaces and shell metacharacters. (5) all 5 compiled kinds anchor 'cd <repo-root> && '. (6) script probe proven to never import -- my own fixture both raises AND writes a sentinel file at import time; neither happened. (7) handback contract driven through checklist_engine.current/attach/flag_candidate/block directly with my own spine/parent/claim text -- all 3 verbs land exactly where DESIGN_NOTE.md section 5 says. (8) claim escalation re-verified unconditional with my own claim text + rollup; mutation floor independently re-run (deleted the injection snippet from a fresh copy, confirmed occurrence count dropped by exactly 1, ran my own probe against the mutant -- red/absent -- and against the real source -- green/present). (9) undecidable path re-run with my own dynamic-flags fixture -- refuses exit 3, nothing written, --help shows no skip flag, grep finds no skip/force/override/ignore identifiers, and an invented --skip-undecidable flag is rejected by argparse (exit 2) with nothing written. (10) guard fixture counts confirmed >=2 VIOLATING/INNOCENT per probe plus populated ACCEPTED_FALSE_ALARM for script+population; independently measured both false-alarm premises live (Path.glob('**/*.toml') matches top-level; the first-positional-arg AST scope really excludes a second-position long flag). (11) git status/diff confirm only the two new untracked files -- validate_spine.py, checklist_engine.py and skills/*/templates/* all bit-for-bit unchanged vs HEAD 0ab7ecab; sweep count re-run = 23, exact match. (12) full suite re-run in the declared test mode: 2765 passed, 3 skipped, 1121 subtests in 107.85s -- exact match to the claimed evidence. All within allowed scope: two new files only, nothing else touched.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status/diff confirms exactly two new untracked files (scripts/generate_spine.py, tests/test_generate_spine.py); validate_spine.py, checklist_engine.py and every skills/*/templates/* file are byte-identical to HEAD. Specific exclusions honored: no shipped template edited, no oracle change, no role-spec authoring (out of scope per handoff, explicitly deferred by the implementer to g2). The one gap named in the design note (checklist_engine.load_config's unhandled JSONDecodeError on a non-JSON config_ref) is correctly left unpatched and only refused for at spec-shape time -- matches 'Specific Exclusions' in DESIGN_NOTE.md section 7.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Required evidence present and reproduced independently, not merely re-read: control pairing, probe VIOLATING/INNOCENT/ACCEPTED_FALSE_ALARM matrix, render_human handback block, falsification floor, sweep count, full suite -- all re-run with fresh fixtures under my own review session and matched the implementer's reported numbers exactly (2765 passed / 3 skipped / 1121 subtests; sweep=23). One real code-quality finding surfaced during independent AST inspection, not claimed by the implementer: _RESOLVER_OWNED_TOKEN_RE (scripts/generate_spine.py:51) is imported from init_work_area but never referenced anywhere else in the file or in the test file -- confirmed by ast.walk over every Name node in the module, none match that identifier. DESIGN_NOTE.md section 4 cites this regex to justify why '<repo-root>' is legitimate output ('verified, _RESOLVER_OWNED_TOKEN_RE.fullmatch(\"<repo-root>\") is true'), but that verification was done by the Commander at design time, never wired into generator code or a test -- the import is dead weight. Not a functional defect (validate_spine.py, which DOES use the regex, is what actually exempts '<repo-root>' from the placeholder fault, and that path is proven by my own control-pairing run), but it is a real, independently-found unused import -- MINOR.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Meets CREW_CONTEXT.md verification discipline: checks proven able to fail (mutation floor, ACCEPTED_FALSE_ALARM), guards asserted against behaviour not text (fault-code asserts, not message greps, except where message-verbatim IS the property under test), loop counts implicitly asserted via >=2 VIOLATING/INNOCENT fixtures actually exercised. All seven silent-spot decisions judged sound, none quietly changes DESIGN_NOTE.md's meaning: (1) spec-artifact-missing-match -- a natural tenth code for behavior section 4 already mandates, consistent with the note's own 'fail at the spec, not the spine' preference used verbatim for spec-all-qualitative-postconditions. (2) exit 1 for malformed TOML -- section 8 is silent on step 1's own exit code and reserves 2-4 explicitly; 1 is the only unclaimed slot. (3) per-layer undecidable exit code (3 for probe, 4 for oracle) -- confirmed by reading main() that both undecidable and fault paths share their layer's exit code, and independently confirmed the two undecidable cases are NOT text-distinguishable from each other in stdout (both print the label 'undecidable -- could not tell'), only exit-code-distinguishable -- a defensible reading of the note's silence, not a hidden regression, since the note never promised the two undecidable sources would be independently labeled. (4) directives.claim.note -- consistent sibling naming with directives.handback.note. (5) omitted claims_rollup when zero large claims -- matches CHECKLIST_SCHEMA's own stated rendering convention. (6) population band shell text -- matches the prose exactly, quotes \"\" for safety, reuses the identical count-command (one implementation, as section 4 demands) -- verified by direct inspection of _compile_population. (7) argparse naming -- matches the invocation shape in section 8 exactly. Fowler pass complete (r6, not yet recorded) found 2 minor style flags (long-method on spec_shape_faults, data-clumps on the three probe signatures vs validate_spine.py's own where-first precedent), both non-blocking. One MINOR finding carried from r3: dead _RESOLVER_OWNED_TOKEN_RE import.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No reconciliation concern: change adds two new files, wired to nothing yet (grep confirms every generate_spine reference lives inside its own test file), matching the implementers own wiring-grep finding and the handoffs stated scope (role-spec authoring is g2, not this gate). No docs/architecture map exists in this repo (context step recorded DEGRADED-UNPARSEABLE), so there is no structural baseline to diverge from. Two out-of-scope items are correctly NOT fixed here and are worth flagging as triage candidates: (a) the oracle gap on non-JSON config_ref crashing checklist_engine.load_config with an unhandled JSONDecodeError -- named in DESIGN_NOTE.md section 7 and restated by the implementer, outside this gates latitude; (b) validate_spine.py --sweep pre-existing 23 faults, several of which are exactly the unresolved-placeholder class this generator exists to make unauthorable, natural candidates once g2 starts replacing hand-authored plan/spine JSON with generated specs.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/<work-id>/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/<work-id>/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/epic-559/c2-generate-the-spine/g1-review/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "FOWLER_PASS.json recorded at .agent-work/epic-559/c2-generate-the-spine/g1-review/FOWLER_PASS.json; verify_fowler_pass.py exits 0 (smells=12, flagged=[long-method, data-clumps], overridden=[]). Both flagged smells are non-blocking style observations, not defects: long-method on spec_shape_faults (72 lines, 5 fault categories sharing one pass's accumulated state) and data-clumps on the three probe functions' repeated (gid, cid, cond, repo_root) signature vs validate_spine.py's own precedent of passing a pre-built where string once. Postcondition c1's command carried an unsubstituted literal <work-id> placeholder (this ad-hoc reviewer survey is not materialized via init_work_area.py's resolver, so nothing substitutes it automatically) -- corrected via amend retext-check (authority=commander, the dispatching role named in the handoff) to the absolute bundled script path and the real FOWLER_PASS.json location, logged as a Workflow Feedback item below.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/epic-559/c2-generate-the-spine/g1-review/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "Independently re-ran all 12 close criteria with my own fixtures (not the implementer's) and got identical results: control pairing genuinely gated by the oracle (not a no-op), validate() confirmed the literal last statement before write with verbatim fault text, compile_condition/compile_spec AST-scanned pure with zero Path/open/subprocess, all five kinds compile character-for-character to DESIGN_NOTE.md section 4 and round-trip through validate_spine's own _pytest_segments/_selector, every kind anchors cd <repo-root>, the script probe never imports its target even under a fixture designed to blow up on import, the handback contract renders and all three verbs land where the contract says, the claim escalation is unconditional and the falsification floor genuinely goes red under my own re-run of the mutation, undecidable refuses with no escape hatch, guard fixtures are honest and their false-alarm premises independently measured true, no shipped file touched and the sweep count is unchanged at 23, and the full suite reproduces exactly (2765 passed, 3 skipped, 1121 subtests). All seven silent-spot decisions are sound and none quietly shifts the design note's meaning. Two findings, both MINOR and non-blocking: an unused _RESOLVER_OWNED_TOKEN_RE import, and two Fowler style flags (long-method, data-clumps) against validate_spine.py's own precedent. Two triage candidates flagged (oracle config_ref gap; the 23 pre-existing sweep faults). APPROVE."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "checklist_engine.load_config crashes with an unhandled JSONDecodeError on a non-JSON config_ref -- validate_spine.py has no fault for this, so an oracle fix (outside this Commander's latitude) is needed to close the gap generate_spine.py's spec-config-ref-not-json fault only refuses at generation time, not for hand-authored spines/plans."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "validate_spine.py --sweep still reports 23 pre-existing faults on shipped templates, several falsifiable-unresolved-placeholder on literal <exact test command>-style tokens -- exactly the class generate_spine.py exists to make unauthorable; natural cleanup once g2 starts replacing hand-authored plan/spine JSON with generated specs."
+    }
+  ],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "reviewer-g1-review-attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-11T17:06:36.359701+00:00",
+    "last_heartbeat": "2026-08-11T17:15:59.264069+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-11T17:17:15.200545+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-11T17:14:16.787941+00:00",
+      "reason": "the template's postcondition command carries a literal <work-id> placeholder never substituted at survey-instantiation time (this ad-hoc reviewer survey is not materialized via init_work_area.py's resolver); correcting it to the absolute bundled script path and the actual FOWLER_PASS.json location per global-everyone.md's 'reference bundled scripts by absolute installed path' rule",
+      "authority": "commander",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}

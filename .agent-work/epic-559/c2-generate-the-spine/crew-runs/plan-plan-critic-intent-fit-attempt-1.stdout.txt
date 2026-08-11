@@ -1,0 +1,5 @@
+Result written to `.agent-work/epic-559/c2-generate-the-spine/crew-handoffs/plan-critic-intent-fit-result.md`.
+
+Lens: intent-fit. Highest-ranked finding (BLOCKING): the plan's Property 1 (`directives.handback.{beliefs,concerns,open_questions}`) is a JSON scaffold no engine verb ever writes to — verified by grep (zero engine references to that vocabulary), by `docs/CHECKLIST_SCHEMA.md:124` (`directives` is documented as top-down, not crew-writable), by `amend`'s `rescope` being restricted to pending gates only, and by a live `render_human` run showing those three fields render permanently blank on every gate.
+
+A second BLOCKING finding shows the `magnitude = "large"` escalation postcondition can be closed end-to-end by the same session that made the claim (`attach` + `attest`, demonstrated live in two calls, no authority or provenance check anywhere in the engine) — directly answering the launch order's "same agent attaching one more artifact" concern in the affirmative.

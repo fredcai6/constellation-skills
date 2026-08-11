@@ -1,0 +1,15 @@
+The review is complete. **Verdict: APPROVE**.
+
+I independently re-ran all 12 close criteria with my own fixtures (never the implementer's) against `scripts/generate_spine.py`:
+
+- Reproduced the control pairing with a fresh spec/script, confirmed the refusal comes from the oracle (fault-code family `falsifiable-*`, not the generator's own `probe-*` codes) and isn't a no-op — the same code path genuinely writes a corrected spec.
+- AST-scanned the pure layer myself (no `Path`/`open`/`subprocess` reachable from `compile_condition`/`compile_spec`).
+- Round-tripped a selector with spaces/shell metacharacters through `validate_spine`'s own `_pytest_segments`/`_selector`.
+- Proved the `script` probe never imports its target with a fixture that both raises and writes a file at import time.
+- Drove the handback contract's three verbs directly through `checklist_engine`.
+- Re-ran the falsification-floor mutation myself (deleted the injection, confirmed the test genuinely goes red, confirmed baseline is green).
+- Confirmed the undecidable path has no escape hatch, guard fixtures are honest with measured (not assumed) false-alarm premises, no shipped file was touched, sweep stayed at 23, and the full suite reproduced exactly: 2765 passed, 3 skipped, 1121 subtests.
+
+Two MINOR, non-blocking findings: a dead `_RESOLVER_OWNED_TOKEN_RE` import I found independently, and two Fowler style flags (long-method, data-clumps) against `validate_spine.py`'s own precedent. Two triage candidates flagged (the oracle's `config_ref` JSON-crash gap; the 23 pre-existing sweep faults).
+
+The review was driven through my own engine-tracked survey (`.agent-work/epic-559/c2-generate-the-spine/g1-review/review.json`, claimed → recorded item-by-item → consolidated to APPROVE → lease released), since the environment's `SPINE_FILE`/`SPINE_SESSION` pointed at the Commander's own top-level spine rather than anything scoped to this review. Full `REVIEW_RESULT` written to `.agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g1-review-result.md`.

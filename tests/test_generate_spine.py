@@ -1,0 +1,978 @@
+"""Tests for scripts/generate_spine.py -- the spine spec compiler and generator.
+
+Frozen contract: .agent-work/epic-559/c2-generate-the-spine/DESIGN_NOTE.md. Where a
+test encodes a choice the design note leaves silent, the choice and its rationale are
+named in the test's own docstring/comment, and restated in IMPLEMENTER_RESULT.md.
+"""
+
+from __future__ import annotations
+
+import ast
+import copy
+import json
+import shlex
+import subprocess
+import sys
+import tempfile
+import tomllib
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+import checklist_engine  # noqa: E402
+import generate_spine as gs  # noqa: E402
+from validate_spine import ACCEPTED_ARTIFACT_TYPES_WITHOUT_MATCH, validate  # noqa: E402
+
+
+# --------------------------------------------------------------------------- #
+# Fixture builders -- minimal valid spec dicts (already TOML-parsed shape),
+# one per check kind, plus a minimal full spec.
+# --------------------------------------------------------------------------- #
+
+def _qualitative_cond(id_="c1", statement="reviewer read the diff", because="no automatable signal exists"):
+    return {"id": id_, "statement": statement, "kind": "qualitative", "because": because}
+
+
+def _pytest_cond(id_="c1", statement="tests pass", selector="Door or Tie", min_collect=4, targets=None):
+    d = {"id": id_, "statement": statement, "kind": "pytest", "selector": selector, "min_collect": min_collect}
+    if targets is not None:
+        d["targets"] = targets
+    return d
+
+
+def _script_cond(id_="c1", statement="flag exists", path="scripts/foo.py", args=None):
+    d = {"id": id_, "statement": statement, "kind": "script", "path": path}
+    if args is not None:
+        d["args"] = args
+    return d
+
+
+def _population_cond(id_="c1", statement="count matches", root="specs", glob="*.toml", expected=3):
+    return {"id": id_, "statement": statement, "kind": "population", "root": root, "glob": glob, "expected": expected}
+
+
+def _artifact_cond(id_="c1", statement="human decided", evidence_type="user-decision", match=None):
+    d = {"id": id_, "statement": statement, "kind": "artifact", "evidence_type": evidence_type}
+    if match is not None:
+        d["match"] = match
+    return d
+
+
+def _gate(id_="m1", title="do it", imperative="do the thing", postconditions=None, preconditions=None,
+          constraints=None, claim=None):
+    g = {"id": id_, "title": title, "imperative": imperative}
+    if postconditions is not None:
+        g["postconditions"] = postconditions
+    if preconditions is not None:
+        g["preconditions"] = preconditions
+    if constraints is not None:
+        g["constraints"] = constraints
+    if claim is not None:
+        g["claim"] = claim
+    return g
+
+
+def _spec(gates=None, *, work_id="w1", type_="gated", config_ref="docs/agents/engine-config.json", parent=None):
+    spec = {
+        "work_id": work_id,
+        "type": type_,
+        "config_ref": config_ref,
+        "gate": gates if gates is not None else [_gate(postconditions=[_qualitative_cond()])],
+    }
+    if parent is not None:
+        spec["parent"] = parent
+    return spec
+
+
+# --------------------------------------------------------------------------- #
+# CHECK_KINDS
+# --------------------------------------------------------------------------- #
+
+class TestCheckKinds:
+    def test_closed_vocabulary(self):
+        assert gs.CHECK_KINDS == ("qualitative", "pytest", "script", "population", "artifact")
+
+
+# --------------------------------------------------------------------------- #
+# compile_condition -- one class per kind, exact compiled output
+# --------------------------------------------------------------------------- #
+
+class TestCompileQualitative:
+    def test_check_is_null_and_because_appended(self):
+        cond = _qualitative_cond(statement="reviewer read the diff", because="nothing automatable exists")
+        out = gs.compile_condition(cond, repo_root_token="<repo-root>")
+        assert out["check"] is None
+        assert out["statement"] == "reviewer read the diff -- QUALITATIVE: nothing automatable exists"
+        assert out["id"] == "c1"
+        assert out["satisfied"] is False
+
+    def test_pure_no_filesystem_symbols(self):
+        # Documented, not executed: purity is a property of the source, so this
+        # asserts the function object carries no reference to banned globals.
+        import inspect
+        src = inspect.getsource(gs.compile_condition)
+        for banned in ("open(", "subprocess.", "Path("):
+            assert banned not in src
+
+
+class TestCompilePytest:
+    def test_default_min_collect_and_no_targets(self):
+        cond = _pytest_cond(selector="Door or Tie", targets=None)
+        del cond["min_collect"]
+        out = gs.compile_condition(cond, repo_root_token="<repo-root>")
+        chk = out["check"]
+        assert chk["kind"] == "command"
+        cmd = chk["command"]
+        assert cmd.startswith("cd <repo-root> && ")
+        assert "test $(python -m pytest -q -k" in cmd
+        assert "--collect-only" in cmd
+        assert "-ge 1" in cmd  # default min_collect
+        assert shlex.quote("Door or Tie") in cmd
+
+    def test_selector_quoted_and_targets_joined(self):
+        cond = _pytest_cond(selector="a or b", min_collect=4, targets=["tests/test_registry.py", "tests/test_door.py"])
+        out = gs.compile_condition(cond, repo_root_token="<repo-root>")
+        cmd = out["check"]["command"]
+        assert "-ge 4" in cmd
+        assert "tests/test_registry.py tests/test_door.py" in cmd
+        # the collect segment and the run segment each carry the selector once
+        assert cmd.count(shlex.quote("a or b")) == 2
+
+    def test_dangerous_selector_is_shell_quoted(self):
+        # defect 1's own shape: a selector containing shell metacharacters must
+        # never appear unquoted in the compiled command.
+        cond = _pytest_cond(selector="Door and not $(rm -rf /)")
+        out = gs.compile_condition(cond, repo_root_token="<repo-root>")
+        cmd = out["check"]["command"]
+        assert "$(rm -rf /)" not in cmd or shlex.quote(cond["selector"]) in cmd
+        assert shlex.quote(cond["selector"]) in cmd
+
+
+class TestCompileScript:
+    def test_no_args(self):
+        cond = _script_cond(path="scripts/foo.py")
+        out = gs.compile_condition(cond, repo_root_token="<repo-root>")
+        assert out["check"] == {"kind": "command", "command": "cd <repo-root> && python scripts/foo.py"}
+
+    def test_args_joined_with_shlex(self):
+        cond = _script_cond(path="scripts/foo.py", args=["--flag", "value with space"])
+        out = gs.compile_condition(cond, repo_root_token="<repo-root>")
+        cmd = out["check"]["command"]
+        assert cmd == "cd <repo-root> && python " + shlex.join(["scripts/foo.py", "--flag", "value with space"])
+
+
+class TestCompilePopulation:
+    def test_exact_count(self):
+        cond = _population_cond(root="specs", glob="*.toml", expected=3)
+        out = gs.compile_condition(cond, repo_root_token="<repo-root>")
+        cmd = out["check"]["command"]
+        assert cmd.startswith("cd <repo-root> && ")
+        assert "pathlib.Path(sys.argv[1]).glob(sys.argv[2])" in cmd
+        assert shlex.quote("specs") in cmd
+        assert shlex.quote("*.toml") in cmd
+        assert "-eq 3" in cmd
+
+    def test_band_form(self):
+        cond = {"id": "c1", "statement": "band", "kind": "population", "root": "specs", "glob": "*.toml",
+                "expected_min": 2, "expected_max": 5}
+        out = gs.compile_condition(cond, repo_root_token="<repo-root>")
+        cmd = out["check"]["command"]
+        assert "-ge 2" in cmd
+        assert "-le 5" in cmd
+
+    def test_probed_command_is_the_same_command_shipped(self, tmp_path):
+        # Section 4's whole point: one implementation. Build a real dir tree,
+        # execute the COMPILED command string itself, and confirm it agrees
+        # with the declared count -- no separate Python-side glob.
+        (tmp_path / "specs").mkdir()
+        for name in ("a.toml", "b.toml", "c.toml"):
+            (tmp_path / "specs" / name).write_text("", encoding="utf-8")
+        # repo_root_token is the real tmp_path here, so the compiled command
+        # is already anchored there -- no substitution needed.
+        cond = _population_cond(root="specs", glob="*.toml", expected=3)
+        out = gs.compile_condition(cond, repo_root_token=str(tmp_path))
+        cmd = out["check"]["command"]
+        proc = subprocess.run(["bash", "-c", cmd], cwd=str(tmp_path), capture_output=True)
+        assert proc.returncode == 0, proc.stderr
+
+
+class TestCompileArtifact:
+    def test_passthrough_with_match(self):
+        cond = _artifact_cond(evidence_type="review-result", match={"verdict": "APPROVE"})
+        out = gs.compile_condition(cond, repo_root_token="<repo-root>")
+        assert out["check"] == {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}
+
+    def test_user_decision_exempt_from_match(self):
+        assert "user-decision" in ACCEPTED_ARTIFACT_TYPES_WITHOUT_MATCH
+        cond = _artifact_cond(evidence_type="user-decision", match=None)
+        out = gs.compile_condition(cond, repo_root_token="<repo-root>")
+        assert out["check"]["kind"] == "artifact"
+        assert out["check"]["evidence_type"] == "user-decision"
+
+    def test_imports_not_redeclares_exception_set(self):
+        import inspect
+        src = inspect.getsource(gs)
+        assert "ACCEPTED_ARTIFACT_TYPES_WITHOUT_MATCH = " not in src
+
+
+# --------------------------------------------------------------------------- #
+# compile_spec -- compiler-supplied defaults
+# --------------------------------------------------------------------------- #
+
+class TestCompilerDefaults:
+    def test_top_level_defaults(self):
+        spec = _spec()
+        spine = gs.compile_spec(spec)
+        assert spine["consolidation"] is None
+        assert spine["triage_candidates"] == []
+        assert spine["blockers"] == []
+        assert spine["items"] == ["m1"]
+        assert spine["work_id"] == "w1"
+        assert spine["type"] == "gated"
+
+    def test_task_defaults_when_gate_has_no_preconditions(self):
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond()])])
+        spine = gs.compile_spec(spec)
+        t = spine["tasks"]["m1"]
+        assert t["preconditions"] == []
+        assert t["status"] == "pending"
+        assert t["status_detail"] == {}
+        assert t["result"] is None
+        assert t["finding"] is None
+        assert t["evidence"] == []
+        assert t["rework_count"] == 0
+        assert t["child_checklist"] is None
+
+    def test_condition_satisfied_defaults_false(self):
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond()])])
+        spine = gs.compile_spec(spec)
+        cond = spine["tasks"]["m1"]["postconditions"][0]
+        assert cond["satisfied"] is False
+
+    def test_items_order_is_gate_order(self):
+        spec = _spec(gates=[
+            _gate(id_="m1", postconditions=[_qualitative_cond()]),
+            _gate(id_="m2", postconditions=[_qualitative_cond()]),
+            _gate(id_="m0", postconditions=[_qualitative_cond()]),
+        ])
+        spine = gs.compile_spec(spec)
+        assert spine["items"] == ["m1", "m2", "m0"]
+
+    def test_pure_no_filesystem_symbols(self):
+        import inspect
+        src = inspect.getsource(gs.compile_spec)
+        for banned in ("open(", "subprocess.", "Path("):
+            assert banned not in src
+
+
+# --------------------------------------------------------------------------- #
+# Handback contract (DESIGN_NOTE.md section 5) -- every gate, unconditionally
+# --------------------------------------------------------------------------- #
+
+class TestHandback:
+    def test_every_gate_carries_the_handback_contract(self):
+        spec = _spec(gates=[
+            _gate(id_="m1", postconditions=[_qualitative_cond()]),
+            _gate(id_="m2", postconditions=[_qualitative_cond()]),
+        ])
+        spine = gs.compile_spec(spec)
+        for gid in ("m1", "m2"):
+            handback = spine["tasks"][gid]["directives"]["handback"]
+            assert handback["belief_worth_recording"].startswith("spine_evidence attach")
+            assert handback["open_question_out_of_scope"].startswith("spine_capture flag-candidate")
+            assert handback["concern_that_must_stop_this_gate"].startswith("spine_halt block")
+            assert "purpose" in handback
+            assert "note" in handback
+
+    def test_hand_back_to_names_parent_when_declared(self):
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond()])], parent="admiral-epic-418-followon")
+        spine = gs.compile_spec(spec)
+        assert spine["tasks"]["m1"]["directives"]["handback"]["hand_back_to"] == "admiral-epic-418-followon"
+
+    def test_hand_back_to_defaults_to_unknown(self):
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond()])])
+        spine = gs.compile_spec(spec)
+        assert spine["tasks"]["m1"]["directives"]["handback"]["hand_back_to"] == "unknown"
+
+    def test_handback_has_no_writable_arrays(self):
+        # The whole point of section 5: no beliefs/concerns/open_questions
+        # array field that no engine verb ever appends to.
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond()])])
+        spine = gs.compile_spec(spec)
+        handback = spine["tasks"]["m1"]["directives"]["handback"]
+        for leaf in handback.values():
+            assert not isinstance(leaf, list)
+
+
+# --------------------------------------------------------------------------- #
+# Claim escalation (DESIGN_NOTE.md section 6)
+# --------------------------------------------------------------------------- #
+
+class TestClaimEscalation:
+    def test_large_claim_injects_c_escalation_postcondition(self):
+        spec = _spec(gates=[_gate(
+            postconditions=[_qualitative_cond()],
+            claim={"magnitude": "large", "text": "this rewires the auth layer"},
+        )])
+        spine = gs.compile_spec(spec)
+        posts = spine["tasks"]["m1"]["postconditions"]
+        esc = next(c for c in posts if c["id"] == "c-escalation")
+        assert esc["check"] == {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}
+        assert "this rewires the auth layer" in esc["statement"]
+        assert esc["satisfied"] is False
+
+    def test_large_claim_renders_directives_claim(self):
+        spec = _spec(gates=[_gate(
+            postconditions=[_qualitative_cond()],
+            claim={"magnitude": "large", "text": "this rewires the auth layer"},
+        )])
+        spine = gs.compile_spec(spec)
+        claim = spine["tasks"]["m1"]["directives"]["claim"]
+        assert claim["magnitude"] == "large"
+        assert claim["text"] == "this rewires the auth layer"
+
+    def test_normal_magnitude_injects_nothing(self):
+        spec = _spec(gates=[_gate(
+            postconditions=[_qualitative_cond()],
+            claim={"magnitude": "normal", "text": "routine"},
+        )])
+        spine = gs.compile_spec(spec)
+        posts = spine["tasks"]["m1"]["postconditions"]
+        assert not any(c["id"] == "c-escalation" for c in posts)
+        assert "claim" not in spine["tasks"]["m1"]["directives"]
+
+    def test_no_claim_table_injects_nothing(self):
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond()])])
+        spine = gs.compile_spec(spec)
+        assert "claim" not in spine["tasks"]["m1"]["directives"]
+
+    def test_rolls_up_onto_last_gate_keyed_by_source(self):
+        spec = _spec(gates=[
+            _gate(id_="m1", postconditions=[_qualitative_cond()],
+                  claim={"magnitude": "large", "text": "claim one"}),
+            _gate(id_="m2", postconditions=[_qualitative_cond()]),
+            _gate(id_="m3", postconditions=[_qualitative_cond()]),
+        ])
+        spine = gs.compile_spec(spec)
+        assert "claims_rollup" not in spine["tasks"]["m1"]["directives"]
+        assert "claims_rollup" not in spine["tasks"]["m2"]["directives"]
+        rollup = spine["tasks"]["m3"]["directives"]["claims_rollup"]
+        assert "m1" in rollup
+        assert rollup["m1"]["text"] == "claim one"
+
+    def test_no_rollup_key_when_no_large_claims(self):
+        spec = _spec(gates=[
+            _gate(id_="m1", postconditions=[_qualitative_cond()]),
+            _gate(id_="m2", postconditions=[_qualitative_cond()]),
+        ])
+        spine = gs.compile_spec(spec)
+        assert "claims_rollup" not in spine["tasks"]["m2"]["directives"]
+
+
+# --------------------------------------------------------------------------- #
+# Spec-shape faults (DESIGN_NOTE.md section 7) -- refused before any probe
+# --------------------------------------------------------------------------- #
+
+class TestSpecShapeFaults:
+    def test_clean_spec_has_no_faults(self):
+        # A single qualitative postcondition would itself trip
+        # spec-all-qualitative-postconditions (below), so "clean" here uses a
+        # real check -- the shared _spec()/_gate() defaults elsewhere in this
+        # file are deliberately all-qualitative and are never run through
+        # spec_shape_faults, only compile_spec, so they do not need to dodge
+        # this rule.
+        spec = _spec(gates=[_gate(postconditions=[_pytest_cond()])])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert faults == []
+
+    def test_unknown_check_kind(self):
+        spec = _spec(gates=[_gate(postconditions=[
+            {"id": "c1", "statement": "x", "kind": "raw-command", "command": "echo hi"}
+        ])])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert any(f.code == "spec-unknown-check-kind" for f in faults)
+
+    def test_missing_field(self):
+        spec = _spec(gates=[_gate(postconditions=[
+            {"id": "c1", "statement": "x", "kind": "pytest"}  # no selector
+        ])])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert any(f.code == "spec-missing-field" for f in faults)
+
+    def test_empty_because(self):
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond(because="")])])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert any(f.code == "spec-empty-because" for f in faults)
+
+    def test_gated_missing_postconditions(self):
+        spec = _spec(gates=[_gate(postconditions=[])])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert any(f.code == "spec-gated-missing-postconditions" for f in faults)
+
+    def test_all_qualitative_postconditions(self):
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond(id_="c1"), _qualitative_cond(id_="c2")])])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert any(f.code == "spec-all-qualitative-postconditions" for f in faults)
+        assert any("falsifiable-all-null" in f.message for f in faults)
+
+    def test_not_all_qualitative_is_clean(self):
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond(id_="c1"), _pytest_cond(id_="c2")])])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert not any(f.code == "spec-all-qualitative-postconditions" for f in faults)
+
+    def test_duplicate_gate_id(self):
+        spec = _spec(gates=[
+            _gate(id_="m1", postconditions=[_qualitative_cond()]),
+            _gate(id_="m1", postconditions=[_qualitative_cond()]),
+        ])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert any(f.code == "spec-duplicate-gate-id" for f in faults)
+
+    def test_duplicate_condition_id_across_pre_and_post(self):
+        spec = _spec(gates=[_gate(
+            preconditions=[_qualitative_cond(id_="c1")],
+            postconditions=[_qualitative_cond(id_="c1")],
+        )])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert any(f.code == "spec-duplicate-condition-id" for f in faults)
+
+    def test_reserved_id(self):
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond(id_="c-escalation")])])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert any(f.code == "spec-reserved-id" for f in faults)
+
+    def test_config_ref_not_json(self, tmp_path):
+        bad = tmp_path / "not_json.toml"
+        bad.write_text("this = 'is toml, not json'\n", encoding="utf-8")
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond()])])
+        spec["config_ref"] = "not_json.toml"
+        faults = gs.spec_shape_faults(spec, repo_root=tmp_path)
+        assert any(f.code == "spec-config-ref-not-json" for f in faults)
+
+    def test_config_ref_valid_json_is_clean(self, tmp_path):
+        good = tmp_path / "config.json"
+        good.write_text("{}", encoding="utf-8")
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond()])])
+        spec["config_ref"] = "config.json"
+        faults = gs.spec_shape_faults(spec, repo_root=tmp_path)
+        assert not any(f.code == "spec-config-ref-not-json" for f in faults)
+
+
+# --------------------------------------------------------------------------- #
+# Purity guard on the module boundary itself
+# --------------------------------------------------------------------------- #
+
+def _real_toml_spec_text(gate_id="m1", extra_gate_toml="") -> str:
+    # c1 is deliberately `artifact`/`user-decision` (no `match`, exempt) rather
+    # than `qualitative`: a lone qualitative postcondition would itself trip
+    # spec-all-qualitative-postconditions, and artifact carries no probe, so a
+    # base spec with no extra_gate_toml compiles and validates cleanly with no
+    # live-environment dependency.
+    return f'''
+work_id = "w1"
+type = "gated"
+config_ref = "docs/agents/engine-config.json"
+
+[[gate]]
+id = "{gate_id}"
+title = "do it"
+imperative = "do the thing"
+
+  [[gate.postconditions]]
+  id = "c1"
+  statement = "human decided"
+  kind = "artifact"
+  evidence_type = "user-decision"
+{extra_gate_toml}
+'''
+
+
+def _write_script_fixture(root: Path, rel_path: str, body: str) -> None:
+    target = root / rel_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(body, encoding="utf-8")
+
+
+# --------------------------------------------------------------------------- #
+# Probes -- one class per kind. VIOLATING/INNOCENT modeled on
+# tests/test_mcp_adoption.py::_cli_only_verb_violations; script and population
+# additionally carry a POPULATED ACCEPTED_FALSE_ALARM bucket (the two probes
+# with no oracle behind them).
+# --------------------------------------------------------------------------- #
+
+class TestPytestProbe:
+    VIOLATING = {
+        "nonsense selector": _pytest_cond(selector="ThisSelectorMatchesNothingAtAll12345", min_collect=1),
+        "another nonsense selector": _pytest_cond(selector="NoSuchTestEverExistedZZZ9876", min_collect=1),
+    }
+
+    INNOCENT = {
+        "real class in this file": _pytest_cond(selector="TestCheckKinds", min_collect=1,
+                                                  targets=["tests/test_generate_spine.py"]),
+        "another real class in this file": _pytest_cond(selector="TestCompileScript", min_collect=1,
+                                                          targets=["tests/test_generate_spine.py"]),
+    }
+
+    @pytest.mark.parametrize("label", sorted(VIOLATING))
+    def test_violating_is_caught(self, label):
+        faults, undecidable = gs._probe_pytest("m1", "c1", self.VIOLATING[label], repo_root=ROOT)
+        assert not undecidable, undecidable
+        assert any(f.code == "probe-pytest-below-min-collect" for f in faults), (label, faults)
+
+    @pytest.mark.parametrize("label", sorted(INNOCENT))
+    def test_innocent_is_left_alone(self, label):
+        faults, undecidable = gs._probe_pytest("m1", "c1", self.INNOCENT[label], repo_root=ROOT)
+        assert not faults, (label, faults)
+        assert not undecidable, (label, undecidable)
+
+
+class TestScriptProbe:
+    VIOLATING = {
+        "unknown flag against a real script":
+            ("scripts/_gs_fixture_a.py",
+             'import argparse\n\ndef build():\n    p = argparse.ArgumentParser()\n    p.add_argument("--known")\n    return p\n',
+             ["--unknown"]),
+        "near-miss typo against another real script":
+            ("scripts/_gs_fixture_b.py",
+             'import argparse\n\ndef build():\n    p = argparse.ArgumentParser()\n    p.add_argument("--work-id")\n    p.add_argument("--session")\n    return p\n',
+             ["--session-id"]),
+    }
+
+    INNOCENT = {
+        "exact match":
+            ("scripts/_gs_fixture_c.py",
+             'import argparse\n\ndef build():\n    p = argparse.ArgumentParser()\n    p.add_argument("--flag")\n    p.add_argument("--other")\n    return p\n',
+             ["--flag", "--other"]),
+        "no flags requested at all -- nothing to check":
+            ("scripts/_gs_fixture_a.py",
+             'import argparse\n\ndef build():\n    p = argparse.ArgumentParser()\n    p.add_argument("--known")\n    return p\n',
+             []),
+    }
+
+    #: One real, principled limitation, not a bug: DESIGN_NOTE.md section 4 says
+    #: the probe collects literals passed as the FIRST positional argument to
+    #: add_argument. A short-then-long registration (`add_argument("-f",
+    #: "--foo")`) puts the long form SECOND, so a real, legitimately-registered
+    #: `--foo` is flagged anyway. Pinned as FIRING (not fixed) so a future
+    #: change to the collection rule is a deliberate edit here, exactly the
+    #: convention test_mcp_adoption.py's own ACCEPTED_FALSE_ALARM documents.
+    ACCEPTED_FALSE_ALARM = {
+        "long flag in second position":
+            ("scripts/_gs_fixture_d.py",
+             'import argparse\n\ndef build():\n    p = argparse.ArgumentParser()\n    p.add_argument("-f", "--foo")\n    return p\n',
+             ["--foo"]),
+    }
+
+    @pytest.mark.parametrize("label", sorted(VIOLATING))
+    def test_violating_is_caught(self, label, tmp_path):
+        rel_path, body, args = self.VIOLATING[label]
+        _write_script_fixture(tmp_path, rel_path, body)
+        cond = _script_cond(path=rel_path, args=args)
+        faults, undecidable = gs._probe_script("m1", "c1", cond, repo_root=tmp_path)
+        assert not undecidable, (label, undecidable)
+        assert any(f.code == "probe-script-unknown-flag" for f in faults), (label, faults)
+
+    @pytest.mark.parametrize("label", sorted(INNOCENT))
+    def test_innocent_is_left_alone(self, label, tmp_path):
+        rel_path, body, args = self.INNOCENT[label]
+        _write_script_fixture(tmp_path, rel_path, body)
+        cond = _script_cond(path=rel_path, args=args)
+        faults, undecidable = gs._probe_script("m1", "c1", cond, repo_root=tmp_path)
+        assert not faults, (label, faults)
+        assert not undecidable, (label, undecidable)
+
+    @pytest.mark.parametrize("label", sorted(ACCEPTED_FALSE_ALARM))
+    def test_the_accepted_false_alarm_still_fires(self, label, tmp_path):
+        rel_path, body, args = self.ACCEPTED_FALSE_ALARM[label]
+        _write_script_fixture(tmp_path, rel_path, body)
+        cond = _script_cond(path=rel_path, args=args)
+        faults, undecidable = gs._probe_script("m1", "c1", cond, repo_root=tmp_path)
+        assert any(f.code == "probe-script-unknown-flag" for f in faults), (
+            f"{label!r} is no longer flagged -- the probe's collection rule changed; "
+            f"re-measure and move this case into INNOCENT in the same edit"
+        )
+
+    def test_never_imports_the_target(self, tmp_path):
+        # A script whose import-time code would blow up if ever imported --
+        # the probe must never trip it (defect 2's own shape one layer up).
+        _write_script_fixture(tmp_path, "scripts/_gs_fixture_boom.py",
+                               'raise RuntimeError("must never be imported")\n')
+        cond = _script_cond(path="scripts/_gs_fixture_boom.py", args=[])
+        faults, undecidable = gs._probe_script("m1", "c1", cond, repo_root=tmp_path)
+        assert not faults
+        assert not undecidable
+
+    def test_missing_target_is_a_fault(self, tmp_path):
+        cond = _script_cond(path="scripts/does_not_exist.py", args=["--flag"])
+        faults, undecidable = gs._probe_script("m1", "c1", cond, repo_root=tmp_path)
+        assert any(f.code == "probe-script-not-found" for f in faults)
+
+
+class TestPopulationProbe:
+    def _make_tree(self, tmp_path, names):
+        (tmp_path / "specs").mkdir()
+        for name in names:
+            (tmp_path / "specs" / name).write_text("", encoding="utf-8")
+
+    VIOLATING_TOO_FEW = ["a.toml", "b.toml"]  # expect 3, only 2 present
+    VIOLATING_TOO_MANY = ["a.toml", "b.toml", "c.toml", "d.toml"]  # expect 3, 4 present
+
+    def test_violating_too_few(self, tmp_path):
+        self._make_tree(tmp_path, self.VIOLATING_TOO_FEW)
+        cond = _population_cond(root="specs", glob="*.toml", expected=3)
+        faults, undecidable = gs._probe_population("m1", "c1", cond, repo_root=tmp_path)
+        assert not undecidable
+        assert any(f.code == "probe-population-count-mismatch" for f in faults)
+
+    def test_violating_too_many(self, tmp_path):
+        self._make_tree(tmp_path, self.VIOLATING_TOO_MANY)
+        cond = _population_cond(root="specs", glob="*.toml", expected=3)
+        faults, undecidable = gs._probe_population("m1", "c1", cond, repo_root=tmp_path)
+        assert not undecidable
+        assert any(f.code == "probe-population-count-mismatch" for f in faults)
+
+    def test_innocent_exact_match(self, tmp_path):
+        self._make_tree(tmp_path, ["a.toml", "b.toml", "c.toml"])
+        cond = _population_cond(root="specs", glob="*.toml", expected=3)
+        faults, undecidable = gs._probe_population("m1", "c1", cond, repo_root=tmp_path)
+        assert not faults
+        assert not undecidable
+
+    def test_innocent_band_match(self, tmp_path):
+        self._make_tree(tmp_path, ["a.toml", "b.toml", "c.toml"])
+        cond = {"id": "c1", "statement": "band", "kind": "population", "root": "specs", "glob": "*.toml",
+                "expected_min": 2, "expected_max": 5}
+        faults, undecidable = gs._probe_population("m1", "c1", cond, repo_root=tmp_path)
+        assert not faults
+        assert not undecidable
+
+    #: `pathlib.Path.glob("**/*.toml")` matches "this directory AND all
+    #: subdirectories, recursively" -- so it also matches TOP-LEVEL files, not
+    #: only nested ones (DESIGN_NOTE.md section 4's own caveat about `**`
+    #: recursion, measured live: verified against this host's Python). An
+    #: author who writes `**/*.toml` reading it as "only inside subfolders"
+    #: (the common, intuitive misreading) declares a count that excludes the
+    #: top level and gets a mismatch -- the check is faithfully reproducing
+    #: real pathlib semantics, not a bug, so this is pinned as FIRING.
+    ACCEPTED_FALSE_ALARM = "** intuitively read as subdirectories-only, but also matches the top level"
+
+    def test_the_accepted_false_alarm_still_fires(self, tmp_path):
+        (tmp_path / "specs" / "sub").mkdir(parents=True)
+        (tmp_path / "specs" / "a.toml").write_text("", encoding="utf-8")
+        (tmp_path / "specs" / "b.toml").write_text("", encoding="utf-8")
+        (tmp_path / "specs" / "sub" / "nested.toml").write_text("", encoding="utf-8")
+        # A naive author intends "just the nested one" and declares expected=1.
+        cond = _population_cond(root="specs", glob="**/*.toml", expected=1)
+        faults, undecidable = gs._probe_population("m1", "c1", cond, repo_root=tmp_path)
+        assert not undecidable
+        assert any(f.code == "probe-population-count-mismatch" for f in faults), (
+            "the ** recursion false alarm stopped firing -- pathlib.Path.glob's ** "
+            "semantics changed, or the probe stopped using it; re-measure"
+        )
+
+
+# --------------------------------------------------------------------------- #
+# main() -- order of operations and exit codes (DESIGN_NOTE.md section 8)
+# --------------------------------------------------------------------------- #
+
+class TestMainCLI:
+    def test_malformed_toml_exit_1(self, tmp_path):
+        spec_path = tmp_path / "bad.spine.toml"
+        spec_path.write_text("this is not [ valid toml\n", encoding="utf-8")
+        out_path = tmp_path / "out.json"
+        rc = gs.main([str(spec_path), "--out", str(out_path), "--root", str(tmp_path)])
+        assert rc == 1
+        assert not out_path.exists()
+
+    def test_spec_shape_fault_exit_2(self, tmp_path):
+        # Two [[gate]] blocks sharing one spec header -- valid TOML, but a
+        # spec-shape fault (duplicate gate id).
+        extra_gate = '''
+[[gate]]
+id = "m1"
+title = "do it again"
+imperative = "do the thing again"
+
+  [[gate.postconditions]]
+  id = "c1"
+  statement = "human decided"
+  kind = "artifact"
+  evidence_type = "user-decision"
+'''
+        spec_path = tmp_path / "dup.spine.toml"
+        spec_path.write_text(_real_toml_spec_text() + extra_gate, encoding="utf-8")
+        out_path = tmp_path / "out.json"
+        rc = gs.main([str(spec_path), "--out", str(out_path), "--root", str(tmp_path)])
+        assert rc == 2
+        assert not out_path.exists()
+
+    def test_probe_fault_exit_3(self, tmp_path):
+        extra = (
+            "\n  [[gate.postconditions]]\n"
+            '  id = "c2"\n'
+            '  statement = "collects something"\n'
+            '  kind = "pytest"\n'
+            '  selector = "NoSuchTestEverExistedAnywhereZZZ"\n'
+            "  min_collect = 1\n"
+        )
+        spec_path = tmp_path / "zero.spine.toml"
+        spec_path.write_text(_real_toml_spec_text(extra_gate_toml=extra), encoding="utf-8")
+        out_path = tmp_path / "out.json"
+        rc = gs.main([str(spec_path), "--out", str(out_path), "--root", str(ROOT)])
+        assert rc == 3
+        assert not out_path.exists()
+
+    def test_success_exit_0_writes_file(self, tmp_path):
+        spec_path = tmp_path / "good.spine.toml"
+        spec_path.write_text(_real_toml_spec_text(), encoding="utf-8")
+        out_path = tmp_path / "out.json"
+        rc = gs.main([str(spec_path), "--out", str(out_path), "--root", str(tmp_path)])
+        assert rc == 0
+        assert out_path.exists()
+        written = json.loads(out_path.read_text(encoding="utf-8"))
+        assert written["items"] == ["m1"]
+        assert written["work_id"] == "w1"
+
+    def test_check_only_writes_nothing_on_success(self, tmp_path):
+        spec_path = tmp_path / "good.spine.toml"
+        spec_path.write_text(_real_toml_spec_text(), encoding="utf-8")
+        out_path = tmp_path / "out.json"
+        rc = gs.main([str(spec_path), "--out", str(out_path), "--root", str(tmp_path), "--check-only"])
+        assert rc == 0
+        assert not out_path.exists()
+
+    def test_validate_is_the_literal_last_statement_before_success(self):
+        import inspect
+        src = inspect.getsource(gs.main)
+        write_idx = src.index("write_text")
+        validate_idx = src.rindex("validate(")
+        assert validate_idx < write_idx
+
+
+# --------------------------------------------------------------------------- #
+# Undecidable -- refuses, always, no flag to skip it (close criterion 9)
+# --------------------------------------------------------------------------- #
+
+class TestUndecidable:
+    def test_script_probe_undecidable_refuses(self, tmp_path):
+        _write_script_fixture(tmp_path, "scripts/_gs_dynamic.py",
+                               'import argparse\n\nNAMES = ["--alpha", "--beta"]\n\n'
+                               'def build():\n    p = argparse.ArgumentParser()\n'
+                               '    for name in NAMES:\n        p.add_argument(name)\n    return p\n')
+        cond = _script_cond(path="scripts/_gs_dynamic.py", args=["--alpha"])
+        faults, undecidable = gs._probe_script("m1", "c1", cond, repo_root=tmp_path)
+        assert not faults
+        assert len(undecidable) == 1
+        assert undecidable[0].code == "undecidable-script-no-add-argument"
+
+    def test_undecidable_refuses_via_main_with_nothing_written(self, tmp_path):
+        extra = (
+            "\n  [[gate.postconditions]]\n"
+            '  id = "c2"\n'
+            '  statement = "flag is registered"\n'
+            '  kind = "script"\n'
+            '  path = "scripts/_gs_dynamic.py"\n'
+            '  args = ["--alpha"]\n'
+        )
+        _write_script_fixture(tmp_path, "scripts/_gs_dynamic.py",
+                               'import argparse\n\nNAMES = ["--alpha", "--beta"]\n\n'
+                               'def build():\n    p = argparse.ArgumentParser()\n'
+                               '    for name in NAMES:\n        p.add_argument(name)\n    return p\n')
+        spec_path = tmp_path / "undecidable.spine.toml"
+        spec_path.write_text(_real_toml_spec_text(extra_gate_toml=extra), encoding="utf-8")
+        out_path = tmp_path / "out.json"
+        rc = gs.main([str(spec_path), "--out", str(out_path), "--root", str(tmp_path)])
+        assert rc != 0
+        assert not out_path.exists()
+
+    def test_no_flag_to_skip_undecidable(self):
+        # There is no escape hatch: parsing an unknown --skip-undecidable-style
+        # flag must fail argparse, not be silently accepted.
+        parser_help = gs.main.__doc__ or ""
+        with pytest.raises(SystemExit):
+            gs.main(["spec.toml", "--out", "out.json", "--skip-undecidable"])
+
+
+# --------------------------------------------------------------------------- #
+# The control pairing (close criterion 3) -- demonstrated for real, both halves.
+# compile_spec TRANSLATES a spec whose command carries a literal
+# placeholder-shaped token the generator's own probes do not examine (a
+# script's non-flag argument VALUE); the guarded CLI still refuses it, because
+# validate_spine.validate() is the last word, not the generator's own probes.
+# --------------------------------------------------------------------------- #
+
+class TestControlPairing:
+    SCRIPT_BODY = 'import argparse\n\ndef build():\n    p = argparse.ArgumentParser()\n    p.add_argument("--flag")\n    return p\n'
+
+    def _spec_text(self, value: str) -> str:
+        extra = (
+            "\n  [[gate.postconditions]]\n"
+            '  id = "c2"\n'
+            '  statement = "flag carries the right value"\n'
+            '  kind = "script"\n'
+            '  path = "scripts/_gs_target.py"\n'
+            f'  args = ["--flag", "{value}"]\n'
+        )
+        return _real_toml_spec_text(extra_gate_toml=extra)
+
+    def test_translation_completes_but_guarded_cli_refuses_with_nothing_written(self, tmp_path):
+        _write_script_fixture(tmp_path, "scripts/_gs_target.py", self.SCRIPT_BODY)
+        spec_path = tmp_path / "refused.spine.toml"
+        spec_path.write_text(self._spec_text("<oops>"), encoding="utf-8")
+
+        # Half one: compile_spec TRANSLATES cleanly -- it does not judge.
+        spec = tomllib.loads(spec_path.read_text(encoding="utf-8"))
+        assert gs.spec_shape_faults(spec, repo_root=tmp_path) == []
+        compiled = gs.compile_spec(spec)
+        assert "<oops>" in compiled["tasks"]["m1"]["postconditions"][1]["check"]["command"]
+
+        # Half two: the guarded CLI refuses it -- the oracle is the last word.
+        out_path = tmp_path / "out.json"
+        rc = gs.main([str(spec_path), "--out", str(out_path), "--root", str(tmp_path)])
+        assert rc == 4
+        assert not out_path.exists()
+
+    def test_same_spec_corrected_is_accepted_and_written(self, tmp_path):
+        _write_script_fixture(tmp_path, "scripts/_gs_target.py", self.SCRIPT_BODY)
+        spec_path = tmp_path / "accepted.spine.toml"
+        spec_path.write_text(self._spec_text("real-value"), encoding="utf-8")
+        out_path = tmp_path / "out.json"
+        rc = gs.main([str(spec_path), "--out", str(out_path), "--root", str(tmp_path)])
+        assert rc == 0
+        assert out_path.exists()
+
+
+# --------------------------------------------------------------------------- #
+# Property 1, verified against BEHAVIOUR (DESIGN_NOTE.md section 5): rendered
+# text through the engine's own render_human, and the three verbs actually
+# driven against a generated spine.
+# --------------------------------------------------------------------------- #
+
+class TestRenderHuman:
+    def test_handback_block_appears_in_rendered_text(self):
+        spec = _spec(gates=[_gate(postconditions=[_pytest_cond()])], parent="admiral-epic-418-followon")
+        spine = gs.compile_spec(spec)
+        rendered = checklist_engine.current(spine)
+        assert "directives:" in rendered
+        assert "handback:" in rendered
+        assert "spine_evidence attach" in rendered
+        assert "spine_capture flag-candidate" in rendered
+        assert "spine_halt block" in rendered
+        assert "admiral-epic-418-followon" in rendered
+
+
+class TestHandbackVerbs:
+    def _spine(self):
+        spec = _spec(gates=[_gate(postconditions=[_pytest_cond()])])
+        return gs.compile_spec(spec)
+
+    def test_attach_lands_in_gate_own_evidence(self):
+        spine = self._spine()
+        checklist_engine.attach(spine, "m1", "review-result", {"verdict": "APPROVE"})
+        evidence = spine["tasks"]["m1"]["evidence"]
+        assert len(evidence) == 1
+        assert evidence[0]["type"] == "review-result"
+        assert evidence[0]["payload"] == {"verdict": "APPROVE"}
+
+    def test_flag_candidate_lands_in_top_level_triage_candidates(self):
+        spine = self._spine()
+        checklist_engine.flag_candidate(spine, "m1", "found something out of scope")
+        assert len(spine["triage_candidates"]) == 1
+        assert spine["triage_candidates"][0]["statement"] == "found something out of scope"
+        assert spine["triage_candidates"][0]["from"] == "m1"
+
+    def test_block_lands_in_top_level_blockers_and_sets_gate_status(self):
+        spine = self._spine()
+        checklist_engine.block(spine, "m1", "needs a decision", "human", "confirm the approach")
+        assert spine["tasks"]["m1"]["status"] == "blocked"
+        assert len(spine["blockers"]) == 1
+        assert spine["blockers"][0]["item"] == "m1"
+        assert spine["blockers"][0]["blocker"] == "needs a decision"
+
+
+# --------------------------------------------------------------------------- #
+# Falsification floor (close criterion 8) -- in the tests/test_mutation_floor.py
+# style: the c-escalation injection is mechanically deleted from a COPY of
+# generate_spine.py, and a throwaway test exercising ONLY that postcondition is
+# run against the copy in a subprocess. A guard whose own removal changes
+# nothing is the defect this epic exists to find.
+# --------------------------------------------------------------------------- #
+
+class TestFalsificationFloor:
+    INJECTION_SNIPPET = (
+        '        postconditions.append({\n'
+        '            "id": RESERVED_CONDITION_ID,\n'
+        '            "statement": f"LARGE CLAIM -- an independent reviewer must approve this gate before it closes: {text}",\n'
+        '            "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}},\n'
+        '            "satisfied": False,\n'
+        '        })\n'
+    )
+
+    _THROWAWAY_TEST = (
+        "import sys\n"
+        "sys.path.insert(0, {scripts_dir!r})\n"
+        "import generate_spine as gs\n"
+        "\n"
+        "def test_large_claim_injects_c_escalation_postcondition():\n"
+        "    spec = {{\n"
+        '        "work_id": "w1", "type": "gated", "config_ref": None,\n'
+        '        "gate": [{{\n'
+        '            "id": "m1", "title": "t", "imperative": "i",\n'
+        '            "postconditions": [{{"id": "c1", "statement": "s", "kind": "artifact", "evidence_type": "user-decision"}}],\n'
+        '            "claim": {{"magnitude": "large", "text": "big claim"}},\n'
+        "        }}],\n"
+        "    }}\n"
+        "    spine = gs.compile_spec(spec)\n"
+        '    posts = spine["tasks"]["m1"]["postconditions"]\n'
+        '    assert any(c["id"] == "c-escalation" for c in posts)\n'
+    )
+
+    def _run_against(self, scripts_dir: Path, work_dir: Path):
+        work_dir.mkdir(parents=True, exist_ok=True)
+        test_file = work_dir / "test_floor_throwaway.py"
+        test_file.write_text(self._THROWAWAY_TEST.format(scripts_dir=str(scripts_dir)), encoding="utf-8")
+        return subprocess.run(
+            [sys.executable, "-m", "pytest", "-q", str(test_file)],
+            capture_output=True, text=True, timeout=60,
+        )
+
+    def test_baseline_is_green(self, tmp_path):
+        proc = self._run_against(ROOT / "scripts", tmp_path / "baseline")
+        assert proc.returncode == 0, "harness error, not a kill:\n" + proc.stdout + proc.stderr
+
+    def test_mutation_kills_it(self, tmp_path):
+        original = (ROOT / "scripts" / "generate_spine.py").read_text(encoding="utf-8")
+        before = original.count(self.INJECTION_SNIPPET)
+        assert before == 1, "harness error: injection snippet not found exactly once in the real source"
+        mutated = original.replace(self.INJECTION_SNIPPET, "        pass  # MUTATED: injection removed\n")
+        after = mutated.count(self.INJECTION_SNIPPET)
+        assert after == 0
+        assert before - after == 1  # the mutation landed -- prove it before comparing red/green
+
+        mutant_dir = tmp_path / "mutant_scripts"
+        mutant_dir.mkdir()
+        (mutant_dir / "generate_spine.py").write_text(mutated, encoding="utf-8")
+        for name in ("init_work_area.py", "validate_spine.py"):
+            (mutant_dir / name).write_text((ROOT / "scripts" / name).read_text(encoding="utf-8"), encoding="utf-8")
+
+        proc = self._run_against(mutant_dir, tmp_path / "mutant")
+        assert proc.returncode != 0, (
+            "the mutation did NOT turn the floor red -- a guard whose own removal "
+            "changes nothing is the defect this epic exists to find\n" + proc.stdout + proc.stderr
+        )
+        assert "test_large_claim_injects_c_escalation_postcondition" in proc.stdout
+
+
+class TestPureBoundary:
+    def test_compile_condition_is_pure_function(self):
+        import inspect
+        assert not inspect.isgeneratorfunction(gs.compile_condition)
+
+    def test_compile_spec_never_writes(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond()])])
+        gs.compile_spec(spec)
+        assert list(tmp_path.iterdir()) == []

@@ -1,0 +1,6 @@
+The `g1-implement` run is done. Summary:
+
+- Built `scripts/generate_spine.py` (pure `compile_spec`/`compile_condition`/`spec_shape_faults`, then probes, oracle call, write, `main()`) and `tests/test_generate_spine.py` (76 tests), driven through 7 TDD gates via my own `IMPLEMENTER_PLAN.json` and the engine CLI (no spine was bound to this crew, so I built and drove my own plan per the implementer skill's fallback path).
+- All required evidence captured: the control pairing (refused/nothing-written vs. corrected/written), probe VIOLATING/INNOCENT/ACCEPTED_FALSE_ALARM fixtures, `render_human` output, the falsification-floor red/green, the unchanged 23-fault sweep, the full suite (2765 passed = 2689 baseline + 76 new, zero regressions), and the wiring grep (only self-referenced so far, as expected — role specs land at `g2`).
+- `IMPLEMENTER_RESULT.md` is written at `.agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g1-implement-result.md` with `Return status: complete`, findings, 7 documented judgment calls where the design note was silent, and workflow feedback.
+- Engine plan fully advanced and the lease released — that's the delivery.

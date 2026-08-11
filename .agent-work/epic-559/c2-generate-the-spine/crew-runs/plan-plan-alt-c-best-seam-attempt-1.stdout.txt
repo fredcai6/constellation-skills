@@ -1,0 +1,5 @@
+Only the untracked `.agent-work/` directory shows (expected — it's the result file itself and sibling handoff artifacts), no other repo files touched, no git writes run.
+
+**Constraint: best-seam-placement.** Recommendation: put the seam where the pure spec→spine translation (`compile_spec`, testable with plain dicts, no filesystem) ends and where the CLI's I/O — reading the TOML, calling the *existing unmodified* `validate_spine.validate()`, writing the file — begins, mirroring the pure/impure split `validate_spine.py` itself already uses; pair it with a closed, no-raw-shell-field check vocabulary and an additive AST-based flag-name guard, at the honest cost of three source artifacts and a vocabulary that can't express an unanticipated check kind without a code change.
+
+Result written to `.agent-work/epic-559/c2-generate-the-spine/crew-handoffs/plan-alt-c-best-seam-result.md`.
