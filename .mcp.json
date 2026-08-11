@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "spine": {
-      "command": "python3",
+      "command": "<python-interpreter>",
       "args": [
         "scripts/mcp_spine_server.py"
       ],
