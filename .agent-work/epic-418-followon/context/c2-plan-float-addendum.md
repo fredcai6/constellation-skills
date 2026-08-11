@@ -109,6 +109,49 @@ hash-pinned. Add it to your substitute set and correct the claim, so nothing dow
 
 If you add modules, regenerate it: `python -m scripts.code_map build`.
 
+## 5. Your sub-crews name me as their parent, not you
+
+All six plan-stage crews are recorded with `parent: admiral-epic-418-followon`. That is wrong, and it
+matters before the execute crews launch.
+
+Traced: `parent` reaches the registry only from `args.parent` (`run_crew.py:1629` → `874`), with **no
+environment fallback**. `_crew_door_env`'s docstring states the rule directly — a dispatching process
+that is itself a crew already has its own `SPINE_PARENT` in `os.environ`, and *"that must never leak
+to a child as the child's parent — it names the grandparent, not the dispatcher."* The guard works.
+You passed your own parent down explicitly instead of naming yourself.
+
+The human's ruling is *"crew should fail up ... I'd prefer it go one rung at a time."* As dispatched,
+a sub-crew that blocked would have asked up two rungs, past the only tier that had briefed it and
+straight to me — who does not have its handoff in context.
+
+**Pass `--parent` naming your own session** on every crew from here:
+`constellation/epic-559/c2-generate-the-spine/execute/commander`.
+
+## 6. You never passed `--model`, so none of the six ran on Sonnet
+
+`run_crew.py` records `model` only when set (`884`), and it is **absent on all six entries**, so
+`--model` never reached the `claude` invocation (`603`). They ran at the inherited default tier.
+
+`decision:sonnet-crews` is `settled/human` and verbatim: *"prefer sonnet crews."* Pass `--model
+sonnet` on every implementer and reviewer. Escalate one to Opus only after a Sonnet crew has failed
+the same task once, and say why.
+
+The cost so far is bounded — the six were advisory alternatives and critics and are complete. The
+execute crews are the expensive ones and have not launched. Fix it before they do.
+
+### What both of these actually tell us — put it in your plan
+
+Neither is a code defect. Both mechanisms exist, work, and are documented; you had the instruction in
+your launch order and it did not get wired through. **That is this epic's thesis landing on a
+Commander instead of an Admiral.** "Pass `--parent`" and "dispatch on Sonnet" are prose, and prose is
+what keeps failing here.
+
+The durable fix is not that the next Commander reads more carefully. It is that a dispatch which does
+not name its parent and its model should be **refused**, the same way your generator refuses a spine
+with a check that cannot fail. If your spec format covers how a spine's crews get dispatched, this
+belongs in it. If it does not, say so and route it to me as a triage candidate — do not silently
+widen your scope to fix `run_crew.py`.
+
 ## What I want to see in the plan you float
 
 Beyond the gates themselves:
