@@ -1,0 +1,23 @@
+[
+  {
+    "crew_id": "constellation/epic-559/d1-stale-pins/h1-pins/implementer/attempt-1",
+    "work_id": "epic-559/d1-stale-pins",
+    "gate": "h1-pins",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/epic-559/d1-stale-pins/h1-pins/implementer/attempt-1",
+    "backend": "cli",
+    "pid": 534140,
+    "worktree": "/home/tommy/projects/constellation-skills-wt/d1-stale-pins",
+    "handoff": ".agent-work/epic-559/d1-stale-pins/HANDOFF.md",
+    "result": ".agent-work/epic-559/d1-stale-pins/IMPLEMENTER_RESULT.md",
+    "spine": ".agent-work/epic-559/d1-stale-pins/IMPLEMENTER_PLAN.json",
+    "stdout": ".agent-work/epic-559/d1-stale-pins/crew-runs/h1-pins-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/epic-559/d1-stale-pins/crew-runs/h1-pins-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-08-11T10:23:54.100344+00:00",
+    "last_heartbeat": "2026-08-11T10:23:54.100344+00:00",
+    "completed_at": null,
+    "abandoned": false
+  }
+]
