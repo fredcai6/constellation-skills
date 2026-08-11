@@ -35,80 +35,62 @@ to the bound spine's own directory tree, the containment every real use in this
 repo already satisfies. See IDENTITY_TRADE.md §2.
 
 --------------------------------------------------------------------------- #
-Tool surface: 7 tools grouping the engine's 18 verbs
+Tool surface: 9 tools covering all 18 of the engine's verbs
 --------------------------------------------------------------------------- #
 
 The engine exposes 18 verbs: current, claim, heartbeat, release, start,
 advance, record, consolidate, skip, block, resume, reopen, append, amend,
-attest, waive, attach, flag-candidate. A door with one tool per verb would be
-18 tools for a "roughly seven" budget (decision:mcp-is-the-vehicle -- MCP is
-the current vehicle, not the destination; do not gold-plate the grouping).
+attest, waive, attach, flag-candidate.
 
-Grouping decision, and why: driving a *real* role spine (this very issue's own
-commander run) needed `attest`, `attach` and `waive` -- a door missing `attach`
-cannot satisfy a `user-decision` checkpoint, and a door missing `waive` cannot
-close a gate whose check the principal accepted as non-blocking. Both are
-therefore covered, folded into `spine_evidence` alongside `attest` (all three
-are "apply evidence to a condition/gate" actions with different argument
-shapes, not different concerns). `skip`, `amend`, `append`, `reopen` and
-`flag-candidate` are genuinely rarer -- deliberate re-planning, escalation and
-out-of-scope capture, not the drive loop's everyday path -- so they stay
-CLI-only rather than inflating the tool count to be safe.
+This used to be a 7-tool, 13-of-18 surface, on a "roughly seven" tool-count
+budget (decision:mcp-is-the-vehicle), with `skip`, `amend`, `append`, `reopen`
+and `flag-candidate` left CLI-only as "genuinely rarer" moves. That budget and
+that escape clause are OVERTURNED (issue #559, N1): the human's ruling is
+"anything that we want to do for the spine needs to be accessible via mcp. the
+agents should not know about the cli. period. anything that we can only do via
+the cli is a defect." Verb coverage is not a grouping decision weighed against
+a tool count, and it is not conditional on a later gate proving a verb
+load-bearing -- every verb the engine has gets a path through this door, full
+stop. The grouping-into-tools STYLE survives (one tool per family of related
+verbs, not one tool per verb); only the "stop at ~7 and leave 5 on the CLI"
+policy is gone.
 
-  1. spine_status        -- current                          (read-only)
+Grouping decision, and why: `spine_halt` already covered `block`/`resume` --
+both change a gate's status without doing the gate's work -- so `skip` and
+`reopen` join it rather than a fourth tool, for the same reason (`spine_halt`
+is NOT renamed despite "halt" reading oddly once it also skips and reopens --
+a rename would break any agent mid-run, and stability outranks the naming
+tension). `append` and `flag-candidate` both add a new item to the plan (a
+task, or an out-of-scope candidate) and fold into a new `spine_capture`.
+`amend` is a different concern from either -- deliberate re-planning under a
+named authority -- and gets its own `spine_amend`.
+
+  1. spine_status        -- current                                  (read-only)
   2. spine_lease         -- claim | release | heartbeat
   3. spine_start         -- start
   4. spine_advance       -- advance
   5. spine_evidence      -- attest | attach | waive
-  6. spine_halt          -- block | resume
+  6. spine_halt          -- block | resume | skip | reopen
   7. spine_survey_result -- record | consolidate              (survey plans only)
+  8. spine_capture       -- append | flag-candidate
+  9. spine_amend         -- amend
 
-13 of 18 verbs covered. Verb coverage is a grouping decision, not a cap: this
-budget must be revisited if a later gate proves one of the 5 CLI-only verbs is
-load-bearing on the drive loop the way `attach`/`waive` turned out to be here.
+18 of 18 verbs covered. There is no CLI-fallback table below this one: every
+verb the engine has is reachable through this door.
 
---------------------------------------------------------------------------- #
-CLI-fallback table: every verb NOT covered by a tool
---------------------------------------------------------------------------- #
-
-The CLI door stays -- F is additive, not a replacement. Every uncovered verb
-keeps this documented fallback (run from the repo/worktree root):
-
-  skip <id> --reason "..." [--session-id <id>]
-      Mark a gate Overtaken By Events without doing its work. Uncovered
-      because it is a deliberate re-scoping decision a human/commander makes
-      about the PLAN, not a step the agent driving the plan reaches for while
-      working it -- rare enough that a tool slot is not worth it.
-
-  reopen <id> --reason "..." [--session-id <id>]
-      Rework: cascades every downstream complete/in-progress gate back to
-      pending and marks their evidence superseded. Uncovered because it is a
-      high-blast-radius escalation (it can undo several gates' worth of
-      state), and the engine already gates it behind the rework cap and a
-      human-legible cascade -- a tool call that silently resets multiple
-      gates is a worse shape than making the agent go to the CLI for it.
-
-  append <id> --title "..." --imperative "..." [--session-id <id>]
-      Survey-only: add a new sibling leaf. Uncovered because it only applies
-      to `survey`-type plans (the reviewer, the interrogator), which are a
-      minority of what this door drives, and it is inherently a re-planning
-      move like `amend`/`skip`.
-
-  amend --delta <file.json> --reason "..." --authority <who> [--session-id <id>]
-      Validated, all-or-nothing plan re-shape (add/drop/rescope pending gates
-      on a gated plan; retext-check on a survey). Uncovered because its input
-      is a delta FILE, not a few scalar arguments -- forcing that through a
-      tool's JSON args would mean re-deriving the delta schema at the MCP
-      boundary, which is exactly the kind of second rendering path this door
-      must not grow. Also a deliberate re-plan, not a drive-loop step.
-
-  flag-candidate --from <id> --statement "..." [--session-id <id>]
-      Record an out-of-scope discovery for Triage to drain later. Uncovered
-      because it is infrequent (once-per-run at most, typically at closeout)
-      and a plain CLI call costs nothing extra at that point in a run.
-
-Every fallback above takes `--session-id <id>` once a lease is active, matching
-the CLI's own rule (see checklist-engine.md "Session lease").
+`amend` is a PASS-THROUGH, deliberately. Its CLI shape is `--delta <file.json>
+--reason ... --authority ...`, where the delta file holds `{"ops": [...]}` --
+a grammar this door does not re-derive or validate (a second definition of
+that grammar at the MCP boundary is exactly the second-rendering-path failure
+this repo keeps fixing elsewhere). `spine_amend` instead accepts `delta` as a
+JSON object in the tool arguments, writes it to a file BESIDE the bound spine
+(`_write_amend_delta`, in the spine's own work directory, never a system temp
+dir, so the artifact is per-task coherent and survives for audit), and hands
+the engine the same `--delta <path>` the CLI already parses -- the engine
+alone validates the ops. That written path is then run back through
+`_identity_violation`'s containment check (`_resolve_confined`, the same
+predicate `spine_advance.from_child` already used) before the engine ever
+sees it.
 """
 from __future__ import annotations
 
@@ -159,6 +141,34 @@ def _log(rec: dict) -> None:
         fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
     if not START_MARKER.exists():
         START_MARKER.write_text(f"started for {SPINE}\n", encoding="utf-8")
+
+
+def _resolve_confined(value: str, *, join_relative_to: Path | None) -> tuple[Path, bool]:
+    """Resolve `value` and report whether it escapes the bound spine's own
+    directory tree (`SPINE.parent`). Shared by both `--from-child` and
+    `--delta` in `_identity_violation` -- one containment predicate, not two,
+    for the two flags that carry the same underlying hazard: a filesystem path
+    the engine will read and act on.
+
+    `join_relative_to` is where the two flags genuinely differ, and it is a
+    parameter rather than a second copy of this function for exactly that
+    reason. `advance()` resolves a relative `from_child` against the parent
+    checklist's own directory (a rule it implements itself); the caller passes
+    `SPINE.parent` here to mirror that. `amend()` applies NO such rule to
+    `--delta` -- it does a bare `Path(args.delta).read_text()`, so a relative
+    value resolves against the process's own cwd, same as Python's own
+    default; the caller passes `None` here, and this function then resolves
+    `value` exactly as `Path(value).resolve()` would, matching the engine
+    faithfully rather than asserting a base directory `amend()` never uses."""
+    bound_dir = SPINE.parent
+    p = Path(value)
+    if not p.is_absolute() and join_relative_to is not None:
+        p = join_relative_to / value
+    try:
+        escapes = not p.resolve().is_relative_to(bound_dir.resolve())
+    except (OSError, ValueError, RuntimeError):
+        escapes = True  # a path that cannot be resolved is not proof it is inside
+    return p, escapes
 
 
 def _identity_violation(argv: list[str]) -> str | None:
@@ -220,6 +230,10 @@ def _identity_violation(argv: list[str]) -> str | None:
     work area the spine sits in). Resolution mirrors `advance()` exactly: a
     non-absolute path resolves against the parent checklist's directory, which
     IS `SPINE.parent` here because `ns.file` was already proven equal to it.
+
+    `amend`'s `--delta` is the same shape of hazard (a filesystem path the
+    engine reads and acts on) added by the N1 verb-closure change, so it is
+    confined by the SAME `_resolve_confined` helper rather than a second check.
     """
     scratch = io.StringIO()
     try:
@@ -249,23 +263,38 @@ def _identity_violation(argv: list[str]) -> str | None:
 
     resolved_child = getattr(ns, "from_child", None)
     if resolved_child:
-        bound_dir = SPINE.parent
-        child = Path(resolved_child)
-        if not child.is_absolute():
-            child = bound_dir / resolved_child  # the rule advance() itself applies
-        try:
-            escapes = not child.resolve().is_relative_to(bound_dir.resolve())
-        except (OSError, ValueError, RuntimeError):
-            escapes = True  # a path that cannot be resolved is not proof it is inside
+        resolved, escapes = _resolve_confined(resolved_child, join_relative_to=SPINE.parent)
         if escapes:
             return (
                 f"REFUSED: --from-child names a child checklist INSIDE the bound spine's own "
-                f"directory ({str(bound_dir)!r}); this call resolves it to {str(child)!r}, "
+                f"directory ({str(SPINE.parent)!r}); this call resolves it to {str(resolved)!r}, "
                 f"which is outside. The child's `consolidation` is attached to the bound spine "
                 f"as a review-result, and a review-result is what closes an artifact "
                 f"postcondition -- so a path outside the binding would let any JSON file carrying "
                 f"a `consolidation` key close a gate. Put the child under the spine's work area, "
                 f"or use the CLI, which is per-call by construction."
+            )
+
+    # `amend`'s --delta is the SAME hazard as --from-child (a filesystem path the
+    # engine will read and act on), so it goes through the SAME containment
+    # predicate (`_resolve_confined`) rather than a second one -- but NOT the same
+    # relative-path rule: `amend()` does a bare `Path(args.delta).read_text()`,
+    # with no base-dir join of its own (unlike `advance()`'s from_child), so a
+    # relative --delta resolves against the process's cwd, not SPINE.parent. This
+    # door only ever writes the delta file itself, beside the spine it amends
+    # (see `_write_amend_delta`, always an absolute path), so this whole branch is
+    # defense in depth against a future change to that call site, not a path a
+    # caller can steer today -- `delta` is declared as a JSON object in the tool
+    # schema, never as a path argument.
+    resolved_delta = getattr(ns, "delta", None)
+    if resolved_delta:
+        resolved, escapes = _resolve_confined(resolved_delta, join_relative_to=None)
+        if escapes:
+            return (
+                f"REFUSED: --delta names a delta file INSIDE the bound spine's own directory "
+                f"({str(SPINE.parent)!r}); this call resolves it to {str(resolved)!r}, which is "
+                f"outside. `amend` applies the delta's ops to the bound spine's own gates, so a "
+                f"path outside the binding could feed re-planning ops read from anywhere on disk."
             )
     return None
 
@@ -358,6 +387,25 @@ def _tool_error(message: str, *, tool: str | None = None, rejection_class: str |
     if tool is not None and rejection_class is not None:
         _log_rejection(tool, rejection_class, message)
     return {"content": [{"type": "text", "text": message}], "isError": True}
+
+
+def _write_amend_delta(delta: dict) -> Path:
+    """Write an `amend` delta BESIDE the bound spine (`SPINE.parent`) -- the
+    human's ruling: "we can and should use the agent work folder that is
+    coherent per task just like the spine" -- never a system temp dir, so the
+    artifact is per-task coherent and survives for audit. This is the ONLY
+    place this module builds the `--delta` path handed to the engine; the path
+    is never caller-supplied (the tool schema declares `delta` as a JSON
+    object, not a path), and it is still run back through
+    `_identity_violation`'s `_resolve_confined` containment check before the
+    engine ever reads it, the same as `spine_advance.from_child`.
+
+    The engine, not this function, validates the delta's `{"ops": [...]}`
+    shape -- this only serialises whatever object the caller sent."""
+    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")
+    path = SPINE.parent / f"mcp_amend_delta_{ts}.json"
+    path.write_text(json.dumps(delta, ensure_ascii=False), encoding="utf-8")
+    return path
 
 
 # --------------------------------------------------------------------------- #
@@ -519,13 +567,19 @@ TOOLS = [
     {
         "name": "spine_halt",
         "description": (
-            "Mark a gate blocked when you genuinely cannot proceed (bubbles to "
-            "the parent agent/human), or resume a gate you previously blocked."
+            "Change a gate's status without doing its work: 'block' when you "
+            "genuinely cannot proceed (bubbles to the parent agent/human); "
+            "'resume' a gate you previously blocked; 'skip' to mark a gate "
+            "Overtaken By Events, never doing its work; 'reopen' to rework a "
+            "complete gate -- resets its conditions and CASCADES every "
+            "downstream complete/in-progress gate back to pending (their "
+            "evidence is superseded, not deleted), gated behind the engine's "
+            "rework cap."
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
-                "action": {"type": "string", "enum": ["block", "resume"]},
+                "action": {"type": "string", "enum": ["block", "resume", "skip", "reopen"]},
                 "task_id": {"type": "string"},
                 "blocker": {"type": "string", "description": "block: what is blocking you (required)"},
                 "authority": {
@@ -533,7 +587,10 @@ TOOLS = [
                     "description": "block: who must resolve it; defaults to 'parent agent'",
                 },
                 "next_action": {"type": "string", "description": "block: suggested next step"},
-                "reason": {"type": "string", "description": "resume: why you can now proceed (required)"},
+                "reason": {
+                    "type": "string",
+                    "description": "resume: why you can now proceed (required). skip/reopen: why (required)",
+                },
                 "note": {"type": "string", "description": "resume: optional detail"},
             },
             "required": ["action", "task_id"],
@@ -562,6 +619,53 @@ TOOLS = [
                 },
             },
             "required": ["action"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "name": "spine_capture",
+        "description": (
+            "Add a new item to the plan: 'append' a new sibling leaf on a "
+            "survey checklist (the reviewer, the interrogator); 'flag-candidate' "
+            "records an out-of-scope discovery for Triage to drain later, from "
+            "any gate."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {"type": "string", "enum": ["append", "flag-candidate"]},
+                "task_id": {"type": "string", "description": "append: the new item's id"},
+                "title": {"type": "string", "description": "append: the new item's title (required)"},
+                "imperative": {"type": "string", "description": "append: the new item's imperative (required)"},
+                "from": {"type": "string", "description": "flag-candidate: the gate id the discovery came from (required)"},
+                "statement": {"type": "string", "description": "flag-candidate: what was found (required)"},
+            },
+            "required": ["action"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "name": "spine_amend",
+        "description": (
+            "Deliberate, validated re-planning of a GATED checklist under a "
+            "named authority: add/drop/rescope pending gates, or retext-check "
+            "a pending/in-progress gate's check text. 'delta' is the same "
+            "{\"ops\": [...]} object the CLI's --delta file holds -- this tool "
+            "writes it to a file beside the bound spine and hands the engine "
+            "that path; the engine alone validates the ops, never this door. "
+            "All-or-nothing: a refusal leaves the plan unmutated."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "delta": {
+                    "type": "object",
+                    "description": "the {\"ops\": [...]} delta object (required) -- validated by the engine, not this schema",
+                },
+                "reason": {"type": "string", "description": "why this re-planning is justified (required)"},
+                "authority": {"type": "string", "description": "who ratified the amendment, e.g. 'human' (required)"},
+            },
+            "required": ["delta", "reason", "authority"],
             "additionalProperties": False,
         },
     },
@@ -716,6 +820,22 @@ def call_tool(name: str, args: dict) -> dict:
             if args.get("note"):
                 rest += ["--note", args["note"]]
             return as_result(run_engine("resume", *rest))
+        if action == "skip":
+            err = _require(args, "reason")
+            if err:
+                return _tool_error(
+                    f"spine_halt skip: {err}",
+                    tool="spine_halt", rejection_class="missing-required-argument",
+                )
+            return as_result(run_engine("skip", task_id, "--reason", args["reason"]))
+        if action == "reopen":
+            err = _require(args, "reason")
+            if err:
+                return _tool_error(
+                    f"spine_halt reopen: {err}",
+                    tool="spine_halt", rejection_class="missing-required-argument",
+                )
+            return as_result(run_engine("reopen", task_id, "--reason", args["reason"]))
         return _tool_error(
             f"spine_halt: unknown action {action!r}",
             tool="spine_halt", rejection_class="unknown-action",
@@ -747,6 +867,54 @@ def call_tool(name: str, args: dict) -> dict:
             f"spine_survey_result: unknown action {action!r}",
             tool="spine_survey_result", rejection_class="unknown-action",
         )
+
+    if name == "spine_capture":
+        action = args.get("action")
+        if action == "append":
+            err = _require(args, "task_id", "title", "imperative")
+            if err:
+                return _tool_error(
+                    f"spine_capture append: {err}",
+                    tool="spine_capture", rejection_class="missing-required-argument",
+                )
+            rest = [args["task_id"], "--title", args["title"], "--imperative", args["imperative"]]
+            return as_result(run_engine("append", *rest))
+        if action == "flag-candidate":
+            err = _require(args, "from", "statement")
+            if err:
+                return _tool_error(
+                    f"spine_capture flag-candidate: {err}",
+                    tool="spine_capture", rejection_class="missing-required-argument",
+                )
+            rest = ["--from", args["from"], "--statement", args["statement"]]
+            return as_result(run_engine("flag-candidate", *rest))
+        return _tool_error(
+            f"spine_capture: unknown action {action!r}",
+            tool="spine_capture", rejection_class="unknown-action",
+        )
+
+    if name == "spine_amend":
+        err = _require(args, "reason", "authority")
+        if err:
+            return _tool_error(
+                f"spine_amend: {err}",
+                tool="spine_amend", rejection_class="missing-required-argument",
+            )
+        delta = args.get("delta")
+        if not isinstance(delta, dict) or not delta:
+            return _tool_error(
+                "spine_amend: missing required argument(s): delta",
+                tool="spine_amend", rejection_class="missing-required-argument",
+            )
+        try:
+            delta_path = _write_amend_delta(delta)
+        except OSError as exc:
+            return _tool_error(
+                f"spine_amend: could not write delta file: {exc}",
+                tool="spine_amend", rejection_class="delta-write-failed",
+            )
+        rest = ["--delta", str(delta_path), "--reason", args["reason"], "--authority", args["authority"]]
+        return as_result(run_engine("amend", *rest))
 
     raise KeyError(name)
 

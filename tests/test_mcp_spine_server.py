@@ -40,8 +40,27 @@ MCP_JSON = ROOT / ".mcp.json"
 EXPECTED_TOOLS = {
     "spine_status", "spine_lease", "spine_start", "spine_advance",
     "spine_evidence", "spine_halt", "spine_survey_result",
+    "spine_capture", "spine_amend",
 }
-UNCOVERED_VERBS = ["skip", "reopen", "append", "amend", "flag-candidate"]
+
+#: Every engine verb, and the one tool that reaches it -- the completeness
+#: claim `scripts/mcp_spine_server.py`'s own docstring now makes ("18 of 18
+#: verbs covered"), pinned against the real TOOLS schemas rather than left as
+#: prose (issue #559, N1: `skip`/`reopen`/`append`/`amend`/`flag-candidate`
+#: used to have no tool at all and stayed CLI-only; see
+#: `AllEighteenVerbsCoveredTests` below and the real-JSON-RPC exercises in
+#: `NewlyCoveredVerbsTests`).
+VERB_TO_TOOL = {
+    "current": "spine_status",
+    "claim": "spine_lease", "release": "spine_lease", "heartbeat": "spine_lease",
+    "start": "spine_start",
+    "advance": "spine_advance",
+    "attest": "spine_evidence", "attach": "spine_evidence", "waive": "spine_evidence",
+    "block": "spine_halt", "resume": "spine_halt", "skip": "spine_halt", "reopen": "spine_halt",
+    "record": "spine_survey_result", "consolidate": "spine_survey_result",
+    "append": "spine_capture", "flag-candidate": "spine_capture",
+    "amend": "spine_amend",
+}
 
 _FILE_EXISTS_SNIPPET = "import sys, pathlib; sys.exit(0 if pathlib.Path(sys.argv[1]).is_file() else 1)"
 
@@ -216,11 +235,13 @@ class ServerProtocolTests(unittest.TestCase):
         self.assertEqual("spine", info["name"])
         self.assertIn("version", info)
 
-    def test_tools_list_is_exactly_the_seven_committed_tools(self):
+    def test_tools_list_is_exactly_the_nine_committed_tools(self):
         tools = self.client.rpc("tools/list")["result"]["tools"]
         names = {t["name"] for t in tools}
         self.assertEqual(EXPECTED_TOOLS, names)
-        self.assertEqual(7, len(tools), "tool budget is ~7, not gold-plated to 18")
+        self.assertEqual(9, len(tools),
+                          "9 tools covering all 18 verbs (issue #559, N1) -- "
+                          "not one tool per verb, and no verb left uncovered")
         for t in tools:
             self.assertIn("description", t)
             self.assertIn("inputSchema", t)
@@ -360,6 +381,98 @@ class ToolsWrapEngineTests(unittest.TestCase):
         self.assertTrue(result.get("isError"))
         self.assertIn("condition_id", result["content"][0]["text"])
 
+    def test_spine_halt_skip(self):
+        """issue #559, N1: `skip` used to have no tool at all. g3 carries a
+        waivable postcondition it never needs to satisfy -- skipping it proves
+        the gate's own work is genuinely never done, not merely bypassed."""
+        self.client.call("spine_lease", action="claim", claimed_by="tester")
+        skipped = self.client.call("spine_halt", action="skip", task_id="g3", reason="OBE: superseded")
+        self.assertFalse(skipped.get("isError"), skipped)
+        self.assertIn("skipped", skipped["content"][0]["text"])
+        state = json.loads(self.spine.read_text(encoding="utf-8"))
+        self.assertEqual("skipped", state["tasks"]["g3"]["status"])
+        self.assertEqual("OBE: superseded", state["tasks"]["g3"]["status_detail"]["reason"])
+
+    def test_spine_halt_reopen(self):
+        """issue #559, N1: `reopen` used to have no tool at all. Drives g1 to
+        `complete` first (the only status `reopen` accepts), then reopens it
+        and checks the REAL cascade side effect (rework_count incremented,
+        status back to in-progress), not just a non-error reply."""
+        self.client.call("spine_lease", action="claim", claimed_by="tester")
+        self.client.call("spine_start", task_id="g1")
+        (self.root / "workspace" / "notes.txt").write_text("hi\n", encoding="utf-8")
+        self.client.call("spine_evidence", action="attest", task_id="g1", condition_id="c2",
+                          which="postconditions")
+        self.client.call("spine_advance", task_id="g1", mechanical=True)
+        state = json.loads(self.spine.read_text(encoding="utf-8"))
+        self.assertEqual("complete", state["tasks"]["g1"]["status"])
+
+        reopened = self.client.call("spine_halt", action="reopen", task_id="g1", reason="rework needed")
+        self.assertFalse(reopened.get("isError"), reopened)
+        self.assertIn("g1", reopened["content"][0]["text"])
+        state = json.loads(self.spine.read_text(encoding="utf-8"))
+        self.assertEqual("in-progress", state["tasks"]["g1"]["status"])
+        self.assertEqual(1, state["tasks"]["g1"]["rework_count"])
+
+    def test_spine_halt_skip_and_reopen_missing_reason_is_a_clean_tool_error(self):
+        skip_err = self.client.call("spine_halt", action="skip", task_id="g1")
+        self.assertTrue(skip_err.get("isError"))
+        self.assertIn("reason", skip_err["content"][0]["text"])
+        reopen_err = self.client.call("spine_halt", action="reopen", task_id="g1")
+        self.assertTrue(reopen_err.get("isError"))
+        self.assertIn("reason", reopen_err["content"][0]["text"])
+
+    def test_spine_capture_flag_candidate(self):
+        """issue #559, N1: `flag-candidate` used to have no tool at all."""
+        flagged = self.client.call("spine_capture", action="flag-candidate", **{"from": "g1"},
+                                    statement="out-of-scope discovery for Triage")
+        self.assertFalse(flagged.get("isError"), flagged)
+        self.assertIn("flagged", flagged["content"][0]["text"])
+        state = json.loads(self.spine.read_text(encoding="utf-8"))
+        self.assertEqual(1, len(state["triage_candidates"]))
+        self.assertEqual("g1", state["triage_candidates"][0]["from"])
+        self.assertEqual("out-of-scope discovery for Triage", state["triage_candidates"][0]["statement"])
+
+    def test_spine_amend_add_gate_and_delta_file_lands_beside_the_spine(self):
+        """issue #559, N1: `amend` used to have no tool at all, and its input is
+        a delta FILE the CLI parses -- this tool accepts the delta as a JSON
+        object and must not re-derive its {"ops": [...]} grammar. Checks THREE
+        things a prose claim could each get away with faking on its own: (1)
+        the delta file genuinely lands beside the bound spine (SPINE.parent,
+        per the human's ruling to use the per-task work folder, not a system
+        temp dir), (2) its content is exactly the object this call sent, and
+        (3) the engine genuinely applied it (a new pending gate exists)."""
+        before_files = set(self.root.iterdir())
+        delta = {"ops": [{"op": "add", "id": "g4", "title": "extra gate",
+                           "imperative": "do one more thing",
+                           "postconditions": [{"id": "c1", "statement": "done", "check": None}]}]}
+        amended = self.client.call("spine_amend", delta=delta, reason="scope grew", authority="human")
+        self.assertFalse(amended.get("isError"), amended)
+        self.assertIn("added g4", amended["content"][0]["text"])
+
+        new_files = set(self.root.iterdir()) - before_files
+        delta_files = [p for p in new_files if p.name.startswith("mcp_amend_delta_")]
+        self.assertEqual(1, len(delta_files), f"expected exactly one delta file beside the spine, found {new_files}")
+        self.assertEqual(self.root, delta_files[0].parent,
+                          "the delta file must land in the bound spine's own directory, not a temp dir")
+        self.assertEqual(delta, json.loads(delta_files[0].read_text(encoding="utf-8")))
+
+        state = json.loads(self.spine.read_text(encoding="utf-8"))
+        self.assertIn("g4", state["tasks"])
+        self.assertEqual("pending", state["tasks"]["g4"]["status"])
+        self.assertEqual("extra gate", state["tasks"]["g4"]["title"])
+
+    def test_spine_amend_missing_delta_is_a_clean_tool_error_not_an_engine_call(self):
+        """`delta` is the one argument this tool cannot forward blank -- an
+        empty/missing delta must never reach the engine as a real --delta file
+        (that would silently create a zero-byte or `{}` artifact)."""
+        result = self.client.call("spine_amend", reason="r", authority="human")
+        self.assertTrue(result.get("isError"))
+        self.assertIn("delta", result["content"][0]["text"])
+        delta_files = [p for p in self.root.iterdir() if p.name.startswith("mcp_amend_delta_")]
+        self.assertEqual([], delta_files,
+                          "no delta file should be written when delta itself is missing")
+
 
 class SurveyToolTests(unittest.TestCase):
     def setUp(self):
@@ -379,6 +492,36 @@ class SurveyToolTests(unittest.TestCase):
         cons = self.client.call("spine_survey_result", action="consolidate", verdict="APPROVE", summary="ok")
         self.assertFalse(cons.get("isError"))
         self.assertIn("verdict=APPROVE", cons["content"][0]["text"])
+
+    def test_spine_capture_append(self):
+        """issue #559, N1: `append` used to have no tool at all -- survey-only,
+        so exercised against the survey fixture, not the gated one."""
+        appended = self.client.call("spine_capture", action="append", task_id="r2",
+                                     title="a new check", imperative="check something else")
+        self.assertFalse(appended.get("isError"), appended)
+        self.assertIn("appended r2", appended["content"][0]["text"])
+        state = json.loads(self.survey.read_text(encoding="utf-8"))
+        self.assertIn("r2", state["tasks"])
+        self.assertIn("r2", state["items"])
+        self.assertEqual("a new check", state["tasks"]["r2"]["title"])
+
+    def test_spine_capture_append_on_gated_spine_is_the_engines_own_refusal(self):
+        """`append` only applies to survey checklists -- this must be the
+        ENGINE'S refusal riding through unchanged, never a door-invented one."""
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            root = Path(tmp.name)
+            gated = write_gated_spine(root)
+            client = McpRpcClient(gated, session_id="gated-append-test")
+            try:
+                result = client.call("spine_capture", action="append", task_id="g4",
+                                      title="t", imperative="i")
+                self.assertTrue(result.get("isError"))
+                self.assertIn("append only on survey checklists", result["content"][0]["text"])
+            finally:
+                client.close()
+        finally:
+            tmp.cleanup()
 
 
 class RefusalSurfacesAsIsErrorTests(unittest.TestCase):
@@ -545,22 +688,40 @@ class McpJsonVarExpansionLaunchTests(unittest.TestCase):
             tmp.cleanup()
 
 
-class CliFallbackTableTests(unittest.TestCase):
-    def test_every_uncovered_verb_is_documented_with_an_invocation(self):
-        text = SERVER.read_text(encoding="utf-8")
-        docstring_end = text.index('"""', text.index('"""') + 3)
-        docstring = text[:docstring_end]
-        for verb in UNCOVERED_VERBS:
-            self.assertIn(verb, docstring, f"uncovered verb {verb!r} not documented in the CLI-fallback table")
+class AllEighteenVerbsCoveredTests(unittest.TestCase):
+    """The completeness claim `scripts/mcp_spine_server.py`'s own docstring now
+    makes ('18 of 18 verbs covered'), pinned against the door's REAL, live
+    `tools/list` -- not the docstring text, which is prose and can drift.
+    issue #559 (N1): `skip`, `reopen`, `append`, `amend` and `flag-candidate`
+    used to have no tool at all and stayed CLI-only; this is what replaces the
+    old `CliFallbackTableTests` (there is no CLI-fallback table any more)."""
 
-    def test_covered_verbs_are_not_also_claimed_uncovered(self):
-        # The 13 verbs the tool surface DOES cover must not appear in the
-        # uncovered list (a sanity check on the grouping decision itself).
-        covered = {"current", "claim", "release", "heartbeat", "start", "advance",
-                   "attest", "attach", "waive", "block", "resume", "record", "consolidate"}
-        self.assertEqual(set(), covered & set(UNCOVERED_VERBS))
-        self.assertEqual(18, len(covered) + len(UNCOVERED_VERBS),
-                          "covered + uncovered must account for all 18 engine verbs")
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.spine = write_gated_spine(self.root)
+        self.client = McpRpcClient(self.spine, session_id="coverage-test")
+
+    def tearDown(self):
+        self.client.close()
+        self.tmp.cleanup()
+
+    def test_every_engine_verb_maps_to_a_tool_the_live_door_actually_advertises(self):
+        tools = self.client.rpc("tools/list")["result"]["tools"]
+        advertised = {t["name"] for t in tools}
+        self.assertEqual(
+            18, len(VERB_TO_TOOL),
+            "VERB_TO_TOOL must name all 18 engine verbs, or this test is vacuous",
+        )
+        for verb, tool_name in VERB_TO_TOOL.items():
+            self.assertIn(
+                tool_name, advertised,
+                f"verb {verb!r} is mapped to {tool_name!r}, which the live door does not advertise",
+            )
+        self.assertEqual(
+            set(VERB_TO_TOOL.values()), advertised,
+            "every advertised tool must cover at least one verb, and vice versa",
+        )
 
 
 class Utf8StdioConformanceTests(unittest.TestCase):
