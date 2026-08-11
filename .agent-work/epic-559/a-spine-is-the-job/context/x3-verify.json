@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "x3-verify",
+  "files": [],
+  "repo_rev": {
+    "commit": "99336f96967983a4e9b9a5b44164c5671f9a7dd6"
+  },
+  "run": {
+    "work_id": "epic-559/a-spine-is-the-job",
+    "generated_at": "2026-08-11T07:02:51Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/a-spine-is-the-job",
+      "repo": "/home/tommy/projects/constellation-skills-wt/a-spine-is-the-job",
+      "durable": "/home/tommy/projects/constellation-skills-wt/a-spine-is-the-job"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/a-spine-is-the-job"
+    }
+  }
+}

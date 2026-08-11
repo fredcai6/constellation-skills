@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "w1-completion-contract",
+  "mechanical": {
+    "run": "epic-559/a-spine-is-the-job",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "w1-completion-contract",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/a-spine-is-the-job-w1-completion-contract@1f504609b71ea31cc47b7ed6fcea629b960421a8",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/a-spine-is-the-job",
+    "generated_at": "2026-08-11T05:56:25Z"
+  }
+}

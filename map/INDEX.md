@@ -4,7 +4,7 @@
 evals: 12 modules, 54 entities
 scripts: 55 modules, 1086 entities
 skills: 1 modules, 18 entities
-tests: 68 modules, 3936 entities
+tests: 68 modules, 3950 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -99,7 +99,7 @@ tests: 68 modules, 3936 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (68 modules, 3936 entities)
+## tests (68 modules, 3950 entities)
 
 ### tests.fixtures (2 modules, 4 entities)
 
@@ -116,7 +116,7 @@ tests: 68 modules, 3936 entities
 - [tests.test_context_determinism](tests.test_context_determinism/INDEX.md) (25 entities, 21 holes): The acceptance test for issue #300: the projection manifest's *content* is identical across environments.
 - [tests.test_context_manifest](tests.test_context_manifest/INDEX.md) (97 entities, 85 holes): Tests for `scripts/context_manifest.py` — the deterministic projection substrate.
 - [tests.test_crew_delivery_addressing](tests.test_crew_delivery_addressing/INDEX.md) (11 entities, 7 holes): Relaunch acceptance test for #507 / #370 / #413 (crew delivery addressing).
-- [tests.test_crew_launcher](tests.test_crew_launcher/INDEX.md) (172 entities, 135 holes): HOLE: no docstring
+- [tests.test_crew_launcher](tests.test_crew_launcher/INDEX.md) (183 entities, 142 holes): HOLE: no docstring
 - [tests.test_curate_corpus](tests.test_curate_corpus/INDEX.md) (40 entities, 23 holes): Golden-fixture suite for scripts/curate_corpus.py.
 - [tests.test_diagnose](tests.test_diagnose/INDEX.md) (32 entities, 27 holes): Tests for the constellation-diagnose skill's rail (scripts/verify_diagnosis.py).
 - [tests.test_docent_freshness](tests.test_docent_freshness/INDEX.md) (18 entities, 17 holes): Unit tests for scripts/docent_freshness.py.
@@ -137,7 +137,7 @@ tests: 68 modules, 3936 entities
 - [tests.test_implementer_vocab](tests.test_implementer_vocab/INDEX.md) (7 entities, 7 holes): Light vocabulary assertion for the constellation-implementer sharpening (DESIGN_SPEC Section D2 — vertical-slice vocabulary).
 - [tests.test_init_work_area](tests.test_init_work_area/INDEX.md) (41 entities, 35 holes): HOLE: no docstring
 - [tests.test_initial_issues](tests.test_initial_issues/INDEX.md) (27 entities, 27 holes): Contract tests for the canonical constellation-to-initial-issues seam.
-- [tests.test_install_constellation](tests.test_install_constellation/INDEX.md) (271 entities, 155 holes): HOLE: no docstring
+- [tests.test_install_constellation](tests.test_install_constellation/INDEX.md) (274 entities, 156 holes): HOLE: no docstring
 - [tests.test_interpreter_portability](tests.test_interpreter_portability/INDEX.md) (34 entities, 10 holes): HOLE: no docstring
 - [tests.test_interrogation](tests.test_interrogation/INDEX.md) (40 entities, 36 holes): Tests for the constellation-interrogator sharpening rail (scripts/verify_interrogation.py).
 - [tests.test_iterative_planning_acceptance](tests.test_iterative_planning_acceptance/INDEX.md) (5 entities, 5 holes): Focused tests for the ten-item iterative-planning acceptance verifier.

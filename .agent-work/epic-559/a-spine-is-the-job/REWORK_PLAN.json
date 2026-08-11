@@ -1,0 +1,300 @@
+{
+  "work_id": "epic-559/a-spine-is-the-job",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "w1-completion-contract",
+    "w2-hook-portable",
+    "w3-verify"
+  ],
+  "tasks": {
+    "w1-completion-contract": {
+      "id": "w1-completion-contract",
+      "title": "A spine-only crew that finishes must be recorded as finished",
+      "imperative": "The cold reviewer dispatched a real spine-only crew: it drove its spine to done, released the lease, exited 0 -- and run_crew.py recorded status failed, result_present false. You moved a crew's INPUT to the spine and left its COMPLETION CONTRACT a document. main() still hard-requires --result and CrewBackend.verify judges purely on that file, while the new prompt never mentions a result artifact. Judge a spine-only dispatch on its bound spine reaching a terminal state instead, and make --result optional in that case. That is the epic's own thesis rather than the smaller patch of naming a file in the prompt. Then fix the test that hid this: SpineOnlyDispatchTests::test_main_cli_spine_only_dispatch_succeeds passes fake_launch(..., write_result_at=...), so the harness writes the artifact the real crew is never told to write -- it passes for a reason that does not exist in production. Name the replacement test test_spine_only_success_is_not_recorded_failed and do not let it manufacture its own precondition.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "spine-only completion is judged on the spine, pinned by at least three passing tests",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -m pytest -q tests/test_crew_launcher.py -k SpineOnlyCompletion --collect-only 2>/dev/null | grep -c '::') -ge 3 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_crew_launcher.py -k SpineOnlyCompletion"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-w1-completion-contract-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the covering test no longer writes the artifact it is meant to prove unnecessary",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import re,sys;s=open('tests/test_crew_launcher.py').read();m=re.search(r'def test_spine_only_success_is_not_recorded_failed.*?(?=\\n    def |\\nclass )',s,re.S);sys.exit(0 if m and 'write_result_at' not in m.group(0) else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-w1-completion-contract-2"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+        "Do not touch settings.json or docs/agents/*.",
+        "Do not change spine templates under skills/*/templates/ -- another crew owns those this wave.",
+        "No merge or push to main. Local commits on this branch only."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-w1-completion-contract-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_crew_launcher.py -k SpineOnlyCompletion --collect-only 2>/dev/null | grep -c '::') -ge 3 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_crew_launcher.py -k SpineOnlyCompletion",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-w1-completion-contract-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import re,sys;s=open('tests/test_crew_launcher.py').read();m=re.search(r'def test_spine_only_success_is_not_recorded_failed.*?(?=\\n    def |\\nclass )',s,re.S);sys.exit(0 if m and 'write_result_at' not in m.group(0) else 1)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "w2-hook-portable": {
+      "id": "w2-hook-portable",
+      "title": "The waive denial must not fail open off this machine",
+      "imperative": "Measured by the reviewer: a PreToolUse hook whose command cannot run lets the tool call through silently. crew_settings_json emits the literal python3 -c '...', so on a host where python3 is not the name, a crew CAN waive its own check and nothing says so. The one mechanism whose whole job is to refuse has a hidden fallback to permitting. run_crew.py is itself a running Python process, so it needs no probe: emit shlex.quote(sys.executable). Add shell: bash to the hook entry -- the repo's own .claude/settings.json sets it on all four of its entries, and without it the single-quoted inline program does not survive a non-POSIX parse. Replace the bare assert guarding WAIVE_DENY_REASON with assert_shell_safe_command(), which already exists and raises; a bare assert is stripped under python -O. Read install_constellation.py::build_hook_command first -- it already documents this exact rule in its own words -- and cite #539 in a comment at the site.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "w1-completion-contract complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the emitted hook command names a real interpreter and a shell",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import sys,json,shlex;sys.path.insert(0,'scripts');import run_crew;h=json.loads(run_crew.crew_settings_json())['hooks']['PreToolUse'][0]['hooks'][0];sys.exit(0 if shlex.split(h['command'])[0] not in ('python3','python','py') and h.get('shell')=='bash' else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-w2-hook-portable-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the shell-safety guard raises rather than asserting",
+          "check": {
+            "kind": "command",
+            "command": "grep -q assert_shell_safe_command scripts/run_crew.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-w2-hook-portable-2"
+        },
+        {
+          "id": "c3",
+          "statement": "#539 is cited at the site",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 539 scripts/run_crew.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-w2-hook-portable-3"
+        },
+        {
+          "id": "c4",
+          "statement": "the portability fix is pinned by at least two passing tests",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -m pytest -q tests/test_crew_launcher.py -k HookPortab --collect-only 2>/dev/null | grep -c '::') -ge 2 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_crew_launcher.py -k HookPortab"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-w2-hook-portable-4"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+        "Do not touch settings.json or docs/agents/*.",
+        "Do not change spine templates under skills/*/templates/ -- another crew owns those this wave.",
+        "No merge or push to main. Local commits on this branch only."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-w2-hook-portable-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import sys,json,shlex;sys.path.insert(0,'scripts');import run_crew;h=json.loads(run_crew.crew_settings_json())['hooks']['PreToolUse'][0]['hooks'][0];sys.exit(0 if shlex.split(h['command'])[0] not in ('python3','python','py') and h.get('shell')=='bash' else 1)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-w2-hook-portable-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q assert_shell_safe_command scripts/run_crew.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-w2-hook-portable-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 539 scripts/run_crew.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-w2-hook-portable-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_crew_launcher.py -k HookPortab --collect-only 2>/dev/null | grep -c '::') -ge 2 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_crew_launcher.py -k HookPortab",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "w3-verify": {
+      "id": "w3-verify",
+      "title": "Full suite green and the result written",
+      "imperative": "Run the full suite with real counts, regenerate map/INDEX.md if the entity count drifted, and overwrite IMPLEMENTER_RESULT.md from the implementer skill's template including its Workflow Feedback section. Say whether your new tests would have caught the failed-status bug.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "w2-hook-portable complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite passes",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-w3-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the result artifact exists",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/epic-559/a-spine-is-the-job/IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-w3-verify-2"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+        "Do not touch settings.json or docs/agents/*.",
+        "Do not change spine templates under skills/*/templates/ -- another crew owns those this wave.",
+        "No merge or push to main. Local commits on this branch only."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-w3-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-w3-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/epic-559/a-spine-is-the-job/IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/epic-559/a-spine-is-the-job/w1-completion-contract/implementer",
+    "status": "released",
+    "claimed_at": "2026-08-11T05:56:21.433269+00:00",
+    "last_heartbeat": "2026-08-11T06:19:31.727366+00:00",
+    "claimed_by": "implementer",
+    "worktree": "/home/tommy/projects/constellation-skills-wt/a-spine-is-the-job",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-11T06:19:36.553337+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "w1-completion-contract",
+      "why": "run_crew.py judges spine-only completion on checklist_engine.active_id(spine)==None via new spine_terminal(); --result is optional in CrewSpec/build_entry/finalize_from_exit_code when --spine is given; replaced the hiding test with SpineOnlyCompletionContractTests (5 tests, none write a result artifact).",
+      "mechanical": false,
+      "ts": "2026-08-11T06:07:11.793151+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "w2-hook-portable",
+      "why": "crew_settings_json now emits shlex.quote(sys.executable) instead of a hardcoded python3, adds shell:bash to the hook entry, and calls install_constellation.assert_shell_safe_command() on the composed command (cites #539); the WAIVE_DENY_REASON apostrophe guard now raises CrewLaunchError instead of a bare assert. Pinned by HookPortabilityTests (3 tests).",
+      "mechanical": false,
+      "ts": "2026-08-11T06:12:11.157108+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "w3-verify",
+      "why": "Full suite green (2556 passed, 1 skipped, 1101 subtests); map/INDEX.md regenerated for the entity-count drift; IMPLEMENTER_RESULT.md written from the implementer template with Workflow Feedback, confirming the new tests would have caught the failed-status bug (verified red against pre-fix commit 6fc83013).",
+      "mechanical": false,
+      "ts": "2026-08-11T06:19:31.727347+00:00"
+    }
+  ]
+}

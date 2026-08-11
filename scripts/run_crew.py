@@ -316,13 +316,32 @@ def result_fresh(result: str | os.PathLike[str], root: Path, since: str) -> bool
 
 def spine_terminal(spine: str | os.PathLike[str], root: Path) -> bool:
     """Whether the bound spine at `spine` reached a terminal state: every item
-    `complete`/`skipped` (`checklist_engine.active_id(...) is None`).
+    `complete`/`skipped` (`checklist_engine.active_id(...) is None`) AND, for
+    a survey checklist, a recorded verdict.
 
     This is the completion contract for a spine-only dispatch (#559): a crew
     told to drive its bound spine "until it reports done" is judged on the
     spine reaching done, not on a result artifact it was never told to write.
     A missing/unparseable/malformed spine is never terminal -- absence of
-    evidence is not evidence of completion."""
+    evidence is not evidence of completion. That includes a well-formed-JSON
+    spine of the WRONG SHAPE (`{}`, `{"items": []}`): `active_id` walks
+    `cl.get("items", [])`, so an empty/missing `items` list makes it return
+    `None` (no non-terminal item found) rather than raise -- `{}` and
+    `{"items": []}` both read as terminal by vacuity, contradicting this
+    function's own contract above. Requiring a non-empty `items` list closes
+    that leak while leaving the missing/unparseable-file cases (already
+    correctly `False`) untouched.
+
+    `checklist_engine.active_id` answers a GATED question -- every item
+    terminal -- and has no opinion on whether a SURVEY (reviewer/
+    interrogator) ever recorded a verdict: `checklist_engine.py` tracks
+    `consolidation` separately and `active_id` never reads it. A survey whose
+    every item is recorded but `consolidation` is still `None` is NOT
+    terminal: the crew's entire deliverable IS the verdict, and none exists
+    yet. `checklist_engine.py` is out of scope for this fix, so the
+    type-aware check lives here rather than there -- the cleaner shape is a
+    type-aware `is_terminal` owned by the engine itself, noted as a seam for
+    whoever picks that up."""
     path = Path(spine)
     if not path.is_absolute():
         path = root / path
@@ -330,10 +349,16 @@ def spine_terminal(spine: str | os.PathLike[str], root: Path) -> bool:
         checklist = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return False
+    if not isinstance(checklist, dict) or not checklist.get("items"):
+        return False
     try:
-        return checklist_engine.active_id(checklist) is None
+        if checklist_engine.active_id(checklist) is not None:
+            return False
     except (KeyError, TypeError, AttributeError):
         return False
+    if checklist.get("type") == checklist_engine.SURVEY and checklist.get("consolidation") is None:
+        return False
+    return True
 
 
 # --------------------------------------------------------------------------- #

@@ -1,0 +1,17 @@
+The run is complete. Survey driven to a consolidated verdict, result artifact written.
+
+## Verdict: **BLOCK** — `.agent-work/epic-559/a-spine-is-the-job/REVIEWER_RESULT.md`
+
+14 items visited (13 shipped + 1 I appended), 5 recorded `fail`, 2 triage candidates, Fowler pass recorded and rail green.
+
+**The design is right and the core claim is real.** I built a scratch two-gate spine and dispatched an actual crew at it with `--spine` and no `--handoff`. It called `spine_status`, drove the spine to `DONE`, released the lease, exit 0 — and it did that while reading the *stale installed* `SKILL.md` that still tells a crew to author its own plan. The prompt alone beat contrary doctrine. The waive denial fired in that same real dispatch with `WAIVE_DENY_REASON` byte for byte, while `attest` and `attach` both succeeded. `--settings` measurably **merges** (project `env` key, project hooks, even a same-matcher `PreToolUse` hook all survived) — four probes against the installed binary, not the docstring.
+
+**Three blockers:**
+
+1. **A spine-only crew that fully succeeds is recorded `failed`.** Found by running it. The change moved a crew's *input* to the spine but left its *completion contract* a document: `--result` is still hard-required, `CrewBackend.verify` judges on that artifact, and the spine-only prompt never mentions one. The only test named for this passes because `fake_launch(write_result_at=...)` writes the artifact the real crew is never told to write.
+2. **The denial hook hardcodes `python3` and hooks fail open.** I measured it — a missing interpreter lets the tool call through silently. So on a non-`python3` host the human's "an agent cannot waive itself" ruling is unenforced with no signal. `install_constellation.py::build_hook_command`'s own docstring forbids exactly this ("never hardcoded … which is why the git-tracked settings.json names none (#539)"), and #539 is not recorded anywhere in the diff — so the short-term allowance doesn't apply. One-line fix: `shlex.quote(sys.executable)`.
+3. **The inline command is POSIX-only** (`shlex.split(posix=False)` leaves the quotes on), the repo's own hooks all set `"shell": "bash"` and this one doesn't, and the quoting guard is a bare `assert` — stripped under `-O`, where `assert_shell_safe_command()` already exists and raises.
+
+Everything the handoff told me not to re-derive I left alone; everything it flagged as untested, I ran. The deleted pins are the right deletion — I enumerated all three consumers of `TIER2_SKILL_FILES` and proved the replacement goes red by putting the old CLI text back. Suite reproduces exactly (`2548 passed, 1 skipped`), TDD red reproduces exactly (14 → 112).
+
+Two things for you specifically: `r6-fowler` shipped with an unsubstituted `<fowler-pass-record-path>` placeholder — the rail correctly refused my `pass`, and I repaired it through `spine_amend` (authority: Admiral) rather than hand-editing. And triage candidate `tc2`: the installed skills are dated Aug 9, so job 3's ruling isn't in force on this machine until a reinstall — the reviewer on this very gate read the old text.

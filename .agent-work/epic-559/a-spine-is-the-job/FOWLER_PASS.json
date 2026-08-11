@@ -1,0 +1,89 @@
+{
+  "work_id": "epic-559/a-spine-is-the-job",
+  "diff_ref": "commit 6fc83013 against main@9d593e0a -- scripts/run_crew.py, skills/implementer/SKILL.md, skills/reviewer/SKILL.md, tests/test_crew_launcher.py, tests/test_mcp_adoption.py, map/INDEX.md",
+  "repo_standards_ref": "references/global-crew.md, references/global-everyone.md, docs/agents/GLOSSARY.md, scripts/run_crew.py module docstring, scripts/install_constellation.py::build_hook_command",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "overridden",
+      "finding": "build_crew_argv grew a three-way if/elif/else on (handoff, spine) plus a 20-line docstring, and crew_settings_json is a single return of a nested literal. Both are short in code and long in prose.",
+      "override": {
+        "repo_standard": "global-crew.md: 'Match the surrounding code's naming, labeling, and in-file documentation conventions'; scripts/run_crew.py's own convention is a short body under a docstring that records WHY, which every neighbouring function follows.",
+        "reason": "The executable body of build_crew_argv is ~20 lines with one flat branch and no nesting; what grew is the reasons-recorded docstring, which is the file's documented house style, not method length. Extracting the branch would hide the one decision a reader of this function needs to see."
+      }
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The 'coerce an Optional[Path] to Optional[str] for build_crew_argv' expression `str(x) if x is not None else None` is written three times (CliBackend.dispatch, CliBackend.resume, and the handoff-path resolution), and the nullable-handoff guard is expressed four times in four shapes: CrewSpec.__post_init__ ('a crew needs a job'), build_crew_argv's else-raise, main()'s `missing` list, and main()'s explicit handoff/spine check. Minor and each site is defensible on its own (the docstring calls the build_crew_argv one 'a second, cheaper backstop'), but four spellings of one rule is where they drift apart. Observation, not a blocker.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "(handoff, spine) travel together through build_crew_argv, CrewSpec, build_entry and launch_crew, which is the shape of a clump -- but CrewSpec is already the parameter object for exactly this tuple, so the clump is named, not loose.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "flagged",
+      "finding": "The hook is a Python PROGRAM carried as a raw str constant (_WAIVE_HOOK_PY), embedded in a shell string, embedded in a JSON string. Three levels of stringly-typed nesting, guarded by one bare `assert` on one interpolated value. This is the direct cause of r4f: the type system cannot help, so quoting correctness rests on a runtime assertion that python -O strips. The repo already ships a typed-ish answer (install_constellation.py::build_hook_command + assert_shell_safe_command, which builds a hook command from a resolved interpreter and a script PATH rather than an inline program). Raised as a blocker under r4f, not merely as a smell.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "overridden",
+      "finding": "build_crew_argv now takes launcher plus five keyword-only params (role, handoff, model, session, spine); launch_crew takes eleven.",
+      "override": {
+        "repo_standard": "scripts/run_crew.py's established convention: keyword-only parameters at every dispatch seam, with CrewSpec as the parameter object where a spec is constructed.",
+        "reason": "Every added parameter is keyword-only, so no call site can transpose arguments, and the one place the list would genuinely be unwieldy already has its parameter object (CrewSpec). build_crew_argv is deliberately PURE so tests can assert argv without spawning; threading a spec into it would couple the pure function to the dataclass it exists to be testable apart from."
+      }
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "Making one field nullable required coordinated edits at eight sites: CrewSpec.handoff, CrewSpec.__post_init__, build_entry, build_crew_argv, CliBackend.dispatch, CliBackend.resume, ExternalBackend.dispatch, launch_crew, and main()'s argument checks. The change made all of them -- but it did NOT make the ninth, CrewBackend.verify / main()'s required --result, which is precisely the site r4g fails on. That is the diagnostic value of this smell here: a change that has to touch nine places will miss one, and it did.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "flagged",
+      "finding": "scripts/run_crew.py now changes for three unrelated reasons: how a crew is IDENTIFIED and recorded (registry, session names, recovery), what a crew is TOLD to do (prompt construction), and what a crew is PERMITTED to do (allowed tools, and now an inline settings/hook policy). The permission-policy concern is new with this change and is the least related of the three -- WAIVE_DENY_REASON, _WAIVE_HOOK_PY and crew_settings_json are a security policy that happens to live in a launcher. Observation for a future seam (a crew_policy module), explicitly not a blocker for this bounded change.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "The nullable handoff, the spine branch and the hook are each driven by a named requirement in the handoff; nothing was built for a hypothetical caller. The `spine` parameter defaults to None, which keeps every existing call site untouched -- backward compatibility, not speculation.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "The diff is comment-heavy even by this file's standards: a 9-line comment above CREW_ALLOWED_TOOLS explaining why it is hand-typed, an 11-line comment above WAIVE_DENY_REASON, a 6-line comment above _WAIVE_HOOK_PY, and inline comments at each refusal site. Several explain a workaround rather than a design (the hand-typed grant, the single-quote hazard).",
+      "override": {
+        "repo_standard": "global-everyone.md 'Reach-up / why-capture' posture and this repo's pervasive record-the-WHY convention -- every function in run_crew.py, checklist_engine.py and mcp_spine_server.py carries a docstring stating why the code is shaped as it is, including the rejected alternative.",
+        "reason": "These comments record decisions and rejected alternatives (why the grant is not imported, what the human ruled verbatim, why --allowedTools cannot express an action-level denial) that no reader could recover from the code. That is the documented house standard, not deodorant. The judgment does not extend to the single-quote comment, whose underlying hazard I raised as a real finding under r4f rather than accepting the comment as the fix."
+      }
+    }
+  ],
+  "rail_exception": null
+}

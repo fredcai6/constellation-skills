@@ -1,0 +1,318 @@
+{
+  "work_id": "epic-559/a-spine-is-the-job",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a-spine-only-dispatch-really-works",
+    "r4b-settings-merge-or-replace",
+    "r4c-hook-fires-in-a-real-dispatch",
+    "r4d-python3-hardcoded",
+    "r4e-deleted-pins",
+    "r4f-shell-quoting",
+    "r4g-spine-only-dispatch-always-reports-failed"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-everyone.md and global-crew.md from the installed reviewer skill, docs/agents deltas, the handoff, IMPLEMENTER_RESULT.md, and the full diff (6 files, +526/-71) at 6fc83013 vs main@9d593e0a. Noted immediately: the INSTALLED /home/tommy/.claude/skills/constellation-reviewer/SKILL.md is the pre-change text and still tells a dispatched crew to build its own survey and drive it through the engine CLI; only the repo's skills/reviewer/SKILL.md carries job 3's replacement. That is the doctrine I was actually dispatched under.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All four asked-for jobs are present and do what was asked. Job 1: build_crew_argv has a spine-carried prompt branch, and I proved it behaviourally (r4a), not just as a string -- a real crew drove a real spine to done from it. Job 2: --handoff is optional; CrewSpec.handoff is nullable, __post_init__ refuses a spec with neither handoff nor spine, _require_handoff is gated on a supplied handoff, the registry records handoff: null, resume tolerates it, and the external backend refuses spine-only explicitly and names why. Job 3: both SKILL.md files had the CLI-fallback paragraph replaced and neither mentions the CLI or checklist_engine.py anywhere -- confirmed by mutation (r4e). Job 4: a crew can no longer waive its own bound spine check -- confirmed in a real dispatch (r4c). The handoff's own escape hatch for CREW_ALLOWED_TOOLS was used as designed. Literal handoff compliance is therefore met; the incompleteness I found (a spine-only dispatch's completion contract, r4g) is a consequence the handoff did not name, so it is charged to r4-quality (the inherited blast-radius rule) rather than double-counted here.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every hard no-go confirmed by command, not by report. `git diff --name-only main...HEAD` is exactly six files: map/INDEX.md, scripts/run_crew.py, skills/implementer/SKILL.md, skills/reviewer/SKILL.md, tests/test_crew_launcher.py, tests/test_mcp_adoption.py. `git diff --quiet main...HEAD -- <path>` reports UNMODIFIED for scripts/checklist_engine.py, scripts/mcp_spine_server.py and .claude/settings.json; `git diff --name-only main...HEAD -- docs/agents/` is empty; `git diff --name-only main...HEAD -- 'skills/*/templates/*'` is empty, so no spine template and no handoff template was touched. `git diff --diff-filter=D --name-only main...HEAD` is empty -- nothing deleted. origin/main is still at 9d593e0a (the merge this branch was cut from), so nothing was pushed to main; 6fc83013 is contained only by epic-559/a-spine-is-the-job. tests/test_mcp_adoption.py WAS modified, outside the handoff's named file list. I judged the implementer's explanation rather than accepting it (r4e): the two removed pins asserted exactly the fact the human ruling deliberately overturned, all three consumers of the list assert that same CLI-presence fact, and the replacement is proven two-sided by mutation. It falls under the handoff's blanket \"and tests\" and the explanation holds. map/INDEX.md is a mechanical regeneration the repo enforces (tests/test_code_map.py::MapTreeFreshnessTests) -- not drift.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "EVERY CLAIM REPRODUCES EXACTLY -- and the evidence still does not demonstrate the behavior. Reproduced independently: (a) full suite, `env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests` -> \"2548 passed, 1 skipped, 1101 subtests passed in 104.11s\", identical to the claim; (b) the TDD red claim, by checking out main's scripts/run_crew.py in place and re-running tests/test_crew_launcher.py -> \"14 failed, 98 passed\", then restoring -> \"112 passed\", identical to the claimed 14/98 -> 112. Nothing was overstated. The failure is one of KIND, and it is a named inherited rule, not my preference: global-crew.md's required-evidence table says \"generated advice/hint/recovery text -> EXECUTE the advice and assert it does not refuse ... string-matching the rendered text is not evidence.\" The two behavioural claims in this change are both generated agent-facing text, and both were evidenced by string-matching the rendered text. (1) The spine-only prompt: every test asserts on the argv build_crew_argv returns; no test, and no manual run, ever put that prompt in front of an agent. (2) The waive denial: verified by piping fabricated JSON at the hook script standalone, which tests the script and not the mechanism (that Claude Code loads inline --settings, matches the hook to mcp__spine__spine_evidence, and honours a deny). Both claims happen to be TRUE -- I executed them (r4a, r4c) and they hold -- but that is my evidence, not the branch's, and running them is what exposed r4g. Worse, the one test whose name asserts the end-to-end claim, SpineOnlyDispatchTests::test_main_cli_spine_only_dispatch_succeeds, calls fake_launch(RC, 0, write_result_at=root / result): the harness writes the result artifact the real crew is never told to write, so the test passes for a reason that does not exist in production. That is the defect this item exists to catch.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Per inherited rule. PASSES: \"minimal change, no speculative abstraction\" -- the handoff branch is byte-identical and pinned by a literal-string test, so no existing dispatch shifted. \"Fail visibly\" at the launcher layer -- CrewSpec.__post_init__, build_crew_argv and main() each refuse a jobless dispatch, and the pure function keeps its own cheap backstop. \"Match surrounding conventions\" -- the comment density, the \"recorded null, not omitted\" registry shape, and the reasons-in-docstrings style all match run_crew.py. FAILS, three inherited rules: (1) global-everyone.md \"enumerate the blast radius of your own change ... by command, never by memory, every artifact that asserts something about what you changed.\" Making --handoff optional changes what a crew is judged on, and the artifact asserting that -- CrewBackend.verify plus main()'s required-argument list -- was not enumerated. That is r4g, and it is the authoring-side twin of the rule the reviewer is asked to apply. (2) global-everyone.md \"no hidden fallback; fail visibly.\" The waive denial rides on a hook whose interpreter is hardcoded `python3`, and I measured that PreToolUse hooks fail OPEN (a missing interpreter lets the tool call through silently). So on a non-python3 host the human's ruling is unenforced with no signal -- a hidden fallback in the one mechanism whose entire job is to refuse. That is r4d/r4f. (3) The repo's own documented standard is contradicted in its own words: install_constellation.py::build_hook_command's docstring says a hook command's interpreter is \"never re-probed here, never hardcoded ... which is why the git-tracked settings.json names none (#539)\", and the repo's .claude/settings.json sets \"shell\": \"bash\" on all four of its hook entries. crew_settings_json hardcodes the interpreter and omits the shell key. Also: assert_shell_safe_command() already exists for the quoting guard, and a bare `assert` was used instead -- stripped under python -O, which I confirmed.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No divergence needing Commander reconciliation, with two things surfaced rather than buried. map/INDEX.md was genuinely regenerated, not hand-edited: the diff is exactly three entity counts (scripts 1084->1085, tests 3897->3923, scripts.run_crew 53->54), and the repo's own freshness rail (tests/test_code_map.py::MapTreeFreshnessTests) is green inside the full suite I re-ran, which it would not be if the map were stale or fabricated. The Map Impact notes match the diff anchor for anchor -- build_crew_argv (new spine param, nullable handoff, new branch), CrewSpec (nullable handoff, construction-time refusal), crew_settings_json/_WAIVE_HOOK_PY/WAIVE_DENY_REASON (new), CREW_ALLOWED_TOOLS (7->9), the two SKILL.md files -- and I verified each exists in the diff. The claimed capability changes are accurate and the constraint note about the external backend is real. The one architecture-significant novelty (restricting a single ACTION inside a multi-action MCP tool via a PreToolUse hook carried in inline --settings) is correctly surfaced as a decision candidate and routed to Triage rather than silently absorbed, which is the right route. TWO GAPS, both surfaced not blocking here: (1) the Map Impact notes do not record that a spine-only dispatch's completion contract is unchanged -- the same omission as r4g, seen from the notes side; (2) doctrine now diverges between the repo's skills/*/SKILL.md and the installed ~/.claude/skills copies until a reinstall, flagged as triage candidate tc2. Stale pins in tests/test_mcp_adoption.py flagged as tc1.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a <fowler-pass-record-path> placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like <work-id> on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-559/a-spine-is-the-job/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Full Fowler baseline pass recorded at .agent-work/epic-559/a-spine-is-the-job/FOWLER_PASS.json; the rail exits 0 (smells=12, flagged=4, overridden=3). FLAGGED: (1) primitive-obsession -- the hook is a Python PROGRAM carried as a raw string inside a shell string inside a JSON string, three levels of stringly-typed nesting guarded by one bare assert; this is the root cause of r4f, and the repo already ships the typed alternative (build_hook_command + assert_shell_safe_command). (2) shotgun-surgery -- making one field nullable required coordinated edits at eight sites, and the diagnostic value is that it missed the ninth (CrewBackend.verify / main()'s required --result), which is exactly r4g; a change that must touch nine places will miss one, and it did. (3) divergent-change -- run_crew.py now changes for three unrelated reasons (crew identity, what a crew is told, what a crew is permitted); the permission-policy concern is new and least related, a future-seam observation only, not a blocker for this bounded change. (4) duplicated-code -- the nullable-handoff rule is spelled four times in four shapes and `str(x) if x is not None else None` three times; minor. OVERRIDDEN with logged standards: long-method and long-parameter-list (run_crew.py's keyword-only + CrewSpec-as-parameter-object convention and its record-the-WHY docstring style; the executable body stayed ~20 lines with one flat branch), and comments-as-deodorant (this repo's pervasive record-the-decision-and-the-rejected-alternative convention -- with the exception of the single-quote comment, whose hazard I raised as a real finding under r4f rather than accepting the comment as the fix). ABSENT: large-class, feature-envy, data-clumps (the (handoff, spine) clump is already named by CrewSpec), message-chains, speculative-generality. RAIL NOTE: this item's c1 shipped with the literal placeholder <fowler-pass-record-path> unsubstituted, so record was correctly REFUSED on first attempt; I took the item's documented repair path -- spine_amend with a single retext-check op on c1, authority Admiral -- rather than hand-editing the survey, and re-recorded. Reported in Workflow Feedback.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py <fowler-pass-record-path>",
+            "exit": 2,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-559/a-spine-is-the-job/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a-spine-only-dispatch-really-works": {
+      "id": "r4a-spine-only-dispatch-really-works",
+      "title": "Run a real spine-only crew end to end",
+      "imperative": "THE DECISIVE ITEM. The whole change exists so a crew can be dispatched with --spine and no --handoff. Nothing in the branch proves that works: every test asserts on the argv build_crew_argv returns, which is a string-construction test, not a behaviour test. Build a tiny throwaway spine in a scratch dir with two trivial gates, dispatch a real crew at it with --spine and NO --handoff via run_crew.py --backend cli --model sonnet, and watch what the crew actually does. Does it call spine_status? Does it drive the spine to done? Does it flounder because the prompt names no task? Report what you saw, including the crew's own output. If the crew cannot work from the spine alone, that is a BLOCK regardless of how clean the code is.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "RAN ONE. Built a scratch gated spine (/tmp/r4a-probe/SCRATCH_SPINE.json, work-id epic-559/r4a-probe, two gates: g1-alpha with a command postcondition, g2-evidence-probe with a check:null precondition, a waivable check:null postcondition and an artifact postcondition) that names NO handoff and NO result document. Dispatched for real: `python scripts/run_crew.py --backend cli --model sonnet --work-id epic-559/r4a-probe --gate g0-probe --role implementer --worktree <this worktree> --spine /tmp/r4a-probe/SCRATCH_SPINE.json --result /tmp/r4a-probe/RESULT.md --root /tmp/r4a-probe` -- no --handoff. The crew did exactly what the change claims: called spine_status first, started g1-alpha, wrote out.txt containing ALPHA, advanced; attested p1, started g2, ran the evidence probe, advanced; engine now reports \"DONE: no open items\" and \"LEASE released\". Child exit code 0, ~56s. It did NOT flounder and it did NOT author a plan of its own. Notably it did this under the STALE installed /home/tommy/.claude/skills/constellation-implementer/SKILL.md (installed Aug 9, still the pre-change text telling a dispatched crew to build its own plan and claim a lease) -- so the spine-only prompt alone was strong enough to override contrary skill doctrine. The prompt-construction half of the change is proven behaviourally, not just as an argv string. The dispatch's COMPLETION accounting is a separate defect -- see appended item r4g.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b-settings-merge-or-replace": {
+      "id": "r4b-settings-merge-or-replace",
+      "title": "Does --settings replace the crew's other settings?",
+      "imperative": "build_crew_argv now appends --settings <inline JSON> to EVERY crew dispatch, including existing handoff dispatches. The docstring ASSERTS this 'merges with' the repo's .claude/settings.json and the worktree's project settings. That is an assumption, not a measurement, and if --settings replaces rather than merges, every crew silently loses the permission allows in .claude/settings.local.json and unrelated hooks (Stop / SessionStart / PostToolUse) stop firing. Determine the real semantics empirically against the installed claude binary. Say which it is and what the consequence is.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "MEASURED, not read: --settings MERGES. Probe against the installed claude 2.1.227 in a scratch project (/tmp/r4b-probe) with its own .claude/settings.json. (1) Baseline, no --settings: project PreToolUse[Bash] and PostToolUse[Bash] hooks fired. (2) With the real crew_settings_json() blob passed inline: both project hooks still fired. (3) Project settings' `env` key (R4B_MARKER) still reached the crew's shell (echo printed project-settings-survived) with the inline blob present -- a non-hook key survives too. (4) Same-event SAME-matcher collision (inline PreToolUse[Bash] vs project PreToolUse[Bash]): BOTH hooks fired -- the arrays are additive, the inline one does not shadow the project one. (5) Corroborating: with --settings present claude still printed \"Ignoring 1 permissions.allow entry from .claude/settings.json\", proving it still read and processed the project file's permissions block. Consequence: the docstring's claim is correct; no crew loses .claude/settings.local.json allows or unrelated Stop/SessionStart/PostToolUse hooks. Separately noted (not caused by this change): this worktree is NOT in ~/.claude.json's trusted projects, so project permissions.allow is already ignored for every crew dispatched here regardless -- crews work only because --allowedTools is a CLI flag. NOT tested: settings precedence for a scalar key set in both places (e.g. model), since the crew blob sets no scalar key.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4c-hook-fires-in-a-real-dispatch": {
+      "id": "r4c-hook-fires-in-a-real-dispatch",
+      "title": "Does the waive denial actually fire, and do attest/attach still work?",
+      "imperative": "The implementer verified the hook by piping fake JSON at the hook script standalone. That proves the script's logic, not that Claude Code invokes it, matches it to mcp__spine__spine_evidence, or honours a deny. In a real dispatched crew: (1) make it attempt a waive and show the denial with the ask-up message; (2) show attest and attach still succeed in that same run. Both halves matter -- a hook that denies everything would pass a waive-only test while breaking every crew.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "BOTH HALVES PROVEN IN THE REAL DISPATCH ABOVE, not by piping JSON at the script. (1) DENY: the probe spine's g2 c1 was deliberately made waivable (override_policy.allowed=true, reason_required=true) so the ENGINE would have granted the waive -- meaning any refusal can only come from the hook. The crew's own report (/tmp/r4a-probe/probe_report.txt, written by the crew) records under \"WAIVE ATTEMPT\" the verbatim text: \"A crew must not waive its own bound spine check -- always ask up. Call spine_halt with action=block, name what you cannot satisfy, and return; only a human or commander waives it from there.\" That is WAIVE_DENY_REASON byte for byte, so Claude Code did invoke the hook, did match it to mcp__spine__spine_evidence, and did honour permissionDecision=deny. (2) NOT A BLANKET DENY: in that same run, on that same tool, `attest` succeeded twice (\"attested g2-evidence-probe.p1\", \"attested g2-evidence-probe.c1\") and `attach` succeeded (\"attached e-g2-evidence-probe-1 (review-result) to g2-evidence-probe\"), and the spine reached DONE -- which it could not have if the hook denied everything. The crew also read the denial as intended: it recorded the ask-up path and continued rather than treating it as a dead end. Independently corroborated by the spine's own journal/state (engine `current` reports DONE with the evidence attached). NOT tested: whether a crew that genuinely cannot satisfy a check actually calls spine_halt (the probe told it to continue).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4d-python3-hardcoded": {
+      "id": "r4d-python3-hardcoded",
+      "title": "The hook command hardcodes python3",
+      "imperative": "crew_settings_json emits the literal command `python3 -c '<script>'`. The repo has an explicit open problem about hardcoded interpreters (#539, with #553 alongside) and a real resolution mechanism -- install_constellation.py probes ('py','python3','python') and writes an interpreter.json sidecar. A hardcoded python3 in a shipped launcher is the same defect that has already bitten this repo more than once, and it fails on a machine where python3 is not the name. Judge how serious this is here, whether it should block, and what the smallest correct fix is. Note that the human has ruled such hardcoding is acceptable short-term ONLY if recorded against #539.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "IT BLOCKS, and it is worse than a portability nit because PreToolUse hooks FAIL OPEN. Measured: I ran claude -p with an inline --settings PreToolUse hook whose command was `python3-does-not-exist-r4f -c foo`; the Bash tool call proceeded normally (Output: hello-FAILOPEN), no error, no denial. Same with a hook that exits 0 printing non-JSON. So on any host where `python3` is not the interpreter name -- Windows with only the `py` launcher, or a box with only `python` -- the hook silently does nothing and the crew CAN waive its own bound spine check. The human's ruling (\"agent cannot waive itself ... always ask up\") is then unenforced with no signal at all, which is precisely the \"no hidden fallback / fail visibly\" posture in global-everyone.md. The repo already knows this: scripts/install_constellation.py::build_hook_command's docstring says, of a hook command's interpreter, \"comes from the run's single resolve_interpreter() probe -- never re-probed here, never HARDCODED ... no single interpreter name works on every platform, which is why the git-tracked settings.json names none (#539).\" crew_settings_json does exactly the forbidden thing, in a git-tracked file, for a hook command. And the human's short-term allowance does not apply: #539/#553 are NOT recorded anywhere in this diff -- `git diff main...HEAD | grep 539` finds nothing -- so the one condition attached to the allowance is unmet. SMALLEST CORRECT FIX: run_crew.py is itself a running Python process, so it does not need the installer's probe at all -- emit `shlex.quote(sys.executable)` (or `Path(sys.executable).as_posix()` quoted) instead of the literal `python3`. That is one line, needs no sidecar, and is correct by construction on every platform, since the interpreter that launched the launcher is by definition present. If the team prefers the existing machinery, resolve_interpreter()/interpreter.json is the alternative. Either way, add a test that the emitted command's argv[0] is not the literal string \"python3\".",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4e-deleted-pins": {
+      "id": "r4e-deleted-pins",
+      "title": "Audit what was removed from tests/test_mcp_adoption.py",
+      "imperative": "The change removed `implementer` and `reviewer` from TIER2_SKILL_FILES and replaced the TestTier2IdentityTradeCarried class. Deleting a pin to make a change pass is the exact escape-hatch shape this epic is hunting. Read the deletion carefully. Was the removed coverage genuinely obsoleted by this change, or did unrelated assertions ride along? Is the replacement two-sided -- does it actually go red if the CLI-fallback text comes back? Prove that by putting the old text back in a scratch copy. Also confirm the implementer's own report that DOOR_TOOL_NAMES (7) and CLI_ONLY_VERBS (5) in that file are stale after N1 and were deliberately left.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "THE DELETION IS RIGHT AND NOTHING UNRELATED RODE ALONG. I enumerated every consumer of TIER2_SKILL_FILES rather than trusting the report: there are exactly three (test_default_path_paragraph_is_two_sided, test_file_still_names_cli_at_all, and test_default_path_paragraph_states_the_cli_is_still_available at line 1159, which parametrizes TIER2_SKILL_FILES + TIER4_TEMPLATE_FILES). All three assert a CLI-presence fact about the file, and all three are exactly the fact the human ruling (\"the agents should not know about the CLI. period.\") deliberately overturned for these two files. So the removal is coextensive with the overturned fact -- no unrelated assertion lost coverage. The removal also carries a comment at the list naming #559 and pointing at the replacement class, which is the right shape for a deleted pin. TWO-SIDEDNESS PROVEN BY MUTATION, not by reading: I appended the old CLI-fallback sentence (\"...you share the parent's MCP scope wholesale, so drive your own survey through the CLI fallback instead: ... `scripts/checklist_engine.py`\") to real copies of both skills/reviewer/SKILL.md and skills/implementer/SKILL.md and re-ran the class -- 2 failed, 4 passed, with the failure naming 'checklist_engine.py' is contained here. Restored both files (git status clean) and re-ran -- 6 passed. So the replacement genuinely goes red when the CLI text comes back. IMPLEMENTER'S STALENESS REPORT CONFIRMED INDEPENDENTLY: DOOR_TOOL_NAMES in that file lists 7 names while mcp_spine_server.TOOL_NAMES is 9 (spine_capture, spine_amend missing), and CLI_ONLY_VERBS = (skip, reopen, append, amend, flag-candidate) while all five are now reachable through the door (mcp_spine_server.py: spine_halt's enum carries block/resume/skip/reopen, spine_capture's carries append/flag-candidate, spine_amend covers amend). Both are stale from the already-merged N1, not from this change, and leaving them alone was the right call for this scope -- but they are stale pins asserting a false fact and should be triaged.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4f-shell-quoting": {
+      "id": "r4f-shell-quoting",
+      "title": "Attack the inline hook command's quoting",
+      "imperative": "The hook is a multi-line python program embedded inside a single-quoted shell string, with an assert guarding apostrophes in one interpolated constant. Try to break it: does the emitted command survive being parsed by whatever actually runs it? Does the assert cover every interpolated value or only WAIVE_DENY_REASON? What happens on a shell where single-quote semantics differ, or if the hook runner does not use a shell at all?",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "ATTACKED IT, three separate weaknesses; the quoting itself is correct on POSIX and wrong off it. (1) POSIX: sound. shlex.split(cmd) yields exactly 3 args (python3, -c, <program>) and the extracted program compiles as Python; the real dispatch in r4a proves a real shell runs it. (2) NON-POSIX: broken. shlex.split(cmd, posix=False) leaves argv[2] as \"'import json,sys\\n...'\" with the single quotes NOT stripped -- cmd.exe treats a single quote as an ordinary character, so python would receive a program whose first character is an apostrophe and die on a SyntaxError. Combined with the fail-open behaviour I measured under r4d, the denial silently vanishes rather than erroring. The repo's own .claude/settings.json sets \"shell\": \"bash\" on every one of its four hook entries; crew_settings_json emits {\"type\",\"command\"} with no \"shell\" key, so it does not even get the repo's own standing answer to this hazard. Adding \"shell\": \"bash\" is the cheapest half of the fix. (3) THE ASSERT COVERS THE RIGHT VALUE BUT IS THE WRONG MECHANISM. WAIVE_DENY_REASON is genuinely the only interpolated value -- _WAIVE_HOOK_PY's other literals use double quotes only, and json.dumps of the reason emits double quotes -- so today the coverage is complete (verified: no single quote anywhere in the emitted program). But it is a bare `assert`, which python -O strips: I confirmed `python -O -c \"import run_crew\"` runs with __debug__ False, so under -O a future apostrophe in that constant would emit a silently malformed command that, per (2)+fail-open, allows the waive. The repo already ships assert_shell_safe_command() in install_constellation.py for exactly this job; use that (it raises, it is not an assert) rather than a stripped-at-runtime assert. NOT tested: an actual Windows host -- I have none here, so (2) is a parse-level demonstration plus the repo's own documented Windows posture (references/windows.md, the `py` launcher recipes, the engine's no-posix-shell refusal), not an observed Windows failure.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4g-spine-only-dispatch-always-reports-failed": {
+      "id": "r4g-spine-only-dispatch-always-reports-failed",
+      "title": "A spine-only crew that fully succeeds is still recorded `failed`",
+      "imperative": "Discovered while running r4a. The change made the crew's INPUT the spine instead of a document, but left the crew's COMPLETION contract as a document. `--result` is still hard-required for every launch (the `missing` list is work_id/gate/role/result), and `CrewBackend.verify` decides `completed` vs `failed` purely on that result artifact existing AND being fresh. The spine-only prompt never mentions a result artifact at all -- it says only \"drive it gate by gate ... until it reports done\", where the handoff prompt says \"The run is only complete when the result artifact the handoff names exists\". Determine whether a perfectly-executed spine-only crew is therefore always recorded failed, and whether any test on the branch covers it.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "CONFIRMED BY THE r4a RUN, AND IT IS THE ONE REAL DEFECT I FOUND. My spine-only crew drove its spine to DONE and released the lease, child exit code 0 -- and run_crew.py printed `crew constellation/epic-559/r4a-probe/g0-probe/implementer/attempt-1 -> failed`. The registry entry records status \"failed\", result_present false, result_fresh false. Mechanism: the change moved the crew's INPUT from a document to the spine but left its COMPLETION contract as a document. (a) scripts/run_crew.py main() still hard-requires --result (`missing = [n for n in (\"work_id\",\"gate\",\"role\",\"result\")...]`); (b) CrewBackend.verify decides completed-vs-failed purely on that artifact existing AND being fresh; (c) the new spine-only prompt never mentions a result artifact -- it ends \"until it reports done\", where the handoff prompt it replaces ends \"The run is only complete when the result artifact the handoff names exists\". So the crew is told its job ends at spine-done while the launcher judges it on a file nobody told it to write. Consequence: every honest spine-only dispatch reports failed, the duplicate-guard keeps holding the gate, and recover_crews.py sees an unresolved run -- the dispatching Commander gets a false negative on a run that actually succeeded. NO TEST COVERS THIS: the only test named for it, SpineOnlyDispatchTests::test_main_cli_spine_only_dispatch_succeeds, passes `fake_launch(RC, 0, write_result_at=root / result)` -- the test harness itself writes the result artifact the real crew is never asked to write, so the test proves the opposite of what its name claims. Smallest correct fix (one of): (1) pass the result path into build_crew_argv's spine branch and end the prompt with the same \"the run is only complete when <result> exists\" clause the handoff branch carries; or (2) for a spine-only dispatch judge completion on the spine reaching a terminal state rather than on a result file. (1) is smaller and keeps one completion contract; (2) is truer to \"the spine is the job\" and is the epic's own thesis. Either way the covering test must NOT fake the artifact into existence.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r3-evidence: EVERY CLAIM REPRODUCES EXACTLY -- and the evidence still does not demonstrate the behavior. Reproduced independently: (a) full suite, `env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests` -> \"2548 passed, 1 skipped, 1101 subtests passed in 104.11s\", identical to the claim; (b) the TDD red claim, by checking out main's scripts/run_crew.py in place and re-running tests/test_crew_launcher.py -> \"14 failed, 98 passed\", then restoring -> \"112 passed\", identical to the claimed 14/98 -> 112. Nothing was overstated. The failure is one of KIND, and it is a named inherited rule, not my preference: global-crew.md's required-evidence table says \"generated advice/hint/recovery text -> EXECUTE the advice and assert it does not refuse ... string-matching the rendered text is not evidence.\" The two behavioural claims in this change are both generated agent-facing text, and both were evidenced by string-matching the rendered text. (1) The spine-only prompt: every test asserts on the argv build_crew_argv returns; no test, and no manual run, ever put that prompt in front of an agent. (2) The waive denial: verified by piping fabricated JSON at the hook script standalone, which tests the script and not the mechanism (that Claude Code loads inline --settings, matches the hook to mcp__spine__spine_evidence, and honours a deny). Both claims happen to be TRUE -- I executed them (r4a, r4c) and they hold -- but that is my evidence, not the branch's, and running them is what exposed r4g. Worse, the one test whose name asserts the end-to-end claim, SpineOnlyDispatchTests::test_main_cli_spine_only_dispatch_succeeds, calls fake_launch(RC, 0, write_result_at=root / result): the harness writes the result artifact the real crew is never told to write, so the test passes for a reason that does not exist in production. That is the defect this item exists to catch.",
+      "r4-quality: Per inherited rule. PASSES: \"minimal change, no speculative abstraction\" -- the handoff branch is byte-identical and pinned by a literal-string test, so no existing dispatch shifted. \"Fail visibly\" at the launcher layer -- CrewSpec.__post_init__, build_crew_argv and main() each refuse a jobless dispatch, and the pure function keeps its own cheap backstop. \"Match surrounding conventions\" -- the comment density, the \"recorded null, not omitted\" registry shape, and the reasons-in-docstrings style all match run_crew.py. FAILS, three inherited rules: (1) global-everyone.md \"enumerate the blast radius of your own change ... by command, never by memory, every artifact that asserts something about what you changed.\" Making --handoff optional changes what a crew is judged on, and the artifact asserting that -- CrewBackend.verify plus main()'s required-argument list -- was not enumerated. That is r4g, and it is the authoring-side twin of the rule the reviewer is asked to apply. (2) global-everyone.md \"no hidden fallback; fail visibly.\" The waive denial rides on a hook whose interpreter is hardcoded `python3`, and I measured that PreToolUse hooks fail OPEN (a missing interpreter lets the tool call through silently). So on a non-python3 host the human's ruling is unenforced with no signal -- a hidden fallback in the one mechanism whose entire job is to refuse. That is r4d/r4f. (3) The repo's own documented standard is contradicted in its own words: install_constellation.py::build_hook_command's docstring says a hook command's interpreter is \"never re-probed here, never hardcoded ... which is why the git-tracked settings.json names none (#539)\", and the repo's .claude/settings.json sets \"shell\": \"bash\" on all four of its hook entries. crew_settings_json hardcodes the interpreter and omits the shell key. Also: assert_shell_safe_command() already exists for the quoting guard, and a bare `assert` was used instead -- stripped under python -O, which I confirmed.",
+      "r4d-python3-hardcoded: IT BLOCKS, and it is worse than a portability nit because PreToolUse hooks FAIL OPEN. Measured: I ran claude -p with an inline --settings PreToolUse hook whose command was `python3-does-not-exist-r4f -c foo`; the Bash tool call proceeded normally (Output: hello-FAILOPEN), no error, no denial. Same with a hook that exits 0 printing non-JSON. So on any host where `python3` is not the interpreter name -- Windows with only the `py` launcher, or a box with only `python` -- the hook silently does nothing and the crew CAN waive its own bound spine check. The human's ruling (\"agent cannot waive itself ... always ask up\") is then unenforced with no signal at all, which is precisely the \"no hidden fallback / fail visibly\" posture in global-everyone.md. The repo already knows this: scripts/install_constellation.py::build_hook_command's docstring says, of a hook command's interpreter, \"comes from the run's single resolve_interpreter() probe -- never re-probed here, never HARDCODED ... no single interpreter name works on every platform, which is why the git-tracked settings.json names none (#539).\" crew_settings_json does exactly the forbidden thing, in a git-tracked file, for a hook command. And the human's short-term allowance does not apply: #539/#553 are NOT recorded anywhere in this diff -- `git diff main...HEAD | grep 539` finds nothing -- so the one condition attached to the allowance is unmet. SMALLEST CORRECT FIX: run_crew.py is itself a running Python process, so it does not need the installer's probe at all -- emit `shlex.quote(sys.executable)` (or `Path(sys.executable).as_posix()` quoted) instead of the literal `python3`. That is one line, needs no sidecar, and is correct by construction on every platform, since the interpreter that launched the launcher is by definition present. If the team prefers the existing machinery, resolve_interpreter()/interpreter.json is the alternative. Either way, add a test that the emitted command's argv[0] is not the literal string \"python3\".",
+      "r4f-shell-quoting: ATTACKED IT, three separate weaknesses; the quoting itself is correct on POSIX and wrong off it. (1) POSIX: sound. shlex.split(cmd) yields exactly 3 args (python3, -c, <program>) and the extracted program compiles as Python; the real dispatch in r4a proves a real shell runs it. (2) NON-POSIX: broken. shlex.split(cmd, posix=False) leaves argv[2] as \"'import json,sys\\n...'\" with the single quotes NOT stripped -- cmd.exe treats a single quote as an ordinary character, so python would receive a program whose first character is an apostrophe and die on a SyntaxError. Combined with the fail-open behaviour I measured under r4d, the denial silently vanishes rather than erroring. The repo's own .claude/settings.json sets \"shell\": \"bash\" on every one of its four hook entries; crew_settings_json emits {\"type\",\"command\"} with no \"shell\" key, so it does not even get the repo's own standing answer to this hazard. Adding \"shell\": \"bash\" is the cheapest half of the fix. (3) THE ASSERT COVERS THE RIGHT VALUE BUT IS THE WRONG MECHANISM. WAIVE_DENY_REASON is genuinely the only interpolated value -- _WAIVE_HOOK_PY's other literals use double quotes only, and json.dumps of the reason emits double quotes -- so today the coverage is complete (verified: no single quote anywhere in the emitted program). But it is a bare `assert`, which python -O strips: I confirmed `python -O -c \"import run_crew\"` runs with __debug__ False, so under -O a future apostrophe in that constant would emit a silently malformed command that, per (2)+fail-open, allows the waive. The repo already ships assert_shell_safe_command() in install_constellation.py for exactly this job; use that (it raises, it is not an assert) rather than a stripped-at-runtime assert. NOT tested: an actual Windows host -- I have none here, so (2) is a parse-level demonstration plus the repo's own documented Windows posture (references/windows.md, the `py` launcher recipes, the engine's no-posix-shell refusal), not an observed Windows failure.",
+      "r4g-spine-only-dispatch-always-reports-failed: CONFIRMED BY THE r4a RUN, AND IT IS THE ONE REAL DEFECT I FOUND. My spine-only crew drove its spine to DONE and released the lease, child exit code 0 -- and run_crew.py printed `crew constellation/epic-559/r4a-probe/g0-probe/implementer/attempt-1 -> failed`. The registry entry records status \"failed\", result_present false, result_fresh false. Mechanism: the change moved the crew's INPUT from a document to the spine but left its COMPLETION contract as a document. (a) scripts/run_crew.py main() still hard-requires --result (`missing = [n for n in (\"work_id\",\"gate\",\"role\",\"result\")...]`); (b) CrewBackend.verify decides completed-vs-failed purely on that artifact existing AND being fresh; (c) the new spine-only prompt never mentions a result artifact -- it ends \"until it reports done\", where the handoff prompt it replaces ends \"The run is only complete when the result artifact the handoff names exists\". So the crew is told its job ends at spine-done while the launcher judges it on a file nobody told it to write. Consequence: every honest spine-only dispatch reports failed, the duplicate-guard keeps holding the gate, and recover_crews.py sees an unresolved run -- the dispatching Commander gets a false negative on a run that actually succeeded. NO TEST COVERS THIS: the only test named for it, SpineOnlyDispatchTests::test_main_cli_spine_only_dispatch_succeeds, passes `fake_launch(RC, 0, write_result_at=root / result)` -- the test harness itself writes the result artifact the real crew is never asked to write, so the test proves the opposite of what its name claims. Smallest correct fix (one of): (1) pass the result path into build_crew_argv's spine branch and end the prompt with the same \"the run is only complete when <result> exists\" clause the handoff branch carries; or (2) for a spine-only dispatch judge completion on the spine reaching a terminal state rather than on a result file. (1) is smaller and keeps one completion contract; (2) is truer to \"the spine is the job\" and is the epic's own thesis. Either way the covering test must NOT fake the artifact into existence."
+    ],
+    "summary": "BLOCK. The design is right and the core claim is real -- I dispatched an actual spine-only crew (no --handoff) and it called spine_status, drove a scratch two-gate spine to done, and released the lease, all while reading an INSTALLED SKILL.md that still tells it to author its own plan. The waive denial fires in a real dispatch with the exact ask-up message, and attest/attach still work in that same run. --settings measurably MERGES (project env key, project hooks, and even a same-matcher PreToolUse hook all survive), so no crew loses its other settings. Three things block. (1) r4g, found by running it: the change moved a crew's INPUT to the spine but left its COMPLETION contract a document -- --result is still hard-required and CrewBackend.verify judges on that artifact, while the spine-only prompt never mentions one, so my perfectly-successful crew was recorded `failed`. The one test named for this passes only because fake_launch writes the artifact the real crew is never told to write. (2) r4d/r4f: the denial hook hardcodes `python3` and I measured that PreToolUse hooks FAIL OPEN -- on a non-python3 host (or any non-POSIX shell, where the single-quoted program is not unquoted) the human's \"an agent cannot waive itself\" ruling is silently unenforced. install_constellation.py::build_hook_command's own docstring forbids exactly this (\"never hardcoded ... which is why the git-tracked settings.json names none (#539)\"), the repo's own hooks all set \"shell\": \"bash\", assert_shell_safe_command already exists, and #539 is not recorded anywhere in the diff -- so the human's short-term allowance does not apply. (3) r3/r4-quality: both behavioural claims were evidenced by string-matching generated agent-facing text, which global-crew.md names as not-evidence. Nothing else is wrong: scope held on every no-go, the deleted pins in test_mcp_adoption.py were genuinely obsoleted and the replacement goes red under mutation, the suite reproduces at 2548 passed / 1 skipped and the TDD red at 14 failed -> 112 passed, and the map is honestly regenerated. Fixes are small: name the result artifact in the spine prompt (or judge a spine-only crew on its spine reaching terminal), emit sys.executable instead of `python3`, add \"shell\": \"bash\", swap the stripped assert for assert_shell_safe_command -- and cover each with a test that does not fake its own precondition."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r4e-deleted-pins",
+      "statement": "tests/test_mcp_adoption.py's DOOR_TOOL_NAMES (7 names) and CLI_ONLY_VERBS (skip, reopen, append, amend, flag-candidate) are stale pins asserting a fact that merged N1 already overturned: mcp_spine_server.TOOL_NAMES is 9, and all five \"CLI-only\" verbs are reachable through the door (spine_halt's enum carries block/resume/skip/reopen, spine_capture's carries append/flag-candidate, spine_amend covers amend). Pre-existing, not caused by #559, and correctly left alone by this change's scope -- but a pin that asserts a false fact is worse than no pin. Owner: whoever next touches that file."
+    },
+    {
+      "id": "tc2",
+      "from": "r0-context",
+      "statement": "Installed-skill lag makes job 3 inert until a reinstall. The installed /home/tommy/.claude/skills/constellation-{implementer,reviewer}/SKILL.md are copies dated Aug 9, still carrying the pre-#559 CLI-fallback paragraph; only the repo's skills/*/SKILL.md have the replacement. Every crew dispatched today -- including me, the reviewer on this very gate -- reads the old text telling a dispatched crew to author its own survey/plan and drive it through the engine CLI. Not a defect in this diff (the repo installs from a bundle, by design), but it means the ruling \"the agents should not know about the CLI. period.\" is not in force on this machine until install_constellation.py runs, and nothing on the branch says so. Worth either a reinstall step in the epic's closeout or a freshness check that fails when an installed SKILL.md is behind the repo's."
+    }
+  ],
+  "blockers": [],
+  "amendments": [
+    {
+      "ts": "2026-08-11T05:48:38.630600+00:00",
+      "reason": "r6-fowler's c1 command still carries the literal instantiation placeholder <fowler-pass-record-path>, which was never substituted when this survey was instantiated from the reviewer template, so the check can never pass as written. This is the documented REPAIR PATH in the item's own imperative. Correcting it to the real record path I wrote for this review: .agent-work/epic-559/a-spine-is-the-job/FOWLER_PASS.json. The authority is the Admiral named in my reviewer handoff as the dispatcher of this g2-review gate; no condition is being marked satisfied by this op.",
+      "authority": "Admiral",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}

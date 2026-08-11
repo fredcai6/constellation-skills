@@ -102,6 +102,51 @@ def no_ambient_spine_env():
                 os.environ[k] = v
 
 
+INSTALLER_PY = ROOT / "scripts" / "install_constellation.py"
+
+
+class InstalledBundleTests(unittest.TestCase):
+    """#559 pass 3, blocker 1: `2152ded3` added `import install_constellation`
+    at module scope in `run_crew.py` (#539's `assert_shell_safe_command`), but
+    no bundle carrying `run_crew.py` shipped `install_constellation.py` as a
+    companion -- every installed Commander and Explorer raised
+    `ModuleNotFoundError` at import, before argparse ever ran, and could
+    launch no crew at all. Reproduced two-sidedly against real installs.
+
+    These build a REAL installed bundle through the installer itself (never a
+    hand-picked file copy, which could pass by accident) and run the
+    INSTALLED `run_crew.py --help` as a real subprocess -- only a real
+    subprocess proves the import resolves in the tree the installer actually
+    produces."""
+
+    def _installed_run_crew_help(self, skill: str, installed_name: str) -> subprocess.CompletedProcess:
+        installer = load_module("install_constellation", INSTALLER_PY)
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "skills"
+            rc = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                 "--skills", skill],
+                env={}, out=lambda _line: None,
+            )
+            self.assertEqual(0, rc)
+            run_crew = dest / installed_name / "scripts" / "run_crew.py"
+            self.assertTrue(run_crew.is_file(), f"{run_crew} was not installed")
+            return subprocess.run(
+                [sys.executable, str(run_crew), "--help"],
+                capture_output=True, text=True,
+            )
+
+    def test_installed_commander_bundle_run_crew_help_works(self):
+        result = self._installed_run_crew_help("commander", "constellation-commander")
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertNotIn("ModuleNotFoundError", result.stderr)
+
+    def test_installed_explorer_bundle_run_crew_help_works(self):
+        result = self._installed_run_crew_help("explorer", "constellation-explorer")
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertNotIn("ModuleNotFoundError", result.stderr)
+
+
 class SessionNameTests(unittest.TestCase):
     def test_session_name_is_deterministic(self):
         name = RC.session_name("issue-420", "g2", "reviewer", 1)
@@ -949,6 +994,81 @@ def _write_spine(path: Path, *, done: bool) -> None:
         "items": ["w1"],
         "tasks": {"w1": {"id": "w1", "status": "complete" if done else "pending"}},
     }), encoding="utf-8")
+
+
+def _write_survey_spine(path: Path, *, consolidation) -> None:
+    """A minimal `checklist_engine`-shaped SURVEY spine (reviewer/interrogator
+    shape): every item recorded terminal, `consolidation` set to whatever the
+    caller passes (`None` for "no verdict yet")."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({
+        "work_id": "issue-1",
+        "type": "survey",
+        "items": ["i1", "i2"],
+        "tasks": {
+            "i1": {"id": "i1", "status": "complete", "result": "pass"},
+            "i2": {"id": "i2", "status": "complete", "result": "pass"},
+        },
+        "consolidation": consolidation,
+    }), encoding="utf-8")
+
+
+class SurveyTerminalTests(unittest.TestCase):
+    """#559 pass 3, blocker 2: `spine_terminal` answered a survey question
+    with `checklist_engine.active_id`, which walks item statuses and never
+    looks at `consolidation`. A real reviewer crew's survey had every item
+    recorded and NO consolidation, and `run_crew` recorded it `completed` --
+    a Commander told the review is done when no verdict exists anywhere, in
+    the one role whose entire deliverable IS the verdict."""
+
+    def test_survey_with_every_item_recorded_but_no_consolidation_is_not_terminal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/REVIEW_SURVEY.json"
+            _write_survey_spine(root / spine_rel, consolidation=None)
+            self.assertFalse(RC.spine_terminal(spine_rel, root))
+
+    def test_survey_with_consolidation_recorded_is_terminal(self):
+        # Positive control: same spine, ONLY consolidation differs -- proves
+        # the check is a real read of `consolidation`, not a tautology that
+        # always refuses a survey.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/REVIEW_SURVEY.json"
+            _write_survey_spine(
+                root / spine_rel,
+                consolidation={"verdict": "APPROVE", "summary": "both items pass"},
+            )
+            self.assertTrue(RC.spine_terminal(spine_rel, root))
+
+
+class MalformedSpineTests(unittest.TestCase):
+    """#559 pass 3, blocker 2 (same function, smaller): `spine_terminal`
+    returned `True` for `{}` and `{"items": []}`, directly contradicting its
+    own docstring -- "a missing/unparseable/malformed spine is never
+    terminal". `checklist_engine.active_id` walks `cl.get("items", [])`, so a
+    missing/empty `items` list finds no non-terminal item and returns `None`
+    -- terminal by vacuity. Missing files and unparseable JSON already
+    correctly returned `False` (covered by `SpineOnlyCompletionContractTests`
+    above); this pins the valid-JSON-wrong-shape leak specifically."""
+
+    def test_empty_dict_spine_is_not_terminal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/EMPTY.json"
+            path = root / spine_rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("{}", encoding="utf-8")
+            self.assertFalse(RC.spine_terminal(spine_rel, root))
+
+    def test_empty_items_list_spine_is_not_terminal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/EMPTY_ITEMS.json"
+            path = root / spine_rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps({"items": []}), encoding="utf-8")
+            self.assertFalse(RC.spine_terminal(spine_rel, root))
 
 
 class SpineOnlyCompletionContractTests(unittest.TestCase):
