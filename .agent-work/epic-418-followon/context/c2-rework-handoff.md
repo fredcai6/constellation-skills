@@ -17,7 +17,7 @@ shipped. `validate()` runs as the literal last statement before success and any 
 `.undecidable` entry** refuses with nothing written. The corpus sweep still reports exactly 23 fault
 lines, so no shipped template moved.
 
-None of that is in question. Three things are.
+None of that is in question. Four things are.
 
 ## Blocker 1 — an author can write a check that always passes
 
