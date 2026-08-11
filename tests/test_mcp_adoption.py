@@ -628,12 +628,19 @@ class TestTier1CommanderCoreAttachLine:
 # paragraph must also still carry the checklist_engine.py CLI marker.
 # --------------------------------------------------------------------------- #
 
+#: `skills/implementer/SKILL.md` and `skills/reviewer/SKILL.md` are DELIBERATELY
+#: not on this list (issue #559, "a spine is the job"): a dispatched crew now
+#: gets its OWN spine bound before it starts (`run_crew.py`'s `--spine`
+#: binding), so the g1 identity-trade fact this tier pinned -- "an in-session
+#: dispatched crew shares its parent's MCP scope and must use the CLI for its
+#: own plan" -- is no longer true for these two files, and the human ruling is
+#: "the agents should not know about the CLI. period." Their own,
+#: CLI-mentions-nothing invariant is `TestTier2SpineAlreadyBoundForDispatchedCrews`
+#: below, not this tier.
 TIER2_SKILL_FILES = [
     "skills/workbench/SKILL.md",
     "skills/charter/SKILL.md",
-    "skills/reviewer/SKILL.md",
     "skills/interrogator/SKILL.md",
-    "skills/implementer/SKILL.md",
     "skills/explorer/SKILL.md",
 ]
 
@@ -664,38 +671,59 @@ class TestTier2SkillBodyDefaultPath:
         assert CLI_SCRIPT_MARKER in _text(path)
 
 
-class TestTier2IdentityTradeCarried:
-    """The g1 fact ('an in-session dispatched crew member cannot drive its own plan
-    through the door') must be carried in the instructions themselves, not merely cited."""
+class TestTier2SpineAlreadyBoundForDispatchedCrews:
+    """Issue #559 ("a spine is the job") supersedes the g1 identity-trade fact
+    the old `TestTier2IdentityTradeCarried` pinned for these two files
+    specifically: `run_crew.py` now binds a dispatched crew's OWN spine before
+    it starts (`--spine`, `SPINE_FILE`/`SPINE_SESSION`), so it no longer shares
+    the dispatching parent's MCP scope and no longer needs the CLI for its own
+    plan. The human ruling this pins, verbatim: "the agents should not know
+    about the CLI. period."
 
-    @pytest.mark.parametrize("path", [
-        "skills/implementer/SKILL.md",
-        "skills/reviewer/SKILL.md",
-    ])
-    def test_dispatched_crew_file_states_cli_for_own_plan(self, path):
-        """FAILS IF: the file stops routing a dispatched crew member's OWN plan
-        to the CLI.
+    FAILS IF either file regresses to routing a dispatched crew's own plan
+    through the CLI, stops telling it a spine is already bound, or mentions the
+    CLI/`checklist_engine.py` at all."""
 
-        The three substring checks this replaced -- `in-session`, "shares the
-        parent", "parent's MCP scope" -- are all supplied by the negation ("an
-        in-session subagent no longer shares the parent's MCP scope, so use the
-        door for your own plan"). The routing sentence is not."""
+    PATHS = ["skills/implementer/SKILL.md", "skills/reviewer/SKILL.md"]
+
+    @pytest.mark.parametrize("path", PATHS)
+    def test_file_never_names_the_cli_at_all(self, path):
+        """PRESENCE IS THE FACT (same category as Tier5's `test_no_door_tool_name_introduced`,
+        applied in reverse): there is no polarity to out-write here, because the
+        rule is "never mention it", not "mention it a certain way"."""
         text = _text(path)
-        routed = [
-            s for s in _sentences(text)
-            if re.search(r"in-session", s, re.I)
-            and re.search(r"\bown\b", s, re.I)
-            and (CLI_SCRIPT_MARKER in s or re.search(r"\bthe CLI\b", s, re.I)
-                 or CLI_PLACEHOLDER in s)
-        ]
-        assert routed, (
-            f"{path} no longer says, in one sentence, that an in-session dispatched crew "
-            f"member drives its OWN plan through the CLI. That is the g1 identity-trade "
-            f"fact, and it has to be carried in the instruction itself, not merely cited."
+        assert CLI_SCRIPT_MARKER not in text, (
+            f"{path} mentions {CLI_SCRIPT_MARKER!r} -- issue #559 removed the CLI-fallback "
+            f"instruction from this file so a dispatched crew is never told about the "
+            f"engine CLI at all"
         )
-        assert "shares the parent" in text or "shares its parent" in text or "parent's MCP scope" in text, (
-            f"{path} does not explain WHY a dispatched crew member uses the CLI for its "
-            f"own plan (shared MCP scope with the dispatching parent)"
+        assert re.search(r"\bCLI\b", text) is None, (
+            f"{path} still says \"CLI\" -- a dispatched crew must not be told it exists"
+        )
+
+    @pytest.mark.parametrize("path", PATHS)
+    def test_file_states_a_dispatched_crews_own_spine_is_already_bound(self, path):
+        text = _text(path)
+        assert _named_affirmatively(text, "spine_status"), (
+            f"{path} does not name spine_status as a dispatched crew's first call"
+        )
+        bound = [
+            s for s in _sentences(text)
+            if re.search(r"\bbound\b", s, re.I) and re.search(r"spine", s, re.I)
+        ]
+        assert bound, (
+            f"{path} no longer states, in one sentence, that a dispatched crew's spine "
+            f"is already bound"
+        )
+
+    @pytest.mark.parametrize("path", PATHS)
+    def test_file_tells_a_dispatched_crew_not_to_author_its_own_plan(self, path):
+        text = _text(path)
+        assert re.search(r"do not author", text, re.I), (
+            f"{path} no longer tells a dispatched crew NOT to author a plan/survey of its "
+            f"own when a spine is already bound -- without that instruction a crew reading "
+            f"the generic 'build your own plan' guidance elsewhere in the file has no "
+            f"reason not to"
         )
 
 

@@ -3,6 +3,7 @@ import contextlib
 import io
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -169,6 +170,182 @@ class SessionNameTests(unittest.TestCase):
         tools = argv[tools_idx + 1:]
         for expected in ("Bash", "Read", "Write", "Edit", "mcp__spine__spine_advance"):
             self.assertIn(expected, tools)
+
+    def test_build_crew_argv_adds_settings_before_allowed_tools(self):
+        # --settings must land BEFORE --allowedTools so the open-ended
+        # `argv[tools_idx + 1:]` slice other tests use to read "the granted
+        # tools" is never polluted by an unrelated flag.
+        argv = RC.build_crew_argv(
+            "claude", role="implementer", handoff="h.md", model=None, session="s",
+        )
+        self.assertIn("--settings", argv)
+        self.assertLess(argv.index("--settings"), argv.index("--allowedTools"))
+
+
+class SpineOwnershipPromptTests(unittest.TestCase):
+    """Issue #559: a dispatched crew's whole job used to be "read this
+    document". These pin the pre-#559 handoff prompt byte for byte (the
+    CONTROL) and the new spine-carried branch that replaces the CLI-fallback
+    instruction with a direct instruction to drive the bound spine."""
+
+    def test_control_handoff_branch_is_byte_identical_to_the_pre_559_prompt(self):
+        # CONTROL, recorded verbatim against a1-control: today's -- i.e.
+        # pre-#559 -- prompt names the handoff path and never mentions the
+        # spine or spine_status anywhere.
+        argv = RC.build_crew_argv(
+            "claude", role="reviewer", handoff="/abs/g2-reviewer.md",
+            model=None, session="s",
+        )
+        prompt = argv[2]
+        self.assertEqual(
+            "You are the constellation reviewer crew for session s. "
+            "Read the handoff at /abs/g2-reviewer.md and execute it exactly. "
+            "The run is only complete when the result artifact the handoff names exists.",
+            prompt,
+        )
+        self.assertNotIn("spine", prompt.lower())
+
+    def test_handoff_branch_unaffected_by_an_also_bound_spine(self):
+        # A crew given BOTH a handoff and a spine (today's normal combined
+        # dispatch, e.g. this very implementer run) still gets the handoff
+        # prompt, byte for byte: the new branch only fires when handoff is
+        # ABSENT, not merely when a spine happens to also be bound.
+        with_spine = RC.build_crew_argv(
+            "claude", role="reviewer", handoff="/abs/g2-reviewer.md",
+            spine="/abs/spine.json", model=None, session="s",
+        )
+        without_spine = RC.build_crew_argv(
+            "claude", role="reviewer", handoff="/abs/g2-reviewer.md",
+            model=None, session="s",
+        )
+        self.assertEqual(without_spine[2], with_spine[2])
+
+    def test_spine_only_branch_names_no_document_and_names_spine_status(self):
+        argv = RC.build_crew_argv(
+            "claude", role="implementer", handoff=None,
+            spine="/abs/.agent-work/w/IMPLEMENTER_PLAN.json",
+            model=None, session="constellation/w/g1/implementer/attempt-1",
+        )
+        prompt = argv[2]
+        self.assertNotIn("/abs/.agent-work/w/IMPLEMENTER_PLAN.json", prompt)
+        self.assertNotIn(".json", prompt)
+        self.assertNotIn(".md", prompt)
+        self.assertIn("spine_status", prompt)
+        self.assertIn("constellation/w/g1/implementer/attempt-1", prompt)
+
+    def test_spine_only_branch_tells_crew_not_to_author_its_own_plan(self):
+        argv = RC.build_crew_argv(
+            "claude", role="implementer", handoff=None, spine="/abs/spine.json",
+            model=None, session="s",
+        )
+        self.assertIn("do not author a plan", argv[2].lower())
+
+    def test_neither_handoff_nor_spine_is_refused(self):
+        with self.assertRaises(RC.CrewLaunchError):
+            RC.build_crew_argv(
+                "claude", role="implementer", handoff=None, spine=None,
+                model=None, session="s",
+            )
+
+
+class WaiveHookTests(unittest.TestCase):
+    """Ruling (human, verbatim): "agent cannot waive itself... always ask up."
+    A crew keeps `mcp__spine__spine_evidence` (attest/attach still need it),
+    but a PreToolUse hook denies the one action inside it -- `waive` -- that
+    would let a crew close its own bound spine's check. These invoke the exact
+    hook command `build_crew_argv` embeds, piping fake tool-call JSON at it, so
+    the behavior is checked without spawning a real agent CLI."""
+
+    def _run_hook(self, action: str) -> dict:
+        argv = RC.build_crew_argv(
+            "claude", role="implementer", handoff="h.md", model=None, session="s",
+        )
+        settings = json.loads(argv[argv.index("--settings") + 1])
+        pre_tool_use = settings["hooks"]["PreToolUse"][0]
+        self.assertEqual("mcp__spine__spine_evidence", pre_tool_use["matcher"])
+        command = pre_tool_use["hooks"][0]["command"]
+        self.assertEqual("command", pre_tool_use["hooks"][0]["type"])
+        # `command` is `python3 -c '<script>'`; extract `<script>` rather than
+        # asking a shell to parse the quoting, so this test does not depend on
+        # a shell being on PATH the same way the real hook runner does.
+        self.assertTrue(command.startswith("python3 -c '"))
+        self.assertTrue(command.endswith("'"))
+        script = command[len("python3 -c '"):-1]
+        proc = subprocess.run(
+            ["python3", "-c", script],
+            input=json.dumps({
+                "tool_name": "mcp__spine__spine_evidence",
+                "tool_input": {"action": action, "task_id": "g1"},
+            }),
+            capture_output=True, text=True,
+        )
+        self.assertEqual(0, proc.returncode, proc.stderr)
+        return json.loads(proc.stdout)
+
+    def test_waive_is_denied(self):
+        out = self._run_hook("waive")
+        specific = out["hookSpecificOutput"]
+        self.assertEqual("deny", specific["permissionDecision"])
+        self.assertIn("spine_halt", specific["permissionDecisionReason"])
+        self.assertIn("block", specific["permissionDecisionReason"].lower())
+
+    def test_attest_carries_no_opinion(self):
+        self.assertEqual({}, self._run_hook("attest"))
+
+    def test_attach_carries_no_opinion(self):
+        self.assertEqual({}, self._run_hook("attach"))
+
+    def test_waive_deny_reason_has_no_apostrophe(self):
+        # The reason string is interpolated into a single-quoted shell command
+        # (`crew_settings_json`); a literal apostrophe would terminate that
+        # quoting early and corrupt the emitted hook command.
+        self.assertNotIn("'", RC.WAIVE_DENY_REASON)
+
+
+class CrewGrantTiesToDoorTests(unittest.TestCase):
+    """`CREW_ALLOWED_TOOLS` used to restate the door's tool names by hand and
+    froze at 7 while `mcp_spine_server.TOOLS` grew to 9 -- two tools silently
+    denied to every crew. This ties the two lists so that drift fails loudly
+    instead of reading as an agent's CLI preference."""
+
+    def _load_mcp_spine_server(self, scratch_root: Path):
+        spine_file = scratch_root / "scratch-spine.json"
+        spine_file.write_text("{}", encoding="utf-8")
+        saved = {k: os.environ.get(k) for k in ("SPINE_FILE", "SPINE_ENGINE", "SPINE_SESSION")}
+        os.environ["SPINE_FILE"] = str(spine_file)
+        os.environ["SPINE_ENGINE"] = str(ROOT / "scripts" / "checklist_engine.py")
+        os.environ.setdefault("SPINE_SESSION", "")
+        try:
+            # A fresh module name each call: mcp_spine_server reads SPINE_FILE
+            # at IMPORT time, so a cached `sys.modules` entry would carry a
+            # stale binding on a second load in the same test process.
+            return load_module("mcp_spine_server_tie_check", ROOT / "scripts" / "mcp_spine_server.py")
+        finally:
+            for k, v in saved.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+
+    def test_crew_grant_mcp_entries_equal_the_doors_own_tool_names(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            server = self._load_mcp_spine_server(Path(tmp))
+        door_tools = {f"mcp__spine__{name}" for name in server.TOOL_NAMES}
+        grant_tools = {t for t in RC.CREW_ALLOWED_TOOLS if t.startswith("mcp__spine__")}
+        self.assertEqual(
+            door_tools, grant_tools,
+            "CREW_ALLOWED_TOOLS's mcp__spine__* entries have drifted from "
+            "mcp_spine_server.TOOL_NAMES -- a tool the door added (or removed) "
+            "is not reflected in the crew grant"
+        )
+
+    def test_door_has_all_nine_tools_todays_grant_expects(self):
+        # CONTROL for the tie test above: pins the count so a future door
+        # regression (e.g. a tool silently dropped) cannot slip through by
+        # shrinking BOTH sides of the comparison in lockstep.
+        with tempfile.TemporaryDirectory() as tmp:
+            server = self._load_mcp_spine_server(Path(tmp))
+        self.assertEqual(9, len(server.TOOL_NAMES))
 
 
 class CliDriftHintTests(unittest.TestCase):
@@ -598,6 +775,116 @@ class DispatchDoorBindingTests(unittest.TestCase):
             env = calls[0]["env"]
             self.assertNotIn("SPINE_FILE", env)
             self.assertNotIn("SPINE_SESSION", env)
+
+
+class SpineOnlyDispatchTests(unittest.TestCase):
+    """Issue #559: `--handoff` becomes optional -- a crew with a bound `--spine`
+    and no `--handoff` is a legal dispatch on the cli backend, refused only when
+    NEITHER is given. The external backend keeps requiring a handoff (it cannot
+    bind a spine, so a spine-only dispatch there would leave the crew with no
+    job at all)."""
+
+    def test_cli_backend_spine_only_dispatch_records_null_handoff(self):
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = result_rel("issue-1", "g1", "implementer")
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            (root / spine_rel).parent.mkdir(parents=True, exist_ok=True)
+            (root / spine_rel).write_text("{}", encoding="utf-8")
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                exit_code, entry = RC.launch_crew(
+                    work_id="issue-1", gate="g1", role="implementer",
+                    handoff=None, result=result, spine=spine_rel,
+                    worktree=".", model=None, launcher="claude", attempt=1,
+                    root=root, entries=[],
+                )
+            self.assertEqual(0, exit_code)
+            self.assertIsNone(entry["handoff"])
+            reg = RC.load_registry(RC.registry_path("issue-1", root))
+            self.assertIsNone(reg[0]["handoff"])
+            prompt = calls[0]["argv"][2]
+            self.assertIn("spine_status", prompt)
+            self.assertNotIn(spine_rel, prompt)
+
+    def test_cli_backend_neither_handoff_nor_spine_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = result_rel("issue-1", "g1", "implementer")
+            with self.assertRaises(RC.CrewLaunchError):
+                RC.launch_crew(
+                    work_id="issue-1", gate="g1", role="implementer",
+                    handoff=None, result=result, spine=None,
+                    worktree=".", model=None, launcher="claude", attempt=1,
+                    root=root, entries=[],
+                )
+
+    def test_main_cli_neither_handoff_nor_spine_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = result_rel("issue-1", "g1", "implementer")
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                code = RC.main([
+                    "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                    "--role", "implementer", "--result", result,
+                ])
+            self.assertEqual(1, code)
+            self.assertIn("REFUSED", stderr.getvalue())
+            self.assertEqual([], RC.load_registry(RC.registry_path("issue-1", root)))
+
+    def test_main_cli_spine_only_dispatch_succeeds(self):
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = result_rel("issue-1", "g1", "implementer")
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            (root / spine_rel).parent.mkdir(parents=True, exist_ok=True)
+            (root / spine_rel).write_text("{}", encoding="utf-8")
+            with fake_launch(RC, 0, write_result_at=root / result):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--result", result, "--spine", spine_rel,
+                    ])
+            self.assertEqual(0, code)
+            self.assertIsNone(RC.load_registry(RC.registry_path("issue-1", root))[0]["handoff"])
+
+    def test_resume_of_spine_only_entry_does_not_crash_on_null_handoff(self):
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = result_rel("issue-1", "g1", "implementer")
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            (root / spine_rel).parent.mkdir(parents=True, exist_ok=True)
+            (root / spine_rel).write_text("{}", encoding="utf-8")
+            with fake_launch(RC, 0, write_result_at=root / result):
+                RC.launch_crew(
+                    work_id="issue-1", gate="g1", role="implementer",
+                    handoff=None, result=result, spine=spine_rel,
+                    worktree=".", model=None, launcher="claude", attempt=1,
+                    root=root, entries=[],
+                )
+            entries = RC.load_registry(RC.registry_path("issue-1", root))
+            session = entries[0]["session_name"]
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                exit_code, entry = RC.resume_crew(session=session, root=root, entries=entries)
+            self.assertEqual(0, exit_code)
+            self.assertIsNone(entry["handoff"])
+            prompt = calls[0]["argv"][2]
+            self.assertIn("spine_status", prompt)
+
+    def test_external_backend_refuses_spine_only_with_no_handoff(self):
+        # A spine-only dispatch on `external` would leave the crew with no job
+        # at all: the backend cannot bind a spine (spawns no process), and now
+        # there is also no handoff document to read.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            result = result_rel("issue-1", "g1", "implementer")
+            with self.assertRaises(RC.CrewLaunchError):
+                RC.record_external_attempt(
+                    work_id="issue-1", gate="g1", role="implementer",
+                    handoff=None, result=result, spine=spine_rel,
+                    worktree=".", model=None, attempt=1, root=root, entries=[],
+                )
 
 
 class AssignmentKeyedLeaseTests(unittest.TestCase):
