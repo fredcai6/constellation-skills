@@ -27,6 +27,7 @@ import argparse
 import json
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -204,10 +205,20 @@ def _fault_all_null(tid: str, task: dict, spine_type) -> list[Fault]:
 
 _PYTEST_SEGMENT_SPLIT_RE = re.compile(r"&&|\|\||;|\|")
 
+#: shlex has no notion of `$(...)` command substitution, so in the corpus's
+#: own idiom (`test $(python -m pytest ...)`) the interpreter token tokenizes
+#: attached to its opening paren as one word, `"$(python"`. Strip it before
+#: treating the token as an interpreter name, or `shutil.which("$(python")`
+#: never resolves and every idiom-shaped check reads as undecidable.
+_COMMAND_SUBSTITUTION_PREFIX_RE = re.compile(r"^\$\(+")
 
-def _pytest_segments(command: str) -> list[list[str]]:
-    """Every shell segment of `command` that invokes `pytest`, as its argv
-    tail (the tokens after the `pytest` word itself). A command can chain
+
+def _pytest_segments(command: str) -> list[tuple[str | None, list[str]]]:
+    """Every shell segment of `command` that invokes `pytest`, as
+    `(interpreter, argv_tail)`. `argv_tail` is the tokens after the `pytest`
+    word itself; `interpreter` is the token naming which Python ran it (e.g.
+    `"python3"` in `python3 -m pytest ...`), or `None` when the segment
+    invokes the `pytest` binary directly with no `-m`. A command can chain
     several segments (`test $(... --collect-only ...) -ge N && pytest ...`);
     each is inspected independently."""
     segments = []
@@ -219,8 +230,13 @@ def _pytest_segments(command: str) -> list[list[str]]:
             tokens = shlex.split(seg)
         except ValueError:
             continue
-        if "pytest" in tokens:
-            segments.append(tokens[tokens.index("pytest") + 1:])
+        if "pytest" not in tokens:
+            continue
+        idx = tokens.index("pytest")
+        interpreter = None
+        if idx >= 2 and tokens[idx - 1] == "-m":
+            interpreter = _COMMAND_SUBSTITUTION_PREFIX_RE.sub("", tokens[idx - 2])
+        segments.append((interpreter, tokens[idx + 1:]))
     return segments
 
 
@@ -230,6 +246,24 @@ def _selector(args: list[str]) -> str | None:
         if i + 1 < len(args):
             return args[i + 1]
     return None
+
+
+#: A shell-redirect-shaped token (`2>/dev/null`, `>out.txt`, `2>&1`,
+#: `&>/dev/null`) -- shlex has no notion of shell redirection, so these
+#: tokenize as ordinary words indistinguishable from a positional argument.
+#: In the corpus's own recommended self-checking idiom (`test $(pytest
+#: --collect-only 2>/dev/null | grep -c '::') -ge N && pytest ...`) the
+#: `2>/dev/null` token lands right after `pytest` in the first segment;
+#: without this exclusion `_pytest_targets` folds it in as a bogus positional
+#: test path, which then genuinely collects zero and is reported as a fault
+#: -- an 8-in-9 false positive rate on the real archive.
+_REDIRECT_TOKEN_RE = re.compile(r"^\d*&?(>>|>|<<|<)")
+
+#: The subset of the above that is the operator ALONE, with no destination
+#: attached (`2>` rather than `2>/dev/null`) -- shlex splits `2> /dev/null`
+#: (a space before the destination) into two separate tokens, so the token
+#: immediately following a bare operator must be excluded too.
+_REDIRECT_OPERATOR_ONLY_RE = re.compile(r"^\d*&?(>>|>|<<|<)$")
 
 
 def _pytest_targets(args: list[str]) -> list[str]:
@@ -244,20 +278,70 @@ def _pytest_targets(args: list[str]) -> list[str]:
             continue
         if a.startswith("-"):
             continue
+        if _REDIRECT_TOKEN_RE.match(a):
+            if _REDIRECT_OPERATOR_ONLY_RE.match(a):
+                skip = True
+            continue
         out.append(a)
     return out
 
 
-def _collects_zero(args: list[str], repo_root: Path) -> bool | None:
+#: Resolved-interpreter cache within one process: the same interpreter name
+#: (usually "python") recurs across every selector in a sweep, and each
+#: resolution spawns a probe subprocess.
+_INTERPRETER_CACHE: dict[str, str | None] = {}
+
+
+def _resolve_interpreter(named: str | None) -> str | None:
+    """The python executable to actually run pytest with, or `None` if that
+    cannot be determined -- "cannot tell" is not a fault (#518 mechanism 2).
+
+    Never falls back to `sys.executable` when the check's own command text
+    names an interpreter: `sys.executable` is whichever python is running
+    THIS tool, which need not be the interpreter the check invokes. On this
+    host `python3` has no `pytest` importable while `python` does --
+    `python3 -m scripts.validate_spine` previously reported 6 spurious
+    zero-collect faults (sys.executable = python3, no pytest, empty output
+    misread as "collected nothing") where `python -m scripts.validate_spine`
+    on the identical file reported 0. Resolving the NAMED interpreter fixes
+    both invocations identically, regardless of which python runs this tool.
+    Confirms `pytest` is actually importable there before ever trusting an
+    empty collection result as a real zero, rather than assuming it.
+    """
+    candidate = named or sys.executable
+    if candidate in _INTERPRETER_CACHE:
+        return _INTERPRETER_CACHE[candidate]
+    path = candidate if Path(candidate).is_absolute() else shutil.which(candidate)
+    resolved: str | None = None
+    if path and Path(path).exists():
+        try:
+            probe = subprocess.run(
+                [path, "-c", "import pytest"], capture_output=True, timeout=30,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            probe = None
+        if probe is not None and probe.returncode == 0:
+            resolved = path
+    _INTERPRETER_CACHE[candidate] = resolved
+    return resolved
+
+
+def _collects_zero(interpreter: str | None, args: list[str], repo_root: Path) -> bool | None:
     """Actually run `pytest --collect-only` with this segment's own `-k`
-    selector and targets. Returns True if it collects nothing, False if it
-    collects at least one test, None if it could not be run at all (no
-    subprocess spawned -- environment trouble, not a verdict)."""
+    selector and targets, using the interpreter the check's command names
+    (never a silent `sys.executable` fallback -- see `_resolve_interpreter`).
+    Returns True if it collects nothing, False if it collects at least one
+    test, None if it could not be run at all -- no interpreter with pytest
+    importable resolved, no subprocess spawned, or a timeout: environment
+    trouble, not a verdict, and undecidable is not a fault."""
     selector = _selector(args)
     if selector is None:
         return None
+    python = _resolve_interpreter(interpreter)
+    if python is None:
+        return None
     targets = _pytest_targets(args)
-    cmd = [sys.executable, "-m", "pytest", "--collect-only", "-q", "-k", selector, *targets]
+    cmd = [python, "-m", "pytest", "--collect-only", "-q", "-k", selector, *targets]
     try:
         proc = subprocess.run(cmd, cwd=str(repo_root), capture_output=True, text=True, timeout=120)
     except (OSError, subprocess.TimeoutExpired):
@@ -275,12 +359,12 @@ def _fault_zero_collect(where: str, check: dict, repo_root: Path) -> list[Fault]
         return []
     faults = []
     seen = set()
-    for args in _pytest_segments(command):
+    for interpreter, args in _pytest_segments(command):
         sel = _selector(args)
         if sel is None or sel in seen:
             continue
         seen.add(sel)
-        if _collects_zero(args, repo_root):
+        if _collects_zero(interpreter, args, repo_root):
             faults.append(Fault(
                 "falsifiable-zero-collected", where,
                 f"the pytest selector -k {sel!r} in this check collects zero "

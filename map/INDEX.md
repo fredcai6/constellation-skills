@@ -2,9 +2,9 @@
 
 ## packages
 evals: 12 modules, 54 entities
-scripts: 56 modules, 1102 entities
+scripts: 56 modules, 1103 entities
 skills: 1 modules, 18 entities
-tests: 73 modules, 4045 entities
+tests: 73 modules, 4059 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -29,7 +29,7 @@ tests: 73 modules, 4045 entities
 - [evals.euler-5-smallest-multiple.checks.spine_completed](evals.euler-5-smallest-multiple.checks.spine_completed/INDEX.md) (9 entities, 2 holes): PROCESS check (gating): a constellation ENGINE spine reached a terminal state WITH engine-written provenance -- not merely agent-written JSON (issue #127).
 - [evals.euler-5-smallest-multiple.checks.tests_green](evals.euler-5-smallest-multiple.checks.tests_green/INDEX.md) (3 entities, 3 holes): PROCESS check (gating): tests were WRITTEN and PASS in the workspace.
 
-## scripts (56 modules, 1102 entities)
+## scripts (56 modules, 1103 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -71,7 +71,7 @@ tests: 73 modules, 4045 entities
 - [scripts.recover_crews](scripts.recover_crews/INDEX.md) (8 entities, 3 holes): Recovery classifier over the durable crew-run registry.
 - [scripts.run_crew](scripts.run_crew/INDEX.md) (55 entities, 11 holes): Safe crew launcher with a durable session-recovery registry.
 - [scripts.run_skill_eval](scripts.run_skill_eval/INDEX.md) (42 entities, 10 holes): Corpus skill-eval runner — the PURE, agent-free core (#106, gate g2).
-- [scripts.validate_spine](scripts.validate_spine/INDEX.md) (16 entities, 7 holes): Refuse a spine or spine template the engine cannot read, or that carries a check which cannot fail.
+- [scripts.validate_spine](scripts.validate_spine/INDEX.md) (17 entities, 7 holes): Refuse a spine or spine template the engine cannot read, or that carries a check which cannot fail.
 - [scripts.verify_context_declaration](scripts.verify_context_declaration/INDEX.md) (7 entities, 1 holes): Lint: every declared `context_refs` path must appear verbatim in its own task's `imperative` prose.
 - [scripts.verify_coverage_ledger](scripts.verify_coverage_ledger/INDEX.md) (6 entities, 2 holes): Verify the removability coverage ledger against the installed-externals manifest.
 - [scripts.verify_cycles](scripts.verify_cycles/INDEX.md) (4 entities, 3 holes): Verify a work area's exploration cycles are consolidated before explore closes.
@@ -100,7 +100,7 @@ tests: 73 modules, 4045 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (73 modules, 4045 entities)
+## tests (73 modules, 4059 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -166,7 +166,7 @@ tests: 73 modules, 4045 entities
 - [tests.test_spine_provenance_check](tests.test_spine_provenance_check/INDEX.md) (34 entities, 32 holes): Provenance hardening for the eval `spine_completed` process check (issue #127).
 - [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (135 entities, 70 holes): Unit tests for scripts/hooks/spine_rail.py.
 - [tests.test_state_note](tests.test_state_note/INDEX.md) (15 entities, 15 holes): HOLE: no docstring
-- [tests.test_validate_spine](tests.test_validate_spine/INDEX.md) (63 entities, 59 holes): Tests for scripts/validate_spine.py (epic-559/c1-spine-lint, #518, #562).
+- [tests.test_validate_spine](tests.test_validate_spine/INDEX.md) (77 entities, 70 holes): Tests for scripts/validate_spine.py (epic-559/c1-spine-lint, #518, #562).
 - [tests.test_verify_coverage_ledger](tests.test_verify_coverage_ledger/INDEX.md) (12 entities, 12 holes): HOLE: no docstring
 - [tests.test_verify_cycles](tests.test_verify_cycles/INDEX.md) (11 entities, 11 holes): HOLE: no docstring
 - [tests.test_verify_episode_captured](tests.test_verify_episode_captured/INDEX.md) (32 entities, 17 holes): Tests for scripts/verify_episode_captured.py — the WRITE-side capture gate that replaces the retiring `.agent-work/LESSONS.md` / `.agent-work/AGENT_FEEDBACK.md`

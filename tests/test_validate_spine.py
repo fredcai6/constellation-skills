@@ -27,6 +27,8 @@ from __future__ import annotations
 import copy
 import importlib.util
 import json
+import stat
+import sys
 from pathlib import Path
 
 import pytest
@@ -282,11 +284,15 @@ class TestFalsifiabilityAllNullPostconditions:
 # Falsifiability fault 2: pytest -k selector collects zero tests
 # --------------------------------------------------------------------------- #
 
+def _spine_with_command(command: str) -> dict:
+    spine = _valid_gated()
+    spine["tasks"]["g1"]["postconditions"][0]["check"] = {"kind": "command", "command": command}
+    return spine
+
+
 class TestFalsifiabilityZeroCollectedSelector:
     def _spine_with_command(self, command: str) -> dict:
-        spine = _valid_gated()
-        spine["tasks"]["g1"]["postconditions"][0]["check"] = {"kind": "command", "command": command}
-        return spine
+        return _spine_with_command(command)
 
     def test_selector_matching_nothing_is_caught(self):
         spine = self._spine_with_command(
@@ -318,6 +324,110 @@ class TestFalsifiabilityZeroCollectedSelector:
 
     def test_command_with_no_pytest_at_all_is_innocent(self):
         spine = self._spine_with_command("test -f scripts/validate_spine.py")
+        faults = vs.validate(spine, repo_root=ROOT)
+        assert "falsifiable-zero-collected" not in _codes(faults)
+
+
+class TestFalsifiabilityZeroCollectDocumentedIdiom:
+    """The corpus's own recommended self-checking idiom
+    (docs/agents/CREW_CONTEXT.md, Verification Discipline): `test $(pytest
+    ... --collect-only 2>/dev/null | grep -c '::') -ge N && pytest ...`. The
+    `2>/dev/null` token lands in the first segment right after `pytest`; if
+    it is folded in as a bogus positional test path, that path collects zero
+    for real and the whole check is refused -- the 8-in-9 false-positive rate
+    measured on the archive sweep. This must stay clean regardless of whether
+    the SAME zero-matching selector elsewhere would legitimately be caught
+    (see test_the_gate_that_self_checks_collection_inline_is_still_caught
+    above -- that test is the control this one must not break)."""
+
+    def test_documented_idiom_with_a_real_selector_is_innocent(self):
+        target = FIXTURE_TESTS.as_posix()
+        spine = _spine_with_command(
+            f"test $(python -m pytest -q {target} -k alpha --collect-only "
+            f"2>/dev/null | grep -c '::') -ge 1 && python -m pytest -q {target} -k alpha"
+        )
+        faults = vs.validate(spine, repo_root=ROOT)
+        assert "falsifiable-zero-collected" not in _codes(faults)
+
+    def test_idiom_still_catches_a_genuinely_zero_selector(self):
+        # The redirect fix must not blanket-exempt the idiom shape -- a real
+        # zero-collect selector wrapped in the idiom is still a real fault.
+        target = FIXTURE_TESTS.as_posix()
+        spine = _spine_with_command(
+            f"test $(python -m pytest -q {target} -k this_matches_nothing_zzz "
+            f"--collect-only 2>/dev/null | grep -c '::') -ge 1 "
+            f"&& python -m pytest -q {target} -k this_matches_nothing_zzz"
+        )
+        faults = vs.validate(spine, repo_root=ROOT)
+        assert "falsifiable-zero-collected" in _codes(faults)
+
+
+class TestFalsifiabilityZeroCollectRedirectTokenShapes:
+    """Direct unit coverage of the mechanism: a shell-redirect-shaped token
+    must never be folded into `_pytest_targets` as a positional test path,
+    whatever form it takes."""
+
+    @pytest.mark.parametrize(
+        "token",
+        ["2>/dev/null", ">/dev/null", "2>&1", "&>/dev/null", "1>>/tmp/out", ">>out.log"],
+        ids=lambda t: t,
+    )
+    def test_attached_redirect_token_excluded_from_targets(self, token):
+        assert vs._pytest_targets(["-q", "-k", "sel", token]) == []
+
+    def test_bare_redirect_operator_and_its_separate_destination_are_both_excluded(self):
+        # shlex splits "2> /dev/null" (a space before the destination) into
+        # two tokens; both the bare operator and its destination must go.
+        assert vs._pytest_targets(["-k", "sel", "2>", "/dev/null"]) == []
+
+    def test_a_real_path_is_still_collected_as_a_target(self):
+        # The fix must stay narrow: an ordinary positional path is untouched.
+        assert vs._pytest_targets(["-k", "sel", "tests/some_test.py"]) == ["tests/some_test.py"]
+
+
+class TestFalsifiabilityZeroCollectInterpreterUnavailable:
+    """Second #518 mechanism, same fault code: `_collects_zero` must invoke
+    the interpreter the check's command TEXT names, not `sys.executable`
+    (whichever python happens to be running this tool), and must confirm
+    pytest is importable there before ever trusting an empty collection
+    result as a real zero. docs/agents/CREW_CONTEXT.md documents that on the
+    reference host `python3` has no pytest while `python` does, so a command
+    written `python -m pytest ...` must resolve `python` even when
+    `validate_spine.py` itself is invoked via `python3`. These tests use a
+    fabricated fake interpreter rather than the real `python3`, so the
+    assertion holds regardless of what any given CI host happens to have
+    installed."""
+
+    @staticmethod
+    def _fake_interpreter(tmp_path: Path, body: str) -> str:
+        script = tmp_path / "fake-interpreter"
+        script.write_text(f"#!/usr/bin/env python3\n{body}\n")
+        script.chmod(script.stat().st_mode | stat.S_IEXEC)
+        return str(script)
+
+    def test_interpreter_without_pytest_importable_is_undecidable_not_a_fault(self, tmp_path):
+        # Simulates the reference host's python3: a real, runnable python
+        # that simply cannot `import pytest`.
+        fake = self._fake_interpreter(tmp_path, "import sys\nsys.exit(1)\n")
+        assert vs._resolve_interpreter(fake) is None
+        assert vs._collects_zero(fake, ["-k", "alpha"], ROOT) is None
+
+    def test_a_name_not_found_on_path_at_all_is_undecidable_not_a_fault(self):
+        assert vs._resolve_interpreter("this-interpreter-does-not-exist-zzz") is None
+
+    def test_the_real_interpreter_running_this_test_resolves_and_still_catches_real_zero(self, tmp_path):
+        # Control: naming the interpreter that DOES have pytest importable
+        # (this very test process) must still behave exactly as before --
+        # the fix narrows false positives, it does not blind the checker.
+        assert vs._resolve_interpreter(sys.executable) == sys.executable
+        assert vs._collects_zero(sys.executable, ["-k", "this_matches_nothing_zzz", FIXTURE_TESTS.as_posix()], ROOT) is True
+
+    def test_unresolvable_interpreter_yields_no_fault_end_to_end(self, tmp_path):
+        # Full validate() path: a command naming an interpreter that cannot
+        # run pytest must not read as `check: null`-equivalent vacuous, nor
+        # as a fault -- it is undecidable, and undecidable is silence.
+        fake = self._fake_interpreter(tmp_path, "import sys\nsys.exit(1)\n")
+        spine = _spine_with_command(f"{fake} -m pytest -q {FIXTURE_TESTS.as_posix()} -k alpha")
         faults = vs.validate(spine, repo_root=ROOT)
         assert "falsifiable-zero-collected" not in _codes(faults)
 
