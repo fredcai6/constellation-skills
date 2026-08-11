@@ -64,6 +64,51 @@ What is *not* optional: **your generator must never emit a `<engine>` token or a
 clause.** A spine that tells its own driver to use the CLI is the defect your generator exists to
 prevent.
 
+## 3. A grade I got wrong — `notes-ride-in-existing-substrate` is not `settled/human`
+
+Your problem statement carries `decision:notes-ride-in-existing-substrate` as `settled/human`. **I
+graded that wrong, and the mistake could force you into a worse design.**
+
+What the human actually said, verbatim:
+
+> *"there should be plenty of room into a template for beliefs, highlighting concerns, posing open
+> questions. it's just a matter of choosing the relevant gate to make those notes. hand off content
+> should still be possible."*
+
+That fixes the **requirement**, not the mechanism. Naming `constraints` and `directives` specifically
+was **my inference**, not the human's instruction. Regraded:
+
+- **`settled/human`** — every gate has room for beliefs, concerns and open questions; they render on
+  the **active gate** where a crew will actually see them; and it is never a field the engine ignores.
+  A crew must be able to hand content back at the relevant gate.
+- **`guess/admiral`** — that `constraints` and `directives` are the right carriers.
+  `settle:` your own reading of the two fields.
+
+Your reading is already better than my inference was. You measured that all three populated
+`constraints` instances mean *"rules this gate must respect"*, and that beliefs and open questions are
+not rules — so overloading a field 970 tasks use for something else would be wrong. That is exactly
+the argument I would want, and my grading forbade you from making it.
+
+So: **if `directives` also turns out to be the wrong shape, you may propose a third answer.** The
+constraint that stands is that the engine must *render* it on the active gate — a field
+`checklist_engine.py` does not read is worse than no field, because it looks like it works. If your
+answer needs a rendering change, that is a float to me, not a patch.
+
+## 4. One factual correction to your map verdict
+
+Your DEGRADED verdict is **right**, and for the right reason: there is no packet map. `map/ids.jsonl`
+is genuinely empty (0 lines) and `docs/architecture/` does not exist.
+
+But the supporting claim that `map/INDEX.md` is *"an unfilled template"* is wrong. On your base it is
+**180 lines of populated code map** — packages, module counts, entity counts, one section per package
+— regenerated at the C1 merge with `python -m scripts.code_map build`, and it already indexes
+`scripts.validate_spine` and `tests.test_validate_spine`. It is not the packet map `map_orient` wants,
+which is why the verdict stands, but it is a real artifact and a better substitute than several you
+hash-pinned. Add it to your substitute set and correct the claim, so nothing downstream is built on
+"there is no map at all" when what is true is "there is no *packet* map."
+
+If you add modules, regenerate it: `python -m scripts.code_map build`.
+
 ## What I want to see in the plan you float
 
 Beyond the gates themselves:
