@@ -18,7 +18,7 @@
       "title": "<gate name>: implement",
       "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, and the inbound map anchors from this gate's anchors block. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence.",
       "preconditions": [{"id": "p1", "statement": "<qualitative dependency on a prior gate, or none>", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)", "check": {"kind": "artifact", "evidence_type": "implementer-result", "match": {"status": "complete"}}, "satisfied": false}],
       "constraints": ["<inherited project or section rules>"],
       "anchors": {
         "structural": ["<struct:id — path/symbol, level — this gate lands in or depends on>"],
