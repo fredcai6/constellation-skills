@@ -40,6 +40,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import re
 import shlex
 import subprocess
 import sys
@@ -188,6 +189,40 @@ def _cond_faults(where: str, cond: dict) -> list[Fault]:
     return faults
 
 
+_CLAIM_MAGNITUDES = ("normal", "large")
+
+
+def _claim_faults(gid: str, claim) -> list[Fault]:
+    """`[gate.claim]` (DESIGN_NOTE.md section 6) must be a TOML table, not an
+    array-of-tables -- an author who writes `[[gate.claim]]` gets a `list`
+    where `compile_spec` expects a `dict`, and without this check that reaches
+    `(g.get("claim") or {}).get("magnitude")` as an unhandled
+    `AttributeError: 'list' object has no attribute 'get'`, a traceback with
+    no fault code (m1's own second task). Refused here, by name, before
+    compile_spec ever runs."""
+    if claim is None:
+        return []
+    where = f"{gid}.claim"
+    if not isinstance(claim, dict):
+        return [Fault(
+            "spec-malformed-claim", where,
+            f"gate.claim must be a table (`[gate.claim]`), not {type(claim).__name__} -- "
+            f"did you write `[[gate.claim]]` (array-of-tables) instead of `[gate.claim]`?",
+        )]
+    magnitude = claim.get("magnitude", "normal")
+    if magnitude not in _CLAIM_MAGNITUDES:
+        return [Fault(
+            "spec-malformed-claim", where,
+            f"gate.claim.magnitude {magnitude!r} is not one of {_CLAIM_MAGNITUDES}",
+        )]
+    if magnitude == "large" and not claim.get("text"):
+        return [Fault(
+            "spec-malformed-claim", where,
+            "gate.claim.magnitude is 'large' but claim.text is missing or empty",
+        )]
+    return []
+
+
 def spec_shape_faults(spec: dict, *, repo_root: Path) -> list[Fault]:
     """Every DESIGN_NOTE.md section 7 fault in `spec` (a tomllib-parsed spec
     dict), checked before `compile_spec` ever runs. Pure except for one cheap,
@@ -206,6 +241,8 @@ def spec_shape_faults(spec: dict, *, repo_root: Path) -> list[Fault]:
         for field in ("id", "title", "imperative"):
             if not g.get(field):
                 faults.append(Fault("spec-missing-field", gid, f"gate is missing required field {field!r}"))
+
+        faults.extend(_claim_faults(gid, g.get("claim")))
 
         pre = g.get("preconditions") or []
         post = g.get("postconditions") or []
@@ -515,11 +552,52 @@ def _add_argument_literals(tree: ast.AST) -> set[str]:
     return found
 
 
+#: A positional argument is "path-shaped" if it contains a `/` or ends in
+#: what looks like a file suffix. Deliberately loose -- a heuristic, not a
+#: curated whitelist, matching the corpus's existing convention
+#: (`map_orient.PATH_TOKEN_RE`'s own "deliberately loose" comment). Scope is
+#: enforced by the exists()/resolver-token checks below, not by this
+#: predicate: over-matching just means one more existence check, never a
+#: false fault, since a resolver-owned token or a real on-disk path both
+#: pass it cleanly.
+_PATH_SUFFIX_RE = re.compile(r"\.[A-Za-z0-9]{1,8}$")
+
+
+def _looks_path_shaped(token: str) -> bool:
+    return "/" in token or bool(_PATH_SUFFIX_RE.search(token))
+
+
+def _positional_arg_faults(gid: str, cid: str, path: str, args: list[str], *, repo_root: Path) -> list[Fault]:
+    """DESIGN_NOTE.md m1: every path-shaped POSITIONAL argument (not a
+    `--flag`) is checked against the repo tree, UNLESS it carries a
+    resolver-owned token -- that family (`<work-id>`, `<repo-root>`,
+    `<*-skill-dir>`, `<*-session-id>`) is filled in by the resolver after
+    generation, cannot be checked here, and is already accepted by
+    validate_spine.py, so it is skipped rather than refused. A positional arg
+    that is not path-shaped at all (a selector, a flag value, a number) is
+    left alone -- there is nothing to check it against."""
+    where = f"{gid}.{cid}"
+    faults: list[Fault] = []
+    for arg in args:
+        if arg.startswith("--") or not _looks_path_shaped(arg):
+            continue
+        if _RESOLVER_OWNED_TOKEN_RE.search(arg):
+            continue  # resolver-owned -- unresolved by design at generation time
+        if not (Path(repo_root) / arg).exists():
+            faults.append(Fault(
+                "probe-script-positional-path-not-found", where,
+                f"{path!r}'s positional argument {arg!r} does not exist under the repo root",
+            ))
+    return faults
+
+
 def _probe_script(gid: str, cid: str, cond: dict, *, repo_root: Path) -> tuple[list[Fault], list[Undecidable]]:
-    """DESIGN_NOTE.md section 4: ast.parse the target file and collect every
-    add_argument literal; every `--flag` in `args` must be in that set. The
-    target is NEVER imported -- importing it would run its import-time code
-    inside the generator, defect 2's own shape one layer up."""
+    """DESIGN_NOTE.md section 4 + m1: ast.parse the target file and collect
+    every add_argument literal; every `--flag` in `args` must be in that set,
+    and every path-shaped positional argument (see `_positional_arg_faults`)
+    must exist on disk unless it carries a resolver-owned token. The target
+    is NEVER imported -- importing it would run its import-time code inside
+    the generator, defect 2's own shape one layer up."""
     path = cond["path"]
     args = cond.get("args") or []
     where = f"{gid}.{cid}"
@@ -527,29 +605,31 @@ def _probe_script(gid: str, cid: str, cond: dict, *, repo_root: Path) -> tuple[l
     if not target.exists():
         return [Fault("probe-script-not-found", where, f"script path {path!r} does not exist")], []
 
+    faults = _positional_arg_faults(gid, cid, path, args, repo_root=repo_root)
+
     flags = [a for a in args if a.startswith("--")]
     if not flags:
-        return [], []  # nothing to check, accepted
+        return faults, []  # nothing else to check
 
     try:
         tree = ast.parse(target.read_text(encoding="utf-8"))
     except SyntaxError as exc:
-        return [], [Undecidable("undecidable-script-parse", where, f"could not ast.parse {path!r}: {exc}")]
+        return faults, [Undecidable("undecidable-script-parse", where, f"could not ast.parse {path!r}: {exc}")]
 
     declared = _add_argument_literals(tree)
     if not declared:
-        return [], [Undecidable(
+        return faults, [Undecidable(
             "undecidable-script-no-add-argument", where,
             f"{path!r} declares no add_argument literals at all -- cannot tell whether {flags} are real flags",
         )]
 
     unknown = [f for f in flags if f not in declared]
     if unknown:
-        return [Fault(
+        faults.append(Fault(
             "probe-script-unknown-flag", where,
             f"{path!r} has no add_argument for {unknown} (known: {sorted(declared)})",
-        )], []
-    return [], []
+        ))
+    return faults, []
 
 
 def _probe_population(gid: str, cid: str, cond: dict, *, repo_root: Path) -> tuple[list[Fault], list[Undecidable]]:

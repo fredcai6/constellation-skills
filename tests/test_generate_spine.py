@@ -603,6 +603,42 @@ class TestSpecShapeFaults:
         faults = gs.spec_shape_faults(spec, repo_root=tmp_path)
         assert not any(f.code == "spec-config-ref-not-json" for f in faults)
 
+    # -- m1's second task: `[[gate.claim]]` (array-of-tables) parses to a
+    # `list`, not the `dict` compile_spec expects; without a named fault this
+    # reaches `(g.get("claim") or {}).get("magnitude")` as an unhandled
+    # `AttributeError: 'list' object has no attribute 'get'`.
+    def test_claim_array_of_tables_is_a_named_fault_not_a_crash(self):
+        spec = _spec(gates=[_gate(
+            postconditions=[_qualitative_cond()],
+            claim=[{"magnitude": "large", "text": "x"}],
+        )])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert any(f.code == "spec-malformed-claim" for f in faults)
+
+    def test_claim_bad_magnitude(self):
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond()],
+                                   claim={"magnitude": "huge", "text": "x"})])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert any(f.code == "spec-malformed-claim" for f in faults)
+
+    def test_claim_large_missing_text(self):
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond()],
+                                   claim={"magnitude": "large"})])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert any(f.code == "spec-malformed-claim" for f in faults)
+
+    def test_claim_normal_is_clean(self):
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond()],
+                                   claim={"magnitude": "normal"})])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert not any(f.code == "spec-malformed-claim" for f in faults)
+
+    def test_claim_large_with_text_is_clean(self):
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond()],
+                                   claim={"magnitude": "large", "text": "big deal"})])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert not any(f.code == "spec-malformed-claim" for f in faults)
+
 
 # --------------------------------------------------------------------------- #
 # Purity guard on the module boundary itself
@@ -753,6 +789,50 @@ class TestScriptProbe:
         faults, undecidable = gs._probe_script("m1", "c1", cond, repo_root=tmp_path)
         assert any(f.code == "probe-script-not-found" for f in faults)
 
+    # -- m1: positional (non-`--`) arguments. r6-fowler's own args
+    # (`.agent-work/<work-id>/FOWLER_PASS.json`) is the case this guards --
+    # a path-shaped positional carrying an unresolved resolver-owned token
+    # must be SKIPPED, never refused, or a check that could not fail turns
+    # into one that cannot pass.
+    _NO_FLAGS_SCRIPT = (
+        "scripts/_gs_fixture_a.py",
+        'import argparse\n\ndef build():\n    p = argparse.ArgumentParser()\n    p.add_argument("--known")\n    return p\n',
+    )
+
+    VIOLATING_POSITIONAL = {
+        "wrong positional path, no resolver token":
+            (*_NO_FLAGS_SCRIPT, [".agent-work/definitely-missing/RESULT.json"]),
+        "another wrong positional path":
+            (*_NO_FLAGS_SCRIPT, ["scripts/_gs_definitely_missing_script.py"]),
+    }
+
+    INNOCENT_POSITIONAL = {
+        "real positional path that exists":
+            (*_NO_FLAGS_SCRIPT, ["scripts/_gs_fixture_a.py"]),
+        "positional path carrying a resolver-owned <work-id> token -- skipped, not refused":
+            (*_NO_FLAGS_SCRIPT, [".agent-work/<work-id>/FOWLER_PASS.json"]),
+        "not path-shaped at all -- left alone even though it doesn't exist as a file":
+            (*_NO_FLAGS_SCRIPT, ["SomeSelectorNotAPath"]),
+    }
+
+    @pytest.mark.parametrize("label", sorted(VIOLATING_POSITIONAL))
+    def test_violating_positional_is_caught(self, label, tmp_path):
+        rel_path, body, args = self.VIOLATING_POSITIONAL[label]
+        _write_script_fixture(tmp_path, rel_path, body)
+        cond = _script_cond(path=rel_path, args=args)
+        faults, undecidable = gs._probe_script("m1", "c1", cond, repo_root=tmp_path)
+        assert not undecidable, (label, undecidable)
+        assert any(f.code == "probe-script-positional-path-not-found" for f in faults), (label, faults)
+
+    @pytest.mark.parametrize("label", sorted(INNOCENT_POSITIONAL))
+    def test_innocent_positional_is_left_alone(self, label, tmp_path):
+        rel_path, body, args = self.INNOCENT_POSITIONAL[label]
+        _write_script_fixture(tmp_path, rel_path, body)
+        cond = _script_cond(path=rel_path, args=args)
+        faults, undecidable = gs._probe_script("m1", "c1", cond, repo_root=tmp_path)
+        assert not faults, (label, faults)
+        assert not undecidable, (label, undecidable)
+
 
 class TestPopulationProbe:
     def _make_tree(self, tmp_path, names):
@@ -852,6 +932,19 @@ imperative = "do the thing again"
         assert rc == 2
         assert not out_path.exists()
 
+    def test_malformed_claim_is_exit_2_not_a_crash(self, tmp_path):
+        # `[[gate.claim]]` (array-of-tables) instead of `[gate.claim]` (a
+        # table) -- valid TOML, but compile_spec expects a dict. Before m1's
+        # second task this reached an unhandled `AttributeError` out of
+        # main(); it must now refuse at the spec-shape layer instead.
+        extra = '\n  [[gate.claim]]\n  magnitude = "large"\n  text = "x"\n'
+        spec_path = tmp_path / "bad_claim.spine.toml"
+        spec_path.write_text(_real_toml_spec_text(extra_gate_toml=extra), encoding="utf-8")
+        out_path = tmp_path / "out.json"
+        rc = gs.main([str(spec_path), "--out", str(out_path), "--root", str(tmp_path)])
+        assert rc == 2
+        assert not out_path.exists()
+
     def test_probe_fault_exit_3(self, tmp_path):
         extra = (
             "\n  [[gate.postconditions]]\n"
@@ -893,6 +986,23 @@ imperative = "do the thing again"
         write_idx = src.index("write_text")
         validate_idx = src.rindex("validate(")
         assert validate_idx < write_idx
+
+
+# --------------------------------------------------------------------------- #
+# The real specs/*.spine.toml files, through the real CLI -- m1's own trap.
+# r6-fowler in specs/reviewer.spine.toml carries a positional arg
+# (`.agent-work/<work-id>/FOWLER_PASS.json`) with an unresolved resolver-owned
+# token; it must keep generating cleanly, not be refused, after m1's change.
+# --------------------------------------------------------------------------- #
+
+class TestRealRoleSpecsRegenerateClean:
+    @pytest.mark.parametrize("spec_name", ["implementer.spine.toml", "reviewer.spine.toml"])
+    def test_role_spec_check_only_succeeds(self, spec_name, tmp_path):
+        spec_path = ROOT / "specs" / spec_name
+        out_path = tmp_path / spec_name.replace(".spine.toml", ".spine.json")
+        rc = gs.main([str(spec_path), "--out", str(out_path), "--root", str(ROOT), "--check-only"])
+        assert rc == 0
+        assert not out_path.exists()  # --check-only writes nothing
 
 
 # --------------------------------------------------------------------------- #

@@ -627,6 +627,11 @@
       "id": "tc1",
       "from": "execute",
       "statement": "A Commander cannot drive its own execute.json through the MCP door. scripts/mcp_spine_server.py binds exactly one file at import time -- SPINE = Path(os.environ[\"SPINE_FILE\"]).resolve() (line 106) -- and there is no per-call spine addressing, while the Commander spine's own `execute` step requires driving a SECOND checklist (execute.json) that the door cannot address. Under the human's categorical ruling (\"anything that we want to do for the spine needs to be accessible via mcp... anything that we can only do via the cli is a defect\") this is a defect, and it is the same family as the four unresolvable <engine> tokens the launch order already flags -- but deeper, because no token substitution fixes it: the door has no verb that can name a second file. Closest compliant thing done and reported as misfit: execute.json is driven through checklist_engine.py directly, with every call journaled to execute.json.journal, so the work is engine-driven and auditable even though it is not door-driven. Floated to the Admiral; fixing it is an mcp_spine_server.py change, outside a Commander's latitude."
+    },
+    {
+      "id": "tc2",
+      "from": "execute",
+      "statement": "scripts/recover_crews.py misclassifies a COMPLETED spine-only dispatch as NEEDS-ABANDON. Measured: run_crew.py judged constellation/epic-559/c2-generate-the-spine/g3-dispatch/spine-probe/attempt-2 \"completed\" on spine_terminal and wrote status=completed, completed_at set, result=None into crew-runs.json; recover_crews.py then reports \"NEEDS-ABANDON -- not running and no result; require explicit --abandon ... --relaunch\". Its classifier keys on a result artifact, which a spine-only dispatch deliberately does not have (run_crew's own --result is documented as optional when --spine is given, precisely because such a crew is judged on its spine reaching a terminal state instead). The consequence is the exact failure recover_crews exists to prevent: a resumed or relaunched Commander running the recovery check first, as doctrine requires, is told to abandon and relaunch a crew whose work is already finished and whose spine is already terminal with its lease released. The fix is to make classify_entry consult status=completed and/or the bound spine's terminal state when result is None and spine is set. Not fixed here -- outside this mission's scope."
     }
   ],
   "blockers": [],
@@ -635,7 +640,7 @@
     "session_id": "constellation/epic-559/c2-generate-the-spine/execute/commander",
     "status": "active",
     "claimed_at": "2026-08-11T15:28:53.094722+00:00",
-    "last_heartbeat": "2026-08-11T16:32:40.750310+00:00",
+    "last_heartbeat": "2026-08-11T18:54:33.861168+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,

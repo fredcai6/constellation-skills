@@ -2,9 +2,9 @@
 
 ## packages
 evals: 12 modules, 54 entities
-scripts: 57 modules, 1135 entities
+scripts: 57 modules, 1138 entities
 skills: 1 modules, 18 entities
-tests: 74 modules, 4237 entities
+tests: 74 modules, 4247 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -29,7 +29,7 @@ tests: 74 modules, 4237 entities
 - [evals.euler-5-smallest-multiple.checks.spine_completed](evals.euler-5-smallest-multiple.checks.spine_completed/INDEX.md) (9 entities, 2 holes): PROCESS check (gating): a constellation ENGINE spine reached a terminal state WITH engine-written provenance -- not merely agent-written JSON (issue #127).
 - [evals.euler-5-smallest-multiple.checks.tests_green](evals.euler-5-smallest-multiple.checks.tests_green/INDEX.md) (3 entities, 3 holes): PROCESS check (gating): tests were WRITTEN and PASS in the workspace.
 
-## scripts (57 modules, 1135 entities)
+## scripts (57 modules, 1138 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -60,7 +60,7 @@ tests: 74 modules, 4237 entities
 - [scripts.episode_capture](scripts.episode_capture/INDEX.md) (15 entities): Assembly seam: the context manifest as a **byproduct of starting a step**.
 - [scripts.file_issue_set](scripts.file_issue_set/INDEX.md) (44 entities, 41 holes): File only the runnable current wave from a verified initial issue set.
 - [scripts.gauge_reader](scripts.gauge_reader/INDEX.md) (11 entities): Gauge reader -- fail-safe read of the context-fullness gauge file.
-- [scripts.generate_spine](scripts.generate_spine/INDEX.md) (22 entities, 11 holes): Compile a `specs/<role>.spine.toml` spec into an engine-native spine JSON, and refuse to emit anything `scripts/validate_spine.py` would reject.
+- [scripts.generate_spine](scripts.generate_spine/INDEX.md) (25 entities, 12 holes): Compile a `specs/<role>.spine.toml` spec into an engine-native spine JSON, and refuse to emit anything `scripts/validate_spine.py` would reject.
 - [scripts.grade_lint](scripts.grade_lint/INDEX.md) (32 entities, 24 holes): Lint `@grade:` decision tags — a plan decision's fixedness as an inline, greppable property of the decision itself, so no second hand-maintained ledger ever has
 - [scripts.init_work_area](scripts.init_work_area/INDEX.md) (7 entities, 2 holes): Scaffold a Constellation work area: .agent-work/<work-id>/ and its subdirs.
 - [scripts.install_constellation](scripts.install_constellation/INDEX.md) (85 entities, 31 holes): HOLE: no docstring
@@ -101,7 +101,7 @@ tests: 74 modules, 4237 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (74 modules, 4237 entities)
+## tests (74 modules, 4247 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -137,7 +137,7 @@ tests: 74 modules, 4237 entities
 - [tests.test_gauge_chain_writer_to_trip](tests.test_gauge_chain_writer_to_trip/INDEX.md) (34 entities, 1 holes): The Context Governor chain, traversed end to end with REAL OS subprocesses:
 - [tests.test_gauge_reader](tests.test_gauge_reader/INDEX.md) (97 entities, 78 holes): HOLE: no docstring
 - [tests.test_gauge_writer](tests.test_gauge_writer/INDEX.md) (89 entities, 21 holes): Unit tests for scripts/hooks/gauge_writer_hook.py.
-- [tests.test_generate_spine](tests.test_generate_spine/INDEX.md) (120 entities, 120 holes): Tests for scripts/generate_spine.py -- the spine spec compiler and generator.
+- [tests.test_generate_spine](tests.test_generate_spine/INDEX.md) (130 entities, 130 holes): Tests for scripts/generate_spine.py -- the spine spec compiler and generator.
 - [tests.test_grade_lint](tests.test_grade_lint/INDEX.md) (50 entities, 35 holes): Tests for scripts/grade_lint.py — the @grade: inline-tag linter (issue #230, epic-226).
 - [tests.test_implementer_vocab](tests.test_implementer_vocab/INDEX.md) (7 entities, 7 holes): Light vocabulary assertion for the constellation-implementer sharpening (DESIGN_SPEC Section D2 — vertical-slice vocabulary).
 - [tests.test_init_work_area](tests.test_init_work_area/INDEX.md) (41 entities, 35 holes): HOLE: no docstring

@@ -1,0 +1,10 @@
+I've implemented both changes cleanly, but hit a genuine blocker at gate `m1`'s close and escalated it rather than working around it.
+
+**What's done:**
+- `_probe_script` in `scripts/generate_spine.py` now checks positional args (path-shaped + no resolver-owned token → must exist; path-shaped + resolver-owned token → skipped; not path-shaped → left alone), preserving `r6-fowler`'s trap case correctly.
+- Added `spec-malformed-claim`, a named spec-shape fault for `[[gate.claim]]` (array-of-tables) or bad `magnitude`/missing `text`, replacing an unhandled `AttributeError`.
+- Added tests (99/99 passing), regenerated both role specs (byte-identical to committed, as expected — the probe only affects generation-time validation, not compiled output), and updated `DESIGN_NOTE.md` §4/§7/§10.
+
+**The blocker:** `m1`'s postcondition `c2` runs `python scripts/generate_spine.py specs/reviewer.spine.toml --check-only --root .` — it's missing the required `--out` flag, so it fails with an argparse usage error before ever reaching my code (confirmed: the same command with `--out` added succeeds, rc=0, proving the actual implementation is correct). This is a typo in the check text itself — the exact defect class this epic exists to close, now surfaced in the meta-checklist driving this gate. I don't have authority to retext a check (that belongs to the dispatching Commander per this corpus's own convention), so I called `spine_halt block`, naming the exact fix (`amend --delta` with a `retext-check` op adding `--out`, authority `commander-epic-559-c2`). The gate is now `blocked`, bubbled to the parent.
+
+I'm stopping here since resuming requires that check text to be corrected by the Commander.

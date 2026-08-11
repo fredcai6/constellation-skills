@@ -143,6 +143,22 @@ as the first positional argument to a call named `add_argument`. Every token in 
 The target is **never imported**. Importing it would run its import-time code inside the generator,
 which is defect 2's own shape one layer up.
 
+**Positional arguments are checked too (g3-dispatch/m1).** A non-`--` token in `args` is classified by
+shape, not by convention:
+
+- **Path-shaped** (contains a `/`, or ends in what looks like a file suffix — a loose heuristic, not a
+  curated whitelist; see `_looks_path_shaped`) **and carries no resolver-owned token** → must exist under
+  `--root` → fault (`probe-script-positional-path-not-found`) if it does not.
+- **Path-shaped and carries a resolver-owned token anywhere in it** (`<work-id>`, `<repo-root>`,
+  `<*-skill-dir>`, `<*-session-id>` — matched with `init_work_area._RESOLVER_OWNED_TOKEN_RE.search`,
+  imported, never re-declared, so this probe and the resolver's own placeholder family cannot drift
+  apart) → **skipped**, not refused. The resolver fills it in after generation; the probe cannot judge it
+  before then, and `validate_spine.py` already accepts this token family in emitted output. This is the
+  shape of `r6-fowler`'s own `args = [".agent-work/<work-id>/FOWLER_PASS.json"]` — a real, checked path
+  once resolved, correctly unresolved right now.
+- **Not path-shaped at all** (a selector, a flag's own value, a bare number) → left alone; there is
+  nothing to check it against.
+
 ### `population`
 
 Fields: `root` (repo-relative dir), `glob`, and exactly one of `expected` (int) or the pair
@@ -298,7 +314,15 @@ test in the `tests/test_mutation_floor.py` style — deleting the injection must
 `spec-gated-missing-postconditions` · `spec-all-qualitative-postconditions` · `spec-duplicate-gate-id` ·
 `spec-duplicate-condition-id` (pre- and postcondition ids must be **disjoint** within a gate — the
 schema's stated invariant, since `attest`'s `--which` fallback resolves by first match) ·
-`spec-reserved-id` (`c-escalation`) · **`spec-config-ref-not-json`**.
+`spec-reserved-id` (`c-escalation`) · `spec-config-ref-not-json` · **`spec-malformed-claim`**.
+
+That last one is g3-dispatch/m1's second task, also found live: `[gate.claim]` is a TOML *table*, and an
+author who writes `[[gate.claim]]` (array-of-tables) instead gets a `list` where `compile_spec` expects a
+`dict` — `(g.get("claim") or {}).get("magnitude")` then raises an unhandled `AttributeError: 'list' object
+has no attribute 'get'`, a traceback with no fault code, exactly the class of mistake this generator
+exists to catch before it reaches the compiler. `spec-malformed-claim` now refuses, by name, a `claim`
+that is not a table, carries a `magnitude` outside `{normal, large}`, or is `large` with no `text` —
+before `compile_spec` ever runs.
 
 That last one is not theoretical: I hit it in this very run. `checklist_engine.load_config` calls
 `json.loads` on **any** `config_ref` that exists, so a `config_ref` pointing at a real non-JSON file
@@ -359,7 +383,7 @@ string match on the one flag the fixture happens to use.
 |---|---|---|---|
 | 1 · unquoted `-k Door or Tie or Registry` split by the shell | `pytest` | **Structurally.** There is no shell-text field to leave unquoted; the author writes a selector, the compiler quotes it. | none for this class |
 | 2 · a probe that could only ever fail (`python -c 'import mcp_spine_server'` with no spine bound) | `pytest`, `script` | **Largely.** No kind runs an arbitrary interpreter line, and `script` never imports its target. | a `script` whose *runtime* behaviour depends on unbound environment is still authorable; the probe checks flags, not environment |
-| 3 · `build_entry(session=…)` where the parameter is `work_id=` | `script` | **Partly. The defect shrinks; it does not vanish.** The author still types flag names and paths from memory; what changes is that a wrong flag is caught loudly at generation time. | a script registering flags dynamically yields no `add_argument` literals — refused as undecidable rather than silently passed, but also not *checked* |
+| 3 · `build_entry(session=…)` where the parameter is `work_id=` | `script` | **Partly, wider than before. The defect shrinks; it does not vanish.** The author still types flag names and paths from memory; what changes is that a wrong flag OR a wrong positional path is caught loudly at generation time (g3-dispatch/m1 added the positional-path check — a path-shaped positional arg carrying no resolver-owned token must exist on disk). | a script registering flags dynamically yields no `add_argument` literals — refused as undecidable rather than silently passed, but also not *checked*; a positional arg that is neither path-shaped nor a `--flag` (a selector, a bare value) is still never checked against anything, because there is nothing in the script's own AST to check it against |
 | 4 · a population filter wrong twice, in opposite directions | `population` | **Yes, for the count.** The declared band is asserted against the live tree by executing the emitted command itself. | the *glob* can still be the wrong glob; the probe proves the count matches the declaration, not that the declaration expresses the intent |
 
 **The honest headline: the shell-tokenization class is closed structurally; the wrong-invocation class
