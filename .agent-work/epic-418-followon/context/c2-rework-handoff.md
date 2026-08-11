@@ -19,6 +19,23 @@ lines, so no shipped template moved.
 
 None of that is in question. Four things are.
 
+## First: what the Commander already reworked — verify, do not redo
+
+C2's own `g2` cold reviewer returned **BLOCK** and the Commander ran its own rework round before this
+handoff reached you. That reviewer earned its keep: the `magnitude=large` escalation — the mechanism
+implementing the human's *"greater claim requires greater review"* — injects correctly and its rollup
+lands on the right gate, so **every shape check passed**. The reviewer went further, copied the
+generated spine out, claimed it, and drove all six items through a real engine. The mechanism does
+not fire: `advance` enforces the injected check, `record` and `consolidate` do not, so on a `survey`
+host the escalation is decorative.
+
+**That is not yours to fix.** It is fixed, or being fixed, upstream of you. Your job on it is to
+**confirm it now fires on `record` and `consolidate`, by driving a survey host — not by reading the
+diff.** If it does not, say so and stop; that is a blocker, not a note.
+
+The same applies to anything else the Commander's rework round closed. Confirm by running. Redoing a
+closed fix costs a round; assuming one closed costs a defect.
+
 ## Blocker 1 — an author can write a check that always passes
 
 `_compile_population` interpolates `expected`, `expected_min` and `expected_max` into the shell
