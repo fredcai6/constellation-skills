@@ -1,0 +1,10 @@
+FF...FFFF.F.....                                                         [100%]
+=========================== short test summary info ===========================
+FAILED tests/test_run_skill_eval.py::test_is_infra_marker_sees_through_ansi_colour[\x1b[31musage\x1b[0m limit reached]
+FAILED tests/test_run_skill_eval.py::test_is_infra_marker_sees_through_ansi_colour[\x1b[1;33mrate\x1b[0m limit exceeded]
+FAILED tests/test_run_skill_eval.py::test_is_permission_denial_sees_through_ansi_colour[Claude \x1b[31mrequested\x1b[0m permissions to write]
+FAILED tests/test_run_skill_eval.py::test_is_permission_denial_sees_through_ansi_colour[this action \x1b[1mrequires\x1b[0m manual approval]
+FAILED tests/test_run_skill_eval.py::test_is_permission_denial_sees_through_ansi_colour[\x1b[31mPermission\x1b[0m denied]
+FAILED tests/test_run_skill_eval.py::test_is_permission_denial_sees_through_ansi_colour[operation \x1b[33mnot\x1b[0m permitted]
+FAILED tests/test_crew_launcher.py::CliDriftHintTests::test_a_colourized_drift_line_still_yields_the_hint
+7 failed, 9 passed in 0.27s

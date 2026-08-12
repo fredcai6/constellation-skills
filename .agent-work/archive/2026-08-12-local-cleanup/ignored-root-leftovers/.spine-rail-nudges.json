@@ -1,0 +1,44 @@
+{
+  "5d549ce6-490f-4654-a751-085085ccd9ec": {
+    "count": 12,
+    "journal_seq": 9,
+    "active_id": "explore"
+  },
+  "90ab6530-cb8d-44c5-b8ca-e35949797062": {
+    "count": 4,
+    "journal_seq": 25,
+    "active_id": "route"
+  },
+  "3c5f5837-b120-46a4-915f-1d10f3d7f6db": {
+    "count": 1,
+    "journal_seq": 9,
+    "active_id": "explore"
+  },
+  "7a69e7fd-1c86-43c0-8847-1428f02eb616": {
+    "count": 1,
+    "journal_seq": 11,
+    "active_id": "latitude"
+  },
+  "05c5ec39-68b1-45f0-a55f-d78261009133": {
+    "count": 1,
+    "journal_seq": 22,
+    "active_id": [
+      "C:\\Programs\\constellation-skills\\.agent-work\\epic-267\\spine.json::execute"
+    ]
+  },
+  "e8249451-5c48-417b-9f38-cf2dd40d405c": {
+    "count": 1,
+    "journal_seq": 21,
+    "active_id": [
+      "C:\\Programs\\constellation-skills-wt\\epic418-a2-440\\.agent-work\\issue-440-binding-cwd\\crew\\g1-review\\review.json::r1-handoff",
+      "C:\\Programs\\constellation-skills\\.agent-work\\epic-418\\spine.json::execute"
+    ]
+  },
+  "cdcd8db2-6d9f-48fe-8c53-ed3a1c34e15b": {
+    "count": 1,
+    "journal_seq": 41,
+    "active_id": [
+      "C:\\Programs\\constellation-skills-wt\\epic418-h-447\\.agent-work\\epic418-h-447\\g4-review\\review.json::None"
+    ]
+  }
+}

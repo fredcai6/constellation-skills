@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m unittest tests.test_constellation_content)",
+      "Bash(ls C:\\\\PRograms\\\\constellation-skills\\\\skills\\\\implementer\\\\templates *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "py \"${CLAUDE_PROJECT_DIR}/scripts/hooks/gauge_writer_hook.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

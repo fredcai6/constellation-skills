@@ -1,0 +1,23 @@
+F.F.                                                                     [100%]
+================================== FAILURES ===================================
+_ ForcedColourDoesNotBreakParsing.test_failed_nodes_reads_a_colourized_FAILED_line _
+tests\test_mutation_floor.py:518: in test_failed_nodes_reads_a_colourized_FAILED_line
+    self.assertEqual(
+E   AssertionError: Lists differ: [] != ['tests/test_map_orient.py::SubstituteProv[57 chars]ort']
+E   
+E   Second list contains 1 additional elements.
+E   First extra element 0:
+E   'tests/test_map_orient.py::SubstituteProvenanceIsReported::test_BOTH_labels_appear_in_one_real_report'
+E   
+E   - []
+E   + ['tests/test_map_orient.py::SubstituteProvenanceIsReported::test_BOTH_labels_appear_in_one_real_report'] : #454 REGRESSION: a FAILED node wrapped in ANSI was not parsed, so a real kill would be reported as 'non-zero exit with no FAILED test node'.
+_ ForcedColourDoesNotBreakParsing.test_run_floor_strips_colour_from_the_child_even_when_FORCE_COLOR_is_set _
+tests\test_mutation_floor.py:542: in test_run_floor_strips_colour_from_the_child_even_when_FORCE_COLOR_is_set
+    self.assertNotIn(
+E   AssertionError: '\x1b' unexpectedly found in '\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m.\x1b[0m\x1b[32m                   [100%]\x1b[0m\n\x1b[32m\x1b[32m\x1b[1m87 passed\x1b[0m, \x1b[32m\x1b[1m39 subtests passed\x1b[0m\x1b[32m in 12.19s\x1b[0m\x1b[0m\n' : #454 REGRESSION: FORCE_COLOR leaked into the floor subprocess, so its captured stdout carries ANSI escapes. Every parse and every truncated diagnostic dump in this file is now unreliable.
+E   [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                   [100%][0m
+E   [32m[32m[1m87 passed[0m, [32m[1m39 subtests passed[0m[32m in 12.19s[0m[0m
+=========================== short test summary info ===========================
+FAILED tests/test_mutation_floor.py::ForcedColourDoesNotBreakParsing::test_failed_nodes_reads_a_colourized_FAILED_line
+FAILED tests/test_mutation_floor.py::ForcedColourDoesNotBreakParsing::test_run_floor_strips_colour_from_the_child_even_when_FORCE_COLOR_is_set
+2 failed, 2 passed in 12.79s

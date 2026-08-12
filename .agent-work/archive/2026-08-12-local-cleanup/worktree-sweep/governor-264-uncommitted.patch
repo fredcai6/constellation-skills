@@ -1,0 +1,747 @@
+diff --git a/scripts/gauge_reader.py b/scripts/gauge_reader.py
+index 9005c7df..6920306b 100644
+--- a/scripts/gauge_reader.py
++++ b/scripts/gauge_reader.py
+@@ -102,6 +102,27 @@ DEFAULT_THRESHOLDS: tuple[float, float] = (
+     _DEFAULT_PROFILE[2] / _DEFAULT_PROFILE[0],
+ )
+ 
++# The top of the REPRESENTABLE fill range: the upper bound `_parse_fields`
++# validates against below, and the value the writer's clamp in
++# `gauge_writer_hook.compute_record` saturates at. Hoisted out of that range
++# check so callers, tests and the engine refer to a NAME instead of re-typing
++# the bound in a third place.
++#
++# THIS IS A DRIFT PIN, NOT A DERIVATION -- say it plainly rather than dressing
++# it up. This module does not and must not import `gauge_writer_hook` (the
++# reader ships bundled into every install; the harness-specific writer does
++# not, and that portability seam is the whole point of the file format), so
++# this side stays a TYPED LITERAL. What keeps it honest is a TEST that pins it
++# to a value obtained by EXECUTING `compute_record()` against a saturating
++# transcript -- structurally identical to the bargain `ModelTableSyncTests`
++# already makes between `_PROFILES` and `MODEL_WINDOWS`. Only the test sees
++# both modules.
++#
++# decision:no-threshold-values -- this is the top of the representable range,
++# never a statement about how much context is acceptable. It must not become
++# one.
++FILL_CEILING = 1.0
++
+ 
+ @dataclass(frozen=True)
+ class Reading:
+@@ -130,6 +151,94 @@ def thresholds_for(model: str) -> tuple[float, float]:
+     return (soft_cap / window, hard_cap / window)
+ 
+ 
++def implied_tokens(reading) -> int | None:
++    """The ABSOLUTE token count `reading` implies, or None.
++
++    `fill_fraction x window`, taking the window from this module's `_PROFILES`
++    row for the reading's model. A DERIVED RENDERING, not a threshold: the
++    precedent is `checklist_engine._format_age`, which renders whatever age it
++    is handed and never decides anything. Nothing here states, or may ever
++    state, how full is acceptable (decision:no-threshold-values).
++
++    THE CONSTRAINT, STATED PLAINLY RATHER THAN PAPERED OVER: this reader
++    CANNOT know the window the writer actually divided by. The gauge record is
++    frozen at four fields and `decision:no-schema-change` forbids a fifth, so
++    the writer's window has nowhere to travel. What comes back is therefore
++
++        fill x READER_window
++
++    -- this module's INTERPRETATION of the writer's fraction, not a
++    measurement it received.
++
++    That gap is not a defect to hide; it is exactly what makes a writer/reader
++    window divergence VISIBLE. A fraction alone is unfalsifiable -- 0.69875
++    looks like a perfectly ordinary reading. The same fraction rendered as an
++    absolute count against a window a human knows is wrong on its face, with
++    no recall of session size required: #252's 139,750 real tokens, divided by
++    a wrongly-assumed 200K window, come back here as ~698,750 tokens on a
++    `claude-opus-5` whose window is 1,000,000. A human noticing that number
++    looked wrong is what ended those eight days.
++
++    TOTAL and FAIL-SAFE, matching every other entry point in this module:
++    anything unknown or malformed -- an object with no `fill_fraction`/`model`,
++    a non-numeric or non-finite fill, a model with no profile -- returns None,
++    and nothing raises. An uncalibrated model yields NO implied count rather
++    than one computed against `_DEFAULT_PROFILE`, for the same reason `read()`
++    rejects it outright (#252): an uncertain model must produce no number, not
++    a wrong one.
++    """
++    fill = getattr(reading, "fill_fraction", None)
++    model = getattr(reading, "model", None)
++    if not isinstance(fill, (int, float)) or isinstance(fill, bool):
++        return None
++    if not isinstance(model, str):
++        return None
++    profile = _PROFILES.get(model)
++    if profile is None:
++        return None
++    try:
++        return round(profile[0] * float(fill))
++    except (ValueError, OverflowError):
++        # NaN/inf can't reach here through `read()` (the range check rejects
++        # both), but this function is total over ANY object handed to it.
++        return None
++
++
++def pinned_at_ceiling(fill) -> bool:
++    """A SECONDARY NOTICE: is this fill pinned at the top of the range?
++
++    Deliberately NOT the headline, and never to be described as the answer to
++    #264 -- `implied_tokens` above is that
++    (decision:implied-tokens-over-ceiling-predicate). This predicate is silent
++    across the entire range where a wrong window actually did its damage: it
++    says nothing at 0.69875 (#252's real reading) or 0.126658 (#271's). And
++    because every shipped profile has `hard_cap < window`, the engine's HARD
++    band is entered at `hard_cap` tokens while this can only fire at `window`
++    tokens -- far too late to prevent the wrongful block it would be reporting.
++
++    EXACT REACH. `fill == FILL_CEILING` iff `tokens >= window`, because that is
++    where the writer's clamp saturates. A live session cannot outgrow its real
++    window -- the harness compacts first -- so a pinned reading is proof that
++    the RATIO is wrong: the window too small OR the token count too large.
++
++    EXACT LIMIT, both halves. (1) It CANNOT SAY WHICH. A double-counted
++    numerator against a correct window arrives here as exactly the same pinned
++    value as a correct numerator against a five-times-small window; the cause
++    is not recoverable from the result. (2) It can NEVER PROVE A WINDOW RIGHT.
++    An unpinned reading is consistent with every window large enough not to
++    saturate, so silence here is not evidence of correct calibration.
++
++    Compares with `>=` rather than `==` because this is total over any float a
++    caller hands it; on a Reading that came through `_parse_fields` the two are
++    identical, since that range check already rejects anything above the
++    ceiling. Fail-safe like the rest of this module: a non-numeric `fill` is
++    False, never an exception.
++    """
++    if not isinstance(fill, (int, float)) or isinstance(fill, bool):
++        return False
++    return float(fill) >= FILL_CEILING
++
++
+ def _parse_observed_at(raw_value) -> datetime | None:
+     """Parse an `observed_at` value into a tz-aware datetime, or None if it
+     isn't a well-formed ISO-8601 string. A naive timestamp is assumed UTC --
+@@ -175,7 +284,7 @@ def _parse_fields(record: dict) -> Reading | None:
+         return None
+     if not isinstance(fill_fraction, (int, float)) or isinstance(fill_fraction, bool):
+         return None
+-    if not 0.0 <= float(fill_fraction) <= 1.0:
++    if not 0.0 <= float(fill_fraction) <= FILL_CEILING:
+         return None
+     if not isinstance(model, str):
+         return None
+diff --git a/tests/test_gauge_chain_writer_to_trip.py b/tests/test_gauge_chain_writer_to_trip.py
+index 86685f81..fafc8d85 100644
+--- a/tests/test_gauge_chain_writer_to_trip.py
++++ b/tests/test_gauge_chain_writer_to_trip.py
+@@ -59,7 +59,9 @@ instrument hides. Every test here runs unconditionally.
+ 
+ import importlib.util
+ import json
++import math
+ import os
++import shutil
+ import subprocess
+ import sys
+ from collections import namedtuple
+@@ -336,7 +338,7 @@ _SESSION_ID = "chain-writer-to-trip-session"
+ _WORK_ID = "chainwork"
+ 
+ 
+-def _fresh_transcript(tmp_path, *, sampled_at, total_tokens=None):
++def _fresh_transcript(tmp_path, *, sampled_at, total_tokens=None, model=None):
+     """The committed capture, re-stamped at `sampled_at`, written into the fence.
+ 
+     Only `timestamp` is rewritten (and, for the ladder, the usage totals --
+@@ -363,6 +365,13 @@ def _fresh_transcript(tmp_path, *, sampled_at, total_tokens=None):
+     which record it selected is pinned separately and deliberately, by the
+     `observed_at` assertion in `_climb_ladder` (only the LAST line carries
+     `sampled_at` exactly).
++
++    `model` is section (6)'s one extra knob: it re-stamps the captured records
++    with a DIFFERENT model name so the same real transcript shape can be driven
++    once per calibrated model. Like `total_tokens` it rewrites a single field
++    and leaves the rest of the capture untouched, and like `total_tokens` it is
++    applied to EVERY record so the outcome cannot depend on which one the
++    writer happens to select.
+     """
+     records = _capture_records()
+     step = timedelta(seconds=1)
+@@ -372,6 +381,8 @@ def _fresh_transcript(tmp_path, *, sampled_at, total_tokens=None):
+         stamped["timestamp"] = (
+             (sampled_at - offset * step).isoformat().replace("+00:00", "Z")
+         )
++        if model is not None:
++            stamped["message"]["model"] = model
+         if total_tokens is not None:
+             usage = stamped["message"]["usage"]
+             bulk = (
+@@ -447,7 +458,8 @@ def _work_tree(tmp_path, *, bind_to=None):
+     return spine
+ 
+ 
+-def _run_writer_hook(tmp_path, transcript_path, session_id=_SESSION_ID):
++def _run_writer_hook(tmp_path, transcript_path, session_id=_SESSION_ID, *,
++                     hook=_GAUGE_WRITER_HOOK):
+     """The WRITER, as a genuine fresh OS process -- never an in-process call.
+ 
+     decision:verify-by-fresh-process. An in-process call would inherit this
+@@ -459,22 +471,30 @@ def _run_writer_hook(tmp_path, transcript_path, session_id=_SESSION_ID):
+     `session_id` is a parameter only so section (5) can drive the SAME writer
+     under its own distinct id; every caller in sections (1)-(4) keeps the
+     default and is unchanged.
++
++    `hook` is section (7)'s knob: it points the SAME invocation at a different
++    copy of the writer. It defaults to the shipped hook, so nothing outside
++    section (7) changes, and the fence applies identically either way.
+     """
+     payload = json.dumps({
+         "session_id": session_id,
+         "transcript_path": str(transcript_path),
+     })
+     return _run_fenced(
+-        [sys.executable, str(_GAUGE_WRITER_HOOK)], tmp_path, stdin_text=payload
++        [sys.executable, str(hook)], tmp_path, stdin_text=payload
+     )
+ 
+ 
+-def _run_engine_current(tmp_path, spine):
++def _run_engine_current(tmp_path, spine, *, engine=_ENGINE):
+     """The ENGINE, as a genuine fresh OS process, on the read-only verb that
+     carries the Trip advisory. `current` never persists, so this cannot mutate
+-    the spine it reads."""
++    the spine it reads.
++
++    `engine` is section (7)'s knob, exactly like `_run_writer_hook`'s `hook`:
++    it points the same invocation at a different copy of the engine, and
++    defaults to the shipped one."""
+     return _run_fenced(
+-        [sys.executable, str(_ENGINE), "--file", str(spine), "current"], tmp_path
++        [sys.executable, str(engine), "--file", str(spine), "current"], tmp_path
+     )
+ 
+ 
+@@ -1142,3 +1162,299 @@ def test_chain_ambiguous_binding_silence_is_surfaced_by_the_engine(tmp_path):
+         f"a spine the writer never flagged announces a silent gauge too, so "
+         f"the announcement distinguishes nothing:\n{quiet.stdout}"
+     )
++
++
++# --------------------------------------------------------------------------- #
++# (6) THE CLAMP -- what `gauge_reader.FILL_CEILING` is actually pinned to
++# --------------------------------------------------------------------------- #
++#
++# `FILL_CEILING` is a TYPED LITERAL on the reader's side and this file is the
++# only place that can honestly say so. The reader must not import
++# `gauge_writer_hook` -- it ships bundled into every install while the
++# harness-specific hook does not, and that portability seam is the whole reason
++# the gauge is a file format rather than a function call. So the reader cannot
++# reach the clamp it is mirroring, and the constant cannot be derived.
++#
++# What it CAN be is a DRIFT PIN: exactly the bargain `ModelTableSyncTests`
++# already makes between `_PROFILES` and `MODEL_WINDOWS`. Only the TEST imports
++# both modules, and it obtains the ceiling by EXECUTING the writer rather than
++# by reading the writer's source or re-typing its bound. If someone changes the
++# clamp, this goes red; nothing else in the repo would notice.
++#
++# It also closes g2's review triage tc1: the ladder's saturating top rung is
++# currently DRIVEN but its result is never OBSERVED, so nothing today asserts
++# that saturating actually saturates.
++
++# The same magnitude the ladder's top rung uses, reused rather than re-derived
++# -- one token past the widest calibrated window, which saturates the clamp for
++# EVERY model in the table permanently (see `_LADDER_TOKENS`' carve-out for why
++# this one magnitude is derived from MODEL_WINDOWS while the ordinary rungs are
++# not). Reusing it means a wider-window model cannot make this test stop
++# saturating without making the ladder stop saturating too.
++_SATURATING_TOKENS = _LADDER_TOKENS[-1]
++
++
++def test_writer_clamp_saturates_at_the_readers_fill_ceiling(tmp_path):
++    """FILL_CEILING, obtained by EXECUTION rather than by re-typing.
++
++    Iterates `MODEL_WINDOWS` BY KEY and never reads a value out of it into an
++    assertion: computing an expected fill from the same table the writer
++    divides by would re-implement `compute_record` and agree with it by
++    construction. The only inputs are the model names and one saturating token
++    count; the only outputs asserted are that all the fills AGREE and that what
++    they agree on is the reader's constant.
++
++    Both assertions are load-bearing and neither implies the other. A writer
++    that clamped per-model to something window-dependent would still be
++    self-consistent for one model but would fail the agreement check; a writer
++    that clamped every model to the same WRONG value would pass agreement and
++    fail the ceiling check.
++    """
++    fills = {}
++    for model in gw.MODEL_WINDOWS:
++        transcript = _fresh_transcript(
++            tmp_path,
++            sampled_at=datetime.now(timezone.utc),
++            total_tokens=_SATURATING_TOKENS,
++            model=model,
++        )
++        record, uncalibrated = gw.compute_record(str(transcript))
++
++        assert uncalibrated is None, (
++            f"{model}: the writer reported no window for a model that is a KEY "
++            f"of its own MODEL_WINDOWS table"
++        )
++        assert record is not None, f"{model}: the writer produced no record"
++        fills[model] = record["fill_fraction"]
++
++    assert len(fills) == len(gw.MODEL_WINDOWS)
++
++    assert len(set(fills.values())) == 1, (
++        f"a token count past EVERY calibrated window produced different fills "
++        f"per model ({fills}), so the clamp is not a single shared ceiling"
++    )
++    observed = fills[next(iter(fills))]
++    assert observed == gr.FILL_CEILING, (
++        f"the writer's clamp saturates at {observed!r} but the reader's "
++        f"FILL_CEILING is {gr.FILL_CEILING!r}. The reader cannot import the "
++        f"writer to find this out, so this test IS the pin -- update the "
++        f"constant to the executed value rather than weakening the assertion"
++    )
++
++
++# --------------------------------------------------------------------------- #
++# (7) WINDOW INVARIANCE -- the trip is a function of ABSOLUTE tokens
++# --------------------------------------------------------------------------- #
++#
++# `_PROFILES` stores ABSOLUTE token caps and `thresholds_for` divides them by
++# the reader's window; the writer divides the token count by ITS window. When
++# the two tables agree, the window CANCELS:
++#
++#     fill >= hard   <=>   tokens / window >= hard_cap / window   <=>   tokens >= hard_cap
++#
++# So today a consistently-wrong window corrupts ONLY THE DISPLAYED PERCENTAGE,
++# never the verdict. That is a real and valuable property -- it is why #252's
++# five-times-wrong window could not, on the current code, cause a wrongful
++# block -- and NOTHING IN THE REPO ASSERTS IT. It holds by construction, which
++# is exactly the kind of property a refactor deletes without noticing: the day
++# someone stores typed fractions again instead of absolute caps, the window
++# stops cancelling and the #252 hole re-opens SILENTLY, with every existing
++# test still green.
++#
++# This section makes that loud. It runs the chain twice over the same absolute
++# token counts -- once on the shipped toolchain, once on a copy whose windows
++# are all scaled -- and asserts the engine's advisory BAND is identical at
++# every token count while the displayed FILL genuinely moves.
++#
++# NO SHIPPED FILE IS EDITED to build this. The scaled world is a materialized
++# COPY inside the fence; see `_scaled_toolchain`.
++
++# Any factor but 1 works. 2 is the smallest that separates the two worlds, and
++# a factor (rather than a replacement table) is what makes the scaling a
++# transformation OF the shipped tables rather than a second hand-typed copy of
++# them.
++_WINDOW_SCALE = 2
++
++
++def _with_epilogue(source, epilogue):
++    """Append `epilogue` to module `source`, ahead of any `__main__` guard.
++
++    Placement is not cosmetic. `gauge_writer_hook.py` ends in
++    `sys.exit(main(...))` under its guard, so an epilogue appended after it
++    would never execute when the module is run AS A SCRIPT -- which is exactly
++    how this file drives the writer. The scaling would silently not happen and
++    the invariance test would compare the shipped chain to itself and pass.
++    """
++    marker = '\nif __name__ == "__main__":'
++    if marker not in source:
++        return source + epilogue
++    head, tail = source.split(marker, 1)
++    return head + epilogue + marker + tail
++
++
++def _scaled_toolchain(tmp_path):
++    """A COPY of the chain's four shipped modules, with every window scaled.
++
++    Four files is the whole file-relative closure, and nothing else needs
++    copying: `checklist_engine.py` loads `gauge_reader.py` from its own
++    directory, and `gauge_writer_hook.py` loads `spine_rail.py` from its own
++    directory. Everything else either is stdlib or is located from the spine
++    path passed in at run time.
++
++    THE SCALING IS A TRANSFORMATION OF THE SHIPPED TABLES, NOT A REPLACEMENT
++    FOR THEM: the epilogue rewrites each table as a comprehension over whatever
++    the shipped module just defined. So it cannot drift from the real tables,
++    it cannot silently scale a row that no longer exists, and a model added
++    tomorrow is scaled tomorrow with no edit here.
++
++    Returns `(engine_path, writer_hook_path)` for the scaled world.
++    """
++    root = tmp_path / "scaled-toolchain"
++    hooks = root / "hooks"
++    hooks.mkdir(parents=True, exist_ok=True)
++
++    # Unmodified -- the engine and the binding rail carry no window of their own.
++    shutil.copyfile(_ENGINE, root / "checklist_engine.py")
++    shutil.copyfile(_SPINE_RAIL, hooks / "spine_rail.py")
++
++    (root / "gauge_reader.py").write_text(
++        _with_epilogue(
++            _GAUGE_READER.read_text(encoding="utf-8"),
++            f"\n\n_PROFILES = {{model: (window * {_WINDOW_SCALE}, soft_cap, hard_cap)\n"
++            f"             for model, (window, soft_cap, hard_cap) in _PROFILES.items()}}\n",
++        ),
++        encoding="utf-8",
++    )
++    (hooks / "gauge_writer_hook.py").write_text(
++        _with_epilogue(
++            _GAUGE_WRITER_HOOK.read_text(encoding="utf-8"),
++            f"\n\nMODEL_WINDOWS = {{model: window * {_WINDOW_SCALE}\n"
++            f"                 for model, window in MODEL_WINDOWS.items()}}\n",
++        ),
++        encoding="utf-8",
++    )
++
++    return root / "checklist_engine.py", hooks / "gauge_writer_hook.py"
++
++
++# The capture's own model, and the ABSOLUTE token counts that straddle its two
++# band boundaries. Read off the real table at test time, never typed
++# (decision:no-threshold-values): these are the caps the table already holds,
++# not a bound this file imposes, and a re-calibration moves the probes with it.
++_CAPTURE_MODEL = _capture_records()[-1]["message"]["model"]
++_, _CAPTURE_SOFT_CAP, _CAPTURE_HARD_CAP = gr._PROFILES[_CAPTURE_MODEL]
++
++# One token below each cap and exactly at it -- the tightest probe pair that
++# LOCATES a flip rather than merely sampling around it.
++_INVARIANCE_PROBES = (
++    _CAPTURE_SOFT_CAP - 1,
++    _CAPTURE_SOFT_CAP,
++    _CAPTURE_HARD_CAP - 1,
++    _CAPTURE_HARD_CAP,
++)
++
++
++def _chain_at_token_counts(tmp_path, *, engine, writer_hook):
++    """Drive the whole chain once per probe through the GIVEN toolchain, and
++    report `{total_tokens: (band, fill)}`.
++
++    Keyed by ABSOLUTE TOKEN COUNT, which is the entire point: the question this
++    section asks is "at what token count does the band flip", and a dict keyed
++    by tokens answers it directly for whichever toolchain produced it.
++
++    Same fence, same spine tree, same session id, same transcript shape as
++    every other test here -- the toolchain is the only variable.
++    """
++    spine = _work_tree(tmp_path)
++    gauge = spine.parent / "gauge.json"
++
++    observed = {}
++    for total_tokens in _INVARIANCE_PROBES:
++        transcript = _fresh_transcript(
++            tmp_path,
++            sampled_at=datetime.now(timezone.utc),
++            total_tokens=total_tokens,
++        )
++        proc = _run_writer_hook(tmp_path, transcript, hook=writer_hook)
++        assert proc.returncode == 0, proc.stderr
++        assert proc.stdout == ""
++        assert gauge.exists(), (
++            f"{total_tokens} tokens: the writer wrote no gauge.json "
++            f"(stderr: {proc.stderr})"
++        )
++
++        engine_proc = _run_engine_current(tmp_path, spine, engine=engine)
++        assert engine_proc.returncode == 0, engine_proc.stderr
++
++        fill = json.loads(gauge.read_text(encoding="utf-8"))["fill_fraction"]
++        observed[total_tokens] = (_band_of(engine_proc.stdout), fill)
++    return observed
++
++
++def test_window_invariance_the_band_is_a_function_of_absolute_tokens(tmp_path):
++    """THE REGRESSION PIN: scale BOTH windows, and the token count at which
++    each band flips must not move.
++
++    What this locks is the cancellation described in this section's header --
++    the property that makes a consistently-wrong window a DISPLAY defect rather
++    than a decision defect. A refactor back to typed fractions breaks it, and
++    breaks it here, loudly, instead of re-opening #252 in silence.
++
++    TWO CONTROLS, both load-bearing, because the headline equality is easy to
++    satisfy vacuously:
++
++      * THE STRADDLE CONTROL. If every probe landed in the same band, the two
++        worlds would agree trivially and the test would assert nothing. So the
++        shipped world must be observed crossing BOTH boundaries.
++
++      * THE SCALING CONTROL. If `_scaled_toolchain` silently failed to scale
++        anything -- a `__main__`-guard placement bug, a renamed table, a
++        copy that was never written -- the "two" worlds would be one world
++        compared to itself, and the equality would hold for the worst possible
++        reason. So the FILL must be observed genuinely MOVING, by exactly the
++        scale factor, at every probe. That is the same finding stated
++        positively: the number a human reads changes; the verdict does not.
++    """
++    shipped = _chain_at_token_counts(
++        tmp_path, engine=_ENGINE, writer_hook=_GAUGE_WRITER_HOOK)
++
++    scaled_engine, scaled_writer = _scaled_toolchain(tmp_path)
++    scaled = _chain_at_token_counts(
++        tmp_path, engine=scaled_engine, writer_hook=scaled_writer)
++
++    # --- the straddle control, FIRST: without it the equality below is vacuous
++    shipped_bands = {band for band, _fill in shipped.values()}
++    assert shipped_bands == set(_ASCENDING_BANDS), (
++        f"the probes {_INVARIANCE_PROBES} did not straddle both boundaries in "
++        f"the shipped world -- they only produced {sorted(shipped_bands)}, so "
++        f"comparing the two worlds proves nothing about where a band flips"
++    )
++
++    # --- the scaling control: the two worlds really are different worlds -----
++    for total_tokens in _INVARIANCE_PROBES:
++        _, shipped_fill = shipped[total_tokens]
++        _, scaled_fill = scaled[total_tokens]
++        assert scaled_fill < shipped_fill, (
++            f"{total_tokens} tokens read as {scaled_fill} in the 'scaled' world "
++            f"and {shipped_fill} in the shipped one -- the displayed fill did "
++            f"not move, so the toolchain copy was never actually scaled and "
++            f"this test is comparing the shipped chain to itself"
++        )
++        assert math.isclose(scaled_fill * _WINDOW_SCALE, shipped_fill, rel_tol=1e-12), (
++            f"{total_tokens} tokens: the scaled world read {scaled_fill}, which "
++            f"is not the shipped {shipped_fill} divided by {_WINDOW_SCALE} -- "
++            f"something other than the window changed between the two runs"
++        )
++
++    # --- THE PIN ------------------------------------------------------------
++    # Compared per ABSOLUTE TOKEN COUNT, so this says exactly what it means:
++    # the band each token count lands in is unchanged by scaling the window.
++    shipped_bands_by_tokens = {t: band for t, (band, _f) in shipped.items()}
++    scaled_bands_by_tokens = {t: band for t, (band, _f) in scaled.items()}
++    assert scaled_bands_by_tokens == shipped_bands_by_tokens, (
++        f"scaling every window by {_WINDOW_SCALE} MOVED the token count at "
++        f"which a band flips: shipped {shipped_bands_by_tokens} vs scaled "
++        f"{scaled_bands_by_tokens}. The trip verdict is no longer a function "
++        f"of absolute tokens alone, which is precisely the condition that let "
++        f"a wrong window mis-scale the governor in #252"
++    )
+diff --git a/tests/test_gauge_reader.py b/tests/test_gauge_reader.py
+index 18ae378b..7ad8eac8 100644
+--- a/tests/test_gauge_reader.py
++++ b/tests/test_gauge_reader.py
+@@ -5,6 +5,7 @@ import tempfile
+ import unittest
+ from datetime import datetime, timedelta, timezone
+ from pathlib import Path
++from types import SimpleNamespace
+ 
+ ROOT = Path(__file__).resolve().parents[1]
+ 
+@@ -433,5 +434,207 @@ class ThresholdsForTests(unittest.TestCase):
+             self.assertLess(soft, hard)
+ 
+ 
++class ImpliedTokensTests(unittest.TestCase):
++    """#264: the HEADLINE rendering. A fill FRACTION is unfalsifiable on its
++    own -- 0.69875 looks like a perfectly ordinary reading. The same fraction
++    rendered as an ABSOLUTE token count against a window a human knows is wrong
++    on its face (decision:implied-tokens-over-ceiling-predicate).
++
++    It is a derived rendering, never a judgment: nothing in this class asserts
++    anything about how full is acceptable."""
++
++    def setUp(self):
++        self.m = load("gauge_reader")
++
++    def _reading(self, fill, model="claude-opus-4-8"):
++        return self.m.Reading(
++            schema_version=1, fill_fraction=fill, model=model, observed_at=NOW)
++
++    def test_implied_count_is_the_fraction_against_the_readers_own_window(self):
++        window = self.m._PROFILES["claude-opus-4-8"][0]
++        self.assertEqual(
++            round(window * 0.42), self.m.implied_tokens(self._reading(0.42)))
++
++    def test_the_252_divergence_is_rendered_absurd_rather_than_plausible(self):
++        """THE POINT OF THE WHOLE FUNCTION, on the real incident numbers.
++
++        #252: 139,750 real tokens were divided by a wrongly-assumed 200K window
++        and written as fill_fraction 0.69875. As a fraction that reads as an
++        unremarkable ~70%. Rendered against claude-opus-5's REAL window it
++        comes back as ~698,750 tokens -- five times the session that actually
++        happened, and wrong on its face to anyone who knows the model, with no
++        recall of session size required.
++
++        The expected value is computed from the table at test time, not typed:
++        a re-calibration of the window must move this rendering with it."""
++        real_tokens = 139_750
++        wrong_window = 200_000
++        as_written = real_tokens / wrong_window  # what the writer actually emitted
++
++        implied = self.m.implied_tokens(self._reading(as_written, "claude-opus-5"))
++        true_window = self.m._PROFILES["claude-opus-5"][0]
++
++        self.assertEqual(round(true_window * as_written), implied)
++        # The rendering is what makes the divergence legible: the implied count
++        # is nothing like the session that really happened.
++        self.assertNotEqual(real_tokens, implied)
++        self.assertGreater(implied, real_tokens * 4)
++
++    def test_a_reading_that_came_through_read_renders_end_to_end(self):
++        tmp = tempfile.TemporaryDirectory()
++        self.addCleanup(tmp.cleanup)
++        path = Path(tmp.name) / "gauge.json"
++        path.write_text(json.dumps(FRESH_RECORD), encoding="utf-8")
++
++        reading = self.m.read(path, now=NOW, max_age=MAX_AGE)
++        window = self.m._PROFILES[reading.model][0]
++        self.assertEqual(
++            round(window * reading.fill_fraction), self.m.implied_tokens(reading))
++
++    def test_uncalibrated_model_renders_NOTHING_not_a_default_scaled_count(self):
++        """Same rule as read()'s own #252 gate: an uncertain model must yield no
++        number, never a wrong one. _DEFAULT_PROFILE exists to keep
++        thresholds_for total; it must not leak into this rendering."""
++        self.assertIsNone(
++            self.m.implied_tokens(self._reading(0.42, "claude-future-9")))
++        # ...even though thresholds_for still answers for that model.
++        self.assertEqual(
++            self.m.DEFAULT_THRESHOLDS, self.m.thresholds_for("claude-future-9"))
++
++    def test_zero_fill_renders_zero_not_none(self):
++        # 0 is a real reading, not a missing one -- `if implied_tokens(r):`
++        # would be a caller bug, but this function must not manufacture the
++        # ambiguity by returning None for a legitimate zero.
++        self.assertEqual(0, self.m.implied_tokens(self._reading(0.0)))
++
++    def test_every_malformed_input_returns_none_and_never_raises(self):
++        window_model = "claude-opus-4-8"
++        for label, value in (
++            ("no attributes at all", object()),
++            ("None", None),
++            ("a bare string", "0.42"),
++            ("string fill", SimpleNamespace(fill_fraction="0.42", model=window_model)),
++            ("bool fill", SimpleNamespace(fill_fraction=True, model=window_model)),
++            ("None fill", SimpleNamespace(fill_fraction=None, model=window_model)),
++            ("non-str model", SimpleNamespace(fill_fraction=0.42, model=1)),
++            ("None model", SimpleNamespace(fill_fraction=0.42, model=None)),
++            ("nan fill", SimpleNamespace(fill_fraction=float("nan"), model=window_model)),
++            ("inf fill", SimpleNamespace(fill_fraction=float("inf"), model=window_model)),
++        ):
++            with self.subTest(label):
++                self.assertIsNone(self.m.implied_tokens(value))
++
++
++class PinnedAtCeilingTests(unittest.TestCase):
++    """#264 SECONDARY notice. Deliberately not the answer to this issue --
++    implied_tokens is. These tests pin both its reach and its limit."""
++
++    def setUp(self):
++        self.m = load("gauge_reader")
++
++    def test_a_pinned_reading_is_reported(self):
++        self.assertTrue(self.m.pinned_at_ceiling(self.m.FILL_CEILING))
++
++    def test_an_unpinned_reading_is_not(self):
++        self.assertFalse(self.m.pinned_at_ceiling(0.0))
++        self.assertFalse(self.m.pinned_at_ceiling(self.m.FILL_CEILING / 2))
++
++    def test_it_is_SILENT_across_the_range_where_a_wrong_window_actually_hurt(self):
++        """Why it is secondary, asserted rather than asserted-in-prose: both
++        real incident readings are below the ceiling, so this predicate says
++        nothing about either of them."""
++        for label, fill in (("#252", 0.69875), ("#271", 0.126658)):
++            with self.subTest(label):
++                self.assertFalse(self.m.pinned_at_ceiling(fill))
++
++    def test_the_engine_already_blocks_long_before_the_ceiling_is_reachable(self):
++        """The structural reason it fires too late: every shipped profile has
++        hard_cap < window, so HARD is entered at hard_cap tokens while the
++        clamp only saturates at `window` tokens. No value is typed; the gap is
++        read off the table."""
++        for model, (window, _soft_cap, hard_cap) in self.m._PROFILES.items():
++            with self.subTest(model=model):
++                self.assertLess(hard_cap, window)
++
++    def test_a_double_counted_numerator_is_INDISTINGUISHABLE_from_a_small_window(self):
++        """THE EXACT LIMIT. A pinned reading proves the RATIO is wrong -- the
++        window too small OR the token count too large -- and cannot say which.
++        Both causes arrive here as the identical value, so no caller can ever
++        recover the cause from the predicate."""
++        window = self.m._PROFILES["claude-opus-5"][0]
++        tokens = window // 2
++
++        window_too_small = min(self.m.FILL_CEILING, tokens / (window // 5))
++        numerator_doubled_twice = min(self.m.FILL_CEILING, (tokens * 4) / window)
++
++        self.assertEqual(window_too_small, numerator_doubled_twice)
++        self.assertTrue(self.m.pinned_at_ceiling(window_too_small))
++        self.assertTrue(self.m.pinned_at_ceiling(numerator_doubled_twice))
++
++    def test_it_can_never_prove_a_window_RIGHT(self):
++        """The other half of the one-directional falsifier: an UNPINNED reading
++        is consistent with any window large enough not to saturate, so silence
++        here is not evidence of a correct window."""
++        tokens = 100_000
++        for window in (400_000, 1_000_000, 8_000_000):
++            with self.subTest(window=window):
++                self.assertFalse(self.m.pinned_at_ceiling(tokens / window))
++
++    def test_the_docstring_indicts_the_RATIO_not_the_denominator(self):
++        """A wording pin, not decoration (decision:one-directional-falsifier).
++        'Denominator' names one of the two causes and is therefore a false
++        claim about what this predicate can establish; it was corrected once
++        during planning and a regression would be silent."""
++        doc = self.m.pinned_at_ceiling.__doc__
++        self.assertIn("RATIO", doc)
++        self.assertNotIn("denominator", doc.lower())
++
++    def test_non_numeric_fill_is_false_never_an_exception(self):
++        for value in (None, "1.0", object(), True, False):
++            with self.subTest(repr(value)):
++                self.assertFalse(self.m.pinned_at_ceiling(value))
++
++
++class ProfileInvariantTests(unittest.TestCase):
++    """#264 REGRESSION PIN, asserted nowhere in this repo until now. It passes
++    at HEAD on all five shipped profiles by design -- it is not a bug report.
++
++    What it catches is a row whose window is set so low that the gauge is
++    STRUCTURALLY INCAPABLE of tripping before it saturates: with
++    `hard_cap >= window` the clamp pins the reading at the ceiling at or before
++    the moment HARD would have been entered, so the band the whole governor
++    exists to reach can never fire cleanly for that model. Nothing else in the
++    suite would notice -- every threshold test would still pass, because each
++    one only ever looks at a single model's arithmetic in isolation."""
++
++    def setUp(self):
++        self.m = load("gauge_reader")
++
++    def _assert_ordered(self, model, profile):
++        window, soft_cap, hard_cap = profile
++        self.assertLess(
++            0, soft_cap, f"{model}: soft_cap must be a positive token count")
++        self.assertLess(
++            soft_cap, hard_cap,
++            f"{model}: soft_cap {soft_cap} is not below hard_cap {hard_cap}, so "
++            f"the two bands cannot be entered in order")
++        self.assertLess(
++            hard_cap, window,
++            f"{model}: hard_cap {hard_cap} is not below window {window}, so the "
++            f"reading saturates at or before HARD and the band can never fire "
++            f"cleanly for this model")
++
++    def test_every_profile_orders_zero_below_soft_below_hard_below_window(self):
++        self.assertTrue(self.m._PROFILES, "the profile table must not be empty")
++        for model, profile in self.m._PROFILES.items():
++            with self.subTest(model=model):
++                self._assert_ordered(model, profile)
++
++    def test_the_default_profile_holds_the_same_invariant(self):
++        """_DEFAULT_PROFILE is not a row of _PROFILES, but thresholds_for can
++        still hand it out, so the same ordering has to hold for it."""
++        self._assert_ordered("_DEFAULT_PROFILE", self.m._DEFAULT_PROFILE)
++
++
+ if __name__ == "__main__":
+     unittest.main()

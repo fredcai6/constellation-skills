@@ -1,0 +1,15 @@
+{
+  "symptom": "In PowerShell, py -c and py -m pytest fail with Access is denied / Cannot run a document in the middle of a pipeline, while python is not recognized.",
+  "altitude": "runtime",
+  "oracle": "Reproduce command resolution with Get-Command py/python, inspect the resolved py file, then invoke the target python.exe directly.",
+  "status": "confirmed",
+  "cause": "PATH resolves py to C:\\Users\\fredc\\.local\\bin\\py, an extensionless POSIX shell wrapper beginning #!/bin/sh. PowerShell treats that path as an Application but cannot execute the shell script as a Windows executable. No py.exe or python.exe is resolvable on this process PATH. The Python runtime targeted by the wrapper is healthy.",
+  "falsifier": "The hypothesis would be disproved if Get-Command resolved py to a Windows executable or if the extensionless wrapper executed successfully from the same PowerShell process while its target runtime failed.",
+  "observed_result": "Get-Command resolved only C:\\Users\\fredc\\.local\\bin\\py with no extension; its 112-byte content is a /bin/sh exec wrapper. Direct invocation failed, while C:\\Users\\fredc\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe ran Python 3.12.13 and exited 0.",
+  "map_staleness_caveat": "",
+  "route": "triage",
+  "rail_exception": {
+    "reviewer_cosign": "",
+    "log": ""
+  }
+}

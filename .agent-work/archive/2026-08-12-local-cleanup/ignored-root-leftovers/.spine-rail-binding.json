@@ -1,0 +1,523 @@
+{
+  "e8249451-5c48-417b-9f38-cf2dd40d405c": {
+    "C:\\Programs\\constellation-skills\\.agent-work\\epic-418\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.agent-work\\epic-418\\spine.json",
+      "engine_session": "admiral-epic-418",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-05T22:23:56.338761+00:00"
+    },
+    "C:\\Programs\\constellation-skills\\.agent-work\\issue-440-binding-cwd\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.agent-work\\issue-440-binding-cwd\\spine.json",
+      "engine_session": "cmdr-440-binding-cwd",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-06T08:10:19.200665+00:00"
+    },
+    "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\spine.json",
+      "engine_session": "cmdr-447-episodes-retirement",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-06T08:37:52.296148+00:00"
+    },
+    "C:\\Programs\\constellation-skills\\.agent-work\\issue-440-binding-cwd\\crew\\g1-implement\\IMPLEMENTER_PLAN.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.agent-work\\issue-440-binding-cwd\\crew\\g1-implement\\IMPLEMENTER_PLAN.json",
+      "engine_session": "impl-440-g1",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-06T08:39:40.828162+00:00"
+    },
+    "C:\\Programs\\constellation-skills-wt\\epic418-a2-440\\.agent-work\\issue-440-binding-cwd\\crew\\g1-review\\review.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-a2-440\\.agent-work\\issue-440-binding-cwd\\crew\\g1-review\\review.json",
+      "engine_session": "rev-440-g1",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-06T09:01:28.402528+00:00"
+    },
+    "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\g1-review\\review.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\g1-review\\review.json",
+      "engine_session": null,
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-06T09:40:21.104073+00:00"
+    },
+    "C:\\Programs\\constellation-skills\\.agent-work\\issue-440-binding-cwd\\crew\\g1b-ambiguity\\IMPLEMENTER_PLAN.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.agent-work\\issue-440-binding-cwd\\crew\\g1b-ambiguity\\IMPLEMENTER_PLAN.json",
+      "engine_session": "impl-g1b-ambiguity",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-06T09:40:23.805823+00:00"
+    },
+    "C:\\Programs\\constellation-skills-wt\\epic418-a2-440\\.agent-work\\issue-440-binding-cwd\\crew\\g1b-ambiguity\\review.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-a2-440\\.agent-work\\issue-440-binding-cwd\\crew\\g1b-ambiguity\\review.json",
+      "engine_session": "rev-440-g1b",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-06T09:51:03.187494+00:00"
+    },
+    "C:\\Programs\\constellation-skills\\x": {
+      "spine": "C:\\Programs\\constellation-skills\\x",
+      "engine_session": null,
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-06T10:02:04.081079+00:00"
+    },
+    "C:\\Programs\\constellation-skills\\$E": {
+      "spine": "C:\\Programs\\constellation-skills\\$E",
+      "engine_session": "g2-impl-440-acceptance",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-06T10:03:03.124710+00:00"
+    }
+  },
+  "cdcd8db2-6d9f-48fe-8c53-ed3a1c34e15b#a9bf3781a824a48ac": {
+    "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\crew-plans\\g2-implementer.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\crew-plans\\g2-implementer.json",
+      "engine_session": "g2-impl-447",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-07T14:41:50.426403+00:00"
+    }
+  },
+  "cdcd8db2-6d9f-48fe-8c53-ed3a1c34e15b#ad611b635dad1da43": {
+    "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\g2-review\\review.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\g2-review\\review.json",
+      "engine_session": "g2rev-447-a",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-07T15:17:02.335683+00:00"
+    }
+  },
+  "cdcd8db2-6d9f-48fe-8c53-ed3a1c34e15b#a69eb7d97edd45f10": {
+    "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\crew-plans\\g3-implementer.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.agent-work\\epic418-h-447\\crew-plans\\g3-implementer.json",
+      "engine_session": "g3-impl-447",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-07T15:48:26.124464+00:00"
+    }
+  },
+  "cdcd8db2-6d9f-48fe-8c53-ed3a1c34e15b#a8281478905262999": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-h-447\\.agent-work\\epic418-h-447\\crew-plans\\g4-implementer.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-h-447\\.agent-work\\epic418-h-447\\crew-plans\\g4-implementer.json",
+      "engine_session": "g4-impl-447",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-07T16:47:05.150366+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "9cbc67f4-bd23-4507-955f-e873fbe42d6f": {
+    "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\spine.json",
+      "engine_session": "commander-issue-456",
+      "worktree": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456",
+      "claimed_at": "2026-08-09T10:47:33.079068+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "cdcd8db2-6d9f-48fe-8c53-ed3a1c34e15b#a0e03a8680b36537d": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-h-447\\.agent-work\\epic418-h-447\\g4-review\\review.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-h-447\\.agent-work\\epic418-h-447\\g4-review\\review.json",
+      "engine_session": "g4-reviewer-447",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-07T17:30:35.215484+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "9cbc67f4-bd23-4507-955f-e873fbe42d6f#ag0-implementer-1ef6b725ecefc88b": {
+    "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\g0-implementer-plan.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\g0-implementer-plan.json",
+      "engine_session": "g0-impl-9febe0be",
+      "worktree": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456",
+      "claimed_at": "2026-08-07T20:48:14.084946+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49": {
+    "C:\\Programs\\constellation-skills\\.agent-work\\epic-418-redux\\latitude-interrogation.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.agent-work\\epic-418-redux\\latitude-interrogation.json",
+      "engine_session": "admiral-epic-418-redux-latitude",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-07T20:58:10.057714+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "9cbc67f4-bd23-4507-955f-e873fbe42d6f#ag0-implementer-2-bbc44f46bd7c5d6f": {
+    "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\g0-implementer-plan.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\g0-implementer-plan.json",
+      "engine_session": "g0-impl-9febe0be",
+      "worktree": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456",
+      "claimed_at": "2026-08-07T21:02:37.516855+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#acmd-433-51c2c968833250b9": {
+    "C:\\Programs\\constellation-skills-wt\\r418-433\\.agent-work\\b433-render-directives\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\r418-433\\.agent-work\\b433-render-directives\\spine.json",
+      "engine_session": "commander-b433-render-directives",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-07T21:37:06.391632+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#acmd-460-65a6c683dc5095af": {
+    "C:\\Programs\\constellation-skills-wt\\r418-460\\.agent-work\\r418-460\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\r418-460\\.agent-work\\r418-460\\spine.json",
+      "engine_session": "commander-r418-460",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-07T21:37:15.083815+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#aimpl-464-46c57848eff9d6c2": {
+    "C:\\Programs\\constellation-skills-wt\\r418-464\\.agent-work\\issue-464\\IMPLEMENTER_PLAN.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\r418-464\\.agent-work\\issue-464\\IMPLEMENTER_PLAN.json",
+      "engine_session": "impl-464",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-07T21:48:16.351779+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#acmd-460b-82d0be545b251f59": {
+    "C:\\Programs\\constellation-skills-wt\\r418-460\\.agent-work\\r418-460\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\r418-460\\.agent-work\\r418-460\\spine.json",
+      "engine_session": "commander-r418-460-b",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-07T22:35:04.359319+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#acmd-433b-b8ff50deb6c4ae94": {
+    "C:\\Programs\\constellation-skills-wt\\r418-433\\.agent-work\\b433-render-directives\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\r418-433\\.agent-work\\b433-render-directives\\spine.json",
+      "engine_session": null,
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-07T22:34:44.233541+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#aeffccf60c7f29486": {
+    "C:\\Programs\\constellation-skills-wt\\r418-460\\.agent-work\\r418-460\\crew-plans\\g1-implement-plan.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\r418-460\\.agent-work\\r418-460\\crew-plans\\g1-implement-plan.json",
+      "engine_session": "impl-460-g1",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-07T22:41:55.859532+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#a6527c9681bf78f99": {
+    "C:\\Programs\\constellation-skills-wt\\r418-433\\.agent-work\\b433-render-directives\\g1-review\\review.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\r418-433\\.agent-work\\b433-render-directives\\g1-review\\review.json",
+      "engine_session": "rev-g1-433-a",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-07T22:53:52.179283+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "9cbc67f4-bd23-4507-955f-e873fbe42d6f#a16df00de749d436a": {
+    "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\g1-implementer-plan.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\g1-implementer-plan.json",
+      "engine_session": "g1-implementer-01",
+      "worktree": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456",
+      "claimed_at": "2026-08-08T00:51:05.214675+00:00",
+      "path_source": "absolute"
+    }
+  },
+  "9cbc67f4-bd23-4507-955f-e873fbe42d6f#ac6d99740ce90b76f": {
+    "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\g1-review\\review.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\g1-review\\review.json",
+      "engine_session": "constellation-issue-456-g1-reviewer-attempt-1",
+      "worktree": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456",
+      "claimed_at": "2026-08-08T01:41:22.526783+00:00",
+      "path_source": "worktree_opt"
+    }
+  },
+  "9cbc67f4-bd23-4507-955f-e873fbe42d6f#a3901e1df165c7cf3": {
+    "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\g2-implementer-plan.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\g2-implementer-plan.json",
+      "engine_session": "g2-implementer-attempt-1",
+      "worktree": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456",
+      "claimed_at": "2026-08-08T04:55:30.965823+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#a57fdf6f722a7f01a": {
+    "C:\\Programs\\wt-w3a-465\\.agent-work\\w3a-465\\spine.json": {
+      "spine": "C:\\Programs\\wt-w3a-465\\.agent-work\\w3a-465\\spine.json",
+      "engine_session": "session_01TTKPTbD6nnMt7jFWw9GtjX",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T04:56:49.660723+00:00",
+      "path_source": "worktree_opt"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#a12eae241a18efe91": {
+    "C:\\Programs\\wt-w3c-488-489\\.agent-work\\w3c-488-489\\IMPLEMENTER_PLAN.json": {
+      "spine": "C:\\Programs\\wt-w3c-488-489\\.agent-work\\w3c-488-489\\IMPLEMENTER_PLAN.json",
+      "engine_session": "impl-w3c-488-489",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T04:59:08.996047+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#aea41109508c6c0e4": {
+    "C:\\Programs\\wt-rev-465\\.agent-work\\harvest-418-redux\\reviews\\w3a-465-review\\g1-review\\review.json": {
+      "spine": "C:\\Programs\\wt-rev-465\\.agent-work\\harvest-418-redux\\reviews\\w3a-465-review\\g1-review\\review.json",
+      "engine_session": "rev-465-session1",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T06:13:51.356994+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#a3d90e44909ee20b9": {
+    "C:\\Programs\\wt-w3a-465\\.agent-work\\w3a-465\\spine.json": {
+      "spine": "C:\\Programs\\wt-w3a-465\\.agent-work\\w3a-465\\spine.json",
+      "engine_session": "commander-w3a-465-b",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T06:23:31.837152+00:00",
+      "path_source": "cd_target"
+    },
+    "C:\\Programs\\wt-w3a-465\\.agent-work\\w3a-465\\execute.json": {
+      "spine": "C:\\Programs\\wt-w3a-465\\.agent-work\\w3a-465\\execute.json",
+      "engine_session": "commander-w3a-465-b",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T06:24:19.743110+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "9cbc67f4-bd23-4507-955f-e873fbe42d6f#acac129dc2c3e14a3": {
+    "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\g2-implementer-plan.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\g2-implementer-plan.json",
+      "engine_session": null,
+      "worktree": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456",
+      "claimed_at": "2026-08-08T06:45:47.302336+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#ac68fd6ca9ca46efd": {
+    "C:\\Programs\\wt-w3a-465\\.agent-work\\w3a-465\\spine.json": {
+      "spine": "C:\\Programs\\wt-w3a-465\\.agent-work\\w3a-465\\spine.json",
+      "engine_session": "commander-w3a-465-c",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T07:12:10.322966+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#acommander-w4-467-fefcbbc644e94546": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\spine.json",
+      "engine_session": "session_01TTKPTbD6nnMt7jFWw9GtjX",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T09:31:10.679387+00:00",
+      "path_source": "worktree_opt"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#ad6f407b5d133896d": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\crew-plans\\g1-implementer-plan.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\crew-plans\\g1-implementer-plan.json",
+      "engine_session": null,
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T10:25:28.433918+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#acommander-w4-467-c-9e4bc55b7eee9b87": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\spine.json",
+      "engine_session": "session_01TTKPTbD6nnMt7jFWw9GtjX",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T10:47:06.614918+00:00",
+      "path_source": "worktree_opt"
+    },
+    "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\execute.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\execute.json",
+      "engine_session": "session_01TTKPTbD6nnMt7jFWw9GtjX",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T10:47:18.003207+00:00",
+      "path_source": "worktree_opt"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#ae7388720032cafca": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\g1-review\\review.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\g1-review\\review.json",
+      "engine_session": "g1-rev-467",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T10:50:07.823325+00:00",
+      "path_source": "worktree_opt"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#acommander-w4-467-e-b0d7a983b158adfd": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\spine.json",
+      "engine_session": "session_01TTKPTbD6nnMt7jFWw9GtjX",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T11:30:52.098863+00:00",
+      "path_source": "worktree_opt"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#acommander-w4-467-f-f6ab63ec1eefb75e": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\spine.json",
+      "engine_session": "session_01TTKPTbD6nnMt7jFWw9GtjX",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T14:15:39.040690+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#a771880beb1eebc00": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\g3-review\\review.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\g3-review\\review.json",
+      "engine_session": "g3-review-rev-01",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T14:22:39.906823+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#acommander-w4-467-g-945823c5c31b5bfa": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\spine.json",
+      "engine_session": "session_01TTKPTbD6nnMt7jFWw9GtjX",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T15:37:23.683779+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#a9183fc41306492fc": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\g4-review\\review.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\g4-review\\review.json",
+      "engine_session": "g4rev-467",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T17:12:16.163146+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "9cbc67f4-bd23-4507-955f-e873fbe42d6f#agb-implementer-8893148f22af9cbd": {
+    "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\gb-implementer-plan.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\gb-implementer-plan.json",
+      "engine_session": "gb-implementer-1",
+      "worktree": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456",
+      "claimed_at": "2026-08-08T17:40:35.280547+00:00",
+      "path_source": "payload_cwd"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#a686ea2dbdb14fd46": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-a2-467\\.agent-work\\issue-467-trip-semantics\\spine.json",
+      "engine_session": "session_01TTKPTbD6nnMt7jFWw9GtjX",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T19:55:21.162589+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#acommander-w5-gates-50c4dde7b164246b": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-w5-gates\\.agent-work\\w5-gates\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-w5-gates\\.agent-work\\w5-gates\\spine.json",
+      "engine_session": null,
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T22:53:38.748532+00:00",
+      "path_source": "cd_target"
+    },
+    "C:\\Programs\\constellation-skills-wt\\epic418-w5-gates\\.agent-work\\w5-gates\\interrogation.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-w5-gates\\.agent-work\\w5-gates\\interrogation.json",
+      "engine_session": "interrogator-w5-gates",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T22:59:15.747976+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#acommander-w5-readiness-1cdd9e3bded0f5d9": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-w5-readiness\\.agent-work\\issue-458-readiness\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-w5-readiness\\.agent-work\\issue-458-readiness\\spine.json",
+      "engine_session": "commander-issue-458-readiness",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T22:55:49.230264+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#aimpl-w5-engine-806521285cd11029": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-w5-engine\\.agent-work\\w5c4-engine\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-w5-engine\\.agent-work\\w5c4-engine\\spine.json",
+      "engine_session": "impl-w5-engine",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T23:06:11.176842+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#aimpl-w5-docs-b471cf76532b5c25": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-w5-docs\\.agent-work\\impl-w5-docs-496-411\\plan.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-w5-docs\\.agent-work\\impl-w5-docs-496-411\\plan.json",
+      "engine_session": "impl-w5-docs-496-411",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T23:19:03.265764+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#aimpl-w5-engine-b-97e6de2655fded5f": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-w5-engine\\.agent-work\\w5c4-engine\\spine.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-w5-engine\\.agent-work\\w5c4-engine\\spine.json",
+      "engine_session": "impl-w5-engine-b",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T23:28:36.384634+00:00",
+      "path_source": "absolute"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#aimpl-w5-addressing-b-3beaa0dee705a095": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-w5-addressing\\.agent-work\\issue-507-370-413-addressing\\plan.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-w5-addressing\\.agent-work\\issue-507-370-413-addressing\\plan.json",
+      "engine_session": "impl-w5-addressing-b",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T23:29:00.941935+00:00",
+      "path_source": "absolute"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#af80afcfb526581f4": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-w5-readiness\\.agent-work\\issue-458-readiness\\crew-handoffs\\g1-implement-plan.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-w5-readiness\\.agent-work\\issue-458-readiness\\crew-handoffs\\g1-implement-plan.json",
+      "engine_session": "impl-458-g1",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-08T23:51:19.235586+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#aab15d8e91daeab11": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-w5-gates\\.agent-work\\w5-gates\\g2-implement-IMPLEMENTER_PLAN.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-w5-gates\\.agent-work\\w5-gates\\g2-implement-IMPLEMENTER_PLAN.json",
+      "engine_session": null,
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-09T01:14:30.281970+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#ab2ca8123694f40aa": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-w5-gates\\.agent-work\\w5-gates\\g3-implement-IMPLEMENTER_PLAN.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-w5-gates\\.agent-work\\w5-gates\\g3-implement-IMPLEMENTER_PLAN.json",
+      "engine_session": "impl-w5-g3",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-09T02:06:59.015710+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#a5c9ff30b2442c403": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-w5-gates\\.agent-work\\w5-gates\\g4-implement-IMPLEMENTER_PLAN.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-w5-gates\\.agent-work\\w5-gates\\g4-implement-IMPLEMENTER_PLAN.json",
+      "engine_session": "g4-implement-attempt-1",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-09T03:19:59.994163+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "9cbc67f4-bd23-4507-955f-e873fbe42d6f#ags-reviewer-df5f0da91739eecf": {
+    "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\gs-review\\review.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456\\.agent-work\\issue-456\\gs-review\\review.json",
+      "engine_session": "gs-reviewer-1",
+      "worktree": "C:\\Programs\\constellation-skills\\.claude\\worktrees\\issue-456",
+      "claimed_at": "2026-08-09T03:45:40.863805+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#acommander-w5-gates-f-b355e239eae14898": {
+    "C:\\Programs\\constellation-skills-wt\\epic418-w5-gates\\.agent-work\\w5-gates\\execute.json": {
+      "spine": "C:\\Programs\\constellation-skills-wt\\epic418-w5-gates\\.agent-work\\w5-gates\\execute.json",
+      "engine_session": "commander-w5-gates-f-20260808",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-09T04:46:15.745535+00:00",
+      "path_source": "cd_target"
+    }
+  },
+  "db1a42c1-52e0-4afe-ba5d-908fa40d9a49#acartographer-418-728e9b79900598e5": {
+    "C:\\Programs\\constellation-skills\\.agent-work\\epic-418-redux\\closeout\\cartographer\\plan.json": {
+      "spine": "C:\\Programs\\constellation-skills\\.agent-work\\epic-418-redux\\closeout\\cartographer\\plan.json",
+      "engine_session": "cartographer-418",
+      "worktree": "C:\\Programs\\constellation-skills",
+      "claimed_at": "2026-08-09T12:01:02.719328+00:00",
+      "path_source": "cd_target"
+    }
+  }
+}
