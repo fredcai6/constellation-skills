@@ -3506,3 +3506,25 @@ Entry grammar (one line of date + tag, then the substance):
   named the ambiguity. Both are episode material.
 
 - TRANSITION | boundary=w8x-closeout | decision=stop | verified
+
+- RULING | 2026-08-12 08:05 | **The human called the stop (human, 2026-08-12):** *"were pretty damn
+  messy right now and need to just take a step and figure out the clean up. go ahead and close up
+  shop on this effort."* R1 is filed rather than run. **#565** filed — sunset the workbench skill,
+  because its teaching half duplicates the door and that is why the CLI keeps growing back. R1's full
+  specification and re-measurement posted as a comment on **#559** rather than as a second issue;
+  #559 already carries this work and a duplicate would split it.
+- TRANSITION | boundary=w8x-closeout | decision=stop | verified
+- FINDING | 2026-08-12 08:10 | **The Admiral's own door was bound to a wave-1 scratch demo spine.**
+  `spine_status` at closeout returned a scratch gate under
+  `constellation-skills-wt/f-424/.../interactive-demo`, not this epic's spine, so the Admiral drove
+  its own closing sequence through the engine directly. That is the precise defect this epic exists
+  to remove, arriving at the top tier at its last step. Recorded rather than worked around. Owed as
+  an episode.
+- STATE | 2026-08-12 08:12 | **`execute` complete; `closeout` refused to start at 23% context and the
+  engine asked for a fresh agent.** The refresh is recorded on the spine as `e-closeout-1`
+  (`seam=closeout`, `why_ref=w-3`). The refusal was not routed around: closeout is `pending`, the
+  lease is still held, and `STATE_NOTE.md` carries the ordered remainder so a fresh Admiral resumes
+  from `current` alone. Owed at closeout: apply the 14-op episode delta plus six episodes from this
+  session, reconcile (a reasoned no-op — this repo has no packet map), the dogfood feedback sweep,
+  harvest and sweep the last worktree, archive this log, present the summary, and release the lease
+  last.

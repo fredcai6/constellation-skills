@@ -129,13 +129,15 @@
           "id": "c1",
           "statement": "every epic issue dispositioned (merged, honest-null closed, deferred with ruling, or escalated)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         },
         {
           "id": "c2",
           "statement": "ADMIRAL_LOG current through the last wave: all rulings, incidents, merges, transition exits, and errors logged",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         },
         {
           "id": "c3",
@@ -144,7 +146,8 @@
             "kind": "command",
             "command": "python3 /home/tommy/.claude/skills/constellation-admiral/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-418-followon"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-2"
         }
       ],
       "constraints": [],
@@ -178,7 +181,7 @@
         }
       },
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {
         "blocker": "Surfaced decision + expired contract, both needing the human. (1) The MCP door is connected but binds to examples/mcp-interactive-demo/spine.json, because nothing in any shipped launch path sets SPINE_FILE: grep -rln SPINE_FILE scripts/ returns only mcp_spine_server.py, which merely reads it, and run_crew.py has zero MCP references. Proved by handshake that the same server with SPINE_FILE set returns this epic's execute gate and live lease, so the server is sound and the binding is the whole defect. Choosing how the door learns its spine changes a production default and the door's binding shape, both surfaced classes in the latitude contract. (2) The latitude contract expired at its own stated expiry, the wave-1 boundary, and 424 merged two waves ago; the human's 2026-08-10 re-goaling to MCP adoption supersedes the confirmed wave plan and is not yet written into a refreshed contract.",
         "authority_needed": "human",
@@ -198,6 +201,17 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 /home/tommy/.claude/skills/constellation-admiral/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-418-followon",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -211,7 +225,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -259,19 +274,30 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-closeout-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "closeout",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 3,
+  "refusals": 4,
   "engine_session": {
     "session_id": "717403d3-70be-436f-bc06-ce9ac3e34e05",
     "status": "active",
     "claimed_at": "2026-08-10T16:38:30.807086+00:00",
-    "last_heartbeat": "2026-08-10T17:31:45.636493+00:00",
+    "last_heartbeat": "2026-08-12T14:52:04.358992+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,
@@ -291,6 +317,26 @@
       "why": "The follow-on is the last three links of #418's confirmed chain, and the contract is written to what each one actually needs rather than to a generic dial: F goes first because A2 settled the verb meanings it types and because the spec's F-before-C link is real, C's preparation overlaps wave 1 because its observables must be named before unit selection or the measure self-fulfils, and E is terminal by its own body and now reads across the redux as well as this run. The two costly-to-revert items the spec names \u2014 C's tranche boundary and E's cluster boundaries \u2014 are carved out as surfaced exceptions inside otherwise-delegated classes, and both measurement missions have their core mechanics pre-cleared per #145 so the harness classifier cannot veto the thing they were dispatched to run.",
       "mechanical": false,
       "ts": "2026-08-09T14:58:07.885356+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "execute",
+      "why": "Thirteen workstreams merged. Wave 7 bound the lifecycle to the spine and the human called the stop; the w8x-closeout transition records decision=stop and the prelaunch verifier accepts it. Four of five done-conditions hold on main; the fifth is filed on #559 and #565 rather than worked.",
+      "mechanical": false,
+      "ts": "2026-08-12T14:51:32.642480+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "closeout",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.2283,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-12T14:51:43.124081+00:00"
     }
   ]
 }
