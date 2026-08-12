@@ -321,10 +321,13 @@ class IsolationGateSurvivesThroughTheCLI(unittest.TestCase):
     the gate unfailable.
 
     So: if you are here because this test went red while making command checks
-    cwd-independent, the test is right and the change is wrong. A command check
-    that observes the environment needs an explicit contract (a schema flag, or
-    the launcher's cwd passed into the check's environment) before the engine
-    may relocate it.
+    cwd-independent, do not just relax the assertion. A command check that
+    observes the environment needs an explicit contract -- a schema flag, or the
+    launcher's cwd passed into the check's environment -- before the engine may
+    relocate it. If such a contract HAS landed, this fixture is what needs
+    updating: it writes the bare `--here` form, so teach it the new form and keep
+    both sides asserted. What must not change is that a launcher standing in the
+    wrong worktree is still refused.
     """
 
     def setUp(self):

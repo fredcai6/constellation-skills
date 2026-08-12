@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r0-context",
+  "mechanical": {
+    "run": "commander-315",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-commander-315-r0-context@e7f398ea3991ae8b29b05dfe120efd650d0156ab",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "commander-315",
+    "generated_at": "2026-08-12T20:58:04Z"
+  }
+}

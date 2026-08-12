@@ -1,3 +1,21 @@
+> # SUPERSEDED — DO NOT BUILD THIS
+>
+> This handoff was **never dispatched**. Its "Resolution target — already
+> decided, do not re-litigate" section was **falsified** before dispatch by the
+> cold plan critic and then disproven empirically.
+>
+> Setting a command check's `cwd` to the spine's enclosing repo root **disarms**
+> the shipped worktree-isolation gate (`COMMANDER_SPINE` `init.c0`):
+> `verify_worktree_isolation.py --here` reads the ambient cwd as the **subject**
+> of the check, not as a path base, so the comparison becomes `X == X`. Proven
+> through the real engine path in `../s1_production.sh`.
+>
+> Issue #315 is **open and unfixed**. Do not implement what follows. Read
+> `../COMMANDER_RESULT.md` first — it carries the measurement, the blocker, and
+> the three options the Admiral must rule between.
+>
+> Kept in the tree only as the record of what was planned and why it was wrong.
+
 # Implementer Handoff
 
 ## Gate
