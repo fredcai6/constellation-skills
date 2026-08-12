@@ -270,8 +270,13 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "The engine refused 'start closeout' at 23% context and instructed that a fresh agent begin this gate; the refresh is recorded on the spine as e-closeout-1 (seam=closeout, why_ref=w-3). Starting a full retrospective, reconcile, sweep and archive at this headroom risks a half-applied episode store, which is worse than not starting. The refusal was not routed around.",
+        "authority_needed": "human",
+        "next_action": "Relaunch a fresh Admiral into .agent-work/epic-418-followon/spine.json, cold-started from 'current' alone. Re-claim lease 717403d3-70be-436f-bc06-ce9ac3e34e05 (idempotent for the same session id), then 'start closeout' and work the ordered remainder in STATE_NOTE.md: apply the 14-op episode delta plus the six episodes this session owes, verify the capture, record a reasoned no-op reconcile (this repo has no packet map), run the dogfood feedback sweep, harvest CONSTELLATION_FEEDBACK.md from the c3-lifecycle worktree before removing it, archive ADMIRAL_LOG.md, present the summary for acceptance, and release the lease last.",
+        "prior_status": "pending"
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -291,13 +296,20 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "closeout",
+      "blocker": "The engine refused 'start closeout' at 23% context and instructed that a fresh agent begin this gate; the refresh is recorded on the spine as e-closeout-1 (seam=closeout, why_ref=w-3). Starting a full retrospective, reconcile, sweep and archive at this headroom risks a half-applied episode store, which is worse than not starting. The refusal was not routed around.",
+      "authority_needed": "human",
+      "next_action": "Relaunch a fresh Admiral into .agent-work/epic-418-followon/spine.json, cold-started from 'current' alone. Re-claim lease 717403d3-70be-436f-bc06-ce9ac3e34e05 (idempotent for the same session id), then 'start closeout' and work the ordered remainder in STATE_NOTE.md: apply the 14-op episode delta plus the six episodes this session owes, verify the capture, record a reasoned no-op reconcile (this repo has no packet map), run the dogfood feedback sweep, harvest CONSTELLATION_FEEDBACK.md from the c3-lifecycle worktree before removing it, archive ADMIRAL_LOG.md, present the summary for acceptance, and release the lease last."
+    }
+  ],
   "refusals": 4,
   "engine_session": {
     "session_id": "717403d3-70be-436f-bc06-ce9ac3e34e05",
     "status": "active",
     "claimed_at": "2026-08-10T16:38:30.807086+00:00",
-    "last_heartbeat": "2026-08-12T14:52:04.358992+00:00",
+    "last_heartbeat": "2026-08-12T14:53:36.727416+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,

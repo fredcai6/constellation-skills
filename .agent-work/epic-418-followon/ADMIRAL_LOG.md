@@ -3528,3 +3528,9 @@ Entry grammar (one line of date + tag, then the substance):
   session, reconcile (a reasoned no-op — this repo has no packet map), the dogfood feedback sweep,
   harvest and sweep the last worktree, archive this log, present the summary, and release the lease
   last.
+- BLOCKED | 2026-08-12 08:20 | **`closeout` is blocked and bubbled to the human**, authority `human`,
+  next action recorded on the spine. The blocker is the engine's own refusal to start the gate at 23%
+  context together with its instruction that a fresh agent begin it. I did not waive it — a waiver
+  here needs the human's authority, not mine — and I did not start the gate anyway. The lease stays
+  held; releasing it now would leave a non-terminal spine open to a second agent, which is the
+  failure this epic measured. `STATE_NOTE.md` carries the ordered remainder.
