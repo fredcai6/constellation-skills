@@ -143,14 +143,21 @@ def _git(args: list[str], *, cwd: Path) -> str:
     return proc.stdout.strip()
 
 
+def _best_effort_git(args: list[str], *, cwd: Path) -> None:
+    """Runs a git command and ignores the outcome -- never raises, exit code
+    unchecked. `_rollback`'s only caller: best-effort cleanup must never itself
+    fail the rollback it is part of."""
+    subprocess.run(["git", *args], cwd=str(cwd), capture_output=True, text=True)
+
+
 def _rollback(worktree: str, branch: str, root: Path) -> None:
     """Best-effort, never raises: removes the worktree this call created and
     deletes the branch this call created. Scoped to what THIS call created --
     a pre-existing unrelated worktree or branch is never touched, because the
     only arguments here are the ones this call itself derived."""
-    subprocess.run(["git", "worktree", "remove", "--force", worktree], cwd=str(root), capture_output=True, text=True)
-    subprocess.run(["git", "worktree", "prune"], cwd=str(root), capture_output=True, text=True)
-    subprocess.run(["git", "branch", "-D", branch], cwd=str(root), capture_output=True, text=True)
+    _best_effort_git(["worktree", "remove", "--force", worktree], cwd=root)
+    _best_effort_git(["worktree", "prune"], cwd=root)
+    _best_effort_git(["branch", "-D", branch], cwd=root)
 
 
 @contextlib.contextmanager
@@ -255,7 +262,7 @@ def open_work(
             raise SpineLifecycleError(f"worktree isolation self-verify failed: {reason}")
 
         spine_path = work_dir / "spine.json"
-        spine_path.write_text(json.dumps(compiled, indent=2) + "\n", encoding="utf-8")
+        spine_path.write_text(json.dumps(compiled, indent=2) + "\n", encoding="utf-8", newline="\n")
     except Exception:
         _rollback(worktree, branch, root)
         raise

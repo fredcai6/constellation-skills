@@ -315,7 +315,8 @@
           "id": "p1",
           "statement": "plan approved; context headroom ensured and commander skill reloaded into this context",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Plan approved (e-plan-1 user-decision citing LAUNCH_ORDER) and committed at 2ca5abad. constellation-commander-delegated reloaded into this context and confirmed active -- that is this run's entry skill; it binds commander-core.md, which is the doctrine the imperative means. Context headroom: this harness exposes no agent-callable compaction command, so per global-everyone.md (\"treat context headroom as opportunistic ... not as its own checkable gate\") this run relies on harness auto-compaction, which preserves the spine and the work-area artifacts."
         },
         {
           "id": "p2",
@@ -324,7 +325,8 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_state_note.py epic-559/c3-lifecycle"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-1"
         }
       ],
       "postconditions": [
@@ -368,11 +370,23 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_state_note.py epic-559/c3-lifecycle",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "reconcile": {
@@ -606,14 +620,25 @@
     }
   },
   "consolidation": null,
-  "triage_candidates": [],
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "execute",
+      "statement": "The door binds ONE spine per process, but a Commander drives TWO checklists \u2014 its spine and its gate plan. _identity_violation refuses any argv resolving --file off the bound spine, so GATE_PLAN.json cannot be driven through this door at all. The only shipped way to drive a second checklist is a second, differently-bound server hand-registered in the user-level ~/.claude.json \u2014 verified: that is exactly what the Admiral's own `spine-epic` entry is, bound to .agent-work/epic-418-followon/spine.json. So the corpus's answer to \"drive a second checklist\" is a manual config edit that cannot even take effect mid-session, which is the same unautomated class as the hand-typed `git worktree add` this epic exists to remove. This does NOT invalidate the deliverable (a crew binds a generated spine through run_crew.py --spine, which works), but it does mean this Commander executes its own gate plan as a frozen document, running every close-criterion command itself, rather than through the engine. Recorded rather than routed around."
+    },
+    {
+      "id": "tc2",
+      "from": "execute",
+      "statement": "episode_capture.manifest_root() (scripts/episode_capture.py:181-213) doubles the work-id path segment when a checklist lives in a subdirectory of its own work-id dir that does not itself end in the work-id -- exactly the .agent-work/<work-id>/<gate>-review/review.json shape the reviewer skill's own convention recommends. Reproduced live and confirmed on disk this run: the g1 reviewer's survey wrote .agent-work/epic-559/c3-lifecycle/epic-559/c3-lifecycle/{context,mechanical}/r*.json instead of .agent-work/epic-559/c3-lifecycle/{context,mechanical}/. The function's docstring documents the historical behaviour but does not flag that a reviewer survey is precisely the shape that trips it, so every reviewer crew in this corpus scatters its engine-written provenance into a nested duplicate path. Out of scope for C3 (episode_capture.py is untouched by every gate here). Found by the g1 reviewer; not filed as an issue, per the launch order's triage pre-ruling."
+    }
+  ],
   "blockers": [],
   "refusals": 3,
   "engine_session": {
     "session_id": "constellation/epic-559/c3-lifecycle/execute/commander",
     "status": "active",
     "claimed_at": "2026-08-12T08:28:28.041404+00:00",
-    "last_heartbeat": "2026-08-12T09:17:11.007783+00:00",
+    "last_heartbeat": "2026-08-12T10:00:20.798043+00:00",
     "claimed_by": "commander",
     "worktree": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle",
     "previous_session_id": null,

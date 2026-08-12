@@ -13,6 +13,7 @@ state is read only by `TestWorktreePathForRealWorktree`, and never written.
 
 from __future__ import annotations
 
+import ast
 import json
 import shutil
 import subprocess
@@ -447,6 +448,67 @@ class TestOriginRoundTrip:
         assert cl["origin"] == origin_before, (
             f"origin mutated by the engine drive:\nbefore: {origin_before}\nafter: {cl['origin']}"
         )
+
+
+# --------------------------------------------------------------------------- #
+# spine.json is written with newline="\n" -- CREW_CONTEXT.md's "every write"
+# rule. Byte-level (Path.read_bytes()) because a text-mode read translates
+# CRLF back to LF on read, which would pass on Windows regardless.
+# --------------------------------------------------------------------------- #
+
+@requires_git
+class TestSpineFileHasNoCRLF:
+    def test_written_spine_bytes_contain_no_crlf(self, repo, wt_root):
+        result = sl.open_work("w1", _spec("w1"), root=repo, base="HEAD", parent="unknown", wt_root=wt_root)
+        raw = Path(result["SPINE_FILE"]).read_bytes()
+        assert b"\r\n" not in raw
+
+
+# --------------------------------------------------------------------------- #
+# Every write_text call in the module pins newline="\n" explicitly. AST-based
+# (house style: tests/test_mcp_adoption.py::_cli_only_verb_violations) because
+# TestSpineFileHasNoCRLF above cannot go red on Linux: os.linesep here is "\n",
+# so write_text() with no newline= argument produces identical bytes to
+# write_text() with newline="\n" -- the CRLF-producing bug is real only on
+# Windows and invisible to any byte comparison run on this host. This check
+# instead reads the source and can fail on any host, including this one.
+# --------------------------------------------------------------------------- #
+
+def _missing_newline_write_text_calls(source: str, where: str) -> list[str]:
+    """Every `.write_text(...)` call in `source` lacking an explicit
+    `newline=` keyword argument, as `where:lineno` strings."""
+    tree = ast.parse(source, filename=where)
+    violations = []
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "write_text"
+            and not any(kw.arg == "newline" for kw in node.keywords)
+        ):
+            violations.append(f"{where}:{node.lineno}")
+    return violations
+
+
+class TestEveryWriteTextPinsNewline:
+    SOURCE = (ROOT / "scripts" / "spine_lifecycle.py").read_text(encoding="utf-8")
+
+    def test_the_shipped_module_has_no_violations(self):
+        assert _missing_newline_write_text_calls(self.SOURCE, "scripts/spine_lifecycle.py") == []
+
+    def test_violating_a_mutated_copy_missing_newline_is_caught(self):
+        # Positive control: proves the predicate can fail, per the mutated-copy
+        # convention `_cli_only_verb_violations` establishes. Strips exactly the
+        # keyword this check exists to require -- not a stand-in for a different
+        # mutation.
+        mutated = self.SOURCE.replace(', newline="\\n")', ")")
+        assert mutated != self.SOURCE, "the mutation did not change the source -- fixture is stale"
+        violations = _missing_newline_write_text_calls(mutated, "<mutated>")
+        assert violations, "the predicate did not catch a write_text call with newline= stripped"
+
+    def test_innocent_a_write_text_call_with_newline_present_is_not_flagged(self):
+        innocent = "p.write_text(data, encoding='utf-8', newline='\\n')"
+        assert _missing_newline_write_text_calls(innocent, "<innocent>") == []
 
 
 # --------------------------------------------------------------------------- #
