@@ -3463,3 +3463,22 @@ Entry grammar (one line of date + tag, then the substance):
   the same matched-pair blindness the cold critic caught for the spine filename, in a second place
   nobody generalized to. **Spine-last held under the real interruption**, which is the good news. C3
   did not patch it post-terminal, correctly. Repair candidate.
+- RULING | 2026-08-12 07:10 | **Human's calls on the C3 incident and the repair (human, 2026-08-12).**
+  PR #564 **stays open and is the merge vehicle** — not closed, branch not deleted. The two blocking
+  defects go to **one repair crew**, not two and not a new Commander. R1 remains held.
+- DISPATCH | 2026-08-12 07:12 | **R0 (`epic-559/r0-lifecycle-repair`) launched** — implementer,
+  Sonnet, parent `admiral-epic-418-followon`, pid `1965632`, into C3's own worktree (both C3 pids
+  confirmed gone by `ps -p`, not by `pgrep`, which matches the checking shell's own command line).
+  Four gates: reproduce both defects into `BASELINE.md`; make the real-worktree test portable; make
+  `close_work` handle gitignored entries and roll back on failure with a fixture that carries one;
+  then prove the suite green **from a foreign detached checkout at HEAD**, which is the gate that
+  would have caught defect 1 in the first place. Spine validates clean — `m0-context` initially drew
+  a `falsifiable-all-null` fault and was given a real check rather than shipped with the silent
+  default, per this wave's own ruling.
+- FINDING | 2026-08-12 07:12 | **Every run that closes itself with `close_work` will register as
+  `failed`.** C3's own registry entry reads `status: "failed"`, `exit_code: 0`,
+  `result_present: false` — because `close_work` moves `COMMANDER_RETURN.md` into the archive and
+  `run_crew.py` then looks for it at the path it was given. The fixed close ordering puts the move
+  after the child's last action, so the verification always runs against the moved-away path. This is
+  a `run_crew.py` question, out of R0's scope; R0 names it and does not fix it. Evidence preserved as
+  `crew-runs.final.json` in C3's archive rather than dropped.
