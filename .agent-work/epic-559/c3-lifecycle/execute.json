@@ -334,7 +334,8 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "All five gates in GATE_PLAN.json closed with integrated evidence, each implement -> review -> integrate, each dispatched through run_crew.py with --parent naming this Commander and an explicit --model sonnet. Commits: g1 d8305d9c, g2 d0358a3d, g3 386d7635, g4 b88f13a4, g5 51feb36c. Every reviewer verdict APPROVE; g1 took a BLOCK and a rework first. I verified each gate's claims against the world myself rather than accepting the reports: mutated the close-path derivation to the literal \"spine.json\" and watched the mandatory test go red; parsed both revisions of mcp_spine_server.py and compared call_tool's FunctionDef to prove it byte-identical; injected a SESSION reference into _spine_open and watched the new containment pin go red; ran verify_declared_dispatch.py directly against a hand-built registry for wrong-parent, wrong-model and matching cases; and drove all six not_yet_written spellings through the generator. Suite 2824 -> 2932, sweep unchanged at 23 at every gate boundary. NOTE, recorded not hidden: GATE_PLAN.json was executed as a frozen document, not driven through the engine, because the door binds one spine per process and _identity_violation refuses any argv resolving --file off it (triage candidate tc1)."
         },
         {
           "id": "c2",
@@ -343,7 +344,8 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id epic-559/c3-lifecycle"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-2"
         }
       ],
       "constraints": [],
@@ -370,7 +372,7 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -380,6 +382,17 @@
           "type": "command-output",
           "payload": {
             "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_state_note.py epic-559/c3-lifecycle",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id epic-559/c3-lifecycle",
             "exit": 0,
             "shell": "posix"
           },
@@ -398,7 +411,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute complete: all five gates closed with integrated evidence and an APPROVE each; commits d8305d9c, d0358a3d, 386d7635, b88f13a4, 51feb36c. Suite 2932, sweep 23, clean tree."
         }
       ],
       "postconditions": [
@@ -406,13 +420,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Reconciled DIRECTLY rather than by dispatching Cartographer, which is the sanctioned path where a run has no packet map. Measured at the context step and unchanged: docs/architecture/ does not exist in any of its three probed forms and map/ids.jsonl is empty, so there is no packet map to fold into. Three structural records were touched and all three are current. (1) map/INDEX.md, the derived code map: regenerated by the gates that added modules; `python -m scripts.code_map check` passes 7 of 7 including deterministic-rebuild; it carries scripts.spine_lifecycle (18 entities), tests.test_spine_lifecycle and tests.test_mcp_lifecycle with accurate one-line descriptions. Never hand-edited. (2) The C2 DESIGN_NOTE.md, which is the generator's frozen contract and was changed by g4 and g5: sections 4, 7 and 10 reconciled in g5, with section 7's fault vocabulary enumerated mechanically from source. (3) mcp_spine_server.py's module docstring, which is that file's real interface record: it gained a substantive \"The lifecycle door\" section stating why the two tools are dispatched outside call_tool, that no .mcp.json change was needed because a tool is not a server, and that the opposite identity postures are checked rather than claimed. The existing \"9 tools / 18 of 18 verbs\" statements remain true because they scope the ENGINE pass-through surface, which did not change. The new module's own design record is LIFECYCLE_CONTRACT.md, tracked and committed, matching the convention C2 set by keeping DESIGN_NOTE.md in its work area. No structural record was left stale and no no-op was needed."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -428,7 +443,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile complete: reconciled directly (no packet map exists in this repo); code map passes 7/7 checks including deterministic-rebuild, C2's DESIGN_NOTE reconciled, and the door's module docstring gained a substantive lifecycle-door section."
         }
       ],
       "postconditions": [
@@ -436,7 +452,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Six candidates routed, none left unrouted, in .agent-work/epic-559/c3-lifecycle/TRIAGE_RECOMMENDATIONS.md. The three engine-flagged candidates (tc1 door-binds-one-spine, tc2 episode_capture path doubling, tc3 DESIGN_NOTE section 7 unpinned) became T1, T2 and T3; three more came from run evidence: T4 (the one-crew-per-worktree rule is prose while active_duplicate keys on role too), T5 (validate_spine cannot express not-yet-written), T6 (the missing newline twin, fixed in g5, with a corpus sweep recommended). Each was checked against the fix-now ladder and the specific FAILING RUNG is named rather than implied; T6 is the only fixed-now and only because g5 already had that file open. Every other disposition is recommend-and-defer, and the deferral reason is identical and not a guess: the launch order withholds filing authority from this run (\"triage files nothing... I file it at epic closeout\"), so authority was WITHHELD rather than unclear. Every observation carries its conditions, its type with how it was established, and rev 51feb36c; defects carry one block per occurrence rather than a merged summary."
         },
         {
           "id": "c2",
@@ -445,17 +462,31 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Pre-rulings \u2014 triage files nothing",
+            "decision": "no issues filed this run; all six candidates routed recommend-and-defer for the Admiral to file at epic closeout",
+            "artifact": ".agent-work/epic-559/c3-lifecycle/TRIAGE_RECOMMENDATIONS.md",
+            "note": "This citation records the DEFERRAL itself, not a filing approval \u2014 none was sought and none was authorized."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -467,7 +498,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage complete: six candidates routed in TRIAGE_RECOMMENDATIONS.md, none filed (launch order withholds filing authority), none dropped; e-triage-1 records the deferral itself."
         }
       ],
       "postconditions": [
@@ -478,17 +510,31 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Honest null + Write COMMANDER_RETURN.md including its Workflow Feedback section before ending your turn",
+            "artifact": ".agent-work/epic-559/c3-lifecycle/COMMANDER_RETURN.md",
+            "summary": "All three pieces ship with violating fixtures; both carried findings fixed; nothing refuted. Suite 2824 -> 2932, sweep 23 -> 23. Five gates, every reviewer APPROVE (g1 after one BLOCK and rework). 15 of 15 crews carry --parent naming this Commander and an explicit --model.",
+            "ratifier": "Admiral admiral-epic-418-followon at the epic return boundary; the human ratifies above that"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -500,7 +546,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Run summary accepted: COMMANDER_RETURN.md written with its Workflow Feedback section, and e-review-1 attached citing the launch order. The Admiral ratifies at the epic return boundary."
         }
       ],
       "postconditions": [
@@ -517,7 +564,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -638,7 +685,7 @@
     }
   ],
   "blockers": [],
-  "refusals": 4,
+  "refusals": 8,
   "engine_session": {
     "session_id": "constellation/epic-559/c3-lifecycle/execute/commander",
     "status": "released",
@@ -678,6 +725,34 @@
       "why": "The plan converged on a named hybrid \u2014 candidate B's dedicated scripts/spine_lifecycle.py seam with candidate A's scope discipline \u2014 decided by candidate A arguing for B's structure inside its own hurt section. The cold critic then changed four things, and the most valuable was that every close criterion in the draft would have closed a spine that open_work itself created, so a close_work hardcoding the literal \"spine.json\" would have passed the whole suite and still been wrong for roughly half the corpus and for this Commander's own execute.json. The excluded names are now derived from Path(spine_path).name and g2 carries a mandatory differing-basename fixture. I also had to correct the critic's own supporting number, which is the same discipline pointed the other way. Two deviations from the launch order's literal wording are recorded: not_yet_written refuses rather than coerces, and the archive path follows the shipped date-prefixed convention. Both are inside latitude and go to the Admiral in the return.",
       "mechanical": false,
       "ts": "2026-08-12T09:17:11.007762+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "All three launch-order pieces ship with violating fixtures, and both carried findings are fixed. The run's most useful discoveries were corrections to its own premises rather than the code: the stated chicken-and-egg was not the real obstacle (.mcp.json defaults SPINE_FILE, so the door always starts; the real constraint is the call_tool AST pin plus _identity_violation), the not_yet_written bug deletes a gate's check rather than merely misreading a field, and a Commander cannot drive its own gate plan through the door at all. That last one is the same unautomated class this epic exists to remove, one tier up, and it is recorded as evidence rather than routed around. Every gate's claims were re-verified against the world by mutation or direct execution, not accepted from the crew reports, and one of my own checks was a false positive I caught and corrected.",
+      "mechanical": false,
+      "ts": "2026-08-12T13:10:11.337653+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "Reconciled directly because this repo genuinely has no packet map, and the three structural records the change actually touched \u2014 the derived code map, C2's frozen design note, and the door's own module docstring \u2014 are each current and each verified rather than asserted. The code map passes its own seven checks including deterministic-rebuild, which is stronger evidence than a Cartographer read would have been for a map that does not exist. The one thing worth carrying forward is that the absence of a packet map is not a gap this run could close: it is why every Commander run here orients DEGRADED, and it goes to the Admiral in the return.",
+      "mechanical": false,
+      "ts": "2026-08-12T13:11:09.199770+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "Six candidates routed and none dropped. The one worth the Admiral's attention first is T1: the door binds one spine per process while a Commander drives two checklists, and the only shipped way to bind a second is a hand-edited user-level config that cannot take effect mid-session. That is the same unautomated, manual, config-editing class this epic exists to remove, sitting one tier above the worktree provisioning it just mechanized. T4 is its smaller sibling: the one-crew-per-worktree rule this run was told to enforce in code is prose, while the mechanical guard actually keys on role as well, so the machinery is weaker than the rule \u2014 and I honoured the prose at real wall-clock cost rather than taking the machinery's permission.",
+      "mechanical": false,
+      "ts": "2026-08-12T13:12:46.669930+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "The run summary is COMMANDER_RETURN.md, and it reports the three corrections to the launch order's own premises as prominently as the code, because those are what should change the epic's next move: the chicken-and-egg was not the KeyError, not_yet_written deletes a check rather than misreading a field, and the archive convention on disk is not the one the order names. It also records two things a summary is tempted to leave out \u2014 that the critic's headline number was wrong and the finding survived anyway, and that one of my own verification checks was a false positive that matched a docstring. In delegated mode the Admiral ratifies this at the epic return boundary; no human was reachable at any point in this run.",
+      "mechanical": false,
+      "ts": "2026-08-12T13:14:38.387425+00:00"
     }
   ]
 }

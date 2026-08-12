@@ -186,12 +186,22 @@
   {
    "issue_id": "g2",
    "outcome": "close ships: closeout_refusal as the whole pure ordering predicate, and close_work archiving spine-last with names DERIVED from the bound spine path rather than the literal spine.json",
-   "evidence": "d0358a3d; suite 2856 -> 2875; the mandatory differing-basename test was falsified by the Commander by mutating the derivation to the literal, and it goes red; reviewer APPROVE"
+   "evidence": "d0358a3d; suite 2856 -> 2875; the mandatory differing-basename test falsified by the Commander by mutating the derivation to the literal, and it goes red; reviewer APPROVE"
   },
   {
    "issue_id": "g3",
-   "outcome": "the door ships: spine_open and spine_close on the already-registered spine server, dispatched from a module-level sibling of call_tool, with their own containment pin; generate_spine is now reachable through MCP",
-   "evidence": "386d7635 (code at 2f6b932e); suite 2875 -> 2884; call_tool body proven byte-identical by AST comparison; the new pin falsified by injecting a SESSION reference; reviewer APPROVE"
+   "outcome": "the door ships: spine_open and spine_close on the already-registered spine server, dispatched from a module-level sibling of call_tool with their own containment pin; generate_spine is now reachable through MCP",
+   "evidence": "386d7635 (code 2f6b932e); suite 2875 -> 2884; call_tool body proven byte-identical by AST comparison; new pin falsified by injecting a SESSION reference; reviewer APPROVE"
+  },
+  {
+   "issue_id": "g4",
+   "outcome": "the declared dispatch ships: [[gate.dispatch]] with role and model required, three new spec-shape faults, and an injected command-kind postcondition reading crew-runs.json",
+   "evidence": "b88f13a4 (code 90e88984); suite 2884 -> 2920; Commander confirmed directly that a recorded admiral parent against a declared commander parent exits 1, wrong model exits 1, matching exits 0; reviewer APPROVE"
+  },
+  {
+   "issue_id": "g5",
+   "outcome": "both carried findings ship: not_yet_written REFUSES a non-bool as spec-not-yet-written-not-bool, and DESIGN_NOTE sections 4, 7 and 10 are reconciled with section 7 enumerated mechanically from source",
+   "evidence": "51feb36c; suite 2920 -> 2932; Commander ran all six cases directly, three refuse by fault name and three are unchanged; reviewer APPROVE"
   }
  ],
  "wave_evidence": [
@@ -274,10 +284,7 @@
    "reason": "Exactly the two-question standard this wave inherits, observed in the reviewer rather than in the implementer."
   }
  ],
- "open_current_wave_issue_ids": [
-  "g4",
-  "g5"
- ],
+ "open_current_wave_issue_ids": [],
  "unlaunched_items": [
   {
    "id": "R1-cli-residue",
