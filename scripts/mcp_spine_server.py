@@ -91,6 +91,30 @@ alone validates the ops. That written path is then run back through
 `_identity_violation`'s containment check (`_resolve_confined`, the same
 predicate `spine_advance.from_child` already used) before the engine ever
 sees it.
+
+--------------------------------------------------------------------------- #
+The lifecycle door: 2 more tools, dispatched OUTSIDE call_tool
+--------------------------------------------------------------------------- #
+
+`spine_open` and `spine_close` (issue #559, C3/g3) wire `scripts/spine_lifecycle.py`'s
+`open_work`/`close_work` onto this same, already-registered server -- no
+`.mcp.json` change, because a tool is not a server. They are NOT engine
+pass-throughs: neither ever calls `run_engine`, so they are dispatched from
+`call_lifecycle_tool`, a MODULE-LEVEL SIBLING of `call_tool` with its own
+containment pin (`tests/test_mcp_lifecycle.py`), routed from `main()`'s
+`tools/call` branch rather than from inside `call_tool` -- `call_tool`'s own
+choke-point pin resolves ITS `ast.FunctionDef` node by name and walks only
+that subtree, so a sibling is structurally outside it, and its body is
+untouched.
+
+Their identity postures are opposite, matching `spine_open` acting on a spine
+that does not exist yet and `spine_close` acting only on the one this door is
+already bound to: `spine_open` never references `SPINE`, `SESSION` or
+`run_engine` (checked, not merely claimed -- see `tests/test_mcp_lifecycle.py`),
+deriving the primary checkout it opens work from fresh off `SPINE_FILE`
+(ambient, server-launch-time state) rather than the module's own `SPINE`
+binding; `spine_close` takes no arguments at all and acts on `SPINE` alone,
+because there is no field to redirect.
 """
 from __future__ import annotations
 
@@ -98,6 +122,7 @@ import contextlib
 import io
 import json
 import os
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -108,6 +133,7 @@ SESSION = os.environ.get("SPINE_SESSION", "")
 
 sys.path.insert(0, str(ENGINE.parent))
 import checklist_engine  # noqa: E402
+import spine_lifecycle  # noqa: E402
 
 PROTOCOL_DEFAULT = "2025-06-18"
 SERVER_NAME = "spine"
@@ -143,12 +169,13 @@ def _log(rec: dict) -> None:
         START_MARKER.write_text(f"started for {SPINE}\n", encoding="utf-8")
 
 
-def _resolve_confined(value: str, *, join_relative_to: Path | None) -> tuple[Path, bool]:
-    """Resolve `value` and report whether it escapes the bound spine's own
-    directory tree (`SPINE.parent`). Shared by both `--from-child` and
-    `--delta` in `_identity_violation` -- one containment predicate, not two,
-    for the two flags that carry the same underlying hazard: a filesystem path
-    the engine will read and act on.
+def _resolve_confined(
+    value: str, *, join_relative_to: Path | None, bound_dir: Path = SPINE.parent,
+) -> tuple[Path, bool]:
+    """Resolve `value` and report whether it escapes `bound_dir`. Shared by
+    both `--from-child` and `--delta` in `_identity_violation` -- one
+    containment predicate, not two, for the two flags that carry the same
+    underlying hazard: a filesystem path the engine will read and act on.
 
     `join_relative_to` is where the two flags genuinely differ, and it is a
     parameter rather than a second copy of this function for exactly that
@@ -159,8 +186,17 @@ def _resolve_confined(value: str, *, join_relative_to: Path | None) -> tuple[Pat
     value resolves against the process's own cwd, same as Python's own
     default; the caller passes `None` here, and this function then resolves
     `value` exactly as `Path(value).resolve()` would, matching the engine
-    faithfully rather than asserting a base directory `amend()` never uses."""
-    bound_dir = SPINE.parent
+    faithfully rather than asserting a base directory `amend()` never uses.
+
+    `bound_dir` defaults to `SPINE.parent` -- exactly what every call inside
+    `_identity_violation` needs, unchanged -- but is a parameter so
+    `spine_open`'s own containment check (`tests/test_mcp_lifecycle.py`) can
+    confine a candidate WORKTREE path to `wt_root` instead: `SPINE.parent` is
+    the CURRENTLY bound spine's directory, an unrelated boundary for a spine
+    that does not exist yet, and `spine_open`'s own source may never reference
+    `SPINE` at all (see `call_lifecycle_tool`'s docstring). Reusing this one
+    predicate with a different `bound_dir` is the whole point: not a second,
+    differently-shaped check."""
     p = Path(value)
     if not p.is_absolute() and join_relative_to is not None:
         p = join_relative_to / value
@@ -406,6 +442,187 @@ def _write_amend_delta(delta: dict) -> Path:
     path = SPINE.parent / f"mcp_amend_delta_{ts}.json"
     path.write_text(json.dumps(delta, ensure_ascii=False), encoding="utf-8")
     return path
+
+
+# --------------------------------------------------------------------------- #
+# The lifecycle door -- spine_open / spine_close. See the module docstring's
+# "The lifecycle door" section for why these are dispatched OUTSIDE call_tool.
+# --------------------------------------------------------------------------- #
+
+def _git_rev_parse(*args: str, cwd: Path) -> str:
+    """Run one read-only `git rev-parse`, with `cwd` an explicit parameter --
+    never the process's own ambient cwd, which this door's request-handling
+    loop never changes and should not start changing merely to answer one
+    lifecycle question. Raises `RuntimeError` on a non-zero exit, naming the
+    directory and git's own stderr."""
+    proc = subprocess.run(["git", "rev-parse", *args], cwd=str(cwd), capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise RuntimeError(f"git rev-parse {' '.join(args)} failed in {cwd}: {proc.stderr.strip()}")
+    return proc.stdout.strip()
+
+
+def _primary_checkout_for_lifecycle() -> Path:
+    """The PRIMARY checkout -- read fresh off `SPINE_FILE` (ambient,
+    server-launch-time state), never off the module-level `SPINE` global, so
+    `_spine_open`'s own source never contains the identifier `SPINE` (checked
+    by `tests/test_mcp_lifecycle.py`). This is `open_work`'s own `root`:
+    `worktree_path_for`'s sibling-of-the-main-checkout convention
+    (`scripts/spine_lifecycle.py`'s `_default_wt_root`) means a NEW worktree
+    must always sit beside the primary checkout, never beside whatever
+    (possibly already-linked) worktree this door's own bound spine happens to
+    live in.
+
+    `git rev-parse --git-common-dir` resolves to the PRIMARY checkout's `.git`
+    from ANY worktree, linked or not -- `verify_worktree_isolation.
+    primary_checkout()` does the same resolution but reads it off the
+    process's ambient cwd; this does the identical join, explicit about
+    `cwd` instead. A linked worktree's common dir is already absolute; the
+    primary checkout's own is `.git`, relative to `cwd` -- joined against
+    `spine_dir`, never `Path.resolve()`'s implicit reliance on the real cwd."""
+    spine_dir = Path(os.environ["SPINE_FILE"]).resolve().parent
+    common = Path(_git_rev_parse("--git-common-dir", cwd=spine_dir))
+    if not common.is_absolute():
+        common = spine_dir / common
+    return common.resolve().parent
+
+
+def _worktree_root_for_lifecycle() -> Path:
+    """The worktree `SPINE` itself lives in -- its own toplevel, NOT the
+    primary checkout. This is `close_work`'s own `root`: it computes
+    `work_id` as `spine_path.parent.relative_to(root / ".agent-work")`, and a
+    spine `open_work` created lives under a LINKED worktree's `.agent-work/`,
+    not the primary checkout's (`tests/test_spine_lifecycle.py`'s own
+    `TestCloseWorkEndToEndRealEngine` passes `root=worktree`, the linked
+    worktree, never the repo it was opened from) -- so this is deliberately
+    NOT `_primary_checkout_for_lifecycle`, a different derivation for a
+    different question. Safe to read `SPINE` here: unlike `_spine_open`,
+    `_spine_close` acts on the bound spine by design."""
+    return Path(_git_rev_parse("--show-toplevel", cwd=SPINE.parent))
+
+
+def _lifecycle_result(payload: dict) -> dict:
+    """The lifecycle door's OWN success answer: the returned dict, JSON-encoded
+    as text, `isError: False`. Mirrors `as_result`'s content/isError shape
+    without going through `run_engine` -- a lifecycle call is not an engine
+    pass-through (see the module docstring)."""
+    return {"content": [{"type": "text", "text": json.dumps(payload, ensure_ascii=False)}], "isError": False}
+
+
+def _spine_open(args: dict) -> dict:
+    """`spine_open`'s own dispatch path. Never references `SPINE`, `SESSION`
+    or `run_engine` -- checked by `tests/test_mcp_lifecycle.py`, with a
+    mutated positive control proving that check can fail. It acts on a spine
+    that does not exist yet, so nothing here may presuppose one is bound: the
+    repo root comes from `_primary_checkout_for_lifecycle` (ambient
+    `SPINE_FILE`, re-read fresh), and `parent` comes from `SPINE_PARENT` (the
+    dispatching session this door's own process was launched under -- a
+    DIFFERENT env var from `SPINE_SESSION`/`SESSION`, never read elsewhere in
+    this module).
+
+    Containment: the candidate worktree path `work_id` derives is resolved
+    against `wt_root` through `_resolve_confined` -- the SAME predicate
+    `_identity_violation` already uses for `--from-child`/`--delta`, reused
+    rather than a second, differently-shaped check, just with `wt_root` (not
+    `SPINE.parent`) as `bound_dir`. This is defense in depth: `open_work`
+    itself already refuses an unsafe `work_id` via `run_crew.validate_work_id`
+    before it ever runs `git worktree add`; this check runs before `open_work`
+    is even called, and it is what `tests/test_mcp_lifecycle.py` exercises
+    against `_resolve_confined` directly."""
+    err = _require(args, "work_id", "spec")
+    if err:
+        return _tool_error(
+            f"spine_open: {err}", tool="spine_open", rejection_class="missing-required-argument",
+        )
+    work_id = args["work_id"]
+    spec = args["spec"]
+    if not isinstance(spec, dict) or not spec:
+        return _tool_error(
+            "spine_open: spec must be a non-empty JSON object",
+            tool="spine_open", rejection_class="bad-argument-type",
+        )
+    base = args.get("base") or "HEAD"
+
+    try:
+        root = _primary_checkout_for_lifecycle()
+    except (OSError, RuntimeError) as exc:
+        return _tool_error(
+            f"spine_open: could not resolve the primary checkout: {exc}",
+            tool="spine_open", rejection_class="root-resolution-failed",
+        )
+
+    wt_root = root.parent / f"{root.name}-wt"
+    candidate, escapes = _resolve_confined(
+        spine_lifecycle.worktree_path_for(work_id, wt_root=str(wt_root)),
+        join_relative_to=None, bound_dir=wt_root,
+    )
+    if escapes:
+        return _tool_error(
+            f"spine_open: work_id {work_id!r} resolves to a worktree path outside "
+            f"{wt_root} ({candidate}); refused before `git worktree add` would ever run",
+            tool="spine_open", rejection_class="path-escape",
+        )
+
+    parent = os.environ.get("SPINE_PARENT") or "unknown"
+    try:
+        opened = spine_lifecycle.open_work(work_id, spec, root=root, base=base, parent=parent)
+    except spine_lifecycle.SpineLifecycleError as exc:
+        return _tool_error(f"spine_open: {exc}", tool="spine_open", rejection_class="open-refused")
+    return _lifecycle_result(opened)
+
+
+def _spine_close(args: dict) -> dict:  # noqa: ARG001 - spine_close takes no arguments; args always {}
+    """`spine_close`'s own dispatch path. Acts on `SPINE` -- the spine THIS
+    door is bound to -- and nothing else; there is no field to redirect
+    because the tool schema declares none. `close_work` itself refuses,
+    doing nothing at all, unless the caller already drove the bound spine to
+    a released, terminal close through the existing `spine_advance`/
+    `spine_lease` tools (see `scripts/spine_lifecycle.py`'s own docstring)."""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    try:
+        root = _worktree_root_for_lifecycle()
+    except (OSError, RuntimeError) as exc:
+        return _tool_error(
+            f"spine_close: could not resolve the bound spine's own worktree: {exc}",
+            tool="spine_close", rejection_class="root-resolution-failed",
+        )
+    try:
+        closed = spine_lifecycle.close_work(SPINE, root=root, today=today)
+    except spine_lifecycle.SpineLifecycleError as exc:
+        return _tool_error(f"spine_close: {exc}", tool="spine_close", rejection_class="close-refused")
+    return _lifecycle_result(closed)
+
+
+def call_lifecycle_tool(name: str, args: dict) -> dict:
+    """A NEW MODULE-LEVEL SIBLING of `call_tool`, never a branch inside it --
+    `call_tool`'s own choke-point pin
+    (`tests/test_mcp_identity.py::IdentityBindingPinTests.test_call_tool_can_only_produce_content_two_ways`)
+    resolves `call_tool`'s `ast.FunctionDef` node BY NAME and walks only that
+    subtree, so a true sibling function is structurally outside it and that
+    pin stays exactly as strict, untouched.
+
+    `spine_open` and `spine_close` are NOT pass-throughs the way the other 9
+    tools are -- neither ever calls `run_engine` -- so they get their OWN
+    containment pin here rather than inheriting one written for a different
+    hazard (`tests/test_mcp_lifecycle.py`): an AST pin restricting THIS
+    function's own return shapes to `_spine_open(...)`/`_spine_close(...)`
+    (mirroring `call_tool`'s `as_result(run_engine(...))`/`_tool_error(...)`
+    shape), plus the `SPINE`/`SESSION`/`run_engine` non-reference check on
+    `_spine_open` specifically -- its own top-level `ast.FunctionDef`, found
+    by name, the same way the choke-point pin finds `call_tool`.
+
+    Two tools, never one `action` switch: their identity postures are
+    opposite (`spine_open` acts on a spine that does not exist and must never
+    touch `SPINE`/`SESSION`; `spine_close` acts on the bound spine and
+    nothing else), and folding them into one function BODY would be exactly
+    the "a guard written for one hazard covers the other by accident" failure
+    `_identity_violation`'s own docstring records as history -- so each gets
+    its own top-level implementation (`_spine_open`, `_spine_close`) and this
+    function does nothing but route to one of them by name."""
+    if name == "spine_open":
+        return _spine_open(args)
+    if name == "spine_close":
+        return _spine_close(args)
+    raise KeyError(name)
 
 
 # --------------------------------------------------------------------------- #
@@ -671,6 +888,58 @@ TOOLS = [
     },
 ]
 
+# The lifecycle door (issue #559, C3/g3) -- see the module docstring's "The
+# lifecycle door" section. A SEPARATE list, concatenated into TOOLS below,
+# because `LIFECYCLE_TOOL_NAMES` is what lets the identity sweep
+# (`tests/test_mcp_identity.py`) scope itself to the 9 engine-pass-through
+# tools it was written for, without re-deriving that set a second way.
+LIFECYCLE_TOOLS = [
+    {
+        "name": "spine_open",
+        "description": (
+            "Open Constellation work in one call: creates a worktree, a "
+            "branch, a scaffolded work area, and a compiled, origin-stamped "
+            "spine for `work_id`, then returns the values (SPINE_FILE, "
+            "SPINE_SESSION, SPINE_PARENT, the branch, the worktree) a crew's "
+            "own door binds to. Acts on a spine that does not exist yet -- "
+            "never the spine THIS door is itself bound to."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "work_id": {
+                    "type": "string",
+                    "description": "the new work's id, e.g. 'epic-560/some-slug'",
+                },
+                "spec": {
+                    "type": "object",
+                    "description": "the gate-plan spec generate_spine compiles into the new spine",
+                },
+                "base": {
+                    "type": "string",
+                    "description": "git ref to branch from; defaults to HEAD",
+                },
+            },
+            "required": ["work_id", "spec"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "name": "spine_close",
+        "description": (
+            "Close the spine THIS door is bound to: moves the work area and "
+            "the spine (last) into the archive and commits, once the caller "
+            "has already driven the bound spine to a released, terminal "
+            "close through spine_advance and spine_lease. Acts on the bound "
+            "spine and nothing else -- no arguments, because there is "
+            "nothing to redirect."
+        ),
+        "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
+    },
+]
+LIFECYCLE_TOOL_NAMES = {t["name"] for t in LIFECYCLE_TOOLS}
+
+TOOLS = TOOLS + LIFECYCLE_TOOLS
 TOOL_NAMES = {t["name"] for t in TOOLS}
 
 
@@ -967,6 +1236,13 @@ def main() -> None:
                     f"unknown tool {nm!r}",
                     tool=nm or "(empty)", rejection_class="unknown-tool",
                 )
+            elif nm in LIFECYCLE_TOOL_NAMES:
+                # Routed here, never inside call_tool -- see the module
+                # docstring's "The lifecycle door" section.
+                try:
+                    result = call_lifecycle_tool(nm, call_args)
+                except KeyError as exc:
+                    result = _tool_error(f"tool error: missing or unknown {exc}")
             else:
                 try:
                     result = call_tool(nm, call_args)

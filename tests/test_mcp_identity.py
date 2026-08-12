@@ -995,7 +995,16 @@ class IdentityBindingPinTests(unittest.TestCase):
 
         module.checklist_engine.main = spy
         try:
+            # Scoped to the engine tools (TOOL_NAMES - LIFECYCLE_TOOL_NAMES):
+            # spine_open/spine_close (issue #559, C3/g3) are dispatched from
+            # `call_lifecycle_tool`, never `call_tool`, and never call
+            # `run_engine` at all -- calling `module.call_tool` on either
+            # raises KeyError by design (see mcp_spine_server.py's module
+            # docstring, "The lifecycle door"). Their own containment pin
+            # lives in tests/test_mcp_lifecycle.py instead.
             for tool in module.TOOLS:
+                if tool["name"] in module.LIFECYCLE_TOOL_NAMES:
+                    continue
                 base = self.TOOL_MINIMAL_ARGS[tool["name"]]
                 for key in self._adversarial_keys():
                     seen.clear()

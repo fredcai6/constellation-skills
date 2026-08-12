@@ -545,10 +545,13 @@ class CrewGrantTiesToDoorTests(unittest.TestCase):
     def test_door_has_all_nine_tools_todays_grant_expects(self):
         # CONTROL for the tie test above: pins the count so a future door
         # regression (e.g. a tool silently dropped) cannot slip through by
-        # shrinking BOTH sides of the comparison in lockstep.
+        # shrinking BOTH sides of the comparison in lockstep. 9 engine tools +
+        # 2 lifecycle tools (spine_open, spine_close -- issue #559, C3/g3) = 11;
+        # unlike test_mcp_adoption.py's Tier3-doc-tied pin, CREW_ALLOWED_TOOLS
+        # has no doc dependency, so this one is NOT scoped down.
         with tempfile.TemporaryDirectory() as tmp:
             server = self._load_mcp_spine_server(Path(tmp))
-        self.assertEqual(9, len(server.TOOL_NAMES))
+        self.assertEqual(11, len(server.TOOL_NAMES))
 
 
 class CliDriftHintTests(unittest.TestCase):
