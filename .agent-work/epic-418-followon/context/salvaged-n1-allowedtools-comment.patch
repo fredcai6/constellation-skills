@@ -1,0 +1,26 @@
+diff --git a/scripts/run_crew.py b/scripts/run_crew.py
+index dcd1ed1b..b2239c6c 100644
+--- a/scripts/run_crew.py
++++ b/scripts/run_crew.py
+@@ -324,11 +324,20 @@ DEFAULT_CREW_PERMISSION_MODE = "acceptEdits"
+ # python/pytest-only need), so the grant is broad: unrestricted Bash plus the
+ # core file/search tools, and the MCP spine door tools a crew drives its own
+ # checklist through (`mcp_spine_server.py`).
++# THIS LIST IS A COUPLING, AND IT HAS ALREADY BITTEN ONCE. Adding a tool to
++# `mcp_spine_server.py` without adding its name here leaves the tool DENIED at
++# the permission layer for every crew, with only a generic permission message
++# and no engine refusal to explain why. N1 (#559) added `spine_capture` and
++# `spine_amend`; its cold reviewer then called `spine_capture` four times, was
++# refused each time, and fell back to the CLI -- reading as "the agent preferred
++# the CLI" when the door had in fact been shut. Derive this from the door's own
++# tool list instead of restating it (#559 N2).
+ CREW_ALLOWED_TOOLS = (
+     "Bash", "Read", "Write", "Edit", "Glob", "Grep", "TodoWrite", "ToolSearch",
+     "mcp__spine__spine_status", "mcp__spine__spine_lease", "mcp__spine__spine_start",
+     "mcp__spine__spine_advance", "mcp__spine__spine_evidence", "mcp__spine__spine_halt",
+-    "mcp__spine__spine_survey_result",
++    "mcp__spine__spine_survey_result", "mcp__spine__spine_capture",
++    "mcp__spine__spine_amend",
+ )
+ 
+ 
