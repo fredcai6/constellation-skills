@@ -3404,3 +3404,16 @@ Entry grammar (one line of date + tag, then the substance):
   `IMPLEMENTER_PLAN.json` plus a journal. The door's `_identity_violation` guard refuses argv that
   resolves `--file` away from the bound spine, so a headless Commander bound to `execute.json`
   **cannot** drive a second spine through the door. Candidate root cause; measure at cold review.
+- FINDING | 2026-08-12 05:55 | **Root cause of C3's released lease: a crew dispatched without
+  `--spine` inherits its dispatcher's spine identity and can release the dispatcher's lease.**
+  `_crew_door_env` (`scripts/run_crew.py:721`) returns `crew_env(parent=...)` when `spine is None`,
+  leaving `SPINE_FILE`/`SPINE_SESSION` untouched by design — so every one of C3's g-gate crews
+  (registry `spine=None`, all 13) ran bound to the Commander's own `execute.json` under the
+  Commander's own session id. One did: `engine_session.claimed_by = "implementer"`,
+  `released_at 11:03:28Z`. The Commander then ran unleased for the rest of the gate work.
+  **Not a blocker for C3's close** — `_active_lease` (`scripts/checklist_engine.py:906`) documents
+  that "a released lease does not gate mutation", and the engine duly accepted five later journal
+  entries including the execute→reconcile `advance`. The cost is the lost mutual-exclusion guard and
+  a false provenance claim, not a refused write. C3 is at `reconcile` with five steps left and is
+  **not** being steered into this; it is wave-8 material or a C3 continuation, adjudicated at cold
+  review.
