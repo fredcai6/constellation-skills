@@ -244,7 +244,8 @@
             "kind": "command",
             "command": "python3 /home/tommy/.claude/skills/constellation-admiral/scripts/verify_episode_captured.py epic-418-followon --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-closeout-3"
         },
         {
           "id": "c3",
@@ -278,7 +279,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {
         "blocker": "The engine refused 'start closeout' at 23% context and instructed that a fresh agent begin this gate; the refresh is recorded on the spine as e-closeout-1 (seam=closeout, why_ref=w-3). Starting a full retrospective, reconcile, sweep and archive at this headroom risks a half-applied episode store, which is worse than not starting. The refusal was not routed around.",
         "authority_needed": "human",
@@ -309,6 +310,17 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-closeout-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 /home/tommy/.claude/skills/constellation-admiral/scripts/verify_episode_captured.py epic-418-followon --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -320,13 +332,14 @@
   "refusals": 4,
   "engine_session": {
     "session_id": "717403d3-70be-436f-bc06-ce9ac3e34e05",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-10T16:38:30.807086+00:00",
-    "last_heartbeat": "2026-08-12T15:09:11.698672+00:00",
+    "last_heartbeat": "2026-08-12T15:09:46.075177+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-12T15:09:58.010130+00:00"
   },
   "why_trail": [
     {
@@ -349,6 +362,13 @@
       "why": "Thirteen workstreams merged. Wave 7 bound the lifecycle to the spine and the human called the stop; the w8x-closeout transition records decision=stop and the prelaunch verifier accepts it. Four of five done-conditions hold on main; the fifth is filed on #559 and #565 rather than worked.",
       "mechanical": false,
       "ts": "2026-08-12T14:51:32.642480+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "closeout",
+      "why": "The epic closes with its record written rather than asserted. Twenty-one episodes are in the store through the only write path, and the capture gate passes. The reconcile ran and returned a measured no-op with a receipt, because this repo has no packet map to reconcile against. The last worktree was harvested before it was swept, sixteen merged branches are gone, and the four refs that remain are dispositioned in the log with the reason they were not deleted: the harness refused the force-delete and I did not route around it. Four of five done-conditions hold; the fifth is filed on #559 and #565 with its full measurement, because the human chose to file it rather than run it. The tree is green in a foreign checkout, which is the only green this epic learned to trust.",
+      "mechanical": false,
+      "ts": "2026-08-12T15:09:46.075153+00:00"
     }
   ],
   "trip_ledger": [
