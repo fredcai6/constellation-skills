@@ -166,3 +166,27 @@ file this wave; not edited, and not depended on.
 The POSIX-shell routing and the `returncode 127` / `no-posix-shell` path are
 untouched — `cwd=` is added only to the branch that already calls
 `subprocess.run`.
+
+---
+
+## OVERRIDE: the enumeration's conclusion was wrong in its highest-consequence row
+
+Everything above about R1/R2 and the repo-root target stands as measurement, but
+the conclusion "option B, zero repairs" does **not** survive.
+
+A cold plan critic found a third class the enumerator cannot represent: a check
+where **cwd is the subject, not a path base**. There is exactly one in the
+shipped corpus, and it is the most consequential one —
+`verify_worktree_isolation.py --here <repo-root>` on `COMMANDER_SPINE`'s
+`init.c0`. It runs `git rev-parse --show-toplevel` from the ambient cwd and
+compares it to EXPECTED. Force cwd to the spine's enclosing root and the
+comparison becomes `X == X`.
+
+Line 79 of these notes classified that script as "clean — takes explicit paths."
+That is exactly backwards. It is the single most cwd-dependent check in the
+corpus.
+
+Proven through the real engine path (`.agent-work/commander-315/s1_production.sh`):
+unmodified engine REFUSES a wrong-worktree launcher, naive-fix engine ADVANCES it.
+
+See `.agent-work/commander-315/COMMANDER_RESULT.md` for the full result.
