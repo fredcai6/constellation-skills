@@ -1,0 +1,154 @@
+work_id    = "<work-id>"
+type       = "gated"
+config_ref = "docs/agents/engine-config.json"
+parent     = "commander-epic-559-c2"
+
+# g3 of epic-559/c2-generate-the-spine: the dispatch proof.
+#
+# This spec is generated into a spine and driven by a real crew dispatched with
+# `run_crew.py --spine` and NO handoff and NO result path, so run_crew judges it
+# on spine_terminal rather than on a result artifact. The crew reads nothing but
+# what `current` renders.
+#
+# The work it carries is genuine and is the residual the settling question
+# exposed at g2: the `script` kind's probe checks `--flag` tokens against the
+# target's `add_argument` literals and never inspects a POSITIONAL argument at
+# all, so a wrong positional path compiles clean, validates clean, and fails
+# only at runtime. This spine closes that -- which makes it the strongest
+# dogfood available: the generator generating the spine that improves the
+# generator.
+
+[[gate]]
+id    = "m0-context"
+title = "Load baseline context"
+imperative = """
+You are driving this spine from `current` alone -- there is no handoff document
+and there is no result artifact to write. Your run is complete when this spine
+reaches a terminal state, and nothing else.
+
+Read, in this order:
+  1. .agent-work/epic-559/c2-generate-the-spine/DESIGN_NOTE.md -- the frozen
+     format. Section 4's `script` entry is what you are changing.
+  2. scripts/generate_spine.py -- specifically `_probe_script` and
+     `_add_argument_literals`.
+  3. specs/reviewer.spine.toml -- read `r6-fowler`'s `args`. It is a POSITIONAL
+     path carrying `<work-id>`, an unresolved resolver-owned token. It must
+     keep generating cleanly after your change. This is the trap.
+
+Then attest c1. c2 and c3 are real checks the engine runs for you.
+"""
+
+  [[gate.postconditions]]
+  id        = "c1"
+  statement = "the design note, the script probe, and the reviewer spec's positional-argument case are read and understood"
+  kind      = "qualitative"
+  because   = "no check can verify that prose was understood; the mechanical half is c2/c3 below, and m1's own postcondition is the real proof that the reading landed"
+
+  [[gate.postconditions]]
+  id        = "c2"
+  statement = "the inherited global-crew doctrine file exists on disk to be read"
+  kind      = "population"
+  root      = "skills/_shared"
+  glob      = "global-crew.md"
+  expected  = 1
+
+  [[gate.postconditions]]
+  id        = "c3"
+  statement = "the inherited global-everyone doctrine file exists on disk to be read"
+  kind      = "population"
+  root      = "skills/_shared"
+  glob      = "global-everyone.md"
+  expected  = 1
+
+[[gate]]
+id    = "m1"
+title = "Make the script probe inspect positional path arguments"
+imperative = """
+Change `_probe_script` in scripts/generate_spine.py so it also inspects
+POSITIONAL arguments, not only `--flag` tokens.
+
+The rule, and get it exactly right -- this is the whole difficulty:
+
+  * A positional argument that looks like a repo-relative path (it contains a
+    `/` or ends in a known file suffix) and contains NO resolver-owned token
+    must EXIST under the repo root. If it does not, that is a fault, named,
+    with the path and the script.
+  * A positional argument that DOES contain a resolver-owned token
+    (`<work-id>`, `<repo-root>`, `<*-skill-dir>`, `<*-session-id>` -- match
+    with `init_work_area._RESOLVER_OWNED_TOKEN_RE`, imported, never
+    re-declared) is SKIPPED. It cannot be checked before the resolver runs,
+    and the resolver is what fills it. This is not "undecidable"; the token
+    family is known-good by construction, which is exactly why
+    validate_spine.py already accepts it.
+  * A positional argument that is not path-shaped at all is left alone.
+
+If you get the second rule wrong, `specs/reviewer.spine.toml` stops generating
+-- its `r6-fowler` check passes `.agent-work/<work-id>/FOWLER_PASS.json`, a
+positional path whose token is unresolved at generation time. Turning a check
+that could not fail into one that cannot pass is the exact defect this whole
+epic exists to find. Regenerate BOTH role specs after your change and confirm
+they still emit and still validate clean:
+
+    python scripts/generate_spine.py specs/implementer.spine.toml --out .agent-work/epic-559/c2-generate-the-spine/generated/implementer.spine.json --root .
+    python scripts/generate_spine.py specs/reviewer.spine.toml --out .agent-work/epic-559/c2-generate-the-spine/generated/reviewer.spine.json --root .
+
+Add tests to the existing `TestScriptProbe` class in
+tests/test_generate_spine.py, following the three-way shape already there:
+VIOLATING fixtures the probe must catch (a wrong positional path), INNOCENT
+ones it must not (a real positional path; a positional path carrying
+`<work-id>`), and keep the accepted-false-alarm case intact.
+
+SECOND, SMALLER TASK, found by the Commander while authoring this very spec.
+A malformed `claim` crashes the compiler instead of being refused by name: an
+author who writes `[[gate.claim]]` (array-of-tables) where the format wants
+`[gate.claim]` (a table) gets
+
+    AttributeError: 'list' object has no attribute 'get'
+
+out of `compile_spec` at the `(g.get("claim") or {}).get("magnitude")` line,
+with a traceback and no fault code. The spec-shape layer never type-checks
+`claim`. Add a named spec-shape fault for it -- a `claim` that is not a table,
+or carries a `magnitude` outside {normal, large}, or is `large` with no `text`
+-- so the author gets a refusal that names the gate and the mistake, in the
+same shape as every other spec-shape fault. Pin it with a test. A generator
+whose own error path is a traceback is the shape this mission exists to remove.
+
+Update DESIGN_NOTE.md section 4's `script` entry, section 7's fault list, and
+section 10's residual row to state what is now covered and what still is not.
+
+Do not modify scripts/validate_spine.py or scripts/checklist_engine.py. Do not
+edit any shipped template under skills/*/templates/. Do not run
+scripts/install_constellation.py. Do not commit and do not push -- the
+Commander integrates.
+
+Attest p1 BEFORE `start m1`: the engine refuses to start a gate whose
+precondition is unmet, and the refusal is non-destructive -- attest, then retry.
+"""
+constraints = [
+  "Only scripts/generate_spine.py, tests/test_generate_spine.py, DESIGN_NOTE.md and the two regenerated spines under .agent-work/epic-559/c2-generate-the-spine/generated/ may change",
+  "specs/reviewer.spine.toml must still generate cleanly after the change -- a positional path carrying a resolver-owned token is skipped, never refused",
+  "_RESOLVER_OWNED_TOKEN_RE is imported from init_work_area, never re-declared, so this probe and the oracle cannot drift apart",
+  "there is no raw-command field in this format and you are not to add one",
+]
+
+  [[gate.preconditions]]
+  id        = "p1"
+  statement = "the script probe's current scope and the reviewer spec's positional-token case are understood"
+  kind      = "qualitative"
+  because   = "trust-but-verify, per docs/CHECKLIST_SCHEMA.md -- the agent that depends on this reading is the one asserting it, and m1's own postcondition is the mechanical proof"
+
+  [[gate.postconditions]]
+  id        = "c1"
+  statement = "the script probe's own guard fixtures still collect and pass, including the new positional cases added to TestScriptProbe"
+  kind      = "pytest"
+  selector  = "TestScriptProbe"
+  min_collect = 7
+  targets   = ["tests/test_generate_spine.py"]
+
+  [[gate.postconditions]]
+  id        = "c2"
+  statement = "the reviewer role spec still generates after the change -- its positional path carries an unresolved resolver-owned token and must be skipped, not refused"
+  kind      = "script"
+  path      = "scripts/generate_spine.py"
+  args      = ["specs/reviewer.spine.toml", "--check-only", "--root", ".", "--out",
+               ".agent-work/epic-559/c2-generate-the-spine/generated/reviewer.spine.json"]

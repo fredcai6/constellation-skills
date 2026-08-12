@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-core-red",
+  "mechanical": {
+    "run": "epic-559/c2-generate-the-spine/g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m1-core-red",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c2-generate-the-spine/g1-implement-m1-core-red@058a2db99368740be200ebca44327d81318949fb",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c2-generate-the-spine/g1-implement",
+    "generated_at": "2026-08-11T16:41:28Z"
+  }
+}

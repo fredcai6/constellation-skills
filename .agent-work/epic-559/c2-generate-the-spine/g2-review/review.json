@@ -1,0 +1,179 @@
+{
+  "work_id": "epic-559/c2-generate-the-spine",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md, g2-review-handoff.md (round 2), DESIGN_NOTE.md (with round-2 correction to Sec 6), g2-implement-result.md, notes-2.md, git diff HEAD, git diff HEAD --stat.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 12 close criteria + R2-a..e independently re-run this round, all confirmed. R2-a: drove scratch reviewer.spine.json (resolved via init_work_area.resolve_spine) through record(all 7 items pass, r6-fowler's real c1 satisfied by the existing FOWLER_PASS.json)+consolidate(APPROVE) -- zero c-escalation postconditions anywhere, consolidates APPROVE, matching directives.claim.enforcement's stated non-enforcement exactly (not silently, as round 1 found -- now truthfully). R2-b: synthetic gated spec -- advance() genuinely raises EngineError naming c-escalation until an APPROVE review-result is attach()ed, then succeeds; matches CLAIM_ENFORCEMENT_GATED's claim. R2-c: manually reproduced the falsification-floor mutation myself (not trusting the test's internal assertion) -- replaced 'if spec_type == \"gated\":' with 'if True:' in a standalone copy, ran the named throwaway test against it, watched it go red with a real AssertionError (c-escalation now present) -- mutation genuinely lands. R2-d: enforcement prose is accurate (matches R2-a/R2-b measurements exactly) and actionable -- names the exact engine calls and scoping words, points the reader to hand_back_to for who must adjudicate; the only soft edge is it does not prescribe a format for that adjudication, which is consistent with this being floated to the Admiral as outside Commander latitude, not a gap in this round's own work. R2-e: grepped the diff for any new command-kind postcondition or new file convention -- none; only directives-level prose changed, no raw-command escape, CHECK_KINDS unchanged. Criteria 1 (oracle OK/zero undecidable, my own regenerated output byte-diffs identical to the committed generated/*.json), 2 (placeholder gone, _pytest_segments/_selector round-trip verified directly), 3 (pytest command run + separate --collect-only both give 2, min_collect=2 honest), 4 (population checks run, exit 0 both; judged an honest disclosed proxy -- can fail if the doctrine files are removed, does not verify comprehension, matches the implementer's own 'presence not comprehension' framing), 5 (qualitative statement carries the QUALITATIVE: <because> suffix verbatim), 6 (handback contract present and complete on all 9 gates across both spines), 7 (superseded by R2-a/R2-e as intended -- no c-escalation on r6-fowler anymore, so the review-of-a-review question notes-2 Finding 6 raised no longer applies to the generated spine; Finding 6's own round-2 correction says this and I verified it), 8 (r0-context postconditions==[] in the shipped REVIEW_SURVEY.template.json, validate_spine reports OK -- notes-2 Finding 2 is right, DESIGN_NOTE.md's correction paragraph already says so), 9 (mutated the token/regex behavior directly -- import-time assert fires with a real AssertionError), 10 (no shipped template/validate_spine.py/checklist_engine.py touched, --sweep=23), 12 (constructed a script check with a wrong positional path -- generator wrote it with exit 0, no complaint, exactly the stated residual) all independently confirmed by running commands myself, not by reading the report. MINOR DISCREPANCY (not blocking): the handoff's own criterion 11 states 'Expected: 2767 passed, 3 skipped, 1121 subtests' -- I measured 2775 passed, 3 skipped, 1121 subtests, 0 failed, matching the implementer's own reported number exactly (2767 + 8 new tests this round added). The handoff's expected count appears to be carried over unedited from before round 2's 8 new tests existed; the suite itself is fully green either way. Flagged in Workflow Feedback, not a defect in the change.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git diff HEAD --stat (excluding .agent-work) shows exactly 3 tracked files touched: map/INDEX.md (10 lines, the Commander's disclosed regeneration -- not implementer scope drift, matches the handoff's own account and this round's re-trip explanation in notes-2 Finding 7), scripts/generate_spine.py (104 lines, the enforcement-branch fix), tests/test_generate_spine.py (223 lines, the 3 new test classes + updated TestFalsificationFloor snippet). No shipped template edited (git diff --name-only has no skills/*/templates/* path). validate_spine.py and checklist_engine.py untouched (not in the diff at all). specs/implementer.spine.toml and specs/reviewer.spine.toml are untracked but confirmed byte-unchanged from round 1 (implementer's own claim, consistent with enforcement being fully generator-computed from spec.type -- nothing in either TOML needed editing). specs/ and generated/ are not gitignored (git check-ignore exit 1 on both), consistent with intent to eventually commit them, not scratch. No raw-command escape added anywhere in the diff.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every Required Evidence item in the implementer's result independently reproduced, and -- unlike round 1's Evidence #6, which the round-1 review found only proved compilation -- this round's evidence genuinely proves the claimed BEHAVIOR because I drove it through the real engine myself rather than trusting the implementer's own pytest run: (1) TestClaimEnforcementDrivenThroughEngine reproduced both as pytest (2 passed) AND as my own from-scratch scripts against real checklist_engine/init_work_area modules (R2-a/R2-b above) -- same outcome both times. (2) TestSurveyGatedDistinctionFloor's mutation-kills-it claim reproduced by hand-mutating a standalone copy myself and watching a real AssertionError, not trusting the subprocess-wrapped test's own returncode assertion. (3) The side-by-side directives.claim for gated vs survey reproduced exactly against the real generated reviewer.spine.json (r6-fowler) -- byte-identical enforcement text to what the result quotes. (4) The rollup evidence reproduced identically. (5) Both spines OK/zero-undecidable reproduced, and my freshly regenerated output diffs byte-identical to the committed generated/*.json (proves the committed artifacts are current, not stale copies). (6) sweep=23 and full suite reproduced exactly (2775/3/1121, 0 failed) -- matches the implementer's number, not the handoff's stale 2767 (see r1-handoff finding). All required evidence is present and demonstrates the actual property, not just its shape.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 4 handoff constraints hold, each independently checked: (1) no shipped template edited -- git diff --name-only has no skills/*/templates/* entry. (2) oracle fault set/acceptance boundary unmoved -- validate_spine.py untouched in the diff, --sweep still exactly 23 fault lines, same as round 1's baseline. (3) no raw-command escape -- CHECK_KINDS still ('qualitative','pytest','script','population','artifact'), grepped scripts/generate_spine.py for any new 'kind': 'command' emission site tied to a spec-authored field and found none; the only command-kind checks are the pre-existing pytest/script/population compilers, unchanged in kind. (4) engine on-disk format unchanged -- checklist_engine.py untouched, and the round-2 fix only changes what generate_spine.py WRITES into the directives/postconditions fields the format already defines (no new top-level key, no schema change). CREW_CONTEXT.md's verification-discipline rule ('assert against behaviour, never text that describes it') was followed by the crew and re-verified by me independently: TestSurveyGatedDistinctionFloor and the driven-engine tests assert against checklist_engine's real return values and raised exceptions, not against rendered strings.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Round-1's tc2 (DESIGN_NOTE.md's r0-context factual error) is now resolved: DESIGN_NOTE.md section 6's 'second correction, of fact' paragraph states the correct measurement (only m0-context is among the 23 baseline faults) -- re-verified myself in criterion 8 above. Round-1's tc1 (checklist_engine.record()/consolidate() never evaluate artifact-kind postconditions on a survey item) is NOT a defect this round introduced or could fix -- it is the exact engine gap DESIGN_NOTE.md section 6 now documents, works around (by not injecting on survey specs), and explicitly floats to the Admiral by name ('record/consolidate never evaluate artifact-kind postconditions on a survey item... outside a Commander's latitude'), including the broader residual that the engine binds no provenance to evidence at all and this affects every artifact/user-decision checkpoint in the corpus. Since the Commander has already floated both in DESIGN_NOTE.md itself, I am not re-filing a duplicate triage candidate -- confirming it is genuinely floated (present, specific, named) rather than silently dropped is the reconciliation check here, and it passes. No new architecture divergence found in this round's diff beyond what DESIGN_NOTE.md section 6 already documents and routes.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/<work-id>/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/<work-id>/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-559/c2-generate-the-spine/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "verify_fowler_pass.py exits 0 on .agent-work/epic-559/c2-generate-the-spine/FOWLER_PASS.json (12 smells, none flagged/overridden). Fowler pass re-run fresh for THIS round's diff specifically (round-1's FOWLER_PASS.json only covered the carried-cleanup diff; overwritten with a pass over the round-2 enforcement-branch diff -- CLAIM_ENFORCEMENT_GATED/SURVEY constants, _escalation_postcondition extraction, _compile_gate's spec_type branch, and the 3 new test classes). All 12 baseline smells rendered absent, each with a specific finding recorded (not blank): long-method (branch adds length but stays single-level, no nesting), duplicated-code (the two enforcement constants considered and rejected as duplication -- data not logic, content genuinely diverges, rule-of-two), data-clumps (large_claims widened to a 3-tuple used at exactly one call site), primitive-obsession (matches the repo's existing closed-string-constant convention, e.g. CHECK_KINDS), shotgun-surgery (2 files, 1 concern, and specs/*.toml correctly untouched -- evidence AGAINST scatter, not just absence of it), divergent-change (considered: _compile_gate already carried 2 concerns from round 1; round 2 adds an axis to an existing concern, not a new one), comments-as-deodorant (new comments name engine calls and ticket refs, non-obvious WHY). No override used, so no logged-standard-and-reason burden to check.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-559/c2-generate-the-spine/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "Round 2 of g2-review: all 12 original close criteria plus the 5 round-2-specific criteria (R2-a survey non-enforcement is real and stated, R2-b gated enforcement genuinely blocks, R2-c the falsification-floor mutation genuinely lands, R2-d the enforcement prose is accurate and actionable, R2-e no command-kind escalation with no producer was smuggled in) independently confirmed by running commands myself, not by reading the implementer's report. The round-1 BLOCK's root cause -- c-escalation being injected on a survey gate and silently unenforced by record()/consolidate() -- is fixed the way DESIGN_NOTE.md section 6's correction describes: nothing is injected on a survey spec, and directives.claim.enforcement / directives.claims_rollup state the non-enforcement truthfully, naming the exact engine mechanism. I drove a scratch copy of the real generated reviewer.spine.json through record()+consolidate() myself and it now matches its own stated claim (previously it silently contradicted it). I drove a synthetic gated spec through advance() and confirmed the enforced side still genuinely blocks. I hand-verified the falsification-floor mutation lands (not trusting the test's own internal assertion). I constructed an adversarial script check with a wrong positional argument and confirmed the settling-question's stated residual is real, not embellished or understated. No shipped template, validate_spine.py, or checklist_engine.py touched; --sweep still 23; full suite 2775 passed/3 skipped/1121 subtests/0 failed (matches the implementer's own count, not the handoff's stale 'Expected: 2767' -- a handoff drafting artifact, not an implementation defect, flagged in Workflow Feedback). Fowler pass re-run fresh for this round's specific diff (round-1's record only covered the earlier carried-cleanup diff): all 12 baseline smells absent, each with a real considered-and-rejected finding where relevant (duplicated-code on the two enforcement constants, divergent-change on _compile_gate's added axis), verify_fowler_pass.py exits 0. One durable architecture item re-flagged as tc1 (checklist_engine.py never evaluating artifact-kind postconditions on survey items) -- already floated to the Admiral in DESIGN_NOTE.md itself; not a defect in this round's work, and this round's fix correctly works around it rather than papering over it."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "checklist_engine.py: record()/consolidate() on a survey checklist never evaluate artifact-kind (or null-kind) postconditions -- confirmed again this round by directly driving the real generated reviewer.spine.json to APPROVE with no review-result ever attached. This round's fix (generate_spine.py) works around it correctly for the one case in this corpus (large claims on survey specs), but the underlying engine gap is unchanged and, per DESIGN_NOTE.md section 6's own residual paragraph, affects every artifact/user-decision human checkpoint in the corpus, not just claim escalations -- already floated to the Admiral in DESIGN_NOTE.md itself; re-flagged here so this review's own triage_candidates[] carries it too, not just prose in a design note."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/epic-559/c2-generate-the-spine/g2-review/reviewer/attempt-2",
+    "status": "released",
+    "claimed_at": "2026-08-11T18:25:47.761603+00:00",
+    "last_heartbeat": "2026-08-11T18:35:31.632986+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-11T18:36:55.901998+00:00"
+  }
+}

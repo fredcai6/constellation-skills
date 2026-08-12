@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g2-integrate",
+  "mechanical": {
+    "run": "epic-559/c2-generate-the-spine",
+    "project": "constellation-skills",
+    "spine-step": "g2-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 1,
+    "context-manifest-ref": "ctx-epic-559/c2-generate-the-spine-g2-integrate@350706560c2407d25c7e8d1fb2d642556a7a9c09",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "epic-559/c2-generate-the-spine",
+    "generated_at": "2026-08-11T18:37:39Z"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "work_id": "epic-559/c2-generate-the-spine",
+  "diff_ref": "new files scripts/generate_spine.py (597 lines), tests/test_generate_spine.py (978 lines), working tree vs HEAD 0ab7ecab",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, DESIGN_NOTE.md section 8 (pure/impure split at function granularity, matching validate_spine.py and checklist_engine.py precedent)",
+  "smells": [
+    {"smell": "long-method", "verdict": "flagged", "finding": "spec_shape_faults (scripts/generate_spine.py:145-217, 72 lines incl. blanks/docstring) does five distinct fault categories (duplicate-gate-id, missing-field, gated-missing-postconditions, all-qualitative-postconditions, config-ref-not-json) inline in one function, where validate_spine.py -- the file DESIGN_NOTE.md section 8 explicitly names as this module's own precedent for the pure/impure split -- gives each fault category its own `_fault_*` function called from one small dispatcher. Not blocking: the checks share mutable local state accumulated across one pass over gates/conditions (seen_gate_ids, pre_ids, post_ids), so splitting would either re-walk the gate list per check or thread that state across functions awkwardly. Worth a maintainer's attention if a sixth fault category is added.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "flagged", "finding": "_probe_pytest/_probe_script/_probe_population (scripts/generate_spine.py:402,444,481) all take the identical (gid, cid, cond, *, repo_root) parameter group and each independently re-derives `where = f\"{gid}.{cid}\"` on its own first line. validate_spine.py's own sibling `_fault_*` functions (e.g. _fault_zero_collect(where, check, repo_root), _fault_artifact_no_match(where, cond, check)) take a pre-built `where` instead, per-call, once -- the precedent this module is designed to match (DESIGN_NOTE.md section 8) computes `where` once and passes it down rather than recomputing it three times. Not blocking: functionally identical, and no documented repo standard mandates one form over the other, so this is a minor style divergence from precedent, not a defect.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "The closed CHECK_KINDS vocabulary and RESERVED_CONDITION_ID are deliberate closures against future untyped extension, the opposite of speculative generality -- no unused hook, no configurability added ahead of a second caller.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

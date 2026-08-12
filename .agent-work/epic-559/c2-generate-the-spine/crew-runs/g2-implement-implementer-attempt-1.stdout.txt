@@ -1,0 +1,11 @@
+## Summary
+
+Completed the g2 gate: wrote `specs/implementer.spine.toml` (gated) and `specs/reviewer.spine.toml` (survey), both matching the shipped templates' intent. Both generate cleanly (exit 0), both pass the oracle with zero faults and zero undecidable, and the `--sweep` count stayed at 23 (no shipped template edited).
+
+Key results:
+- **Settling question answered no** — neither spec asks its author to type a shell command from memory. The one honest residual: the `script` kind's probe never checks positional arguments (only `--flag` tokens), so a positional-argument script check still trusts the author's manual read of the target file.
+- **Carried finding done** — turned the dead `_RESOLVER_OWNED_TOKEN_RE` import into a real module-level assertion plus a pinning test (`TestResolverOwnedTokenRegex`), which also became `m1`'s own live postcondition in the generated implementer spine — real work, not a manufactured example.
+- **7 findings** written to `notes-2.md`, including that DESIGN_NOTE.md's own claim about `r0-context` carrying `falsifiable-all-null` doesn't hold against the measured oracle, and that `docs/agents/engine-config.json` doesn't exist anywhere in the repo.
+- **One close criterion not met**: the full suite has a pre-existing `map/INDEX.md` staleness failure, reproduced as predating this gate (present even with all g2 changes stashed) and outside Allowed Scope to fix — flagged plainly rather than hidden or fixed out-of-scope.
+
+Full `IMPLEMENTER_RESULT` written to `.agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g2-implement-result.md`, opening with `Return status: complete`.

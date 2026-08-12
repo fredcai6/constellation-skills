@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "epic-559/c2-generate-the-spine/dispatch-proof",
+    "project": "constellation-skills",
+    "role": "spine-probe",
+    "refusals": 0,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c2-generate-the-spine/dispatch-proof-m0-context@74375b8a2fe6bee50f765b2d109cc8544542dbb9",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c2-generate-the-spine/dispatch-proof",
+    "generated_at": "2026-08-11T18:43:51Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-behavioral-green",
+  "mechanical": {
+    "run": "epic-559/c2-generate-the-spine/g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m5-behavioral-green",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c2-generate-the-spine/g1-implement-m5-behavioral-green@a901185f9f369377dc2c14ebed4bde9fc2c657b1",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c2-generate-the-spine/g1-implement",
+    "generated_at": "2026-08-11T16:54:57Z"
+  }
+}

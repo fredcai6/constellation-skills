@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "v3-truthiness-bug",
+  "mechanical": {
+    "run": "epic-559/c2-generate-the-spine",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "v3-truthiness-bug",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c2-generate-the-spine-v3-truthiness-bug@5934e34a51662d670147d32c1a2f4c78456091da",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c2-generate-the-spine",
+    "generated_at": "2026-08-12T05:03:52Z"
+  }
+}

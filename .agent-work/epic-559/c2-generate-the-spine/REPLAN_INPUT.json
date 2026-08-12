@@ -1,0 +1,289 @@
+{
+ "schema_version": 1,
+ "current_plan": {
+  "schema_version": 1,
+  "epic": {
+   "title": "Prose instruction is a liability: put what can be checked behind a check",
+   "spec_path": ".agent-work/epic-559/c2-generate-the-spine/LAUNCH_ORDER.md",
+   "intent_and_why": "A hand-authored check is the same liability one level up, and it does not go away by making the author more capable. Wave 6 makes the check a generated artifact instead of a typed string."
+  },
+  "definition_of_done": [
+   "A spec format exists that an author can write without knowing the engine's JSON shape.",
+   "A generator emits a spine from it and refuses any spec whose output scripts/validate_spine.py would reject.",
+   "Every generated gate carries a place to record beliefs, concerns and open questions, in substrate the engine already renders.",
+   "A large claim is carried up to whoever reviews it rather than sitting inside a gate nobody opens.",
+   "Role specs exist for at least the implementer and the reviewer.",
+   "A spine generated from one is proven to drive to a terminal state in a real dispatch."
+  ],
+  "good_enough": {
+   "mandatory_quality": "The oracle does not move; no shipped template is edited to make output validate; every change gets a cold reviewer independent of its implementer.",
+   "sufficient_evidence": "Commands and their output, re-run by the Commander rather than accepted from a crew's report; a measured negative reported with the same rigor as a win.",
+   "appetite": "One bounded wave, generous compute, prefer another review round over shipping something unproven."
+  },
+  "hard_constraints": [
+   "checklist_engine.py's on-disk format is not changed.",
+   "validate_spine.py's fault set and acceptance boundary are not moved.",
+   "Beliefs, concerns and open questions ride in constraints/directives, never a new field the engine ignores.",
+   "No shipped template is edited to make generator output validate.",
+   "Implementers and reviewers run on Sonnet.",
+   "No issues are filed this wave; triage candidates route to the Admiral."
+  ],
+  "fixed_decisions": [
+   "spec-has-no-raw-command-field: the spec offers a closed vocabulary of typed check kinds and no free-text shell field.",
+   "notes-live-in-directives-not-constraints: constraints already means rules-this-gate-must-respect on 970 live tasks.",
+   "handback-names-verbs-not-arrays: no engine verb appends to a directives field on an active gate.",
+   "escalation-is-review-result-APPROVE on gated, and stated-not-injected on survey.",
+   "placeholder-template-vs-instance: the generator refuses an instance carrying a non-resolver placeholder."
+  ],
+  "current_wave": {
+   "objective": "Write the thing that writes spines, and prove one drives.",
+   "exit_criteria": [
+    "scripts/generate_spine.py exists, is cold-reviewed, and refuses what the oracle would refuse, shown as a paired control.",
+    "specs/implementer.spine.toml and specs/reviewer.spine.toml generate spines the oracle accepts with zero undecidable.",
+    "A generated spine reaches a terminal state under run_crew.py --spine, judged on spine_terminal.",
+    "The settling question is answered without softening."
+   ],
+   "issues": [
+    {
+     "id": "g1",
+     "title": "The generator",
+     "desired_outcome": "A spine generated from a typed spec, refused before emission if the oracle would reject it.",
+     "useful_now": "Nothing in the corpus wrote a good spine; validate_spine.py could only refuse a bad one.",
+     "appetite": "One crew gate with cold review.",
+     "acceptance_or_falsification_evidence": "The control pairing: one spec whose translation completes on the pure path and which the guarded CLI refuses with nothing written, and the same spec corrected and written.",
+     "implementation_latitude": "Module internals, CLI shape, error messages.",
+     "hard_constraints_no_gos": [
+      "validate_spine.py is imported and called, never re-implemented or modified."
+     ],
+     "local_unknowns": [
+      "Whether a closed vocabulary can express the two role specs without a raw-command field."
+     ],
+     "anchors": [
+      "scripts/generate_spine.py",
+      "scripts/validate_spine.py"
+     ],
+     "type": "AFK",
+     "blocks": []
+    },
+    {
+     "id": "g2",
+     "title": "The role specs",
+     "desired_outcome": "Implementer and reviewer role specs written in the format and generating clean.",
+     "useful_now": "It is the only way to find out whether the format removed the defect or moved it.",
+     "appetite": "One crew gate with cold review; it took two rounds.",
+     "acceptance_or_falsification_evidence": "Both generated spines OK with zero undecidable; the shipped <exact test command> placeholder replaced by a selector and a number.",
+     "implementation_latitude": "Which gates the specs carry and where the large claim sits.",
+     "hard_constraints_no_gos": [
+      "No shipped template is edited."
+     ],
+     "local_unknowns": [
+      "Whether the format can express a survey as well as a gated plan."
+     ],
+     "anchors": [
+      "specs/implementer.spine.toml",
+      "specs/reviewer.spine.toml"
+     ],
+     "type": "AFK",
+     "blocks": []
+    },
+    {
+     "id": "g3",
+     "title": "The dispatch proof",
+     "desired_outcome": "A generated spine drives to a terminal state in a real dispatch.",
+     "useful_now": "Protected intent #4; without it the generator is unproven in the only place that counts.",
+     "appetite": "One dispatch plus a cold review of the proof.",
+     "acceptance_or_falsification_evidence": "The driven spine's own final state: every item complete or skipped, lease released, judged by run_crew on spine_terminal.",
+     "implementation_latitude": "What genuine work the driven spine carries.",
+     "hard_constraints_no_gos": [
+      "Never two crews in one worktree."
+     ],
+     "local_unknowns": [
+      "Whether spine_terminal is a check that can fail."
+     ],
+     "anchors": [
+      ".agent-work/epic-559/c2-generate-the-spine/dispatch-proof/spine.json"
+     ],
+     "type": "AFK",
+     "blocks": []
+    }
+   ]
+  },
+  "wave_forecast": [
+   {
+    "outcome": "Migrate the shipped role templates to generated spines",
+    "why_likely": "The two role specs demonstrate the format carries both a gated plan and a survey; the remaining templates are the same shapes.",
+    "entry_conditions": [
+     "The Admiral accepts the format",
+     "The engine's survey-side artifact-postcondition gap is ruled on"
+    ]
+   },
+   {
+    "outcome": "Close the missing-required-flag gap in the script probe",
+    "why_likely": "It was found the hard way inside this wave's own machinery and has a clear mechanism (argparse introspection of required arguments).",
+    "entry_conditions": [
+     "A decision on whether the probe may import or introspect a target rather than only ast-parse it"
+    ]
+   }
+  ],
+  "uncertainty_register": [
+   {
+    "unknown": "Whether a closed vocabulary with no raw-command field survives contact with role specs beyond implementer and reviewer",
+    "affects": "Whether the format generalizes or needs a sixth kind per role",
+    "settle_by": "Authoring a third role spec, ideally a closeout gate needing git-change-policy",
+    "current_evidence": "Two role specs, one gated and one survey, needed no kind outside the closed five",
+    "next_probe": "Author the commander or cartographer spec"
+   },
+   {
+    "unknown": "Whether generation-time probing can ever express a TDD-red target",
+    "affects": "Whether the generator can author an implementer plan for work whose tests do not exist yet",
+    "settle_by": "Attempt to generate a spine whose pytest selector names a test not yet written",
+    "current_evidence": "The pytest probe refuses a selector collecting below min_collect, so a forward-looking selector cannot be emitted",
+    "next_probe": "Decide whether a declared-forward selector is a legitimate spec field or a hole in the design"
+   }
+  ],
+  "parked_possibilities": [
+   "Fixing the four unresolvable <engine> tokens in the orchestrator-tier templates",
+   "Giving the engine a verb that appends to a directives field on an active gate",
+   "Binding provenance to evidence so attach records who really attached it"
+  ]
+ },
+ "completed_outcomes": [
+  {
+   "issue_id": "g1",
+   "outcome": "scripts/generate_spine.py ships: a TOML spec with no raw-command field, five typed check kinds each with a generation-time probe, and validate_spine.validate() as the literal last statement before success. Cold-reviewed APPROVE.",
+   "evidence": "Control pairing re-run by the Commander with its own spec: the guarded CLI refused with [falsifiable-unresolved-placeholder] at exit 4 and test ! -f confirmed nothing written; the corrected spec was written. Suite 2765 passed; sweep unchanged at 23."
+  },
+  {
+   "issue_id": "g2",
+   "outcome": "specs/implementer.spine.toml (gated) and specs/reviewer.spine.toml (survey) generate spines the oracle accepts with zero undecidable. Cold review BLOCKED round 1 and APPROVED round 2.",
+   "evidence": "Both generated spines OK with no undecidable line; the shipped <exact test command> placeholder replaced by selector TestResolverOwnedTokenRegex with min_collect 2, which collects exactly 2. Suite 2775 passed; sweep 23."
+  },
+  {
+   "issue_id": "g3",
+   "outcome": "A generated spine reached a terminal state under run_crew.py --spine with no handoff and no result path: both items complete, lease released, registry status completed on spine_terminal.",
+   "evidence": "dispatch-proof/spine.json final state read directly; the driven work (positional-argument probing) verified by the Commander catching a wrong positional path and skipping one carrying a resolver-owned token. Suite 2788 passed after map regeneration."
+  }
+ ],
+ "wave_evidence": [
+  {
+   "claim": "The generator cannot emit a spine the lint would reject.",
+   "expected": "A defect-shaped spec is refused with nothing written; the same spec corrected is written.",
+   "observed": "Reproduced by the Commander with an independently authored spec, and again by the cold reviewer with a third: refusal at exit 4 carrying the oracle's own fault text verbatim, output file absent; corrected spec written.",
+   "source": "Commander re-run plus g1-review-result.md criterion 1"
+  },
+  {
+   "claim": "Every generated gate carries a place to record beliefs, concerns and open questions.",
+   "expected": "The handback contract renders on every gate through the engine's own render_human, and each named verb lands where it says.",
+   "observed": "9 of 9 gates across a gated and a survey spine carry it; the reviewer drove attach, flag-candidate and block against a generated spine and each record landed where the contract said.",
+   "source": "g1-review-result.md criterion 7 and Commander verification of both generated spines"
+  },
+  {
+   "claim": "A large claim is carried up rather than buried.",
+   "expected": "The escalation makes the gate unclosable until an independent reviewer approves.",
+   "observed": "TRUE ON GATED ONLY. advance() refuses until an APPROVE review-result is attached. On a survey the engine never consults an artifact postcondition at all -- record() evaluates only command-kind postconditions and consolidate() reads only each item's result field -- so the survey consolidated APPROVE with the escalation unsatisfied and nothing attached.",
+   "source": "g2-review-result.md round 1 criterion 7, reproduced against bare checklist_engine dicts"
+  },
+  {
+   "claim": "The spec no longer asks its author to type a shell command from memory.",
+   "expected": "No shell text anywhere in either role spec.",
+   "observed": "True for shell tokenization and for zero-collect and wrong-population. NOT true for the wrong-invocation class: a positional path is now probed, but a REQUIRED flag the author failed to name is still invisible -- the Commander authored exactly that defect in this run's own dispatch-proof spec and the generator emitted it.",
+   "source": "g2-implement-result.md settling-question report, and the blocked gate in dispatch-proof/spine.json"
+  },
+  {
+   "claim": "The shipped corpus is unchanged by this wave.",
+   "expected": "validate_spine.py --sweep reports the same 23 fault lines before and after.",
+   "observed": "23 before, 23 after, at every gate boundary; git diff over skills/*/templates/* empty.",
+   "source": "g1-integrate.c3 and g2-integrate.c3 engine-run postconditions, plus reviewer re-runs"
+  }
+ ],
+ "discrepancies": [
+  {
+   "id": "D1",
+   "signal": "A Commander cannot drive its own execute.json through the MCP door: mcp_spine_server.py binds one file at import time and offers no per-call spine addressing, while the Commander spine's execute step requires driving a second checklist.",
+   "classification": "evidence_only",
+   "affects": "The human's ruling that anything reachable only via the CLI is a defect",
+   "evidence": "scripts/mcp_spine_server.py:106 SPINE = Path(os.environ['SPINE_FILE']).resolve(); execute.json was driven through checklist_engine.py directly, journaled.",
+   "reason": "Fixing it is an mcp_spine_server.py change, outside a Commander's latitude. Recorded as tc1 for the Admiral."
+  },
+  {
+   "id": "D2",
+   "signal": "record()/consolidate() never evaluate artifact-kind postconditions on a survey item, so no artifact-based gate can be enforced on any survey in the corpus.",
+   "classification": "invalidates_forecast_or_decomposition",
+   "affects": "Any future plan that assumes an artifact postcondition gates a reviewer or interrogator checklist",
+   "evidence": "g2-review round 1 drove a generated survey to consolidation APPROVE with the escalation unsatisfied and nothing attached; reproduced against bare checklist_engine dicts.",
+   "reason": "It changes what a survey-type role spec can promise, so a later wave that migrates reviewer or interrogator templates must plan around it or the engine must change first."
+  },
+  {
+   "id": "D3",
+   "signal": "The script probe cannot see a REQUIRED flag the author failed to name -- it verifies only that flags the author DID name exist.",
+   "classification": "blocks_current_wave_exit",
+   "affects": "The settling question's answer, which is a headline deliverable",
+   "evidence": "The Commander authored dispatch-proof m1.c2 omitting --out; the generator emitted it and the oracle accepted it; the driven crew blocked on 'the following arguments are required: --out' at exit 2.",
+   "reason": "It does not block shipping the generator, but it does block claiming the wrong-invocation class is closed. Resolved by reporting the residual honestly rather than by softening the claim."
+  },
+  {
+   "id": "D4",
+   "signal": "recover_crews.py misclassifies a completed spine-only dispatch as NEEDS-ABANDON because its classifier keys on a result artifact such a crew deliberately never writes.",
+   "classification": "later_only",
+   "affects": "Crew recovery for any future spine-only dispatch",
+   "evidence": "run_crew.py wrote status=completed with completed_at set and result=None; recover_crews.py then reported NEEDS-ABANDON for the same entry.",
+   "reason": "It would make a resumed Commander redispatch finished work, which is what recover_crews exists to prevent, but nothing in this wave depends on it. Recorded as tc2."
+  },
+  {
+   "id": "D5",
+   "signal": "Adding a module silently staled map/INDEX.md twice this run, surfacing each time as a test failure a crew reasonably misread as pre-existing.",
+   "classification": "evidence_only",
+   "affects": "Any wave that adds a module",
+   "evidence": "57 modules vs 56 committed after g1; again after the driven change. Both fixed by python -m scripts.code_map build.",
+   "reason": "Mechanical and already handled; recorded because a crew stashing its own changes cannot distinguish 'not my diff' from 'not this run'."
+  },
+  {
+   "id": "D6",
+   "signal": "checklist_engine.load_config json.loads any config_ref that EXISTS, so a config_ref pointing at a real non-JSON file crashes the engine with an unhandled JSONDecodeError before any rail text prints; validate_spine.py has no fault for it.",
+   "classification": "evidence_only",
+   "affects": "Any spine or template authored with a mistyped config_ref",
+   "evidence": "Hit live while wiring this run's own execute.json, which pointed config_ref at a markdown file.",
+   "reason": "The generator refuses it as spec-config-ref-not-json without moving the oracle; the oracle's own gap is reported rather than patched."
+  }
+ ],
+ "open_current_wave_issue_ids": [],
+ "unlaunched_items": [
+  {
+   "id": "U-migrate-role-templates",
+   "kind": "forecast"
+  },
+  {
+   "id": "U-required-flag-probe",
+   "kind": "forecast"
+  },
+  {
+   "id": "U-third-role-spec-generalizes",
+   "kind": "uncertainty"
+  },
+  {
+   "id": "U-tdd-red-target",
+   "kind": "uncertainty"
+  },
+  {
+   "id": "U-engine-tokens",
+   "kind": "parked"
+  },
+  {
+   "id": "U-directives-write-verb",
+   "kind": "parked"
+  },
+  {
+   "id": "U-evidence-provenance",
+   "kind": "parked"
+  }
+ ],
+ "repo_state": {
+  "anchors": [
+   "scripts/generate_spine.py",
+   "scripts/validate_spine.py",
+   "specs/",
+   "docs/CHECKLIST_SCHEMA.md"
+  ],
+  "map_status": "No architecture map: map_orient returns DEGRADED-UNPARSEABLE and the receipt is discharged with six hash-pinned substitutes"
+ }
+}

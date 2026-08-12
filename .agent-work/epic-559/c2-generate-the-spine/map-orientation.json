@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "work_id": "epic-559/c2-generate-the-spine",
+  "root": "/home/tommy/projects/constellation-skills-wt/c2-generate-the-spine",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/CHECKLIST_SCHEMA.md",
+      "content_hash": "224224f087f0986fe0ba43d40f06c13ef974697959b627bc82c52f57250ebac7",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/CHECKLIST_ENGINE_DESIGN.md",
+      "content_hash": "2ecf6ac1d58672e348ce15d7a6619457be9d914c5e4d73ae7999e183e5420a9b",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "70fc98d8194a28f9f8fc2be73e8455ba556e15b81e9b28fdd82eeb11883b6b10",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/GLOSSARY.md",
+      "content_hash": "574e9ef4f494522653ea8d62cb58a1138f5bf385a17e95a75629bccd3c0340ee",
+      "source": "agent-declared"
+    },
+    {
+      "path": "README.md",
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb",
+      "source": "known-fallback"
+    },
+    {
+      "path": "SKILL_INDEX.md",
+      "content_hash": "d16be75663604eccaa0b4d26229925e3c9b3052425c1113b4661f6c86ed6aaf4",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "No docs/architecture/ packet map exists in this repo at all; map/INDEX.md is an unfilled template and map/ids.jsonl is empty, so scripts/checklist_engine.py, scripts/validate_spine.py and the skills/*/templates/*.json spine corpus have no structural map entries. Blast radius for the generator had to be derived from docs/CHECKLIST_SCHEMA.md plus direct reads.",
+    "docs/agents/engine-config.json does not exist in this repo; the context imperative names it as a project delta. Substituted docs/CHECKLIST_SCHEMA.md as the engine's on-disk contract."
+  ],
+  "escalation": "Recorded as a triage candidate to the Admiral (epic-418-followon): this skill-source repo ships map/INDEX.md and map/ids.jsonl as empty scaffolding, so every commander's map_orient is structurally DEGRADED here. Not fixing it in this wave -- out of mission scope.",
+  "emitted_at": "2026-08-11T15:29:48.514152+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

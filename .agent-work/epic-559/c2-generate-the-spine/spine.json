@@ -1,0 +1,824 @@
+{
+  "work_id": "epic-559/c2-generate-the-spine",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "init",
+    "context",
+    "understand",
+    "plan",
+    "execute",
+    "reconcile",
+    "triage",
+    "review",
+    "feedback",
+    "archive"
+  ],
+  "tasks": {
+    "init": {
+      "id": "init",
+      "title": "Set up work area",
+      "imperative": "Run: python /home/tommy/.claude/skills/constellation-commander/scripts/init_work_area.py epic-559/c2-generate-the-spine. This same script now ALSO optionally materializes spine.json from a spine template with its placeholders resolved, via --spine <spine-template> [--skill-dir <path>] (shipped in issue-73 g1) \u2014 use it to instantiate spine.json rather than hand-substituting placeholders, passing the commander skill directory to --skill-dir so the commander-skill-dir placeholder resolves to an absolute path (it auto-detects when omitted). Start the work branch per repo guidance. Claim the engine session lease on this spine so a resumed or duplicated parent cannot concurrently drive it: by default, call the spine_lease MCP tool with action=claim, claimed_by=commander, worktree=. (add force=true and reason=\"resuming this run\" if a stale prior lease blocks you) -- this is your own spine (the one this process's door is bound to), so the door needs no session id argument, it reads SPINE_SESSION from its own environment. CLI fallback: <engine> claim --session-id commander-epic-559/c2-generate-the-spine --claimed-by commander --worktree . (if a stale prior lease blocks you, re-run with --force --reason \"resuming this run\"). From here on, pass --session-id commander-epic-559/c2-generate-the-spine on every mutating CLI call against this spine (the door tools never take one).",
+      "preconditions": [
+        {
+          "id": "c0",
+          "statement": "this Commander is operating in the worktree it was provisioned into, not the shared checkout or another agent's worktree -- proven, not asserted",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_worktree_isolation.py --here /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-init-1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area scaffolded",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/.claude/skills/constellation-commander/scripts/init_work_area.py epic-559/c2-generate-the-spine"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-init-2"
+        },
+        {
+          "id": "c2",
+          "statement": "engine session lease claimed for this spine (commander owns the state)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Engine session lease claimed via spine_lease (door, action=claim, claimed_by=commander, worktree=.) \u2014 active as constellation/epic-559/c2-generate-the-spine/execute/commander. The imperative's `<engine>` CLI tokens are unresolvable residue (LAUNCH_ORDER \"A defect in your own spine\"); used the MCP door per the human's categorical ruling."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-init-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_worktree_isolation.py --here /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-init-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/.claude/skills/constellation-commander/scripts/init_work_area.py epic-559/c2-generate-the-spine",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "context": {
+      "id": "context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/engine-config.json. Where the repo carries no docs/agents/ overlay at all (e.g. a skill-source repo), substitute the closest repo doctrine you can find (README, CONTRIBUTING, top-level docs) and record the substitution \u2014 do not treat those paths as guaranteed to exist. Before you open any source file, resolve and read the map input: run python /home/tommy/.claude/skills/constellation-commander/scripts/map_orient.py orient --root /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine --work-id epic-559/c2-generate-the-spine. On RESOLVED, read the entrypoint it names and the packets, overlays and decision anchors it routes you to for the area the ask touches, and treat every later source read as confirming a frame the map already gave you rather than building one out of code. On DEGRADED, re-run the same command with --substitute PATH (what you read instead of a map \u2014 it is hash-pinned into the receipt) --unmapped TEXT (what stayed unmapped) --escalation TEXT (what you are escalating, and to whom), and get that on the record before any source read: degraded is a declared reading, never a licence to start from code. The tool probes a fixed fallback order \u2014 README.md, AGENTS.md, CLAUDE.md, a docs/ index \u2014 and labels a substitute it found there as verified by the filesystem rather than merely asserted by you. The anchor of this instruction is the point: 'before you open any source file' is an act you cannot postpone, whereas a map-first imperative anchored to a late artifact (the gate plan, which is authored at the END of a long run) is satisfied by a run that crawls source for fifty calls, reads the map afterwards, and has complied exactly \u2014 that is measured behaviour, not a hypothetical. This read is the map-first input the mission frame and plan are built from. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context, glossary, engine config loaded; current map read for the affected area where architecture artifacts exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read: references/global-orchestrator.md and references/global-everyone.md (inherited doctrine); docs/agents/ORCHESTRATOR_CONTEXT.md and docs/agents/GLOSSARY.md (project deltas). docs/agents/engine-config.json DOES NOT EXIST in this repo \u2014 substituted docs/CHECKLIST_SCHEMA.md (the engine's on-disk contract, incl. Task fields constraints/directives/anchors and their rendering) and docs/CHECKLIST_ENGINE_DESIGN.md; substitution recorded in the map-orientation receipt. Map: DEGRADED-UNPARSEABLE \u2014 this repo has no docs/architecture/ map at all, map/INDEX.md is an unfilled template and map/ids.jsonl is empty. Discharged with 6 hash-pinned substitutes, 2 unmapped gaps and an escalation to the Admiral."
+        },
+        {
+          "id": "c2",
+          "statement": "the orientation contract is satisfied -- RESOLVED, or a DEGRADED verdict discharged with hash-pinned substitutes AND the unmapped gap AND an escalation -- recorded at the context step, which precedes understand and plan. Ordering itself is NOT machine-verifiable from a receipt: nothing in a receipt distinguishes a run that resolved the map first from one that crawled fifty files and then wrote an identical receipt. Ordering lives in this step's imperative ('Before you open any source file') and in the report-only ordering audit, never in this check. This gate is a regression floor so map-IGNORING cannot silently return; it is NOT the fix for map-LATENESS (measured sensitivity 0/4, specificity 0/1). Gate-vs-report is a flag flip: adding --report-only to 'python /home/tommy/.claude/skills/constellation-commander/scripts/map_orient.py verify-orientation --root /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine --work-id epic-559/c2-generate-the-spine' turns this gate into a non-blocking report without rewiring the step.",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/.claude/skills/constellation-commander/scripts/map_orient.py verify-orientation --root /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine --work-id epic-559/c2-generate-the-spine"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-context-1"
+        }
+      ],
+      "context_refs": [
+        {
+          "root": "skill",
+          "path": "references/global-orchestrator.md",
+          "required": true
+        },
+        {
+          "root": "skill",
+          "path": "references/global-everyone.md",
+          "required": true
+        },
+        {
+          "root": "repo",
+          "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+          "required": false
+        },
+        {
+          "root": "repo",
+          "path": "docs/agents/GLOSSARY.md",
+          "required": false
+        },
+        {
+          "root": "repo",
+          "path": "docs/agents/engine-config.json",
+          "required": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-context-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/.claude/skills/constellation-commander/scripts/map_orient.py verify-orientation --root /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine --work-id epic-559/c2-generate-the-spine",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "understand": {
+      "id": "understand",
+      "title": "Understand the ask",
+      "imperative": "In your own context (interactive: the interrogator reaches the human), load constellation-interrogator and drive interrogation.json with the request, context, and commander starting questions; frame the ask map-first against the affected capabilities, structural anchors, and governing constraints/decisions read at context, and flag any low-confidence/stale/disputed map area the ask depends on. Save the consolidated problem statement. Confirm it with the human. In delegated mode (running from an Admiral launch order, no reachable human), reconcile the ask against the frozen launch order instead of interrogating a human, and satisfy c1 by attaching a user-decision evidence item citing the launch order (attach understand --type user-decision --field cite='LAUNCH_ORDER:Mission'); take a genuine gap to the Admiral \u2014 float a decision outside latitude, or query for missing context \u2014 per Stop Conditions. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Baseline context loaded at the context step and closed there: inherited global-orchestrator/global-everyone doctrine, docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/CHECKLIST_SCHEMA.md (substituting the absent docs/agents/engine-config.json), plus the discharged DEGRADED map-orientation receipt at .agent-work/epic-559/c2-generate-the-spine/map-orientation.json."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "problem statement and protected intent confirmed",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-understand-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": "interrogation.json",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-understand-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Mission + LAUNCH_ORDER:Pre-Rulings + LAUNCH_ORDER:Pre-empted Steps (understand)",
+            "statement": ".agent-work/epic-559/c2-generate-the-spine/PROBLEM_STATEMENT.md",
+            "ratified_by": "admiral-epic-418-followon acting as the human's delegate",
+            "baseline_reconciled": "no generator exists at base (grep for generate_spine|spine_spec|spec_to_spine returns nothing); validate_spine.py present and importable; --sweep baseline reproduces the order's stated faults exactly"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "plan": {
+      "id": "plan",
+      "title": "Author the gate plan",
+      "imperative": "Map-first: BEFORE authoring execute.json, produce a mission frame from the map input the context step resolved, using templates/MISSION_FRAME.template.md (intent; affected capabilities; relevant examples/events; structural anchors; governing constraints/assumptions; decision anchors and decision pressure; claims/evidence surfaces; map confidence/staleness/disputes; out of scope). Write it to .agent-work/epic-559/c2-generate-the-spine/MISSION_FRAME.md \u2014 that exact path is what the c6 gate reads, so a frame parked anywhere else reads as no frame at all. For a trivial local/mechanical change where the map adds nothing, shrink or skip the frame and say so in its intent; c6 is waivable, so take that escape as a RECORDED waiver (<engine> waive plan --cond c6 --authority human --reason '...') rather than as a silent skip. The c6 gate runs map_orient.py verify-frame over that file: every anchor id the frame cites must exist in the map inventory the context step resolved, or \u2014 when context came back DEGRADED \u2014 must be one of the substitutes the receipt hash-pinned there, so the frame is compared against a committed prior declaration instead of a same-breath assertion. Know what that check is and is not, and do not overclaim it: it is a regression floor so map-IGNORING cannot silently return, not the fix for map-LATENESS. Measured against this epic's baseline five runs it has sensitivity 0/4 and specificity 0/1, and it inherits the late-anchor defect it was built next to, because anchors-in-a-late-frame is compliance without sequence. The load-bearing map-first anchor is at the context step ('before you open any source file'), which is why verify-orientation is gated there and verify-frame is gated only here. Do NOT 'fix' that asymmetry by also running verify-frame at context: no frame exists at context \u2014 the step runs before understand and plan \u2014 and the only way to make it pass there is to let an ABSENT frame pass, which is exactly the refusal the whole check is built on. If verify-frame ever has to be context-safe, give it a step-scoped mode; never a vacuous pass. For any low-confidence/stale/disputed map area the run depends on, alter the plan accordingly: add a scout/verification gate or surface it to the human as a decision \u2014 never author gates that silently trust an unverified map. Surface durable-structure choices as decision candidates per the skill's Decision candidates section rather than choosing alone. Then author the gate plan into execute.json: each gate the smallest reasonable bite, with close criteria, required evidence, and an anchors block cut from the frame. Before the plan-approved checkpoint run plan-alternatives (parallel gate-plan candidates under distinct constraints, via the references/design-it-twice-brief.md contract) and a cold plan critic (reads the candidate plan + mission frame only, no authoring context); both bias-to-yes \u2014 any skip is surfaced as a named untaken road \u2014 and the panel-vs-single choice is surfaced to the human at plan approval. Get the human to approve it. In delegated mode, satisfy c3 (plan approved) by attaching a user-decision evidence item citing the launch order's frozen plan and scope -- by default via the spine_evidence MCP tool (action=attach, task_id=plan, evidence_type=user-decision, fields={cite: 'LAUNCH_ORDER:Mission'}); CLI fallback: attach plan --type user-decision --field cite='LAUNCH_ORDER:Mission'; surface a plan-invalidating discovery to the Admiral rather than blocking on the human. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "ask confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Problem statement and protected intent are confirmed and closed at the understand step: .agent-work/epic-559/c2-generate-the-spine/PROBLEM_STATEMENT.md, ratified by evidence e-understand-1 (user-decision) citing LAUNCH_ORDER:Mission + Pre-Rulings + Pre-empted Steps, with the order's assumed baseline reconciled against the actual code."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "mission frame produced from the current map (or explicitly skipped as trivial) where architecture artifacts exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "MISSION_FRAME.md written at the exact path the c6 gate reads, and verify-frame returns FRAME-OK (0 problems). Not skipped: this run introduces a load-bearing interface, the opposite of the trivial-mechanical case. Built from the declared DEGRADED reading rather than from a map, and it deliberately carries no `struct:`/`decision:`-prefixed anchor ids \u2014 under a degraded orientation verify-frame refuses every map-anchor id, correctly, because no map exists for one to be a member of. Decisions are named and graded without the prefix, and the reason is stated at the top of the frame."
+        },
+        {
+          "id": "c2",
+          "statement": "execute.json authored, one bounded issue, gates carry anchors cut from the frame",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute.json authored at .agent-work/epic-559/c2-generate-the-spine/execute.json: 12 items over five gates (e0-context, g0-design reasoning, g1 generator crew triple, g2 role-specs crew triple, g3 dispatch-proof crew triple, g4-closeout reasoning), one bounded issue. Every gate carries an anchors block cut from the frame, and every gate carries the handback directives contract the run is about to make the generator emit \u2014 dogfooded on my own plan. File-ownership scope enumerated against the authored gates: scripts/generate_spine.py (g1), specs/*.spine.toml plus generated spines (g2), the dispatch proof (g3), the closeout packet and floats (g4); the four <engine> tokens are carried as decision pressure to g4, not silently dropped. Control: python scripts/validate_spine.py .agent-work/epic-559/c2-generate-the-spine/execute.json --root . reports OK \u2014 0 faults, 0 undecidable, exit 0 \u2014 where nine of twelve shipped templates carry falsifiable-all-null."
+        },
+        {
+          "id": "c3",
+          "statement": "plan approved",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-plan-1"
+        },
+        {
+          "id": "c4",
+          "statement": "plan-alternatives run BEFORE the plan freezes (parallel candidates under distinct constraints converging to one recommendation), or the skip surfaced as a named untaken road",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "plan-alternatives run BEFORE the plan froze. Brief: .agent-work/epic-559/c2-generate-the-spine/plan-alternatives.md (design-it-twice contract, plan-phase form). Panel of 3, one named distinct constraint each, dispatched sequentially on Sonnet through scripts/run_crew.py: a-smallest-diff, b-most-testable, c-best-seam-placement. Results at crew-handoffs/plan-alt-{a,b,c}-*-result.md. Converged to ONE named hybrid, not a menu: C's seam + B's vocabulary and escalation + C's AST guard in place of B's live import. Untaken roads surfaced, not silent: (1) a fourth max-flexibility candidate (a spec that can express raw shell) was not funded because it is the mission's null hypothesis rather than a design, and is carried instead as the settling question every candidate had to answer; (2) no separate interface-phase excursion, because the interface being chosen is this plan's own first gate."
+        },
+        {
+          "id": "c5",
+          "statement": "cold plan critic run on the converged candidate plan + mission frame (after alternatives, before plan approval), findings triaged by the human; panel-vs-single choice surfaced at plan approval",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Cold plan critic run AFTER the alternatives converged and BEFORE plan approval, on CANDIDATE_PLAN.md + MISSION_FRAME.md only \u2014 each critic was told not to read the three candidate documents or the launch order. Panel of three lenses (intent-fit, testability/falsifiability, simplicity/YAGNI), Sonnet, sequential, results at crew-handoffs/plan-critic-*-result.md. Panel-vs-single choice surfaced at approval: PANEL, because the run introduces a load-bearing interface other authors write against and doctrine says \"when in doubt, panel\"; the Admiral may overturn it. Findings: 2 BLOCKING, 7 SERIOUS, 6 MINOR. Every one triaged by me and none by its author \u2014 .agent-work/epic-559/c2-generate-the-spine/plan-critic.md records each finding with its disposition. 12 accepted (both BLOCKING ones changed the design: the handback arrays were deleted as unwritable, and the escalation was re-pointed from a match-less user-decision to a review-result matching verdict APPROVE), 1 rejected with evidence (TOML kept; 14 of 61 shipped imperatives exceed 1000 chars and the longest is 3534, so a JSON spec would move the hand-escaping hazard onto the imperative). Both BLOCKING findings were found by RUNNING the engine, not by reading the plan."
+        },
+        {
+          "id": "c6",
+          "statement": "the mission frame at .agent-work/epic-559/c2-generate-the-spine/MISSION_FRAME.md cites anchors that resolve against the map the context step oriented on (or, when context degraded, against the substitutes the receipt hash-pinned) \u2014 an ABSENT frame REFUSES and never vacuously passes. A regression floor against map-ignoring, NOT a check for map-lateness; waive it for a genuinely trivial change so the escape is recorded. Gate-vs-report is a flag flip: append --report-only to turn this gate into a non-blocking report without rewiring the step.",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/.claude/skills/constellation-commander/scripts/map_orient.py verify-frame --root /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine --work-id epic-559/c2-generate-the-spine"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-plan-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-plan-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Pre-empted Steps (plan.c3 -- 'the Admiral approves, not the human') + LAUNCH_ORDER:Mission + LAUNCH_ORDER:Inherited Latitude",
+            "plan": ".agent-work/epic-559/c2-generate-the-spine/execute.json",
+            "reads_for_approval": "CANDIDATE_PLAN.md (with its superseded-in-part table), plan-critic.md (13 findings, each with my disposition), plan-alternatives.md (convergence), MISSION_FRAME.md",
+            "delivery": "sent by artifact, not by round-trip: this Commander runs headless, and ending the turn to wait for the Admiral would kill the run mid-plan. The delegated user-decision mechanism is a cited attachment; the Admiral amends at the return boundary.",
+            "surfaced_for_overturn": "panel-of-3 scaling on BOTH design-it-twice and the cold critic; the choice to keep TOML over JSON; the decision to cut git_change_policy and recorded from the vocabulary",
+            "floated": "the engine binds no provenance to evidence -- attach takes no authority and stamps produced_by 'engine' for every caller, while waive demands one. Every artifact/user-decision human checkpoint in the corpus is therefore satisfiable by the agent it checks. Outside my latitude (a checklist_engine.py change); carried in the return report."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-plan-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/.claude/skills/constellation-commander/scripts/map_orient.py verify-frame --root /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine --work-id epic-559/c2-generate-the-spine",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "execute": {
+      "id": "execute",
+      "title": "Execute the plan",
+      "imperative": "Before entering this step: ensure context headroom (run a harness compaction command if one is exposed, else rely on harness auto-compaction \u2014 either is fine) and reload the constellation-commander skill into this context, confirming it is active; this satisfies p1. Then, before this step and before EACH detached dispatch, (re)write the crash-resume state note at .agent-work/epic-559/c2-generate-the-spine/STATE_NOTE.md (step \u00b7 slug \u00b7 next command \u00b7 PID \u00b7 expected artifact) from .agent-work/templates/STATE_NOTE.template.md, or the bundled skills/workbench/templates/STATE_NOTE.template.md when the project has no .agent-work/templates/ overlay \u2014 the PID changes per detach, and the engine refuses to start execute until it is filled (precondition p2). Then drive execute.json gate by gate in this conversation using this skill's gate execution instructions. Dispatch subagents only for the implementer and reviewer tasks within each gate, and NEVER hand-launch a crew: run every implementer/reviewer dispatch through python /home/tommy/.claude/skills/constellation-commander/scripts/run_crew.py (foreground/blocking, durable registry, result-artifact verification). Before this step and before EACH crew dispatch, run python /home/tommy/.claude/skills/constellation-commander/scripts/recover_crews.py epic-559/c2-generate-the-spine and only launch when it reports no unresolved running/resumable/conflicting crew for that work-id/gate/role/worktree; recover (resume) or explicitly abandon/relaunch any it flags. Record completed outcomes, observed-vs-expected wave evidence, and classified discrepancies in the exact ../constellation-replan/templates/REPLAN_INPUT.template.json fields at .agent-work/epic-559/c2-generate-the-spine/REPLAN_INPUT.json as execution proceeds; discrepancies remain evidence and MUST NOT be auto-filed as issues. Run python /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id epic-559/c2-generate-the-spine; missing, malformed, or non-G2 run packets refuse execute completion. If a gate proves the plan wrong, surface the decision to the user before continuing. In delegated mode, surface a plan-invalidating discovery to the Admiral (float it) per the commander skill's Delegated/autonomous mode, rather than blocking on the human.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan approved; context headroom ensured and commander skill reloaded into this context",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "constellation-commander-delegated is loaded and active in this context, and I have read the constellation-commander skill's bundled references/commander-core.md (the mode-neutral role doctrine it points to), references/crew-dispatch.md, references/global-orchestrator.md, references/global-everyone.md and references/design-it-twice-brief.md. Context headroom: this harness exposes no agent-callable compaction command (/compact is user-level), so per inherited doctrine I rely on harness auto-compaction and keep detail in durable artifacts rather than in context \u2014 every plan-step deliverable is on disk (PROBLEM_STATEMENT.md, MISSION_FRAME.md, plan-alternatives.md, CANDIDATE_PLAN.md, plan-critic.md, execute.json, STATE_NOTE.md), so a relaunched Commander cold-starts from the spine's current plus those files."
+        },
+        {
+          "id": "p2",
+          "statement": "crash-resume state note written before any detached dispatch (step, slug, next command, pid, expected artifact)",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_state_note.py epic-559/c2-generate-the-spine"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-execute-1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every gate closed with integrated evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute.json is fully driven: all 12 items complete. e0-context, g0-design (reasoning), g1-implement/review/integrate, g2-implement/review/integrate (each reworked once after a cold-review BLOCK), g3-implement (amended to a reasoning gate so a crew would not have to dispatch a crew into the same worktree)/review/integrate, g4-closeout (reasoning). Every crew gate closed on integrated evidence: an implementer-result with status=complete, a review-result with verdict=APPROVE, and command postconditions the engine itself re-ran on each advance -- the full declared test suite plus a sweep guard asserting the shipped corpus still reports exactly 23 fault lines. Three commits: b406cc13, 4333ff84, 0b27b2b8."
+        },
+        {
+          "id": "c2",
+          "statement": "the run's REPLAN_INPUT.json returns observed execution discrepancies/evidence through the exact verified G2 input without automatic issue filing",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id epic-559/c2-generate-the-spine"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-execute-2"
+        }
+      ],
+      "constraints": [],
+      "directives": {
+        "replan_input": {
+          "template": "../constellation-replan/templates/REPLAN_INPUT.template.json",
+          "output": ".agent-work/epic-559/c2-generate-the-spine/REPLAN_INPUT.json",
+          "evidence_fields": [
+            "completed_outcomes",
+            "wave_evidence",
+            "discrepancies"
+          ],
+          "classifications": [
+            "blocks_current_wave_exit",
+            "invalidates_forecast_or_decomposition",
+            "later_only",
+            "evidence_only",
+            "drop"
+          ],
+          "auto_file_discrepancies": false,
+          "check": "verify_iterative_role_artifacts.py commander"
+        }
+      },
+      "child_checklist": "execute.json",
+      "context_headroom_tokens": 30000,
+      "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_state_note.py epic-559/c2-generate-the-spine",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id epic-559/c2-generate-the-spine",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "reconcile": {
+      "id": "reconcile",
+      "title": "Reconcile the map",
+      "imperative": "Hand the implemented changes to a subagent that invokes constellation-cartographer to fold them into the recorded architecture \u2014 this is the default path whenever a packet map exists. Where the run has no packet map (e.g. a skill-source repo with no docs/architecture map), reconcile the structural record directly instead: fold the change into the schema or design doc it actually touches, and where the change touched neither, record a reasoned no-op as compliant rather than blocking on an absent map.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execute complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute is complete: execute.json is driven to completion across all 12 items, three commits are on the branch (b406cc13, 4333ff84, 0b27b2b8), the suite is green at 2788 passed / 3 skipped / 1121 subtests, and the shipped-corpus lint sweep is unchanged at 23 fault lines."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map reflects the implemented changes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Reconciled directly, not by dispatching a Cartographer: this repo has NO packet map (map_orient returns DEGRADED-UNPARSEABLE -- docs/architecture/ absent, map/INDEX.md an unfilled template, map/ids.jsonl empty), which the imperative names as the case for direct reconciliation. Two records folded. (1) map/INDEX.md, which IS this repo's structural record, regenerated with `python -m scripts.code_map build --root .` -- twice, because adding scripts/generate_spine.py and then extending it each changed the module/entity counts (56 -> 57 modules, 1113 -> 1134 entities and again after). Both times it surfaced as a red test that a crew reasonably misread as pre-existing; it is now green and committed. (2) docs/CHECKLIST_SCHEMA.md, the schema this change actually touches, gained a \"Who writes a checklist\" section recording that scripts/generate_spine.py is the first PRODUCER of the documented shape, that the on-disk format is unchanged, and -- the part worth more than the announcement -- the three engine behaviours this run measured whose consequences the document did not draw: no artifact-based gate can be enforced on a survey because neither closing verb consults one, config_ref crashes the engine when it exists but is not JSON, and a command check receives no cwd. docs/agents/* is untouched, which is the human's call always. Suite green at 2788 after the edit."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "triage": {
+      "id": "triage",
+      "title": "Route future work",
+      "imperative": "Load the constellation-triage skill into this context. Drive triage on execute.json triage_candidates in this conversation \u2014 do not dispatch a subagent. Before creating any issues, present the full list of recommendations to the human and get explicit approval for each issue to be filed. In delegated mode, satisfy c2 (user approved issue creation) by attaching a user-decision evidence item citing the launch order's issue-filing authority (attach triage --type user-decision --field cite='LAUNCH_ORDER:Inherited Latitude'), or float to the Admiral when filing falls outside inherited latitude. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "reconcile complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "reconcile is complete: map/INDEX.md regenerated and green, docs/CHECKLIST_SCHEMA.md folded with the change and the three measured engine behaviours, docs/agents/* untouched."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every triage candidate routed or recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Six candidates, every one routed, none left unrouted: tc1 the door cannot address a second spine; tc2 recover_crews misclassifies a completed spine-only dispatch as NEEDS-ABANDON; tc3 load_config crashes on a config_ref that exists but is not JSON, with no matching lint fault; tc4 this repo's empty map scaffolding makes every Commander structurally DEGRADED; tc5 REVIEW_SURVEY's r6-fowler carries an unsubstituted <work-id>, hit independently by two reviewers; tc6 a dispatched crew inherits the parent's SPINE_FILE, so both my reviewers found the Commander's own spine bound in their environment. Disposition for all six: recommend-and-defer. I checked each against the fix-now ladder rather than defaulting -- tc2 and tc5 are genuinely small diffs and were tempting, but both fail the adjacent-to-scope and no-production-default-impact rungs, and clearing three of four does not qualify. Issue-ready recommendations, each with observations carrying conditions, type and rev, are at .agent-work/epic-559/c2-generate-the-spine/triage-candidates/RECOMMENDATIONS.md."
+        },
+        {
+          "id": "c2",
+          "statement": "user approved issue creation",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-triage-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Pre-empted Steps -- 'triage.c2 (user approved issue creation) -- no issues are created this wave. Route every triage candidate to me in your return report instead, and record c2 citing this order.'",
+            "decision": "NO issues filed. Filing authority was not unclear -- it was explicitly withheld by the launch order, so this citation records the DEFERRAL itself, not an approval to file, per the delegated-mode rule for a recommend-and-defer landing.",
+            "recommendations": ".agent-work/epic-559/c2-generate-the-spine/triage-candidates/RECOMMENDATIONS.md",
+            "count": "6 candidates, all recommend-and-defer, all checked against the fix-now ladder and none qualifying",
+            "routed_to": "admiral-epic-418-followon, in COMMANDER_RETURN.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "review": {
+      "id": "review",
+      "title": "Review accomplishments with user",
+      "imperative": "Summarize all gates closed, changes implemented, architecture changes reconciled, and triage items routed or filed. Present the full run summary to the user. Get their confirmation before archiving. In delegated mode, satisfy c1 (run summary accepted) by attaching a user-decision evidence item citing the launch order (attach review --type user-decision --field cite='LAUNCH_ORDER:Return Shape'); the Admiral ratifies at the epic return boundary. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "triage complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "triage is complete: six candidates routed, all recommend-and-defer, none filed, recommendations written issue-ready at triage-candidates/RECOMMENDATIONS.md."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "run summary accepted by user",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape + LAUNCH_ORDER:Pre-empted Steps ('review.c1 -- the Admiral accepts the run summary. The human accepts the epic at closeout, not this wave.')",
+            "summary": ".agent-work/epic-559/c2-generate-the-spine/COMMANDER_RETURN.md",
+            "contains": "all seven required sections: verdict; evidence I personally ran including verify_worktree_isolation --here; the control pairing shown accepted on the pure path and refused by the guard with nothing written; the settling question answered without softening; map impact; six triage candidates routed not filed; workflow feedback",
+            "gates_closed": "spine: init, context, understand, plan, execute, reconcile, triage, review (in progress), feedback, archive pending. execute.json: all 12 items complete across five gates, two of them reasoning gates with the crew waiver stated.",
+            "ratified_by": "the Admiral at the epic return boundary; the human accepts the epic at closeout, not this wave"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "feedback": {
+      "id": "feedback",
+      "title": "Record workflow feedback",
+      "imperative": "Before committing, reflect honestly on how this run actually went: how closely you followed the skills, handoffs, and checklists; where you had to improvise or work around the instructions; what was ambiguous, missing, or contradictory; and what would have helped. Include the crew Workflow Feedback harvested at each gN-integrate. A 'none' answer requires a run-specific reason ('none \u2014 confirmed after review: <what you checked>'); a bare 'none' does not close this step. Then record what happened as EPISODES: one episode per distinct thing that happened \u2014 not one per run, and not a summary \u2014 each stating its task-intent, expected-behavior, observed-behavior, impact-cost and workaround. An episode is a record, not a rule: write what you observed, and do NOT write a rule for a future agent to follow \u2014 a rule to follow belongs in docs/agents/* and is a human's call. Write the delta to .agent-work/epic-559/c2-generate-the-spine/episode-delta.json and apply it deterministically: python /home/tommy/.claude/skills/constellation-commander/scripts/apply_episode_delta.py --delta .agent-work/epic-559/c2-generate-the-spine/episode-delta.json --store-root episodes. Pass --store-root on every invocation: the writer's default resolves relative to the installed skill directory, so an installed copy would silently build a store at ~/.claude/skills/constellation-commander/episodes \u2014 outside the repo \u2014 while every gate reported green. Never hand-edit a file under episodes/: that writer is the only write path into it. Then run the capture gate before advancing: python /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-559/c2-generate-the-spine --store-root episodes --phase feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "run summary accepted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Run summary accepted: COMMANDER_RETURN.md written with all seven sections the launch order's Return Shape requires, closed at the review step with e-review-1 citing LAUNCH_ORDER:Return Shape. The Admiral ratifies at the epic return boundary; the human accepts the epic at closeout, not this wave."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "this run captured at least one episode: an episode in the store records this work id",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-559/c2-generate-the-spine --store-root episodes --phase feedback"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-559/c2-generate-the-spine --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "archive": {
+      "id": "archive",
+      "title": "Archive, commit, and push",
+      "imperative": "Commit all remaining work, including this run's episodes under episodes/. That is a tracked repo-root path, so the committed episode IS the durable record: it survives `git worktree remove` and lands in a fresh clone. None of the old is-.agent-work-gitignored reasoning applies to it. Push the branch to remote. When you open a PR on Windows, write the body to a temp file and use gh pr create -F <file> \u2014 a bash heredoc and a PowerShell @'...'@ here-string both fail for gh pr create --body (here-strings work for git commit -m, not PR bodies). Move .agent-work/epic-559/c2-generate-the-spine/ to .agent-work/archive/<date>-epic-559/c2-generate-the-spine/. Run the archive-phase capture gate before marking archive complete \u2014 it additionally requires git to TRACK the episode, which is what proves the record outlived this worktree: python /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-559/c2-generate-the-spine --store-root episodes --phase archive. Confirm the branch is clean and merge-ready per repo guidance. The engine mechanically refuses closeout (c4) when the staged diff includes suspicious artifacts (oversized files, generated record dumps, disallowed dirs, binary/blob additions, large data files); if any are intentional, a human waives c4 via <engine> waive archive --cond c4 --authority human --reason \"...\" rather than hand-editing the spine. Release the engine session lease only as your VERY LAST action, AFTER the archive postconditions pass and you have run the engine's final advance on archive (the advance that marks the spine done): by default call the spine_lease MCP tool with action=release (this is your own spine; the door needs no session id argument). CLI fallback: <engine> release --session-id commander-epic-559/c2-generate-the-spine. Release must come after that closing advance, never before it \u2014 the lease must cover every journaled action, so the release is the final journal entry; releasing earlier leaves archive's own closeout entries (attest/waive/advance) after the lease release and fails the terminal provenance check.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "workflow feedback recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Workflow feedback recorded and closed at the feedback step: the reflection in COMMANDER_RETURN.md section 7 and notes-1.md, every crew's harvested Workflow Feedback pooled in notes-1.md (no bare \"none\"), and eight episodes captured through apply_episode_delta.py with the capture gate passing."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area archived and this run's episode captured AND tracked by git, so the record survives this worktree",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-559/c2-generate-the-spine --store-root episodes --phase archive"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-archive-1"
+        },
+        {
+          "id": "c2",
+          "statement": "branch committed and pushed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Branch epic-559/c2-generate-the-spine committed and pushed to origin across four commits: b406cc13 the generator, 4333ff84 the role specs and the honest Property 2, 0b27b2b8 positional-argument probing plus the dispatch proof, ef1d63ce the closeout. `git push -u origin` reported \"* [new branch]\" and the branch now tracks origin. Working tree clean. PR #563 open, titled FINAL, explicitly saying do not merge -- the Admiral merges after cold review and a green suite, per the launch order."
+        },
+        {
+          "id": "c2b",
+          "statement": "the work is REACHABLE: this branch has a pull request that is OPEN or MERGED. A merged PR is reachable work; a closed-unmerged one is not, and neither is no PR at all. A terminal spine and a pushed branch describe the run, not the ref -- CI never runs on an unopened branch, and every commander that reached a terminal spine without opening one had to be chased for it. Open the PR even if the work is unfinished; declare FINAL or PENDING in its title and hand the merge up. Two properties of the check text are load-bearing. The branch is derived at CHECK time from the repo root, never resolved at instantiation: init instantiates the spine before it starts the branch, so the branch need not exist yet -- and a literal branch placeholder is not a resolver-owned token, so instantiation cannot catch one and would ship it unsubstituted. The count is compared in the SHELL because the engine's verdict for a command condition is the EXIT CODE and stdout is discarded: gh --jq 'length > 0' prints true or false but exits 0 either way, so that form can never fail.",
+          "check": {
+            "kind": "command",
+            "command": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-archive-2"
+        },
+        {
+          "id": "c3",
+          "statement": "engine session lease released",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "The engine session lease is released as my VERY LAST action, immediately after the closing advance on archive and never before it -- so the lease covers every journaled action and the release is the final journal entry. Attesting here rather than releasing here is what preserves that order: releasing first would leave archive's own closeout entries after the release and fail the terminal provenance check. Released through the MCP door (spine_lease action=release), which needs no session id because this is my own bound spine."
+        },
+        {
+          "id": "c4",
+          "statement": "staged diff carries no suspicious artifacts (oversized files, generated record dumps, disallowed dirs, binary/blob additions, large data files); refuse closeout unless a human waives via the engine override path",
+          "check": {
+            "kind": "git-change-policy",
+            "mode": "staged",
+            "max_file_bytes": 1000000,
+            "deny_globs": [
+              "*.parquet",
+              "*.pkl",
+              "*.pickle",
+              "*.joblib",
+              "*.pt",
+              "*.onnx",
+              "*.bin",
+              "*.ckpt",
+              "data/generated/**",
+              "records/**",
+              ".agent-work/LESSONS.md",
+              ".agent-work/AGENT_FEEDBACK.md",
+              ".agent-work/CONSTELLATION_FEEDBACK.md",
+              ".agent-work/CONSTELLATION_FEEDBACK.collected.json"
+            ],
+            "allow_globs": [
+              "docs/**",
+              "src/**",
+              "tests/**",
+              "skills/**",
+              "scripts/**",
+              ".agent-work/**"
+            ],
+            "require_human_waiver_for_binary": true
+          },
+          "satisfied": true,
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied_by": "e-archive-3"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-559/c2-generate-the-spine --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-3",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "execute",
+      "statement": "A Commander cannot drive its own execute.json through the MCP door. scripts/mcp_spine_server.py binds exactly one file at import time -- SPINE = Path(os.environ[\"SPINE_FILE\"]).resolve() (line 106) -- and there is no per-call spine addressing, while the Commander spine's own `execute` step requires driving a SECOND checklist (execute.json) that the door cannot address. Under the human's categorical ruling (\"anything that we want to do for the spine needs to be accessible via mcp... anything that we can only do via the cli is a defect\") this is a defect, and it is the same family as the four unresolvable <engine> tokens the launch order already flags -- but deeper, because no token substitution fixes it: the door has no verb that can name a second file. Closest compliant thing done and reported as misfit: execute.json is driven through checklist_engine.py directly, with every call journaled to execute.json.journal, so the work is engine-driven and auditable even though it is not door-driven. Floated to the Admiral; fixing it is an mcp_spine_server.py change, outside a Commander's latitude."
+    },
+    {
+      "id": "tc2",
+      "from": "execute",
+      "statement": "scripts/recover_crews.py misclassifies a COMPLETED spine-only dispatch as NEEDS-ABANDON. Measured: run_crew.py judged constellation/epic-559/c2-generate-the-spine/g3-dispatch/spine-probe/attempt-2 \"completed\" on spine_terminal and wrote status=completed, completed_at set, result=None into crew-runs.json; recover_crews.py then reports \"NEEDS-ABANDON -- not running and no result; require explicit --abandon ... --relaunch\". Its classifier keys on a result artifact, which a spine-only dispatch deliberately does not have (run_crew's own --result is documented as optional when --spine is given, precisely because such a crew is judged on its spine reaching a terminal state instead). The consequence is the exact failure recover_crews exists to prevent: a resumed or relaunched Commander running the recovery check first, as doctrine requires, is told to abandon and relaunch a crew whose work is already finished and whose spine is already terminal with its lease released. The fix is to make classify_entry consult status=completed and/or the bound spine's terminal state when result is None and spine is set. Not fixed here -- outside this mission's scope."
+    }
+  ],
+  "blockers": [],
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "constellation/epic-559/c2-generate-the-spine/execute/commander",
+    "status": "released",
+    "claimed_at": "2026-08-11T15:28:53.094722+00:00",
+    "last_heartbeat": "2026-08-11T19:27:03.965785+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-11T19:27:06.601665+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "init",
+      "why": "Work area was pre-scaffolded by the Admiral (LAUNCH_ORDER \"Pre-empted Steps\": init done, spine.json instantiated from COMMANDER_SPINE.template.json). I claimed the engine lease myself through the MCP door, and verified worktree isolation (verify_worktree_isolation.py --here exits 0: \"worktree OK: in /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine\"). Noted for the record: init's imperative carries two of the four unresolvable `<engine>` CLI tokens the launch order flags as a defect in this spine \u2014 ignored per the human's ruling that the CLI is not agent-facing.",
+      "mechanical": false,
+      "ts": "2026-08-11T15:29:07.466212+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "context",
+      "why": "This repo carries no architecture map \u2014 map_orient probes five candidates and all five come back absent, unparseable or empty, so every commander here is structurally DEGRADED. I discharged it as a declared reading rather than pretending: six hash-pinned substitutes, the two unmapped gaps named (no packet map over checklist_engine.py/validate_spine.py/the spine-template corpus; no docs/agents/engine-config.json), and the scaffolding gap escalated to the Admiral as a triage candidate. The substitute that actually carries my mission's frame is docs/CHECKLIST_SCHEMA.md: it is the engine's on-disk contract, and it confirms the launch order's two load-bearing facts \u2014 `constraints` and `directives` are Task-level fields that `current` renders on the active gate (#420/#433), and `directives` legitimately carries both a dict-of-contracts shape and a flat list of strings. That is the substrate my generator must emit into, and I now have it from the schema rather than from the order's summary of it.",
+      "mechanical": false,
+      "ts": "2026-08-11T15:30:15.882681+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "understand",
+      "why": "Reconciled the ask against the frozen launch order instead of interrogating (delegated mode), and checked the order's assumed baseline against the code rather than taking it on trust: no generator exists (tree-wide grep for generate_spine|spine_spec|spec_to_spine is empty), validate_spine.validate() is importable and its own docstring already names \"a future spine generator\" as its caller, and my own --sweep reproduces the order's baseline fault list exactly. The measurement that changes my design: `constraints` is not a free field \u2014 all 970 populated tasks and all three shipped-template instances use it to mean \"rules this gate must respect\", so beliefs/concerns/open questions do not belong there. `directives` means \"a standing contract this gate must satisfy\", is populated on only 22 tasks by four near-duplicate contracts, and renders as name + indented fields on the active gate. That is the field with room for a job, and it is where the handback substrate will go.",
+      "mechanical": false,
+      "ts": "2026-08-11T15:33:32.746821+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "plan",
+      "why": "The plan I would have frozen after the design-it-twice panel was wrong in two places, and only running the engine found it. Three candidates converged on a hybrid \u2014 a pure translation function separated from every I/O act (C), a closed vocabulary of typed check kinds each with a generation-time probe keyed to one of the four historical defects (B), and an AST scan instead of a live import so generation never executes author-named code (C over B, which is defect 2's own shape one layer up). Then the cold panel took it apart: the `directives.handback` arrays I designed are unwritable \u2014 no engine verb appends to a `directives` field on an active gate, `amend rescope` touches pending gates only \u2014 so they would have rendered empty on every gate forever, which is \"looks like it works\" inside the mechanism built to avoid it. And the `user-decision` escalation I designed for a large claim can be attached and attested by the same session that made the claim, because `attach` takes no authority and stamps `produced_by: \"engine\"` for every caller, while `waive` three functions below it demands one. So the escalation could not fail against the agent it exists to check. Both are fixed: the handback contract now names the three verbs that actually persist (attach, flag-candidate, block) plus the recorded parent, and the escalation is now a review-result matching verdict APPROVE \u2014 a checked property, not bare arrival. The residual is not mine to close: the engine binds no provenance to evidence at all, so every user-decision checkpoint in the corpus is self-satisfiable, and that is floated to the Admiral rather than patched. The panel also cut the plan down \u2014 one file not two, five check kinds not seven, five gates not six \u2014 each on precedent I verified rather than on taste. My own execute.json validates OK with zero faults and zero undecidable, and carries the handback contract on every gate, which is the smallest honest dogfood available before the generator exists.",
+      "mechanical": false,
+      "ts": "2026-08-11T16:31:35.312357+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "execute.json is driven to completion, and the two things worth carrying forward are both failures the run caught in its own machinery rather than successes. First: one of the mission's two non-optional properties was silently inert on every survey-type role spec, because record() evaluates only command-kind postconditions on a survey item and consolidate() reads only each item's result field. A cold reviewer found it by driving a generated survey to consolidation, not by reading it, and BLOCKED. The generator now refuses to inject a postcondition the engine will never consult and states the non-enforcement instead -- deliberately not taking the tempting command-check fix, which would have invented a convention with no producer and turned a gate that cannot fail into one that cannot pass, which is prior-wave verdict B's exact defect. Second: I authored a check omitting a required flag, the generator emitted it and the oracle accepted it, and only a real dispatch found it -- because the script probe verifies that flags an author NAMED exist and cannot see one they FAILED to name. That is the honest limit on the settling question and it is reported rather than softened. The run packet carries six classified discrepancies as evidence with none auto-filed, and verify_iterative_role_artifacts confirms it is G2-valid.",
+      "mechanical": false,
+      "ts": "2026-08-11T19:15:20.170649+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "Reconciled directly because there is no packet map to hand a Cartographer, which the step itself names as the compliant path. The structural record here is map/INDEX.md, and the reconciliation that mattered was mechanical: a new module and then its extension each staled it, and both times the staleness surfaced as a red test rather than as anything anyone noticed while writing the code -- the authoring-side blind spot, twice, in one run. The judgement part went into docs/CHECKLIST_SCHEMA.md: the format is unchanged and now has its first producer, and the three engine behaviours this run measured are recorded with their consequences drawn rather than left implied -- especially that neither closing verb on a survey consults an artifact postcondition, which is a fact any future role spec has to plan around.",
+      "mechanical": false,
+      "ts": "2026-08-11T19:18:24.762408+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "Six candidates routed, none filed, and the citation records the deferral rather than an approval \u2014 the launch order withheld filing authority explicitly, which is a different thing from authority being unclear. The two most valuable are both about the machinery the corpus uses to police itself rather than about my mission: recover_crews now advises abandoning and relaunching a spine-only crew whose work is already finished, which is precisely the duplication it exists to prevent; and a dispatched crew inherits its dispatcher's SPINE_FILE, so both my reviewers found the Commander's own spine bound in their environment and only their own doctrine stopped them driving it. I checked every candidate against the fix-now ladder rather than defaulting to defer \u2014 tc2 and tc5 are small enough to be tempting and both fail two rungs, and three of four does not qualify.",
+      "mechanical": false,
+      "ts": "2026-08-11T19:20:11.717487+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "The run summary is written and it leads with what did not hold rather than with what did, because that is the more useful half. Property 2 is enforceable on a gated gate and not on a survey; the wrong-invocation class is narrowed and not closed, proven by a defect I authored myself that the generator emitted and the oracle accepted; and the generator cannot author a TDD-shaped plan at all, because a selector for a test that does not yet exist collects zero and the probe refuses it. The control pairing is in the report as three runs with their real output, including test ! -f proving nothing was written on the refusal and the corrected spec being written, because a refusal without the accepted half proves only that the guard fires. Six triage candidates routed to the Admiral with none filed, and three floats recorded rather than patched.",
+      "mechanical": false,
+      "ts": "2026-08-11T19:22:26.934933+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Eight episodes recorded, one per distinct thing that happened, each as a record and none as a rule for a future agent. The reflection is in COMMANDER_RETURN.md section 7 and notes-1.md, and it includes every crew's harvested Workflow Feedback rather than a bare none: two reviewers independently reported that their environment carried MY spine bound; the g1 implementer volunteered that it nearly shipped a guard fixture built on an unmeasured assumption about Path.glob and caught itself; the g2 crew flagged that the config path the design note's own example names does not exist. The capture itself produced a ninth thing worth recording in its own right: I wrote the `run` field kebab-cased, so the capture gate could not resolve the eight episodes it had just written. I did not hand-edit the store to fix it -- the writer is the only write path -- so the eight were retired with the reason stated and eight corrected ones created through the same writer. The gate now passes on the work-id verbatim.",
+      "mechanical": false,
+      "ts": "2026-08-11T19:24:58.711443+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "Closeout, with one instruction deliberately not followed and the misfit reported rather than hidden. The imperative says to move .agent-work/epic-559/c2-generate-the-spine/ under .agent-work/archive/. I did not, for three reasons: the spine I am still driving lives in that directory, so moving it would break SPINE_FILE before this very advance and the release that must follow it; my frozen launch order names .agent-work/epic-559/c2-generate-the-spine/COMMANDER_RETURN.md as the artifact the Admiral judges completion from, and moving it would take that artifact out from under my principal mid-epic; and this repo's own archive layout shows the EPIC archiving its commanders together at epic closeout (.agent-work/archive/2026-08-09-epic-418-followon/commander-424/), which is the Admiral's act, not mine. c1's actual check is the archive-phase capture gate, and it passes: the episodes are committed and git-tracked, so the record already outlives this worktree, which is the property the move existed to guarantee. Everything else is satisfied on its own terms -- four commits pushed, PR #563 open and titled FINAL with do-not-merge stated, the staged diff carrying no suspicious artifacts, and the lease still held so it covers this entry. The release follows immediately and is the last thing I do.",
+      "mechanical": false,
+      "ts": "2026-08-11T19:27:03.965769+00:00"
+    }
+  ]
+}

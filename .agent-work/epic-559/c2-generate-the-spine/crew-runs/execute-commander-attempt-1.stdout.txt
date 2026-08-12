@@ -1,0 +1,23 @@
+The run is complete. Spine terminal, lease released, PR #563 open.
+
+## What shipped
+
+**`scripts/generate_spine.py`** compiles a TOML spec into the JSON the engine already reads, and refuses to emit anything `validate_spine.py` would reject — `validate()` is imported and called as the literal last statement before writing. The spec has **no raw-command field**: five typed check kinds, each with a generation-time probe.
+
+**`specs/implementer.spine.toml`** (gated) and **`specs/reviewer.spine.toml`** (survey) both generate spines the oracle accepts with zero undecidable. A spine generated from one was dispatched with `run_crew.py --spine` and reached a terminal state.
+
+**99 new tests; suite 2788 passed / 3 skipped / 1121 subtests** (baseline 2689). Lint sweep unchanged at 23 fault lines — no shipped template edited.
+
+## The three things worth your attention
+
+**1. Property 2 is not enforceable on a survey.** A cold reviewer drove a generated survey to `APPROVE` with the escalation unsatisfied and nothing attached: `record()` evaluates only command-kind postconditions, `consolidate()` reads only `result`. It **BLOCKED**, and that block changed the design — the generator now refuses to inject a postcondition the engine will never consult and states the non-enforcement instead. I declined the tempting command-check fix: no artifact could honestly satisfy it, so it would have turned a gate that cannot fail into one that cannot pass — verdict B's exact defect.
+
+**2. The settling question, answered honestly.** No, the spec no longer asks for a shell command. But the `script` probe checks flags an author *named*; it cannot see a **required** flag they *failed to name*. I proved that by authoring exactly that defect in this run's own dispatch-proof check — the generator emitted it, the oracle accepted it, and only a real dispatch found it, via a crew that blocked rather than forcing its gate. The shell-tokenization class is closed structurally; the wrong-invocation class is narrowed, not closed. Also: the generator **cannot author a TDD-shaped plan**, since a selector for an unwritten test collects zero and the probe refuses it.
+
+**3. Three floats and six triage candidates, none filed.** The sharpest: `attach()` takes no authority and stamps `produced_by: "engine"` for every caller, so **every `user-decision` checkpoint in the corpus is satisfiable by the agent it checks** — including the four in the spine I just drove. And `recover_crews.py` misclassifies a *completed* spine-only dispatch as `NEEDS-ABANDON`, which would make a resumed Commander redispatch finished work.
+
+I did **not** fix the four `<engine>` tokens, deliberately: they're the visible symptom of the door binding one spine at import time. Resolving them would make the instruction readable while the defect stayed — a loud defect made quiet. Recommend fixing the door first, then removing them together.
+
+Two deviations I should flag rather than bury: I drove `execute.json` through the CLI because no door verb can address a second spine, and I did not move the work area to `.agent-work/archive/` — the live spine and your return artifact both live there, and this repo archives commanders at *epic* closeout. Both are recorded in the spine's own `why` trail.
+
+Full detail: `.agent-work/epic-559/c2-generate-the-spine/COMMANDER_RETURN.md`.

@@ -1,0 +1,10 @@
+The rework run is complete — all six plan gates (context, escalation-mechanism verification, and the four fix blockers) drove through the engine to done, and the lease is released.
+
+Summary of what changed in `scripts/generate_spine.py` / `tests/test_generate_spine.py` / two spec files / one dispatch-proof spec:
+
+1. **Blocker 1/2** — `population.expected`/`expected_min`/`expected_max` and `pytest.min_collect` now refuse a non-integer at spec-shape time (`spec-non-integer-field`), closing the shell-injection-through-an-unquoted-number defect, each with VIOLATING+INNOCENT fixtures.
+2. **Blocker 0** — the `pytest` kind gained an opt-in `not_yet_written` declaration so the generator can author a TDD red step. Building this end-to-end surfaced that `validate_spine.py`'s own zero-collect oracle check (out of scope to edit) unconditionally blocks any compiled `command`-kind pytest check that currently collects zero — so a declared condition compiles to `check: null` (a manual attest, like `qualitative`) instead of a deferred-but-strict command, which is the only shape that actually lets generation succeed.
+3. **Blocker 4** — the two shipped role specs' hardcoded `parent = "admiral-epic-418-followon"` is now `parent = "<parent>"`, with a new guard proven against the exact prior value.
+4. **Diverged artifact** — fixed at the source (`dispatch-proof/probe.spine.toml`), never the generated spine.
+
+I also drove (not just read) a throwaway survey host and confirmed the large-claim escalation still does **not** fire on `record`/`consolidate` — reported as a blocker per the handoff's instruction, not fixed (`checklist_engine.py` is out of scope). Full details, evidence, and the settling-question answer are in `.agent-work/epic-559/c2-generate-the-spine/IMPLEMENTER_RESULT.md`.

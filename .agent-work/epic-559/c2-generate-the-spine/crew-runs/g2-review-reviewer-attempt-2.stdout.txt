@@ -1,0 +1,7 @@
+Round-2 review is complete and driven end-to-end through the engine.
+
+**Verdict: APPROVE.** The round-1 BLOCK's root cause — an injected `c-escalation` postcondition silently inert on a survey gate — is fixed: nothing is injected on a `survey` spec, and `directives.claim.enforcement` states the non-enforcement truthfully, naming the exact engine mechanism. I independently drove the real engine (not just the implementer's tests) to confirm: the survey side now behaves exactly as documented (no injected postcondition, consolidates APPROVE honestly), the gated side still genuinely enforces via `advance()`, the falsification-floor mutation genuinely lands, the enforcement prose is accurate, and no command-kind escalation with no producer was smuggled in. All 12 original close criteria re-verified by running commands myself.
+
+One non-blocking discrepancy flagged: the handoff's stated "Expected: 2767 passed" is stale (measured 2775, matching the implementer's own count exactly — 8 new tests this round). One triage candidate re-filed (`tc1`): the underlying `checklist_engine.py` gap (survey items never evaluate artifact-kind postconditions) persists as a durable engine-level item, already floated to the Admiral in DESIGN_NOTE.md.
+
+Result written to `.agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g2-review-result.md`, survey consolidated and lease released.

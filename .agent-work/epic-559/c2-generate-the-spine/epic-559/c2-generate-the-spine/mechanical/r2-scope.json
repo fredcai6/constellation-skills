@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r2-scope",
+  "mechanical": {
+    "run": "epic-559/c2-generate-the-spine",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r2-scope",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c2-generate-the-spine-r2-scope@f584072ec2145bf17abf6a17fb4ed71db5d86a01",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c2-generate-the-spine",
+    "generated_at": "2026-08-12T05:02:32Z"
+  }
+}
