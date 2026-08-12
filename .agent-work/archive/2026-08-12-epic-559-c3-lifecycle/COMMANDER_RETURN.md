@@ -251,3 +251,46 @@ to the work.
 This one outranks the other five floats. It is a live cross-agent identity leak in the dispatch path,
 found only because I read `engine_session` while demonstrating my own close predicate — and the fact that
 **the journal could not have told me** is the more troubling half.
+
+---
+
+## Post-terminal: `close_work` has a defect, found by using it on this run
+
+The run is terminal, archived and released. Before that, I ran **this run's own `close_work` on this
+run's own work area** — and it failed, which is the most useful thing that happened at closeout.
+
+```
+git add .../mcp_calls.jsonl failed: The following paths are ignored by one of your .gitignore files
+```
+
+`close_work` `git add`s every top-level entry. The MCP door writes **`mcp_calls.jsonl`** and
+**`mcp_server_started`** beside the spine, and both are **gitignored**, so `git add` refuses them.
+
+**Two separate problems:**
+
+1. **It does not handle gitignored entries.** A real work area contains them; a fixture one does not.
+2. **It half-succeeded and has no rollback.** 22 entries moved, then it raised, leaving the work area
+   split across two directories. That is precisely the refuse-rather-than-half-succeed property the launch
+   order demanded of `open_work` — and `open_work` has it. **`close_work` was never asked for it, and I
+   never noticed the asymmetry when I wrote the contract.** That omission is mine, not the crew's.
+
+**Why no test caught it, and why that is the same lesson twice.** Every `close_work` test builds its work
+area with `open_work`, which never produces a gitignored file. The cold critic named exactly this
+blindness for the spine *filename* and I fixed it there with a mandatory differing-basename fixture — and
+did not generalize it. **The matched-pair fixture problem had a second instance and I looked at only the
+one I was told about.**
+
+**What held, and it is the good news.** **Spine-last worked under a genuine, unplanned interruption.** The
+failure landed after 22 entries had moved and before the spine did, and `execute.json` and
+`execute.json.journal` were still at the original path — so the retry found them. The simulated
+interruption fixture approximated this; the real one proved it.
+
+I completed the move by hand, spine and journal last, and committed it (`b9bd628e`). **I did not patch
+`close_work` after the fact** — the gate is reviewed and terminal, and a post-terminal edit to approved
+code is exactly the unreviewed change this whole apparatus exists to prevent. **The fix is a follow-up
+and it should be the first thing R-anything picks up.**
+
+Suggested shape: classify each entry (tracked / untracked-not-ignored / ignored) and move each
+accordingly — `git mv` for tracked, `git add` then move for untracked-not-ignored, plain filesystem move
+for ignored — and wrap the whole sequence so a failure restores what it moved. Plus a fixture whose work
+area contains a gitignored file, which is what a real one always does.
