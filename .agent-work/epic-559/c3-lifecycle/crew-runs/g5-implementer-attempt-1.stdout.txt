@@ -1,0 +1,12 @@
+Everything is in scope: only `scripts/generate_spine.py`, `tests/test_generate_spine.py`, `DESIGN_NOTE.md`, and `map/INDEX.md` changed (all allowed), plus the result artifact. The run is complete.
+
+## Summary
+
+Delivered g5 ("the two carried findings") for `epic-559/c3-lifecycle`:
+
+1. **`not_yet_written` type guard** — added `spec-not-yet-written-not-bool` in `_cond_faults` (`scripts/generate_spine.py`), refusing a `pytest` condition's `not_yet_written` field when it's present with a non-`bool` value (TOML strings `"false"`/`"true"`, or int `1`), before `compile_condition`/`_probe_pytest` ever read it with bare truthiness. All 3 VIOLATING + 3 INNOCENT close criteria verified directly. Also fixed the missing `newline="\n"` on the compiled-spine write.
+2. **`DESIGN_NOTE.md` reconciliation** — mechanically enumerated all fault codes (17 total, 16 reachable via `spec_shape_faults()`, 1 separate/unwired), rewrote §7's list (previously only 10 of 16 were documented), filled in §4's missing `not_yet_written` documentation, verified §10's four-defect table row-by-row and left it unchanged (still accurate).
+
+Suite: 2932 passed (was 2920, +12 new tests), 3 skipped, 1121 subtests. Sweep: still exactly 23. Result artifact written at `.agent-work/epic-559/c3-lifecycle/crew-handoffs/g5-implementer-result.md` with `Return status: complete`, and the engine plan I drove for this gate is fully closed with the lease released.
+
+One thing worth flagging to you: this is the second gate in a row (g4, now g5) where the crew's inherited `SPINE_FILE`/`SPINE_SESSION` pointed at the Commander's own outer `execute.json` spine rather than a gate-scoped one — I noted it in Workflow Feedback as worth fixing at the dispatch level.

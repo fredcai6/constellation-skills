@@ -630,6 +630,11 @@
       "id": "tc2",
       "from": "execute",
       "statement": "episode_capture.manifest_root() (scripts/episode_capture.py:181-213) doubles the work-id path segment when a checklist lives in a subdirectory of its own work-id dir that does not itself end in the work-id -- exactly the .agent-work/<work-id>/<gate>-review/review.json shape the reviewer skill's own convention recommends. Reproduced live and confirmed on disk this run: the g1 reviewer's survey wrote .agent-work/epic-559/c3-lifecycle/epic-559/c3-lifecycle/{context,mechanical}/r*.json instead of .agent-work/epic-559/c3-lifecycle/{context,mechanical}/. The function's docstring documents the historical behaviour but does not flag that a reviewer survey is precisely the shape that trips it, so every reviewer crew in this corpus scatters its engine-written provenance into a nested duplicate path. Out of scope for C3 (episode_capture.py is untouched by every gate here). Found by the g1 reviewer; not filed as an issue, per the launch order's triage pre-ruling."
+    },
+    {
+      "id": "tc3",
+      "from": "execute",
+      "statement": "DESIGN_NOTE.md section 7's spec-fault list is now complete, but nothing PINS it against the source. Section 4's CHECK_KINDS tuple is machine-pinned by a test asserting it equals the compiler's own constant; section 7's fault-code list has no equivalent, so it stays correct only as long as whoever next adds a spec-* fault re-runs the enumeration instead of hand-editing. That is the same under-listing failure this gate just fixed, left able to recur. A test asserting section 7's list equals the codes grepped from generate_spine.py would close it. Found by the g5 reviewer. Related: the note has no enumerated list of the six probe-* fault codes at all. Not filed as issues, per the launch order's triage pre-ruling."
     }
   ],
   "blockers": [],

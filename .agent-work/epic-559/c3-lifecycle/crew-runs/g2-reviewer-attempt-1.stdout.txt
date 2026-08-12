@@ -1,0 +1,13 @@
+The g2 review is complete. **Verdict: APPROVE**.
+
+I drove the review survey through the checklist engine (`.agent-work/epic-559/c3-lifecycle/g2-review/review.json`) across all 7 checks (context, handoff compliance, scope, evidence, quality, reconciliation, Fowler pass), independently reproducing every claim rather than trusting the implementer's report:
+
+- Reran the full suite myself: 2875 passed, 3 skipped, 1121 subtests — matches exactly.
+- Independently reproduced the mandatory differing-basename mutation (literal-string hardcode → red, restored → green).
+- Went a step further than the handoff asked: mutated `close_work`'s actual move order (spine-first instead of spine-last) and confirmed both ordering-sensitive tests correctly go red — proving they test real ordering, not just that a mock fired.
+- Confirmed the differential test against `run_crew.spine_terminal` is correct, including a survey-consolidation branch the handoff's own bullet list under-described but that's genuinely required for agreement.
+- Confirmed the end-to-end test drives the real engine, the stage-by-name guard has a genuine positive control, and refusals are checked byte-for-byte against the whole work area.
+- Ran a full Fowler code-smell pass (12/12 smells, 2 legitimately overridden against documented repo conventions, `verify_fowler_pass.py` exits 0).
+- Confirmed no excluded files were touched, no scope drift, and `newline="\n"` wasn't weakened.
+
+Result artifact written to `.agent-work/epic-559/c3-lifecycle/crew-handoffs/g2-reviewer-result.md`, engine lease released, working tree left clean (all mutation experiments restored and verified against the original diff).

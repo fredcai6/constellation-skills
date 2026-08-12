@@ -1,0 +1,173 @@
+{
+  "work_id": "epic-559/c3-lifecycle",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, LIFECYCLE_CONTRACT.md sec 2-4, g2-implementer-handoff.md, g2-implementer-result.md, and the diff (scripts/spine_lifecycle.py, tests/test_spine_lifecycle.py).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "closeout_refusal(spine, *, archive_exists) and close_work(spine_path, *, root, today) added to scripts/spine_lifecycle.py, matching LIFECYCLE_CONTRACT.md sec 4: pure predicate refuses on non-released lease / non-terminal gate (naming it) / archive already exists, in that order; close_work starts at 'move work area, spine last' and neither performs nor re-implements satisfy-postconditions/advance/release. All 10 close criteria in the handoff have a corresponding test, independently re-run (see r3/r4 findings) and all pass. Scope: only scripts/spine_lifecycle.py, tests/test_spine_lifecycle.py, and the mechanically-regenerated map/INDEX.md changed -- verified via git diff --stat against every excluded path (empty).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git diff --stat HEAD against scripts/checklist_engine.py, scripts/validate_spine.py, scripts/mcp_spine_server.py, scripts/generate_spine.py, settings.json, .mcp.json, docs/agents/, skills/ is empty -- none touched. Branch is epic-559/c3-lifecycle (git branch --show-current), not main; no push evidence in git log. close_work's own source contains no git add -A / bare '.' (AST-verified, see r4). No door wiring in scripts/mcp_spine_server.py (g3's, untouched). generate_spine.py imported only, not edited; its known missing newline at line 910 is untouched and out of scope, confirmed still present and unmodified.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently reproduced (not trusted from the result artifact): full suite 2875 passed, 3 skipped, 1121 subtests (matches claim exactly, up from the 2856/3/1121 baseline, +19 net matching test_spine_lifecycle.py's growth 32->51 def test_ methods, grep-confirmed 51). validate_spine.py --sweep sweep count exactly 23 (matches claim). Differing-basename mutation experiment independently reproduced: mutated spine_name to the literal 'spine.json', reran TestCloseWorkDifferingBasenameMandatory, got the exact RED failure signature claimed (AssertionError on triage-candidates missing), restored, reran, GREEN, git diff shows no residue. Also independently mutated the move ORDER itself (spine-first instead of spine-last) and confirmed both TestCloseWorkSpineLastUnderInterruption and TestCloseWorkDifferingBasenameMandatory go RED -- proving these fixtures test genuine ordering, not merely that a monkeypatched raise fired; restored, both green again. map/INDEX.md regeneration reproduced (python -m scripts.code_map build --root .) and is idempotent (identical diff on a second run): scripts 1156->1160 entities, tests 4332->4371, matching the claimed entity-count delta.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Walked all 7 numbered verification items: (1) excluded names ARE derived (spine_name = absolute_spine_path.name; journal_name = spine_name + '.journal') -- independently falsified to the literal string, watched TestCloseWorkDifferingBasenameMandatory go red with the exact predicted signature, restored, green again. (2) refusal does nothing: TestCloseWorkLeaseActiveRefusalLeavesWorkUntouched/TestCloseWorkNonTerminalGateRefusal/TestCloseWorkArchiveExistsRefusal all use a byte-for-byte _snapshot of the FULL .agent-work tree before/after (not just archive absence). (3) spine-genuinely-last: independently mutated close_work to move the spine FIRST instead of last -- both TestCloseWorkSpineLastUnderInterruption and TestCloseWorkDifferingBasenameMandatory went red, proving the fixtures test real ordering, not merely that a monkeypatch fired; restored. (4) TestCloseWorkEndToEndRealEngine drives checklist_engine.claim/start/attest/attach/advance directly on a real open_work-compiled spine, not a simulation -- confirmed by reading the source (no mocking of the engine calls) and by rerunning it green. (5) TestCloseoutRefusalAgreesWithSpineTerminal exercises one terminal and one non-terminal case against the real run_crew.spine_terminal reading a real file on disk; closeout_refusal's extra survey-consolidation check (not explicitly in the 3 contract bullets) is REQUIRED for genuine agreement -- run_crew.spine_terminal:358-359 also refuses a survey with consolidation is None, confirmed by reading its source; without this check the two functions would disagree on that case, so its presence is correct, not scope creep. (6) TestCloseWorkNeverGitAddAllOrBareDot::test_violating_a_mutated_copy_with_add_dash_a_is_caught is a genuine positive control (mutates in an injected 'git add -A' call and asserts the AST guard catches it) -- reran, passes. (7) newline='\\n': close_work adds zero new write_text call sites (grep-confirmed, only g1's pre-existing spine_path.write_text in open_work has one, already pinned); TestEveryWriteTextPinsNewline (g1's guard) still present and green, not weakened or exempted.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture divergence needing Commander reconciliation. The implementer's own result artifact flags one latitude decision not literally specified either way: work_id (and so archive_name_for's input) is derived structurally from spine_path's location relative to root/.agent-work, rather than read from the spine's origin field. Verified sound: this is consistent with LIFECYCLE_CONTRACT.md sec 8's explicit exclusion of 'retrofitting origin onto spines opened by hand' -- close_work must work on a hand-authored spine lacking origin, so it cannot depend on that field. Map Impact notes (structural anchors, capabilities added, constraints/assumptions touched) checked against the diff and are accurate; entity-count claim (1156->1160) independently reproduced in r3. No decision candidates require authority beyond what the implementer already surfaced; nothing to flag as a triage candidate.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a .agent-work/epic-559/c3-lifecycle/g2-review/FOWLER_PASS.json placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like <work-id> on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-559/c3-lifecycle/g2-review/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass over the g2 diff: 12/12 smells visited. 2 overridden (long-method on close_work -- the fixed close-ordering invariant needs locality in one function, per global-everyone.md's Locality doctrine and matching open_work's own shape; primitive-obsession on the dict-in/dict-out pure-function shape -- the contract-mandated convention shared with generate_spine.py/validate_spine.py/checklist_engine.py). 10 absent, each with a checked finding (large-class, duplicated-code -- close_work reuses g1's existing _git helper rather than duplicating subprocess plumbing; feature-envy, data-clumps, long-parameter-list, shotgun-surgery, divergent-change, message-chains, speculative-generality -- _has_any_file has exactly one caller, grep-confirmed; comments-as-deodorant -- docstrings state non-obvious invariants, not restated code). Recorded to .agent-work/epic-559/c3-lifecycle/g2-review/FOWLER_PASS.json; scripts/verify_fowler_pass.py exits 0 (smells=12, flagged=[], overridden=['long-method','primitive-obsession']).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-559/c3-lifecycle/g2-review/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "g2 close (closeout_refusal + close_work) independently re-verified end to end. Reproduced the full suite (2875 passed, 3 skipped, 1121 subtests, matching claim exactly) and the sweep (23). Independently, not by trust: (a) mutated the excluded-name derivation to the literal 'spine.json' string and confirmed the mandatory differing-basename test goes RED with the exact predicted signature, then restored to GREEN; (b) mutated the move ORDER itself (spine-first instead of spine-last) and confirmed BOTH the interruption fixture and the differing-basename test go RED, proving they check genuine ordering rather than merely that a monkeypatch fired; (c) reran the stage-by-name guard's positive control (mutated-copy injected git add -A, caught); (d) read closeout_refusal against run_crew.spine_terminal's actual source and confirmed the survey-consolidation branch closeout_refusal adds beyond the handoff's 3 literal bullets is REQUIRED for genuine agreement, not scope creep; (e) confirmed TestCloseWorkEndToEndRealEngine drives claim/start/attest/attach/advance on the real engine, not a simulation; (f) confirmed refusal-does-nothing is checked via a byte-for-byte snapshot of the full work area, not just archive absence; (g) regenerated map/INDEX.md and confirmed it is idempotent and matches the claimed entity-count delta. No excluded file touched (verified via git diff --stat against every named exclusion); no git add -A / bare '.' in close_work's own source; newline=\"\\n\" not weakened -- zero new write_text call sites added, g1's guard test still green. Fowler pass: 12/12 smells visited, 2 overridden with a logged repo-standard reason (long-method: the fixed close-ordering invariant needs single-function locality; primitive-obsession: the contract-mandated dict-in/dict-out convention shared with every sibling pure function), 10 absent; scripts/verify_fowler_pass.py exits 0. Tree left clean: every mutation made during verification (three separate temporary edits to scripts/spine_lifecycle.py) was restored and diffed back to the original committed change before finishing."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/epic-559/c3-lifecycle/g2/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-12T10:51:18.941727+00:00",
+    "last_heartbeat": "2026-08-12T10:59:01.723924+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-12T10:59:55.550765+00:00"
+  }
+}
