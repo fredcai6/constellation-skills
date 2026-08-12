@@ -1,0 +1,24 @@
+{
+  "contract": 1,
+  "step": "g3",
+  "mechanical": {
+    "run": "t",
+    "project": "constellation-skills",
+    "spine-step": "g3",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-t-g3@9e47581b5ad92eee9f5dfa35357f1fc277eafd55",
+    "artifact-ref": [
+      "scripts/gauge_reader.py"
+    ]
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "t",
+    "generated_at": "2026-08-09T14:51:51Z"
+  }
+}

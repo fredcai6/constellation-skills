@@ -1,0 +1,24 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "mechanical": {
+    "run": "t",
+    "project": "constellation-skills",
+    "spine-step": "reconcile",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-t-reconcile@d9e199281de641790ee439182d1f7947e12b9838",
+    "artifact-ref": [
+      "scripts/gauge_reader.py"
+    ]
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "t",
+    "generated_at": "2026-08-09T14:51:55Z"
+  }
+}

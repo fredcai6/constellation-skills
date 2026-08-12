@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "execute",
+  "mechanical": {
+    "run": "t",
+    "project": "constellation-skills",
+    "spine-step": "execute",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-t-execute@0597edcaa858f13a476c7a16f8e24626dd4feeb6",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "t",
+    "generated_at": "2026-08-08T13:43:34Z"
+  }
+}
