@@ -301,5 +301,112 @@ class EngineDeliberateBreakage(unittest.TestCase):
         self.assertEqual(cl["tasks"]["init"]["status"], "in-progress")
 
 
+class IsolationGateSurvivesThroughTheCLI(unittest.TestCase):
+    """The isolation gate must still REFUSE a wrong-worktree launcher when driven
+    the way production drives it: through `main()` with `--file`, so the engine
+    computes `base_dir = path.parent` (#315).
+
+    Why this exists as a SEPARATE test from
+    `test_start_refused_on_mismatch_then_succeeds_once_fixed` above: that test
+    calls `E.start(cl, "init")` directly, with **no `base_dir`**. Any future
+    change that resolves a command check's cwd from `base_dir` leaves that test
+    green (it takes the `base_dir is None` path) while silently disarming the
+    real gate.
+
+    The disarming is not hypothetical. `verify_worktree_isolation.py --here`
+    runs `git rev-parse --show-toplevel` **from the ambient cwd** and compares
+    it to EXPECTED -- so cwd is the check's SUBJECT, not a path base. In a real
+    spine, EXPECTED is `<repo-root>`, which is by construction the very root a
+    `base_dir`-derived cwd would resolve to, making the comparison `X == X` and
+    the gate unfailable.
+
+    So: if you are here because this test went red while making command checks
+    cwd-independent, the test is right and the change is wrong. A command check
+    that observes the environment needs an explicit contract (a schema flag, or
+    the launcher's cwd passed into the check's environment) before the engine
+    may relocate it.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        base = Path(self.tmp.name)
+        self.main_checkout = base / "main"
+        self.worktree = base / "wt"
+        subprocess.run(["git", "init", "-q", str(self.main_checkout)],
+                       check=True, capture_output=True, text=True)
+        self._git("-c", "user.email=t@t", "-c", "user.name=t",
+                  "commit", "-q", "--allow-empty", "-m", "init")
+        subprocess.run(
+            ["git", "-C", str(self.main_checkout), "worktree", "add", "-q",
+             str(self.worktree), "-b", "wtbranch"],
+            check=True, capture_output=True, text=True,
+        )
+        self.spine_path = self.worktree / ".agent-work" / "w1" / "spine.json"
+        self.spine_path.parent.mkdir(parents=True)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _git(self, *args):
+        subprocess.run(["git", "-C", str(self.main_checkout), *args],
+                       check=True, capture_output=True, text=True)
+
+    def _write_spine(self, here_expected: str) -> None:
+        command = (
+            f'"{sys.executable}" "{ISOLATION_SCRIPT.as_posix()}" '
+            f'--here "{here_expected}"'
+        )
+        self.spine_path.write_text(json.dumps({
+            "work_id": "w1", "type": "gated", "items": ["init"],
+            "tasks": {"init": {
+                "id": "init", "title": "init", "imperative": "isolation",
+                "preconditions": [{
+                    "id": "c0",
+                    "statement": "operating in the provisioned worktree",
+                    "check": {"kind": "command", "command": command},
+                    "satisfied": False,
+                }],
+                "postconditions": [],
+                "constraints": [], "directives": None, "child_checklist": None,
+                "status": "pending", "status_detail": {}, "result": None,
+                "finding": None, "evidence": [], "rework_count": 0,
+            }},
+            "consolidation": None, "triage_candidates": [], "blockers": [],
+        }, indent=1), encoding="utf-8")
+
+    def _start_from(self, cwd: Path) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [sys.executable, str(ENGINE_SCRIPT), "--file",
+             str(self.spine_path), "start", "init"],
+            cwd=str(cwd), capture_output=True, text=True,
+        )
+
+    def test_gate_refuses_launcher_standing_in_the_main_checkout(self):
+        # The spine lives in the worktree and demands the agent be there.
+        self._write_spine(self.worktree.resolve().as_posix())
+
+        # Launch from the MAIN CHECKOUT -- the wrong place, which is exactly
+        # what this gate exists to catch.
+        proc = self._start_from(self.main_checkout)
+        combined = proc.stdout + proc.stderr
+        self.assertIn("c0", combined,
+                      msg=f"gate did not refuse; engine said: {combined!r}")
+        self.assertEqual(
+            json.loads(self.spine_path.read_text(encoding="utf-8"))
+            ["tasks"]["init"]["status"], "pending",
+            msg="the isolation gate was disarmed: a launcher standing in the "
+                "main checkout advanced a gate asserting it was in the worktree",
+        )
+
+    def test_gate_passes_launcher_standing_in_the_worktree(self):
+        # The pass side, so the refusal above is proven to be a real signal
+        # rather than a gate that never opens.
+        self._write_spine(self.worktree.resolve().as_posix())
+        proc = self._start_from(self.worktree)
+        combined = proc.stdout + proc.stderr
+        self.assertIn("init -> in-progress", combined,
+                      msg=f"gate did not open; engine said: {combined!r}")
+
+
 if __name__ == "__main__":
     unittest.main()

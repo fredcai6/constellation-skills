@@ -278,8 +278,13 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
-      "status_detail": {},
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "Wave 1 as scoped cannot land. Forcing a command check's cwd disarms the shipped worktree-isolation gate: verify_worktree_isolation.py --here reads the ambient cwd as the SUBJECT of the check, so with cwd set to the spine's enclosing repo root the comparison becomes tautological. Proven through the real engine path -- unmodified engine REFUSES a wrong-worktree launcher, naive-fix engine ADVANCES it. Resolving this needs an engine-to-check contract for environment-observing checks, which is an architecture change outside commander-315 latitude.",
+        "authority_needed": "admiral",
+        "next_action": "Admiral rules on the identity-check contract and on whether wave 1 splits: (a) engine exports the launcher cwd into the check environment and verify_worktree_isolation.py gains an explicit --from, or (b) a schema flag marks environment-observing checks exempt from relocation, or (c) 315 is closed as measured-not-worth-it. Landed meanwhile: a regression guard that goes red on the naive fix.",
+        "prior_status": "in-progress"
+      },
       "result": null,
       "finding": null,
       "evidence": [],
@@ -585,14 +590,52 @@
     }
   },
   "consolidation": null,
-  "triage_candidates": [],
-  "blockers": [],
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "plan",
+      "statement": "Identity checks need an explicit engine contract. verify_worktree_isolation.py --here reads the ambient cwd as the SUBJECT of the check, not as a path base, so any engine change that relocates a command check's cwd makes it tautological. Needs a schema flag or a launcher-cwd env var passed into the check environment. Engine-core architecture change; floated."
+    },
+    {
+      "id": "tc2",
+      "from": "plan",
+      "statement": "11 of 22 shipped command checks are cwd-dependent only because they invoke a script whose --root defaults to cwd (init_work_area.py, verify_state_note.py, verify_cycles.py, verify_spec_confirmed.py, verify_iterative_role_artifacts.py). Pinning those roots in the templates would remove the dependence at the authoring side regardless of what the engine does."
+    },
+    {
+      "id": "tc3",
+      "from": "plan",
+      "statement": "checklist_engine.py main() does not resolve the --file path, so base_dir = path.parent is relative whenever --file is. Any base_dir-derived path walk no-ops on the CLI form every crew member is told to use."
+    },
+    {
+      "id": "tc4",
+      "from": "plan",
+      "statement": "generate_spine.py emits every command anchored cd <repo-root> and 394 checked-in checks already carry that prefix, so a shell cd would override an engine-set cwd. Whether the generator keeps emitting the prefix is an open decision that any cwd fix must settle."
+    },
+    {
+      "id": "tc5",
+      "from": "plan",
+      "statement": "Three different cwd rules coexist inside one _check_condition dispatch: command checks inherit the launcher cwd, git-change-policy uses base_dir, and load_config resolves config_ref against Path.cwd() first. load_config decides rework_cap and the trip band, so a spine driven from elsewhere loads its rigor config from a stranger's directory."
+    },
+    {
+      "id": "tc6",
+      "from": "plan",
+      "statement": "docs/CHECKLIST_SCHEMA.md lines 39-41 and scripts/init_work_area.py lines 129-134 both state the no-cwd behaviour as present fact and cite issue 341 as the tracking issue. No test asserts either, so they will silently go stale the day a cwd fix lands."
+    }
+  ],
+  "blockers": [
+    {
+      "item": "plan",
+      "blocker": "Wave 1 as scoped cannot land. Forcing a command check's cwd disarms the shipped worktree-isolation gate: verify_worktree_isolation.py --here reads the ambient cwd as the SUBJECT of the check, so with cwd set to the spine's enclosing repo root the comparison becomes tautological. Proven through the real engine path -- unmodified engine REFUSES a wrong-worktree launcher, naive-fix engine ADVANCES it. Resolving this needs an engine-to-check contract for environment-observing checks, which is an architecture change outside commander-315 latitude.",
+      "authority_needed": "admiral",
+      "next_action": "Admiral rules on the identity-check contract and on whether wave 1 splits: (a) engine exports the launcher cwd into the check environment and verify_worktree_isolation.py gains an explicit --from, or (b) a schema flag marks environment-observing checks exempt from relocation, or (c) 315 is closed as measured-not-worth-it. Landed meanwhile: a regression guard that goes red on the naive fix."
+    }
+  ],
   "refusals": 3,
   "engine_session": {
     "session_id": "commander-315-s1",
     "status": "active",
     "claimed_at": "2026-08-12T20:25:53.462909+00:00",
-    "last_heartbeat": "2026-08-12T20:32:16.228943+00:00",
+    "last_heartbeat": "2026-08-12T20:51:29.006889+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
