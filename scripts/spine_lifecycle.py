@@ -1,23 +1,31 @@
 #!/usr/bin/env python
-"""Open Constellation work in one call: a worktree, a branch, a scaffolded work
-area, and a compiled, origin-stamped spine -- instead of a caller that must
-already know the worktree/branch convention and hand-drive `git worktree add`,
-`init_work_area.py` and `generate_spine.py` itself.
+"""Open and close Constellation work in one call each: `open_work` builds a
+worktree, a branch, a scaffolded work area, and a compiled, origin-stamped
+spine; `close_work` moves that work area into the archive, spine last, once
+the caller has already driven it to a released, terminal close -- instead of
+a caller that must already know the worktree/branch/archive conventions and
+hand-drive `git worktree add`, `init_work_area.py`, `generate_spine.py` and
+the close-ordering rules itself.
 
-Frozen contract: `.agent-work/epic-559/c3-lifecycle/LIFECYCLE_CONTRACT.md`, sections 2
-and 3. This gate ships `open_work` and the pure helpers only -- `close_work` is g2's,
-and no MCP door wiring happens here (g3).
+Frozen contract: `.agent-work/epic-559/c3-lifecycle/LIFECYCLE_CONTRACT.md`, sections
+2-4. No MCP door wiring happens here (g3).
 
 Pure/impure split at FUNCTION granularity, matching `generate_spine.py`,
 `validate_spine.py` and `checklist_engine.py`:
 
-- `worktree_path_for`, `branch_name_for`, `archive_name_for`, `build_origin` are
-  PURE: dict/str in, dict/str out, no `Path`, no `open`, no `subprocess`.
+- `worktree_path_for`, `branch_name_for`, `archive_name_for`, `build_origin`,
+  `closeout_refusal` are PURE: dict/str in, dict/str out, no `Path`, no `open`,
+  no `subprocess`.
 - `open_work` is impure and does the real work: it validates, refuses an occupied
   worktree or an already-active engine session, runs `git worktree add`, scaffolds
   the work area, compiles the spine (`generate_spine`, imported, never
   re-implemented), injects `origin`, re-validates, and self-verifies isolation --
   rolling back everything it created on any failure at or after `git worktree add`.
+- `close_work` is impure: it calls `closeout_refusal` and, if refused, does
+  nothing at all; otherwise it `git mv`s every top-level entry under the work
+  area except the bound spine and its journal, then `git mv`s those two last,
+  then commits. It never advances, releases, opens a PR, or removes a
+  worktree -- those are the caller's, before and after this call.
 """
 
 from __future__ import annotations
@@ -86,6 +94,51 @@ def build_origin(
         "opened_by": "spine_open",
         "parent": parent,
     }
+
+
+_TERMINAL_STATUSES = ("complete", "skipped")
+
+
+def closeout_refusal(spine: dict, *, archive_exists: bool) -> str | None:
+    """The whole close-ordering predicate (`LIFECYCLE_CONTRACT.md` section 4):
+    `None` when `close_work` may proceed, else the refusal message naming why.
+    `close_work` calls this and does nothing else about ordering.
+
+    It computes terminality from the dict it is given and does NOT call
+    `run_crew.spine_terminal` -- that function takes a PATH and reads the
+    file (`run_crew.py:317`), so a function typed dict-in and forbidden I/O
+    cannot call it. A differential test pins agreement with `spine_terminal`
+    instead (same `TERMINAL` notion: `complete`/`skipped`, plus a survey's
+    recorded `consolidation`).
+
+    Checks, in order, refusing on the first that fails:
+
+    - `engine_session.status == "released"`.
+    - every id in `items` carries a terminal task status.
+    - the archive directory does not already exist (`archive_exists` is
+      `False`) -- never overwrite a prior archive.
+    """
+    session = spine.get("engine_session")
+    status = session.get("status") if isinstance(session, dict) else None
+    if status != "released":
+        return "close refused: the lease is still active"
+
+    items = spine.get("items")
+    tasks = spine.get("tasks")
+    if not items or not isinstance(tasks, dict):
+        return "close refused: no gates recorded to close"
+    for iid in items:
+        task = tasks.get(iid)
+        task_status = task.get("status") if isinstance(task, dict) else None
+        if task_status not in _TERMINAL_STATUSES:
+            return f"close refused: gate {iid!r} is not terminal (status {task_status!r})"
+    if spine.get("type") == "survey" and spine.get("consolidation") is None:
+        return "close refused: the survey has no recorded consolidation"
+
+    if archive_exists:
+        return "close refused: the archive directory already exists"
+
+    return None
 
 
 # --------------------------------------------------------------------------- #
@@ -274,4 +327,126 @@ def open_work(
         "SPINE_PARENT": parent,
         "branch": branch,
         "worktree": worktree,
+    }
+
+
+# --------------------------------------------------------------------------- #
+# close_work -- impure. Order per LIFECYCLE_CONTRACT.md section 4, and it is
+# NOT this function's latitude: satisfying the closeout gate's postconditions,
+# the final `advance`, and `release` are the CALLER's, through the door tools
+# that already exist. `close_work` starts at "move the work area, spine file
+# last."
+# --------------------------------------------------------------------------- #
+
+def _has_any_file(path: Path) -> bool:
+    """Whether `path` is a file, or a directory holding at least one file at
+    any depth. Git tracks files, never directories -- an empty directory (or
+    a directory holding only further empty directories) has nothing `git
+    add`/`git mv` can ever see, no matter how it is staged."""
+    if path.is_file():
+        return True
+    if path.is_dir():
+        return any(child.is_file() for child in path.rglob("*"))
+    return False
+
+
+def close_work(
+    spine_path: str | os.PathLike[str], *, root: str | os.PathLike[str], today: str,
+) -> dict:
+    """Move a closed-out work area into the archive, spine and journal last,
+    and commit the move.
+
+    Refuses via `closeout_refusal` and does NOTHING AT ALL if the lease is
+    still active, any gate is non-terminal, or the archive directory already
+    exists.
+
+    Otherwise: moves every top-level entry directly under the spine's own
+    directory (the work area) except the bound spine file and its journal,
+    each call naming its own paths; THEN moves those two, last; then
+    `git commit`s. Never `git add -A`, never a bare `.` -- each entry is
+    staged by its own explicit path (`git add <path>`, a no-op for content
+    already tracked) before `git mv`, because a scaffolded work area routinely
+    holds directories nothing has been committed into yet, and `git mv`
+    refuses an entry with no tracked content. An entry with no trackable
+    content at all (an empty directory -- git tracks no directory, ever) is
+    moved on the filesystem directly, since there is nothing for git to stage
+    either way.
+
+    The excluded names are DERIVED from `spine_path`'s own basename, never the
+    literal strings `"spine.json"`/`"spine.json.journal"` -- a spine opened by
+    `open_work` is always named `spine.json`, but this Commander's own driving
+    spine is `execute.json`, and a literal hardcode would sweep a live driving
+    checklist into the "everything else" batch before the spine-last step.
+
+    The work id -- and so the archive name (`archive_name_for`) -- is derived
+    structurally from `spine_path`'s location relative to `root/.agent-work`,
+    never read from an `origin` field that a hand-authored spine might lack.
+
+    Reports a verdict naming the branch, the new `HEAD`, and "ready to PR."
+    Never opens a PR, never removes a worktree, never judges the work good.
+    """
+    root = Path(root).resolve()
+    spine_path = Path(spine_path)
+    absolute_spine_path = spine_path if spine_path.is_absolute() else root / spine_path
+
+    spine = json.loads(absolute_spine_path.read_text(encoding="utf-8"))
+
+    work_dir = absolute_spine_path.resolve().parent
+    agent_work_dir = (root / ".agent-work").resolve()
+    work_id = work_dir.relative_to(agent_work_dir).as_posix()
+
+    archive_dir = root / ".agent-work" / "archive" / archive_name_for(work_id, today=today)
+
+    refusal = closeout_refusal(spine, archive_exists=archive_dir.exists())
+    if refusal is not None:
+        raise SpineLifecycleError(refusal)
+
+    spine_name = absolute_spine_path.name
+    journal_name = spine_name + ".journal"
+    journal_path = absolute_spine_path.parent / journal_name
+
+    other_entries = sorted(
+        p.name for p in work_dir.iterdir() if p.name not in (spine_name, journal_name)
+    )
+
+    def _stage_and_move(src: Path, dest: Path) -> None:
+        """Move one top-level work-area entry, staged by its own explicit
+        path (never `-A`, never a bare `.`). `git add <src>` first, so
+        content `git mv` has never seen committed (a freshly scaffolded work
+        area routinely holds some) is tracked before the move -- a no-op for
+        content already tracked. If `src` has no trackable content at all (an
+        empty directory), `git add` stages nothing and `git mv` would refuse
+        it outright ("source directory is empty"); there is nothing for git
+        to know about either way, so the entry is moved on the filesystem
+        directly."""
+        _git(["add", str(src)], cwd=root)
+        if _has_any_file(src):
+            _git(["mv", str(src), str(dest)], cwd=root)
+        else:
+            src.rename(dest)
+
+    archive_dir.mkdir(parents=True)
+    for name in other_entries:
+        _stage_and_move(work_dir / name, archive_dir / name)
+
+    # Spine and journal, LAST -- so an interruption before this point leaves
+    # them findable at their original path for a retry.
+    _stage_and_move(absolute_spine_path, archive_dir / spine_name)
+    if journal_path.exists():
+        _stage_and_move(journal_path, archive_dir / journal_name)
+
+    _git(["commit", "-m", f"chore: close {work_id} -- archive under {archive_dir.relative_to(root)}"], cwd=root)
+
+    new_head = _git(["rev-parse", "HEAD"], cwd=root)
+    branch = _git(["rev-parse", "--abbrev-ref", "HEAD"], cwd=root)
+
+    return {
+        "work_id": work_id,
+        "branch": branch,
+        "head": new_head,
+        "archive": str(archive_dir),
+        "message": (
+            f"closed {work_id}: branch {branch} at {new_head}, "
+            f"archived under {archive_dir} -- ready to PR."
+        ),
     }

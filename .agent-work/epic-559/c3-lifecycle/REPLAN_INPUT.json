@@ -177,7 +177,13 @@
    "an engine-level notion of a dispatch, which would close the textual-detection hole"
   ]
  },
- "completed_outcomes": [],
+ "completed_outcomes": [
+  {
+   "issue_id": "g1",
+   "outcome": "open ships: open_work plus the pure helpers, with rollback of worktree AND branch, an in-process self-verify that overrides a zero git exit code, and a top-level origin block proven to survive a real engine drive",
+   "evidence": "d8305d9c; suite 2824 -> 2856; sweep 23; reviewed twice, first BLOCK on a missing newline=chr(10) write that no test asserted against, second APPROVE"
+  }
+ ],
  "wave_evidence": [
   {
    "claim": "the launch order's stated chicken-and-egg is the door's import-time KeyError",
@@ -259,7 +265,6 @@
   }
  ],
  "open_current_wave_issue_ids": [
-  "g1",
   "g2",
   "g3",
   "g4",

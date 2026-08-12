@@ -1,8 +1,9 @@
-"""Tests for scripts/spine_lifecycle.py -- open Constellation work in one call.
+"""Tests for scripts/spine_lifecycle.py -- open and close Constellation work in one
+call each.
 
-Frozen contract: .agent-work/epic-559/c3-lifecycle/LIFECYCLE_CONTRACT.md, sections 2
-and 3. This gate ships `open_work` and the pure helpers only -- `close_work` tests
-belong to g2.
+Frozen contract: .agent-work/epic-559/c3-lifecycle/LIFECYCLE_CONTRACT.md, sections
+2-4. `open_work` and its pure helpers are g1's; `closeout_refusal` and `close_work`
+are g2's.
 
 House style (tests/test_mcp_adoption.py::_cli_only_verb_violations): every guard
 gets a VIOLATING fixture that trips it and an INNOCENT fixture that does not, so a
@@ -520,3 +521,415 @@ class TestReusesRunCrewValidator:
         import inspect
         src = inspect.getsource(sl.open_work)
         assert "run_crew.validate_work_id" in src
+
+
+# =============================================================================
+# g2 -- closeout_refusal (pure) and close_work (impure)
+# LIFECYCLE_CONTRACT.md section 4.
+# =============================================================================
+
+def _terminal_spine(**overrides):
+    """A minimal genuinely-terminal, released, gated spine dict -- the
+    baseline every closeout_refusal/close_work fixture below starts from and
+    overrides one field of at a time."""
+    spine = {
+        "type": "gated",
+        "items": ["m1"],
+        "tasks": {"m1": {"status": "complete"}},
+        "engine_session": {"status": "released", "session_id": "s1"},
+    }
+    spine.update(overrides)
+    return spine
+
+
+def _make_work_area(repo: Path, work_id: str, spine_name: str, spine: dict) -> dict:
+    """Scaffold `.agent-work/<work_id>/` under `repo` with a spine file named
+    `spine_name` plus the usual init_work_area.py subdirectories -- one
+    (`crew-handoffs/`) holding a real file, the other two (`evidence/`,
+    `triage-candidates/`) left genuinely empty, so every close_work test
+    exercises BOTH the tracked/untracked-file path and the empty-directory
+    path through `_stage_and_move` at once. Nothing here is `git add`ed or
+    committed -- a freshly scaffolded work area routinely isn't either."""
+    work_dir = repo / ".agent-work" / work_id
+    for sub in ("crew-handoffs", "evidence", "triage-candidates"):
+        (work_dir / sub).mkdir(parents=True, exist_ok=True)
+    (work_dir / "crew-handoffs" / "note.md").write_text("hello\n", encoding="utf-8", newline="\n")
+    spine_path = work_dir / spine_name
+    spine_path.write_text(json.dumps(spine), encoding="utf-8", newline="\n")
+    return {"work_dir": work_dir, "spine_path": spine_path}
+
+
+def _snapshot(root: Path) -> dict:
+    """relpath -> bytes for every FILE under `root`, for a byte-for-byte
+    before/after comparison. Silently empty (not raising) when `root` does
+    not exist -- the natural "nothing there" reading for a refusal that
+    never created anything."""
+    if not root.exists():
+        return {}
+    return {str(p.relative_to(root)): p.read_bytes() for p in sorted(root.rglob("*")) if p.is_file()}
+
+
+# --------------------------------------------------------------------------- #
+# closeout_refusal -- pure. Every guard gets a VIOLATING and an INNOCENT case
+# (house style, tests/test_mcp_adoption.py::_cli_only_verb_violations).
+# --------------------------------------------------------------------------- #
+
+class TestCloseoutRefusal:
+    def test_violating_lease_still_active_names_it(self):
+        spine = _terminal_spine(engine_session={"status": "active", "session_id": "s1"})
+        msg = sl.closeout_refusal(spine, archive_exists=False)
+        assert msg is not None
+        assert "the lease is still active" in msg
+
+    def test_violating_non_terminal_gate_names_the_offending_gate(self):
+        spine = _terminal_spine(
+            items=["m1", "m2"],
+            tasks={"m1": {"status": "complete"}, "m2": {"status": "in-progress"}},
+        )
+        msg = sl.closeout_refusal(spine, archive_exists=False)
+        assert msg is not None
+        assert "m2" in msg
+        assert "m1" not in msg  # only the OFFENDING gate is named, not the terminal one
+
+    def test_violating_archive_already_exists(self):
+        msg = sl.closeout_refusal(_terminal_spine(), archive_exists=True)
+        assert msg is not None
+        assert "archive" in msg
+
+    def test_innocent_terminal_and_released_proceeds(self):
+        assert sl.closeout_refusal(_terminal_spine(), archive_exists=False) is None
+
+    def test_innocent_skipped_status_is_terminal_too(self):
+        spine = _terminal_spine(tasks={"m1": {"status": "skipped"}})
+        assert sl.closeout_refusal(spine, archive_exists=False) is None
+
+    def test_checks_run_in_order_lease_before_terminality(self):
+        # An active lease is named even when a gate is ALSO non-terminal --
+        # proves the lease check runs first, per the contract's stated order.
+        spine = _terminal_spine(
+            engine_session={"status": "active", "session_id": "s1"},
+            tasks={"m1": {"status": "in-progress"}},
+        )
+        msg = sl.closeout_refusal(spine, archive_exists=False)
+        assert "the lease is still active" in msg
+
+    def test_pure_no_filesystem_symbols(self):
+        import inspect
+        src = inspect.getsource(sl.closeout_refusal)
+        for banned in ("open(", "subprocess.", "Path("):
+            assert banned not in src
+
+
+# --------------------------------------------------------------------------- #
+# closeout_refusal agrees with run_crew.spine_terminal -- differential test
+# (required evidence: criterion 9). `spine_terminal` takes a PATH and reads
+# the file; closeout_refusal takes the already-parsed dict. Both are run
+# against the SAME spine content, held terminal-or-not constant while lease
+# and archive are held fixed, so the comparison isolates the terminality
+# verdict alone.
+# --------------------------------------------------------------------------- #
+
+class TestCloseoutRefusalAgreesWithSpineTerminal:
+    def _write(self, tmp_path, spine):
+        path = tmp_path / "spine.json"
+        path.write_text(json.dumps(spine), encoding="utf-8", newline="\n")
+        return path
+
+    def test_agrees_on_a_terminal_case(self, tmp_path):
+        spine = _terminal_spine()
+        path = self._write(tmp_path, spine)
+        pure_says_terminal = sl.closeout_refusal(spine, archive_exists=False) is None
+        real_says_terminal = run_crew.spine_terminal(path, tmp_path)
+        assert pure_says_terminal is True
+        assert real_says_terminal is True
+
+    def test_agrees_on_a_non_terminal_case(self, tmp_path):
+        spine = _terminal_spine(tasks={"m1": {"status": "in-progress"}})
+        path = self._write(tmp_path, spine)
+        pure_says_terminal = sl.closeout_refusal(spine, archive_exists=False) is None
+        real_says_terminal = run_crew.spine_terminal(path, tmp_path)
+        assert pure_says_terminal is False
+        assert real_says_terminal is False
+
+
+# --------------------------------------------------------------------------- #
+# close_work -- refusal leaves the work area byte-for-byte untouched
+# (required evidence: criterion 1).
+# --------------------------------------------------------------------------- #
+
+@requires_git
+class TestCloseWorkLeaseActiveRefusalLeavesWorkUntouched:
+    def test_violating_lease_active_refuses_byte_for_byte_untouched(self, repo):
+        spine = _terminal_spine(engine_session={"status": "active", "session_id": "s1"})
+        area = _make_work_area(repo, "w1", "spine.json", spine)
+        before = _snapshot(repo / ".agent-work")
+
+        with pytest.raises(sl.SpineLifecycleError) as excinfo:
+            sl.close_work(area["spine_path"], root=repo, today="2026-08-12")
+        assert "the lease is still active" in str(excinfo.value)
+
+        after = _snapshot(repo / ".agent-work")
+        assert after == before, "the work area was touched by a refused close"
+        assert not (repo / ".agent-work" / "archive").exists()
+
+
+@requires_git
+class TestCloseWorkNonTerminalGateRefusal:
+    def test_violating_non_terminal_gate_refuses_and_names_it(self, repo):
+        spine = _terminal_spine(
+            items=["m1", "m2"],
+            tasks={"m1": {"status": "complete"}, "m2": {"status": "in-progress"}},
+        )
+        area = _make_work_area(repo, "w1", "spine.json", spine)
+        before = _snapshot(repo / ".agent-work")
+
+        with pytest.raises(sl.SpineLifecycleError) as excinfo:
+            sl.close_work(area["spine_path"], root=repo, today="2026-08-12")
+        assert "m2" in str(excinfo.value)
+
+        assert _snapshot(repo / ".agent-work") == before
+
+
+@requires_git
+class TestCloseWorkArchiveExistsRefusal:
+    def test_violating_archive_already_exists_refuses_never_overwrites(self, repo):
+        spine = _terminal_spine()
+        area = _make_work_area(repo, "w1", "spine.json", spine)
+        archive_dir = repo / ".agent-work" / "archive" / sl.archive_name_for("w1", today="2026-08-12")
+        archive_dir.mkdir(parents=True)
+        (archive_dir / "prior.txt").write_text("prior\n", encoding="utf-8", newline="\n")
+        before = _snapshot(repo / ".agent-work")
+
+        with pytest.raises(sl.SpineLifecycleError) as excinfo:
+            sl.close_work(area["spine_path"], root=repo, today="2026-08-12")
+        assert "archive" in str(excinfo.value)
+
+        assert _snapshot(repo / ".agent-work") == before  # the prior archive is untouched too
+
+
+@requires_git
+class TestCloseWorkInnocentProceeds:
+    def test_innocent_terminal_and_released_moves_work_area_to_archive(self, repo):
+        spine = _terminal_spine()
+        area = _make_work_area(repo, "w1", "spine.json", spine)
+
+        result = sl.close_work(area["spine_path"], root=repo, today="2026-08-12")
+
+        archive_dir = repo / ".agent-work" / "archive" / "2026-08-12-w1"
+        assert archive_dir.is_dir()
+        assert json.loads((archive_dir / "spine.json").read_text()) == spine
+        assert (archive_dir / "crew-handoffs" / "note.md").read_text() == "hello\n"
+        assert (archive_dir / "evidence").is_dir()  # the empty-directory path moved too
+        assert (archive_dir / "triage-candidates").is_dir()
+        assert not area["spine_path"].exists()
+
+        assert result["work_id"] == "w1"
+        assert result["branch"] is not None
+        assert result["head"] is not None
+        assert result["message"].endswith("ready to PR.")
+
+        status = subprocess.run(
+            ["git", "-C", str(repo), "status", "--porcelain"], check=True, capture_output=True, text=True,
+        ).stdout
+        assert status.strip() == "", f"the move was not fully committed:\n{status}"
+
+
+# --------------------------------------------------------------------------- #
+# close_work -- the differing-basename fixture (required evidence: criterion
+# 5, MANDATORY). open_work always writes `spine.json`; this Commander's OWN
+# driving spine is `execute.json`. A literal hardcode of the excluded names
+# would sweep it into the "everything else" batch before the spine-last step
+# -- untestable by any spine.json-named fixture, because open_work never
+# writes anything else. See the result artifact for the mutation experiment
+# (hardcode the literal strings, watch this go red, restore, watch it go
+# green again).
+# --------------------------------------------------------------------------- #
+
+@requires_git
+class TestCloseWorkDifferingBasenameMandatory:
+    def test_execute_json_spine_moves_last_not_swept_into_the_early_batch(self, repo, monkeypatch):
+        spine = _terminal_spine()
+        area = _make_work_area(repo, "w1", "execute.json", spine)
+
+        real_git = sl._git
+        def watching_git(args, *, cwd):
+            if any("execute.json" in str(a) for a in args):
+                raise RuntimeError("simulated interruption at the spine-last step")
+            return real_git(args, cwd=cwd)
+        monkeypatch.setattr(sl, "_git", watching_git)
+
+        with pytest.raises(RuntimeError):
+            sl.close_work(area["spine_path"], root=repo, today="2026-08-12")
+
+        # The spine is STILL at its original path -- the "everything else"
+        # batch never reached it.
+        assert area["spine_path"].is_file()
+
+        # But every OTHER top-level entry already moved -- proving the spine
+        # move really is attempted LAST, not merely absent from this batch.
+        archive_dir = repo / ".agent-work" / "archive" / "2026-08-12-w1"
+        assert (archive_dir / "crew-handoffs" / "note.md").is_file()
+        assert (archive_dir / "evidence").is_dir()
+        assert (archive_dir / "triage-candidates").is_dir()
+
+
+# --------------------------------------------------------------------------- #
+# close_work -- spine-last under a SIMULATED interruption (required evidence:
+# criterion 6). Monkeypatches the git call itself to raise once the "spine
+# last" step is reached; a real process kill between two git operations is
+# out of scope -- this fixture proves ordering, not crash-atomicity.
+# --------------------------------------------------------------------------- #
+
+@requires_git
+class TestCloseWorkSpineLastUnderInterruption:
+    def test_simulated_interruption_leaves_spine_and_journal_at_original_path(self, repo, monkeypatch):
+        spine = _terminal_spine()
+        area = _make_work_area(repo, "w1", "spine.json", spine)
+        journal_path = area["work_dir"] / "spine.json.journal"
+        journal_path.write_text('{"seq": 1}\n', encoding="utf-8", newline="\n")
+
+        real_git = sl._git
+        def watching_git(args, *, cwd):
+            if any("spine.json" in str(a) for a in args):
+                raise RuntimeError("simulated interruption before the spine-last step")
+            return real_git(args, cwd=cwd)
+        monkeypatch.setattr(sl, "_git", watching_git)
+
+        with pytest.raises(RuntimeError):
+            sl.close_work(area["spine_path"], root=repo, today="2026-08-12")
+
+        # Both the spine and its journal are still at their ORIGINAL path --
+        # a retry can find them.
+        assert area["spine_path"].is_file()
+        assert journal_path.is_file()
+
+        # The other entries already moved -- the interruption really did
+        # land at the spine-last step, not before.
+        archive_dir = repo / ".agent-work" / "archive" / "2026-08-12-w1"
+        assert (archive_dir / "crew-handoffs" / "note.md").is_file()
+        assert (archive_dir / "evidence").is_dir()
+        assert (archive_dir / "triage-candidates").is_dir()
+
+
+# --------------------------------------------------------------------------- #
+# close_work -- stage-by-name source guard (required evidence: criterion 7).
+# No `git add -A`, no bare `.` reaches a staging call. AST-based (house
+# style, tests/test_mcp_adoption.py::_cli_only_verb_violations /
+# TestEveryWriteTextPinsNewline above): a byte-comparison cannot go red here
+# because the shipped code has no violation to compare against, so this reads
+# the source directly and carries its own mutated-copy positive control.
+# --------------------------------------------------------------------------- #
+
+def _bare_dot_or_add_all_violations(source: str, where: str) -> list[str]:
+    """Every git-call argument LIST literal in `source` containing the bare
+    string "." or "-A" -- either reads the whole worktree/cwd instead of
+    naming a precise path, defeating "each call names its own paths"."""
+    tree = ast.parse(source, filename=where)
+    violations = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.List):
+            for elt in node.elts:
+                if isinstance(elt, ast.Constant) and elt.value in ("-A", "."):
+                    violations.append(f"{where}:{node.lineno}")
+                    break
+    return violations
+
+
+class TestCloseWorkNeverGitAddAllOrBareDot:
+    # `close_work`'s own source, INCLUDING the nested `_stage_and_move`
+    # closure that actually issues every staging call -- `inspect.getsource`
+    # of an outer function returns its full text, nested defs included, so
+    # this is genuinely "close_work's own source", not a different function's.
+    SOURCE = None
+
+    def setup_method(self):
+        import inspect
+        self.SOURCE = inspect.getsource(sl.close_work)
+
+    def test_the_shipped_close_work_has_no_violations(self):
+        assert _bare_dot_or_add_all_violations(self.SOURCE, "close_work") == []
+
+    def test_violating_a_mutated_copy_with_add_dash_a_is_caught(self):
+        # Positive control: proves the predicate can fail. Injects the exact
+        # call this guard exists to forbid.
+        mutated = self.SOURCE.replace(
+            '_git(["commit", "-m"',
+            '_git(["add", "-A"], cwd=root)\n    _git(["commit", "-m"',
+        )
+        assert mutated != self.SOURCE, "the mutation did not change the source -- fixture is stale"
+        violations = _bare_dot_or_add_all_violations(mutated, "<mutated>")
+        assert violations, "the predicate did not catch an injected `git add -A` call"
+
+    def test_innocent_a_named_path_argument_is_not_flagged(self):
+        innocent = '_git(["add", str(work_dir / name)], cwd=root)'
+        assert _bare_dot_or_add_all_violations(innocent, "<innocent>") == []
+
+
+# --------------------------------------------------------------------------- #
+# close_work -- end to end through the REAL engine: claim -> start -> attest
+# -> advance on every gate, release, THEN close_work (required evidence:
+# criterion 8, load-bearing). Origin and every gate's evidence[] must survive
+# intact under the archive.
+# --------------------------------------------------------------------------- #
+
+def _two_gate_spec(work_id):
+    return {
+        "work_id": work_id,
+        "type": "gated",
+        "gate": [
+            {"id": "m1", "title": "first", "imperative": "do first",
+             "postconditions": [_qual_cond("c1"), _artifact_cond("c2")]},
+            {"id": "m2", "title": "second", "imperative": "do second",
+             "postconditions": [_qual_cond("c1"), _artifact_cond("c2")]},
+        ],
+    }
+
+
+def _drive_gate_to_complete(cl: dict, gate_id: str) -> None:
+    checklist_engine.start(cl, gate_id)
+    checklist_engine.attest(cl, gate_id, "c1", "postconditions", "verified by hand")
+    checklist_engine.attach(cl, gate_id, "user-decision", {"decision": "go"})
+    evidence_id = cl["tasks"][gate_id]["evidence"][-1]["id"]
+    checklist_engine.attest(cl, gate_id, "c2", "postconditions", "human decided", evidence_id=evidence_id)
+    checklist_engine.advance(cl, gate_id, mechanical=True)
+
+
+@requires_git
+class TestCloseWorkEndToEndRealEngine:
+    def test_real_generated_spine_driven_to_terminal_then_closed(self, repo, wt_root):
+        opened = sl.open_work(
+            "w1", _two_gate_spec("w1"), root=repo, base="HEAD",
+            parent="constellation/parent/g0/commander/attempt-1", wt_root=wt_root,
+        )
+        spine_path = Path(opened["SPINE_FILE"])
+        worktree = Path(opened["worktree"])
+
+        cl = json.loads(spine_path.read_text())
+        origin_before = json.loads(json.dumps(cl["origin"]))
+
+        config = checklist_engine.load_config(cl, None)
+        checklist_engine.claim(cl, "test-session", "test", opened["worktree"], config)
+        _drive_gate_to_complete(cl, "m1")
+        _drive_gate_to_complete(cl, "m2")
+        assert checklist_engine.active_id(cl) is None
+        checklist_engine.release(cl, "test-session")
+        checklist_engine.save(spine_path, cl)
+
+        before_entries = sorted(p.name for p in (worktree / ".agent-work" / "w1").iterdir())
+
+        result = sl.close_work(spine_path, root=worktree, today="2026-08-12")
+
+        archive_dir = worktree / ".agent-work" / "archive" / "2026-08-12-w1"
+        assert archive_dir.is_dir()
+        after_entries = sorted(p.name for p in archive_dir.iterdir())
+        assert after_entries == before_entries, "the archive is missing an entry the work area had"
+
+        archived = json.loads((archive_dir / "spine.json").read_text())
+        assert archived["origin"] == origin_before
+        for gate_id in ("m1", "m2"):
+            assert archived["tasks"][gate_id]["status"] == "complete"
+            assert archived["tasks"][gate_id]["evidence"], f"gate {gate_id} lost its evidence[]"
+        assert archived["engine_session"]["status"] == "released"
+
+        assert result["work_id"] == "w1"
+        assert "ready to PR" in result["message"]
