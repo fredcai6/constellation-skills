@@ -181,7 +181,12 @@
   {
    "issue_id": "g1",
    "outcome": "open ships: open_work plus the pure helpers, with rollback of worktree AND branch, an in-process self-verify that overrides a zero git exit code, and a top-level origin block proven to survive a real engine drive",
-   "evidence": "d8305d9c; suite 2824 -> 2856; sweep 23; reviewed twice, first BLOCK on a missing newline=chr(10) write that no test asserted against, second APPROVE"
+   "evidence": "d8305d9c; suite 2824 -> 2856; sweep 23; reviewed twice, first BLOCK on a missing newline write that no test asserted against, second APPROVE"
+  },
+  {
+   "issue_id": "g2",
+   "outcome": "close ships: closeout_refusal as the whole pure ordering predicate, and close_work archiving spine-last with names DERIVED from the bound spine path rather than the literal spine.json",
+   "evidence": "d0358a3d; suite 2856 -> 2875; sweep 23; the mandatory differing-basename test was falsified by the Commander by mutating the derivation to the literal, and it goes red; reviewer APPROVE with no blockers"
   }
  ],
  "wave_evidence": [
@@ -265,7 +270,6 @@
   }
  ],
  "open_current_wave_issue_ids": [
-  "g2",
   "g3",
   "g4",
   "g5"

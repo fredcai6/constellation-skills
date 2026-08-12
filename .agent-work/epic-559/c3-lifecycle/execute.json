@@ -636,13 +636,14 @@
   "refusals": 3,
   "engine_session": {
     "session_id": "constellation/epic-559/c3-lifecycle/execute/commander",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-12T08:28:28.041404+00:00",
-    "last_heartbeat": "2026-08-12T10:00:20.798043+00:00",
-    "claimed_by": "commander",
-    "worktree": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle",
+    "last_heartbeat": "2026-08-12T11:02:36.389172+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-12T11:03:28.333494+00:00"
   },
   "why_trail": [
     {
