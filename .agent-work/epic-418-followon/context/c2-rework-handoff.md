@@ -19,6 +19,43 @@ lines, so no shipped template moved.
 
 None of that is in question. Four things are.
 
+## Blocker 0 — the pytest probe asserts a close-time truth at generation time
+
+**This is the largest item and it unblocks the generator's primary use case.**
+
+`_probe_pytest` (`generate_spine.py:513`) runs `pytest --collect-only` when the spine is **compiled**
+and returns a `Fault` below `min_collect`. It reserves `Undecidable` only for the case where pytest
+cannot be run at all. So it cannot tell these two apart:
+
+- the selector is wrong — a real fault, and the defect the probe was built to catch;
+- the test is not written yet — which is **the entire point of a red step**.
+
+The consequence, from C2's own return: *"The generator cannot author a TDD-shaped plan at all... The
+shipped `IMPLEMENTER_PLAN.template.json` is instantiated *before* its test is written. Both role specs
+sidestepped this by pointing at tests that already existed."* A generator that cannot express the
+repo's own red-green workflow does not replace hand-authoring for the case that matters most.
+
+**The error is a timing assumption. The check runs at gate close; the probe runs at generation.** For
+a TDD gate those are different moments with different truths, and the probe asserts the close-time
+truth at generation time.
+
+**The fix, ruled by the human:** a spec declares the set of tests that must exist and pass **when the
+gate closes**. Generation verifies the check is **well-formed** — selector parses, targets resolve,
+counts are integers — not that it is already green.
+
+Where "not yet written" is the author's stated intent, generation reports **`Undecidable`**, not a
+fault. That is C1's third channel used exactly as designed: *"could not tell"* stated distinctly from
+*"checked, found nothing."* The strict default stays for regression guards, where refusing a
+zero-collect selector is correct and load-bearing.
+
+**Make it a stated declaration, not an inferred one**, per the qualitative-must-be-stated ruling
+already in this handoff: the author says the test does not exist yet, that declaration renders on the
+gate, and a reviewer sees the claim. Silence keeps the strict behaviour. How the spec expresses it is
+yours — a field on the `pytest` kind is the obvious shape, but argue for better if you see it.
+
+**VIOLATING fixtures both ways**, per Blocker 2: a wrong selector must still be refused when no
+declaration is present, and a declared-not-yet-written test must not be refused.
+
 ## The one that matters most — the artifact diverged from its source
 
 The `g3` `--out` fix was applied by `amend` to the **generated spine**. The source spec was left
