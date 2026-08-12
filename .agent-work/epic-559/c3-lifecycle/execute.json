@@ -558,17 +558,30 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-559/c3-lifecycle --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-559/c3-lifecycle --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -580,7 +593,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Workflow feedback recorded: eight episodes applied through apply_episode_delta.py --store-root episodes and confirmed by verify_episode_captured.py, plus the Workflow Feedback section of COMMANDER_RETURN.md. Committed at 0c606ef7."
         }
       ],
       "postconditions": [
@@ -658,8 +672,13 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "archive.c2 requires the branch to be PUSHED and archive.c2b requires an OPEN or MERGED pull request. Both are outward-facing acts this run is not authorized to take. The launch order reserves them (\"It does not open the PR. Outward-facing acts stay explicit\"; \"No merge or push to main\"), and docs/agents/ORCHESTRATOR_CONTEXT.md puts pushes, pull requests and merges behind explicit human approval that was never granted. Neither condition declares an override_policy, and the PreToolUse hook run_crew.py emits for every spawned crew denies my waive outright -- exactly as the launch order predicted (\"Never a waive -- the door denies a crew's waive on spine_evidence anyway\"). So this blocks rather than forcing, which is the prescribed path.",
+        "authority_needed": "admiral admiral-epic-418-followon",
+        "next_action": "The Admiral pushes epic-559/c3-lifecycle and opens the PR (as it did for C2, PR #563, merged by its own commit e4c80f85), then either waives archive.c2/c2b with human authority or re-advances archive once the PR exists. All other archive postconditions are satisfied: episodes captured and git-tracked, 16 commits, clean tree, suite 2932, sweep 23. The work area is deliberately NOT yet moved to .agent-work/archive/2026-08-12-epic-559-c3-lifecycle/, because the fixed close ordering is advance -> release -> move, and this gate has not advanced; this run's own closeout_refusal, applied to this run's own spine, correctly refuses with \"gate 'archive' is not terminal\". Deliverable COMMANDER_RETURN.md is written and committed.",
+        "prior_status": "in-progress"
+      },
       "result": null,
       "finding": null,
       "evidence": [],
@@ -682,20 +701,31 @@
       "id": "tc3",
       "from": "execute",
       "statement": "DESIGN_NOTE.md section 7's spec-fault list is now complete, but nothing PINS it against the source. Section 4's CHECK_KINDS tuple is machine-pinned by a test asserting it equals the compiler's own constant; section 7's fault-code list has no equivalent, so it stays correct only as long as whoever next adds a spec-* fault re-runs the enumeration instead of hand-editing. That is the same under-listing failure this gate just fixed, left able to recur. A test asserting section 7's list equals the codes grepped from generate_spine.py would close it. Found by the g5 reviewer. Related: the note has no enumerated list of the six probe-* fault codes at all. Not filed as issues, per the launch order's triage pre-ruling."
+    },
+    {
+      "id": "tc4",
+      "from": "archive",
+      "statement": "A crew dispatched WITHOUT --spine inherits the dispatcher's SPINE_FILE and SPINE_SESSION, so its MCP door is bound to the DISPATCHER'S OWN SPINE under the dispatcher's identity. Measured on this run: all 15 crews were dispatched with spine=None (my error -- run_crew.py never required it), and one implementer during the g3 window CLAIMED my commander spine as claimed_by='implementer' and then RELEASED it at 11:03:28, while I was still driving. I continued for 14 more journaled gate actions with the lease showing 'released'. Two distinct problems. (1) _crew_door_env's no-spine branch is documented as leaving the inherited-environment route \"genuinely untouched\", but untouched means the child points at the parent's spine, which is the one thing a crew must never drive. (2) The engine does NOT journal claim or release -- grep of the 43-entry journal returns zero -- so a lease released out from under an owner leaves no trace in the append-only record the terminal provenance check reads. The journal itself is intact: all 43 entries carry my session id and hash-chain correctly, so no gate work was corrupted. Recovered with an idempotent same-id re-claim."
     }
   ],
-  "blockers": [],
-  "refusals": 8,
+  "blockers": [
+    {
+      "item": "archive",
+      "blocker": "archive.c2 requires the branch to be PUSHED and archive.c2b requires an OPEN or MERGED pull request. Both are outward-facing acts this run is not authorized to take. The launch order reserves them (\"It does not open the PR. Outward-facing acts stay explicit\"; \"No merge or push to main\"), and docs/agents/ORCHESTRATOR_CONTEXT.md puts pushes, pull requests and merges behind explicit human approval that was never granted. Neither condition declares an override_policy, and the PreToolUse hook run_crew.py emits for every spawned crew denies my waive outright -- exactly as the launch order predicted (\"Never a waive -- the door denies a crew's waive on spine_evidence anyway\"). So this blocks rather than forcing, which is the prescribed path.",
+      "authority_needed": "admiral admiral-epic-418-followon",
+      "next_action": "The Admiral pushes epic-559/c3-lifecycle and opens the PR (as it did for C2, PR #563, merged by its own commit e4c80f85), then either waives archive.c2/c2b with human authority or re-advances archive once the PR exists. All other archive postconditions are satisfied: episodes captured and git-tracked, 16 commits, clean tree, suite 2932, sweep 23. The work area is deliberately NOT yet moved to .agent-work/archive/2026-08-12-epic-559-c3-lifecycle/, because the fixed close ordering is advance -> release -> move, and this gate has not advanced; this run's own closeout_refusal, applied to this run's own spine, correctly refuses with \"gate 'archive' is not terminal\". Deliverable COMMANDER_RETURN.md is written and committed."
+    }
+  ],
+  "refusals": 9,
   "engine_session": {
     "session_id": "constellation/epic-559/c3-lifecycle/execute/commander",
-    "status": "released",
-    "claimed_at": "2026-08-12T08:28:28.041404+00:00",
-    "last_heartbeat": "2026-08-12T11:02:36.389172+00:00",
-    "claimed_by": "implementer",
-    "worktree": ".",
+    "status": "active",
+    "claimed_at": "2026-08-12T13:19:07.953200+00:00",
+    "last_heartbeat": "2026-08-12T13:19:27.751072+00:00",
+    "claimed_by": "commander",
+    "worktree": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle",
     "previous_session_id": null,
-    "takeover_reason": null,
-    "released_at": "2026-08-12T11:03:28.333494+00:00"
+    "takeover_reason": null
   },
   "why_trail": [
     {
@@ -753,6 +783,13 @@
       "why": "The run summary is COMMANDER_RETURN.md, and it reports the three corrections to the launch order's own premises as prominently as the code, because those are what should change the epic's next move: the chicken-and-egg was not the KeyError, not_yet_written deletes a check rather than misreading a field, and the archive convention on disk is not the one the order names. It also records two things a summary is tempted to leave out \u2014 that the critic's headline number was wrong and the finding survived anyway, and that one of my own verification checks was a false positive that matched a docstring. In delegated mode the Admiral ratifies this at the epic return boundary; no human was reachable at any point in this run.",
       "mechanical": false,
       "ts": "2026-08-12T13:14:38.387425+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Eight episodes, one per distinct thing that happened rather than one per run, applied through apply_episode_delta.py with --store-root episodes (never hand-edited) and confirmed by the capture gate. Each is a record of what was observed, not a rule for a future agent. Three of them record my OWN failures rather than the crews': an AST check that reported a docstring hit as a code reference and nearly produced a spurious BLOCK; a pathspec-scoped git add -A that swept in a stray directory and left a commit describing code it did not contain; and a crew dispatch that silently did not happen, which I caught only because the wait loop polls the registry for a running entry rather than polling the result path alone. The reflection they come from is honest about where I improvised: the gate plan was executed as a frozen document rather than driven through the engine, because the door binds one spine and refuses the second, and I named that rather than letting the run read as fully engine-driven. Crew workflow feedback was harvested at each integrate and folded into the return.",
+      "mechanical": false,
+      "ts": "2026-08-12T13:16:15.284753+00:00"
     }
   ]
 }

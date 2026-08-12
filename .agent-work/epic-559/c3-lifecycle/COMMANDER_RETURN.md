@@ -189,3 +189,65 @@ dropped**, per your pre-ruling.
   faults, one per gate.
 - **Wall-clock is dominated by the one-crew-per-worktree serialization.** 15 sequential crews. If that
   rule is really "never two crews on the same assignment," this run could have been substantially shorter.
+
+---
+
+## Closeout state — the run is BLOCKED at `archive`, deliberately, and the lease is still held
+
+**`archive` is `blocked`, bubbled to you.** Two of its postconditions require outward-facing acts this
+run is not authorized to take:
+
+- **`archive.c2`** — "branch committed and pushed". The branch is committed (16 commits). It is **not
+  pushed**.
+- **`archive.c2b`** — requires an OPEN or MERGED pull request. **None was opened.**
+
+Neither condition declares an `override_policy`, and the `PreToolUse` hook `run_crew.py` emits for every
+spawned crew **denied my waive outright** — exactly as your launch order predicted: *"Never a waive — the
+door denies a crew's waive on `spine_evidence` anyway."* So this blocks rather than forces, which is the
+path you prescribed.
+
+**Everything else at `archive` is satisfied:** episodes captured and git-tracked, clean tree, suite 2932,
+sweep 23, `COMMANDER_RETURN.md` written and committed.
+
+**The work area is deliberately NOT moved to `.agent-work/archive/2026-08-12-epic-559-c3-lifecycle/`,**
+because the ordering you fixed is advance → release → move, and this gate has not advanced. I applied
+**this run's own `closeout_refusal` to this run's own spine** and it refused correctly:
+
+```
+close refused: gate 'archive' is not terminal (status 'in-progress')
+```
+
+That is the tool this run built, declining to eat the spine that is driving it. It is the best evidence I
+can offer that the ordering guard is real.
+
+**To finish:** push `epic-559/c3-lifecycle` and open the PR (as you did for C2 — PR #563, merged by your
+own `e4c80f85`), then waive `c2`/`c2b` with human authority or re-advance `archive`. **The lease is still
+held**, deliberately, so a second agent cannot enter a non-terminal spine; re-claim it with the same
+session id (idempotent) or `--force` if it has gone stale.
+
+## A defect I have to report against my own dispatches
+
+**Every one of the 15 crews was dispatched without `--spine`, so every one inherited my `SPINE_FILE` and
+`SPINE_SESSION` and had its MCP door bound to *my* spine under *my* identity.** `run_crew.py` never
+required otherwise and I never noticed. One implementer during the `g3` window **claimed my commander
+spine as `claimed_by: "implementer"` and released it at 11:03:28**, while I was still driving; I
+continued for 14 more journaled gate actions with the lease reading `released`, and recovered with an
+idempotent same-id re-claim once I found it at closeout.
+
+Two distinct problems, recorded as `tc4`:
+
+1. **`_crew_door_env`'s no-spine branch** is documented as leaving the inherited-environment route
+   *"genuinely untouched"* — but untouched means the child points at the **parent's** spine, which is the
+   one spine a crew must never drive. The docstring treats this as the safe default; on this run it was
+   the unsafe one.
+2. **The engine does not journal `claim` or `release`.** A grep of the 43-entry journal returns **zero**.
+   So a lease released out from under its owner leaves **no trace** in the append-only record the terminal
+   provenance check reads.
+
+**What was not damaged, checked rather than assumed:** all 43 journal entries carry my session id and the
+`prev_hash`/`hash` chain is intact, so no crew drove a gate on my spine. The damage was to the lease, not
+to the work.
+
+This one outranks the other five floats. It is a live cross-agent identity leak in the dispatch path,
+found only because I read `engine_session` while demonstrating my own close predicate — and the fact that
+**the journal could not have told me** is the more troubling half.
