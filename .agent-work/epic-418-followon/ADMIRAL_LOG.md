@@ -3417,3 +3417,26 @@ Entry grammar (one line of date + tag, then the substance):
   a false provenance claim, not a refused write. C3 is at `reconcile` with five steps left and is
   **not** being steered into this; it is wave-8 material or a C3 continuation, adjudicated at cold
   review.
+- FINDING | 2026-08-12 06:20 | **Cold review of C3: one merge blocker, found by running its suite
+  somewhere other than its own worktree.** In a detached scratch worktree at `51feb36c` the suite is
+  **1 failed, 2931 passed, 3 skipped, 1121 subtests**. The single failure is
+  `tests/test_spine_lifecycle.py::TestWorktreePathForRealWorktree::test_reproduces_this_runs_real_worktree`,
+  which hardcodes the work id `"epic-559/c3-lifecycle"` and asserts the derived path equals the
+  current checkout root — so it passes **only** from a checkout literally at
+  `<primary>-wt/c3-lifecycle`. Its own comment claims it "stays true on any host"; that comment is
+  false. It fails in the main checkout and on CI. C3's reported 2932 is its own worktree's number,
+  honestly measured and not portable. **Merge is refused until this is repaired.**
+- MEASUREMENT | 2026-08-12 06:20 | **C3's other claims verified independently, all held.**
+  `call_tool`'s body is byte-identical across the change (AST-extracted from both revisions and
+  compared). `skills/**`, `settings.json`, `.mcp.json` and `docs/agents/` are untouched by the whole
+  branch diff. Corpus sweep is 23 fault lines across 8 files — unchanged. Two guards falsified by
+  mutating the real source, not by reading their tests: inserting a `SPINE` reference into
+  `_spine_open` fails the identity pin, and replacing `close_work`'s derived `spine_name` with the
+  literal `"spine.json"` fails the mandatory differing-basename fixture — the exact defect the cold
+  plan critic predicted.
+- RULING | 2026-08-12 06:20 | **C3 blocked at `archive` on `c2` (push the branch) and `c2b` (open a
+  PR) and was right to.** Its launch order forbids push and merge, and a PR is an outward-facing act
+  no one authorized; it neither opened one nor waived its own gate. This epic merges locally and has
+  opened no PR for any of its eleven merged workstreams, so the template's requirement is the misfit,
+  not the run. **I waive `c2` and `c2b` on C3's spine under Admiral authority** and take the merge up
+  myself, as the template's own text says to. The waiver is recorded on the spine with its reason.
