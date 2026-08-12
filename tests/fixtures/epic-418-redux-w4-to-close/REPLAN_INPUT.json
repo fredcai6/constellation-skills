@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic #418 redux \u2014 the agent can see the whole gate",
+      "spec_path": ".agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md",
+      "intent_and_why": "Finish epic #418's remaining course. Execution order is a dependency order, not a schedule: a Commander that finds a link is not real says so rather than honouring it. Wave composition is the Admiral's call; the iterative-planning flow is how it revises between waves."
+    },
+    "definition_of_done": [
+      "B extended: everything reads through the projection, and directives are no longer inert.",
+      "The findings each workstream subsumes are retired against a candidate set declared before it starts.",
+      "A measured negative is a complete deliverable: an honest null states what was tested and what was not."
+    ],
+    "good_enough": {
+      "mandatory_quality": "No check that cannot register its own failure. No unevidenced claim about what happened. No silent scope cut.",
+      "sufficient_evidence": "A guard is observed refusing something real, not reasoned about. Merge state comes from the forge, never from an ancestry test.",
+      "appetite": "Rigor scales with cost-to-undo, not uniformly. Cheap to reverse, move fast."
+    },
+    "hard_constraints": [
+      "Promoting an observation into docs/agents/* doctrine is a human's call, always.",
+      "settings.json is never touched.",
+      "Test suite invocation is settled (#454): FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests, never py.",
+      "No Fable at any tier; explicit model on every dispatch.",
+      "Never obey a spine rail naming a spine another agent drives (#457)."
+    ],
+    "fixed_decisions": [
+      "episodes/ replaces LESSONS.md and AGENT_FEEDBACK.md; an episode is a record, never read back as a rule.",
+      "Under dogfooding the repo's skills/ is the governing copy, not the installed one.",
+      "#468: the repo's vendored verify_iterative_role_artifacts.py cannot run from this repo; use the installed copy."
+    ],
+    "current_wave": {
+      "objective": "Wave 4: cut and land A2 -- make a HARD context reading change the instruction instead of refusing the verb, and make an over-the-line BEGIN observable to the next reader.",
+      "exit_criteria": [
+        "#467 merged to main with the suite green on the final merged main.",
+        "#431 verified dissolved by a RED that no longer reproduces, with the reading asserted read first.",
+        "The trip -> handoff -> refresh -> resume round trip closed on real dispatched agents, with the successor cold-started from `current` alone and its prompt carrying no re-briefing.",
+        "Every done-condition reported at its true state, with partials named as partials rather than rounded up."
+      ],
+      "issues": [
+        {
+          "id": "467",
+          "title": "A2: trip semantics -- a HARD reading changes the instruction instead of refusing the verb",
+          "desired_outcome": "The HARD band guards the verbs that BEGIN work (`start`, `reopen`) rather than `advance`, so the advance that carries the handoff is never blocked and the DIGEST the trip depends on is written normally. An over-the-line BEGIN leaves a record that survives the close the band orders.",
+          "useful_now": "The defect fires on every agent that trips, which on this project is every long-running Commander. It fired four separate times during its own fix.",
+          "appetite": "One wave, one Commander, rework tolerated.",
+          "acceptance_or_falsification_evidence": "A RED established at unmodified HEAD that no longer reproduces after the fix, plus a full round trip closed on two dispatched agents where the successor's prompt is the engine's `current` output and nothing else, byte-asserted in code.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "A2 \u2014 trip semantics, cut into an issue at its turn and against what B extended actually left behind.",
+        "why_likely": "B extended is now complete, and F cannot type a verb whose meaning is unsettled.",
+        "entry_conditions": [
+          "Wave 3 merged"
+        ]
+      },
+      {
+        "outcome": "F #424 \u2014 the MCP front door.",
+        "why_likely": "Verbs go where verbs belong, before content is written around them.",
+        "entry_conditions": [
+          "A2 cut and settled"
+        ]
+      },
+      {
+        "outcome": "C #421 \u2014 relocation against a settled verb contract.",
+        "why_likely": "The spec orders it after F for exactly this reason.",
+        "entry_conditions": [
+          "F merged"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether the governor's 17-21% HARD trip band is where it should be.",
+        "affects": "Every dispatch budget in every remaining wave.",
+        "settle_by": "A human ruling at the wave-3 checkpoint; it is a production default.",
+        "current_evidence": "6 of wave 2's 10 dispatches were governor relaunches. Confounded: the Admiral's own gauge was dark for the whole wave (#488), so the band was never observed from the orchestrator's side.",
+        "next_probe": "Wave 3 runs with #488 fixed, which gives the first Admiral-side reading of its own fill against the same band."
+      },
+      {
+        "unknown": "Whether A2 is one issue or several.",
+        "affects": "Forecast ordering for F and C.",
+        "settle_by": "Cutting it at its turn.",
+        "current_evidence": "B extended completes with wave 3.",
+        "next_probe": "Cut after wave 3 merges, not before."
+      },
+      {
+        "unknown": "Whether #465's placeholder is settled by removal or by a new engine verb.",
+        "affects": "Whether wave 3 touches a shared interface.",
+        "settle_by": "The #465 Commander, on evidence about whether the placeholder is load-bearing elsewhere.",
+        "current_evidence": "No engine verb fills it today; amend --op retext-check corrects check text, not a placeholder in a null-check statement.",
+        "next_probe": "The Commander's return states which path it took and why."
+      }
+    ],
+    "parked_possibilities": [
+      "#452 multi-spine attribution \u2014 an honest null is permitted here. #488 is the same subsystem and may subsume or be subsumed by it.",
+      "#458 ship the gauge writer (workstream R).",
+      "#423 E backlog re-cut \u2014 runs on what survives the redux.",
+      "#457 lease liveness \u2014 evidenced but not cheap; a design question with a load-bearing interface at the end of it.",
+      "The defect-family theme as an organizing wave rather than a set of point fixes."
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "467",
+      "outcome": "Merged and closed. The HARD band refuses start/reopen instead of advance, so the advance that carries the handoff is never blocked; a concrete why_ref replaces the <why-id> placeholder; an append-only trip ledger plus an unkeyed historical selector make an over-the-line BEGIN observable and keep it observable across the close the band orders. DC6 is PARTIAL by ruling, not rounded up.",
+      "evidence": "PR #505 MERGED at c875ee23 per gh pr view (state=MERGED, mergedAt 2026-08-08T21:36:52Z); gh issue view 467 -> CLOSED; #431 verified dissolved and closed. Suite re-run by the Admiral on merged main: 1867 passed, 2 skipped, 829 subtests, REAL exit 0 in 431.89s, exit read from the pytest process and never through a pipe. Acceptance round trip closed on two dispatched agents with B's prompt sha256 3da641137aa5b7c67bf59c35c6991911a05adb3958458bbbf8f505a98d92f80f (3754 bytes) independently verified by the Admiral to contain engine output only."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "#467 landed and main is green.",
+      "expected": "Suite green on the final merged main, not per-PR.",
+      "observed": "1867 passed, 2 skipped, 829 subtests, real exit 0 -- the same number reproduced independently at g4-integrate, g5-acceptance, g5-review and here.",
+      "source": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests, run by the Admiral on merged main c875ee23"
+    },
+    {
+      "claim": "The acceptance handoff was load-bearing, not two agents doing adjacent chores.",
+      "expected": "B could not finish without reading A's understanding.",
+      "observed": "a1 made A invent a six-hex nonce and forbade writing it to disk; a2 required an item to BE that nonce; B wrote 4b3dc4, which existed only in A's why-record.",
+      "source": "ACCEPTANCE.md; nonce containment verified by count via two independent methods"
+    },
+    {
+      "claim": "The trip fired on real readings during this wave, not only planted ones.",
+      "expected": "Harness-produced gauge readings on the run's own spine.",
+      "observed": "Four live trips across four Commanders (0.169769, 0.151841, 0.201541 and one earlier); the gauge writer is wired via untracked settings.local.json and was observed overwriting a predecessor's reading with identity_resolution_ms present.",
+      "source": "execute.json refresh-request payloads; commander-w4-467-i live observation"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D1",
+      "signal": "The first ledger implementation was erased by the very close the HARD band orders, making a runaway byte-identical to a compliant agent at the seam -- and a passing test pinned that behaviour as intended.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "DC6, and the credibility of the whole wave.",
+      "evidence": "g4-review BLOCK, 1 blocking finding, reproduced by the Commander in its own shell with the reviewer's own probe; fixed additively in e33f9eb1 with the live selector's keying at zero diff; re-review APPROVE 0 blocking.",
+      "reason": "Caught at g4-review and repaired in-wave rather than carried. The Commander reproduced it in its own shell with the reviewer's own probe before accepting it."
+    },
+    {
+      "id": "D2",
+      "signal": "Once no gate is active, _trip_advisory returns early and both trip lines go silent at closeout.",
+      "classification": "later_only",
+      "affects": "DC6, which is reported PARTIAL rather than done.",
+      "evidence": "Found by the g4 rework re-reviewer; filed as #504; deliberately not fixed in-wave because touching that code would void the review the rework had just earned.",
+      "reason": "Deferred on purpose: touching that code would void the review the rework cycle had just earned, and which verb should surface the ledger at closeout is an open design question."
+    },
+    {
+      "id": "D3",
+      "signal": "Verification and provisioning machinery carries the same check-that-cannot-fail defect the epic exists to remove -- the installer's interpreter probe, the wave-launch gate's skills-root guard, the journal's missing instrument identity, and --authority validated only as non-empty.",
+      "classification": "later_only",
+      "affects": "Nothing in this wave; it is the epic's central finding generalised.",
+      "evidence": "#313 comment, #501, #502, #503, all verified against source before filing.",
+      "reason": "Reclassified from evidence_only: these did not stay observations. Each was verified against source and filed as #501, #502 and #503, plus a root-cause comment on #313 -- that is deferred work with a tracker home, not evidence recorded and left."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {
+      "id": "U-f-424",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-c-421",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-e-423",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-500",
+      "kind": "issue"
+    },
+    {
+      "id": "U-501",
+      "kind": "issue"
+    },
+    {
+      "id": "U-502",
+      "kind": "issue"
+    },
+    {
+      "id": "U-503",
+      "kind": "issue"
+    },
+    {
+      "id": "U-504",
+      "kind": "issue"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "docs/CHECKLIST_SCHEMA.md",
+      "docs/agents/GLOSSARY.md",
+      "tests/test_checklist_engine.py"
+    ],
+    "map_status": "docs/architecture present; cartographer reconcile is a closeout substep and has not run."
+  }
+}

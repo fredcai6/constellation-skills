@@ -28,10 +28,12 @@ SHAPED_BRIEF = ROOT / "skills" / "to-initial-issues" / "templates" / "SHAPED_BRI
 REPLAN_INPUT = ROOT / "skills" / "replan" / "templates" / "REPLAN_INPUT.template.json"
 REPLAN_RESULT = ROOT / "skills" / "replan" / "templates" / "REPLAN_RESULT.template.json"
 ROLE_VERIFIER = ROOT / "scripts" / "verify_iterative_role_artifacts.py"
-# The epic's own terminal transition, tracked in git. Copied -- never mutated --
-# so the stop golden path is measured against a packet a real Admiral wrote
-# rather than a template with one field edited.
-LIVE_STOP_TRANSITION = ROOT / ".agent-work" / "epic-418-redux" / "transitions" / "w4-to-close"
+# The epic's own terminal transition, copied verbatim into tests/fixtures/ when the
+# run directory was archived -- never mutated -- so the stop golden path is measured
+# against a packet a real Admiral wrote rather than a template with one field edited.
+# (Originally read from .agent-work/epic-418-redux/, but tests must not depend on run
+# directories: archiving a run must never break the suite.)
+LIVE_STOP_TRANSITION = ROOT / "tests" / "fixtures" / "epic-418-redux-w4-to-close"
 
 
 def load_module(name: str, path: Path):

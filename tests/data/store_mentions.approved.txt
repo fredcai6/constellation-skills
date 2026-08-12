@@ -16,15 +16,6 @@
 # under skills/ -- no skill instructs an agent about the store today, and that is the
 # property most worth keeping.
 
-# pre-registered tripwire record for #304: names the write path its outcomes take
-TRIPWIRES.md:Git history is the tamper-evident timestamp. The episode store cannot carry a prediction: `create`
-
-# pre-registered tripwire record for #304: names the write path its outcomes take
-TRIPWIRES.md:Outcomes go to `.agent-work/issue-304/TRIPWIRE_OUTCOMES.md`, then into `episodes/active/` via
-
-# pre-registered tripwire record for #304: names the write path its outcomes take
-TRIPWIRES.md:`scripts/apply_episode_delta.py` (the only write path), each episode carrying `expected-behavior` = the
-
 # architecture overview: describes the store as a layer, instructs no agent to read it
 docs/CONSTELLATION_OVERVIEW.md:episodes/active/ + episodes/retired/:
 
