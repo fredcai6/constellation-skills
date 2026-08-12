@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "rr1-fix-completeness",
+  "mechanical": {
+    "run": "epic-559/c3-lifecycle",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "rr1-fix-completeness",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c3-lifecycle-rr1-fix-completeness@63bd1ca5669fbdbb9faedc2fef48f0fc3e52b8b1",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c3-lifecycle",
+    "generated_at": "2026-08-12T10:22:07Z"
+  }
+}

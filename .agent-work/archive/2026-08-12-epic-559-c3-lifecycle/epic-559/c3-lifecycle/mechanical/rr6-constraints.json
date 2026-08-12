@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "rr6-constraints",
+  "mechanical": {
+    "run": "epic-559/c3-lifecycle",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "rr6-constraints",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c3-lifecycle-rr6-constraints@b473b19dc79a4b98dbbf2f01d96e084cde66ffb8",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c3-lifecycle",
+    "generated_at": "2026-08-12T10:22:47Z"
+  }
+}

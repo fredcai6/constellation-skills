@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "rr5-gate-whole-recheck",
+  "mechanical": {
+    "run": "epic-559/c3-lifecycle",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "rr5-gate-whole-recheck",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c3-lifecycle-rr5-gate-whole-recheck@5b0974229ce1145c6068bad196598194357855cd",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c3-lifecycle",
+    "generated_at": "2026-08-12T10:22:40Z"
+  }
+}
