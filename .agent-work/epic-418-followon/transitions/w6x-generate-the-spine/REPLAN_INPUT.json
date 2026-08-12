@@ -1,0 +1,290 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "The door is the interface, and the spine is the job",
+      "spec_path": "docs/agents/EPIC_418_FOLLOWON.md",
+      "intent_and_why": "Agents reach a spine only through the MCP door, and receive their work as a spine rather than as prose. The goal is a weaker agent than the one authoring the work: everything that can sit behind a tool or a check should, because prose instruction is a liability."
+    },
+    "definition_of_done": [
+      "A dispatched crew drives its own spine through the door, measured from its own call record.",
+      "A respawn resumes its lease rather than force-claiming it.",
+      "No shipped entry definition hardcodes an interpreter.",
+      "No agent-facing instruction names the engine CLI.",
+      "A crew that cannot satisfy a check has somewhere to go that is not silence."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Every merged change carries a control that reproduced its defect first, and a cold reviewer independent of the implementer re-ran that control.",
+      "sufficient_evidence": "A property driven against a real spine through a real handshake, not asserted in prose.",
+      "appetite": "One implementer plus a cold reviewer per workstream, reworked until the reviewer approves."
+    },
+    "hard_constraints": [
+      "settings.json is never touched",
+      "docs/agents/* edits are the human's call",
+      "no git add -A; .agent-work/ is tracked",
+      "never two crews in one worktree",
+      "merge and push to main only on cold-review approval plus a green suite",
+      "planning makes no direct gh or network mutation"
+    ],
+    "fixed_decisions": [
+      "Anything wanted for the spine is reachable through MCP; agents do not know about the CLI; anything reachable only through the CLI is a defect.",
+      "Judgment is highlighted and carried up: a greater claim requires greater review.",
+      "A crew fails up one rung at a time, to its recorded parent, never sideways and never silently.",
+      "Launched identities remain stable."
+    ],
+    "current_wave": {
+      "objective": "Make the door the only interface an agent has to a spine: close the verb gap, remove the CLI from agent-facing instruction, make the spine itself the crew's job description, and give a stuck crew somewhere to go.",
+      "exit_criteria": [
+        "All 18 engine verbs are reachable through mcp__spine__ tools.",
+        "A crew dispatched with a spine and no handoff document drives it to a terminal state and is recorded as succeeding.",
+        "A shipped template's gate is proven satisfiable by a real run, and the convention that satisfies it lives where the check does.",
+        "A pin that asserts a false fact is removed or corrected.",
+        "A crew that hits a check it cannot satisfy blocks, records its parent, and is reported as blocked rather than as failed or complete.",
+        "A cold reviewer independent of each implementer has approved each change."
+      ],
+      "issues": [
+        {
+          "id": "N1",
+          "title": "Close the verb gap: every engine verb reachable through the door",
+          "desired_outcome": "Nine tools cover all eighteen verbs; the CLI-fallback table is removed.",
+          "useful_now": "Everything else in the wave depends on it.",
+          "appetite": "One implementer plus a cold reviewer.",
+          "acceptance_or_falsification_evidence": "Each verb driven against a real scratch spine over a real JSON-RPC handshake.",
+          "implementation_latitude": "Tool grouping is the implementer's, near the same tool count.",
+          "hard_constraints_no_gos": ["no per-call spine addressing", "checklist_engine.py unmodified"],
+          "local_unknowns": [],
+          "anchors": ["scripts/mcp_spine_server.py"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "A",
+          "title": "The spine is the job: a crew dispatched with a spine needs no handoff document",
+          "desired_outcome": "run_crew.py judges a spine-only dispatch on its spine reaching a terminal state, and the hook that denies a crew's waive cannot fail open.",
+          "useful_now": "It detaches a crew's work from a prose document, which is the epic's thesis.",
+          "appetite": "One implementer plus a cold reviewer.",
+          "acceptance_or_falsification_evidence": "A real spine-only dispatch recorded as completed, and a crew that leaves a gate open still recorded as failed.",
+          "implementation_latitude": "The completion predicate is the implementer's.",
+          "hard_constraints_no_gos": ["checklist_engine.py, mcp_spine_server.py, settings.json and shipped templates untouched"],
+          "local_unknowns": ["Whether a blocked spine reads as terminal"],
+          "anchors": ["scripts/run_crew.py"],
+          "type": "AFK",
+          "blocks": ["N1"]
+        },
+        {
+          "id": "B",
+          "title": "Instructions become checks, and the check's convention lives where the check does",
+          "desired_outcome": "The Commander gate that promised no unresolved blockers actually refuses one, and the template carrying the check carries the instruction that satisfies it.",
+          "useful_now": "A gate that cannot fail is the defect class this epic exists to remove.",
+          "appetite": "One implementer plus a cold reviewer.",
+          "acceptance_or_falsification_evidence": "The real shipped gate driven through the real engine in both directions.",
+          "implementation_latitude": "Wording is the implementer's.",
+          "hard_constraints_no_gos": ["scripts/ untouched", "compact JSON edited surgically"],
+          "local_unknowns": ["What field a Commander actually attaches"],
+          "anchors": ["skills/commander/templates/EXECUTE_PLAN.template.json"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "C1",
+          "title": "A spine can be refused before it is driven",
+          "desired_outcome": "A lint that refuses a spine the engine cannot read, and four falsifiability faults it can, reporting undecidable as a third channel distinct from OK.",
+          "useful_now": "The generator needs something to be refused by.",
+          "appetite": "One implementer plus a cold reviewer.",
+          "acceptance_or_falsification_evidence": "Each fault caught on a fixture and absent on an innocent one; zero false positives over the corpus.",
+          "implementation_latitude": "The fault set is the implementer's beyond the four named.",
+          "hard_constraints_no_gos": ["no shipped template edited to make the lint pass"],
+          "local_unknowns": ["Whether the corpus's own self-check idiom trips the zero-collect fault"],
+          "anchors": ["scripts/validate_spine.py"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "D1",
+          "title": "Remove the pins that assert a false fact",
+          "desired_outcome": "The door tool names and CLI-only verb list derive from the door itself rather than restating a stale count.",
+          "useful_now": "A pin asserting a false fact is worse than no pin.",
+          "appetite": "One implementer plus a cold reviewer.",
+          "acceptance_or_falsification_evidence": "The derived list computed from the argparse registry and the door's call sites.",
+          "implementation_latitude": "Derivation mechanism is the implementer's.",
+          "hard_constraints_no_gos": ["no production behaviour change"],
+          "local_unknowns": [],
+          "anchors": ["tests/test_mcp_adoption.py"],
+          "type": "AFK",
+          "blocks": ["N1"]
+        },
+        {
+          "id": "E1",
+          "title": "A crew that gets stuck has somewhere to go",
+          "desired_outcome": "blocked is a recorded outcome distinct from failed and complete, and the dispatch records the parent a crew should reach.",
+          "useful_now": "The human's ruling is that a crew fails up one rung at a time.",
+          "appetite": "One implementer plus a cold reviewer.",
+          "acceptance_or_falsification_evidence": "A crew driven into a blocked gate recorded as blocked, with its parent readable from the run record.",
+          "implementation_latitude": "The parent's representation is the implementer's.",
+          "hard_constraints_no_gos": ["messaging may not be depended on"],
+          "local_unknowns": ["Whether a headless crew can address its parent at all"],
+          "anchors": ["scripts/run_crew.py"],
+          "type": "AFK",
+          "blocks": ["A"]
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Stop hand-authoring spines: generate them from a spec",
+        "why_likely": "The lint gives a generator something to be refused by",
+        "entry_conditions": ["C1 merged"]
+      },
+      {
+        "outcome": "Consolidate the door's tool surface",
+        "why_likely": "The human deferred it explicitly to a consolidation round at the end",
+        "entry_conditions": ["the tool set stops changing"]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether instruction or enforcement drives door adoption",
+        "affects": "How much of the corpus rewrite is load-bearing",
+        "settle_by": "Reading crew call records across dispatches",
+        "current_evidence": "Crews with a bound door and no CLI mention in their skill used the door",
+        "next_probe": "Read the call record of the next wave's crews"
+      },
+      {
+        "unknown": "Whether a crew can reach its parent directly",
+        "affects": "Whether fail-up needs a durable artifact or can rely on messaging",
+        "settle_by": "A probe dispatch that tries to message a named parent",
+        "current_evidence": "None",
+        "next_probe": "E1's probe"
+      }
+    ],
+    "parked_possibilities": [
+      "Windows launch, carried as a standing constraint that entry definitions stay configurable",
+      "The duplicated-path work directory, adjacent to #478"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "N1",
+      "outcome": "Nine mcp__spine__ tools cover all eighteen engine verbs; the door's CLI-fallback table is gone.",
+      "evidence": "Cold review APPROVE. Each verb driven against a real scratch spine over a real JSON-RPC handshake."
+    },
+    {
+      "issue_id": "A",
+      "outcome": "A spine-only dispatch is judged on its spine reaching a terminal state rather than on a result artifact nobody asked for, and the hook that denies a crew's waive no longer fails open; merged to main as 9a056105.",
+      "evidence": "Cold review APPROVE on round 2 after a BLOCK. Real spine-only dispatch recorded completed; a crew leaving a gate open still recorded failed; a survey with no consolidation is non-terminal; the hook emits shlex.quote(sys.executable) with shell bash."
+    },
+    {
+      "issue_id": "B",
+      "outcome": "The Commander gate that promised no unresolved blockers now refuses one, and the evidence convention that satisfies it is written where the check lives; merged to main as 90b39e2b.",
+      "evidence": "Cold review APPROVE on round 2 after a BLOCK. The round-1 fix flipped the defect's sign -- a 122-record census, re-run independently by the Admiral, found only 23% of real records matched it. The real shipped gate is now driven through the real engine in both directions."
+    },
+    {
+      "issue_id": "D1",
+      "outcome": "The stale door-tool and CLI-only-verb pins derive from the door's own registry instead of restating a count that had become false; merged to main as 3c0fc7d2.",
+      "evidence": "Cold review APPROVE. CLI_ONLY_VERBS computed from the gap between the argparse registry and the door's call sites, and DOOR_TOOL_NAMES tied to mcp_spine_server.TOOL_NAMES."
+    },
+    {
+      "issue_id": "E1",
+      "outcome": "blocked is a recorded outcome distinct from failed and complete, and a dispatch records the parent a crew should reach; merged to main as 094f573a.",
+      "evidence": "Cold review APPROVE. A crew driven into a blocked gate is recorded blocked with its parent readable from the run record. Probe measured that a headless crew cannot reach a parent named by a descriptive string, so the durable path is the mechanism."
+    },
+    {
+      "issue_id": "C1",
+      "outcome": "validate_spine.py refuses a spine the engine cannot read and four falsifiability faults it can, and reports undecidable as a channel distinct from OK; merged to main as 0ab7ecab.",
+      "evidence": "Cold review APPROVE on round 2 after a BLOCK for refusing the corpus's own self-check idiom (8 of 9 false positives, now 0 over 26 type-discovered checklists). Admiral mutation control: neutering validate() turns 24 of 82 tests red. Suite on merged main: 2689 passed, 3 skipped, 1121 subtests."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "A shipped template's gates are satisfiable by a real run.",
+      "expected": "Some test somewhere asks this.",
+      "observed": "No test in the repo had ever asked it. That absence is why a gate promising 'no unresolved blockers' shipped while checking only that some artifact arrived.",
+      "source": "B's review round 1"
+    },
+    {
+      "claim": "Commanders attach a consistent field to an implementer-result.",
+      "expected": "A convention exists.",
+      "observed": "122 real implementer-result records: 28 status=complete (23%), 33 verdict, 5 wrong-case status, the rest bespoke or absent. There is no convention.",
+      "source": "census re-run independently by the Admiral"
+    },
+    {
+      "claim": "The shipped templates carry checks that can fail.",
+      "expected": "Mostly yes, with isolated exceptions.",
+      "observed": "validate_spine's sweep reports falsifiable-all-null on the context gate of nine role templates and an unresolved <exact test command> in two.",
+      "source": "scripts/validate_spine.py --sweep over the merged corpus"
+    },
+    {
+      "claim": "Hand-authoring a spine is reliable when the author is capable.",
+      "expected": "An Admiral authoring its own gates produces checks that work.",
+      "observed": "The Admiral hand-authored roughly ten work spines and seven review surveys this wave. Four carried checks that could not do their job: an unquoted -k selector, a probe importing a module that needs a bound spine, a call using a parameter name the signature does not have, and a population filter wrong twice. None was caught by the author first.",
+      "source": "the wave's own record"
+    },
+    {
+      "claim": "A headless crew can reach its dispatching parent directly.",
+      "expected": "Messaging by name works.",
+      "observed": "A headless crew is on the peer graph but cannot reach a parent named by a descriptive string.",
+      "source": "E1's probe"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "The author of the spines is the least-checked link in the chain.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth",
+      "evidence": "Four of the Admiral's own hand-written checks could not do their job, each caught downstream by a crew, a reviewer or argparse.",
+      "reason": "The epic's thesis is that prose instruction is a liability; the same argument applies to hand-authored checks, and the wave produced the evidence for it."
+    },
+    {
+      "id": "D1",
+      "signal": "Two merged workstreams disagree about the same token.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth",
+      "evidence": "B's test allowlists <exact test command> in two templates as a legitimate authoring-time fill-in slot; C1's lint reports the same two occurrences as unresolved-placeholder faults.",
+      "reason": "A generator must pick a side, so the disagreement has to be settled before it is written rather than inherited by it."
+    },
+    {
+      "id": "D2",
+      "signal": "Nine of twelve shipped role templates open on a gate that cannot refuse anything.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth",
+      "evidence": "validate_spine --sweep reports falsifiable-all-null on every role template's context gate.",
+      "reason": "Either the context gate is a legitimate qualitative gate and the lint must say so, or the shipped templates carry the defect the lint was built to find. A generator inherits whichever answer is chosen."
+    },
+    {
+      "id": "D3",
+      "signal": "The Admiral commanded workstreams itself rather than dispatching a Commander.",
+      "classification": "evidence_only",
+      "affects": "Current planning truth",
+      "evidence": "Each workstream was right-sized as a bounded implementer-with-plan on its first pass and then grew to three review-and-rework rounds without being reconsidered.",
+      "reason": "An Admiral practice failure, owed as an episode at closeout rather than as an issue."
+    },
+    {
+      "id": "D4",
+      "signal": "A design that depends on crew-to-crew messaging cannot be built on.",
+      "classification": "drop",
+      "affects": "Current planning truth",
+      "evidence": "A headless crew cannot reach a parent named by a descriptive string.",
+      "reason": "The durable path -- a blocked gate, a recorded parent, and a polling parent -- is the mechanism; messaging is an optimisation nothing may depend on."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {"id": "560", "kind": "issue"},
+    {"id": "421", "kind": "issue"},
+    {"id": "555", "kind": "issue"},
+    {"id": "consolidate-door-tools", "kind": "forecast"},
+    {"id": "instruction-causes-adoption", "kind": "uncertainty"},
+    {"id": "windows-launch", "kind": "parked"}
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/validate_spine.py",
+      "scripts/checklist_engine.py",
+      "scripts/mcp_spine_server.py",
+      "skills/"
+    ],
+    "map_status": "map/INDEX.md regenerated at the C1 merge; scripts.validate_spine and tests.test_validate_spine present"
+  }
+}

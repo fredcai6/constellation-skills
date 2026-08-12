@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "decision": "stop",
+  "applicable": false,
+  "criteria_assessment": {
+    "wave_exit": "Wave 4's exit criteria are met for M2 and M3; #555 is carried unworked by design.",
+    "epic_done": "The epic is not complete. The remaining definition-of-done item is that agent instructions name the door and not the CLI.",
+    "good_enough": "The mandatory quality boundary is preserved and unchanged by this proposal."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "D0",
+      "action": "revise_plan",
+      "reason": "The wave-4 conclusion that binding is not sufficient rested on crews that had no bound door. The basis is gone, so planning truth is revised rather than merely annotated.",
+      "issue_created": false
+    },
+    {
+      "id": "D1",
+      "action": "revise_plan",
+      "reason": "Withholding the engine by omitting it from an allow-list does not work, because Bash reaches it. N2 is planned against a deny mechanism instead.",
+      "issue_created": false
+    },
+    {
+      "id": "D2",
+      "action": "revise_plan",
+      "reason": "A fixed decision contradicts a human ruling; the correction is proposed as an escalation rather than applied.",
+      "issue_created": false
+    },
+    {
+      "id": "D3",
+      "action": "record_evidence_only",
+      "reason": "An Admiral practice failure, corrected within the same run and owed as an episode at closeout.",
+      "issue_created": false
+    },
+    {
+      "id": "D4",
+      "action": "amend_forecast_or_parked",
+      "reason": "Adjacent to #478 and outside this epic's intent; parked with the observation recorded rather than fixed silently.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": null,
+  "revised_forecast": [],
+  "revised_uncertainty": [],
+  "revised_parked": [],
+  "unlaunched_dispositions": [
+    {
+      "id": "559",
+      "action": "keep",
+      "reason": "Its launch waits on this boundary being settled"
+    },
+    {
+      "id": "560",
+      "action": "keep",
+      "reason": "Untouched and independent"
+    },
+    {
+      "id": "421",
+      "action": "keep",
+      "reason": "Entry condition unchanged by this proposal"
+    },
+    {
+      "id": "instruction-causes-adoption",
+      "action": "keep",
+      "reason": "Still unsettled"
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "fixed_decisions",
+      "before": "The CLI door stays as a fallback; F is additive",
+      "after": "Every spine action is reachable through the MCP door; a CLI-only verb is a defect",
+      "reason": "The human ruled on 2026-08-10: 'anything that we want to do for the spine needs to be accessible via mcp. the agents should not know about the cli. period. anything that we can only do via the cli is a defect.' The superseded decision was left standing beside the new one in the w4x packet, so the plan carried a contradiction; this proposal removes it."
+    },
+    {
+      "surface": "fixed_decisions",
+      "before": "(absent)",
+      "after": "Hardcoding an interpreter for the current host is permitted provided every instance is recorded on #539",
+      "reason": "The human ruled on 2026-08-10: 'I'm explicitly saying it is okay to set the interpreter for python here for this system, but any hard coding like that needs to be noted in the already open issue.' Recorded on #539 as comment 5248339534, with #553 cross-linked."
+    }
+  ],
+  "escalation": {
+    "boundary": "fixed_decisions",
+    "proposed_value": [
+      "Launched identities remain stable",
+      "The lease keys on the assignment, not the process instance",
+      "Identity is derived from the spine's own work_id, never hand-typed",
+      "Every spine action is reachable through the MCP door; a CLI-only verb is a defect",
+      "Agents do not know about the engine CLI; the CLI is used only behind the MCP door",
+      "Mechanical setup is the tool's job, not the operator's",
+      "Hardcoding an interpreter for the current host is permitted provided every instance is recorded on #539, which carries the unified cross-platform fix"
+    ],
+    "reason": "Two human rulings of 2026-08-10 change what is fixed for this epic: the MCP door becomes the only interface an agent has to a spine, replacing the earlier decision that the CLI stays as a fallback; and hardcoding this host's interpreter is permitted on condition that every instance is recorded on #539. The Admiral may not move a fixed boundary, so both are proposed here rather than applied. Both rulings are already quoted verbatim in ADMIRAL_LOG.md and LATITUDE_CONTRACT.md.",
+    "authority_required": "human"
+  },
+  "wave_review_comment": "## Boundary proposal -- fixed_decisions\n\nThis packet proposes a change to a fixed boundary and launches nothing.\n\nThe epic's `fixed_decisions` carried two statements that contradict each other: *the CLI door stays as a fallback; F is additive*, and *agents do not know about the engine CLI*. The second was added when the human ruled, and the first was never removed, so the plan of record has been internally inconsistent since the w4x boundary.\n\nThe human's ruling is unambiguous and is quoted verbatim in the escalation. Because the Admiral may not move a fixed boundary, the correction is proposed for ratification rather than applied. A second ruling -- that hardcoding this host's interpreter is permitted provided every instance is recorded on #539 -- is proposed on the same surface and in the same packet, since a singular escalation may carry one boundary but not two.\n\nNothing else changes here. The wave revision, its issues, and its evidence are carried in the follow-on packet, which proceeds from the ratified boundary.",
+  "revised_epic_body": "## Current planning truth\n\nThis packet is a boundary proposal and launches no wave, so the planning truth below is unchanged except on the surface under proposal.\n\nAgents drive their spines through the MCP door. What is now proposed as *fixed* is that this is the only route: every spine action reachable through the door, and a CLI-only verb treated as a defect rather than an acceptable gap. The superseded decision -- that the CLI stays as an additive fallback -- is proposed for removal, because leaving it beside its replacement is what let planning carry a contradiction across a wave boundary.\n\nAlso proposed as fixed: hardcoding an interpreter for the current host is permitted, on the condition that every instance is recorded on #539, which carries the unified cross-platform fix. That condition is the whole point of the permission -- the risk is not the hardcode, it is forgetting where the hardcodes are.\n\n**Nonbinding forecast.** On ratification, the follow-on packet revises the wave to close the door's five-verb gap, withhold the engine from the crew grant, and remove the CLI from agent-facing instruction -- in that order."
+}

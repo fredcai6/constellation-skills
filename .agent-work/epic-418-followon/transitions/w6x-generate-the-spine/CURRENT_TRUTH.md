@@ -1,0 +1,13 @@
+## Current planning truth
+
+Agents drive their spines through the MCP door and never touch the engine CLI. All eighteen verbs are reachable through nine tools; no agent-facing instruction names the CLI; a crew's job arrives as a spine rather than as prose; and a crew that gets stuck blocks against a recorded parent instead of failing silently. All five definition-of-done items hold.
+
+**What the wave found is that the spine itself is now the weakest artifact in the chain.** Roughly ten work spines and seven review surveys were hand-authored this wave, and four of them carried checks that could not do their job -- caught downstream every time, never by the author. The epic exists because prose instruction is a liability when the reader is weaker than the writer. A hand-authored check is the same liability one level up, and it does not go away by making the author more capable.
+
+C1 shipped `validate_spine.py`, which refuses a spine the engine cannot read and four falsifiability faults it can, and which reports *undecidable* as a channel distinct from OK -- so "could not tell" is never silently indistinguishable from "checked, found nothing". That is the thing a generator can be refused by. Nothing yet writes a spine.
+
+**Wave 6 is the generator.** An author states what the work is; a generator emits a spine the lint cannot refuse. Two properties are non-negotiable in its output. Every gate carries a place to record beliefs, concerns and open questions -- in the `constraints` and `directives` substrate the engine already renders on the active gate, not in a new field the engine ignores -- because a crew that has to hand something back needs a gate to hand it back at. And judgment is carried up rather than buried: a greater claim requires greater review.
+
+Two rulings the generator is written against. A placeholder is a legitimate slot in a template and a fault in an instantiated spine; the lint keys on which it is looking at. A gate with no checkable postcondition must say in so many words that it is qualitative -- nine of twelve shipped templates carry that gate today and none of them states the choice, which makes it a default rather than a decision.
+
+**Nonbinding forecast.** C3 puts one door tool in front of the generator, because a generator reachable only from a shell is exactly the defect the human's ruling names. Then the consolidation round the human deferred, once the tool set stops changing. Then wiring the lint into the corpus as a gate rather than a report -- safe only once the generator can produce something that passes it. #421 opens on a condition that now holds. Windows launch stays parked as a standing constraint that entry definitions remain configurable, with every hardcode recorded on #539.

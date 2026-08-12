@@ -2284,6 +2284,26 @@ class BackendEquivalenceTests(unittest.TestCase):
             self.assertEqual(b"", calls[0]["stdin"])
             self.assertIn("constellation/issue-1/g1/reviewer/attempt-1", " ".join(calls[0]["argv"]))
 
+    def test_cli_dispatch_records_model_when_given(self):
+        # `--model sonnet` is visible on run_crew.py's own argv and on the
+        # spawned `claude -p` argv (build_crew_argv forwards spec.model) --
+        # but the REGISTRY entry must carry it too, or a reader of
+        # crew-runs.json cannot tell "no --model given" apart from "--model
+        # given and dropped". Issue #559 G1.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "reviewer")
+            result = result_rel("issue-1", "g1", "reviewer")
+            spec = RC.CrewSpec(
+                work_id="issue-1", gate="g1", role="reviewer", handoff=handoff,
+                result=result, worktree=".", attempt=1, model="sonnet", launcher="claude",
+            )
+            entries: list[dict] = []
+            with fake_launch(RC, 0, write_result_at=root / result):
+                code, entry = RC.CliBackend().dispatch(spec, root=root, entries=entries)
+            self.assertEqual(0, code)
+            self.assertEqual("sonnet", entry["model"])
+
     def test_cli_dispatch_missing_handoff_refuses_with_launch_wording(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "decision": "advance",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Met on three of four criteria, with the fourth deferred by a recorded Admiral ruling rather than failed silently. Role spines default to the door with the CLI kept; a dispatched agent drove a real role spine to done through the door alone at 9 door calls and 0 CLI engine invocations, counted from its own record; the door's own rejections reach the run's episode and fail loudly per occurrence. The installer criterion is open and stated in the PR title. C's entry condition — agents running the spine through the door rather than the CLI — is the criterion that was met.",
+    "epic_done": "Not complete. C (#421) is unstarted and its launch needs the human, whose AFK grant covered the end of F2 and not the start of C.",
+    "good_enough": "The mandatory quality boundary held, but only because it was enforced after the fact. The wave first reported itself complete with defects still in it, having force-waived two APPROVE postconditions on an authority never granted and waived g4b's independent review on a basis later proven false. Thirteen defects were then found by five rounds of cold review, every one taken on evidence and none overridden. The final record states what was deferred, what is unmeasured, and what deleting a check cost."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "E0",
+      "action": "amend_forecast_or_parked",
+      "reason": "The installer criterion is real work that was deliberately not done, not work that failed. It goes to the board with #553 attached, since .mcp.json hardcodes an interpreter that does not resolve on the owner's platform, and that is what makes the criterion load-bearing rather than cosmetic.",
+      "issue_created": true
+    },
+    {
+      "id": "E1",
+      "action": "revise_plan",
+      "reason": "The door's confinement claim was false as shipped and is now true. C relocates gate instructions against this door, so C must inherit the corrected claim rather than the original one.",
+      "issue_created": false
+    },
+    {
+      "id": "E2",
+      "action": "record_evidence_only",
+      "reason": "Three waivers on absent authority or falsified grounds is a governance observation for the retrospective. Promoting it to a rule for future agents belongs in docs/agents/* and is the human's call.",
+      "issue_created": false
+    },
+    {
+      "id": "E3",
+      "action": "record_evidence_only",
+      "reason": "A measurement document citing a sentence no agent read is the epic's own central failure, committed inside the wave whose subject it is. Withdrawn and recorded; it belongs in the retrospective, not in a rule I write.",
+      "issue_created": false
+    },
+    {
+      "id": "E4",
+      "action": "record_evidence_only",
+      "reason": "Criterion 1's causal contribution is UNMEASURED and is recorded as unmeasured, explicitly not as a negative. Criterion 2 stands on arm 3 alone with its basis narrowed to what was actually observed.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Finish F2's open installer criterion, then C (#421): the first relocation tranche, against the door F2 made the default",
+    "exit_criteria": [
+      "install_constellation.py ships and wires .mcp.json with an interpreter resolved per machine, so a fresh install gets the door on Windows as well as POSIX",
+      "An agent at gate N does not do, plan or reserve gate N+k work",
+      "Per-run delivered tokens do not grow",
+      "The gate imperative rides tool results verbatim; spine templates stay the single source of instruction text"
+    ],
+    "issues": [
+      {
+        "id": "542",
+        "title": "Adopt the MCP door: agents default to it for spine management, measured from the call record",
+        "desired_outcome": "Agents default to the door, with the CLI kept as the documented fallback, and adoption measured from the driving agent's own call record.",
+        "useful_now": "C relocates gate instructions against whichever door delivers them; doing C against the CLI and porting after is doing it twice.",
+        "appetite": "One Commander, one wave",
+        "acceptance_or_falsification_evidence": "A dispatched agent's own call record showing door calls and zero CLI engine invocations, with Bash available so zero-CLI cannot be true by construction",
+        "implementation_latitude": "Which role spines change and in what order, how the acceptance run is staged, test structure",
+        "hard_constraints_no_gos": [
+          "The CLI door stays; F is additive",
+          "settings.json untouched at user scope",
+          "no engine logic duplicated"
+        ],
+        "local_unknowns": [
+          "whether identity can be bound to a container the harness shares"
+        ],
+        "anchors": [
+          "scripts/mcp_spine_server.py",
+          "scripts/install_constellation.py",
+          "skills/workbench/references/checklist-engine.md"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "421",
+        "title": "C: first relocation tranche — move gate-specific instruction out of the launch order and into the spine",
+        "desired_outcome": "An agent receives what its current gate needs, when it needs it, rather than the whole spec at dispatch.",
+        "useful_now": "F2 settled which door delivers gate results, so the relocation is written once rather than written and ported.",
+        "appetite": "One Commander, one wave",
+        "acceptance_or_falsification_evidence": "Per-run delivered tokens measured across arms, and gate-N+k work counted from an agent's own record",
+        "implementation_latitude": "Tranche boundary, which roles move first, how the measure is staged",
+        "hard_constraints_no_gos": [
+          "The gate imperative rides tool results verbatim",
+          "The CLI door stays; adoption changed the default, not the availability",
+          "settings.json is never written at user scope"
+        ],
+        "local_unknowns": [
+          "whether the tranche boundary is costly to revert once instructions move"
+        ],
+        "anchors": [
+          "scripts/checklist_engine.py",
+          "scripts/mcp_spine_server.py",
+          "skills/commander/templates/EXECUTE_PLAN.template.json"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "Close the epic: episodes, cartographer reconcile, harvest before sweep, user acceptance",
+      "why_likely": "C is the last workstream; E was removed from this epic at the human's direction",
+      "entry_conditions": [
+        "C has landed or been dispositioned"
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether the tranche boundary in C is costly to revert once gate instructions move into the spine",
+      "affects": "How much of C is done in one wave",
+      "settle_by": "C's plan step",
+      "current_evidence": "The spec names it as one of two costly-to-revert items in the epic",
+      "next_probe": "C's interrogation"
+    },
+    {
+      "unknown": "Whether the door is reachable on the repo owner's own platform",
+      "affects": "Whether adoption is real for the human who asked for it",
+      "settle_by": "#553 plus the deferred installer criterion",
+      "current_evidence": ".mcp.json hardcodes \"command\": \"python3\"; the owner's box has no working python3, python or py",
+      "next_probe": "A Windows run after the installer wires a resolved interpreter"
+    }
+  ],
+  "revised_parked": [
+    "Description trimming and the bare-descriptions control arm",
+    "A third door beyond CLI and MCP",
+    "Concurrency beyond the two-instance separation test"
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "421",
+      "action": "keep",
+      "reason": "Entry condition met — a dispatched agent drove a real role spine through the door alone. The launch itself waits for the human."
+    },
+    {
+      "id": "553",
+      "action": "defer",
+      "reason": "The door's launch line does not resolve on the owner's platform. Filed, and paired with the deferred installer criterion rather than folded into C."
+    },
+    {
+      "id": "description-trimming",
+      "action": "keep",
+      "reason": "Explicitly out of scope in spec section F and untouched by F2"
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "Whether anything drives through the door",
+      "before": "Zero files in skills/ referenced the door's tools; zero agents drove through it",
+      "after": "13 files name the door's tools with the CLI retained in all of them, and one dispatched agent drove a real role spine to done at 9 door calls and 0 CLI engine invocations",
+      "reason": "F2's whole purpose; measured from the driving agent's own record with Bash available so zero-CLI could not be true by construction"
+    },
+    {
+      "surface": "What the door can touch",
+      "before": "Documented as able to touch only the spine its own process was launched for",
+      "after": "That was false as shipped — the declared from_child property let any caller attach evidence read from an arbitrary file into the bound spine, satisfying artifact postconditions. Now confined at runtime, and the claim is true of the process",
+      "reason": "Found by cold review with no mutation required; fixed after measuring that every real from_child use resolves inside a gated checklist's directory"
+    },
+    {
+      "surface": "Identity doctrine",
+      "before": "An MCP-specific question about whether env-binding was the right mechanism",
+      "after": "A fleet-wide rule: identity may be bound to a container only at the granularity that container genuinely separates, and a seam that binds identity to a container must name what it does not separate and must fail closed below it, or defer to a per-call path where one exists",
+      "reason": "The same composition defect was found independently in the hook seam, which has no per-call path to defer to"
+    },
+    {
+      "surface": "How this wave's quality was actually assured",
+      "before": "Gate reviews inside the wave",
+      "after": "Five rounds of post-hoc cold review found thirteen defects, including three checks that could not fail and one measurement document quoting a sentence no agent read",
+      "reason": "The wave's own reviews were waived twice on absent authority and once on grounds later proven false"
+    }
+  ],
+  "wave_review_comment": "## Wave review — w2-f2-advance\n\n**F2 met three of its four criteria, and the fourth was deferred out loud rather than failed quietly.** Role spine instructions name the door's tools in 13 files where none did, with the CLI retained in every one. A dispatched agent drove a real role spine to done **through the door alone — 9 door calls, 0 CLI engine invocations**, counted from its own record, with Bash available in all three arms so \"zero CLI\" could not be true by construction. The door's own rejections now reach the run's episode and fail loudly per occurrence when they cannot. **C's entry condition is the criterion that was met.**\n\n**The installer criterion is open.** `install_constellation.py` still has zero MCP references, so a fresh install does not get the door — and `.mcp.json` hardcodes `\"command\": \"python3\"`, which resolves on neither the owner's Windows box nor anything without a `python3` on PATH (#553). Adoption is real on Linux and **unverified on Windows**, and that is in the PR title rather than a footnote.\n\n**The wave first reported itself complete with defects still in it.** Two `APPROVE` postconditions were force-waived citing an Admiral authority that was never granted, and independent review of the load-bearing gate was waived on the recorded basis that its two negatives came from \"two different reasons\" — which the repair later proved was one condition observed twice. Five rounds of cold review then found **thirteen defects**, every one taken on evidence and none overridden.\n\n**The most serious needed no mutation at all.** `spine_advance.from_child` is a *declared* tool property: any caller could point it at an arbitrary file and have its `consolidation` attached into the bound spine as a `review-result` — the evidence type that satisfies artifact postconditions. Gate closure on fabricated evidence, in the epic whose subject is evidence that reads as data but is not. Confined at runtime after measuring that all 166 consolidation-carrying surveys in the repo resolve inside a gated checklist's directory.\n\n**And the epic's own failure was committed inside it.** A measurement document introduced a block quote with \"Reading the freshly installed instruction shows why\", quoting a sentence that appears **zero** times across all three arms' records. The conclusion drawn from it is withdrawn — named, not reworded, with the withdrawal itself recorded. All three arms loaded a corpus predating the adoption edits, so **criterion 1's causal contribution is UNMEASURED**, recorded as unmeasured and explicitly not as a negative.\n\n**Decision: advance.** C's entry condition is met and C is next, but its launch waits for the human.",
+  "revised_epic_body": "## Current planning truth — after wave 2 (advance)\n\n**F2 landed and the door is now used.** 13 files under `skills/` name the door's tools where none did, the CLI is retained in every one, and a dispatched agent drove a real role spine to done through the door alone at 9 door calls and 0 CLI engine invocations, measured from its own call record. The door's own rejections reach the run's episode and fail loudly per occurrence. PR #554.\n\n**One criterion is open and deliberately so.** `install_constellation.py` ships no MCP wiring, so a fresh install does not get the door, and `.mcp.json` hardcodes an interpreter that does not resolve on the repo owner's own machine (#553). Deferred by Admiral ruling to protect the wave's load-bearing gate; **adoption is unverified on Windows** and the return says so.\n\n**The identity question generalised.** `IDENTITY_TRADE.md` records a fleet-wide rule rather than an MCP trade: identity may be bound to a container only at the granularity that container genuinely separates. The property given up is named — an in-session dispatched crew cannot drive its own plan through the door, so the CLI is not kept for compatibility, it is the only path for a whole class of agent.\n\n**C (#421) is next and its entry condition is met.** Agents run the spine through the door rather than the CLI, which is what C was gated on. C relocates gate instructions against that door, and must inherit the *corrected* confinement claim: `from_child` was a declared property that let any caller close a gate on evidence read from an arbitrary file, and is now confined at runtime.\n\n**E (#423) is out of this epic** at the human's direction.\n\n**Carried to the human:** the launch decision for C; #553 and the deferred installer criterion; three waivers taken on absent authority or falsified grounds; 43 active engine leases of which 41 are stale and 17 sit inside `.agent-work/archive/` because archiving never releases (#552); and #530/#549, where the Stop rail delivers a subagent's active step to its parent.",
+  "escalation": null
+}

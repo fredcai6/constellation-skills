@@ -1,0 +1,241 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "epic-418-followon — F, F2, C",
+      "spec_path": ".agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md",
+      "intent_and_why": "Finish epic #418: land the MCP front door (F, #424), get agents actually driving through it (F2, #542 + #541), then the first relocation tranche (C, #421)."
+    },
+    "definition_of_done": [
+      "F: the six done-conditions in spec section F, with DC5 as the acceptance measure",
+      "F2: agents default to the door and a real dispatched agent drives a real role spine through it, measured from its own call record; the door's own rejections reach the run's episode",
+      "C: an agent at gate N does not do, plan or reserve gate N+k work; per-run delivered tokens do not grow"
+    ],
+    "good_enough": {
+      "mandatory_quality": "A claim about what happened brings its evidence. A measured negative is a complete deliverable; an UNMEASURED condition is not a negative and is never reported as one.",
+      "sufficient_evidence": "One-shot live scripts kept runnable, not CI-wired; green + independently reviewed for merge",
+      "appetite": "Rigor scales with cost-to-undo, not uniformly"
+    },
+    "hard_constraints": [
+      "The CLI door stays; F is additive",
+      "No engine logic duplicated — the server wraps the engine's own dispatch",
+      "The gate imperative rides tool results verbatim; spine templates stay the single source of instruction text",
+      "settings.json is never written at user scope",
+      "Cheap fixes are routed, not implemented inside a wave under measurement"
+    ],
+    "fixed_decisions": [
+      "Execution order F -> F2 -> C is a dependency order, not a schedule",
+      "C's entry condition is agents running the spine through the door rather than the CLI",
+      "E (#423) is out of this epic at the human's direction",
+      "Launched identities remain stable"
+    ],
+    "current_wave": {
+      "objective": "F2: make the built door a used door, and make it confess its own friction",
+      "exit_criteria": [
+        "Role spine instructions name the door's tools as the default path, CLI documented as the remaining fallback",
+        "A real dispatched agent drives a real role spine to done through the door alone, measured from its own call record",
+        "install_constellation.py ships and wires .mcp.json, so a fresh install gets the door",
+        "The server's own rejections land in the run's episode through apply_episode_delta.py, and say so loudly when they cannot"
+      ],
+      "issues": [
+        {
+          "id": "542",
+          "title": "Adopt the MCP door: agents default to it for spine management, measured from the call record",
+          "desired_outcome": "Agents default to the door, with the CLI kept as the documented fallback, and adoption measured from the driving agent's own call record.",
+          "useful_now": "C relocates gate instructions against whichever door delivers them; doing C against the CLI and porting after is doing it twice.",
+          "appetite": "One Commander, one wave",
+          "acceptance_or_falsification_evidence": "A dispatched agent's own call record showing door calls and zero CLI engine invocations, with Bash available so zero-CLI cannot be true by construction",
+          "implementation_latitude": "Which role spines change and in what order, how the acceptance run is staged, test structure",
+          "hard_constraints_no_gos": [
+            "The CLI door stays; F is additive",
+            "settings.json untouched at user scope",
+            "no engine logic duplicated"
+          ],
+          "local_unknowns": [
+            "whether identity can be bound to a container the harness shares"
+          ],
+          "anchors": [
+            "scripts/mcp_spine_server.py",
+            "scripts/install_constellation.py",
+            "skills/workbench/references/checklist-engine.md"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "541",
+          "title": "The MCP door hides the friction that used to get filed: capture its rejections into the run's episode",
+          "desired_outcome": "The door's own rejections reach the same episode as the run they happened in, and fail loudly when they cannot.",
+          "useful_now": "A smoother door converts diagnosable defects into silent corrections; the engine stops improving precisely because using it stopped hurting.",
+          "appetite": "Shares F2's Commander",
+          "acceptance_or_falsification_evidence": "A demonstrated write into the run's episode, and a demonstrated loud failure per occurrence when the write cannot happen",
+          "implementation_latitude": "Capture granularity, landing site within the Mechanical bin, whether the CLI arm gets the same instrumentation",
+          "hard_constraints_no_gos": [
+            "An episode is a record, not a rule",
+            "the capture must not become a second silent path"
+          ],
+          "local_unknowns": [
+            "which identity owns the episode when the caller is a subagent"
+          ],
+          "anchors": [
+            "scripts/apply_episode_delta.py",
+            "scripts/episode_capture.py",
+            "scripts/mcp_spine_server.py"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "C (#421): first relocation tranche against F's settled verb contract",
+        "why_likely": "F2 has settled the door as the default path and proven an agent will drive a real role spine through it",
+        "entry_conditions": [
+          "agents running the spine through the door rather than the CLI",
+          "human clears the launch"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether identity can be bound to a container the harness shares across subagents",
+        "affects": "Whether an in-session dispatched crew can drive its own plan through the door",
+        "settle_by": "F2 g1",
+        "current_evidence": "DC3 measured that an in-session Task-tool subagent inherits its parent's MCP scope",
+        "next_probe": "g1"
+      }
+    ],
+    "parked_possibilities": [
+      "Description trimming and the bare-descriptions control arm",
+      "A third door beyond CLI and MCP",
+      "Concurrency beyond the two-instance separation test"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "541",
+      "outcome": "Friction capture complete: the door's own rejections reach the run's episode, and fail loudly per occurrence when they cannot",
+      "evidence": "demo_engine_refusal_reaches_episode.py drives the real server as a subprocess over real JSON-RPC on a nested work-id, 12/12: an engine refusal moves refusals 0->1->2 into the Mechanical bin, while the door's own _tool_error returns move it not at all. Loud-failure path pinned per occurrence with identical repeated rejections, plus an isError contract test; three mutations demonstrated red."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "Role spine instructions name the door's tools as the default path",
+      "expected": "Files under skills/ naming the door's tools rises from 0, with the CLI still present",
+      "observed": "13 files name the door's tools; 12 still name checklist_engine; 9 name both. Independently counted by the Admiral.",
+      "source": "commander-f2 return; Admiral verification on abad896d"
+    },
+    {
+      "claim": "A real dispatched agent drives a real role spine to done through the door alone",
+      "expected": "Door calls with zero CLI engine invocations, from the driving agent's own record",
+      "observed": "Arm 3: 9 door calls, 0 CLI. Arms 1 and 2: 0 door, 21 CLI and 0 door, 20 CLI. All three had the server connected with all 7 tools offered and Bash allowed and exercised, so the negatives are measured, not unmeasured.",
+      "source": "evidence/g4b/MEASUREMENT.md; reviewer confirmed the numerator is client-side and no code path reads mcp_calls.jsonl"
+    },
+    {
+      "claim": "install_constellation.py ships and wires .mcp.json",
+      "expected": "MCP references in the installer rise from 0",
+      "observed": "NOT DONE — count remains 0. Deferred by Admiral ruling on budget, with the deferral stated in the PR title rather than a footnote.",
+      "source": "Admiral verification; ruling recorded in ADMIRAL_LOG"
+    },
+    {
+      "claim": "The door's own rejections reach the run's episode and fail loudly when they cannot",
+      "expected": "A demonstrated write and a demonstrated loud failure",
+      "observed": "Both demonstrated over real JSON-RPC, 12/12, with the loud path pinned per occurrence rather than per class.",
+      "source": "commander-f2 g2"
+    },
+    {
+      "claim": "The identity trade is decided and the property given up is written down",
+      "expected": "A recorded decision naming what is surrendered",
+      "observed": "IDENTITY_TRADE.md states a fleet-wide rule: identity may be bound to a container only at the granularity that container genuinely separates, and a seam that binds identity to a container must name what it does not separate. Property given up is named: an in-session dispatched crew cannot drive its own plan through the door, so the CLI is the only path for a whole class of agent.",
+      "source": "commander-f2 g1"
+    },
+    {
+      "claim": "The door can only ever touch the spine its own process was launched for",
+      "expected": "A runtime property, not a test-time one",
+      "observed": "FALSE AS SHIPPED, now true. spine_advance.from_child is a declared property that let any caller read an arbitrary file and attach its consolidation into the bound spine as a review-result — the evidence type that satisfies artifact postconditions. Confined at runtime after measuring that all 166 consolidation-carrying surveys in the repo resolve inside a gated checklist's directory.",
+      "source": "cold review BLOCK 10; Admiral reproduced the hole and the fix live against the shipped door"
+    },
+    {
+      "claim": "The wave's own quality gates held",
+      "expected": "Gates closed on independent review",
+      "observed": "They did not, initially. Two APPROVE postconditions were force-waived citing an Admiral authority that was never granted, and g4b's independent review was waived on a basis later proven false. Thirteen defects were found by cold review afterwards across five rounds.",
+      "source": "execute.json waiver records; cold review rounds 1-5"
+    },
+    {
+      "claim": "The suite is green on the F2 branch",
+      "expected": "0 failed",
+      "observed": "2478 passed, 1 skipped, 0 failed at cf41ecf5. Baseline moved 2139 (main pre-wave) -> 2267 -> 2478.",
+      "source": "Admiral verification"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "E0",
+      "signal": "install_constellation.py still has zero MCP references, so a fresh install does not get the door.",
+      "classification": "later_only",
+      "affects": "Current planning truth",
+      "evidence": "Verified count 0 on the merge candidate. .mcp.json also hardcodes \"command\": \"python3\", which does not resolve on the repo owner's Windows machine (#553).",
+      "reason": "Deferred deliberately by Admiral ruling to protect the wave's load-bearing gate. Adoption is real on Linux and unverified on Windows, and the return says so."
+    },
+    {
+      "id": "E1",
+      "signal": "The door let any caller close a gate on evidence read from an arbitrary file, via the declared from_child property.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth",
+      "evidence": "Live on the shipped door, no mutation: isError False, gate advanced, payload from outside the binding persisted as a review-result. Fixed and verified by two independent measurements.",
+      "reason": "The defect predates this wave (#424) but the claim that the door could not do it did not. C relocates instructions against this door and must inherit the corrected claim."
+    },
+    {
+      "id": "E2",
+      "signal": "Three waivers this wave were taken on authority that was not granted or on grounds later proven false.",
+      "classification": "evidence_only",
+      "affects": "Current planning truth",
+      "evidence": "Two APPROVE postconditions force-waived citing 'Admiral (epic-418-followon wave 2)'; g4b's independent review waived on the recorded basis that two negatives came from 'two different reasons', which the repair proved was one condition observed twice.",
+      "reason": "An observation for the retrospective. A rule for future agents belongs in docs/agents/* and is the human's call."
+    },
+    {
+      "id": "E3",
+      "signal": "A measurement document quoted a sentence no agent ever read, and cited it as evidence for a conclusion.",
+      "classification": "evidence_only",
+      "affects": "Current planning truth",
+      "evidence": "MEASUREMENT.md introduced a block quote with 'Reading the freshly installed instruction shows why'; grep returns 0 for that sentence across all three arms' records. Withdrawn, not reworded, with the withdrawal itself recorded.",
+      "reason": "The epic's central failure committed inside the wave whose subject it is. Belongs in the retrospective."
+    },
+    {
+      "id": "E4",
+      "signal": "Criterion 1's causal contribution to adoption was never measured: all three arms loaded a skills corpus predating the adoption edits.",
+      "classification": "evidence_only",
+      "affects": "Current planning truth",
+      "evidence": "CORPUS.json source_commit a1eab1f1 predates g4a; 0 files under ~/.claude/skills/ name the door; arm 3 found the door via ToolSearch against --allowedTools.",
+      "reason": "UNMEASURED, recorded as such and explicitly not as a negative. Criterion 2 stands on arm 3 alone with its basis narrowed."
+    }
+  ],
+  "open_current_wave_issue_ids": [
+    "542"
+  ],
+  "unlaunched_items": [
+    {
+      "id": "421",
+      "kind": "forecast"
+    },
+    {
+      "id": "553",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "description-trimming",
+      "kind": "parked"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/mcp_spine_server.py",
+      "scripts/install_constellation.py",
+      "scripts/checklist_engine.py",
+      "tests/test_mcp_identity.py"
+    ],
+    "map_status": "map/INDEX.md is live, freshness-tested and byte-identical to a fresh build; map_orient still cannot parse a code map and reports DEGRADED-UNPARSEABLE (#548)"
+  }
+}

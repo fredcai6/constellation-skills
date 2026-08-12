@@ -838,8 +838,12 @@ def build_entry(
       * `dispatch` — external keeps its legacy `dispatch: "external"` marker
                      (Decision 5) so today's tooling and records still parse;
                      the cli backend passes `None` (no marker, as before).
-      * `model`    — recorded only when the caller stored it (external), matching
-                     the prior per-path shape; the cli path does not store it.
+      * `model`    — recorded on both paths when the caller passed one (issue
+                     #559 G1): a prior version of the cli path silently dropped
+                     it, which made the field's presence on the external path
+                     alone look like evidence the cli path never received
+                     `--model`, rather than what it was -- the same field,
+                     recorded on one path and lost on the other.
       * `handoff`  — nullable (issue #559): recorded as `None` for a spine-only
                      crew, the same "recorded null, not omitted" shape `spine`
                      already uses below.
@@ -1103,7 +1107,7 @@ class CliBackend(CrewBackend):
             work_id=spec.work_id, gate=spec.gate, role=spec.role, attempt=spec.attempt,
             worktree=spec.worktree, handoff=spec.handoff, result=spec.result, root=root,
             started=started, backend=self.name, pid=os.getpid(), spine=spec.spine,
-            parent=spec.parent,
+            parent=spec.parent, model=spec.model,
         )
         # Durable record BEFORE the crew starts (so a parent loss leaves a durable
         # `running` record).

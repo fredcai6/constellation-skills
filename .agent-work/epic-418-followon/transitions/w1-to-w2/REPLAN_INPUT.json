@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Iterative planning",
+      "spec_path": "DESIGN_SPEC.md",
+      "intent_and_why": "Plan from evidence at wave boundaries."
+    },
+    "definition_of_done": ["The epic outcome is demonstrated."],
+    "good_enough": {
+      "mandatory_quality": "Strict contracts",
+      "sufficient_evidence": "Public-interface tests",
+      "appetite": "One bounded wave"
+    },
+    "hard_constraints": ["No network writes"],
+    "fixed_decisions": ["Launched identities remain stable"],
+    "current_wave": {
+      "objective": "Validate the replanning seam",
+      "exit_criteria": ["All four exits verify"],
+      "issues": [
+        {
+          "id": "A",
+          "title": "Issue A",
+          "desired_outcome": "Observable wave evidence exists.",
+          "useful_now": "It settles the current decision.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "The verifier passes or refuses.",
+          "implementation_latitude": "Choose internals; preserve fixed boundaries.",
+          "hard_constraints_no_gos": [],
+          "local_unknowns": [],
+          "anchors": ["skills/replan"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Wire role contracts",
+        "why_likely": "The seam is accepted",
+        "entry_conditions": []
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Which next wave is useful",
+        "affects": "Forecast ordering",
+        "settle_by": "Wave review",
+        "current_evidence": "Only the initial wave has run",
+        "next_probe": "Inspect completed outcomes"
+      }
+    ],
+    "parked_possibilities": ["Portfolio optimization"]
+  },
+  "completed_outcomes": [],
+  "wave_evidence": [
+    {
+      "claim": "The seam is usable",
+      "expected": "All exits verify",
+      "observed": "Checks pass",
+      "source": "tests"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "Current exit is blocked",
+      "classification": "blocks_current_wave_exit",
+      "affects": "Current planning truth",
+      "evidence": "Observed during the wave",
+      "reason": "Repair is evidence-led"
+    },
+    {
+      "id": "D1",
+      "signal": "Forecast assumptions changed",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth",
+      "evidence": "Observed during the wave",
+      "reason": "Revision is evidence-led"
+    },
+    {
+      "id": "D2",
+      "signal": "A later possibility changed",
+      "classification": "later_only",
+      "affects": "Current planning truth",
+      "evidence": "Observed during the wave",
+      "reason": "Forecast amendment is sufficient"
+    },
+    {
+      "id": "D3",
+      "signal": "Evidence needs recording",
+      "classification": "evidence_only",
+      "affects": "Current planning truth",
+      "evidence": "Observed during the wave",
+      "reason": "No issue is warranted"
+    },
+    {
+      "id": "D4",
+      "signal": "A signal was disproven",
+      "classification": "drop",
+      "affects": "Current planning truth",
+      "evidence": "Observed during the wave",
+      "reason": "The evidence falsified it"
+    }
+  ],
+  "open_current_wave_issue_ids": ["A"],
+  "unlaunched_items": [
+    {"id": "U-issue", "kind": "issue"},
+    {"id": "U-forecast", "kind": "forecast"},
+    {"id": "U-uncertainty", "kind": "uncertainty"},
+    {"id": "U-parked", "kind": "parked"}
+  ],
+  "repo_state": {
+    "anchors": ["skills/replan"],
+    "map_status": "No architecture map"
+  }
+}

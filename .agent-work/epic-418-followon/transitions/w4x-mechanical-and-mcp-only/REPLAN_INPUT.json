@@ -1,0 +1,267 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "epic-418-followon \u2014 make agents use the MCP door instead of the CLI",
+      "spec_path": ".agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md",
+      "intent_and_why": "Agents drive their spines through the MCP door and never touch the engine CLI directly; the CLI is an implementation detail behind the door. Entry definitions stay configurable so the work is OS-agnostic by construction. Anything an operator must remember to do by hand is a defect in the tool."
+    },
+    "definition_of_done": [
+      "A dispatched crew drives its own spine through the door, measured from its own call record.",
+      "A respawned agent on the same assignment resumes its lease rather than force-claiming it.",
+      "Constellation agent instructions name the door and not the engine CLI.",
+      "No shipped entry definition hardcodes an interpreter or an absolute path."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Every claim about what happened brings its evidence; a control must reproduce the defect before a fix is believed.",
+      "sufficient_evidence": "Measured from the driving agent's own call record, never from the engine's refusals counter.",
+      "appetite": "One bounded wave; keep out the easy failures rather than making it foolproof."
+    },
+    "hard_constraints": [
+      "settings.json is never touched",
+      "docs/agents/* edits are a human's call",
+      "No merge or push to main while the human is AFK",
+      "Planning makes no direct gh or network mutation"
+    ],
+    "fixed_decisions": [
+      "Launched identities remain stable",
+      "The lease keys on the assignment, not the process instance",
+      "Identity is derived from the spine's own work_id, never hand-typed",
+      "The CLI door stays as a fallback; F is additive",
+      "Agents do not know about the engine CLI; the CLI is used only behind the MCP door",
+      "Mechanical setup is the tool's job, not the operator's"
+    ],
+    "current_wave": {
+      "objective": "Hand every dispatched crew its own spine and a derived, assignment-keyed identity, so an agent drives its own task's spine through the door and a respawn resumes rather than force-claims.",
+      "exit_criteria": [
+        "A crew dispatched through run_crew.py receives SPINE_FILE bound to its own spine and SPINE_SESSION carrying an assignment-keyed identity, verified from the child's environment rather than from prose.",
+        "The lease identity is derived from the spine's own work_id plus the claiming role, excludes the attempt tail, and is not hand-typed anywhere in the shipped path.",
+        "A second dispatch on the same assignment resumes the lease idempotently, with no force and no takeover recorded \u2014 proven by a control that reproduces the force-claim before the change.",
+        "A cold reviewer independent of the implementer has approved the change.",
+        "#555 is carried unchanged and unworked. It stays in this wave because it is a launched identity that may not be silently dropped; its terms are preserved verbatim and no spend is authorized against it this wave. Its disposition returns to the human."
+      ],
+      "issues": [
+        {
+          "id": "M1",
+          "title": "run_crew.py binds each crew's door to its own spine and derives an assignment-keyed lease identity",
+          "desired_outcome": "crew_env() hands the child SPINE_FILE for that crew's own spine and SPINE_SESSION as constellation/<work-id>/<gate>/<role>, derived from the spine's work_id and the role, with no attempt tail. A respawn on the same assignment resumes its lease instead of force-claiming it.",
+          "useful_now": "It is the single wire between two constructs that already exist, and it is what makes a dispatched agent able to use the door at all.",
+          "appetite": "One bounded change to the crew launcher plus tests. Not a rewrite of the engine or the door.",
+          "acceptance_or_falsification_evidence": "A control that reproduces today's behaviour first \u2014 a crew whose door binds to the demo spine, and a relaunch that must force-claim \u2014 then the same two cases passing after the change. Measured from the child's actual environment and the spine's lease record, never from prose.",
+          "implementation_latitude": "Choose how the spine path and role reach crew_env(). Preserve the existing lease semantics exactly; the engine's claim() is not to be modified. Do not open per-call spine addressing in the door.",
+          "hard_constraints_no_gos": [
+            "Do not modify checklist_engine.py::claim semantics",
+            "Do not weaken _identity_violation or the from_child path confinement",
+            "Do not touch settings.json or docs/agents/*",
+            "No merge or push to main; local commits only"
+          ],
+          "local_unknowns": [
+            "Whether the role is already available at the crew_env() call site or must be threaded in",
+            "Whether any existing caller depends on crew_env() not setting SPINE_*"
+          ],
+          "anchors": [
+            "scripts/run_crew.py",
+            "scripts/checklist_engine.py",
+            "scripts/mcp_spine_server.py"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "555",
+          "title": "Make the MCP door launch where python3 is not a command",
+          "desired_outcome": "The door launches from a fresh install on both platforms.",
+          "useful_now": "It was believed to be the blocker on adoption.",
+          "appetite": "One bounded wave",
+          "acceptance_or_falsification_evidence": "Green CI on windows-latest plus a cold review.",
+          "implementation_latitude": "Choose the interpreter resolution; no literal interpreter in the shipped path.",
+          "hard_constraints_no_gos": [
+            "No user-scope writes under a project-scope flag"
+          ],
+          "local_unknowns": [
+            "Whether --wire-mcp writes only where the caller named"
+          ],
+          "anchors": [
+            "scripts/install_constellation.py",
+            ".mcp.json"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Measure whether a dispatched crew actually uses the door once its binding is correct",
+        "why_likely": "F2 already measured that an agent owning its binding uses the door; this extends that condition to crew",
+        "entry_conditions": [
+          "M1 lands and a crew dispatch is observed with a correct binding"
+        ]
+      },
+      {
+        "outcome": "#559 \u2014 remove the CLI fallback for agents",
+        "why_likely": "It only becomes honest once the door is reachable on every dispatch path",
+        "entry_conditions": [
+          "Crew are measured using the door by default"
+        ]
+      },
+      {
+        "outcome": "#421 (C) relocation tranche",
+        "why_likely": "Its entry condition was a settled verb contract and a usable door",
+        "entry_conditions": [
+          "The door is usable by dispatched agents, not merely launchable"
+        ]
+      },
+      {
+        "outcome": "#555 \u2014 Windows launch, resumed with the cold review it is owed",
+        "why_likely": "The fix at 6b947546 is promising and CI-green, but unverified and unreviewed",
+        "entry_conditions": [
+          "The human returns and rules on whether Windows re-enters scope"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether role-spine instructions cause adoption, as distinct from tool availability",
+        "affects": "Whether further instruction investment is warranted",
+        "settle_by": "A measurement whose arms load a corpus containing the edits AND whose door is correctly bound",
+        "current_evidence": "All three F2 arms loaded a pre-edit corpus; arm 3 found the door via ToolSearch, not via any instruction. Recorded as UNMEASURED, not as a negative.",
+        "next_probe": "Re-measure after M1, when a dispatched crew has a working binding"
+      },
+      {
+        "unknown": "Whether a derived identity is reachable at every claim site, or only at crew dispatch",
+        "affects": "Whether the Admiral and Commander spines also stop hand-typing identities",
+        "settle_by": "M1's implementation finding out where claims actually originate",
+        "current_evidence": "Four spines carry four hand-typed conventions, including one never claimed at all",
+        "next_probe": "M1's implementer reports which call sites it could not reach"
+      },
+      {
+        "unknown": "Whether stale leases (#552: 43 on disk, 41 stale, 17 inside archive) share this root cause",
+        "affects": "Whether #552 is absorbed or stays separate",
+        "settle_by": "Inspecting whether the stale leases carry process-scoped identities",
+        "current_evidence": "Hand-typed and UUID identities cannot be resumed, so every recovery mints a new lease and abandons the old one",
+        "next_probe": "Sample the 41 stale leases for identity shape after M1"
+      }
+    ],
+    "parked_possibilities": [
+      "#560 \u2014 --wire-hooks writes the user settings.json under a --scope project flag",
+      "#553/#555 \u2014 Windows launch; parked with status written on the PR, cold review owed",
+      "#556 \u2014 spine conditions should declare their basis at plan time",
+      "#557 \u2014 one append-only override ledger",
+      "#558 \u2014 what each review level checks",
+      "Per-call spine addressing in the door, if a genuine cross-spine mutation ever appears"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "M1",
+      "outcome": "run_crew.py binds each dispatched crew's door to its own spine and derives an assignment-keyed lease identity; merged to main as 27a5adf5.",
+      "evidence": "Three cold review rounds found three real defects, all fixed. Suite 2494 passed / 1 skipped / 1089 subtests on merged main. Two of four crews drove their spines through the door (24 and 22 door calls), leases assignment-keyed with no attempt tail, claimed and released."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "Binding the door to a crew's own spine makes agents use it",
+      "expected": "A correctly bound crew uses the door instead of the CLI",
+      "observed": "PARTLY FALSIFIED. Four crews ran with a correctly bound door. The two told explicitly in their handoff to prefer the door made 24 and 22 calls; the reviewer made 0 and drove its survey through the CLI; one rework crew made 0 and never touched its spine at all. Binding is necessary and not sufficient.",
+      "source": "mcp_calls.jsonl per gate, and the four spine files' lease and gate\u72b6\u614b"
+    },
+    {
+      "claim": "The lease identity fix takes effect regardless of how the agent reaches the engine",
+      "expected": "A crew claims with the assignment identity",
+      "observed": "FALSIFIED for the CLI route. The reviewer's lease was constellation/.../g2-review/reviewer/attempt-1 \u2014 the attempt-tagged name it read out of its own prompt, which build_crew_argv fills with session_name(). The derived identity only takes effect through the door.",
+      "source": "REVIEW_SURVEY.json engine_session, and build_crew_argv at scripts/run_crew.py:302"
+    },
+    {
+      "claim": "run_crew.py's cli backend is usable as shipped",
+      "expected": "A spawned crew can do a crew's work",
+      "observed": "FALSIFIED. build_crew_argv passes no --allowedTools and no --permission-mode. Every dispatch today needed a hand-written gitignored .claude/settings.local.json in the worktree first. All 7 prior crews in this epic used the external backend instead.",
+      "source": "scripts/run_crew.py build_crew_argv; commander-f2/crew-runs.json"
+    },
+    {
+      "claim": "Shipped entry definitions are portable",
+      "expected": "No hardcoded interpreter",
+      "observed": "FALSIFIED. .mcp.json hardcodes \"command\": \"python3\", which on this host is the interpreter WITHOUT pytest and on the owner's Windows box is not a command at all.",
+      "source": ".mcp.json; measured interpreter table 2026-08-10"
+    },
+    {
+      "claim": "docs/agents/CREW_CONTEXT.md describes this host correctly",
+      "expected": "Its Python guidance matches the machine",
+      "observed": "FALSIFIED. It names py as the broken interpreter; py and python are the same install carrying pytest 9.1.1 and /usr/bin/python3 is the one without it. Three handoffs today carried an inline correction to work around it.",
+      "source": "measured 2026-08-10; filed as #561"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "Agents choose the CLI even with a correctly bound door",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth",
+      "evidence": "2 of 4 crews used the door; the 2 that did were told to in their handoff",
+      "reason": "Adoption cannot be achieved by binding alone, so the plan must remove the choice rather than improve the encouragement"
+    },
+    {
+      "id": "D1",
+      "signal": "The launcher requires hand-written per-dispatch permission config",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth",
+      "evidence": "build_crew_argv grants nothing; every dispatch today needed a settings file written first",
+      "reason": "The human ruled mechanical setup is the tool's job"
+    },
+    {
+      "id": "D2",
+      "signal": "Shipped entry definitions hardcode an interpreter",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth",
+      "evidence": ".mcp.json command python3",
+      "reason": "The human replaced the Windows workstream with a standing constraint that entry definitions stay configurable"
+    },
+    {
+      "id": "D3",
+      "signal": "CREW_CONTEXT.md's Python section is wrong on this host",
+      "classification": "blocks_current_wave_exit",
+      "affects": "Current planning truth",
+      "evidence": "three handoffs carried inline corrections",
+      "reason": "The human authorized the docs fix, so it is repairable now"
+    },
+    {
+      "id": "D4",
+      "signal": "Windows launch as a separate workstream",
+      "classification": "drop",
+      "affects": "Current planning truth",
+      "evidence": "the human: do not worry about the windows fix explicitly",
+      "reason": "Replaced by the OS-agnostic entry-definition constraint"
+    }
+  ],
+  "open_current_wave_issue_ids": [
+    "555"
+  ],
+  "unlaunched_items": [
+    {
+      "id": "559",
+      "kind": "parked"
+    },
+    {
+      "id": "560",
+      "kind": "parked"
+    },
+    {
+      "id": "421",
+      "kind": "issue"
+    },
+    {
+      "id": "instruction-causes-adoption",
+      "kind": "uncertainty"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/run_crew.py",
+      "scripts/mcp_spine_server.py",
+      ".mcp.json",
+      "skills/"
+    ],
+    "map_status": "map/INDEX.md regenerated on the M1 merge"
+  }
+}
