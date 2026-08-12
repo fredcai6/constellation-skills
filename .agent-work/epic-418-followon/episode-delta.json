@@ -1,0 +1,652 @@
+{
+  "work_id": "epic-418-followon",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Find out why dispatched crews kept reaching for the engine CLI instead of the MCP door, so the corpus rewrite could target whatever was causing it."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "Crews reached for the CLI because agent-facing instruction still named it, so removing the instruction would remove the behaviour."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Nine of ten dispatch scripts in this epic never set SPINE_FILE. Every crew that 'reached for the CLI' had a door bound to a wave-1 scratch demo spine, so the CLI was the only path to its own spine. The crews were behaving correctly; the environment was broken."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "An entire causal story about agent preference was built on the behaviour, and a corpus-wide instruction rewrite was scoped against it. The rewrite was still worth doing, but the evidence cited for it measured the launcher rather than the agents."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Bind SPINE_FILE, SPINE_SESSION and SPINE_PARENT at launch and check the child process command line, rather than inferring intent from what a crew did after it arrived."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "A behaviour observed under a broken environment reads as a preference, because the environment is invisible in the transcript and the choice is not."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "medium",
+          "statement": "Before attributing a behaviour to an agent's judgment, verify the agent had the alternative available; the launcher's own environment is the first thing to measure."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/transitions/w6x-generate-the-spine/REPLAN_RESULT.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Hand-author the work spines and review surveys for six parallel workstreams, so each crew arrived with a gated plan rather than prose."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "An Admiral authoring its own gates would produce checks that do their job, since the author knows the epic better than any crew does."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Roughly ten work spines and seven review surveys were hand-authored in one wave, and four carried checks that could not do their job: an unquoted pytest selector, a probe importing a module that needs a bound spine, a call using a parameter name the signature does not have, and a population filter wrong twice. Each was caught downstream by a crew, a reviewer or argparse. None was caught by its author."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Four rework rounds that existed only because the check was wrong, and a wave of evidence that the epic's own thesis applies one tier above where it was aimed: a hand-authored check is only as good as the hand that wrote it, and that hand was the unchecked link."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Compile the spine from a typed spec whose check kinds are a closed vocabulary, and refuse to write anything the oracle would reject; a check is never a shell string typed from memory."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "Authoring a check and running it are separated by a dispatch, so the author never sees the failure their own text produces."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 3,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Right-size each dispatch: send an implementer-with-plan for bounded work rather than standing up a full Commander spine for it."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The sizing decision made at each workstream's first pass would remain correct as the work proceeded."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Three of six workstreams grew into multi-round implement-review-rework cycles, which is the shape a Commander owns, and the sizing was never revisited. The human noticed before the Admiral did and asked directly why no Commander was being used."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The Admiral hand-authored every spine, every reviewer handoff and every rework handoff across those rounds, which is both the labour a Commander exists to absorb and the source of the four defective checks recorded separately."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Re-size at every wave boundary rather than only at first dispatch; a workstream on its second review round has already outgrown an implementer-with-plan."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "A sizing decision is made once, when the work looks smallest, and nothing in the loop re-asks it as the work grows."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 4,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/transitions/w7x-lifecycle/REPLAN_RESULT.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Gate every merge on a cold review by a reviewer independent of the implementer, re-running the implementer's own controls."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "Independent reviews would catch what a single review missed, so more rounds would mean more coverage."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "One branch was reviewed five times. The first four each ran real commands and each answered its own questions correctly, and each missed something different: a field that was never quoted, a stale session id present on nine of nine gates, that same id written into a review's own evidence line as proof of completeness, and a divergence one reviewer saw, described accurately, then scoped away. The fifth found nine stale ids nobody had looked for."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Four review rounds established that mechanisms operated while a wrong value rode through all of them; the defect survived every round that was supposed to catch it, and was caught only when a reviewer changed method rather than tried harder."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Ask two questions of every check, not one: does this mechanism work, and is the value it carries correct. The fifth reviewer's difference was treating its own green results as questions."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "A review confirms that a mechanism operates and does not interrogate the value it operates on. Absence reads as correct because there is nothing to look at, and ubiquity reads as correct because nine-of-nine reads as deliberate."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "medium",
+          "statement": "The repo's three-way guard fixture covers absence; nothing covers a value that is wrong but consistent, and that gap is what the fifth round had to close by hand."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Check whether a Commander had honoured the standing instruction to dispatch its crews on Sonnet, by reading the model field on each crew's registry entry."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "An absent model field would mean the flag was never passed, since the field is present on entries that do carry it."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "run_crew.py's cli backend never passed model to build_entry, while the external backend did. Dispatching a real crew with an explicit --model sonnet showed the flag on run_crew.py's own command line and on the child claude -p command line, with the registry entry still recording no model at all."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "A finding was built and logged across nine dispatches on a field that records nothing on the only path that spawns a process, and it was wrong. Every registry entry in this repo's history is silent about model tier for the same reason, so no run record could answer the question that was asked of it."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Verify against the process command line, not the record, until the record is proven to carry the field; then fix the record and pin both paths, because the asymmetry between them is the bug."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "A field that is absent for two different reasons -- never supplied, or supplied and dropped -- cannot distinguish them, and its presence on a sibling code path is exactly what makes the absence look like data."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Hold a rework dispatch until the previous crew in that worktree was confirmed dead, since two crews must never share a worktree."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A pgrep on the crew's command pattern would go quiet once the crew exited, releasing the hold."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The pgrep pattern matched the Admiral's own watcher shells, which contained the pattern as an argument. The check could never go false while the watcher ran, so the hold could never release."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "A dispatch was held for hours on a liveness check that was structurally incapable of clearing, and it cleared only when the watcher PIDs were killed by hand."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "A liveness check must exclude the checker. Match on the child process rather than a string that the watching command itself carries, and ask whether the check can ever return false before trusting it to gate anything."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "This is the epic's own 'a check that cannot fail' defect in the Admiral's operating loop rather than in a spine: a gate whose condition is unsatisfiable by construction reads identically to one that is simply not satisfied yet."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 4,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/context/salvaged-n1-allowedtools-comment.patch"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Close the verb gap by adding spine_capture and spine_amend to the MCP door, so all eighteen engine verbs are reachable without the CLI."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A tool present in the door's TOOLS list would be callable by any dispatched crew."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "CREW_ALLOWED_TOOLS in run_crew.py restates the door's tool list, and the two new names were not added to it. The workstream's own cold reviewer called spine_capture four times, was refused at the permission layer each time with a generic message and no engine refusal to explain why, and fell back to the CLI."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The fallback read as evidence that an agent preferred the CLI, in the very wave whose purpose was to measure door adoption, when the door had in fact been shut on it."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Derive the crew allow-list from the door's own tool list rather than restating it; a coupling maintained by memory has already regressed once."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "A permission-layer denial and a deliberate choice produce the same transcript, so a shut door is indistinguishable from a preference unless the allow-list is checked."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/CURRENT_TRUTH.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/transitions/w7x-lifecycle/REPLAN_INPUT.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Record at the wave-5 boundary which of the epic's five definition-of-done items now held, so the next wave could be planned against what was left."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A workstream's own report that it had removed every CLI mention from agent-facing instruction could be carried into the boundary record."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Remeasured a wave later: 15 CLI-fallback clauses across 11 shipped files and 8 live <engine> tokens across 4 orchestrator templates. The wave-5 cleanup had covered the crew-facing skills and left the orchestrator tier untouched, and its claim was never checked against the corpus."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "A definition-of-done item was recorded as holding for a full wave while being false, and two of the surviving clauses assert that the CLI is the only path for an in-session dispatched crew -- a claim the same epic had already disproved by dispatching one."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Re-run the measurement at the boundary rather than carrying a crew's summary of it; the grep costs seconds and the claim rode for a wave."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "A definition-of-done item is checked when it is first claimed and never again, so a partial fix that reports as complete is never contradicted."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "closeout",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Harvest each commander worktree's CONSTELLATION_FEEDBACK.md before git worktree remove destroys it, as closeout doctrine requires."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "Some worktrees would carry an untracked feedback export that removal would lose."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The file is tracked in this repo, so it appears in every checkout by construction. Across all 21 worktrees it was present, identical and unmodified, with no untracked copy anywhere under any of them. Every crew wrote its feedback into a committed result artifact instead."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The harvest requirement is why 22 worktrees stood at once, held against a rescue that had nothing to rescue; the disk and the merge-conflict surface of map/INDEX.md across those branches were the real cost."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "A close that archives the whole work area it created does not need to guess what to rescue, and is correct whether or not anything was exported."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "The step was written when the export was untracked, and survived the change that tracked it because nothing re-measured whether it still guarded anything."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "medium",
+          "statement": "Commit staged work and launch the next dispatch detached in a single shell command, then read the resulting HEAD."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "git add && git commit && nohup ... & would run the first two synchronously and background only the dispatch."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "& binds looser than &&, so the entire chain was backgrounded. The following git log read a stale HEAD and reported the commit missing, though the work landed correctly moments later."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "A false 'the commit did not land' reading, and the investigation it triggered, on work that was in fact fine."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Group the synchronous half explicitly, or run the commit and the detached launch as separate commands; never read state from the same chain that backgrounds itself."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Carry issue #555 -- the door does not launch where python3 is not a command -- unworked for a wave, with no spend authorized and its disposition reserved to the human."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "An issue carried as unworked has no work done against it, so carrying it costs only the carrying."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The fix already existed on an unmerged branch, fix/mcp-door-launchable, measured against a specific client version with marker-writing launcher scripts and proven on Windows CI. It sat unmerged for three waves while the issue was carried as unworked, and .mcp.json on main still hardcoded python3."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The door remained unlaunchable on the repo owner's own platform for three waves, on the grounds that no spend was authorized, when the spend had already happened and only the merge was missing."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Before carrying an issue as unworked, check whether a branch already answers it; the worktree sweep found this one, which means nothing before the sweep was looking."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "'Carried, no spend authorized' describes a decision about future work and says nothing about work already done, so it stays true and stops being relevant at the same moment."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/launch-orders/LAUNCH_ORDER-C3-lifecycle.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Instruct a Commander in its launch order to pass --parent naming itself and --model naming Sonnet on every crew it dispatches."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A Commander given both instructions in a frozen launch order would put both flags on the command line."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Six sub-crews were dispatched naming the Admiral as parent rather than the dispatching Commander, and none carried an explicit model. The Sonnet instruction appeared once in the launch order as a graded human ruling and nine more times in the Commander's own frozen execute.json, and still never became a flag."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "A sub-crew that blocked would have asked up two rungs, past the only tier that had briefed it, to an Admiral without its handoff in context -- against a standing human ruling that crews fail up one rung at a time."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The spec declares the crews a gate dispatches and the generator emits the dispatch with parent and model already in it, so removing them requires editing a committed file and shows up in a diff."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "Restating an instruction does not make it more likely to be followed: it was present ten times before the dispatch that dropped it. Prose cannot enforce itself, which is the epic's own thesis landing one tier up from where it was aimed."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/transitions/w6x-generate-the-spine/REPLAN_RESULT.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Build a generator that compiles a typed spec into a spine, so an author never writes a check as a shell string from memory."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "Typing the check kinds would remove the class of defect that hand-authored checks produce."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The first generator could still author a check that cannot fail and one that cannot pass: numeric fields reached the compiled shell command unquoted and untyped, and the script probe could not see a check's required arguments. Both were found by driving the generator rather than by reading it."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The defect class the generator exists to close was reproducible inside the generator itself on its first pass, which is what justified the rework round rather than the merge."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Refuse a non-integer on every numeric field, and call the oracle as the literal last statement before writing so any fault or undecidable entry refuses with nothing written."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "A closed vocabulary constrains the shape of a check and not the values inside it, so an untyped field in a typed format is the same footgun with a smaller surface."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Run every spine in this corpus against the engine, each declaring its own config_ref."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A spine naming docs/agents/engine-config.json would be driven under the configuration that file specifies."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The file does not exist. Every spine in the corpus names it, and the engine has been running on defaults throughout, with no refusal and no warning. A dispatched Commander found it while reading its own spine at the understand gate."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Unknown: no run in this epic can say whether it would have behaved differently under the named configuration, because the configuration has never existed to compare against."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Treat a missing config_ref as a refusal rather than a silent default, matching the known adjacent defect where a non-JSON config_ref crashes the engine outright -- the same field is unchecked in both directions."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "A reference that silently falls back to a default cannot distinguish 'configured this way' from 'never configured', and every spine in the corpus inherited the reference by template copy."
+        }
+      ]
+    }
+  ]
+}
