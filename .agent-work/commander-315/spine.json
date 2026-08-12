@@ -633,13 +633,14 @@
   "refusals": 3,
   "engine_session": {
     "session_id": "commander-315-s1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-12T20:25:53.462909+00:00",
     "last_heartbeat": "2026-08-12T20:51:29.006889+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-12T20:54:23.547729+00:00"
   },
   "why_trail": [
     {
