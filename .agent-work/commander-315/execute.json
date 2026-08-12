@@ -1,0 +1,92 @@
+{
+  "work_id": "commander-315",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["e0-context", "g1-implement", "g1-review", "g1-integrate", "g2-corpus"],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read the inherited global doctrine and the project deltas (docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md). The map is DEGRADED-UNPARSEABLE, so the substitutes hash-pinned at the context step stand in: docs/CHECKLIST_SCHEMA.md (lines 39-41 record this exact defect), docs/CHECKLIST_ENGINE_DESIGN.md. Confirm the frozen plan's intent and scope from .agent-work/commander-315/MISSION_FRAME.md, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {"id": "c1", "statement": "doctrine + degraded-map substitutes loaded; plan intent and scope confirmed against MISSION_FRAME.md", "check": null, "satisfied": false},
+        {"id": "c2", "statement": "the frame and the hash-pinned degraded-map substitutes this gate reads are actually present", "check": {"kind": "command", "command": "test -f .agent-work/commander-315/MISSION_FRAME.md && test -f docs/CHECKLIST_SCHEMA.md && test -f docs/CHECKLIST_ENGINE_DESIGN.md"}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "engine: resolve a command check's cwd to the spine's repo root",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch a subagent invoking constellation-implementer. TASK: in scripts/checklist_engine.py, thread the already-available base_dir into _run_check_command and pass the enclosing repo/worktree root as cwd= to the subprocess.run call at line 787. Resolve the root by walking UP from base_dir for a .git entry, accepting BOTH a directory (plain checkout) and a FILE (linked worktree). No .git found, or base_dir is None -> pass cwd=None, i.e. exactly today's inherited-cwd behavior. Add a targeted regression test to tests/test_checklist_engine.py covering: (a) the fail-open -- a decoy file present only in the launcher's cwd must NOT satisfy a check; (b) the false-red -- a file present in the project must satisfy a check launched from elsewhere; (c) the no-repo fallback still inherits cwd; (d) a linked worktree (.git as a FILE) resolves to the worktree, not the main checkout. Integrate the returned IMPLEMENTER_RESULT with: attach g1-implement --type implementer-result --field status=complete",
+      "preconditions": [{"id": "p1", "statement": "execution context loaded and the resolution target (repo root, not spine dir) confirmed from the frame", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)", "check": {"kind": "artifact", "evidence_type": "implementer-result", "match": {"status": "complete"}}, "satisfied": false}],
+      "constraints": [
+        "PRESERVE the POSIX-shell routing and the visible returncode-127 / no-posix-shell failure path. Add cwd= ONLY to the branch that already calls subprocess.run; do not touch the synthetic CompletedProcess branch.",
+        "FORBIDDEN FILES: scripts/hooks/spine_rail.py and scripts/agent_work_root.py must not be edited. If the fix appears to need them, STOP and report -- do not edit.",
+        "Do NOT use agent_work_root.durable_root(): it redirects a linked worktree to the MAIN checkout, which is the opposite of what a check needs.",
+        "No new hard dependency on git being installed -- resolve the root by filesystem walk, not by shelling out to git.",
+        "Never hand-edit any spine.json or execute.json; drive the engine."
+      ],
+      "anchors": {
+        "structural": ["scripts/checklist_engine.py:775-799 _run_check_command", "scripts/checklist_engine.py:802-845 _check_condition (command branch drops base_dir at line 831)", "scripts/checklist_engine.py:3299 main() computes base_dir = path.parent"],
+        "capability": ["command-kind postcondition verification for gated advance/start and survey record --result pass"],
+        "constraint": ["preserve-no-posix-shell-behavior (LAUNCH_ORDER pre-ruling)", "engine-core-serialized: spine_rail.py and agent_work_root.py are forbidden this wave"],
+        "decision": ["cwd resolves to the repo/worktree root enclosing the spine, NOT to base_dir itself -- measured: zero shipped checks are spine-dir-relative, all 17 cwd-dependent ones are repo-root-relative @grade: settled/measured - leans implementation"],
+        "evidence": ["the repro at .agent-work/commander-315/repro_315.py must go from exit 1 to exit 0", "docs/CHECKLIST_SCHEMA.md:39-41 names the repo root as the anchor the corpus assumes", "scripts/generate_spine.py:946 already probes checks with cwd=str(repo_root)"],
+        "confidence_flags": ["map is DEGRADED-UNPARSEABLE, anchor count 0 -- blast radius was enumerated by command over the template corpus instead of read from map references"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "engine cwd fix: independent review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a subagent invoking constellation-reviewer. Verify: the fix resolves cwd to the repo root and not the spine dir; the no-posix-shell path and returncode 127 are byte-for-byte preserved; neither forbidden file was touched; the fallback when no .git exists is inherited cwd; the regression tests genuinely fail against the pre-fix engine rather than passing vacuously. Integrate the returned REVIEW_RESULT.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for this gate", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g1-implement anchors — review verifies the change against the same structural/capability/constraint/decision/evidence anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "engine cwd fix: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the repro and the engine suite yourself, then advance. BLOCK: return for rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for this gate", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "the live repro passes: a decoy in the launcher's cwd no longer satisfies a gate, and the project's own file is visible to a check launched from elsewhere", "check": {"kind": "command", "command": "py .agent-work/commander-315/repro_315.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "the engine test suite passes", "check": {"kind": "command", "command": "py -m pytest tests/test_checklist_engine.py -q 2>&1 | tail -3"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c3", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2-corpus": {
+      "id": "g2-corpus",
+      "title": "corpus: re-measure the blast radius against the landed fix",
+      "imperative": "REASONING GATE -- no crew. Crew waiver reason: the deliverable is a measurement over a corpus this Commander already enumerated, not code or an independently-verifiable change; a crew would re-derive the same enumeration with less context. Re-run the by-command enumeration against the landed fix and record, for EVERY hit, its disposition: repaired, or explicitly ruled correct under the new resolution. State the measured count against the filed claim of five. Repair any check the fix actually made wrong; if the count is zero, say so with the command that shows it.",
+      "preconditions": [{"id": "p1", "statement": "g1 integrated: the engine fix has landed", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "every command check in the shipped template corpus is enumerated by command and dispositioned; the measured count is stated against the filed claim of five", "check": null, "satisfied": false},
+        {"id": "c2", "statement": "the broader suite is green -- the fix did not break a check elsewhere in the corpus", "check": {"kind": "command", "command": "py -m pytest tests/ -q -x --timeout=600 2>&1 | tail -5"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false}
+      ],
+      "constraints": ["Repairs are limited to shipped templates. Any repair that would touch a forbidden engine-core file is floated to the Admiral instead."],
+      "anchors": {
+        "structural": ["skills/*/templates/*.json (source corpus, 22 command checks)", ".agent-work/templates/*.json (installed mirror, 21 command checks)"],
+        "capability": ["relative-path resolution for every authored command check"],
+        "constraint": ["repairs limited to shipped templates"],
+        "decision": ["the filed count of five is an inherited claim, re-measured here @grade: settled/measured - leans acceptance"],
+        "evidence": ["measured 17 of 22 cwd-dependent in the source corpus before the fix; zero authored spine-dir-relative, so zero repairs expected"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}
