@@ -48,5 +48,30 @@
     "exit_code": 0,
     "result_present": true,
     "result_fresh": true
+  },
+  {
+    "crew_id": "constellation/epic-559/c2-generate-the-spine/rework-review/reviewer/attempt-1",
+    "work_id": "epic-559/c2-generate-the-spine",
+    "gate": "rework-review",
+    "role": "reviewer",
+    "attempt": 1,
+    "status": "completed",
+    "session_name": "constellation/epic-559/c2-generate-the-spine/rework-review/reviewer/attempt-1",
+    "backend": "cli",
+    "pid": 4180888,
+    "worktree": ".",
+    "handoff": ".agent-work/epic-559/c2-generate-the-spine/REVIEW_HANDOFF.md",
+    "result": ".agent-work/epic-559/c2-generate-the-spine/REVIEWER_RESULT.md",
+    "spine": null,
+    "parent": "admiral-epic-418-followon",
+    "stdout": ".agent-work/epic-559/c2-generate-the-spine/crew-runs/rework-review-reviewer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/epic-559/c2-generate-the-spine/crew-runs/rework-review-reviewer-attempt-1.stderr.txt",
+    "started_at": "2026-08-12T04:48:34.972326+00:00",
+    "last_heartbeat": "2026-08-12T05:05:40.773119+00:00",
+    "completed_at": "2026-08-12T05:05:40.773119+00:00",
+    "abandoned": false,
+    "exit_code": 0,
+    "result_present": true,
+    "result_fresh": true
   }
 ]

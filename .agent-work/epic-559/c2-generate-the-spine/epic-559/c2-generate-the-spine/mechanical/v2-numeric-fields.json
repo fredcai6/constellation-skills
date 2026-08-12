@@ -1,21 +1,21 @@
 {
   "contract": 1,
-  "step": "r4-quality",
+  "step": "v2-numeric-fields",
   "mechanical": {
     "run": "epic-559/c2-generate-the-spine",
     "project": "constellation-skills",
     "role": "reviewer",
     "refusals": 0,
-    "spine-step": "r4-quality",
+    "spine-step": "v2-numeric-fields",
     "rework-count": 0,
     "failed-commands": 0,
     "reopens": 0,
-    "context-manifest-ref": "ctx-epic-559/c2-generate-the-spine-r4-quality@09cb5a4fa6ca452bc4ecdcb33895a841daea0177",
+    "context-manifest-ref": "ctx-epic-559/c2-generate-the-spine-v2-numeric-fields@1590ce45e58443cb91d9402a316d16a49446a7f0",
     "artifact-ref": []
   },
   "refused": [],
   "run": {
     "work_id": "epic-559/c2-generate-the-spine",
-    "generated_at": "2026-08-12T05:02:53Z"
+    "generated_at": "2026-08-12T05:03:40Z"
   }
 }

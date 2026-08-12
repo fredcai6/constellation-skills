@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "v2-numeric-fields",
+  "files": [],
+  "repo_rev": {
+    "commit": "a9e6e0e1b4a90c6ee3e4bcab48ca470f3189b3a2"
+  },
+  "run": {
+    "work_id": "epic-559/c2-generate-the-spine",
+    "generated_at": "2026-08-12T05:03:40Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/c2-generate-the-spine",
+      "repo": "/home/tommy/projects/constellation-skills-wt/c2-generate-the-spine",
+      "durable": "/home/tommy/projects/constellation-skills-wt/c2-generate-the-spine"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/c2-generate-the-spine"
+    }
+  }
+}
