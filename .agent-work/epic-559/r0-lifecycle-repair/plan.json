@@ -240,7 +240,8 @@
             "kind": "command",
             "command": "git worktree remove --force ../r0-verify 2>/dev/null; git worktree prune; git worktree add --detach ../r0-verify HEAD && cd ../r0-verify && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m3-verify-1"
         },
         {
           "id": "c2",
@@ -249,7 +250,8 @@
             "kind": "command",
             "command": "test \"$(python scripts/validate_spine.py --sweep --root . 2>&1 | grep -cE '^\\s+\\[')\" -eq 23"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m3-verify-2"
         },
         {
           "id": "c3",
@@ -258,7 +260,8 @@
             "kind": "command",
             "command": "grep -q 'Workflow Feedback' .agent-work/epic-559/r0-lifecycle-repair/IMPLEMENTER_RESULT.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m3-verify-3"
         }
       ],
       "constraints": [
@@ -266,11 +269,45 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m3-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "git worktree remove --force ../r0-verify 2>/dev/null; git worktree prune; git worktree add --detach ../r0-verify HEAD && cd ../r0-verify && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(python scripts/validate_spine.py --sweep --root . 2>&1 | grep -cE '^\\s+\\[')\" -eq 23",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-verify-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'Workflow Feedback' .agent-work/epic-559/r0-lifecycle-repair/IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -298,6 +335,13 @@
       "why": "close_work now classifies each top-level entry (tracked / untracked-not-ignored / untracked-and-ignored via git check-ignore) and moves the untracked-ignored case on the filesystem directly, since git add refuses an untracked ignored path outright -- this is exactly the mcp_calls.jsonl/mcp_server_started shape the MCP door leaves behind. The \"everything else\" batch is wrapped: a failure partway through restores every already-moved entry (including a filesystem-moved ignored one and a partially-staged git rename) before the exception propagates, so the work area is never left split. Spine-last stays deliberately OUTSIDE that rollback wrapping: a failure at that already-last step still leaves spine and journal at their original, retryable path -- unchanged, still covered by the existing TestCloseWorkSpineLastUnderInterruption / TestCloseWorkDifferingBasenameMandatory tests, both still green. New fixture (_make_work_area with ignored_file=) builds a work area carrying a gitignored file via a real, committed .gitignore. RED observed and FALSIFIED both attested with the mutation experiment (c2). Full suite: 2934 passed, 3 skipped, 1121 subtests (baseline was 2932; +2 for the two new tests).",
       "mechanical": false,
       "ts": "2026-08-12T14:19:41.536146+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-verify",
+      "why": "Committed the fix (388f9391) and the result (ef29f3ac), pushed both to origin/epic-559/c3-lifecycle -- the existing branch backing PR #564, not merged. Verified green from a foreign detached checkout at the fix commit (git worktree add --detach, not this worktree): 2933 passed, 4 skipped, 1121 subtests -- the 4th skip is the fixed worktree test correctly skipping outside the wt-root convention, no failures. Spine sweep still reports 23 fault lines across the same 8 files, no movement. IMPLEMENTER_RESULT.md written with its Workflow Feedback section, including the third defect (run_crew.py registering a self-closing run as failed) reported per the launch order, not fixed.",
+      "mechanical": false,
+      "ts": "2026-08-12T14:26:36.514562+00:00"
     }
   ]
 }
