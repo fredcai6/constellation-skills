@@ -1,0 +1,48 @@
+{
+  "contract": 1,
+  "step": "context",
+  "files": [
+    {
+      "root": "skill",
+      "path": "references/global-orchestrator.md",
+      "rev": null
+    },
+    {
+      "root": "skill",
+      "path": "references/global-everyone.md",
+      "rev": null
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "rev": "10c0027e40163ceebbaf0eaa5c9560c60df641c9"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/GLOSSARY.md",
+      "rev": "6594c7c8ec53d1c2f450ea24f6e634d4fe1e2629"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/engine-config.json",
+      "rev": null
+    }
+  ],
+  "repo_rev": {
+    "commit": "293b77215e5f2e8d5a7c33dcc78be5b784faabaa"
+  },
+  "run": {
+    "work_id": "epic-559/c3-lifecycle",
+    "generated_at": "2026-08-12T08:28:43Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle",
+      "repo": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle",
+      "durable": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle"
+    }
+  }
+}

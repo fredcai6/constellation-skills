@@ -103,4 +103,6 @@ Stop and return if: allowed scope must be exceeded, a specific exclusion must be
 ## Return Format
 Return IMPLEMENTER_RESULT: completed slice, files changed, test mode satisfied, evidence produced, assumptions used, stop conditions hit, out-of-scope observations, workflow feedback (what in this handoff or the workflow made the work harder than it needed to be).
 
+The result's `Return status` field (`complete | partial | blocked | out-of-scope | failed`, `skills/workbench/references/status-model.md`) is what the Commander copies verbatim, lowercase, into this gate's `implementer-result` evidence as the `status` field — the gate's postcondition matches on that exact field name and exact-case value, so write it lowercase here.
+
 **Delivery.** Write the full `IMPLEMENTER_RESULT` to `.agent-work/<work-id>/crew-handoffs/<gate>-implementer-result.md` before ending your turn — that write is the delivery, and it is what a resumed or relaunched Commander finds regardless of which instance dispatched you. `SendMessage` an announcement to the dispatching Commander too, but treat it as a best-effort courtesy ping, not the delivery itself: the instance you address may have relaunched or handed off in the meantime and no longer resolve, or (dispatched as a subagent) may not be addressable from your thread at all — a missing ping is not a missing result.

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "b3-verify",
+  "mechanical": {
+    "run": "epic-559/b-instructions-to-checks",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "b3-verify",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/b-instructions-to-checks-b3-verify@7ba3a2d81070687c650823e7e6233d88663633c2",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/b-instructions-to-checks",
+    "generated_at": "2026-08-11T05:15:31Z"
+  }
+}

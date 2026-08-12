@@ -276,6 +276,54 @@ manifest is not a durable record unless something copies it out. **Cardinality:*
 is produced per spine *step*, not per episode, so a consumer that thinks in episodes has to decide
 which step's manifest it means. Neither is settled by this substrate.
 
+## A second front door: the MCP server (#424, epic 418 workstream F)
+
+`scripts/mcp_spine_server.py` is a second interface onto the same engine, beside the CLI. It speaks
+newline-delimited JSON-RPC 2.0 over stdio — the MCP stdio transport — with **zero dependencies**, so
+no SDK enters the corpus.
+
+**It wraps the engine; it never reimplements it.** Every tool builds an argv and calls
+`checklist_engine.main(argv)`, capturing stdout, stderr and the exit code. Refusals, recovery hints,
+rails, the trip ledger, the journal sidecar and lease enforcement all ride through unchanged because
+none of them is re-derived. A non-zero exit surfaces as `isError: true` carrying the engine's own
+output verbatim, so a model sees a failed tool call rather than prose it must parse to notice failure.
+`git diff` against `checklist_engine.py` for the whole workstream is empty, and a test asserts the
+CLI projection and the MCP tool result carry **byte-identical** imperative text for every gate in
+every shipped template (`tests/test_mcp_imperative_equivalence.py`, 61 gates across 12 templates,
+enumerated by walking the tree so a template added later is covered automatically).
+
+**Identity rides the environment, not a generated file.** The server binds `SPINE_FILE`,
+`SPINE_ENGINE` and `SPINE_SESSION` at launch from its environment, deliberately **not** as tool
+arguments, so a model cannot point the door at another spine or another identity mid-conversation.
+The committed project-scope `.mcp.json` uses `${VAR:-default}` expansion, so each dispatch supplies
+its own values and each gets its own server instance and its own reading. This is measured, not
+assumed: two `claude -p` dispatches from one directory through one committed config, differing only
+in their environment, each returned its own spine's reading.
+
+**A per-dispatch config generator was built and then removed** (`scripts/gen_mcp_config.py`,
+tombstoned). It was justified by the belief that a shared `.mcp.json` binds one identity for all
+consumers; `${VAR}` expansion disproves that. The last argument for keeping it was that an in-session
+subagent might share its parent's already-launched server, putting that case beyond `${VAR}`'s reach.
+That was measured **true** — a Task-tool subagent inherits its dispatching process's MCP scope
+wholesale — and it still did not save the generator, because a generated config also binds at server
+launch **per process**: it names a case *neither* mechanism reaches. **Do not reintroduce per-dispatch
+config generation on identity grounds without new evidence.** Per-dispatch identity scoping is per
+top-level process, not per agent-turn; giving Task-tool-dispatched crews distinct spine identities
+would need its own design.
+
+**Inheritance fails closed**, and the test proving it carries a positive control in the assertion
+path (`tests/test_mcp_identity.py`): "a refusal or no identity" is also exactly what total
+non-installation produces, so the door is proven up and serving before any no-identity result is
+allowed to count.
+
+**What the door is worth, measured.** Driving a real role spine, a cold agent through the door used
+about 18% fewer engine invocations than through the CLI — but with **zero** malformed calls in either
+arm. The saving is not the door absorbing fumbles, as the design assumed; it is the schema arriving
+with the tools, so nothing has to be looked up. Against that, a typed tool call carries exactly one
+verb and cannot batch, so the door costs roughly 1.8x as many composed tool calls as a shell that
+chains several invocations per command. Full write-up and raw records: issue #424's
+`MEASUREMENT.md`.
+
 ## Evidence: gate on type/shape, not quality
 
 The engine does **not** judge whether work is good. A gate declares the **evidence types** required before it can close, and the engine checks **presence and minimal shape** only:

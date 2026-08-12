@@ -1,0 +1,9 @@
+The review is complete. Summary:
+
+**Verdict: BLOCK**
+
+I drove my own `REVIEW_SURVEY.json` through the checklist engine (nothing was bound as my own checklist — `crew-runs.json` recorded `"spine": null` for this dispatch, so I built and drove `.agent-work/epic-559/c3-lifecycle/g1-review/review.json` per the reviewer skill's convention). I reproduced every claimed result independently — full suite (2852 passed/3 skipped/1121 subtests), sweep (23), and the three load-bearing evidence items — and additionally mutated two of the guards (the occupied-worktree check, the rollback except-clause) to confirm they genuinely fail red, and instrumented `_rollback` as a spy to prove the rollback tests remove a worktree/branch that really existed rather than merely asserting "never created."
+
+The implementation is solid and faithfully follows `LIFECYCLE_CONTRACT.md`. One confirmed blocking defect: `scripts/spine_lifecycle.py:258` writes the compiled `spine.json` without `newline="\n"`, violating the project's own explicit Windows-write rule — and this repo's CI genuinely runs on `windows-latest`, so it's a live, untested, silently-wrong gap rather than a theoretical one. One-line fix.
+
+I also flagged an out-of-scope engine bug I hit incidentally (`episode_capture.manifest_root` doubles the work-id path for exactly the review-survey path convention this skill recommends) and a minor non-blocking Fowler-pass observation (duplicated `subprocess.run` calls in `_rollback`). The result artifact is written at `.agent-work/epic-559/c3-lifecycle/crew-handoffs/g1-reviewer-result.md`.

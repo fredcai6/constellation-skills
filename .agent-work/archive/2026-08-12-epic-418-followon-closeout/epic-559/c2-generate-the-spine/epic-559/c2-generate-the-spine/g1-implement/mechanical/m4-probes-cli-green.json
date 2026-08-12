@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-probes-cli-green",
+  "mechanical": {
+    "run": "epic-559/c2-generate-the-spine/g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m4-probes-cli-green",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c2-generate-the-spine/g1-implement-m4-probes-cli-green@36ed988759fb3f766a154ec28de3285775ce2dcc",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c2-generate-the-spine/g1-implement",
+    "generated_at": "2026-08-11T16:52:13Z"
+  }
+}

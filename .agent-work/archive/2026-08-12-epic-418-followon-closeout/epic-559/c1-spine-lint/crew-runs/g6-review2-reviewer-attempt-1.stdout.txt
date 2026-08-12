@@ -1,0 +1,9 @@
+The round-2 review is complete: **APPROVE**, driven fully through the engine (11 survey items recorded, consolidated, lease released), with the result written to `.agent-work/epic-559/c1-spine-lint/REVIEWER_RESULT2.md`.
+
+Summary of what I found, independently reproduced:
+- **w1 (the decisive item) is clean** — re-swept 553 files myself; faults 1/3/4 match the crew's counts exactly (no regression), fault-2 down to the same single true positive, zero new false positives.
+- **w4** — verified the surviving true positive end-to-end via git history and a live pytest run: genuinely zero-collect today.
+- **w2/w3** — found a real, narrow gap: a bare `pytest` (no `-m`) command still falls back to `sys.executable`, so on this exact documented host (`python3` lacking pytest), a genuinely-vacuous check silently reads "OK" — which directly contradicts one claim in `IMPLEMENTER_RESULT.md`. Judged non-blocking (not a new false positive, not a regression, rare in the corpus, outside the rework's named scope) but flagged clearly for a doc correction.
+- **w5** — found the Admiral's own `check_corpus_fp.py` undercounts its claimed population by 44% (14 of a real 25 files) via a filename-substring filter — the same anti-pattern the crew's own fix elsewhere rejected. Not the crew's to fix; routed to Triage as `tc1`.
+
+Also caught and corrected a real discrepancy in my own workflow feedback: the handoff text said to write the Fowler record to `FOWLER_PASS2.json`, but the survey's binding postcondition pointed at `FOWLER_PASS.json` — I followed the engine's mechanical check (correct per doctrine) and made sure to name the conflict rather than let it pass silently.

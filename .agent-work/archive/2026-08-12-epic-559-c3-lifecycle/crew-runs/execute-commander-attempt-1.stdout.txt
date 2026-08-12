@@ -1,0 +1,26 @@
+**Run complete.** All ten spine steps terminal, lease released last, work area archived, PR #564 open with the merge handed up to the Admiral.
+
+| | |
+|---|---|
+| Suite | **2824 → 2932** passed, 3 skipped, 1121 subtests |
+| Sweep | **23 → 23** — no shipped template moved |
+| Gates | 5, each implement → review → integrate; every verdict **APPROVE** (g1 after one BLOCK + rework) |
+| Crews | 15, **all** with `--parent` naming this Commander and explicit `--model` |
+
+**All three pieces ship**: `open_work` (one call → branch, worktree, work area, origin-stamped spine, self-verified, rolls back), `close_work` (archives spine-last, "ready to PR"), and the declared dispatch (a wrong parent now **fails a gate** — I confirmed exit 1 by hand). Both carried findings fixed.
+
+**Three of the launch order's premises were wrong, and the corrections mattered more than the code:**
+- The chicken-and-egg isn't the import-time `KeyError` — `.mcp.json` defaults `SPINE_FILE`. The real obstacles are `_identity_violation` and the `call_tool` AST pin, which is why `spine_open` is a *sibling* with its own containment pin.
+- `not_yet_written = "false"` doesn't misread a field — it compiles the check to `None`, **deleting the gate's check**.
+- The archive convention on disk is date-prefixed (38 of 41), not `archive/<work-id>/`.
+
+**Three things I got wrong, all on the record rather than tidied away:**
+- I **blocked the archive gate on a misreading of my own launch order** — "It does not open the PR" constrains the close *tool*, not me. I resumed, pushed, and opened the PR; the block-then-resume stands in the journal.
+- A purity check I wrote returned a **false positive** (matched a docstring) and nearly produced a spurious BLOCK.
+- A pathspec-scoped `git add -A` swept in a stray directory and left a commit describing code it didn't contain. Scoped `-A` is still `-A`.
+
+**Two findings the Admiral should read first:**
+1. **All 15 crews were dispatched without `--spine`**, so each inherited my `SPINE_FILE`/`SPINE_SESSION` and was bound to *my* spine under *my* identity. One claimed it as `claimed_by: "implementer"` and released it mid-run. The journal is intact — all 49 entries mine and hash-chained — but **`claim`/`release` are never journaled**, so nothing in the append-only record could have shown it.
+2. **`close_work` has a defect I found by running it on this run's own work area**: it `git add`s gitignored entries (the door's own `mcp_calls.jsonl`) and **half-succeeds with no rollback** — the property `open_work` has and I never asked `close_work` for. Every test built its work area with `open_work`, which never produces an ignored file: the matched-pair blindness the critic named for the *filename*, in a second place I didn't generalize to. **Spine-last held** under that real interruption, which is better evidence than the simulated fixture. I did **not** patch it post-terminal; it's handed up as the first follow-up.
+
+Six triage candidates are issue-ready in `TRIAGE_RECOMMENDATIONS.md`. Nothing filed, per your pre-ruling.

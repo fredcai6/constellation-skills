@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-closeout",
+  "mechanical": {
+    "run": "g3fix3-utf8b-cli-decode",
+    "project": "constellation-skills",
+    "role": "g3fix3-implementer",
+    "refusals": 1,
+    "spine-step": "m4-closeout",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3fix3-utf8b-cli-decode-m4-closeout@7b987dd91d5dfb9a7ffcd4e7bf595d10ad65f3c2",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3fix3-utf8b-cli-decode",
+    "generated_at": "2026-08-10T02:28:07Z"
+  }
+}

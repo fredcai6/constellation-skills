@@ -1,0 +1,401 @@
+{
+  "work_id": "g1-implement-mcp-door-424-rework-2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-delete-gen-config",
+    "m2-rewire-spine-server-tests",
+    "m3-rewire-identity-tests",
+    "m4-fix-server-docstring",
+    "m5-rebuild-map",
+    "m6-full-suite-and-commit"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), project deltas (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md if present), and the g1 rework handoff in full (crew-handoffs/g1-implementer-handoff-rework.md). Read scripts/gen_mcp_config.py, scripts/mcp_spine_server.py, tests/test_mcp_spine_server.py, and tests/test_mcp_identity.py in full to know exactly what generation-specific coverage exists before touching anything. Verify the handoff is complete (task, intent, scope, exclusions, evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff + all four target source files read in full; handoff verified complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md, global-everyone.md, checklist-engine.md; docs/agents/CREW_CONTEXT.md + GLOSSARY.md not needed beyond what's already loaded via skill; read g1-implementer-handoff-rework.md in full; read scripts/gen_mcp_config.py, scripts/mcp_spine_server.py, tests/test_mcp_spine_server.py, tests/test_mcp_identity.py in full. Handoff verified complete: task, why, scope, exclusions, test mode, close criteria, evidence, reporting all present. Baseline suite reproduced green: 2175 passed, 1 skipped, 1061 subtests passed, 0 failed."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-delete-gen-config": {
+      "id": "m1-delete-gen-config",
+      "title": "Delete scripts/gen_mcp_config.py",
+      "imperative": "Commander's decision is made and is not mine to relitigate: git rm scripts/gen_mcp_config.py. If I find hard evidence the removal is wrong, STOP here and report it as a blocker with the evidence instead of proceeding.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded and handoff verified complete (m0-context)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "file gone from working tree and staged as a deletion",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && test ! -f scripts/gen_mcp_config.py && git diff --cached --name-status | grep -qE '^D[[:space:]]+scripts/gen_mcp_config.py$'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-delete-gen-config-1"
+        }
+      ],
+      "constraints": [
+        "do not compensate with a same-purpose helper under another name"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-delete-gen-config-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && test ! -f scripts/gen_mcp_config.py && git diff --cached --name-status | grep -qE '^D[[:space:]]+scripts/gen_mcp_config.py$'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-rewire-spine-server-tests": {
+      "id": "m2-rewire-spine-server-tests",
+      "title": "Rewire tests/test_mcp_spine_server.py off gen_mcp_config.py",
+      "imperative": "Drop GenMcpConfigTests and the load_module helper (no longer needed once nothing loads gen_mcp_config as a module). Carry the env-seam coverage those tests were really proving (SPINE_FILE/SPINE_ENGINE/SPINE_SESSION binding at server-launch, and the server treating SPINE_SESSION as an opaque string with no '#'-parsing of its own) onto a directly env-launched server and/or the shipped .mcp.json ${VAR} path. Update the module docstring and the GEN_CONFIG/MCP_JSON header block to stop naming the deleted file. Do not delete coverage silently -- state carried-over vs dropped in the result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "gen_mcp_config.py deleted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "gen_mcp_config.py deleted and staged (m1)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no reference to gen_mcp_config left in the file; suite green",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && ! grep -q gen_mcp_config tests/test_mcp_spine_server.py && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_spine_server.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-rewire-spine-server-tests-1"
+        }
+      ],
+      "constraints": [
+        "do not weaken any assertion to make rewiring easier",
+        "carried-over vs dropped assertions must be stated explicitly in the result"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-rewire-spine-server-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && ! grep -q gen_mcp_config tests/test_mcp_spine_server.py && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_spine_server.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-rewire-identity-tests": {
+      "id": "m3-rewire-identity-tests",
+      "title": "Rewire tests/test_mcp_identity.py DC3 parent off gen_mcp_config.py",
+      "imperative": "In DC3InheritanceMechanismTests.setUp, replace the gen_mcp_config.py subprocess call with a parent launched directly from the environment seam (ServerInstance with a directly-composed SPINE_SESSION, matching what the other classes in this file already do). The DC3 positive control must stay in the assertion path and stay demonstrated red for its manipulations and green when correct; the ambient-leak counterfactual must still prove the no-leak assertion is not vacuous. Update GEN_CONFIG references and class docstrings that name the deleted file's mechanism.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "gen_mcp_config.py deleted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "gen_mcp_config.py deleted and staged (m1)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no reference to gen_mcp_config left in the file; DC3 positive control and ambient-leak counterfactual still present; suite green",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && ! grep -q gen_mcp_config tests/test_mcp_identity.py && grep -q 'class DC3PositiveControlTests' tests/test_mcp_identity.py && grep -q test_ambient_leak_counterfactual_would_have_been_caught tests/test_mcp_identity.py && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-rewire-identity-tests-1"
+        }
+      ],
+      "constraints": [
+        "do not weaken any DC2/DC3 guarantee to make rewiring easier"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-rewire-identity-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && ! grep -q gen_mcp_config tests/test_mcp_identity.py && grep -q 'class DC3PositiveControlTests' tests/test_mcp_identity.py && grep -q test_ambient_leak_counterfactual_would_have_been_caught tests/test_mcp_identity.py && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-fix-server-docstring": {
+      "id": "m4-fix-server-docstring",
+      "title": "Correct the dangling SPINE_SESSION docstring reference",
+      "imperative": "In scripts/mcp_spine_server.py's module docstring, the SPINE_SESSION line says '(gen_mcp_config.py composes this key; the server just uses whatever string it is handed)'. Keep the true half (the server treats the string as opaque) and re-point the composition to the caller's environment -- do not replace it with a fresh unmeasured claim.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "gen_mcp_config.py deleted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "gen_mcp_config.py deleted and staged (m1)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no reference to gen_mcp_config left in the file",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && ! grep -q gen_mcp_config scripts/mcp_spine_server.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-fix-server-docstring-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-fix-server-docstring-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && ! grep -q gen_mcp_config scripts/mcp_spine_server.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-rebuild-map": {
+      "id": "m5-rebuild-map",
+      "title": "Stage changes and rebuild the code map",
+      "imperative": "git add the touched files (scripts/gen_mcp_config.py deletion, scripts/mcp_spine_server.py, tests/test_mcp_spine_server.py, tests/test_mcp_identity.py) so code_map's git-ls-files-based discovery sees them, then run python -m scripts.code_map build --root . and stage the regenerated map/ output.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all three source edits complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "all three source edits complete (m2 tests/test_mcp_spine_server.py, m3 tests/test_mcp_identity.py, m4 scripts/mcp_spine_server.py) and m1 deletion staged"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map rebuilt with gen_mcp_config gone from map/INDEX.md",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && python -m scripts.code_map build --root . && ! grep -q gen_mcp_config map/INDEX.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-rebuild-map-1"
+        }
+      ],
+      "constraints": [
+        "stage deletions/additions before rebuilding, since discovery enumerates git ls-files"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-rebuild-map-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && python -m scripts.code_map build --root . && ! grep -q gen_mcp_config map/INDEX.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-full-suite-and-commit": {
+      "id": "m6-full-suite-and-commit",
+      "title": "Full suite green, then commit",
+      "imperative": "Run the full suite (FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests), confirm 0 failed and account for the pass-count delta against the 2175/1/1061 baseline. Confirm git diff -- scripts/checklist_engine.py is empty. Stage the map output and commit everything to epic-418/f-424-mcp-door.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "map rebuilt and staged",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "map rebuilt and map/INDEX.md staged (m5)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite 0 failed; checklist_engine.py untouched; commit created",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests 2>&1 | tail -5 | grep -qE '0 failed|passed' && git diff -- scripts/checklist_engine.py | wc -l | grep -qx 0 && git log -1 --format=%H"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-full-suite-and-commit-1"
+        }
+      ],
+      "constraints": [
+        "never write settings.json",
+        "do not close any issue",
+        "do not promote anything into docs/agents/*"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-full-suite-and-commit-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests 2>&1 | tail -5 | grep -qE '0 failed|passed' && git diff -- scripts/checklist_engine.py | wc -l | grep -qx 0 && git log -1 --format=%H",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/epic-418-followon/commander-424/g1/implementer/attempt-2",
+    "status": "released",
+    "claimed_at": "2026-08-09T21:34:08.506654+00:00",
+    "last_heartbeat": "2026-08-09T21:44:53.923883+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T21:46:29.008612+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff and all target source files read; baseline suite reproduced green before touching anything.",
+      "mechanical": false,
+      "ts": "2026-08-09T21:34:22.701381+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-delete-gen-config",
+      "why": "gen_mcp_config.py removed via git rm and staged as a deletion; the removal decision is Commander's and confirmed by the check.",
+      "mechanical": false,
+      "ts": "2026-08-09T21:34:44.373379+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-rewire-spine-server-tests",
+      "why": "GenMcpConfigTests and load_module dropped; env-seam coverage (SPINE_FILE/SPINE_ENGINE/SPINE_SESSION binding at launch, SPINE_SESSION as opaque string with '#') carried onto a new McpJsonVarExpansionLaunchTests class that launches the real server through the committed .mcp.json command/args with caller-set env vars. build_config-specific unit tests (key composition, '#' rejection, CLI writer) dropped as genuinely generation-only -- that validation logic no longer exists anywhere in the repo. 21 passed (was 24; -4 generation-only, +1 replacement).",
+      "mechanical": false,
+      "ts": "2026-08-09T21:37:31.059935+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-rewire-identity-tests",
+      "why": "DC3InheritanceMechanismTests.setUp now launches the parent directly via ServerInstance with a composed SPINE_SESSION ('parent-session#parent-agent'), same pattern as DC2 classes elsewhere in the file, instead of shelling out to the deleted generator. All downstream assertions (positive control red/green, no-identity for an unconfigured subagent, ambient-leak counterfactual) are unchanged in substance and still pass: 12/12, identical to baseline -- no coverage lost.",
+      "mechanical": false,
+      "ts": "2026-08-09T21:39:08.592659+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-fix-server-docstring",
+      "why": "SPINE_SESSION docstring line re-pointed to the caller's own environment (what .mcp.json's ${VAR} expansion sets), keeping the true half (server treats the string as opaque) and dropping the dangling gen_mcp_config.py reference. No unmeasured claim added.",
+      "mechanical": false,
+      "ts": "2026-08-09T21:39:32.168066+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-rebuild-map",
+      "why": "All four source edits staged (gen_mcp_config.py deletion, mcp_spine_server.py docstring, both test files). Code map rebuilt via python -m scripts.code_map build --root . (129 modules, scripts.gen_mcp_config gone from the corpus). Only map/INDEX.md and map/ids.jsonl are git-tracked per .gitignore; INDEX.md restaged with no gen_mcp_config reference; ids.jsonl unchanged.",
+      "mechanical": false,
+      "ts": "2026-08-09T21:40:50.439332+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-full-suite-and-commit",
+      "why": "Full suite green: 2172 passed, 1 skipped, 1061 subtests passed, 0 failed (baseline was 2175/1/1061; -3 delta fully accounted for). git diff -- scripts/checklist_engine.py is empty (0 lines both staged and unstaged). Committed to epic-418/f-424-mcp-door at fda35ec0a62c72d4cb66a675da02de5fd35e3b7e (5 files changed, 124 insertions, 228 deletions).",
+      "mechanical": false,
+      "ts": "2026-08-09T21:44:53.923861+00:00"
+    }
+  ]
+}

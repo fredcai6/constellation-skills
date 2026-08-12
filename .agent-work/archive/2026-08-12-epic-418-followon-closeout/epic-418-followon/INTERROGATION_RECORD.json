@@ -1,0 +1,75 @@
+{
+  "goal": "Settle the latitude contract for epic-418-followon: the remaining course of epic #418 — #424 (F, MCP front door), #421 (C, relocate gate instructions), #423 (E, backlog re-cut plus the terminal shipped-vs-obligation check).",
+  "mode": "interactive",
+  "questions": [
+    {
+      "id": "q1",
+      "kind": "fact",
+      "question": "What does the follow-on inherit — what is settled, what is open, and what does each of #424/#421/#423 actually require?",
+      "status": "resolved",
+      "resolution": "The predecessor run epic-418-redux is complete on all four spine steps (.agent-work/epic-418-redux/spine.json: init/latitude/execute/closeout all 'complete'). #418's only open children are #424, #421 and #423 (gh issue list --search affbd7f9a456). The spec of record is .agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md, CONFIRMED 2026-08-07. Its execution order is B extended -> A2 -> F -> C -> E, stated as a dependency order and not a schedule; A2 (#467) is merged and closed, so F's precondition is settled. F's fixed boundaries: the CLI door stays, no engine logic duplicated, gate imperative rides tool results verbatim, per-agent server instance keyed by session_id#agentId, project-scope .mcp.json only, settings.json never touched. F's acceptance measure is DC5 — spine-management recovery events per run per arm, counted from the call record and not from the engine's own refusals counter (#427), with the engine bug fixes held constant across arms, and the far-side count included. C's done-condition is that an agent at gate N does not do, plan or reserve gate N+k work; prose shrinkage is demoted to a secondary indicator; per-run delivered tokens must not grow; each relocated unit carries a foreclosure check and an observable named BEFORE the unit is selected; the tranche has a floor tied to observed forward references. E is the terminal act by its own body ('this check is the epic's terminal act'), re-cut rather than consolidate, with every close carrying evidence. The two costly-to-revert items named in the spec are C's tranche boundary and E's cluster boundaries. Live backlog measured this session: 149 open issues, 43 unlabelled (gh issue list --state open --limit 300 --json number,labels).",
+      "code_evidence": ".agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md sections F (408-546), C (548-626), E (652-731) and Execution order (771-803); .agent-work/epic-418-redux/spine.json; .agent-work/epic-418-redux/closeout/DISPOSITIONS.md section C; .agent-work/epic-418-redux/LATITUDE_CONTRACT.md incl. addenda R1-R4; gh issue view 424/421/423."
+    },
+    {
+      "id": "q2",
+      "kind": "decision",
+      "question": "Is the epic's scope exactly #424 + #421 + #423 plus cheap fixes routed en route, and does E's terminal check span the redux's workstreams as well as this run's?",
+      "status": "resolved",
+      "resolution": "Scope is the three workstreams plus cheap fixes routed under R4. E's terminal shipped-vs-obligation check spans both sets of work — the redux's workstreams (A, A2, B, D, R) and F and C. The carried-unruled governor trip band (17-21%) is folded in on the standing recommendation that the band is doing its job and is not retuned.",
+      "human_answer": "Tommy, 2026-08-09: \"agree all\" — confirming the recommendation as presented for all six decisions, including scope as exactly #424/#421/#423 plus routed cheap fixes, and E's check reading across both the redux and this run."
+    },
+    {
+      "id": "q3",
+      "kind": "decision",
+      "question": "Does C (#421) wait for F (#424) to land, or do the two overlap?",
+      "status": "resolved",
+      "resolution": "Wave 1 is F alone, one Commander on Opus. C's non-dependent preparation runs beside it: naming the later-gate observables before unit selection, and establishing the control-arm baseline that must show forward-reference happening at a measurable rate. Wave 2 is C proper, against F's settled verb contract. E is terminal.",
+      "human_answer": "Tommy, 2026-08-09: \"agree all\"."
+    },
+    {
+      "id": "q4",
+      "kind": "decision",
+      "question": "What is the checkpoint protocol, and how much of the predecessor contract carries forward verbatim?",
+      "status": "resolved",
+      "resolution": "Run ahead through wave boundaries; report, do not block. Carried verbatim: scope discipline (2026-08-05), appetite scales with cost-to-undo (2026-08-07), Sonnet for implementers unless a named reason (R3), cheap fixes are routed not implemented mid-wave (R4), and the commit-to-main grant for workbench hygiene. Surfaced classes unchanged: scope change, issue closing, promoting an observation into docs/agents/*, production defaults, design-it-twice convergence, and a workstream that cannot meet its stated obligation.",
+      "human_answer": "Tommy, 2026-08-09: \"agree all\"."
+    },
+    {
+      "id": "q5",
+      "kind": "decision",
+      "question": "#423 is labelled HITL — which parts of E are the Admiral's and which stay the human's?",
+      "status": "resolved",
+      "resolution": "The Admiral dispatches the re-cut through constellation-to-initial-issues to produce a proposed current wave plus nonbinding forecast over the redux's survivors, classifying the 43 unlabelled issues as part of producing that proposal. The cluster boundaries come back to Tommy as one batched confirm; he rules on the cut, not on 149 individual issues. Every close still carries its evidence, and issue closing remains a surfaced class.",
+      "human_answer": "Tommy, 2026-08-09: \"agree all\"."
+    },
+    {
+      "id": "q6",
+      "kind": "decision",
+      "question": "What are the model tiers, permission pre-clearances, and contract expiry?",
+      "status": "resolved",
+      "resolution": "Pre-cleared at contract time, per the #145 lesson that an eval or measurement mission must pre-clear its own core mechanics: starting MCP server processes, writing project-scope .mcp.json, cold-agent tracer dispatches, and corpus surgery on COMMANDER_SPINE.template.json and commander-core.md. settings.json stays untouched. Tiers: Opus for the F and C Commanders, Sonnet for implementers unless a named reason. Expiry: the wave-1 boundary (F merged) or 72 hours, whichever comes first.",
+      "human_answer": "Tommy, 2026-08-09: \"agree all\"."
+    },
+    {
+      "id": "q7",
+      "kind": "decision",
+      "question": "Who runs F's .mcp.json pickup probe, and what happens on each branch?",
+      "status": "resolved",
+      "resolution": "The Commander probes whether an interactive session picks up a fresh .mcp.json without a restart, and proceeds on its own answer, reporting which branch it took. Picked up means project-scope .mcp.json suffices; not picked up means per-dispatch config generation becomes the delivery path and gets designed first. It is a measurable fact, not a preference, so it does not come back to the human.",
+      "human_answer": "Tommy, 2026-08-09: \"agree all\"."
+    },
+    {
+      "id": "q8",
+      "kind": "decision",
+      "question": "Is anything to be done before wave 1 dispatches?",
+      "status": "resolved",
+      "resolution": "Yes — a cheap implementer fixes the local Python interpreter annoyance before anything else launches. Machine-local only, zero repo file changes: the ~700 'py ...' references and issue #313 are the cross-device permafix, deliberately deferred.",
+      "human_answer": "Tommy, 2026-08-09: \"before you do anythign - send out a cheep implemnter to fix the py thing. we'll need to permafix python management across all devices, but for now just making it not annoying local is fien.\""
+    }
+  ],
+  "signoff": {
+    "by": "Tommy",
+    "statement": "2026-08-09, in session: \"agree all\" — given in response to the six decisions presented with recommendations (scope and the both-sets reading of E, wave shape with F alone in wave 1, checkpoint protocol and carried standing rulings, E's HITL split with batched cluster confirms, tiers/pre-clearances/expiry, and F's pre-build probe). Followed immediately by the pre-wave instruction recorded as q8."
+  },
+  "consolidated": false
+}

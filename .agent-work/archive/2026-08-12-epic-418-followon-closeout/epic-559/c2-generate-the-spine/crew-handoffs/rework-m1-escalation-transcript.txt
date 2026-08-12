@@ -1,0 +1,46 @@
+$ python scripts/checklist_engine.py --file /tmp/rework-m1-escalation/spine.json claim --session-id rework-m1-escalation-probe --claimed-by investigator
+claimed lease rework-m1-escalation-probe -> active
+exit: 0
+
+$ python scripts/checklist_engine.py --file /tmp/rework-m1-escalation/spine.json current
+LEASE active: rework-m1-escalation-probe (by investigator, heartbeat 2026-08-12T04:00:51.152081+00:00)
+ACTIVE r1 [pending] — record pass
+postconditions:
+  c1 [unmet] null — trivial -- QUALITATIVE: no automatable signal
+0/1 met
+directives:
+  handback:
+    purpose: where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into
+    belief_worth_recording: spine_evidence attach -- lands in this gate's own evidence[]
+    open_question_out_of_scope: spine_capture flag-candidate -- lands in the top-level triage_candidates[]
+    concern_that_must_stop_this_gate: spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent named below
+    hand_back_to: <parent>
+    note: there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever
+next: start r1
+exit: 0
+
+$ python scripts/checklist_engine.py --file /tmp/rework-m1-escalation/spine.json start r1 --session-id rework-m1-escalation-probe
+r1 -> in-progress
+exit: 0
+
+$ python scripts/checklist_engine.py --file /tmp/rework-m1-escalation/spine.json record r1 --result pass --session-id rework-m1-escalation-probe
+r1 recorded pass
+exit: 0
+
+$ python scripts/checklist_engine.py --file /tmp/rework-m1-escalation/spine.json start r2-large --session-id rework-m1-escalation-probe
+r2-large -> in-progress
+exit: 0
+
+$ python scripts/checklist_engine.py --file /tmp/rework-m1-escalation/spine.json record r2-large --result pass --session-id rework-m1-escalation-probe
+r2-large recorded pass
+exit: 0
+
+$ python scripts/checklist_engine.py --file /tmp/rework-m1-escalation/spine.json consolidate --verdict APPROVE --summary no review-result ever attached to r2-large --session-id rework-m1-escalation-probe
+consolidated: verdict=APPROVE findings=0
+exit: 0
+
+$ python scripts/checklist_engine.py --file /tmp/rework-m1-escalation/spine.json current
+LEASE active: rework-m1-escalation-probe (by investigator, heartbeat 2026-08-12T04:00:51.418588+00:00)
+DONE: no open items.
+exit: 0
+

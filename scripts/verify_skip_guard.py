@@ -61,6 +61,36 @@ ALLOWED_SKIPS: frozenset[tuple[str, str, str]] = frozenset(
             "py resolves outside PATH on this host, so py-unresolvable cannot "
             "be genuinely induced",
         ),
+        # Added 2026-08-09: `_same_path` folds case and separators only where
+        # `os.path.normcase` does, which is Windows. The behaviour is therefore
+        # asserted twice, once per platform, and exactly ONE of the pair runs on
+        # any given host -- so its opposite necessarily skips and needs a tuple.
+        #
+        # This pair is deliberately NOT the usual "we cannot test it here" shape,
+        # and the distinction matters for a guard whose whole job is refusing
+        # silent skips. No assertion is given up: on Windows the folding case runs
+        # and the POSIX case skips; on Linux the reverse. There is no host on which
+        # the behaviour goes unasserted, which is what makes two allow-tuples
+        # honest here rather than two holes. Delete either test and the other's
+        # tuple becomes a hole -- they are only safe as a pair.
+        #
+        # The Windows tuple's message was measured from a real --junitxml report on
+        # a Linux host, not transcribed from the source. The POSIX tuple's message
+        # cannot be measured here -- it only skips on Windows, which is where CI
+        # runs -- so it is the `reason=` string joined exactly as Python
+        # concatenates its two source literals.
+        (
+            "tests.test_spine_rail",
+            "test_same_path_windows_normcase_sep_equivalence",
+            "ntpath's normcase (lowercase + backslash/forward-slash folding) "
+            "only applies on Windows",
+        ),
+        (
+            "tests.test_spine_rail",
+            "test_same_path_posix_case_and_backslash_are_significant",
+            "posixpath's normcase is identity and backslash is not a separator "
+            "-- covered by the Windows-only case above instead",
+        ),
     }
 )
 

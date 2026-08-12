@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-full-suite-baseline",
+  "mechanical": {
+    "run": "g3fix3-utf8b-cli-decode",
+    "project": "constellation-skills",
+    "role": "g3fix3-implementer",
+    "refusals": 1,
+    "spine-step": "m3-full-suite-baseline",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3fix3-utf8b-cli-decode-m3-full-suite-baseline@04bb5d93bb7985a372c8e31639ccfca7000a7725",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3fix3-utf8b-cli-decode",
+    "generated_at": "2026-08-10T02:24:32Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r1-handoff",
+  "mechanical": {
+    "run": "epic-418-followon/commander-f2/g2-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r1-handoff",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon/commander-f2/g2-review-r1-handoff@48c021fa70652aa4411d37357b5b1acc92e7e590",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon/commander-f2/g2-review",
+    "generated_at": "2026-08-10T08:10:36Z"
+  }
+}

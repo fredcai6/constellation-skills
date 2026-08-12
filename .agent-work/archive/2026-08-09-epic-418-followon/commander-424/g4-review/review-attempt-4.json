@@ -1,0 +1,261 @@
+{
+  "work_id": "epic-418-followon/commander-424",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r7-duplicate-gone",
+    "r8-tc1-arithmetic",
+    "r9-caveat-consistency",
+    "r10-no-drift"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, project CREW_CONTEXT.md, GLOSSARY.md, and the rework-3 handoff in full.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? This round is scoped to exactly two edits (duplicate paragraph deletion, tc1 arithmetic fix) plus a no-drift check. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Both named edits land. Duplicate paragraph after observation (c) is deleted (verified r7); tc1's order-control paragraph now cites the per-order CLI-vs-MCP gap (2 in rep1: 21 vs 19, 6 in rep2: 23 vs 17) as load-bearing evidence and concludes direction-only support (verified r8); the midpoint caveat propagated into headline table + DC5 section + order-control paragraph consistently (r9); no drift found elsewhere (r10).",
+      "evidence": [
+        {
+          "id": "e-r1-handoff-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": "/home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/crew-handoffs/g4-reviewer-result-rework3.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions (read/verify only in the worktree; do not rerun measurement arms)? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Stayed strictly read/verify-only in the f-424 worktree. No measurement arm rerun -- only score_arm.py (x4) and control_scorer.py, which read existing evidence/g4-dc5/rep*/record.jsonl and write nothing. git status shows no writes by this review under evidence/g4-dc5/.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Rerun the five verification commands named in the handoff (score_arm.py x4, control_scorer.py) and confirm they reproduce the numbers MEASUREMENT.md now states. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Reran score_arm.py on all four arms foreground: rep1-cli=21 attempts/5 fumbles, rep2-cli=23/7, rep1-mcp=19/0, rep2-mcp=17/0 -- exact match to MEASUREMENT.md's Results table and to the 2-vs-6 per-order gap the order-control paragraph now cites (21-19=2, 23-17=6). control_scorer.py reproduces all 7 [PASS] controls verbatim. No writes occurred (score.json mtimes predate this session, from attempt-3's run, confirming score_arm.py is read-only on invocation without --json output-file flag).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints, CREW_CONTEXT.md Verification Discipline)? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Meets CREW_CONTEXT.md Verification Discipline: the positive controls remain load-bearing (re-confirmed by rerun), numbers are asserted against re-run behaviour not just described in prose (independently recomputed 2-vs-6 from the raw score_arm.py output, not trusted from text), and the revision note at the file's foot still names the full three-version correction history. No new rigor defects found beyond what r7/r8/r9/r10 already checked.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture/structural-baseline divergence -- this gate produces a measurement write-up (MEASUREMENT.md) and disposable fixtures under evidence/g4-dc5/, not shipped code. Nothing for Cartographer to reconcile; no triage candidate.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This diff is docs-only prose editing (MEASUREMENT.md); note that explicitly rather than silently skipping.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python3 /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/g4-review/fowler-pass-attempt-4.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline smell pass over this round's docs-only diff (MEASUREMENT.md prose: duplicate-paragraph deletion, tc1 arithmetic rewrite propagated to 3 locations). All 12 baseline smells rendered absent -- no code in this diff. verify_fowler_pass.py exits 0 (smells=12, flagged=[], overridden=[]). Noted the shotgun-surgery candidate (3-location propagation of the midpoint caveat) explicitly and judged it absent: deliberate single-conclusion propagation across a summary table, a verdict section, and its source paragraph is the expected shape for this document, not scattered incidental change.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "fowler-pass",
+          "payload": {
+            "record_path": "/home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/g4-review/fowler-pass-attempt-4.json"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/g4-review/fowler-pass-attempt-4.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r7-duplicate-gone": {
+      "id": "r7-duplicate-gone",
+      "title": "Duplicate paragraph deleted, observation (c) survives once",
+      "imperative": "Read MEASUREMENT.md's secondary-observations block. Confirm the unedited-draft-remnant duplicate of observation (c) (formerly lines 222-225, flatter/more negative/unmitigated restatement) is gone, and that (c) itself appears exactly once, in its mitigated form ending on the 'same direction, different mechanism' close. Grep the whole file for repeated lines to confirm no other verbatim duplication was introduced. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Confirmed by direct read and grep: MEASUREMENT.md observation (c) (lines 225-229) now ends once on its mitigated close 'Same direction, different mechanism, and worth knowing which one was actually bought.' The old leftover ('...had, on this task, nothing to absorb.') is gone -- grep for that exact phrase returns zero hits. The shared phrase 'did not fumble the argument shape' now appears exactly once (line 226), where it appeared twice (lines 217 and 223) in the version attempt-3 blocked. A whole-file repeated-non-blank-line scan finds only markdown boilerplate (table separators, code fences) repeating -- no other content duplication anywhere in the file.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r8-tc1-arithmetic": {
+      "id": "r8-tc1-arithmetic",
+      "title": "tc1 order-control arithmetic supports its own claim",
+      "imperative": "Read the order-control paragraph. Confirm it now cites the per-order CLI-vs-MCP gap (2 attempts in rep1: 21 vs 19; 6 in rep2: 23 vs 17) as its load-bearing evidence, states same direction / threefold size difference, and concludes the order control supports direction only, not effect size. Recompute the 2-vs-6 figures independently against the raw scores (score_arm.py reruns) rather than trusting the prose. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The order-control paragraph (MEASUREMENT.md lines 133-138) now cites the per-order CLI-vs-MCP gap as load-bearing: '2 attempts in rep1 (21 vs 19) and 6 in rep2 (23 vs 17) -- the same direction, but a threefold difference in size'. Recomputed independently: reran score_arm.py on all four arms this session -- rep1-cli=21, rep1-mcp=19 (gap 2), rep2-cli=23, rep2-mcp=17 (gap 6) -- exact match to both MEASUREMENT.md's Results table and the cited parenthetical figures. 6/2=3, matching the stated 'threefold difference'. The paragraph concludes 'the order control supports \"no order effect large enough to reverse any comparison at n=2\"; it does not support any claim about the size of the effect' -- direction-only, as the handoff specified. New addition (a 9%-26% range for the 18%) is independently arithmetically consistent: 2/21=9.5%, 6/23=26.1%, midpoint=17.8%~=18%.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r9-caveat-consistency": {
+      "id": "r9-caveat-consistency",
+      "title": "Midpoint caveat consistent across headline table, DC5 section, order-control paragraph",
+      "imperative": "Confirm the '18% is a midpoint, not an estimate' caveat appears in all three places (headline table, DC5 PASS section, order-control paragraph), says the same thing in each, and does not contradict itself or the order-control paragraph's own conclusion. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The midpoint caveat appears in exactly three places and is mutually consistent: (1) headline table (line 17): 'The 18% is a midpoint, not an estimate: the per-order gap is 2 and 6.' (2) DC5 PASS section (lines 175-177): 'The 18% is the midpoint of two runs that disagree substantially about size -- the CLI-minus-MCP gap is 2 in one order and 6 in the other -- so read it as \"a reduction, direction consistent\", not as an effect-size estimate. See \"Order control\" above.' -- explicitly points back to the order-control paragraph. (3) order-control paragraph (lines 133-138): the source of the 2-vs-6 figures, concluding 'the 18% should be read as the midpoint of a 9%-26% range that two samples cannot narrow.' All three agree: 18% is a midpoint/direction signal, not an effect-size estimate, backed by the same 2-vs-6 figures. No contradiction found -- none of the three claims a tighter estimate than the others.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r10-no-drift": {
+      "id": "r10-no-drift",
+      "title": "No-drift check: nothing else moved",
+      "imperative": "Diff this round's MEASUREMENT.md against the attempt-3 (rework2) version reviewed previously. Confirm no number changed, no verdict changed, no caveat was quietly softened outside the two named edits and their propagation. Confirm DC5 still reads PASS on the pre-registered metric with secondary observations labelled as before. Confirm evidence/g4-dc5/score_arm.py and control_scorer.py are untouched (empty git diff / unchanged mtime since attempt-2). Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Checked against everything attempt-3's review (crew-handoffs/g4-reviewer-result-rework2.md) already independently verified and quoted: DC1 headline row, DC6 headline row, Results table (21/5, 23/7, 19/0, 17/0), DC1 assertion block, control_scorer 7-PASS block, and observation (b) (10 and 10 / 19 and 17) are all byte-identical to the quoted attempt-3 text -- nothing there moved. DC5 verdict is still 'PASS on the pre-registered metric', section header still reads 'Primary result... the door wins'. Secondary observations are still labelled (a)/(b)/(c) in the same bounding-not-overturning framing. Instruments untouched since attempt-2: evidence/g4-dc5/score_arm.py (mtime 1786319206) and control_scorer.py (mtime 1786319174) both predate the attempt-2 review result's mtime (1786320192) -- no write to either since that review signed off on them, matching attempt-3's own finding. MEASUREMENT.md's mtime (1786321103) is the only content file touched this round, consistent with the handoff's claim that only the two named edits plus their 3-location propagation happened.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "Both of this round's two named edits land cleanly, and nothing else drifted. Fix 1: the leftover duplicate paragraph after secondary observation (c) is deleted -- grep confirms the shared phrase 'did not fumble the argument shape' now appears exactly once, and (c) survives once in its mitigated form (r7). Fix 2: tc1's order-control paragraph now cites the per-order CLI-vs-MCP gap (2 in rep1: 21 vs 19, 6 in rep2: 23 vs 17) as load-bearing evidence, independently reproduced against re-run score_arm.py output, and concludes the order control supports direction only, not effect size (r8). That consequence is consistently propagated into the headline table and the DC5 PASS section, all three agreeing the 18% is a midpoint, not an estimate (r9). No drift: DC1/DC6 headline rows, the Results table, DC1 assertion, control_scorer's 7-PASS block, and observation (b) all match byte-for-byte what attempt-3's review already quoted and verified; DC5 still reads PASS on the pre-registered metric; secondary observations are still labelled as before; instruments (score_arm.py, control_scorer.py) remain untouched since attempt-2 by mtime (r10). Fowler pass finds nothing to flag in this docs-only prose diff (r6). Handoff compliance, scope, evidence and reconciliation all pass (r1-r5). Fourth review of this gate, third real defect found and now confirmed fixed twice running -- APPROVE."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/epic-418-followon/commander-424/g4/reviewer/attempt-4",
+    "status": "released",
+    "claimed_at": "2026-08-10T00:21:05.042387+00:00",
+    "last_heartbeat": "2026-08-10T00:26:56.334268+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "/home/tommy/projects/constellation-skills-wt/f-424",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-10T00:27:00.804073+00:00"
+  }
+}

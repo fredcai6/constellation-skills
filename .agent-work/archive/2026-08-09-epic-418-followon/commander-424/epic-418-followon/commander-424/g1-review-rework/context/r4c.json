@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r4c",
+  "files": [],
+  "repo_rev": {
+    "commit": "fda35ec0a62c72d4cb66a675da02de5fd35e3b7e"
+  },
+  "run": {
+    "work_id": "epic-418-followon/commander-424/g1-review-rework",
+    "generated_at": "2026-08-09T22:01:34Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-workbench",
+      "repo": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "durable": "/home/tommy/projects/constellation-skills-wt/f-424"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/f-424"
+    }
+  }
+}

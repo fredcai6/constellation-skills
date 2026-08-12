@@ -1,0 +1,95 @@
+{
+  "work_id": "epic-418-followon/commander-f2/g2-review",
+  "diff_ref": "commit ef4b13c1 (e2b8f04e..ef4b13c1) -- scripts/mcp_spine_server.py (REJECTIONLOG, _log_rejection, _tool_error extended with optional tool=/rejection_class=, all 15 in-scope call sites), tests/test_mcp_friction_capture.py (new, 7 tests)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, skills/_shared/global-crew.md, scripts/mcp_spine_server.py's own module docstring (Grouping decision)",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "overridden",
+      "finding": "call_tool() was already a long if/elif dispatcher before this diff (7 tools x nested actions); this diff only adds 2 keyword args to each existing _tool_error(...) call inside that pre-existing structure and does not add new branching shape.",
+      "override": {
+        "repo_standard": "Module docstring's own 'Grouping decision' section (scripts/mcp_spine_server.py lines 28-102): a single multiplexed dispatcher per tool, covering 13 of 18 engine verbs across 7 tools, is the documented, deliberate shape -- a roughly-seven tool budget chosen over one-tool-per-verb.",
+        "reason": "The length is the direct, named consequence of a budget decision the file already documents and defends; splitting call_tool() into one function per tool would fight the file's own stated design, not fix a defect this diff introduced."
+      }
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "No classes in the production diff. The two new test classes (RejectionCaptureRecordsEachClassTests: 6 methods, LoudFailureOnCaptureWriteTests: 1 method) are each a single cohesive concern, comparable in size to the existing IdentityBindingPinTests convention.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "14 call sites each repeat the 3-line shape 'return _tool_error(f\"...\", tool=X, rejection_class=Y)' -- structurally near-identical boilerplate, differing only in the tool name, class, and message.",
+      "override": {
+        "repo_standard": "call_tool()'s own choke-point pin (tests/test_mcp_identity.py::IdentityBindingPinTests::test_call_tool_can_only_produce_content_two_ways, closed at this run's own g1 gate), which restricts every return in call_tool() to literally as_result(run_engine(...)) or _tool_error(...) via an AST walk on the called function's name -- documented directly in _tool_error's own docstring.",
+        "reason": "A wrapper function was tried first (per the episode's a2/a3/a4 assertions) and rejected by the pin (14 offenders, one per call site) precisely because a second named call at the same return site is the third answer-shape the pin exists to forbid. The repeated inline shape is the pin's own sanctioned alternative, not an oversight -- folding the two new facts into _tool_error's existing name was the fix, and the residual repetition is its cost, paid deliberately."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "_log_rejection operates only on its own parameters and the module-level REJECTIONLOG; it reaches into no other object's internals.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "(tool, rejection_class, detail) travel together only inside _log_rejection's own signature and the record dict it builds; they are not passed around together as a recurring clump across multiple unrelated functions.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "rejection_class is a bare string literal ('unknown-action' / 'missing-required-argument' / 'unknown-tool') rather than an enum, and 'tool' is a bare string tool name.",
+      "override": {
+        "repo_standard": "This same module's own established vocabulary: every multiplexed `action` value (claim/release/heartbeat/attest/waive/attach/block/resume/record/consolidate) is already a bare string compared with ==, never an enum, throughout call_tool().",
+        "reason": "Introducing an enum for exactly these two new fields would be inconsistent with every other domain concept the file already represents as a plain string; matching the file's existing convention is the locally correct choice, not an omission."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "_tool_error grew from 1 positional parameter to 1 positional + 2 optional keyword-only parameters (tool=None, rejection_class=None) -- 3 total, well short of a long list, and the two new ones are keyword-only so every pre-existing bare call site stays valid unchanged.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "overridden",
+      "finding": "Adding rejection capture required touching 15 call sites across call_tool() and main() -- one conceptual change, scattered across many lines.",
+      "override": {
+        "repo_standard": "Same choke-point pin as duplicated-code above, plus the module's grouping decision: every door-own rejection point already had to name its own _tool_error(...) call individually (no shared error-raising helper is legal at those sites), so a new fact threaded through that path was always going to touch every site once.",
+        "reason": "The scatter is confined to ONE file (scripts/mcp_spine_server.py) and is the direct shape of a pre-existing, pinned dispatch pattern, not a design where an unrelated change ripples across many files/modules -- the classic shotgun-surgery harm (cross-module ripple, easy to miss a site) is mitigated here because the pin itself refuses a missed or malformed site at test time."
+      }
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "call_tool() continues to change only for routing reasons; the new capture behavior is entirely contained inside _tool_error()/_log_rejection(), a single, separately-named seam that is the one place logging-related changes land.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "No chained accessor calls introduced; REJECTIONLOG.open(...) is a single call on a module-level Path.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "REJECTIONLOG follows the exact existing CALLLOG/START_MARKER optional-env-var-with-default pattern already in the file; no new abstraction, hook, or unused generality is introduced for a hypothetical future need.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "_log_rejection and _tool_error each carry a multi-paragraph docstring explaining why the shape is what it is (the pin interaction, the fail-loud rationale) rather than relying on the code alone.",
+      "override": {
+        "repo_standard": "This same file's documentation-density convention, already logged as the standard in this run's own g1 fowler-pass.json/fowler-pass-2.json/fowler-pass-3.json/fowler-pass-4.json for this exact file, and in skills/_shared/global-everyone.md ('Agent-facing. Dense by design.').",
+        "reason": "The docstrings record provenance a reader cannot recover from the code alone (which pin forced this shape, what alternative was tried and rejected) -- explanatory history, not a patch masking unclear logic. Consistent with the standard four prior reviews already applied to this file."
+      }
+    }
+  ],
+  "rail_exception": null
+}

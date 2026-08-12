@@ -1,0 +1,268 @@
+{
+  "work_id": "epic-559/b-instructions-to-checks",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r1-convention",
+    "r2-satisfiable",
+    "r3-shipped-checks-run",
+    "r4-verify"
+  ],
+  "tasks": {
+    "r1-convention": {
+      "id": "r1-convention",
+      "title": "Write down the evidence convention g1-implement.c1 depends on",
+      "imperative": "The check you shipped requires payload status=complete on implementer-result evidence, and no document in this repo tells a Commander to attach it. Fix that at the source. Say it in the g1-implement imperative in skills/commander/templates/EXECUTE_PLAN.template.json itself (the template that carries the check must carry the instruction that satisfies it), and in skills/commander/references/commander-core.md and skills/commander/templates/IMPLEMENTER_HANDOFF.template.md. State the exact field name, that the value is the IMPLEMENTER_RESULT's own Return status, and that it is lowercase -- the engine's match is exact dict equality, so COMPLETE and COMPLETED both fail. Then pin it: tests/test_commander_evidence_convention.py, at least three tests, asserting the shipped template's check and the documented convention agree, and going red if either drifts.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the convention is documented and pinned by at least three passing tests",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -m pytest -q tests/test_commander_evidence_convention.py --collect-only 2>/dev/null | grep -c '::') -ge 3 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_commander_evidence_convention.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r1-convention-1"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Edit compact-format JSON templates surgically as raw text; never round-trip through json.load/json.dump. Re-validate with json.load afterwards.",
+        "Do not modify scripts/checklist_engine.py, scripts/run_crew.py, skills/implementer/*, skills/reviewer/* (another crew owns those), settings.json, or docs/agents/*.",
+        "No merge or push to main."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-r1-convention-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_commander_evidence_convention.py --collect-only 2>/dev/null | grep -c '::') -ge 3 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_commander_evidence_convention.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r2-satisfiable": {
+      "id": "r2-satisfiable",
+      "title": "Prove a Commander following the shipped instructions clears the gate",
+      "imperative": "Nobody has ever shown that a shipped template's gates can be satisfied by a real run -- that is why this defect shipped. Write tests/test_shipped_template_gates_satisfiable.py that instantiates EXECUTE_PLAN.template.json into a scratch work area, drives g1-implement through the real engine with evidence attached exactly as the imperative now instructs, and asserts it advances. Include the negative: evidence reporting the work blocked must refuse. Both directions, or it proves nothing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "r1-convention complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "r1-convention advanced to complete via the engine (advance r1-convention succeeded above)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "a real drive of the shipped implement gate passes on complete and refuses on blocked",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -m pytest -q tests/test_shipped_template_gates_satisfiable.py --collect-only 2>/dev/null | grep -c '::') -ge 2 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_shipped_template_gates_satisfiable.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r2-satisfiable-1"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Edit compact-format JSON templates surgically as raw text; never round-trip through json.load/json.dump. Re-validate with json.load afterwards.",
+        "Do not modify scripts/checklist_engine.py, scripts/run_crew.py, skills/implementer/*, skills/reviewer/* (another crew owns those), settings.json, or docs/agents/*.",
+        "No merge or push to main."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-r2-satisfiable-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_shipped_template_gates_satisfiable.py --collect-only 2>/dev/null | grep -c '::') -ge 2 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_shipped_template_gates_satisfiable.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r3-shipped-checks-run": {
+      "id": "r3-shipped-checks-run",
+      "title": "Every shipped command check must actually run after instantiation",
+      "imperative": "The cold reviewer found that REVIEW_SURVEY.template.json's r6-fowler.c1 ships a check command containing <fowler-pass-record-path>, a placeholder init_work_area.resolve_spine cannot resolve -- so the check is non-functional out of the box, and your census called that row 'already converted, no action'. Fix that placeholder, then sweep ALL six shipped role templates for the same shape: any command check whose text still holds an unresolved token after instantiation. Write tests/test_shipped_check_commands_resolve.py to pin it for every template, so a future author cannot ship another one. Report every site found, fixed or not.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "r2-satisfiable complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "r2-satisfiable advanced to complete via the engine."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no shipped command check carries an unresolvable placeholder, pinned across all six templates",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -m pytest -q tests/test_shipped_check_commands_resolve.py --collect-only 2>/dev/null | grep -c '::') -ge 1 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_shipped_check_commands_resolve.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r3-shipped-checks-run-1"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Edit compact-format JSON templates surgically as raw text; never round-trip through json.load/json.dump. Re-validate with json.load afterwards.",
+        "Do not modify scripts/checklist_engine.py, scripts/run_crew.py, skills/implementer/*, skills/reviewer/* (another crew owns those), settings.json, or docs/agents/*.",
+        "No merge or push to main."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-r3-shipped-checks-run-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_shipped_check_commands_resolve.py --collect-only 2>/dev/null | grep -c '::') -ge 1 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_shipped_check_commands_resolve.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4-verify": {
+      "id": "r4-verify",
+      "title": "Full suite green and the result written",
+      "imperative": "Run the full suite with real counts and write IMPLEMENTER_RESULT.md from the implementer skill's template, including its Workflow Feedback section. Say explicitly what your first census missed and why, and whether the new tests would have caught it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "r3-shipped-checks-run complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "r3-shipped-checks-run advanced to complete via the engine."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite passes",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r4-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the result artifact exists",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/epic-559/b-instructions-to-checks/IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r4-verify-2"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Edit compact-format JSON templates surgically as raw text; never round-trip through json.load/json.dump. Re-validate with json.load afterwards.",
+        "Do not modify scripts/checklist_engine.py, scripts/run_crew.py, skills/implementer/*, skills/reviewer/* (another crew owns those), settings.json, or docs/agents/*.",
+        "No merge or push to main."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-r4-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r4-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/epic-559/b-instructions-to-checks/IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "implementer/epic-559/b-instructions-to-checks/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-11T05:42:54.640371+00:00",
+    "last_heartbeat": "2026-08-11T05:57:19.761742+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-11T05:57:25.106679+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "r1-convention",
+      "why": "Documented the status=complete evidence convention (field name, Return-status source, lowercase rule) in EXECUTE_PLAN.template.json's g1-implement imperative, commander-core.md, and IMPLEMENTER_HANDOFF.template.md; pinned it with 4 tests in tests/test_commander_evidence_convention.py that go red if the check's match dict or any of the three docs drift apart.",
+      "mechanical": false,
+      "ts": "2026-08-11T05:44:49.667352+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "r2-satisfiable",
+      "why": "Wrote tests/test_shipped_template_gates_satisfiable.py: it instantiates EXECUTE_PLAN.template.json into a scratch dir, drives e0-context and g1-implement through the real checklist_engine.py CLI, attaches implementer-result evidence exactly as the new imperative documents (attach g1-implement --type implementer-result --field status=<value>), and asserts advance succeeds on status=complete and refuses (exit!=0, gate stays in-progress) on status=blocked. Both tests pass.",
+      "mechanical": false,
+      "ts": "2026-08-11T05:46:39.352618+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "r3-shipped-checks-run",
+      "why": "Swept the exact 6 templates named in checklist-engine.md's own Template set table for command checks holding an unresolved token after the real resolve_spine substitution. Found two phantom-placeholder sites of the same shape: REVIEW_SURVEY.template.json's r6-fowler.c1 (<fowler-pass-record-path>, the one the reviewer flagged) and INTERROGATION.template.json's zc-consolidate.c1 (<interrogation-record-path>, a second instance of the identical bug the sweep was written to catch). Both fixed by deriving the record path from <work-id> alone (.agent-work/<work-id>/FOWLER_PASS.json and .agent-work/<work-id>/INTERROGATION_RECORD.json), matching the already-established real convention and requiring no separate agent-invented substitution. Pinned with tests/test_shipped_check_commands_resolve.py: a closed allowlist for the one legitimate authoring-time placeholder shape (<exact test command>), zero tolerance for anything else, plus direct regression tests for both fixed sites.",
+      "mechanical": false,
+      "ts": "2026-08-11T05:52:00.244160+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "r4-verify",
+      "why": "Full suite reran clean (2542 passed, 1 skipped, 1102 subtests) and IMPLEMENTER_RESULT.md was written from the implementer template, including Workflow Feedback and an explicit accounting of what the first census missed (checked check-shape presence, never check-command resolvability) and that the new r3 sweep test would have caught it directly -- it did, finding a second unreported instance of the same bug in INTERROGATION.template.json.",
+      "mechanical": false,
+      "ts": "2026-08-11T05:57:19.761726+00:00"
+    }
+  ]
+}

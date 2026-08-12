@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "g1-implement-mcp-door-424-rework-2",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g1-implement-mcp-door-424-rework-2-m0-context@708b86dbad2768b07d729c48f60ca4167768e933",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g1-implement-mcp-door-424-rework-2",
+    "generated_at": "2026-08-09T21:34:15Z"
+  }
+}

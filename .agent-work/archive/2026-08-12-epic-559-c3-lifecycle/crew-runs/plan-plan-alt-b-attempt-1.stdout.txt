@@ -1,0 +1,9 @@
+Result artifact written. Summary for the pointer:
+
+**Candidate:** `best-seam-placement` — a new `scripts/spine_lifecycle.py` module owns `open_work`/`close_work` as one tested interface; two thin adapters (two new MCP tools dispatched from a sibling of `call_tool`, plus a CLI matching the corpus's existing script convention) sit over it with no logic duplicated between them.
+
+**Gate count:** 6 (`g0-lifecycle-contract` reasoning gate, then `g1-carried-findings` → `g2-lifecycle-module` → `g3-door-adapters` → `g4-declared-dispatch` → `g5-integration-and-close`, all crew gates with checkable pytest/qualitative postconditions).
+
+**Path:** `.agent-work/epic-559/c3-lifecycle/crew-handoffs/plan-alt-b-result.md`
+
+The result also argues the four required questions independently (verifying live, e.g., that the `call_tool` AST pin is scoped to that one `FunctionDef` and can't see a sibling function), names honestly where the two-adapter constraint hurts (CLI surface with no currently-measured second caller, one extra call-hop, doubled test entry points), self-scores against `smallest-diff`, and closes with a Workflow Feedback section.

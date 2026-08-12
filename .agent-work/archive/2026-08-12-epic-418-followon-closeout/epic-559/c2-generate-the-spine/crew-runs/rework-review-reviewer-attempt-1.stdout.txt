@@ -1,0 +1,11 @@
+The review is complete. Verdict: **APPROVE**, delivered at `.agent-work/epic-559/c2-generate-the-spine/REVIEWER_RESULT.md`, driven through a self-authored engine survey at `.agent-work/epic-559/c2-generate-the-spine/rework-review/review.json` (claimed, driven item-by-item, consolidated, lease released).
+
+Summary of what held up under adversarial attack:
+- **v1 (TDD escape hatch):** Built 5 of my own adversarial specs (not reusing existing fixtures) — none reaches a written gated spine with an unfalsifiable gate. The one case that *does* generate clean (a survey-type spec) turned out to be pre-existing, ruled engine behavior, not a new hole.
+- **v2 (numeric typing):** Independently re-derived the unquoted-field enumeration from source rather than trusting the crew's list — it matched exactly.
+- **v5 (stale-parent guard):** Verified it fires/doesn't fire directly against the function, not on trust (the handoff specifically warned three prior reviewers passed this on trust).
+- **v6/suite/no-gos:** Sweep still 23, suite 2823/3 matching exactly, all five hard no-go paths confirmed untouched.
+
+Two real findings that don't rise to BLOCK, both recorded rather than smoothed over:
+- **v3:** the crew's self-reported `not_yet_written` truthiness bug — judged an authoring footgun, not an exploitable escape.
+- **v4:** I found a *second*, unstated divergence the crew didn't name — `.agent-work/.../generated/{implementer,reviewer}.spine.json` are now stale against the freshly-fixed shipped specs. Recorded as a `fail` on its own survey check and filed as a triage candidate, since it's a stale evidence artifact rather than a shipped-format regression.

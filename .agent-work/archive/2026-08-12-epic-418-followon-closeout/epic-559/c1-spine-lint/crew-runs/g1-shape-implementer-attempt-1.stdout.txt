@@ -1,0 +1,14 @@
+The run is complete and the tree is clean.
+
+## Summary
+
+Built `scripts/validate_spine.py`, an importable checker (`validate(spine) -> list[Fault]`, thin CLI wrapper) that refuses a spine or spine template for:
+
+- **Shape faults** — wrong top-level key (`gates` vs `items`), `items`/`tasks` mismatches, unimplemented check kinds, missing postconditions on gated tasks, missing `result` on survey tasks.
+- **Falsifiability faults (#518/#562)** — all-null postconditions, a pytest `-k` selector that actually collects zero tests (verified live via subprocess), an artifact check with no `match` whose statement asserts a property (#562), and unresolved `<placeholder>` tokens in command checks — with named VIOLATING/INNOCENT/ACCEPTED fixture sets for the two judgment-call faults.
+
+Swept all 12 shipped gated-or-survey templates: 4 clean, 21 all-null gates across 8 templates, 2 unresolved `<exact test command>` scaffold placeholders — findings only, no templates touched.
+
+Notable finds along the way: the g2 gate's own frozen postcondition had a shell-quoting bug (fixed via `spine_amend --op retext-check`), and `init_work_area`'s resolver-token regex has a gap (bare `<skill-dir>`) that I worked around locally rather than editing that file.
+
+All four gates driven to completion through the engine, full suite green (2638 passed), map rebuilt, everything committed at `303b7f19` and `9aa094dd`. Full writeup in `.agent-work/epic-559/c1-spine-lint/IMPLEMENTER_RESULT.md`.

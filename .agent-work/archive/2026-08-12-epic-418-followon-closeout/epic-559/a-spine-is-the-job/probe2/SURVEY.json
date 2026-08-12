@@ -1,0 +1,45 @@
+{
+  "work_id": "probe2",
+  "type": "survey",
+  "items": [
+    "i1",
+    "i2"
+  ],
+  "tasks": {
+    "i1": {
+      "id": "i1",
+      "title": "i1",
+      "imperative": "Record item i1 with result pass and a one-line finding, using the survey record verb. Then STOP -- do NOT consolidate and do NOT write any verdict. End your turn after the last item is recorded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "i1 verified: no issues found.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "i2": {
+      "id": "i2",
+      "title": "i2",
+      "imperative": "Record item i2 with result pass and a one-line finding, using the survey record verb. Then STOP -- do NOT consolidate and do NOT write any verdict. End your turn after the last item is recorded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "i2 verified: no issues found.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

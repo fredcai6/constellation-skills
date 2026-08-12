@@ -1,0 +1,239 @@
+{
+  "work_id": "epic-559/g1-model-record",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-red",
+    "m2-fix",
+    "m3-asymmetry",
+    "m4-suite"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (constellation-implementer skill's references/global-crew.md and references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the handoff at .agent-work/epic-559/g1-model-record/HANDOFF.md. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md, and HANDOFF.md all read; handoff verified complete: task/intent/scope/exclusions/evidence/test-mode/stop-conditions all present"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-red": {
+      "id": "m1-red",
+      "title": "Red control: cli-backend entry drops model",
+      "imperative": "Add a new test to tests/test_crew_launcher.py's BackendEquivalenceTests that dispatches CliBackend with a CrewSpec carrying model='sonnet' (reusing the fake_launch harness already used by test_cli_dispatch_matches_launch_crew_and_tags_backend) and asserts entry['model'] == 'sonnet'. Run only that test with the required test-mode env/invocation and observe it fail (AssertionError / KeyError on entry['model']). Paste the failure output verbatim into evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: context and handoff loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new red test added; run against unfixed code and observed to fail -- manual attest, failure text captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "added BackendEquivalenceTests.test_cli_dispatch_records_model_when_given (tests/test_crew_launcher.py); run against unfixed code, observed KeyError: 'model' at entry['model'] (see stored failure output)"
+        }
+      ],
+      "constraints": [
+        "scope limited to scripts/run_crew.py and tests/test_crew_launcher.py",
+        "no retroactive registry backfill",
+        "no merge or push to main"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-fix": {
+      "id": "m2-fix",
+      "title": "Fix: pass model=spec.model in the cli backend's build_entry call",
+      "imperative": "In scripts/run_crew.py's CliBackend.dispatch, add model=spec.model to the build_entry(...) call (~line 1102-1107). Update build_entry's docstring (the `model` bullet, ~line 841-842) so it no longer claims the cli path omits model -- it now matches the external path's shape. Run the new red test from m1-red plus the existing external-path model test (test_external_dispatch_records_without_spawning_returns_none) and confirm both are green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "red control observed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-red complete: red control observed failing with KeyError: 'model'"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "cli backend now records model; new cli test and existing external test both pass",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_crew_launcher.py -k 'model'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fix-1"
+        }
+      ],
+      "constraints": [
+        "minimal change: only the model= argument and the docstring bullet",
+        "do not touch scripts/checklist_engine.py, scripts/validate_spine.py, scripts/generate_spine.py, settings.json, .mcp.json, skills/"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-fix-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_crew_launcher.py -k 'model'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-asymmetry": {
+      "id": "m3-asymmetry",
+      "title": "Enumerate every remaining asymmetry between the two build_entry call sites",
+      "imperative": "Compare the CliBackend.dispatch build_entry(...) call and the ExternalBackend.dispatch build_entry(...) call argument by argument (both call sites in scripts/run_crew.py). Report every field one passes that the other does not, with a rationale for each (pid differs by design -- external is pid-less; dispatch differs by design -- external marker vs cli's no-marker; model was the bug, now fixed). If model was the only unintentional asymmetry, say so plainly.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "fix landed and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-fix complete: fix landed, tests green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full argument-by-argument enumeration of both call sites recorded in evidence, with each difference classified as by-design or bug",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Argument-by-argument diff of the two build_entry(...) call sites (scripts/run_crew.py, CliBackend.dispatch ~L1106 vs ExternalBackend.dispatch ~L1232), post-fix: work_id/gate/role/attempt/worktree/handoff/result/root/started/backend/spine/parent/model -- identical on both (same spec.X source). Remaining differences: (1) pid -- cli passes os.getpid(), external passes None; by design, external spawns no process (build_entry docstring: PID-less). (2) dispatch -- cli omits it (defaults None), external passes DISPATCH_EXTERNAL; by design, the legacy external marker (build_entry docstring Decision 5; pinned by EntryBackendTests). model was the only unintentional asymmetry and is now fixed -- both call sites pass model=spec.model."
+        }
+      ],
+      "constraints": [
+        "report only, no additional code changes unless a new bug is found -- if found, stop and report rather than fixing (out of the handoff's scope)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-suite": {
+      "id": "m4-suite",
+      "title": "Full suite + deliverable",
+      "imperative": "Run the full required test-mode command across tests/ and confirm no regression against the stated baseline (2689 passed, 3 skipped, 1121 subtests). Write .agent-work/epic-559/g1-model-record/IMPLEMENTER_RESULT.md from the implementer skill's template, including the Workflow Feedback section, the red control's failure output verbatim, and the full asymmetry enumeration from m3-asymmetry.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "asymmetry enumeration complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3-asymmetry complete: enumeration recorded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite passes at or above baseline; IMPLEMENTER_RESULT.md exists with all required sections",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "deliverable path is exactly .agent-work/epic-559/g1-model-record/IMPLEMENTER_RESULT.md",
+        "stage .agent-work changes by name, never git add -A"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 5,
+  "engine_session": {
+    "session_id": "constellation/epic-559/g1-model-record/h1-model/implementer/attempt-1",
+    "status": "active",
+    "claimed_at": "2026-08-12T04:47:32.081124+00:00",
+    "last_heartbeat": "2026-08-12T04:49:18.766432+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "handoff confirmed: fix cli backend's build_entry call to pass model=spec.model (currently omitted vs external backend which passes it); write red test first, then fix, then enumerate remaining asymmetries between the two build_entry call sites, then full suite + IMPLEMENTER_RESULT.md",
+      "mechanical": false,
+      "ts": "2026-08-12T04:47:50.477461+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-red",
+      "why": "reproduced the Admiral's finding directly: CliBackend.dispatch given model='sonnet' produces an entry with no 'model' key (KeyError), while build_crew_argv correctly forwards --model to the child. Next: add model=spec.model to the cli build_entry call.",
+      "mechanical": false,
+      "ts": "2026-08-12T04:48:18.578893+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-fix",
+      "why": "cli backend now passes model=spec.model to build_entry, symmetric with the external backend; updated build_entry's docstring to match; new cli test + existing external test both green",
+      "mechanical": false,
+      "ts": "2026-08-12T04:48:47.820870+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-asymmetry",
+      "why": "enumerated both build_entry call sites arg-by-arg: model was the only unintentional asymmetry, now fixed; pid and dispatch remain asymmetric by design (documented in build_entry's own docstring and pinned by EntryBackendTests)",
+      "mechanical": false,
+      "ts": "2026-08-12T04:49:15.482064+00:00"
+    }
+  ]
+}

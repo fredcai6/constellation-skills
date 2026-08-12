@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "decision": "replan",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "The current wave's exit criterion — the door launches from a fresh install on Windows and POSIX — is measurable but no longer sufficient. It was written against the launch axis, and the door launching correctly on this host while remaining unusable falsifies the premise that launch is what gates adoption.",
+    "epic_done": "The epic is not complete. The door is built, adopted in instructions and proven usable by one agent that owned its binding, but no shipped launch path binds it, so no dispatched crew can use it.",
+    "good_enough": "The mandatory quality boundary is preserved. Every claim in this transition carries the command or file read that produced it, and the two central negatives were reproduced directly rather than inferred."
+  },
+  "discrepancy_dispositions": [
+    {"id": "D0", "action": "revise_plan", "reason": "The binding defect is what gates adoption, so it becomes the current wave rather than a repair of the existing one", "issue_created": false},
+    {"id": "D1", "action": "revise_plan", "reason": "The decomposition rested on a falsified premise about which defect gates adoption", "issue_created": false},
+    {"id": "D2", "action": "revise_plan", "reason": "The human specified respawn-safe identity as a from-the-beginning requirement; it joins the current wave", "issue_created": false},
+    {"id": "D3", "action": "amend_forecast_or_parked", "reason": "Windows launch is real but off the path to this round's goal; PR #555 stays parked with its status written on it", "issue_created": false},
+    {"id": "D4", "action": "drop", "reason": "The evidence falsified it as a general constraint", "issue_created": false}
+  ],
+  "current_wave": {
+    "objective": "Hand every dispatched crew its own spine and a derived, assignment-keyed identity, so an agent drives its own task's spine through the door and a respawn resumes rather than force-claims.",
+    "exit_criteria": [
+      "A crew dispatched through run_crew.py receives SPINE_FILE bound to its own spine and SPINE_SESSION carrying an assignment-keyed identity, verified from the child's environment rather than from prose.",
+      "The lease identity is derived from the spine's own work_id plus the claiming role, excludes the attempt tail, and is not hand-typed anywhere in the shipped path.",
+      "A second dispatch on the same assignment resumes the lease idempotently, with no force and no takeover recorded — proven by a control that reproduces the force-claim before the change.",
+      "A cold reviewer independent of the implementer has approved the change.",
+      "#555 is carried unchanged and unworked. It stays in this wave because it is a launched identity that may not be silently dropped; its terms are preserved verbatim and no spend is authorized against it this wave. Its disposition returns to the human."
+    ],
+    "issues": [
+      {
+        "id": "M1",
+        "title": "run_crew.py binds each crew's door to its own spine and derives an assignment-keyed lease identity",
+        "desired_outcome": "crew_env() hands the child SPINE_FILE for that crew's own spine and SPINE_SESSION as constellation/<work-id>/<gate>/<role>, derived from the spine's work_id and the role, with no attempt tail. A respawn on the same assignment resumes its lease instead of force-claiming it.",
+        "useful_now": "It is the single wire between two constructs that already exist, and it is what makes a dispatched agent able to use the door at all.",
+        "appetite": "One bounded change to the crew launcher plus tests. Not a rewrite of the engine or the door.",
+        "acceptance_or_falsification_evidence": "A control that reproduces today's behaviour first — a crew whose door binds to the demo spine, and a relaunch that must force-claim — then the same two cases passing after the change. Measured from the child's actual environment and the spine's lease record, never from prose.",
+        "implementation_latitude": "Choose how the spine path and role reach crew_env(). Preserve the existing lease semantics exactly; the engine's claim() is not to be modified. Do not open per-call spine addressing in the door.",
+        "hard_constraints_no_gos": [
+          "Do not modify checklist_engine.py::claim semantics",
+          "Do not weaken _identity_violation or the from_child path confinement",
+          "Do not touch settings.json or docs/agents/*",
+          "No merge or push to main; local commits only"
+        ],
+        "local_unknowns": [
+          "Whether the role is already available at the crew_env() call site or must be threaded in",
+          "Whether any existing caller depends on crew_env() not setting SPINE_*"
+        ],
+        "anchors": [
+          "scripts/run_crew.py",
+          "scripts/checklist_engine.py",
+          "scripts/mcp_spine_server.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "555",
+        "title": "Make the MCP door launch where python3 is not a command",
+        "desired_outcome": "The door launches from a fresh install on both platforms.",
+        "useful_now": "It was believed to be the blocker on adoption.",
+        "appetite": "One bounded wave",
+        "acceptance_or_falsification_evidence": "Green CI on windows-latest plus a cold review.",
+        "implementation_latitude": "Choose the interpreter resolution; no literal interpreter in the shipped path.",
+        "hard_constraints_no_gos": ["No user-scope writes under a project-scope flag"],
+        "local_unknowns": ["Whether --wire-mcp writes only where the caller named"],
+        "anchors": ["scripts/install_constellation.py", ".mcp.json"],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "Measure whether a dispatched crew actually uses the door once its binding is correct",
+      "why_likely": "F2 already measured that an agent owning its binding uses the door; this extends that condition to crew",
+      "entry_conditions": ["M1 lands and a crew dispatch is observed with a correct binding"]
+    },
+    {
+      "outcome": "#559 — remove the CLI fallback for agents",
+      "why_likely": "It only becomes honest once the door is reachable on every dispatch path",
+      "entry_conditions": ["Crew are measured using the door by default"]
+    },
+    {
+      "outcome": "#421 (C) relocation tranche",
+      "why_likely": "Its entry condition was a settled verb contract and a usable door",
+      "entry_conditions": ["The door is usable by dispatched agents, not merely launchable"]
+    },
+    {
+      "outcome": "#555 — Windows launch, resumed with the cold review it is owed",
+      "why_likely": "The fix at 6b947546 is promising and CI-green, but unverified and unreviewed",
+      "entry_conditions": ["The human returns and rules on whether Windows re-enters scope"]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether role-spine instructions cause adoption, as distinct from tool availability",
+      "affects": "Whether further instruction investment is warranted",
+      "settle_by": "A measurement whose arms load a corpus containing the edits AND whose door is correctly bound",
+      "current_evidence": "All three F2 arms loaded a pre-edit corpus; arm 3 found the door via ToolSearch, not via any instruction. Recorded as UNMEASURED, not as a negative.",
+      "next_probe": "Re-measure after M1, when a dispatched crew has a working binding"
+    },
+    {
+      "unknown": "Whether a derived identity is reachable at every claim site, or only at crew dispatch",
+      "affects": "Whether the Admiral and Commander spines also stop hand-typing identities",
+      "settle_by": "M1's implementation finding out where claims actually originate",
+      "current_evidence": "Four spines carry four hand-typed conventions, including one never claimed at all",
+      "next_probe": "M1's implementer reports which call sites it could not reach"
+    },
+    {
+      "unknown": "Whether stale leases (#552: 43 on disk, 41 stale, 17 inside archive) share this root cause",
+      "affects": "Whether #552 is absorbed or stays separate",
+      "settle_by": "Inspecting whether the stale leases carry process-scoped identities",
+      "current_evidence": "Hand-typed and UUID identities cannot be resumed, so every recovery mints a new lease and abandons the old one",
+      "next_probe": "Sample the 41 stale leases for identity shape after M1"
+    }
+  ],
+  "revised_parked": [
+    "#560 — --wire-hooks writes the user settings.json under a --scope project flag",
+    "#553/#555 — Windows launch; parked with status written on the PR, cold review owed",
+    "#556 — spine conditions should declare their basis at plan time",
+    "#557 — one append-only override ledger",
+    "#558 — what each review level checks",
+    "Per-call spine addressing in the door, if a genuine cross-spine mutation ever appears"
+  ],
+  "unlaunched_dispositions": [
+    {"id": "421", "action": "keep", "reason": "Still supported, but its entry condition is restated: the door must be usable by dispatched agents, not merely launchable"},
+    {"id": "559", "action": "keep", "reason": "Still supported and now better grounded; it cannot be honest until every dispatch path reaches the door"},
+    {"id": "560", "action": "keep", "reason": "Still supported; untouched and independent of this transition"},
+    {"id": "instruction-causes-adoption", "action": "keep", "reason": "Still unmeasured; a correctly bound door is its precondition"}
+  ],
+  "material_changes": [
+    {
+      "surface": "current_wave.objective",
+      "before": "Make the door launchable where the owner works (PR #555), on the assumption that Windows launch was the blocker on adoption.",
+      "after": "Hand every dispatched crew its own spine and a derived, assignment-keyed identity, so an agent drives its own task's spine through the door and a respawn resumes rather than force-claims.",
+      "reason": "The door launches correctly on this host and is still unusable, so launch was not what gated adoption. The binding is."
+    },
+    {
+      "surface": "current_wave.issues",
+      "before": "#555 alone, actively worked.",
+      "after": "M1 added and actively worked; #555 carried verbatim and unworked, its disposition returned to the human.",
+      "reason": "#555 is a launched identity with committed work, so it is preserved rather than dropped, but no spend is authorized against it while the goal is adoption."
+    },
+    {
+      "surface": "wave_forecast",
+      "before": "#421 (C) gated on 'the door launches from a fresh install on Windows and POSIX, proven in CI'.",
+      "after": "#421 (C) gated on 'the door is usable by dispatched agents, not merely launchable'.",
+      "reason": "The old entry condition could be fully satisfied while leaving every dispatched agent unable to reach the door."
+    },
+    {
+      "surface": "current_wave.exit_criteria",
+      "before": "The door launches from a fresh install on Windows and POSIX, proven in CI.",
+      "after": "Per-dispatch binding, derived assignment-keyed identity, an idempotent respawn proven against a control, a cold review, and #555 carried unworked.",
+      "reason": "The exit criteria now measure the axis that actually gates adoption. The definition of done is unchanged by this transition — the human's respawn-safety requirement was already folded into it before this boundary."
+    }
+  ],
+  "wave_review_comment": "## Wave review — boundary w3x-door-binding\n\nThe planned wave was #555, on the belief that the door not launching on Windows was what blocked adoption. That belief is falsified for this host, and the replacement finding is smaller and more actionable.\n\n**The door works.** It is connected in an interactive session with all 7 tools, and a direct JSON-RPC handshake with `SPINE_FILE` set returns this epic's own `execute` gate and live lease. Nothing is wrong with the server.\n\n**It binds to the wrong spine.** Through the approved door, `spine_status` returns the scratch demo's gate g1. The server binds `SPINE_FILE` at launch from the environment and deliberately refuses to be redirected per call. `grep -rln SPINE_FILE scripts/` returns exactly one file — the server that reads it. `run_crew.py` has zero MCP references. The only places the variable has ever been set are three throwaway measurement scripts under `commander-f2/evidence/g4b/`. That is why F2's arm 3 succeeded and why no dispatched crew ever has.\n\n**Identity is hand-typed and has already drifted four times inside this epic:** a session UUID on the Admiral spine, a never-claimed `None` on the commander spine, and `g2-implement-session` / `g4a-implement-session` on the two implementer spines — while the Admiral spine's own `init` imperative asks for the stable `admiral-epic-418-followon`. Two successive sessions read that instruction and typed a UUID anyway. A typed identity drifts; a derived one cannot.\n\n**Both halves of the fix already exist and were never connected.** `run_crew.py::session_name` mints `constellation/<work-id>/<gate>/<role>/attempt-<n>`, nesting-aware. `checklist_engine.py::claim` already gives idempotent same-id resume, refusal on a different active id, force-with-reason takeover, and staleness self-yield — the exact conflict construct specified. The wave is one wire, plus dropping the `attempt-<n>` tail from the lease identity so a respawn resumes instead of force-claiming.\n\nWindows launch stays parked as a real but separate defect. PR #555's fix at `6b947546` is CI-green, unverified and unreviewed, and still owed a cold review.",
+  "revised_epic_body": "## Current planning truth — after boundary w3x-door-binding\n\n**The goal, in the human's words:** make agents use the MCP door instead of the CLI. Cross-platform usability matters but is not this round's problem; being broken on Windows for now is accepted.\n\n**The door is built, correct, and unreachable by any dispatched agent.** It serves properly and returns real engine content, but it binds `SPINE_FILE` at launch and nothing in any shipped launch path sets it, so every dispatch gets the demo example. This — not the Windows launch line — is what has kept adoption at one agent.\n\n**Spines are per task and nest, and this is already real on disk:** `epic-418-followon` → `epic-418-followon/commander-f2` → `epic-418-followon/commander-f2/g2-implement`. Every spine file already carries the `work_id` its identity needs.\n\n**The current wave is one issue, M1:** `run_crew.py` hands each crew `SPINE_FILE` for its own spine and `SPINE_SESSION` as `constellation/<work-id>/<gate>/<role>` — derived from the spine's own `work_id` and the role, with no `attempt-<n>` tail so a respawn resumes rather than force-claims. The engine's lease semantics are not modified; the door's identity guard is not weakened.\n\n**Confirmed ownership doctrine.** A spine belongs to a task, not to an agent or a session; agents are assigned one at a time; the lease keys on the assignment, not the process instance; identity is derived, never typed; conflicts raise the existing refuse-or-force flag rather than being made foolproof.\n\n**Not in this wave, and why.** #555/#553 Windows launch — parked, real, cold review owed. #421 (C) — entry condition restated to \"the door is usable by dispatched agents\", not merely launchable. #559 — removing the CLI fallback cannot be honest until every dispatch path reaches the door. #423 (E) — out of the epic at the human's direction.\n\n**Unmeasured, and reported as such:** whether role-spine instructions *cause* adoption. Every F2 arm loaded a pre-edit corpus and the accepting arm found the door through `ToolSearch`. Unmeasured is not a negative.",
+  "escalation": null
+}

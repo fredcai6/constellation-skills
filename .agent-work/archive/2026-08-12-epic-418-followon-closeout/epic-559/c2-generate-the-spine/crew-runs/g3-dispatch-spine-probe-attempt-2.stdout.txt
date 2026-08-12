@@ -1,0 +1,8 @@
+The spine is done and the lease is released. Summary of the m1 gate work:
+
+- `_probe_script` in `scripts/generate_spine.py` now checks path-shaped positional arguments (not just `--flags`) against the repo tree, skipping any that carry a resolver-owned token (matched via the imported `init_work_area._RESOLVER_OWNED_TOKEN_RE`).
+- Both `specs/implementer.spine.toml` and `specs/reviewer.spine.toml` regenerate and validate cleanly — `reviewer.spine.toml`'s `r6-fowler` positional path is correctly skipped rather than refused.
+- Added VIOLATING/INNOCENT positional test fixtures to `TestScriptProbe`, plus a real-CLI regeneration test for both specs.
+- Second task: `[[gate.claim]]` (array-of-tables) now raises a named `spec-malformed-claim` fault instead of an unhandled `AttributeError`, with tests covering bad magnitude, `large` without `text`, and the clean cases.
+- `DESIGN_NOTE.md` sections 4, 7, and 10 updated accordingly.
+- Full test suite (99 tests) passes; only the permitted files changed.

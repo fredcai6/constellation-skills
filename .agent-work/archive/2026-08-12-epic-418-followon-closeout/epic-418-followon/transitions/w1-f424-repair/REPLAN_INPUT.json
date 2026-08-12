@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "epic-418-followon — F, C, E",
+      "spec_path": ".agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md",
+      "intent_and_why": "Finish epic #418: land the MCP front door (F, #424) and the first relocation tranche (C, #421), then re-cut what survives and check what shipped against what each workstream promised (E, #423)."
+    },
+    "definition_of_done": [
+      "F: the six done-conditions in spec section F, with DC5 (spine-management cost, counted from the call record, both sides of the door) as the acceptance measure",
+      "C: an agent at gate N does not do, plan or reserve gate N+k work; per-run delivered tokens do not grow",
+      "E: every survivor of the redux appears in exactly one of the current wave or the forecast, and shipped-vs-obligation is checked across both sets of work"
+    ],
+    "good_enough": {
+      "mandatory_quality": "A claim about what happened brings its evidence. A measured negative is a complete deliverable; an UNMEASURED condition is not a negative and is never reported as one.",
+      "sufficient_evidence": "One-shot live scripts kept runnable, not CI-wired; green + independently reviewed for merge",
+      "appetite": "Rigor scales with cost-to-undo, not uniformly"
+    },
+    "hard_constraints": [
+      "The CLI door stays; F is additive",
+      "No engine logic duplicated — the server wraps the engine's own dispatch",
+      "The gate imperative rides tool results verbatim; spine templates stay the single source of instruction text",
+      "settings.json is never written at any scope",
+      "Cheap fixes are routed, not implemented inside a wave under measurement"
+    ],
+    "fixed_decisions": [
+      "Execution order F -> C -> E is a dependency order, not a schedule",
+      "E is terminal by its own body",
+      "C's tranche boundary and E's cluster boundaries are costly-to-revert and surfaced",
+      "Launched identities remain stable"
+    ],
+    "current_wave": {
+      "objective": "Land F: the MCP front door, with its acceptance measured rather than asserted",
+      "exit_criteria": [
+        "F's six done-conditions each carry a verdict backed by evidence",
+        "PR green and independently reviewed",
+        "no gate left blocked by its own reviewer"
+      ],
+      "issues": [
+        {
+          "id": "424",
+          "title": "MCP front door for the engine — ~7 typed tools wrapping the dispatch loop",
+          "desired_outcome": "A second front door that moves spine-management cost off the working agent's attention, with the cost drop measured.",
+          "useful_now": "F settles the verb contract C must relocate against, and it is the epic's least-proven piece — finding out early is the point of the reorder.",
+          "appetite": "One Commander, one wave",
+          "acceptance_or_falsification_evidence": "DC5 counted from the call record, both arms, both sides of the door, CLI baseline re-measured rather than reused",
+          "implementation_latitude": "Tool grouping, argument shapes, delivery mechanism, tracer protocol and n, what is lifted from the prototype",
+          "hard_constraints_no_gos": ["settings.json untouched", "no engine logic duplicated", "do not gold-plate the tool grouping"],
+          "local_unknowns": [
+            "whether an in-session Task-tool subagent shares its parent's already-launched MCP server"
+          ],
+          "anchors": ["scripts/checklist_engine.py", "scripts/mcp_spine_server.py", "skills/workbench/references/checklist-engine.md"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "C (#421): first relocation tranche against F's settled verb contract",
+        "why_likely": "F is the stated dependency and its verb surface is what C writes against",
+        "entry_conditions": ["F's verb contract is settled and not still moving"]
+      },
+      {
+        "outcome": "E (#423): re-cut the survivors and run the terminal shipped-vs-obligation check",
+        "why_likely": "E is terminal by its own body and runs on what survives",
+        "entry_conditions": ["every other issue in the epic has landed"]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Does an in-session Task-tool subagent share its parent's already-launched MCP server?",
+        "affects": "Whether per-dispatch config generation is necessary at all, and DC3's verdict",
+        "settle_by": "Running g3 (the separation/inheritance gate) before g1-integrate",
+        "current_evidence": "External-process dispatch is served by ${VAR} expansion in a shared committed config — reviewer-verified, two dispatches, two identities. The in-session case is untested.",
+        "next_probe": "g3, whose handoff is already written"
+      }
+    ],
+    "parked_possibilities": [
+      "Description trimming and the bare-descriptions control arm",
+      "A third door beyond CLI and MCP",
+      "Concurrency beyond the two-instance separation test"
+    ]
+  },
+  "completed_outcomes": [],
+  "wave_evidence": [
+    {
+      "claim": "F's door is up and serving through typed tools",
+      "expected": "A cold agent drives a spine to DONE through the tools alone with no malformed calls",
+      "observed": "A throwaway spine driven to DONE through the 7 tools; NOT a cold agent on a real role spine",
+      "source": "commander-424 return, DC1 partial"
+    },
+    {
+      "claim": "Same-gate equivalence holds as a property over every gate carrying an imperative",
+      "expected": "Population check across all gates",
+      "observed": "Byte-identity proven for one SAMPLED gate, with a mutate-to-red-and-revert control; the population check is g2 and was not reached",
+      "source": "commander-424 return, DC4 partial"
+    },
+    {
+      "claim": "Spine-management cost falls, attributably to the door",
+      "expected": "Counts per arm, both sides of the door, CLI baseline re-measured",
+      "observed": "NOT MEASURED — g4 not reached. No counts exist.",
+      "source": "commander-424 return, DC5 not met"
+    },
+    {
+      "claim": "Inheritance fails closed for a subagent with no special configuration",
+      "expected": "Refusal or no identity, never the parent's lease, proven against a positive control",
+      "observed": "NOT MEASURED — g3 not reached. Separately, the Admiral measured two spines in this run sharing one session id, so the defect is live in the tree.",
+      "source": "commander-424 return DC3; Admiral log 2026-08-09"
+    },
+    {
+      "claim": "Project-scope .mcp.json cannot serve a cold agent, so per-dispatch generation is required",
+      "expected": "A settled branch point",
+      "observed": "FALSIFIED TWICE. Live sessions do not hot-reload .mcp.json (holds). But 'cannot serve a cold agent' omitted --allowedTools and measured the per-tool permission gate; and the replacement claim 'a shared file cannot key identity per agent' is false — ${VAR} expansion does exactly that, verified by two dispatches from one directory against one committed config returning two different spines.",
+      "source": "g1 cold reviewer BLOCK, reproduced by commander-424"
+    },
+    {
+      "claim": "The suite is green on the F branch",
+      "expected": "0 failed",
+      "observed": "2163 passed, 1 skipped, 0 failed after merging origin/main; PR #533 OPEN, MERGEABLE",
+      "source": "commander-424 return"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "g1-integrate is blocked by its own cold reviewer, and the block cannot be resolved without a fact the plan scheduled two gates later.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "Current planning truth",
+      "evidence": "Reviewer BLOCK on gen_mcp_config.py's justification (not its code — protected-intent items verified, engine diff empty). Necessity turns on whether an in-session Task-tool subagent shares its parent's MCP server. That fact IS DC3, planned at g3.",
+      "reason": "Repair is evidence-led: the blocking evidence is obtainable, and its gate already has a written handoff."
+    },
+    {
+      "id": "D1",
+      "signal": "The plan placed a claim at g1 and its evidence at g3.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth",
+      "evidence": "commander-424 names this as its own defect and recommends running g3 first; g2 and g3 handoffs are already written and its leases are released for a clean claim.",
+      "reason": "Gate order must put evidence before the claim that depends on it."
+    },
+    {
+      "id": "D2",
+      "signal": "map_orient.py reports DEGRADED-NO-MAP on a repo with a live enforced map at map/INDEX.md, because it never probes map/.",
+      "classification": "later_only",
+      "affects": "Current planning truth",
+      "evidence": "commander-424 planned map-first while map-blind and then built ceremony around a confident wrong negative.",
+      "reason": "Real defect, outside F's scope; it belongs on the board rather than in this wave."
+    },
+    {
+      "id": "D3",
+      "signal": "The engine heartbeat is not a liveness signal for a role that blocks on a foreground child; it read 70 minutes stale while the Commander produced a probe, a plan, a crew review and a replan packet.",
+      "classification": "evidence_only",
+      "affects": "Current planning truth",
+      "evidence": "Admiral measurement, 2026-08-09, corroborated across five rail firings.",
+      "reason": "An observation for the retrospective. A rule for future agents belongs in docs/agents/* and is the human's call."
+    },
+    {
+      "id": "D4",
+      "signal": "DC5's first numerator counted server-side, where a client-side schema rejection never arrives.",
+      "classification": "drop",
+      "affects": "Current planning truth",
+      "evidence": "The cold critic showed the measure could not lose: counting from the server log structurally hides exactly the fumbles the door gets credit for avoiding. Corrected to invocation attempts from the driving agent's record, identical across arms, order-controlled.",
+      "reason": "Falsified and already replaced by a sound design; the corrected design is the run's most reusable output."
+    }
+  ],
+  "open_current_wave_issue_ids": ["424"],
+  "unlaunched_items": [
+    {"id": "421", "kind": "forecast"},
+    {"id": "423", "kind": "forecast"},
+    {"id": "in-session-mcp-sharing", "kind": "uncertainty"},
+    {"id": "description-trimming", "kind": "parked"}
+  ],
+  "repo_state": {
+    "anchors": ["scripts/mcp_spine_server.py", "scripts/gen_mcp_config.py", "tests/test_mcp_spine_server.py", "scripts/checklist_engine.py"],
+    "map_status": "map/INDEX.md is live and enforced by a freshness test; map_orient.py does not probe it and reports DEGRADED-NO-MAP (D2)"
+  }
+}

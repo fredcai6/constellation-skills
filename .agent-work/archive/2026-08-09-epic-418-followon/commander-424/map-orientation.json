@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "work_id": "epic-418-followon/commander-424",
+  "root": "/home/tommy/projects/constellation-skills-wt/f-424",
+  "mode": "DEGRADED-NO-MAP",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "70fc98d8194a28f9f8fc2be73e8455ba556e15b81e9b28fdd82eeb11883b6b10",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/GLOSSARY.md",
+      "content_hash": "574e9ef4f494522653ea8d62cb58a1138f5bf385a17e95a75629bccd3c0340ee",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/CREW_CONTEXT.md",
+      "content_hash": "3acd43c9eeddfc538df2da19387cb69a5400512107964cb350d55db61be3b1e4",
+      "source": "agent-declared"
+    },
+    {
+      "path": "README.md",
+      "content_hash": "ecbd4b1d94448d2ffdaf70c0b5355478a82eabcd27ddfcf3f4365d1417490b44",
+      "source": "known-fallback"
+    },
+    {
+      "path": "docs/CHECKLIST_SCHEMA.md",
+      "content_hash": "224224f087f0986fe0ba43d40f06c13ef974697959b627bc82c52f57250ebac7",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "ecbd4b1d94448d2ffdaf70c0b5355478a82eabcd27ddfcf3f4365d1417490b44"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "This is a skill-source repo: no docs/architecture map, no generated map.json, no packets or decision anchors. The checklist engine's internal structure (dispatch surface, verb table, refusal paths) has no map entry; I will read scripts/checklist_engine.py directly as the authority for the tool surface F wraps.",
+    "No map entry exists for MCP-server surfaces in this repo; F introduces the first one."
+  ],
+  "escalation": "Escalating to the Admiral in the return report: workstream F builds a new front door with no architecture map to hang it on. Recording the substitution rather than blocking, per the context step's own instruction for repos with no docs/agents overlay/map.",
+  "emitted_at": "2026-08-09T16:31:18.159141+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1",
+  "mechanical": {
+    "run": "dc5-rep2-mcp",
+    "project": "constellation-skills",
+    "role": "dc5-rep2-mcp-sid",
+    "refusals": 0,
+    "spine-step": "m1",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-dc5-rep2-mcp-m1@bea76119948e00ec5879ce28b175947e6a8f479f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "dc5-rep2-mcp",
+    "generated_at": "2026-08-09T23:19:58Z"
+  }
+}

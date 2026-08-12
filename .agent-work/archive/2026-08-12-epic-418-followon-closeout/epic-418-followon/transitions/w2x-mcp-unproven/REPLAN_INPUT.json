@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "epic-418-followon — F, F2, C",
+      "spec_path": ".agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md",
+      "intent_and_why": "Finish epic #418: land the MCP front door (F, #424), get agents actually driving through it (F2, #542 + #541), then the first relocation tranche (C, #421)."
+    },
+    "definition_of_done": [
+      "F: the six done-conditions in spec section F, with DC5 as the acceptance measure",
+      "F2: agents default to the door and a real dispatched agent drives a real role spine through it, measured from its own call record; the door's own rejections reach the run's episode",
+      "C: an agent at gate N does not do, plan or reserve gate N+k work; per-run delivered tokens do not grow"
+    ],
+    "good_enough": {
+      "mandatory_quality": "A claim about what happened brings its evidence. A measured negative is a complete deliverable; an UNMEASURED condition is not a negative and is never reported as one.",
+      "sufficient_evidence": "One-shot live scripts kept runnable, not CI-wired; green + independently reviewed for merge",
+      "appetite": "Rigor scales with cost-to-undo, not uniformly"
+    },
+    "hard_constraints": [
+      "The CLI door stays; F is additive",
+      "No engine logic duplicated — the server wraps the engine's own dispatch",
+      "The gate imperative rides tool results verbatim; spine templates stay the single source of instruction text",
+      "settings.json is never written at user scope",
+      "Cheap fixes are routed, not implemented inside a wave under measurement"
+    ],
+    "fixed_decisions": [
+      "Execution order F -> F2 -> C is a dependency order, not a schedule",
+      "C's entry condition is the MCP door WORKING -- not merely built, and not merely driven once on one platform",
+      "E (#423) is out of this epic at the human's direction",
+      "Launched identities remain stable"
+    ],
+    "current_wave": {
+      "objective": "Finish F2's open installer criterion, then C (#421): the first relocation tranche, against the door F2 made the default",
+      "exit_criteria": [
+        "install_constellation.py ships and wires .mcp.json with an interpreter resolved per machine, so a fresh install gets the door on Windows as well as POSIX",
+        "An agent at gate N does not do, plan or reserve gate N+k work",
+        "Per-run delivered tokens do not grow",
+        "The gate imperative rides tool results verbatim; spine templates stay the single source of instruction text"
+      ],
+      "issues": [
+        {
+          "id": "542",
+          "title": "Adopt the MCP door: agents default to it for spine management, measured from the call record",
+          "desired_outcome": "Agents default to the door, with the CLI kept as the documented fallback, and adoption measured from the driving agent's own call record.",
+          "useful_now": "C relocates gate instructions against whichever door delivers them; doing C against the CLI and porting after is doing it twice.",
+          "appetite": "One Commander, one wave",
+          "acceptance_or_falsification_evidence": "A dispatched agent's own call record showing door calls and zero CLI engine invocations, with Bash available so zero-CLI cannot be true by construction",
+          "implementation_latitude": "Which role spines change and in what order, how the acceptance run is staged, test structure",
+          "hard_constraints_no_gos": [
+            "The CLI door stays; F is additive",
+            "settings.json untouched at user scope",
+            "no engine logic duplicated"
+          ],
+          "local_unknowns": [
+            "whether identity can be bound to a container the harness shares"
+          ],
+          "anchors": [
+            "scripts/mcp_spine_server.py",
+            "scripts/install_constellation.py",
+            "skills/workbench/references/checklist-engine.md"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "421",
+          "title": "C: first relocation tranche — move gate-specific instruction out of the launch order and into the spine",
+          "desired_outcome": "An agent receives what its current gate needs, when it needs it, rather than the whole spec at dispatch.",
+          "useful_now": "F2 settled which door delivers gate results, so the relocation is written once rather than written and ported.",
+          "appetite": "One Commander, one wave",
+          "acceptance_or_falsification_evidence": "Per-run delivered tokens measured across arms, and gate-N+k work counted from an agent's own record",
+          "implementation_latitude": "Tranche boundary, which roles move first, how the measure is staged",
+          "hard_constraints_no_gos": [
+            "The gate imperative rides tool results verbatim",
+            "The CLI door stays; adoption changed the default, not the availability",
+            "settings.json is never written at user scope"
+          ],
+          "local_unknowns": [
+            "whether the tranche boundary is costly to revert once instructions move"
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "scripts/mcp_spine_server.py",
+            "skills/commander/templates/EXECUTE_PLAN.template.json"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Close the epic: episodes, cartographer reconcile, harvest before sweep, user acceptance",
+        "why_likely": "C is the last workstream; E was removed from this epic at the human's direction",
+        "entry_conditions": [
+          "C has landed or been dispositioned"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether the tranche boundary in C is costly to revert once gate instructions move into the spine",
+        "affects": "How much of C is done in one wave",
+        "settle_by": "C's plan step",
+        "current_evidence": "The spec names it as one of two costly-to-revert items in the epic",
+        "next_probe": "C's interrogation"
+      },
+      {
+        "unknown": "Whether the door is reachable on the repo owner's own platform",
+        "affects": "Whether adoption is real for the human who asked for it",
+        "settle_by": "#553 plus the deferred installer criterion",
+        "current_evidence": ".mcp.json hardcodes \"command\": \"python3\"; the owner's box has no working python3, python or py",
+        "next_probe": "A Windows run after the installer wires a resolved interpreter"
+      }
+    ],
+    "parked_possibilities": [
+      "Description trimming and the bare-descriptions control arm",
+      "A third door beyond CLI and MCP",
+      "Concurrency beyond the two-instance separation test"
+    ]
+  },
+  "completed_outcomes": [],
+  "wave_evidence": [
+    {
+      "claim": "C's entry condition is met: agents run the spine through the door rather than the CLI",
+      "expected": "The door works -- reachable and usable by an agent on the machines this fleet runs on",
+      "observed": "FALSE AS RECORDED. One dispatched agent drove one role spine through the door on Linux, having found the tools via ToolSearch against --allowedTools. .mcp.json hardcodes \"command\": \"python3\", which does not resolve on the repo owner's Windows machine. install_constellation.py has zero MCP references, so a fresh install never wires the door.",
+      "source": "Owner's judgement 2026-08-10; Admiral verification of the installer count and .mcp.json on e8d3b862"
+    },
+    {
+      "claim": "Role spine instructions naming the door cause agents to adopt it",
+      "expected": "An arm whose adoption is attributable to the role-spine edits",
+      "observed": "UNMEASURED. All three g4b arms loaded a skills corpus predating the adoption edits, and the accepting arm found the door through ToolSearch rather than through any instruction. Recorded as unmeasured, not as a negative.",
+      "source": "cold review BLOCK 4; correction recorded in evidence/g4b/MEASUREMENT.md"
+    },
+    {
+      "claim": "The door itself serves correctly once launched",
+      "expected": "A real JSON-RPC session returning real engine output",
+      "observed": "TRUE. initialize returns serverInfo, tools/list returns all 7 tools, a spine_status call returns real engine content with isError False. The defect is the launch line, not the server.",
+      "source": "Admiral smoke test on abad896d and on the merged main"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "X0",
+      "signal": "The wave-2 transition recorded C's entry condition as met. It is not met: the door does not launch on the platform the repo owner uses, and no fresh install wires it.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth",
+      "evidence": "install_constellation.py MCP references: 0. .mcp.json command: \"python3\". Owner's box: py is an extensionless #!/bin/sh wrapper PowerShell cannot execute, python not on PATH.",
+      "reason": "The decomposition treated a deferred criterion as separable from the entry condition it actually constitutes. C cannot be written against a door its author cannot open."
+    },
+    {
+      "id": "X1",
+      "signal": "The Admiral ranked the installer criterion as low priority by reading the owner's phrasing rather than their intent.",
+      "classification": "evidence_only",
+      "affects": "Current planning truth",
+      "evidence": "Owner's words were 'with reinstall will we start driving through the mcp server?'. The Admiral classified that as a question rather than an instruction and deprioritised g3 on that basis, then measured mid-wave that the answer was no, filed #553, and still recorded advance.",
+      "reason": "An Admiral error for the retrospective: a requirement phrased as a question is still a requirement, and I had the measurement that contradicted my own ranking before I ruled."
+    },
+    {
+      "id": "X2",
+      "signal": "Adoption's causal claim rests on an arm that found the door by tool discovery, not by instruction.",
+      "classification": "later_only",
+      "affects": "Current planning truth",
+      "evidence": "All three arms loaded a pre-edit corpus; arm 3 used ToolSearch against --allowedTools.",
+      "reason": "Real work, separable from making the door launchable, and it needs the door launchable first to be measured honestly."
+    }
+  ],
+  "open_current_wave_issue_ids": [
+    "542",
+    "421"
+  ],
+  "unlaunched_items": [
+    {
+      "id": "553",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "description-trimming",
+      "kind": "parked"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/install_constellation.py",
+      ".mcp.json",
+      "scripts/mcp_spine_server.py"
+    ],
+    "map_status": "map/INDEX.md live and freshness-tested; map_orient still cannot parse a code map (#548)"
+  }
+}

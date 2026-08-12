@@ -107,6 +107,15 @@ SCRIPT_RUNTIME_COMPANIONS: dict[str, tuple[str, ...]] = {
     # where neither can find the other and NOTHING raises -- the hook just stops
     # resolving gauge paths. Co-location is the whole contract here.
     "gauge_writer_hook.py": ("spine_rail.py",),
+    # run_crew.py: `sys.path.insert(0, <own parent>)` + a plain top-level
+    # `import install_constellation` (#539, for `assert_shell_safe_command`).
+    # Exactly the #305 mechanism this dict exists to catch -- and it did not,
+    # because the guard that pins this dict against reality was keyed to the
+    # literal `"checklist_engine.py"` and watched no other script (#559 pass
+    # 3). No bundle carrying `run_crew.py` shipped this companion, so
+    # Commander and Explorer, installed, raised `ModuleNotFoundError` at
+    # import -- before argparse ever ran -- and could launch no crew at all.
+    "run_crew.py": ("install_constellation.py",),
 }
 
 # SOURCE SUBDIRECTORIES: scripts whose source lives under a subdirectory of
@@ -355,17 +364,23 @@ def validate_required_references(
         raise InstallError(f"required reference(s) missing: {'; '.join(missing)}")
 
 
-def _platform_interpreter() -> str:
-    """Interpreter for installed command strings: the `py` launcher on Windows,
-    `python3` elsewhere. Installed spine imperatives ship the literal `python <…>`
-    prefix; rewriting it here spares Windows users the recurring `python`->`py`
-    hand-patch (the source templates keep `python <…>` to preserve the authoring
-    contract). This is the os.name-based FALLBACK used only when
-    `probe_host_interpreter` cannot find any working candidate on the host --
-    see `resolve_interpreter`."""
-    return "py" if os.name == "nt" else "python3"
-
-
+# THERE IS NO os.name FALLBACK, by owner ruling. There used to be a
+# `_platform_interpreter()` returning `py` on Windows and `python3` elsewhere,
+# reached only when every candidate below had been probed and rejected. Read
+# those two facts together and the fallback cannot be right by construction:
+# its answer is always drawn from the set that was just disproved. On Windows
+# it returned `py`, already probed, already failed; on POSIX `python3`, the
+# same. It was never a safety net -- it was a guaranteed-wrong value that only
+# ran in worlds where its own answer had been falsified, and it stamped that
+# value into every installed skill body so the failure surfaced later,
+# somewhere else, with no trace back to the cause.
+#
+# Measured on the owner's Windows host: `py` resolves to an extensionless
+# `#!/bin/sh` wrapper PowerShell cannot execute, and neither `python3` nor
+# `python` is on PATH. All three candidates fail, and the old fallback stamped
+# `py` -- the exact thing just proven unlaunchable.
+#
+# `resolve_interpreter` therefore RAISES when nothing answers. See #539.
 INTERPRETER_CANDIDATES: tuple[str, ...] = ("py", "python3", "python")
 DEFAULT_INTERPRETER_PROBE_TIMEOUT = 5.0  # seconds; bounds a hung/misregistered `py` launcher
 
@@ -378,7 +393,15 @@ class InterpreterResolution:
 
     interpreter: str
     candidates: tuple[str, ...]
-    resolved_via: str  # "probe" | "os-default-fallback"
+    # Always "probe" for anything `resolve_interpreter` produces -- the
+    # os.name fallback that used to write "os-default-fallback" is gone (see
+    # INTERPRETER_CANDIDATES above). The field STAYS because
+    # scripts/verify_installed_bundles.py reconstructs this dataclass from an
+    # installed `interpreter.json` sidecar, and a bundle installed by an older
+    # version legitimately still carries "os-default-fallback" on disk. Reading
+    # that back is exactly how a consumer learns a bundle was built from the
+    # disproved guess and should be reinstalled.
+    resolved_via: str  # "probe" | (historical, from an old sidecar) "os-default-fallback"
 
     def as_sidecar(self) -> dict:
         return {
@@ -428,23 +451,177 @@ def probe_host_interpreter(
     return None
 
 
+def no_interpreter_message(candidates: Sequence[str]) -> str:
+    """The refusal text, as one definition, so the CLI error and the readiness
+    report cannot describe the same host condition differently."""
+    return (
+        f"no working Python interpreter found on this host. Tried "
+        f"{', '.join(candidates)} -- each was launched as a real "
+        f"`<name> --version` subprocess and none exited 0 (a missing command, a "
+        f"non-zero exit and a timeout all count as failing). Constellation stamps "
+        f"one of these names into installed skill bodies and hook commands, so "
+        f"there is no correct value to write. Put a working Python on PATH under "
+        f"one of those names -- on Windows the python.org installer provides `py` "
+        f"and `python`; on POSIX `python3` is the PEP 394 guarantee -- then re-run."
+    )
+
+
 def resolve_interpreter(
     *,
     candidates: Sequence[str] = INTERPRETER_CANDIDATES,
     timeout: float = DEFAULT_INTERPRETER_PROBE_TIMEOUT,
 ) -> InterpreterResolution:
     """Resolve the interpreter to stamp into installed skill bodies for ONE
-    install run: probe the host once, falling back to `_platform_interpreter`'s
-    os.name guess only if every candidate fails (never raises). Call this ONCE
-    per run and thread the result through -- never re-probe per skill. Caching
-    prevents INTRA-run drift only; cross-run determinism (#197's
-    `stable_corpus_id`, which compares two separate install invocations) rests on
-    the probe being naturally stable given a static host PATH, the same basis
-    today's pure os.name read relies on."""
+    install run: probe the host once. Call this ONCE per run and thread the
+    result through -- never re-probe per skill. Caching prevents INTRA-run
+    drift only; cross-run determinism (#197's `stable_corpus_id`, which
+    compares two separate install invocations) rests on the probe being
+    naturally stable given a static host PATH.
+
+    RAISES `InstallError` when no candidate answers. This function used to
+    promise "never raises" and fall back to an os.name guess; that contract is
+    gone by owner ruling (#539), because the guess is drawn from the set the
+    probe just disproved and so cannot be right on any platform. Refusing here
+    keeps the failure at its cause instead of stamping an unlaunchable name
+    into every installed bundle and surfacing it later, somewhere else.
+
+    Callers that must REPORT this condition rather than abort on it -- the
+    `--check-readiness` mode -- call `probe_host_interpreter` directly and get
+    `None`, which is the same measurement without the control flow."""
     probed = probe_host_interpreter(candidates=candidates, timeout=timeout)
-    if probed is not None:
-        return InterpreterResolution(probed, tuple(candidates), "probe")
-    return InterpreterResolution(_platform_interpreter(), tuple(candidates), "os-default-fallback")
+    if probed is None:
+        raise InstallError(no_interpreter_message(candidates))
+    return InterpreterResolution(probed, tuple(candidates), "probe")
+
+
+# --------------------------------------------------------------------------- #
+# .mcp.json interpreter wiring (M2 g3-rework, widened g4-repair) -- CLI-entry-point-only
+# --------------------------------------------------------------------------- #
+# `.mcp.json` is git-tracked (like settings.json, #539). #539 also records the
+# rule that governs it: a tracked config that code also reads directly cannot
+# hold an unresolvable value, because anything that consumes the file before
+# wiring runs -- a test, a fresh clone, a harness reading `.mcp.json` at
+# session start -- sees it verbatim. So the committed file carries a real,
+# launchable bare interpreter name (`python3` here; the PEP 394 guarantee on
+# POSIX) rather than staying on `MCP_INTERPRETER_PLACEHOLDER` forever, and
+# wiring's job is to rewrite that bare name -- or the placeholder, for a
+# config that has not been through this repo's own commit -- to the
+# interpreter THIS run actually probed. `is_rewritable_mcp_command` is the one
+# predicate for "which commands wiring may touch": the placeholder plus bare
+# `python`/`python3`/`py` (and their `.exe` forms); anything with a path
+# separator, or naming any other program, is left alone on purpose -- a caller
+# who pinned a path meant it, and a wrapper script is not ours to guess at.
+# This is the ONE write path -- shared with scripts/wire_mcp_interpreter.py,
+# which reuses `rewrite_mcp_config_interpreter` (and this predicate) by
+# reference rather than carrying a second copy.
+#
+# `wire_repo_mcp_config`/`mcp_config_path` are keyword-only `main()` parameters,
+# not CLI flags: they default to `False`/`None` so a direct call to `main()`
+# (every test in this suite, and any other library caller) never touches this
+# checkout's own tracked `.mcp.json`. Only `if __name__ == "__main__":` passes
+# `wire_repo_mcp_config=True`, so a real install run wires it automatically --
+# nothing to remember -- while `main()` itself stays exactly as pure as it
+# always was.
+MCP_CONFIG_FILENAME = ".mcp.json"
+MCP_INTERPRETER_PLACEHOLDER = "<python-interpreter>"
+
+# Bare names wiring may resolve, beyond the placeholder -- exactly the
+# interpreter launcher names `resolve_interpreter` itself probes, plus their
+# Windows `.exe` forms. Nothing else: a bare `uv`, `node`, or wrapper script
+# name is a different program and not ours to guess at.
+MCP_REWRITABLE_BARE_NAMES: frozenset[str] = frozenset({
+    "python", "python3", "py",
+    "python.exe", "python3.exe", "py.exe",
+})
+
+
+def is_rewritable_mcp_command(command: object) -> bool:
+    """Whether `command` is something `rewrite_mcp_config_interpreter` may
+    replace with the resolved interpreter: the placeholder, or a bare name in
+    `MCP_REWRITABLE_BARE_NAMES`. A path -- anything containing `/` or `\\` --
+    is never rewritable regardless of its final component: a caller who
+    pinned `/usr/bin/python3.12` meant it, and stomping that is a worse bug
+    than the silent no-op this predicate exists to fix. Any other program
+    name is likewise left alone."""
+    if not isinstance(command, str):
+        return False
+    if command == MCP_INTERPRETER_PLACEHOLDER:
+        return True
+    if "/" in command or "\\" in command:
+        return False
+    return command in MCP_REWRITABLE_BARE_NAMES
+
+
+def default_mcp_config_path(repo_root: Path = REPO_ROOT) -> Path:
+    return repo_root / MCP_CONFIG_FILENAME
+
+
+def rewrite_mcp_config_interpreter(mcp_config_path: Path, interpreter: InterpreterResolution) -> bool:
+    """Rewrite every `mcpServers[*].command` that `is_rewritable_mcp_command`
+    accepts -- the placeholder, or a bare `python`/`python3`/`py` name -- to
+    `interpreter.interpreter`. Returns whether the file changed; a command
+    that is already the resolved interpreter counts as unchanged, so a
+    correctly-wired config stays a true no-op rather than a same-value
+    rewrite.
+
+    `interpreter` is threaded in, never re-probed here -- mirrors
+    `resolve_interpreter`'s "call once per run, thread the result through"
+    contract, so this stays a pure rewrite over an already-resolved value and
+    never second-guesses the probe."""
+    config = json.loads(mcp_config_path.read_text(encoding="utf-8"))
+    changed = False
+    for server in config.get("mcpServers", {}).values():
+        command = server.get("command")
+        if is_rewritable_mcp_command(command) and command != interpreter.interpreter:
+            server["command"] = interpreter.interpreter
+            changed = True
+    if changed:
+        mcp_config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+    return changed
+
+
+def apply_repo_mcp_config_wiring(
+    mcp_config_path: Path,
+    interpreter: InterpreterResolution,
+    *,
+    dry_run: bool,
+    out: Callable[[str], object],
+) -> None:
+    """Report-and-wire step for THIS checkout's own `.mcp.json`, run once per
+    CLI invocation after skills install successfully.
+
+    A missing file is a silent, named no-op rather than a refusal: an
+    installed copy of this script (write-a-skill bundles it) runs from inside
+    some other skill's tree with no `.mcp.json` beside it, and that is not a
+    defect to abort an otherwise-successful install over."""
+    if not mcp_config_path.is_file():
+        out(f"- {MCP_CONFIG_FILENAME}: none at {mcp_config_path}; nothing to wire")
+        return
+    if dry_run:
+        config = json.loads(mcp_config_path.read_text(encoding="utf-8"))
+        rewritable_count = sum(
+            1 for server in config.get("mcpServers", {}).values()
+            if is_rewritable_mcp_command(server.get("command"))
+            and server.get("command") != interpreter.interpreter
+        )
+        if rewritable_count:
+            out(
+                f"- DRY RUN: would wire {rewritable_count} {mcp_config_path} "
+                f"server command(s) -> {interpreter.interpreter!r} (probed)"
+            )
+        else:
+            out(
+                f"- DRY RUN: {mcp_config_path} carries no rewritable interpreter "
+                f"command; nothing to wire"
+            )
+        return
+    if rewrite_mcp_config_interpreter(mcp_config_path, interpreter):
+        out(f"- {mcp_config_path}: wired command -> {interpreter.interpreter!r} (probed)")
+    else:
+        out(
+            f"- {mcp_config_path}: no rewritable interpreter command found; "
+            f"nothing to wire"
+        )
 
 
 def installed_path_replacements(
@@ -632,7 +809,14 @@ def migrate_legacy_initial_cut_destination(
 # writes nothing -- it does not even create the file when it is absent.
 
 SETTINGS_FILENAME = "settings.json"
+# The per-machine sibling Claude Code also reads. Its hooks MERGE with (never
+# replace) the ones in settings.json -- so this file is where a command
+# carrying an absolute path and a host-probed interpreter name belongs, and
+# settings.json stays the same bytes for every contributor. See `--hooks-from
+# source` in `wire_hooks`.
+LOCAL_SETTINGS_FILENAME = "settings.local.json"
 GAUGE_WRITER_HOOK_SCRIPT = "gauge_writer_hook.py"
+SPINE_RAIL_HOOK_SCRIPT = "spine_rail.py"
 # The canonical owner (see SKILL_SCRIPT_BUNDLES["workbench"]): exactly one
 # installed copy exists, so the wiring has an unambiguous path to point at.
 HOOK_OWNER_SKILL = "workbench"
@@ -645,6 +829,71 @@ HOOK_EVENT = "PostToolUse"
 HOOK_MATCHER = "*"
 HOOK_TIMEOUT = 10
 
+
+@dataclass(frozen=True)
+class HookSpec:
+    """ONE hook this installer knows how to wire and to detect.
+
+    Four exist (#539), not one: the Context Governor's PostToolUse gauge writer
+    plus the three `spine_rail.py` events. Before this table the installer
+    hard-coded the gauge writer's event/matcher/timeout as module constants and
+    had no representation at all for the other three -- so `--wire-hooks` could
+    only ever produce a quarter of the wiring, and detection could only ever
+    see a quarter of it.
+
+    `(event, script)` is the identity: two specs never share both, so one
+    settings.json entry belongs to at most one spec, and `spine_rail.py`
+    appearing under three different events stays unambiguous."""
+
+    name: str                  # stable id used in reports; never user-facing config
+    script: str                # the hook script's FILE NAME, not a path
+    event: str                 # the Claude Code hook event this entry lives under
+    matcher: str | None        # None for events (Stop) that take no matcher
+    args: tuple[str, ...]      # positional arguments appended after the script path
+    timeout: int
+
+
+# Every field below is carried VERBATIM from this repo's own
+# .claude/settings.json (the four entries it ships) -- nothing here is tuned,
+# derived, or invented. `tests/test_interpreter_portability.py` holds this
+# table to that file so the two cannot drift apart.
+GAUGE_WRITER_SPEC = HookSpec(
+    name="gauge_writer",
+    script=GAUGE_WRITER_HOOK_SCRIPT,
+    event=HOOK_EVENT,
+    matcher=HOOK_MATCHER,
+    args=(),
+    timeout=HOOK_TIMEOUT,
+)
+SPINE_RAIL_SPECS: tuple[HookSpec, ...] = (
+    HookSpec("spine_rail_stop", SPINE_RAIL_HOOK_SCRIPT, "Stop", None, ("Stop",), 20),
+    HookSpec(
+        "spine_rail_session_start", SPINE_RAIL_HOOK_SCRIPT, "SessionStart",
+        "compact|resume|startup", ("SessionStart",), 20,
+    ),
+    HookSpec(
+        "spine_rail_post_tool_use", SPINE_RAIL_HOOK_SCRIPT, "PostToolUse",
+        "Bash", ("PostToolUse",), 10,
+    ),
+)
+HOOK_SPECS: tuple[HookSpec, ...] = (GAUGE_WRITER_SPEC, *SPINE_RAIL_SPECS)
+
+# Named hook SETS the CLI exposes. `governor` is the default and is exactly
+# what `--wire-hooks` did before #539 -- the flag's existing contract is
+# unchanged, and the rail (which can BLOCK a Stop) is never added to somebody's
+# settings.json as a side effect of an install they already knew how to run.
+HOOK_SETS: dict[str, tuple[HookSpec, ...]] = {
+    "governor": (GAUGE_WRITER_SPEC,),
+    "rail": SPINE_RAIL_SPECS,
+    "all": HOOK_SPECS,
+}
+DEFAULT_HOOK_SET = "governor"
+
+# Where the wiring points its script paths.
+HOOKS_FROM_INSTALLED = "installed"  # <target_root>/constellation-workbench/scripts/
+HOOKS_FROM_SOURCE = "source"        # this checkout's own scripts/hooks/
+HOOKS_FROM_CHOICES = (HOOKS_FROM_INSTALLED, HOOKS_FROM_SOURCE)
+
 # Hooks are a Claude Code mechanism. No other supported agent reads a
 # `hooks.PostToolUse` array, so detecting -- let alone writing -- one under
 # ~/.codex/ would be reporting on a file nothing ever reads.
@@ -653,6 +902,12 @@ HOOK_CAPABLE_AGENT_NAMES = frozenset({AGENT_TARGETS["claude"].name})
 WIRING_WIRED = "wired"
 WIRING_STALE = "stale"
 WIRING_UNWIRED = "unwired"
+# Only reachable when more than one spec is being asked about: SOME hooks
+# resolve and others have no entry at all. Before #539 this shape could not be
+# expressed -- a single resolvable entry made the whole verdict `wired`, so
+# three missing hooks out of four would have read as fully wired. That is the
+# reassuring-failure shape, one level up from the one `stale` was added for.
+WIRING_PARTIAL = "partial"
 # NOT a fourth classification of entries -- it says the entries could not be
 # classified at all. Reporting that beats lying in the reassuring direction
 # ("wired") or the alarming one ("stale"), and beats taking the install down.
@@ -675,28 +930,42 @@ WIRING_UNDETERMINABLE = "undeterminable"
 # we ACCEPT -- `build_hook_command` never produces a token at all.
 _EXPANDABLE_ENV_TOKENS = frozenset({"CLAUDE_PROJECT_DIR"})
 
-_ESCAPED_HOOK_SCRIPT = re.escape(GAUGE_WRITER_HOOK_SCRIPT)
-# Quoted form first: an installed path on Windows can contain spaces, so the
-# quotes -- not whitespace -- are what delimit it.
-_HOOK_SCRIPT_PATH_RE = re.compile(
-    rf'"([^"]*{_ESCAPED_HOOK_SCRIPT})"|(\S*{_ESCAPED_HOOK_SCRIPT})'
-)
+def _script_path_re(script: str) -> re.Pattern:
+    """Matches the path of `script` inside a hook command string. Quoted form
+    first: an installed path on Windows can contain spaces, so the quotes --
+    not whitespace -- are what delimit it."""
+    escaped = re.escape(script)
+    return re.compile(rf'"([^"]*{escaped})"|(\S*{escaped})')
+
+
+_HOOK_SCRIPT_PATH_RES: dict[str, re.Pattern] = {
+    script: _script_path_re(script)
+    for script in (GAUGE_WRITER_HOOK_SCRIPT, SPINE_RAIL_HOOK_SCRIPT)
+}
+_HOOK_SCRIPT_PATH_RE = _HOOK_SCRIPT_PATH_RES[GAUGE_WRITER_HOOK_SCRIPT]
 _ENV_TOKEN_RE = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}|%([A-Za-z_][A-Za-z0-9_]*)%")
 
 
 @dataclass(frozen=True)
 class HookWiring:
-    """One read-only verdict about one settings.json."""
+    """One read-only verdict about one settings.json, covering the `specs` it
+    was asked about (the Context Governor's one hook by default)."""
 
     state: str
     settings_path: Path
     settings_exists: bool
-    resolved: tuple[str, ...] = ()    # governor commands whose script IS on disk
-    unresolved: tuple[str, ...] = ()  # governor commands that resolve to nothing
-    # governor commands carrying an env token we decline to evaluate -- neither
+    resolved: tuple[str, ...] = ()    # commands whose script IS on disk
+    unresolved: tuple[str, ...] = ()  # commands that resolve to nothing
+    # commands carrying an env token we decline to evaluate -- neither
     # confirmed nor condemned, because from here they are genuinely unknowable
     undeterminable: tuple[str, ...] = ()
     error: str | None = None
+    # Spec NAMES with no entry in this settings.json at all. Distinct from
+    # `unresolved` on purpose: "you never wired this" and "you wired it at a
+    # path that no longer exists" are different problems with different fixes,
+    # and only the second one is a defect.
+    missing: tuple[str, ...] = ()
+    specs: tuple[HookSpec, ...] = (GAUGE_WRITER_SPEC,)
 
 
 def settings_path_for_target_root(target_root: Path) -> Path:
@@ -710,8 +979,36 @@ def settings_path_for_target_root(target_root: Path) -> Path:
     return target_root.parent / SETTINGS_FILENAME
 
 
+def local_settings_path_for_target_root(target_root: Path) -> Path:
+    """The per-machine settings file beside the shared one."""
+    return target_root.parent / LOCAL_SETTINGS_FILENAME
+
+
+def installed_hook_path(target_root: Path, script: str) -> Path:
+    """Where `script` lands in an INSTALL. The destination is flat under the
+    canonical owner's bundle, so both hook scripts sit in one directory."""
+    return target_root / HOOK_OWNER_INSTALL_NAME / "scripts" / script
+
+
 def installed_gauge_writer_path(target_root: Path) -> Path:
-    return target_root / HOOK_OWNER_INSTALL_NAME / "scripts" / GAUGE_WRITER_HOOK_SCRIPT
+    return installed_hook_path(target_root, GAUGE_WRITER_HOOK_SCRIPT)
+
+
+def source_hook_path(script: str, repo_root: Path = REPO_ROOT) -> Path:
+    """Where `script` lives in THIS checkout -- `scripts/hooks/<script>`,
+    resolved through the same `script_source_path` the copy loop uses so the
+    two can never disagree about a hook's source.
+
+    This is the half of #539 the installer could not do at all: `hook_command`
+    could only ever point at an INSTALLED skill copy, so the repo that owns
+    the hooks was the one repo whose hooks it could not wire."""
+    return script_source_path(script, repo_root / "scripts")
+
+
+def hook_script_path(target_root: Path, script: str, *, hooks_from: str) -> Path:
+    if hooks_from == HOOKS_FROM_SOURCE:
+        return source_hook_path(script)
+    return installed_hook_path(target_root, script)
 
 
 def _expand_env_tokens(text: str, env: Mapping[str, str]) -> str:
@@ -730,102 +1027,208 @@ def _expand_env_tokens(text: str, env: Mapping[str, str]) -> str:
     return _ENV_TOKEN_RE.sub(replace, text)
 
 
-def extract_hook_script_path(command: str) -> str | None:
-    """The gauge-writer script path a hook `command` string invokes, or None
-    when the command is not a Context Governor entry at all."""
-    match = _HOOK_SCRIPT_PATH_RE.search(command)
+def extract_hook_script_path(command: str, script: str = GAUGE_WRITER_HOOK_SCRIPT) -> str | None:
+    """The `script` path a hook `command` string invokes, or None when the
+    command does not invoke that script at all. Defaults to the gauge writer,
+    so every pre-#539 caller keeps asking exactly the question it asked."""
+    pattern = _HOOK_SCRIPT_PATH_RES.get(script) or _script_path_re(script)
+    match = pattern.search(command)
     if match is None:
         return None
     return match.group(1) or match.group(2)
 
 
-def governor_hook_commands(settings: object) -> list[str]:
-    """Every PostToolUse `command` string that invokes a gauge writer hook,
-    flattened across matcher blocks. Deliberately tolerant of shapes it does
-    not expect: an odd settings.json is something to REPORT, never something to
-    raise on in the middle of an otherwise-fine install."""
+def hook_command_text(hook: object) -> str | None:
+    """One hook object's full invocation as a single string.
+
+    Exec-form entries (`{"command": "python3", "args": ["/path/x.py"]}`) put
+    the script path in `args`, not in `command`. We never EMIT that form, but
+    a hand-written one is real and must not read as "no hook here at all" --
+    that would be a silent false negative in the one detector that exists to
+    catch silence. Joining is enough for path extraction; it is never executed."""
+    if not isinstance(hook, dict):
+        return None
+    command = hook.get("command")
+    if not isinstance(command, str):
+        return None
+    args = hook.get("args")
+    if isinstance(args, list):
+        return " ".join([command, *(a for a in args if isinstance(a, str))])
+    return command
+
+
+def _event_hook_commands(settings: object, event: str) -> list[str]:
+    """Every hook command string under one event, flattened across matcher
+    blocks. Deliberately tolerant of shapes it does not expect: an odd
+    settings.json is something to REPORT, never something to raise on in the
+    middle of an otherwise-fine install."""
     commands: list[str] = []
     if not isinstance(settings, dict):
         return commands
     hooks = settings.get("hooks")
-    entries = hooks.get(HOOK_EVENT) if isinstance(hooks, dict) else None
+    entries = hooks.get(event) if isinstance(hooks, dict) else None
     if not isinstance(entries, list):
         return commands
     for entry in entries:
         if not isinstance(entry, dict):
             continue
         for hook in entry.get("hooks") or []:
-            if not isinstance(hook, dict):
-                continue
-            command = hook.get("command")
-            if isinstance(command, str) and extract_hook_script_path(command):
-                commands.append(command)
+            text = hook_command_text(hook)
+            if text is not None:
+                commands.append(text)
     return commands
 
 
-def detect_hook_wiring(settings_path: Path, *, env: Mapping[str, str]) -> HookWiring:
-    """Three-state and READ-ONLY -- opens nothing for writing and creates
-    nothing.
+def hook_commands_for_spec(settings: object, spec: HookSpec) -> list[str]:
+    """Every command under `spec.event` that invokes `spec.script`."""
+    return [
+        command
+        for command in _event_hook_commands(settings, spec.event)
+        if extract_hook_script_path(command, spec.script)
+    ]
+
+
+def governor_hook_commands(settings: object) -> list[str]:
+    """Every PostToolUse command string that invokes a gauge writer hook."""
+    return hook_commands_for_spec(settings, GAUGE_WRITER_SPEC)
+
+
+def detect_hook_wiring(
+    settings_path: Path,
+    *,
+    env: Mapping[str, str],
+    specs: Sequence[HookSpec] = (GAUGE_WRITER_SPEC,),
+) -> HookWiring:
+    """READ-ONLY -- opens nothing for writing and creates nothing.
 
     Classification is by RESOLVING each entry's script path against the
     filesystem, never by string-matching the command. Under a string match a
     moved, renamed, or uninstalled tree still reads as `wired`, which is exactly
-    the reassuring-failure shape this detector exists to prevent."""
+    the reassuring-failure shape this detector exists to prevent.
+
+    Each spec in `specs` is classified on its own, then rolled up. `specs`
+    defaults to the Context Governor's single hook, so every pre-#539 caller
+    gets byte-identical verdicts; pass `HOOK_SPECS` to ask about all four."""
+    specs = tuple(specs)
     if not settings_path.is_file():
-        return HookWiring(WIRING_UNWIRED, settings_path, False)
+        return HookWiring(
+            WIRING_UNWIRED, settings_path, False,
+            missing=tuple(spec.name for spec in specs), specs=specs,
+        )
     try:
         settings = json.loads(settings_path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
-        return HookWiring(WIRING_UNREADABLE, settings_path, True, error=str(exc))
+        return HookWiring(WIRING_UNREADABLE, settings_path, True, error=str(exc), specs=specs)
 
     resolved: list[str] = []
     unresolved: list[str] = []
     undeterminable: list[str] = []
-    for command in governor_hook_commands(settings):
-        raw = extract_hook_script_path(command) or ""
-        expanded = _expand_env_tokens(raw, env)
-        if _ENV_TOKEN_RE.search(expanded):
-            # An env token we will not evaluate survives. Resolving it against
-            # the installer's own environment would answer a question about the
-            # WRONG process, so we decline rather than guess in either direction.
-            undeterminable.append(command)
-            continue
-        (resolved if Path(expanded).is_file() else unresolved).append(command)
+    missing: list[str] = []
+    covered: list[str] = []       # spec has at least one entry that RESOLVES
+    unknown_specs: list[str] = []  # spec has entries, none resolve, some unknowable
+    broken_specs: list[str] = []   # spec has entries and every one names nothing
 
-    if resolved:
-        state = WIRING_WIRED
-    elif undeterminable:
-        # Ahead of STALE deliberately: "I cannot tell" must not be reported as
+    for spec in specs:
+        commands = hook_commands_for_spec(settings, spec)
+        if not commands:
+            missing.append(spec.name)
+            continue
+        spec_resolved: list[str] = []
+        spec_unknown: list[str] = []
+        spec_unresolved: list[str] = []
+        for command in commands:
+            raw = extract_hook_script_path(command, spec.script) or ""
+            expanded = _expand_env_tokens(raw, env)
+            if _ENV_TOKEN_RE.search(expanded):
+                # An env token we will not evaluate survives. Resolving it
+                # against the installer's own environment would answer a
+                # question about the WRONG process, so we decline rather than
+                # guess in either direction.
+                spec_unknown.append(command)
+            elif Path(expanded).is_file():
+                spec_resolved.append(command)
+            else:
+                spec_unresolved.append(command)
+        resolved.extend(spec_resolved)
+        undeterminable.extend(spec_unknown)
+        unresolved.extend(spec_unresolved)
+        if spec_resolved:
+            covered.append(spec.name)
+        elif spec_unknown:
+            unknown_specs.append(spec.name)
+        else:
+            broken_specs.append(spec.name)
+
+    if not covered and not unknown_specs and not broken_specs:
+        # Nothing was wired at all. Not a defect -- an uninstalled project.
+        state = WIRING_UNWIRED
+    elif broken_specs:
+        # Something is definitely wired WRONG: a named path with no file.
+        state = WIRING_STALE
+    elif missing:
+        state = WIRING_PARTIAL
+    elif unknown_specs:
+        # Ahead of WIRED deliberately: a spec we cannot evaluate is not a spec
+        # we have confirmed. "I cannot tell" must not be reported as
         # "definitely broken" any more than as "definitely fine".
         state = WIRING_UNDETERMINABLE
-    elif unresolved:
-        state = WIRING_STALE
     else:
-        state = WIRING_UNWIRED
+        state = WIRING_WIRED
     return HookWiring(
-        state, settings_path, True, tuple(resolved), tuple(unresolved), tuple(undeterminable)
+        state, settings_path, True, tuple(resolved), tuple(unresolved),
+        tuple(undeterminable), missing=tuple(missing), specs=specs,
     )
+
+
+def _wiring_label(wiring: HookWiring) -> str:
+    """What to CALL the hooks in a report line. Kept as the pre-#539 wording
+    whenever the question asked was the pre-#539 question, so existing reports
+    and the docs that quote them stay word-for-word correct."""
+    if tuple(wiring.specs) == (GAUGE_WRITER_SPEC,):
+        return "Context Governor hooks"
+    return "Constellation hooks"
+
+
+def _wiring_events(wiring: HookWiring) -> str:
+    return "/".join(dict.fromkeys(spec.event for spec in wiring.specs))
+
+
+def _wiring_scripts(wiring: HookWiring) -> str:
+    return "/".join(dict.fromkeys(spec.script for spec in wiring.specs))
 
 
 def describe_hook_wiring(wiring: HookWiring) -> str:
     """One reportable line. ASCII only -- this goes to a Windows console."""
+    label = _wiring_label(wiring)
+    events = _wiring_events(wiring)
+    scripts = _wiring_scripts(wiring)
     if wiring.state == WIRING_WIRED:
-        paths = ", ".join(sorted(
-            {extract_hook_script_path(command) or command for command in wiring.resolved}
-        ))
-        return f"- Context Governor hooks: WIRED -- {paths}"
+        paths = ", ".join(sorted({
+            extract_hook_script_path(command, spec.script) or command
+            for spec in wiring.specs
+            for command in wiring.resolved
+            if extract_hook_script_path(command, spec.script)
+        }))
+        return f"- {label}: WIRED -- {paths}"
+    if wiring.state == WIRING_PARTIAL:
+        return (
+            f"- {label}: PARTIALLY WIRED -- {len(wiring.resolved)} of {len(wiring.specs)} "
+            f"hook(s) resolve in {wiring.settings_path}, but these have no entry at all: "
+            f"{', '.join(wiring.missing)}. Those events never fire and nothing else can "
+            f"tell you that. Re-run with --wire-hooks --hooks all to add the missing ones."
+        )
     if wiring.state == WIRING_STALE:
         return (
-            f"- Context Governor hooks: STALE -- {len(wiring.unresolved)} {HOOK_EVENT} "
-            f"entry(ies) in {wiring.settings_path} name a {GAUGE_WRITER_HOOK_SCRIPT} that "
+            f"- {label}: STALE -- {len(wiring.unresolved)} {events} "
+            f"entry(ies) in {wiring.settings_path} name a {scripts} that "
             f"is not on disk, so the hook never runs and nothing else can tell you that: "
             f"{'; '.join(wiring.unresolved)}. Re-run with --wire-hooks to add a correct "
             f"entry; the stale one is left in place for you to remove."
         )
     if wiring.state == WIRING_UNDETERMINABLE:
         return (
-            f"- Context Governor hooks: CANNOT EVALUATE -- {len(wiring.undeterminable)} "
-            f"{HOOK_EVENT} entry(ies) in {wiring.settings_path} name the script through an "
+            f"- {label}: CANNOT EVALUATE -- {len(wiring.undeterminable)} "
+            f"{events} entry(ies) in {wiring.settings_path} name the script through an "
             f"environment variable this installer will not expand, because it would be "
             f"expanded in the WRONG process (this one, not the future hook's): "
             f"{'; '.join(wiring.undeterminable)}. Whether the hook fires cannot be "
@@ -833,27 +1236,83 @@ def describe_hook_wiring(wiring: HookWiring) -> str:
         )
     if wiring.state == WIRING_UNREADABLE:
         return (
-            f"- Context Governor hooks: UNREADABLE -- could not parse "
+            f"- {label}: UNREADABLE -- could not parse "
             f"{wiring.settings_path} ({wiring.error}), so the wiring state is unknown. "
             f"Nothing was read past this point and nothing was changed."
         )
     where = wiring.settings_path if wiring.settings_exists else f"{wiring.settings_path} (absent)"
     return (
-        f"- Context Governor hooks: UNWIRED -- no {HOOK_EVENT} entry for "
-        f"{GAUGE_WRITER_HOOK_SCRIPT} in {where}, so the Context Governor never fires. "
-        f"Re-run with --wire-hooks to add one; nothing is written without that flag."
+        f"- {label}: UNWIRED -- no {events} entry for "
+        f"{scripts} in {where}, so nothing there ever fires. "
+        f"Re-run with --wire-hooks to add one; nothing is written without that flag. "
+        f"NOT WIRED YET is not the same as WIRED WRONG: this reads as an uninstalled "
+        f"project, not a defective one."
+    )
+
+
+def local_settings_note(target_root: Path) -> str:
+    """A sentence naming the per-machine sibling when one exists, else "".
+
+    Every verdict this installer prints is about the SHARED settings.json.
+    Claude Code merges hooks across both files, so a reader who is told
+    "UNWIRED" while a populated settings.local.json sits next to it would draw
+    a false conclusion about whether the hooks run. Say it exists; do not
+    claim it satisfies anything."""
+    local_path = local_settings_path_for_target_root(target_root)
+    if not local_path.is_file():
+        return ""
+    return (
+        f" NOTE: {local_path.name} also exists beside it and Claude Code merges its "
+        f"hooks with these; it is per-machine and does not ship, so it cannot satisfy "
+        f"this verdict."
     )
 
 
 def report_hook_wiring(
-    target_root: Path, *, env: Mapping[str, str], out: Callable[[str], object]
+    target_root: Path,
+    *,
+    env: Mapping[str, str],
+    out: Callable[[str], object],
+    specs: Sequence[HookSpec] = (GAUGE_WRITER_SPEC,),
 ) -> HookWiring:
-    wiring = detect_hook_wiring(settings_path_for_target_root(target_root), env=env)
-    out(describe_hook_wiring(wiring))
+    wiring = detect_hook_wiring(
+        settings_path_for_target_root(target_root), env=env, specs=specs)
+    out(describe_hook_wiring(wiring) + local_settings_note(target_root))
     return wiring
 
 
-def build_hook_command(script_path: Path, interpreter: str) -> str:
+def assert_shell_safe_command(command: str) -> None:
+    """A hook `command` must begin with a COMMAND WORD -- never with a quote.
+
+    This is the #539 trap made unrepresentable. Claude Code spawns a shell-form
+    hook with `sh -c` on POSIX, Git Bash on Windows, or PowerShell when Git
+    Bash is not installed. PowerShell parses a statement that STARTS with a
+    double quote as a string-literal expression rather than a command: it
+    echoes the path and exits 0 without running anything. A hook that silently
+    does nothing is indistinguishable from a hook with nothing to say, which is
+    worse than one that errors.
+
+    Naming the interpreter first is what removes that hazard, and it removes it
+    under EVERY shell -- `sh`, Git Bash, PowerShell and `cmd` all parse a
+    leading bare word as a command to run. So this invariant does not depend on
+    the PowerShell parse claim being true; it is simply the form that is
+    correct whether or not it is."""
+    # Leading WHITESPACE is the same defect wearing a hat: a shell strips it,
+    # so ` "path"` is the leading-quote command again. Requiring a bare word
+    # character first is the invariant, not "does not literally begin with a
+    # double quote".
+    if not command or command[0] in "\"' \t":
+        raise InstallError(
+            f"refusing to emit a hook command that does not start with a command word: "
+            f"{command!r}. "
+            f"Under PowerShell (Claude Code's shell-form fallback on a Windows host "
+            f"without Git Bash) a leading quote parses as a string literal, so the hook "
+            f"echoes its own path and exits 0 without running -- a silent no-op. Name "
+            f"the interpreter first."
+        )
+
+
+def build_hook_command(script_path: Path, interpreter: str, args: Sequence[str] = ()) -> str:
     """The literal `command` string an entry carries.
 
     ABSOLUTE, and never `${CLAUDE_PROJECT_DIR}`. That variable delivers its
@@ -866,58 +1325,116 @@ def build_hook_command(script_path: Path, interpreter: str) -> str:
     that judges it.
 
     `interpreter` comes from the run's single `resolve_interpreter()` probe --
-    never re-probed here, never hardcoded."""
-    return f'{interpreter} "{script_path.as_posix()}"'
+    never re-probed here, never hardcoded. Naming it at all is only safe
+    BECAUSE this string is written per machine: no single interpreter name
+    works on every platform, which is why the git-tracked settings.json names
+    none (#539)."""
+    command = f'{interpreter} "{script_path.as_posix()}"'
+    if args:
+        command = " ".join([command, *args])
+    assert_shell_safe_command(command)
+    return command
 
 
-def build_hook_entry(command: str) -> dict:
-    return {
-        "matcher": HOOK_MATCHER,
-        "hooks": [{"type": "command", "command": command, "timeout": HOOK_TIMEOUT}],
-    }
+def build_hook_entry(command: str, spec: HookSpec = GAUGE_WRITER_SPEC) -> dict:
+    hooks = [{"type": "command", "command": command, "timeout": spec.timeout}]
+    if spec.matcher is None:
+        # Stop takes no matcher. Emitting `"matcher": null` or a bogus "*"
+        # would be inventing config this repo's own settings.json does not use.
+        return {"hooks": hooks}
+    return {"matcher": spec.matcher, "hooks": hooks}
 
 
-def add_hook_entry(settings: dict, entry: dict) -> bool:
-    """Append `entry` as a SIBLING in `hooks.PostToolUse`, in place. Never nests
+def add_hook_entry(settings: dict, entry: dict, event: str = HOOK_EVENT) -> bool:
+    """Append `entry` as a SIBLING in `hooks.<event>`, in place. Never nests
     inside an existing matcher block, never reorders what is already there, and
     never removes anything -- including a stale governor entry, which is
     reported rather than silently rewritten (no self-healing, by design).
 
-    Returns False when an identical command is already present."""
+    Returns False when an identical command is already present under `event`."""
     hooks = settings.setdefault("hooks", {})
     if not isinstance(hooks, dict):
         raise InstallError(f"--wire-hooks: 'hooks' in settings is not an object: {type(hooks).__name__}")
-    entries = hooks.setdefault(HOOK_EVENT, [])
+    entries = hooks.setdefault(event, [])
     if not isinstance(entries, list):
         raise InstallError(
-            f"--wire-hooks: 'hooks.{HOOK_EVENT}' in settings is not an array: {type(entries).__name__}"
+            f"--wire-hooks: 'hooks.{event}' in settings is not an array: {type(entries).__name__}"
         )
-    if entry["hooks"][0]["command"] in governor_hook_commands(settings):
+    if entry["hooks"][0]["command"] in _event_hook_commands(settings, event):
         return False
     entries.append(entry)
     return True
 
 
+def settings_path_for_wiring(target_root: Path, hooks_from: str) -> Path:
+    """Which settings file `--wire-hooks` writes.
+
+    `installed` keeps writing the same file it always wrote. `source` writes
+    the per-machine sibling instead, and that is not a preference: a
+    source-tree command carries this checkout's absolute path AND an
+    interpreter name probed on THIS host, so it is wrong for every other
+    machine by construction. Claude Code merges hooks across both files rather
+    than letting one replace the other, so the shared file keeps whatever it
+    already had."""
+    if hooks_from == HOOKS_FROM_SOURCE:
+        return local_settings_path_for_target_root(target_root)
+    return settings_path_for_target_root(target_root)
+
+
 def wire_hooks(
     target_root: Path,
     *,
-    interpreter: str,
+    interpreter: InterpreterResolution,
     dry_run: bool,
     scope: str,
     out: Callable[[str], object],
+    specs: Sequence[HookSpec] = (GAUGE_WRITER_SPEC,),
+    hooks_from: str = HOOKS_FROM_INSTALLED,
 ) -> None:
-    """The ONE path on which this installer writes a settings.json. Reached only
+    """The ONE path on which this installer writes a settings file. Reached only
     from the explicit `--wire-hooks` opt-in (`decision:opt-in-wiring-only`, a
     human ruling), and still a no-op under `--dry-run`."""
-    script = installed_gauge_writer_path(target_root)
-    if not dry_run and not script.is_file():
+    specs = tuple(specs)
+
+    # FAIL LOUDLY ON A PLATFORM WE CANNOT SERVE (#539). Since the owner ruling,
+    # `resolve_interpreter` RAISES rather than returning an os.name guess, so a
+    # CLI run can no longer reach here with an unprobed resolution -- the
+    # refusal now happens one level up, at its cause. This guard stays as
+    # defense in depth on a PUBLIC function, and it is not dead code: the other
+    # producer of an `InterpreterResolution` is
+    # scripts/verify_installed_bundles.py, which reconstructs one from an
+    # installed `interpreter.json` sidecar, and a bundle installed by an older
+    # version still carries "os-default-fallback" on disk. What is refused is
+    # wiring from a resolution never measured on THIS host, whatever made it.
+    if interpreter.resolved_via != "probe":
         raise InstallError(
-            f"--wire-hooks: no {GAUGE_WRITER_HOOK_SCRIPT} at {script}. Refusing to wire a "
-            f"path with no file behind it, and refusing to point at another skill's copy."
+            f"--wire-hooks: refusing to wire from an interpreter resolution that was not "
+            f"probed on this host (resolved_via={interpreter.resolved_via!r}, "
+            f"interpreter={interpreter.interpreter!r}). A hook command built from an "
+            f"unmeasured name may not start at all, and a hook that never starts reports "
+            f"nothing. Re-run the installer so this host is probed afresh."
         )
 
-    command = build_hook_command(script, interpreter)
-    settings_path = settings_path_for_target_root(target_root)
+    settings_path = settings_path_for_wiring(target_root, hooks_from)
+
+    if hooks_from == HOOKS_FROM_SOURCE and is_git_tracked(settings_path):
+        raise InstallError(
+            f"--wire-hooks --hooks-from source: refusing to write {settings_path} -- it is "
+            f"git-tracked. Source-tree wiring carries this checkout's absolute path and an "
+            f"interpreter probed on this host, so committing it hands every teammate a "
+            f"path that does not exist on their machine. Untrack it (it belongs in "
+            f".gitignore) and re-run."
+        )
+
+    commands: list[tuple[HookSpec, str]] = []
+    for spec in specs:
+        script = hook_script_path(target_root, spec.script, hooks_from=hooks_from)
+        if not dry_run and not script.is_file():
+            raise InstallError(
+                f"--wire-hooks: no {spec.script} at {script}. Refusing to wire a "
+                f"path with no file behind it, and refusing to point at another skill's copy."
+            )
+        commands.append((spec, build_hook_command(script, interpreter.interpreter, spec.args)))
 
     settings: dict = {}
     if settings_path.is_file():
@@ -935,27 +1452,42 @@ def wire_hooks(
             )
         settings = loaded
 
-    added = add_hook_entry(settings, build_hook_entry(command))
+    added: list[tuple[HookSpec, str]] = []
+    unchanged: list[tuple[HookSpec, str]] = []
+    for spec, command in commands:
+        target = added if add_hook_entry(
+            settings, build_hook_entry(command, spec), spec.event) else unchanged
+        target.append((spec, command))
 
     if dry_run:
         # `dry_run` is pre-existing plumbing and this is a NEW write path, so the
         # bail-out is placed after everything that can refuse and before anything
         # that can write -- the mutation above happened only in memory.
-        verb = "add" if added else "leave unchanged (already present)"
-        out(f"- DRY RUN: would {verb} the {HOOK_EVENT} entry in {settings_path}")
-        out(f"- DRY RUN: would write command: {command}")
-        out("- DRY RUN: settings.json NOT written")
+        for spec, command in commands:
+            verb = "add" if (spec, command) in added else "leave unchanged (already present)"
+            out(f"- DRY RUN: would {verb} the {spec.event} entry in {settings_path}")
+            out(f"- DRY RUN: would write command: {command}")
+        out(f"- DRY RUN: {settings_path.name} NOT written")
         return
 
     if added:
         settings_path.parent.mkdir(parents=True, exist_ok=True)
         settings_path.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
-        out(f"- wired the Context Governor {HOOK_EVENT} hook into {settings_path}")
-        out(f"  command: {command}")
-    else:
-        out(f"- Context Governor {HOOK_EVENT} hook already present in {settings_path}; unchanged")
+        for spec, command in added:
+            out(f"- wired the {spec.name} {spec.event} hook into {settings_path}")
+            out(f"  command: {command}")
+    for spec, _command in unchanged:
+        out(f"- {spec.name} {spec.event} hook already present in {settings_path}; unchanged")
 
-    if scope == "project":
+    if hooks_from == HOOKS_FROM_SOURCE:
+        out(
+            f"- NOTE: this wiring points at this checkout's own scripts/hooks/ and names "
+            f"the interpreter probed here ({interpreter.interpreter}). It is correct on "
+            f"THIS machine only. It was written to {settings_path.name}, which is "
+            f"per-machine and must never be committed; Claude Code merges its hooks with "
+            f"whatever {SETTINGS_FILENAME} already carries rather than replacing them."
+        )
+    elif scope == "project":
         # The absolute path is the accepted cost of rejecting a project-relative
         # form, and it embeds the user's home directory AND user name. A
         # project-scope settings.json is committable, so say so out loud rather
@@ -970,20 +1502,78 @@ def wire_hooks(
 # --------------------------------------------------------------------------- #
 # readiness check (#458) -- report-only: never repairs, never writes settings.json
 # --------------------------------------------------------------------------- #
-# "Is this project set up to run Constellation" answered as four separately
+# "Is this project set up to run Constellation" answered as five separately
 # testable checks, never a single opaque verdict. Each returns a ReadinessCheck
 # so a failing item always carries a NAMED reason -- a check that can only ever
 # report ready is the exact defect this exists to catch.
+#
+# The fifth item, `interpreter`, arrived with #539's ruling that the installer
+# hard-stops when no interpreter answers. An abort is right for an install and
+# wrong for a diagnostic: readiness exists to NAME what is wrong with a host,
+# so it reports this condition as a plain NOT READY instead of refusing to run.
+
+
+READINESS_READY = "READY"
+READINESS_NOT_READY = "NOT READY"
+# A THIRD outcome, not a flavour of the second (#539). `check_hooks_shippable`
+# can reach a state where it honestly cannot tell -- an entry names its script
+# through an environment variable that only exists in the future hook's
+# process. Expanding it here would answer a question about the wrong process.
+# Two states force that honest "I cannot tell" to be laundered into a pass or
+# a fail; a correctly wired repo was being reported as defective on exactly
+# that account. Undeterminable is not ready -- but it is not a defect either.
+READINESS_UNDETERMINABLE = "CANNOT DETERMINE"
 
 
 @dataclass(frozen=True)
 class ReadinessCheck:
     """One readiness item's verdict. `reason` is always populated -- on a pass
     it names what was actually verified, not just 'ok', so a reader can tell a
-    real determination from a check that never ran."""
+    real determination from a check that never ran.
+
+    `determinable=False` means the check ran and reached no verdict. It implies
+    `ready=False` (an unconfirmed item is never reported as confirmed) but it
+    must not be rolled up as a failure."""
 
     ready: bool
     reason: str
+    determinable: bool = True
+
+    @property
+    def verdict(self) -> str:
+        if self.ready:
+            return READINESS_READY
+        return READINESS_NOT_READY if self.determinable else READINESS_UNDETERMINABLE
+
+
+def check_interpreter_resolvable(
+    *,
+    candidates: Sequence[str] = INTERPRETER_CANDIDATES,
+    timeout: float = DEFAULT_INTERPRETER_PROBE_TIMEOUT,
+) -> ReadinessCheck:
+    """Readiness item 5: an interpreter this installer can NAME (environment-scoped).
+
+    A distinct question from item 1, not a duplicate of it. `check_engine_runnable`
+    asks whether pytest runs under `sys.executable` -- an interpreter that
+    always exists, because it is the one running this process. This asks
+    whether any of `INTERPRETER_CANDIDATES` resolves as a NAME on PATH, which
+    is what installed skill bodies and hook commands are written in terms of.
+    A host can pass item 1 and fail this one: a venv Python running the
+    installer says nothing about whether `py`/`python3`/`python` are launchable
+    for a hook subprocess later.
+
+    Reported, never raised. `resolve_interpreter` refusing is right for an
+    install; refusing to run the DIAGNOSTIC when this condition is the
+    diagnosis would be its own defect, so this calls `probe_host_interpreter`
+    directly -- the same measurement without the control flow."""
+    probed = probe_host_interpreter(candidates=candidates, timeout=timeout)
+    if probed is None:
+        return ReadinessCheck(False, no_interpreter_message(candidates))
+    return ReadinessCheck(
+        True,
+        f"`{probed}` answered `{probed} --version` on this host "
+        f"(tried {', '.join(candidates)} in order)",
+    )
 
 
 def check_engine_runnable(*, python: str = sys.executable, timeout: float = 10.0) -> ReadinessCheck:
@@ -1071,11 +1661,32 @@ def is_git_tracked(path: Path) -> bool:
     the file's own parent so this resolves correctly even when the file sits
     in a subdirectory of the repo root (the real install layout: .git at the
     project root, settings.json one level down under .claude/). Any git
-    failure (not a repo, git missing) reads as untracked, never raises."""
+    failure (not a repo, git missing) reads as untracked, never raises.
+
+    `path` is made absolute FIRST, and both the subprocess `cwd` and the
+    pathspec are derived from that absolute path -- a relative `path` (e.g.
+    `.claude/settings.local.json` from `--project .`) would otherwise resolve
+    its RELATIVE parent (`.claude`) against the process's real cwd for `cwd`,
+    while git evaluates the still-relative pathspec against THAT same cwd too,
+    doubling the parent segment (`.claude/.claude/...`) and reporting a tracked
+    file as untracked. Absolutizing first makes the answer independent of
+    whether the caller passed a relative or an absolute path.
+
+    It is `os.path.abspath`, deliberately, and NOT `Path.resolve()`.
+    `resolve()` follows symlinks, so a git-tracked symlink whose target lives
+    outside the repo resolves to a path git knows nothing about and reads as
+    untracked -- reintroducing the exact false negative this function was
+    fixed for, and letting the installer write machine-specific wiring
+    straight through the link into a file some other repo tracks, with no
+    local `git status` signal. `resolve()` also touches the filesystem and
+    raises `RuntimeError` on a symlink loop, which is outside the caught set
+    and breaks the never-raises contract above. `abspath` normalizes `..`
+    without following links and without any filesystem I/O."""
     try:
+        absolute = Path(os.path.abspath(os.fspath(path)))
         result = subprocess.run(
-            ["git", "ls-files", "--error-unmatch", str(path)],
-            cwd=str(path.parent), capture_output=True, text=True, timeout=10,
+            ["git", "ls-files", "--error-unmatch", str(absolute)],
+            cwd=str(absolute.parent), capture_output=True, text=True, timeout=10,
         )
     except (OSError, subprocess.TimeoutExpired):
         return False
@@ -1083,45 +1694,89 @@ def is_git_tracked(path: Path) -> bool:
 
 
 def check_hooks_shippable(
-    target_root: Path, *, scope: str, env: Mapping[str, str]
+    target_root: Path,
+    *,
+    scope: str,
+    env: Mapping[str, str],
+    specs: Sequence[HookSpec] = (GAUGE_WRITER_SPEC,),
 ) -> ReadinessCheck:
     """Readiness item 3: hooks wired in a file that ships (environment-scoped).
 
     Reuses `detect_hook_wiring`/`describe_hook_wiring` rather than re-deriving
-    wiring detection. Ready iff the Context Governor hook is WIRED AND, for
+    wiring detection. Ready iff the hooks are WIRED AND, for
     `scope == 'project'` only, the settings.json backing that verdict is
     git-tracked (`git ls-files` membership) -- a gitignored
     `settings.local.json` can be WIRED while the tracked `settings.json` is
     not, which must read as NOT ready. `scope == 'user'` has no tracked/
     untracked axis at all (`~/.claude/settings.json` is never part of a repo),
     so WIRED alone is sufficient there -- `settings_path_for_target_root`
-    already derives the real runtime path by construction."""
+    already derives the real runtime path by construction.
+
+    Three outcomes, not two (#539). CANNOT EVALUATE is returned as
+    `determinable=False`: the detector's refusal to expand an env token from
+    the wrong process is correct and must survive the roll-up intact, instead
+    of being reported as a defect on a healthy config."""
     settings_path = settings_path_for_target_root(target_root)
-    wiring = detect_hook_wiring(settings_path, env=env)
+    wiring = detect_hook_wiring(settings_path, env=env, specs=specs)
+    # `describe_hook_wiring` renders a standalone bullet; this is embedded
+    # after a bullet of its own, so drop the marker rather than print "- - ".
+    # A local file cannot make this item READY (#180: at project scope the
+    # wiring must be in a file that SHIPS), but staying silent about it invites
+    # the reader to conclude the hooks do not run at all, which may be false.
+    reason = describe_hook_wiring(wiring).removeprefix("- ") + local_settings_note(target_root)
+    if wiring.state == WIRING_UNDETERMINABLE:
+        return ReadinessCheck(False, reason, determinable=False)
     if wiring.state != WIRING_WIRED:
-        return ReadinessCheck(False, describe_hook_wiring(wiring))
+        return ReadinessCheck(False, reason)
     if scope == "project" and not is_git_tracked(settings_path):
         return ReadinessCheck(
             False,
             f"{settings_path} is WIRED but not git-tracked (git ls-files) -- an "
             f"untracked settings file (e.g. settings.local.json) never ships with the project",
         )
-    return ReadinessCheck(True, f"Context Governor hooks WIRED via {settings_path}")
+    return ReadinessCheck(True, f"{_wiring_label(wiring)} WIRED via {settings_path}")
 
 
-READINESS_ITEMS: tuple[str, ...] = ("engine", "skills", "hooks", "work_area")
+READINESS_ITEMS: tuple[str, ...] = (
+    "engine", "interpreter", "skills", "hooks", "work_area")
+
+
+# Exit code for the roll-up "some item could not be determined, and nothing
+# was found wrong". Distinct from 1 on purpose: a caller that treats any
+# nonzero as broken keeps working, and one that wants the distinction can have
+# it without us pretending to a verdict we do not hold.
+READINESS_EXIT_UNDETERMINABLE = 3
 
 
 @dataclass(frozen=True)
 class ReadinessReport:
     """One agent target's full readiness verdict: the four ReadinessChecks,
-    keyed by `READINESS_ITEMS` name. `ready` is true only when all four are."""
+    keyed by `READINESS_ITEMS` name. `ready` is true only when all of them are."""
 
     checks: Mapping[str, ReadinessCheck]
 
     @property
     def ready(self) -> bool:
         return all(check.ready for check in self.checks.values())
+
+    @property
+    def verdict(self) -> str:
+        """READY, NOT READY, or CANNOT DETERMINE. The last is reached only when
+        nothing was found wrong AND at least one item reached no verdict --
+        never as a softer way of saying NOT READY."""
+        if self.ready:
+            return READINESS_READY
+        if any(not c.ready and c.determinable for c in self.checks.values()):
+            return READINESS_NOT_READY
+        return READINESS_UNDETERMINABLE
+
+    @property
+    def exit_code(self) -> int:
+        return {
+            READINESS_READY: 0,
+            READINESS_NOT_READY: 1,
+            READINESS_UNDETERMINABLE: READINESS_EXIT_UNDETERMINABLE,
+        }[self.verdict]
 
 
 def build_readiness_report(
@@ -1133,20 +1788,22 @@ def build_readiness_report(
     env: Mapping[str, str],
     expected_skills: Iterable[str] | None = None,
     python: str = sys.executable,
+    specs: Sequence[HookSpec] = (GAUGE_WRITER_SPEC,),
 ) -> ReadinessReport:
-    """Combine all four readiness checks for one agent target.
+    """Combine all five readiness checks for one agent target.
 
     Hooks are a Claude Code mechanism (`HOOK_CAPABLE_AGENT_NAMES`); for any
     other agent, item 3 is reported READY with an explicit 'not applicable'
     reason rather than silently skipped -- a check the reader cannot tell was
     never run is the exact defect this readiness mode exists to catch."""
     if agent.name in HOOK_CAPABLE_AGENT_NAMES:
-        hooks = check_hooks_shippable(target_root, scope=scope, env=env)
+        hooks = check_hooks_shippable(target_root, scope=scope, env=env, specs=specs)
     else:
         hooks = ReadinessCheck(
             True, f"not applicable: {agent.name} has no hook mechanism to check")
     return ReadinessReport({
         "engine": check_engine_runnable(python=python),
+        "interpreter": check_interpreter_resolvable(),
         "skills": check_skills_installed(target_root, expected_skills=expected_skills),
         "hooks": hooks,
         "work_area": check_work_area_present(project_root),
@@ -1154,14 +1811,13 @@ def build_readiness_report(
 
 
 def describe_readiness_report(agent_name: str, report: ReadinessReport) -> str:
-    """One reportable block: a READY/NOT READY line per item plus an overall
-    verdict line, each carrying the check's own named reason."""
+    """One reportable block: a per-item verdict line plus an overall verdict
+    line, each carrying the check's own named reason."""
     lines = [f"{agent_name}:"]
     for name in READINESS_ITEMS:
         check = report.checks[name]
-        verdict = "READY" if check.ready else "NOT READY"
-        lines.append(f"  - {name}: {verdict} -- {check.reason}")
-    lines.append(f"  {'READY' if report.ready else 'NOT READY'}")
+        lines.append(f"  - {name}: {check.verdict} -- {check.reason}")
+    lines.append(f"  {report.verdict}")
     return "\n".join(lines)
 
 
@@ -1190,15 +1846,25 @@ def run_readiness_check(
         target_args = argparse.Namespace(**{**vars(args), "project": None})
     target_roots = resolve_target_roots(target_args, env, cwd)
 
-    overall_ready = True
+    specs = HOOK_SETS[getattr(args, "hooks", DEFAULT_HOOK_SET)]
+    verdicts: list[str] = []
     for agent, target_root in target_roots:
         report = build_readiness_report(
             agent=agent, target_root=target_root, scope=args.scope,
             project_root=project_root, env=env, expected_skills=expected_skills,
+            specs=specs,
         )
         out(describe_readiness_report(agent.name, report))
-        overall_ready = overall_ready and report.ready
-    return 0 if overall_ready else 1
+        verdicts.append(report.verdict)
+
+    # A definite failure on ANY agent outranks an undeterminable on another:
+    # the run is refused, and saying so does not launder the unknown item --
+    # its own line still reads CANNOT DETERMINE.
+    if READINESS_NOT_READY in verdicts:
+        return 1
+    if READINESS_UNDETERMINABLE in verdicts:
+        return READINESS_EXIT_UNDETERMINABLE
+    return 0
 
 
 def install_skills(
@@ -1607,6 +2273,30 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--hooks",
+        choices=sorted(HOOK_SETS),
+        default=DEFAULT_HOOK_SET,
+        help=(
+            "Which hooks --wire-hooks writes and which hooks are reported on: "
+            "'governor' (default) is the Context Governor's PostToolUse gauge writer "
+            "alone -- exactly what --wire-hooks has always written; 'rail' is the three "
+            "spine_rail.py events (Stop, SessionStart, PostToolUse); 'all' is all four. "
+            "Also applies to --check-readiness."
+        ),
+    )
+    parser.add_argument(
+        "--hooks-from",
+        choices=HOOKS_FROM_CHOICES,
+        default=HOOKS_FROM_INSTALLED,
+        help=(
+            "Where the wired commands point. 'installed' (default) points at the "
+            "installed skill copy. 'source' points at THIS checkout's own "
+            "scripts/hooks/, for developing the hooks themselves -- it writes "
+            f"{LOCAL_SETTINGS_FILENAME} rather than {SETTINGS_FILENAME}, because a "
+            "source-tree command is correct on the machine that wrote it and no other."
+        ),
+    )
+    parser.add_argument(
         "--baseline-only",
         action="store_true",
         help=(
@@ -1633,6 +2323,8 @@ def main(
     env: Mapping[str, str] | None = None,
     cwd: Path | None = None,
     out: Callable[[str], object] = print,
+    wire_repo_mcp_config: bool = False,
+    mcp_config_path: Path | None = None,
 ) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -1654,6 +2346,16 @@ def main(
                 raise InstallError(
                     "--check-readiness cannot be combined with --baseline-only"
                 )
+            if args.hooks_from != HOOKS_FROM_INSTALLED:
+                # --hooks-from only affects what gets WRITTEN, and this mode
+                # writes nothing. Accepting it silently would imply it changed
+                # what was checked. (--hooks DOES apply here: it selects which
+                # hooks are reported on.)
+                raise InstallError(
+                    "--check-readiness cannot be combined with --hooks-from -- readiness "
+                    "reports only and never writes a settings file, so there is nothing "
+                    "for it to change. Use --hooks to choose which hooks are reported on."
+                )
             return run_readiness_check(args, env=runtime_env, cwd=runtime_cwd, out=out)
 
         skills = select_skills(args.skills, discover_skills())
@@ -1670,15 +2372,39 @@ def main(
                     "--wire-hooks cannot be combined with --baseline-only (which installs "
                     "no skills, so there would be no hook to point at)"
                 )
-            if HOOK_OWNER_SKILL not in {skill.source_name for skill in skills}:
+            if (
+                args.hooks_from == HOOKS_FROM_INSTALLED
+                and HOOK_OWNER_SKILL not in {skill.source_name for skill in skills}
+            ):
                 raise InstallError(
                     f"--wire-hooks needs the '{HOOK_OWNER_SKILL}' skill -- the canonical owner "
                     f"of {GAUGE_WRITER_HOOK_SCRIPT} -- and this install does not include it. "
                     f"Refusing to wire a hook it cannot locate rather than silently pointing "
                     f"at some other skill's copy."
                 )
+            if args.hooks_from == HOOKS_FROM_SOURCE:
+                # Source wiring points at THIS checkout, so the check is about
+                # the checkout, not about what is being installed.
+                missing_sources = [
+                    str(source_hook_path(spec.script))
+                    for spec in HOOK_SETS[args.hooks]
+                    if not source_hook_path(spec.script).is_file()
+                ]
+                if missing_sources:
+                    raise InstallError(
+                        f"--wire-hooks --hooks-from source: this checkout has no hook "
+                        f"script(s) at {', '.join(missing_sources)}. Source wiring only "
+                        f"means anything in a checkout that owns scripts/hooks/."
+                    )
 
         if args.baseline_only:
+            # NO interpreter probe on this path, deliberately. --baseline-only
+            # seeds template baselines and working copies, both of which are
+            # `shutil.copy2` of a source template verbatim -- it never calls
+            # `rewrite_installed_skill_paths`, so no `python <` token is ever
+            # rewritten and there is no interpreter name to write. Refusing here
+            # would block a legitimate operation on a ground that does not apply
+            # to it, which is the mirror of the defect this ruling fixes.
             if args.scope != "project":
                 raise InstallError("--baseline-only requires --scope project")
             if args.dest:
@@ -1700,9 +2426,15 @@ def main(
             )
         # Resolve ONCE for the whole process here (not per target root / agent) so
         # a `--agent all` run still probes the host exactly once, not once per
-        # agent target. A --wire-hooks dry run still probes, so it can PRINT the
-        # exact command string it would have written.
-        interpreter = None if (args.dry_run and not args.wire_hooks) else resolve_interpreter()
+        # agent target.
+        #
+        # UNCONDITIONAL, including under --dry-run. A dry run used to skip the
+        # probe entirely, which meant that on a host with no working interpreter
+        # it printed a clean plan and exited 0 for an install that could not
+        # succeed -- a dry run that says "fine" about a run that would refuse is
+        # worse than no dry run. It now refuses at exactly the point the real run
+        # would, and for the same stated reason.
+        interpreter = resolve_interpreter()
         for agent, target_root in target_roots:
             out(f"{agent.name}:")
             install_skills(
@@ -1719,15 +2451,28 @@ def main(
                 if args.wire_hooks:
                     wire_hooks(
                         target_root,
-                        interpreter=interpreter.interpreter,
+                        interpreter=interpreter,
                         dry_run=args.dry_run,
                         scope=args.scope,
                         out=out,
+                        specs=HOOK_SETS[args.hooks],
+                        hooks_from=args.hooks_from,
                     )
                 # Always-on and read-only, with or without the flag. Runs AFTER
                 # the install so a fresh install that just placed the hook flips
                 # a previously-stale entry to wired.
-                report_hook_wiring(target_root, env=runtime_env, out=out)
+                report_hook_wiring(
+                    target_root, env=runtime_env, out=out, specs=HOOK_SETS[args.hooks])
+        if wire_repo_mcp_config:
+            # Same `interpreter` this run already resolved above -- never a
+            # second probe. Runs once per process regardless of --agent all,
+            # since this checkout's own .mcp.json is not per-agent-target.
+            apply_repo_mcp_config_wiring(
+                mcp_config_path if mcp_config_path is not None else default_mcp_config_path(),
+                interpreter,
+                dry_run=args.dry_run,
+                out=out,
+            )
         if args.scope == "project" and not args.dry_run and not args.dest:
             project_root = args.project.expanduser() if args.project else runtime_cwd
             seeded = write_template_baselines(skills, project_root, out=out)
@@ -1739,4 +2484,7 @@ def main(
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # wire_repo_mcp_config=True ONLY here: a real process invocation wires this
+    # checkout's own .mcp.json automatically, with nothing to remember, while a
+    # direct library/test call to main() (every other caller) never touches it.
+    raise SystemExit(main(wire_repo_mcp_config=True))

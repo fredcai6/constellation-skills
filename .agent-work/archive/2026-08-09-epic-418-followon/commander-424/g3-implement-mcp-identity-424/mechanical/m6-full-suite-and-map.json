@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m6-full-suite-and-map",
+  "mechanical": {
+    "run": "g3-implement-mcp-identity-424",
+    "project": "constellation-skills",
+    "role": "g3-implementer",
+    "refusals": 1,
+    "spine-step": "m6-full-suite-and-map",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3-implement-mcp-identity-424-m6-full-suite-and-map@bfc0be0c2b945670ebda1a21e5f67fec66fd1821",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3-implement-mcp-identity-424",
+    "generated_at": "2026-08-09T21:12:24Z"
+  }
+}

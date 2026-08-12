@@ -1,0 +1,5 @@
+The document now contains: the pasted sweep baseline, the required-8-sections structure, a complete worked implementer spec, the emitted `constraints`/`directives` JSON for gate `m1` plus what `current` would render, the gate plan, self-scoring, the settling question answered honestly (partial — shell-tokenization fixed, wrong-invocation not), and the strongest argument against the candidate. No mission-already-done generator was found in the tree (confirmed via search), and no code was written or edited outside the result file.
+
+**My constraint: smallest-diff.** One-sentence recommendation: build `scripts/generate_spine.py` as a single importable+CLI module with a two-kind (`command`/`argv`, `artifact`) spec vocabulary that always calls the real `validate_spine.validate()` as its hard gate before writing anything — cheapest to review, but it can't author `git-change-policy` gates and only *renders* large claims to a reviewer rather than mechanically forcing them to be addressed.
+
+Result written to: `.agent-work/epic-559/c2-generate-the-spine/crew-handoffs/plan-alt-a-smallest-diff-result.md`

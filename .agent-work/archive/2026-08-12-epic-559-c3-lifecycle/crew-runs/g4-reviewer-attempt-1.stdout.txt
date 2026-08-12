@@ -1,0 +1,19 @@
+The g4 review is complete: **APPROVE**, 0 blocking findings, all 7 survey checks recorded and consolidated through the checklist engine, lease released, source tree unmodified.
+
+Summary of what was verified independently (not just read off the implementer's report):
+- Wrong-parent case exits 1 naming the offending entry; matching parent exits 0 — reproduced from scratch with my own fixtures.
+- The injected postcondition is `command`-kind, never `artifact`.
+- `spec-dispatch-undeclared` is honestly textual-only everywhere (code, fault text, contract) — no overclaiming found.
+- `abandoned` handling reuses `run_crew.is_abandoned` directly, no reimplementation; the false-alarm fixture passes.
+- Emitted commands are `shlex.quote`d and `cd`-anchored — confirmed no shell injection with a malicious parent string.
+- Sweep unchanged at 23; full suite reproduced at 2920 passed/3 skipped/1121 subtests.
+- `not_yet_written` lines are byte-identical to pre-g4, untouched.
+- All named file/dir exclusions confirmed untouched; Fowler code-smell pass ran clean (3 justified overrides, 0 flagged).
+
+The result artifact is at `.agent-work/epic-559/c3-lifecycle/crew-handoffs/g4-reviewer-result.md`, with one non-blocking note for the Commander in Workflow Feedback about a stray `refusals` counter increment on the parent's `execute.json` from an earlier spine-binding mismatch this session.
+; all specific exclusions (spine_lifecycle.py, mcp_spine_server.py, validate_spine.py, DESIGN_NOTE.md) confirmed untouched; `not_yet_written` and the missing `newline="\n"` at line 1044 confirmed left alone for g5.
+- Ran the Fowler code-smell pass (12/12 smells, 0 flagged, 3 honestly overridden against logged precedent).
+
+One workflow note flagged in the result: the inherited `SPINE_FILE`/`SPINE_SESSION` pointed at the Commander's own outer spine rather than a g4-scoped one, which caused one harmless refused call against it before I switched to authoring my own survey (matching the g1–g3 precedent).
+
+Result artifact written to `.agent-work/epic-559/c3-lifecycle/crew-handoffs/g4-reviewer-result.md`.

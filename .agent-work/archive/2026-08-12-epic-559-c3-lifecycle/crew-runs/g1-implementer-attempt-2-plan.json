@@ -1,0 +1,360 @@
+{
+  "work_id": "epic-559/c3-lifecycle/g1/implementer/attempt-2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-newline-fix",
+    "m2-regression-test",
+    "m3-rollback-refactor",
+    "m4-full-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read references/global-crew.md and references/global-everyone.md (constellation-implementer skill), docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the rework handoff, and the reviewer result it names. Verify the handoff is complete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + reviewer-result loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md, global-everyone.md, CREW_CONTEXT.md write rule, g1-rework-handoff.md, g1-reviewer-result.md, spine_lifecycle.py, existing tests. Handoff is complete: task, intent, scope, exclusions, evidence, return format all present."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-newline-fix": {
+      "id": "m1-newline-fix",
+      "title": "Fix the missing newline arg, audit every other write in the module",
+      "imperative": "Add newline=\"\\n\" to spine_lifecycle.py:258's spine_path.write_text call. Audit every other write in the module for the same omission (grep write_text/open with mode w) and fix any found. Confirm via grep that the file has exactly one write site and it now carries newline=\"\\n\".",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff read."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "spine_path.write_text carries encoding=\"utf-8\", newline=\"\\n\"; no other write site in the module is missing it",
+          "check": {
+            "kind": "command",
+            "command": "grep -Fn 'newline=\"\\n\"' scripts/spine_lifecycle.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-newline-fix-2"
+        }
+      ],
+      "constraints": [
+        "do not touch generate_spine.py's identical pre-existing omission (g4/g5 scope)",
+        "checklist_engine.py save() unchanged",
+        "validate_spine.py unchanged"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-newline-fix-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -n 'newline=\"\\\\\\\\n\"' scripts/spine_lifecycle.py",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-newline-fix-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -Fn 'newline=\"\\n\"' scripts/spine_lifecycle.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-regression-test": {
+      "id": "m2-regression-test",
+      "title": "Add the test that would have caught it, with a real mutation experiment",
+      "imperative": "Add a byte-level test (Path.read_bytes(), assert no b'\\r\\n') for the written spine.json. Mutate the newline= fix out, run pytest, observe pass/fail on this Linux host, restore the fix, run again. If the byte-level test cannot go red on Linux, say so and add a source/AST-level check (house style of tests/test_mcp_adoption.py::_cli_only_verb_violations) asserting newline= is present at every write_text call in the module, with a mutated-copy positive control proving the predicate can fail. Attest c1 with the RED observation transcript (manual, since a by-design-failing run is not itself the gate's check). c2 is the final green suite state.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "newline fix landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "newline fix landed at spine_lifecycle.py:258"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red observed: the mutation experiment ran on this host and its actual output (pass or fail) is recorded verbatim in the result artifact",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Mutation experiment ran on this Linux host (see result artifact for full transcript). Removed newline=\"\\n\" from spine_lifecycle.py:258 write_text call, re-ran the 4 new tests: TestSpineFileHasNoCRLF and test_innocent_write_text_call_with_newline_present STAYED GREEN (proves the byte-level b'\\r\\n' check cannot go red on Linux, since os.linesep is \\n here so no translation happens either way). test_the_shipped_module_has_no_violations WENT RED (AssertionError: [scripts/spine_lifecycle.py:258] == []), proving the AST-level check IS the layer that can fail on this host. Restored the fix; re-ran; all 4 pass again."
+        },
+        {
+          "id": "c2",
+          "statement": "new test(s) pass with the real fix in place",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_spine_lifecycle.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-regression-test-1"
+        }
+      ],
+      "constraints": [
+        "byte-level assertion must use Path.read_bytes(), not text-mode read"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-regression-test-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_spine_lifecycle.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-rollback-refactor": {
+      "id": "m3-rollback-refactor",
+      "title": "Collapse _rollback's three inline subprocess.run calls into a helper",
+      "imperative": "Replace _rollback's three repeated subprocess.run([\"git\", ...], cwd=str(root), capture_output=True, text=True) inline calls with a small best-effort helper, keeping the never-raises contract exactly as-is. Re-run the rollback tests to confirm behavior is unchanged.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "newline fix and regression test landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "newline fix and regression test landed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "_rollback still never raises; TestOpenWorkRollback and TestOpenWorkSelfVerifyForcesRollback still pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_spine_lifecycle.py -k 'Rollback or SelfVerifyForcesRollback'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-rollback-refactor-1"
+        }
+      ],
+      "constraints": [
+        "never raises",
+        "no behavior change"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-rollback-refactor-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_spine_lifecycle.py -k 'Rollback or SelfVerifyForcesRollback'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-full-evidence": {
+      "id": "m4-full-evidence",
+      "title": "Full suite + sweep, write the result artifact",
+      "imperative": "Run the full suite and the sweep exactly as the handoff specifies; confirm counts exceed the 2852/23 baseline. Write the result artifact at .agent-work/epic-559/c3-lifecycle/crew-handoffs/g1-rework-result.md with Return status: complete, the diff, the mutation transcript, and Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "newline fix, regression test, and rollback refactor all landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "all three prior items complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite passes, count exceeds 2852 passed baseline",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-full-evidence-1"
+        },
+        {
+          "id": "c2",
+          "statement": "sweep still exactly 23",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && test \"$(python scripts/validate_spine.py --sweep --root . 2>&1 | grep -cE '^\\s+\\[')\" = 23"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-full-evidence-2"
+        },
+        {
+          "id": "c3",
+          "statement": "result artifact written with Return status: complete",
+          "check": {
+            "kind": "command",
+            "command": "grep -q '^Return status$' -A1 /home/tommy/projects/constellation-skills-wt/c3-lifecycle/.agent-work/epic-559/c3-lifecycle/crew-handoffs/g1-rework-result.md 2>/dev/null || grep -q 'complete' /home/tommy/projects/constellation-skills-wt/c3-lifecycle/.agent-work/epic-559/c3-lifecycle/crew-handoffs/g1-rework-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-full-evidence-3"
+        }
+      ],
+      "constraints": [
+        "never git add -A",
+        "no push to main"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-full-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-full-evidence-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && test \"$(python scripts/validate_spine.py --sweep --root . 2>&1 | grep -cE '^\\s+\\[')\" = 23",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-full-evidence-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q '^Return status$' -A1 /home/tommy/projects/constellation-skills-wt/c3-lifecycle/.agent-work/epic-559/c3-lifecycle/crew-handoffs/g1-rework-result.md 2>/dev/null || grep -q 'complete' /home/tommy/projects/constellation-skills-wt/c3-lifecycle/.agent-work/epic-559/c3-lifecycle/crew-handoffs/g1-rework-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/epic-559/c3-lifecycle/g1/implementer/attempt-2",
+    "status": "released",
+    "claimed_at": "2026-08-12T10:03:46.591429+00:00",
+    "last_heartbeat": "2026-08-12T10:13:19.894702+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-12T10:13:23.966837+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-12T10:03:59.745347+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-newline-fix",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-12T10:04:59.131501+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-regression-test",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-12T10:05:46.121525+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-rollback-refactor",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-12T10:06:06.024778+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-full-evidence",
+      "why": "newline fix landed, audited (single write site), regression test added with a real mutation experiment proving the byte-level check cannot go red on Linux and the AST-level check can; _rollback collapsed into a best-effort helper with unchanged behavior; suite 2856 passed (baseline 2852 + 4 new), sweep unchanged at 23; result artifact written with Return status: complete",
+      "mechanical": false,
+      "ts": "2026-08-12T10:13:19.894689+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-12T10:04:56.209502+00:00",
+      "reason": "postcondition c1's grep pattern was over-escaped through JSON and never matched the literal newline=\"\\n\" text; retext to a working fixed-string grep",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m1-newline-fix.c1"
+      ]
+    }
+  ]
+}

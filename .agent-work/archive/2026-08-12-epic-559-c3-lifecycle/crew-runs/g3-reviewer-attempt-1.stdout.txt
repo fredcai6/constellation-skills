@@ -1,0 +1,10 @@
+The g3 review is complete. **Verdict: APPROVE.**
+
+Summary of what was done:
+- Built and drove a full review survey through the checklist engine (`.agent-work/epic-559/c3-lifecycle/g3-review/review.json`), since no spine was bound for this crew dispatch — no shortcuts, no self-reported checks.
+- Independently reproduced every item in the handoff's 8-point verify order, including two live falsifications: injecting `SESSION` into `_spine_open` to prove the identity guard goes red, and separately injecting a docstring-only mention of the banned words to prove the guard resists the exact false-positive class that tripped the Commander earlier. Both were restored afterward.
+- Falsified all four updated tool-count pins by injecting a bogus 12th tool — all went red correctly, then restored green.
+- Reproduced the full stdio round trip, the full suite (2884 passed, 3 skipped, 1121 subtests), and the sweep (23) — all matched the claim exactly.
+- Ran the required Fowler code-smell pass (rail-verified via `verify_fowler_pass.py`): one non-blocking flagged smell (duplicated git-plumbing logic vs. `verify_worktree_isolation.py`), two overridden with logged reasons (shotgun-surgery and comments-as-deodorant, both justified by documented repo conventions).
+- Confirmed the tree is unmodified and flagged one out-of-scope triage candidate (stale tool count in `skills/workbench/references/checklist-engine.md`) that the implementer had already independently disclosed.
+- Wrote the result artifact to `.agent-work/epic-559/c3-lifecycle/crew-handoffs/g3-reviewer-result.md`, including a "most likely way this gate produces a green run that is wrong" (the identity guard is scoped to one function's AST and can't see a future leak pushed one call-level down) and workflow feedback flagging an unsubstituted `<work-id>` placeholder bug in the reviewer's own survey template.

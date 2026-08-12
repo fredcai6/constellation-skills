@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r6-fowler",
+  "files": [],
+  "repo_rev": {
+    "commit": "36a1bdcddaa2927f3c83053e3178dece4f99f2f7"
+  },
+  "run": {
+    "work_id": "epic-418-followon/commander-f2/g1-review",
+    "generated_at": "2026-08-10T06:25:52Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/f2-mcp-adoption",
+      "repo": "/home/tommy/projects/constellation-skills-wt/f2-mcp-adoption",
+      "durable": "/home/tommy/projects/constellation-skills-wt/f2-mcp-adoption"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/f2-mcp-adoption"
+    }
+  }
+}

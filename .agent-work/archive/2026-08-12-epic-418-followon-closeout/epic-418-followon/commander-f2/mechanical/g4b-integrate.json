@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g4b-integrate",
+  "mechanical": {
+    "run": "epic-418-followon/commander-f2",
+    "project": "constellation-skills",
+    "spine-step": "g4b-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon/commander-f2-g4b-integrate@53da78fbea6f96b0dc4f0b0baa2b4067c2a03adc",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "epic-418-followon/commander-f2",
+    "generated_at": "2026-08-10T09:18:41Z"
+  }
+}

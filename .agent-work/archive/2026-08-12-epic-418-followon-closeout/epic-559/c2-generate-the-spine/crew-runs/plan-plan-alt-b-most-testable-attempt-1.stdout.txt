@@ -1,0 +1,5 @@
+Only the untracked `.agent-work/` artifact area shows — no code, template, spine, `.mcp.json`, or settings were touched, and no git write operations were run, per the handoff's scope limits.
+
+**Constraint: most-testable.** My recommendation: a closed, six-kind TOML spec with a generation-time probe per kind (live pytest-collect, `inspect.signature().bind()`, argparse dry-run, live glob count) — an author never types a shell command from memory for four of the six kinds, and a wrong flag/kwarg/selector is refused loudly before any JSON is written, with the honest cost that three of the six probe kinds have no existing oracle behind them and rest on tests this mission itself must write.
+
+Result written to `.agent-work/epic-559/c2-generate-the-spine/crew-handoffs/plan-alt-b-most-testable-result.md`.

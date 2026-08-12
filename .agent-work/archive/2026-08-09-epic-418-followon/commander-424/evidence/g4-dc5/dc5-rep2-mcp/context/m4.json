@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m4",
+  "files": [],
+  "repo_rev": {
+    "commit": "6fe601c8aaed915c86c6d5e2af092e21d41242d8"
+  },
+  "run": {
+    "work_id": "dc5-rep2-mcp",
+    "generated_at": "2026-08-09T23:20:15Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "repo": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "durable": "/home/tommy/projects/constellation-skills-wt/f-424"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/f-424"
+    }
+  }
+}

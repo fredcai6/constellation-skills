@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r0-context",
+  "mechanical": {
+    "run": "epic-418-followon/commander-424/g1-review-rework",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon/commander-424/g1-review-rework-r0-context@07860f1c300304823fe925ecc5ec5ca9c6c7126d",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon/commander-424/g1-review-rework",
+    "generated_at": "2026-08-09T21:57:47Z"
+  }
+}

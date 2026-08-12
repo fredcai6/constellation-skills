@@ -1,0 +1,8 @@
+Working tree is clean apart from the (deliberately untracked) `.agent-work/epic-559/` artifacts. All three gates of `REWORK_PLAN.json` are `complete`, the engine lease is released, and `IMPLEMENTER_RESULT.md` exists at the path the handoff names. The run is done.
+
+**Summary:**
+- **w1** — `--result` is now optional when `--spine` is given; a spine-only crew's completion is judged on its bound spine reaching a terminal state (`spine_terminal`), not a result file it was never told to write. Replaced the test that hid the bug with `SpineOnlyCompletionContractTests` (5 tests, none write a result artifact), verified red against pre-fix `run_crew.py`.
+- **w2** — the waive-deny `PreToolUse` hook now names `sys.executable` (never hardcoded `python3`), carries `shell: bash`, and its composed command is checked by `install_constellation.assert_shell_safe_command()` (cites #539); the bare `assert` on `WAIVE_DENY_REASON` now raises. Pinned by `HookPortabilityTests` (3 tests).
+- **w3** — full suite green (2556 passed, 1 skipped), `map/INDEX.md` regenerated, result written.
+
+Three commits landed locally on `epic-559/a-spine-is-the-job` (no merge/push). Flagged one out-of-scope finding for later: `recover_crews.py::classify_entry` doesn't yet know about spine-terminal completions, so it could misclassify a legitimately-completed spine-only crew as needing abandonment — left untouched since it's outside this handoff's file scope.

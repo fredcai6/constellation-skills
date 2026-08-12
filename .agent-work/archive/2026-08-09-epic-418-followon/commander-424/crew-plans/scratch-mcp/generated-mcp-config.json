@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "spine": {
+      "command": "/home/tommy/.local/share/pyfix-venv/bin/python",
+      "args": [
+        "/home/tommy/projects/constellation-skills-wt/f-424/scripts/mcp_spine_server.py"
+      ],
+      "env": {
+        "SPINE_FILE": "/home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/arm-headless/spine.json",
+        "SPINE_ENGINE": "/home/tommy/projects/constellation-skills-wt/f-424/scripts/checklist_engine.py",
+        "SPINE_SESSION": "epic418-424-headless-probe#probe1"
+      }
+    }
+  }
+}

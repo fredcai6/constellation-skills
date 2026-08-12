@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "v2-does-it-catch-real-ones",
+  "mechanical": {
+    "run": "epic-559/c1-spine-lint",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "v2-does-it-catch-real-ones",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/c1-spine-lint-v2-does-it-catch-real-ones@b0ae08b0c3f1abb1e433d96ba17cc7f39a4880ee",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/c1-spine-lint",
+    "generated_at": "2026-08-11T11:30:17Z"
+  }
+}

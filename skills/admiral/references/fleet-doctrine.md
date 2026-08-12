@@ -124,9 +124,9 @@ do not trust the flag; provision the worktree yourself before a parallel wave:
    provisioned worktree is a material fleet action.
 2. Hand each Commander its **absolute** worktree path in the LAUNCH_ORDER
    `## Workspace` field, with the instruction to run
-   `py scripts/verify_worktree_isolation.py --here <path>` as its first step and
+   `python <admiral-skill-dir>/scripts/verify_worktree_isolation.py --here <path>` as its first step and
    paste the result into its return report.
-3. Gate the wave: `py scripts/verify_worktree_isolation.py <path1> <path2> ...`
+3. Gate the wave: `python <admiral-skill-dir>/scripts/verify_worktree_isolation.py <path1> <path2> ...`
    must exit 0 (every path a real, registered worktree, distinct from each other
    and from the main checkout) before you launch. A non-zero exit means isolation
    is not real — fix it; do not launch.

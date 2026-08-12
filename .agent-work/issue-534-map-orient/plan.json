@@ -1,0 +1,490 @@
+{
+  "work_id": "issue-534-map-orient",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-repro",
+    "m2-fix-red-green",
+    "m3-option3-driftguard",
+    "m4-fullsuite",
+    "m5-pr"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read references/global-crew.md and references/global-everyone.md, then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the handoff (issue #534 + dispatch prompt). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m0-context-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m0-context",
+            "why_ref": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m1-repro": {
+      "id": "m1-repro",
+      "title": "Reproduce the defect and read map_orient.py in full",
+      "imperative": "Run `python3 scripts/map_orient.py orient --root . --work-id repro-534` and confirm it reads DEGRADED-NO-MAP. Read scripts/map_orient.py end to end, including the '#315 failure mode' note near mode-selection logic, before changing anything. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "defect reproduced (DEGRADED-NO-MAP observed) and module read in full",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "do not touch scripts/mcp_*, scripts/gen_mcp_config.py, tests/test_mcp_*, .mcp.json, scripts/install_constellation.py, .claude/settings.json, skills/**"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-repro-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m1-repro",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-fix-red-green": {
+      "id": "m2-fix-red-green",
+      "title": "Add map/INDEX.md + map/ids.jsonl as ordered candidates (option 1); TDD red then green",
+      "imperative": "Replace tests/test_map_orient.py::CitableContent::test_this_repo_resolves_degraded (which asserted the bug as correct) with test_this_repo_resolves_non_degraded_no_map, asserting a non-DEGRADED-NO-MAP verdict against this repo's real root. Observe it RED against the pre-fix module (stash scripts/map_orient.py, rerun, watch it fail, restore). Then add CODE_MAP_DIRNAME/CODE_MAP_INDEX/CODE_MAP_IDS constants and two new ordered candidates (probed after every docs/architecture/ candidate, additive) to scripts/map_orient.py, update the docstring's resolution rule, and fix the candidate-kind-list assertion in test_every_candidate_is_recorded_even_after_a_hit. Attest c1 (RED) manually; c2 is the command check for GREEN.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "defect reproduced and module read",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new/modified regression test observed failing against the pre-fix module (git stash demonstration) -- manual attest, check MUST be null",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "fix applied; tests/test_map_orient.py passes in full",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/map-orient-534 && python -m pytest -q tests/test_map_orient.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fix-red-green-2"
+        }
+      ],
+      "constraints": [
+        "additive only: keep docs/architecture/ precedence for consuming repos on that layout",
+        "do not touch scripts/mcp_*, scripts/gen_mcp_config.py, tests/test_mcp_*, .mcp.json, scripts/install_constellation.py, .claude/settings.json, skills/**"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-fix-red-green-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m2-fix-red-green",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-fix-red-green-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/map-orient-534 && python -m pytest -q tests/test_map_orient.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-option3-driftguard": {
+      "id": "m3-option3-driftguard",
+      "title": "Root-cause step (option 3, partial): named constants + cross-check test tying the two sides together",
+      "imperative": "In scripts/code_map/render.py, name the two map-root filenames it writes (TOP_INDEX_FILENAME, IDS_FILENAME) instead of bare literals. Add tests/test_map_orient.py::CodeMapCandidateAlignment cross-checking map_orient.py's CODE_MAP_DIRNAME/CODE_MAP_INDEX/CODE_MAP_IDS against render.py's constants and against the real committed map/ files -- the strongest tie available given map_orient.py must stay importable standalone in consuming repos with no scripts/code_map. Regenerate map/INDEX.md with `python -m scripts.code_map build --root .` since the source edit changed tests/test_map_orient.py's own entity count, per tests/test_code_map.py's freshness check. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "core fix green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "drift-guard test class added and passing; map/INDEX.md regenerated and fresh",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/map-orient-534 && python -m pytest -q tests/test_map_orient.py -k CodeMapCandidateAlignment && python -m pytest -q tests/test_code_map.py -k freshness"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-option3-driftguard-2"
+        }
+      ],
+      "constraints": [
+        "scripts/code_map/render.py is not in the excluded-paths list"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-option3-driftguard-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m3-option3-driftguard",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-option3-driftguard-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/map-orient-534 && python -m pytest -q tests/test_map_orient.py -k CodeMapCandidateAlignment && python -m pytest -q tests/test_code_map.py -k freshness",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-fullsuite": {
+      "id": "m4-fullsuite",
+      "title": "Full suite green; self-test green; final reproduction shows the honest verdict",
+      "imperative": "Run `python3 scripts/map_orient.py --self-test`, re-run the original reproduction command and confirm it no longer reads DEGRADED-NO-MAP, then run the full suite and confirm 0 failed. Attest c1; c2 is the command check.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "option-3 step complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "self-test OK; reproduction now reads DEGRADED-UNPARSEABLE, not DEGRADED-NO-MAP -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "full suite passes, 0 failed",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/map-orient-534 && python -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-fullsuite-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-fullsuite-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m4-fullsuite",
+            "why_ref": "w-4"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-fullsuite-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/map-orient-534 && python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-pr": {
+      "id": "m5-pr",
+      "title": "Commit and open PR against main referencing #534",
+      "imperative": "Commit the change on fix/534-map-orient-candidates, push, and open a PR against main referencing #534 (do not merge). Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "full suite green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "commit created, branch pushed, PR opened against main referencing #534, not merged",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "do not merge"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-pr-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m5-pr",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 5,
+  "engine_session": {
+    "session_id": "impl-534-01",
+    "status": "released",
+    "claimed_at": "2026-08-09T22:18:24.579591+00:00",
+    "last_heartbeat": "2026-08-09T22:23:26.560554+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T22:23:42.383401+00:00"
+  },
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "m0-context",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1823,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-09T22:18:35.230746+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "m0-context",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.1896,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-09T22:19:54.320575+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "m1-repro",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1929,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-1",
+      "ts": "2026-08-09T22:20:11.885028+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "m1-repro",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.1929,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-1",
+      "ts": "2026-08-09T22:20:17.551991+00:00"
+    },
+    {
+      "id": "tl-5",
+      "gate": "m1-repro",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.1929,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-1",
+      "ts": "2026-08-09T22:20:23.800439+00:00"
+    },
+    {
+      "id": "tl-6",
+      "gate": "m2-fix-red-green",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.1953,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-09T22:20:39.300755+00:00"
+    },
+    {
+      "id": "tl-7",
+      "gate": "m3-option3-driftguard",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.1978,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-09T22:21:01.432420+00:00"
+    },
+    {
+      "id": "tl-8",
+      "gate": "m4-fullsuite",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.2006,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-4",
+      "ts": "2026-08-09T22:21:20.461321+00:00"
+    },
+    {
+      "id": "tl-9",
+      "gate": "m5-pr",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.2025,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-09T22:23:14.361827+00:00"
+    }
+  ],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Loaded global-crew/global-everyone doctrine and this repo's CREW_CONTEXT.md/GLOSSARY.md deltas. Handoff (issue #534 + dispatch prompt) is complete: task (map_orient.py probes only docs/architecture/, misses this repo's map/INDEX.md), scope (scripts/map_orient.py, tests/test_map_orient.py, judiciously scripts/code_map/render.py for option 3), exclusions (mcp_*, install_constellation.py, .claude/settings.json, skills/**), required evidence (RED-then-GREEN regression test against the real repo root, full suite green), stop condition (PR opened against main, not merged).",
+      "mechanical": false,
+      "ts": "2026-08-09T22:20:07.592068+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-repro",
+      "why": "Reproduced: python3 scripts/map_orient.py orient --root . --work-id repro-534 printed DEGRADED-NO-MAP (exit 10), probing only 3 docs/architecture/ paths, all absent. Read scripts/map_orient.py in full (1733 lines): the #315 failure mode note pins UNRESOLVABLE-ROOT vs DEGRADED-NO-MAP as never-collapse; the candidate mechanism (Candidate dataclass, collect_candidates, ordered kind list) already supports appending more candidates without disturbing existing precedence.",
+      "mechanical": false,
+      "ts": "2026-08-09T22:20:31.355762+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-fix-red-green",
+      "why": "RED demonstrated: git stash push -- scripts/map_orient.py (test file kept), reran pytest -k test_this_repo_resolves_non_degraded_no_map -- failed with AssertionError: 'DEGRADED-NO-MAP' == 'DEGRADED-NO-MAP', plus test_every_candidate_is_recorded_even_after_a_hit failed on the old 4-kind list. git stash pop restored the fix. GREEN: added CODE_MAP_DIRNAME/CODE_MAP_INDEX/CODE_MAP_IDS constants and two ordered candidates (code-map-index, code-map-ids) probed after every docs/architecture/ candidate; updated the docstring resolution rule to 6 items; updated the candidate-kind-list assertion. Verdict against this repo flips from DEGRADED-NO-MAP to DEGRADED-UNPARSEABLE (map/INDEX.md has real content but no struct:/capability:/... citable anchor in scripts/code_map's own id vocabulary -- documented as a deliberately untaken larger follow-up in the module docstring).",
+      "mechanical": false,
+      "ts": "2026-08-09T22:20:53.821567+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-option3-driftguard",
+      "why": "Named the two map-root filenames render.py writes as TOP_INDEX_FILENAME/IDS_FILENAME. Added CodeMapCandidateAlignment (4 tests) cross-checking map_orient's CODE_MAP_DIRNAME against code_map.cli.MAP_DIRNAME, CODE_MAP_INDEX/CODE_MAP_IDS against render.py's new constants, and both against the actually-committed map/INDEX.md + map/ids.jsonl files on disk. Regenerated map/INDEX.md via python -m scripts.code_map build --root . after the source edit changed tests/test_map_orient.py's entity count (120->125 entities); freshness test was RED before the rebuild, GREEN after -- live proof the freshness-enforcing side actually enforces. A live import between the two modules is not possible: map_orient.py ships standalone into consuming repos with no scripts/code_map, so this same-repo cross-check test is the strongest tie available, not a full elimination of the two literals.",
+      "mechanical": false,
+      "ts": "2026-08-09T22:21:14.388167+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-fullsuite",
+      "why": "self-test OK; python3 scripts/map_orient.py orient --root . --work-id final-534-check now reads DEGRADED-UNPARSEABLE (not DEGRADED-NO-MAP), exit 10, candidates_tried includes code-map-index=map/INDEX.md (unparseable) and code-map-ids=map/ids.jsonl (empty). Full suite: 2143 passed, 1 skipped (pre-existing), 0 failed.",
+      "mechanical": false,
+      "ts": "2026-08-09T22:23:07.833974+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-pr",
+      "why": "Committed cdbefa7c on fix/534-map-orient-candidates, pushed to origin, opened PR #536 (https://github.com/fredcai6/constellation-skills/pull/536) against main, referencing #534. Confirmed OPEN, not merged, via gh pr view.",
+      "mechanical": false,
+      "ts": "2026-08-09T22:23:26.560546+00:00"
+    }
+  ]
+}

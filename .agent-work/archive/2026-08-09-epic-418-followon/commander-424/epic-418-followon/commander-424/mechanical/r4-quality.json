@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4-quality",
+  "mechanical": {
+    "run": "epic-418-followon/commander-424",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r4-quality",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon/commander-424-r4-quality@a8bf5f701395bc3f9a3f8fa221c55beca774ca5a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon/commander-424",
+    "generated_at": "2026-08-10T00:24:27Z"
+  }
+}

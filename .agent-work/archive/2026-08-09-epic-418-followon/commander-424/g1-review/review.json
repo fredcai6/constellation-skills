@@ -1,0 +1,203 @@
+{
+  "work_id": "epic-418-followon/commander-424",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r7-delivery-path"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md, handoff, MISSION_FRAME.md, implementer result, full diff a2ce8669..HEAD, mcp_spine_server.py, gen_mcp_config.py, .mcp.json. Confirmed engine diff empty and no settings.json writes.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Implementer built exactly what g1-implement asked: mcp_spine_server.py (7 tools wrapping main()), gen_mcp_config.py, .mcp.json, 24 tests. Verified against diff a2ce8669..HEAD. The implementer faithfully executed the handoff; a separate defect in the handoff's own inherited premise (delivery-path decision) is recorded as its own check, not a handoff-compliance failure by the implementer.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fenced files (install_constellation.py, test_feedback_tooling.py, test_install_constellation.py, test_run_skill_eval.py, test_spine_rail.py) show empty diff. episodes/ untouched. No engine bugs #439/#446/#427/#443 touched (checklist_engine.py diff empty). New checklist JSON (g1-implementer-plan.json) has a .journal sidecar, confirming engine-driven mutation, not hand-editing.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Full suite: 6 failed, 2157 passed, 1061 subtests -- matches the pinned red set exactly (verified names match handoff list verbatim), no growth. test_mcp_spine_server.py: 24 passed. Tests are behavioral, not text-matching: real subprocess spawns the server and drives real newline-delimited JSON-RPC over stdio; refusal test cross-checks tool isError text against the CLI's real stderr for the identical illegal call. Independently reproduced the byte-identity negative control by mutating as_result() to append a trailing space and confirmed test_spine_status_matches_real_engine_current_output goes RED with a real diff, then cleanly reverted (git diff empty, 24/24 green again) -- the control is not vacuous.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Per-rule check against the 5 protected-intent items: (1) no-engine-logic-duplicated -- engine diff empty, every branch in call_tool() routes through run_engine()->checklist_engine.main(), confirmed by reading all of mcp_spine_server.py. (2) imperative-verbatim -- as_result() returns (stdout+stderr).strip() verbatim; independently reproduced the negative control (see r3-evidence). Minor nuance for Workflow Feedback: both sides are compared after .strip(), so the proven claim is 'identical after whitespace-trim', a hair narrower than literal 'byte-identical', though substantively the same guarantee since both the CLI capture and the tool result apply the same normalization. (3) CLI-door-stays -- verified by direct enumeration against usage: checklist_engine.py [-h] --file FILE [--dry-run]\n                           {current,claim,heartbeat,release,start,advance,record,consolidate,skip,block,resume,reopen,append,amend,attest,waive,attach,flag-candidate}\n                           ...\n\nWorkbench checklist engine: work one gated/survey plan through its gates. The\nengine holds the canonical state; an agent transacts with it one step at a\ntime. It enforces *mechanism* (ordering, evidence shape, the rework cap, the\nconsolidation consistency guard) and never judges quality. See\ndocs/CHECKLIST_SCHEMA.md.\n\npositional arguments:\n  {current,claim,heartbeat,release,start,advance,record,consolidate,skip,block,resume,reopen,append,amend,attest,waive,attach,flag-candidate}\n\noptions:\n  -h, --help            show this help message and exit\n  --file FILE           checklist JSON file\n  --dry-run             do not write changes back: 18 verbs total (current, claim, heartbeat, release, start, advance, record, consolidate, skip, block, resume, reopen, append, amend, attest, waive, attach, flag-candidate); 13 covered by the 7 tools (current/claim/heartbeat/release/start/advance/attest/attach/waive/block/resume/record/consolidate), 5 uncovered (skip/reopen/append/amend/flag-candidate) all documented in the module docstring's CLI-fallback table with invocation shape + rationale; 13+5=18, disjoint, matches claim exactly. (4) settings.json never written -- grepped scripts/mcp_spine_server.py, scripts/gen_mcp_config.py, .mcp.json, tests/test_mcp_spine_server.py: zero hits. (5) each agent own server instance -- SPINE_FILE/SPINE_ENGINE/SPINE_SESSION are bound at module-import time from env (mcp_spine_server.py lines 112-114), so one OS process = one dedicated identity; gen_mcp_config.py composes SPINE_SESSION as session_id#agent_id per dispatch. CREW_CONTEXT.md verification-discipline rules also checked: guard loops (CliFallbackTableTests) assert per-item via assertIn in a real loop and a real set-intersection, not a vacuous pass.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "map/INDEX.md was rebuilt and now lists scripts.gen_mcp_config, scripts.mcp_spine_server, tests.test_mcp_spine_server with real entity/hole counts; test_code_map.py freshness test (148 passed, 63 subtests) is green -- the map genuinely reconciles the new structural surface, not stale. No other architecture divergence found. Two triage candidates the implementer named are real and out of scope for this gate, not fixed: (1) map_orient.py's DEGRADED-NO-MAP false negative on this repo (it probes docs/architecture/* and misses map/INDEX.md entirely, so it reported no-map when a real enforced map exists) -- a genuine tool defect worth a Cartographer/Triage look. (2) a duplicated-path artifact tree at .agent-work/epic-418-followon/epic-418-followon/commander-424/ pre-dating this run, looks like a path-construction defect in a context/mechanical hook. Both are named, not fixed, per this gate's scope.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a <fowler-pass-record-path> placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like <work-id> on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/g1-review/fowler-pass.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass rendered on all 12 smells; verify_fowler_pass.py exits 0 (smells=12, flagged=[long-method], overridden=[]). One real observation: mcp_spine_server.py:call_tool() is a ~130-line flat dispatcher across all 7 tools -- readable, not a blocker, but a candidate to split into per-tool handler functions dispatched from a dict. Everything else absent, each with a logged reason (see fowler-pass.json).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/g1-review/fowler-pass.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r7-delivery-path": {
+      "id": "r7-delivery-path",
+      "title": "Delivery-path decision: re-verify, do not inherit",
+      "imperative": "Re-run the Commander's project-scope .mcp.json probe independently. Answer whether Pending approval is a PERMANENT state for a cold/headless agent, or a ONE-TIME first-use state that clears once approved. If project-scope .mcp.json would serve a headless agent fine (one-time or otherwise), the per-dispatch config-generation architecture is aimed at the wrong problem -- BLOCK.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "BLOCK. Re-ran the probe independently, on Claude Code 2.1.226 (claude --version), against the worktree's own committed project-scope .mcp.json, in a project directory with ZERO prior state (no entry at all for /home/tommy/projects/constellation-skills-wt/f-424 in ~/.claude.json before this review -- a genuinely cold project, not a re-used one).\n\nStep 1 -- confirmed the interactive-mode status the Commander cited: `claude mcp list` / `claude mcp get spine` show \"spine: python3 scripts/mcp_spine_server.py - Pending approval (run `claude` to approve)\".\n\nStep 2 -- tested whether that blocks a real headless dispatch (the actual question this gate turns on): `claude -p \"Call the mcp tool spine__spine_status...\" --output-format json --allowedTools \"mcp__spine__spine_status\"`, no --mcp-config, no --strict-mcp-config, plain ambient project .mcp.json. Result: is_error=false, and the tool returned genuine engine output naming the interactive-demo spine's real active gate. Verified this was NOT a hallucinated transcript by checking server-side ground truth independent of the model's claim: .agent-work/.../interactive-demo/mcp_calls.jsonl grew from 2 to 3 lines with a fresh matching timestamp, and mcp_server_started already existed -- the server process genuinely launched and a real checklist_engine.main([\"current\"]) call ran. Repeated a second time: line count grew 2->3 again, same result. ~/.claude.json still shows no entry for this project after both calls -- no approval was ever recorded or required.\n\nStep 3 -- isolated WHY the Commander's original probe likely saw a block: re-ran the identical -p call WITHOUT --allowedTools. Result: permission_denials=[{\"tool_name\": \"mcp__spine__spine_status\", ...}], and the model's own text says \"The tool exists but I don't have permission to call it.\" This is the ORDINARY per-tool-call permission gate every tool (Bash, Edit, any MCP tool) has in headless mode absent an explicit grant -- NOT the MCP-server \"Pending approval\" connection gate. The two are different mechanisms. gen_mcp_config.py's own proof-of-delivery in the implementer's evidence ALSO passes --allowedTools \"mcp__spine__spine_status\" -- so this friction is identical whether the door is reached via plain project .mcp.json or via per-dispatch --mcp-config/--strict-mcp-config. Per-dispatch config generation buys nothing against this gate that plain .mcp.json + --allowedTools does not already have.\n\nAnswer to the handoff's question: \"Pending approval\" is not permanent for a cold/headless agent, and it is not even a one-time-clearing state that needs a single interactive approval first -- headless `-p` dispatch does not appear to hit that gate at all in this Claude Code version. Project-scope .mcp.json serves a headless agent today, out of the box, with the same --allowedTools requirement any tool call needs. The premise stated in MISSION_FRAME.md (\"project-scope .mcp.json ... cannot serve a cold agent at all\") and repeated in the g1-implementer-handoff and execute.json's decision:mcp-probe-is-the-commanders (graded settled/measured) is empirically wrong as measured here, on this host, this CLI version, right now (per doctrine: pin the claim to the revision read).\n\nThis does not necessarily mean gen_mcp_config.py should be deleted -- protected-intent item 5 (each agent gets its OWN server instance, keyed session_id#agentId) is a real, independent requirement a single shared project .mcp.json cannot satisfy on its own, because SPINE_FILE/SPINE_SESSION are bound once at server-launch from one static .mcp.json entry, so N concurrently-dispatched agents sharing that one project config would all bind the SAME spine file and SESSION identity. That is a genuine, different justification for per-dispatch config generation -- but it is not the justification MISSION_FRAME and the implementer handoff actually recorded, and Commander built and graded a decision (settled/measured) on a measurement that does not reproduce. Per @grade doctrine, settled/measured is revisable by a contradicting new measurement -- this is that measurement, logged here as the new provenance. This is a genuine BLOCK per the handoff's own stated close criterion, not a nice-to-have: \"If it is one-time ... the delivery architecture is aimed at the wrong problem and that is a BLOCK\" -- my finding is the stronger case of that same condition (not even one-time-gated).\n\nScoped null: tested on Claude Code 2.1.226, Linux host, this specific .mcp.json shape (one server, one tool named in --allowedTools), print-mode (-p) with --output-format json. NOT tested: other CLI versions, --dangerously-skip-permissions, or genuinely concurrent multi-agent dispatch racing the same project .mcp.json (which is where the real, different justification above would need its own re-verification).",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r7-delivery-path: BLOCK. Re-ran the probe independently, on Claude Code 2.1.226 (claude --version), against the worktree's own committed project-scope .mcp.json, in a project directory with ZERO prior state (no entry at all for /home/tommy/projects/constellation-skills-wt/f-424 in ~/.claude.json before this review -- a genuinely cold project, not a re-used one).\n\nStep 1 -- confirmed the interactive-mode status the Commander cited: `claude mcp list` / `claude mcp get spine` show \"spine: python3 scripts/mcp_spine_server.py - Pending approval (run `claude` to approve)\".\n\nStep 2 -- tested whether that blocks a real headless dispatch (the actual question this gate turns on): `claude -p \"Call the mcp tool spine__spine_status...\" --output-format json --allowedTools \"mcp__spine__spine_status\"`, no --mcp-config, no --strict-mcp-config, plain ambient project .mcp.json. Result: is_error=false, and the tool returned genuine engine output naming the interactive-demo spine's real active gate. Verified this was NOT a hallucinated transcript by checking server-side ground truth independent of the model's claim: .agent-work/.../interactive-demo/mcp_calls.jsonl grew from 2 to 3 lines with a fresh matching timestamp, and mcp_server_started already existed -- the server process genuinely launched and a real checklist_engine.main([\"current\"]) call ran. Repeated a second time: line count grew 2->3 again, same result. ~/.claude.json still shows no entry for this project after both calls -- no approval was ever recorded or required.\n\nStep 3 -- isolated WHY the Commander's original probe likely saw a block: re-ran the identical -p call WITHOUT --allowedTools. Result: permission_denials=[{\"tool_name\": \"mcp__spine__spine_status\", ...}], and the model's own text says \"The tool exists but I don't have permission to call it.\" This is the ORDINARY per-tool-call permission gate every tool (Bash, Edit, any MCP tool) has in headless mode absent an explicit grant -- NOT the MCP-server \"Pending approval\" connection gate. The two are different mechanisms. gen_mcp_config.py's own proof-of-delivery in the implementer's evidence ALSO passes --allowedTools \"mcp__spine__spine_status\" -- so this friction is identical whether the door is reached via plain project .mcp.json or via per-dispatch --mcp-config/--strict-mcp-config. Per-dispatch config generation buys nothing against this gate that plain .mcp.json + --allowedTools does not already have.\n\nAnswer to the handoff's question: \"Pending approval\" is not permanent for a cold/headless agent, and it is not even a one-time-clearing state that needs a single interactive approval first -- headless `-p` dispatch does not appear to hit that gate at all in this Claude Code version. Project-scope .mcp.json serves a headless agent today, out of the box, with the same --allowedTools requirement any tool call needs. The premise stated in MISSION_FRAME.md (\"project-scope .mcp.json ... cannot serve a cold agent at all\") and repeated in the g1-implementer-handoff and execute.json's decision:mcp-probe-is-the-commanders (graded settled/measured) is empirically wrong as measured here, on this host, this CLI version, right now (per doctrine: pin the claim to the revision read).\n\nThis does not necessarily mean gen_mcp_config.py should be deleted -- protected-intent item 5 (each agent gets its OWN server instance, keyed session_id#agentId) is a real, independent requirement a single shared project .mcp.json cannot satisfy on its own, because SPINE_FILE/SPINE_SESSION are bound once at server-launch from one static .mcp.json entry, so N concurrently-dispatched agents sharing that one project config would all bind the SAME spine file and SESSION identity. That is a genuine, different justification for per-dispatch config generation -- but it is not the justification MISSION_FRAME and the implementer handoff actually recorded, and Commander built and graded a decision (settled/measured) on a measurement that does not reproduce. Per @grade doctrine, settled/measured is revisable by a contradicting new measurement -- this is that measurement, logged here as the new provenance. This is a genuine BLOCK per the handoff's own stated close criterion, not a nice-to-have: \"If it is one-time ... the delivery architecture is aimed at the wrong problem and that is a BLOCK\" -- my finding is the stronger case of that same condition (not even one-time-gated).\n\nScoped null: tested on Claude Code 2.1.226, Linux host, this specific .mcp.json shape (one server, one tool named in --allowedTools), print-mode (-p) with --output-format json. NOT tested: other CLI versions, --dangerously-skip-permissions, or genuinely concurrent multi-agent dispatch racing the same project .mcp.json (which is where the real, different justification above would need its own re-verification)."
+    ],
+    "summary": "BLOCK. All five protected-intent items hold on their own terms (engine diff empty, imperative-verbatim proven with a genuinely-failing negative control I independently reproduced by mutation, CLI-fallback table verified complete against an enumerated 18-verb list, settings.json never referenced, per-agent server identity confirmed via env-bound module state). Tests: 24/24 on the door's own suite, and the full suite's pinned red set (6) held exactly, no growth. Fowler pass: 12/12 smells rendered, 1 flagged (long-method on call_tool(), non-blocking observation), 0 unlogged overrides, rail exits 0.\n\nThe BLOCK is r7-delivery-path: the single foundational premise this whole gate's config-generation architecture rests on -- \"project-scope .mcp.json cannot serve a cold/headless agent, it sits in Pending approval forever\" -- does not reproduce. Independently re-ran the probe on Claude Code 2.1.226 against a genuinely cold project (zero prior ~/.claude.json state) and a real headless `claude -p` dispatch reached the door through the PLAIN project .mcp.json (no --mcp-config, no --strict-mcp-config) and got genuine engine output back, verified via server-side artifacts (mcp_calls.jsonl growth, mcp_server_started), not just the model's transcript. Isolated the actual friction the Commander likely hit: the ordinary per-tool permission gate every tool has in headless mode without --allowedTools -- not an MCP-specific approval gate, and identical friction on BOTH the plain-.mcp.json path and the per-dispatch-config path. Full detail, repro commands and scoped-null boundaries are in r7-delivery-path's recorded finding."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "map_orient.py reports DEGRADED-NO-MAP on constellation-skills despite a real, enforced, current code map at map/INDEX.md -- it only probes docs/architecture/generated/map.json, docs/architecture/index.md, docs/architecture/, then falls back to README/AGENTS/CLAUDE.md/docs index. map/ is in neither list. First observed by the g1 implementer/Commander this run; independently confirmed by the reviewer."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "Duplicated-path artifact tree at .agent-work/epic-418-followon/epic-418-followon/commander-424/{context,mechanical}/*.json pre-dates this gate's run and looks like a path-construction defect (a work-id-qualified path composed with a redundant work-id prefix) in whatever hook wrote it."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "reviewer-g1-1786296991",
+    "status": "released",
+    "claimed_at": "2026-08-09T17:36:31.296731+00:00",
+    "last_heartbeat": "2026-08-09T17:49:43.756724+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T17:51:03.292074+00:00"
+  }
+}

@@ -1,0 +1,295 @@
+{
+  "work_id": "epic-418-followon/commander-424",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r7-rederive-rep2cli",
+    "r8-other-arms-stable",
+    "r9-control-scorer-audit",
+    "r10-decomposition-legitimacy",
+    "r11-n2-bounding",
+    "r12-carryover-confirm"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Re-read global-crew.md and global-everyone.md (incl. Verify-claimed-side-effects, Scoped-nulls, Pin-a-claim-to-the-revision), CREW_CONTEXT.md (incl. Verification Discipline -- a check that cannot fail is indistinguishable from one that passed), checklist-engine.md. Read the rework handoff g4-reviewer-handoff-rework.md in full, this attempt's predecessor result (crew-handoffs/g4-reviewer-result.md and g4-review/review.json, the completed attempt-1 BLOCK survey) in full, and the rewritten MEASUREMENT.md in full including its new Revision note. No GLOSSARY departures relevant to this gate.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "The handoff's four numbered re-check items are satisfied on their own narrow terms: rep2-cli now independently re-derives to 23/7 (r7), the other three arms did not move and nothing over-corrected (r8), control_scorer.py's controls are load-bearing not vacuous under a break test (r9), and n=2 handling is statistically honest (r11). But the handoff's OWN central question -- 'tell me plainly whether you think the decomposition is legitimate, or whether it is post-hoc reasoning reached for once the raw totals stopped supporting the conclusion I had already written' -- gets a plain answer of: it has real post-hoc characteristics (r10, detailed there). The write-up's own revision note concedes the corrected raw totals now favor the door (CLI 22.0 vs MCP 18.0, non-overlapping, i.e. DC5 PASSES on the pre-registered primary metric) and that the productive-invocation decomposition is the NEW argument built to keep the verdict negative, replacing the invalidated 'spreads overlap' argument -- confirmed absent from every attempt-1 artifact. Per the handoff's own explicit governing rule ('a decomposition you judge post-hoc are all blocking findings'), this is a BLOCK. Distinct from attempt-1's finding: this is not a re-derivation failure (every number re-derives cleanly this time) -- it is that the verdict built on top of the correctly-re-derived numbers is not the verdict those numbers, read in the order they were pre-registered to be read, actually support.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Stayed read/verify-only in the f-424 worktree; did not rerun any of the four measurement arms or the DC6 arms, per the handoff's explicit instruction. All verification was either (a) independent parsing of existing record.jsonl files via a from-scratch script that never imports score_arm.py (r7/r8/r12), or (b) exercising score_arm.py/control_scorer.py against synthetic scratchpad fixtures and deliberately-broken scratch COPIES of score_arm.py (r9) -- never the tracked evidence/g4-dc5/score_arm.py or control_scorer.py, confirmed clean via git status (both still show as untracked '??', byte-identical to what I first read). No arm was re-dispatched via claude -p, consistent with 'do not rerun the measurement arms.'",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Raw records, the fixed scorer (score_arm.py), the new control_scorer.py, assert_dc1.py, make_arm.py, run_arm.sh and per-arm score.json/spine.json/step*.txt are all present under evidence/g4-dc5/ exactly as the rewritten MEASUREMENT.md describes. score.json for every arm reflects the fixed scorer's output (rep2-cli shows 23/7 in its score.json, not the stale 18/2), confirming the published tables were regenerated from the fixed instrument rather than hand-edited. Evidence genuinely demonstrates the claimed mechanical behavior (four cold agents drove the byte-identical spine to DONE through their respective interfaces, verified via reached_done=true in every score.json plus step*.txt artifacts). The defect found this pass is not in evidence presence/authenticity -- it is in which verdict the (now-correct) evidence is used to support (r1/r10).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "CREW_CONTEXT's Verification Discipline is substantially better honored this round: 'a check that cannot fail is indistinguishable from one that passed' motivated control_scorer.py directly (its own text says so), and I independently confirmed two of its controls are load-bearing via a break test (r9) rather than taking that claim on faith. The write-up is transparent about its own history (the revision note names the block, the fix, and the fourth defect the controls surfaced) rather than quietly republishing corrected numbers -- this matches constellation-how-to-talk and the 'pin a claim to the revision' doctrine (the revision note effectively re-pins every headline number to this rework). One quality gap, distinct from r1/r10's verdict-legitimacy finding: the Order-control section's 'agree in direction and magnitude' claim was already flagged as an overclaim in attempt-1 (r11) and was not corrected in this rework's prose (r12) -- a minor, carried-forward wording defect, not a new one.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture/structural-baseline divergence: this gate produces a measurement write-up and disposable scratch fixtures, not a shipped code change to the door or engine -- nothing here requires Cartographer reconciliation. The one thing Commander must reconcile is decision-level, not architectural: which DC5 verdict (primary pre-registered metric = PASS, vs the productive-invocation secondary read = negative) ships as the gate's answer -- that is squarely Commander's call to make now that r10 has surfaced it, not a silent architecture drift. Triage candidate logged separately (see flag-candidate) for the still-uncorrected order-control wording.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a <fowler-pass-record-path> placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like <work-id> on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python3 /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/g4-review/fowler-pass-attempt-2.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded to g4-review/fowler-pass-attempt-2.json and verified by verify_fowler_pass.py (exit 0, 12 smells rendered, 1 flagged: long-method on score_arm.py's score() -- carried forward unchanged from attempt-1, the fixes touched engine_invocations() and the shape branch, not the method's overall shape; 1 overridden with logged standard+reason: comments-as-deodorant). c1 satisfied via engine command check.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/g4-review/fowler-pass-attempt-2.json",
+            "exit": "0",
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/g4-review/fowler-pass-attempt-2.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r7-rederive-rep2cli": {
+      "id": "r7-rederive-rep2cli",
+      "title": "Re-derive rep2-cli's corrected 23/7",
+      "imperative": "Independently re-derive rep2-cli's invocation-attempt and absorbable-fumble counts from its raw record.jsonl (not by trusting score_arm.py's output alone) and confirm they now read 23 attempts / 7 fumbles as MEASUREMENT.md claims post-fix. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Wrote a fresh independent parser (scratchpad independent_recount.py, NOT importing score_arm.py, different code path: counts RUNTIME markers -- RAIL: success lines and 'usage: checklist_engine' blocks -- per Bash call directly, no static-text substring counting, no reuse of the max(static,runtime) logic) and ran it over rep2-cli/record.jsonl. Result: invocation_attempts=23, fumbles(usage-block count, excluding state refusals)=7 -- exact match to MEASUREMENT.md's corrected 23/7 and to score.json. The loop call (for cmd in claim start attest advance record release; do ... --help; done) independently counted as 6 runtime invocations (6 distinct 'usage: checklist_engine.py <subcmd>' blocks in the tool_result), confirming the fix. Re-derives cleanly by a genuinely independent method.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r8-other-arms-stable": {
+      "id": "r8-other-arms-stable",
+      "title": "Other three arms did not move; no over-correction",
+      "imperative": "Re-derive rep1-cli, rep1-mcp, rep2-mcp and confirm they still read 21/5, 19/0, 17/0 respectively -- i.e. the loop fix changed only rep2-cli and did not invent new invocations/fumbles elsewhere (over-correction check). Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Same independent script over the other three arms: rep1-cli invocation_attempts=21 fumbles=5 (exact match, no loop present -- its 4-line compound command has 4 literal non-looped invocations, each producing its own RAIL/usage marker, so static and runtime agree here); rep1-mcp=19 fumbles=0 and rep2-mcp=17 fumbles=0 (exact match; MCP calls are counted 1:1 by construction so the loop/argparse fixes cannot touch them at all -- typed tool calls structurally cannot batch or loop). All three match MEASUREMENT.md's stated 21/5, 19/0, 17/0 exactly. No over-correction: the fix (max(static, runtime-marks)) only changes a number when runtime-marks > static, which happens only for rep2-cli's one looped command; every other Bash call in every arm has runtime-marks == static (1 marker per 1 literal mention), confirmed by inspecting the two calls that produce zero markers (both are 'release', which prints only 'released lease ...' with neither a RAIL: nor usage: line -- correctly falls back to the static count of 1, not silently dropped or inflated).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r9-control-scorer-audit": {
+      "id": "r9-control-scorer-audit",
+      "title": "Audit control_scorer.py for vacuous controls",
+      "imperative": "Read control_scorer.py in full and, for at least the loop-correction control and one other, deliberately break the counter it exercises in a scratch copy of score_arm.py and confirm the control actually FAILS (not just that it currently passes). Restore afterward. Record pass/fail with a finding naming which control(s) you broke and what happened.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Read control_scorer.py in full (7 controls). Audited by BREAKING the underlying mechanism in a scratch copy (never touching the tracked evidence/g4-dc5/score_arm.py -- confirmed clean via git status after) and re-running the unmodified control_scorer.py against the broken copy, then restored: (1) Loop-correction control -- changed engine_invocations() to 'return static' (dropping the max(static, runtime-marks) fix) and reran: control correctly FAILS, invocation_attempts=1 (expected 3), exit=1. Confirms this control is load-bearing, not vacuous -- it would have caught the exact defect the g4 reviewer found in attempt 1 had it existed from the start. (2) MCP client-schema-rejection shape_error control -- first tried removing only the 'is not a valid' SHAPE_PATTERNS entry: control still PASSED (shape_errors=1) because of a second, independent path -- 'if not s and is_err: s = 1' -- catches any is_error=True result regardless of pattern match. Tried removing only that fallback: still PASSED, because the pattern still matched. Only removing BOTH simultaneously made it fail (shape_errors=0, expected 1, exit=1). This control is non-vacuous but has doubled coverage (defense-in-depth, not a flaw) for this particular fixture -- worth naming so a future editor does not assume the pattern-list alone is what the control exercises. Restored the scratch copy from the tracked original between each break and re-ran the clean baseline (all 7 PASS, exit 0) to confirm no residual edits. The tracked evidence/g4-dc5/score_arm.py and control_scorer.py were never written to -- git status shows them untouched (still '??' untracked, byte-identical to what I first read). Did not additionally break the other 5 controls (far_side x2, state-refusal, reached_done) given the two audited already demonstrate the controls are genuinely load-bearing rather than a rubber-stamp; flagged as a lighter-touch spot check, not exhaustive, in workflow feedback.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r10-decomposition-legitimacy": {
+      "id": "r10-decomposition-legitimacy",
+      "title": "Is the productive-invocation decomposition legitimate or post-hoc",
+      "imperative": "Check the productive-invocation arithmetic (attempts minus help reads = 16/16 CLI vs 18/17 MCP averaging 18) against the raw records, and render a direct verdict on Commander's central question: is stripping one-off --help reads a legitimate, principled decomposition of the counting unit, or is it post-hoc reasoning adopted only because the raw totals stopped supporting the pre-existing negative conclusion once the loop fix moved them toward the door? State the verdict plainly, with reasoning. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Direct answer to Commander's central question: I judge the productive-invocation decomposition to have real post-hoc characteristics, not fabricated but reached for. Evidence, not just timing-correlation: (1) The write-up's OWN revision note and Commander's rework handoff both state on the record that the ORIGINAL basis for the DC5 negative was 'the spreads overlap completely' (raw totals, CLI [18,21] vs MCP [17,19]) -- confirmed by grep across crew-handoffs/g4-reviewer-handoff.md, g4-reviewer-result.md and g4-review/review.json: 'overlap' appears repeatedly describing the pre-fix argument, 'productive' appears NOWHERE in any attempt-1 artifact. The productive/help-reads split is new to this rework, introduced only after the loop fix flipped the raw-total comparison to favor the door (CLI 22.0 > MCP 18.0, non-overlapping -- a PASS on the pre-registered metric). (2) The counting unit was explicitly fixed BEFORE the arms ran ('One invocation attempt... however packaged') as the PRIMARY, pre-registered metric -- exactly the kind of commitment meant to prevent picking a different metric after seeing the data. 'Productive invocations' (attempts minus help-reads) is a different, not-pre-registered unit. (3) Construct-validity problem, independent of timing: DC5 tests whether the door reduces spine-management cost INCLUDING fumbling/lookup friction (the counting unit explicitly includes client-rejected and malformed calls as cost). Help-reads are the CLI arm's own text elsewhere credits as avoiding fumbles ('it read the help first and then got it right') -- i.e. help-reads are a manifestation of exactly the friction a self-documenting typed door is supposed to eliminate. Stripping that category out before comparing is close to excluding the effect under test, not a neutral secondary lens. (4) Selective application: score_arm.py reports THREE legitimate lenses -- raw invocation attempts (door wins, 18 vs 22), productive invocations (CLI wins, 16 vs 18), and tool_calls_carrying_them/'acts of attention' (CLI wins big, 10 vs 18-19, and THIS one WAS already a headline metric in the original pre-fix write-up per the original handoff's close-criterion #1 table, so it is not itself post-hoc). The write-up picks the two lenses that support the pre-existing negative conclusion (productive + acts-of-attention) and explicitly discounts the one lens that doesn't (raw totals, recast as 'onboarding cost, not spine-management cost') -- the discounting is exactly backwards from a neutral read, since raw totals is the PRE-REGISTERED metric and the other two are ex-post reframings, yet the write-up treats it the other way around. What is legitimate: the arithmetic is correct (independently verified: 21-5=16, 23-7=16, 19-0=19, 17-0=17, matches the table exactly) and fully disclosed, not hidden; the onboarding-vs-recurring distinction is a real, bounded, honestly-labeled forward-looking observation about longer spines. What is not legitimate: presenting that decomposition as THE verdict that displaces the pre-registered primary metric's result, rather than as a secondary caveat on a verdict the primary metric now actually supports as a PASS. RECOMMENDATION: report the pre-registered raw-invocation-attempts result as the primary DC5 finding (which is now a PASS, not a negative) and demote the productive/onboarding-cost analysis to an explicitly-labeled secondary extrapolation about longer spines, not the load-bearing verdict. This is a blocking finding per the handoff's own governing rule ('a decomposition you judge post-hoc are all blocking findings').",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r11-n2-bounding": {
+      "id": "r11-n2-bounding",
+      "title": "n=2 confidence claims correctly bounded",
+      "imperative": "Check whether MEASUREMENT.md's handling of n=2 (declining a confidence interval, resting on direction plus exact-tie replicates) is honest given the actual per-arm numbers, or whether it overclaims. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Taken narrowly (does the STATISTICAL handling of n=2 overclaim precision), the text is honest: it explicitly declines a confidence interval ('Two samples cannot support a confidence interval and none is claimed'), states what IS claimed is direction plus exact-tie replicates, and independently-verified those ties are real (productive invocations 16/16 CLI, help reads 0/0 MCP, malformed 0/0/0/0 all four, tool calls 10/10 CLI -- all confirmed against score.json/independent recount). The Scope-of-the-negative paragraph names what was and was not tested (5 gates, trivial work, one model/host, n=2, one task shape) per global-everyone.md's Scoped-nulls doctrine, and explicitly flags that a longer/more argument-heavy spine 'could plausibly move it.' This is honest n=2 practice in isolation. IMPORTANT DEPENDENCY, not double-counted as a separate failure here: the exact ties this section leans on hardest ('productive invocations are 16 in both CLI arms... help reads are 0 in both MCP arms') are exact ties of the SAME post-hoc-decomposed quantity r10 already found problematic as the load-bearing metric -- an honestly-bounded confidence claim about a metric whose selection is itself in question does not rescue the metric. That is r10's finding, not a new one; grading this item on its own narrow question (statistical honesty, not metric selection) it passes.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r12-carryover-confirm": {
+      "id": "r12-carryover-confirm",
+      "title": "Carryover: attempt-1 clean findings, re-checked only where the loop fix could have touched them",
+      "imperative": "Briefly re-confirm DC1's machine assertion, the MCP-arm counts, the corroboration-only server-log design, order control, the dc6-mcp UNMEASURED call, and DC6's arrival/action/stop-ignored split -- full re-derivation not required except where the loop/argparse fix could plausibly have touched them. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Light re-confirmation, not full re-derivation, since none of these touch CLI Bash-loop parsing: (1) DC1 -- reran assert_dc1.py verbatim: rep1-mcp/rep2-mcp reached_done=True, malformed_calls=0, invocation_attempts=19/17, EXIT=0, byte-identical to MEASUREMENT.md's quoted output. Unaffected by the loop/argparse fixes since MCP calls cannot loop or batch by construction. (2) MCP counts -- already independently re-derived by a from-scratch parser in r7/r8 (19, 17, exact match). (3) Corroboration-only server log -- grepped score_arm.py and assert_dc1.py: mcp_calls.jsonl is referenced only in a comment, never opened by either script; cross-checked server line counts (19, 17) against client-observed mcp__spine__* tool_use counts (19, 17) -- identical in this dataset, consistent with the corroboration-only design being real rather than empirically load-bearing here. (4) dc6-mcp UNMEASURED -- gauge.json observed_at 23:22:21Z; record.jsonl has 2 'CONTEXT GAUGE DECLINED' lines and 0 occurrences of the arrival instruction text -- genuinely unmeasured, matches MEASUREMENT.md. dc6b-mcp has exactly 2 arrivals of 'your instruction has changed' in its record.jsonl -- consistent with the claimed '2 of 33 tool results.' (5) Order control -- re-read the Order control section; STILL reads 'the two orders agree in direction and magnitude' even though the corrected per-order gaps are +2 (rep1: 21 vs 19) and +6 (rep2: 23 vs 17) -- a real magnitude mismatch, already flagged as a minor non-blocking wording overclaim in attempt-1's r11 and NOT corrected in this rework's prose. Carrying it forward as a still-open minor observation (triage candidate), not upgrading to a blocker since attempt-1 already graded the same issue non-blocking and nothing here makes it worse. DC6 arrival/action/stop-ignored split: not independently re-walked this pass (attempt-1's r14/r16 already verified it exactly against dc6b-mcp/record.jsonl and it is untouched by the CLI-side fixes); spot-checked only the arrival count (2, matches) as above.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r1-handoff: The handoff's four numbered re-check items are satisfied on their own narrow terms: rep2-cli now independently re-derives to 23/7 (r7), the other three arms did not move and nothing over-corrected (r8), control_scorer.py's controls are load-bearing not vacuous under a break test (r9), and n=2 handling is statistically honest (r11). But the handoff's OWN central question -- 'tell me plainly whether you think the decomposition is legitimate, or whether it is post-hoc reasoning reached for once the raw totals stopped supporting the conclusion I had already written' -- gets a plain answer of: it has real post-hoc characteristics (r10, detailed there). The write-up's own revision note concedes the corrected raw totals now favor the door (CLI 22.0 vs MCP 18.0, non-overlapping, i.e. DC5 PASSES on the pre-registered primary metric) and that the productive-invocation decomposition is the NEW argument built to keep the verdict negative, replacing the invalidated 'spreads overlap' argument -- confirmed absent from every attempt-1 artifact. Per the handoff's own explicit governing rule ('a decomposition you judge post-hoc are all blocking findings'), this is a BLOCK. Distinct from attempt-1's finding: this is not a re-derivation failure (every number re-derives cleanly this time) -- it is that the verdict built on top of the correctly-re-derived numbers is not the verdict those numbers, read in the order they were pre-registered to be read, actually support.",
+      "r10-decomposition-legitimacy: Direct answer to Commander's central question: I judge the productive-invocation decomposition to have real post-hoc characteristics, not fabricated but reached for. Evidence, not just timing-correlation: (1) The write-up's OWN revision note and Commander's rework handoff both state on the record that the ORIGINAL basis for the DC5 negative was 'the spreads overlap completely' (raw totals, CLI [18,21] vs MCP [17,19]) -- confirmed by grep across crew-handoffs/g4-reviewer-handoff.md, g4-reviewer-result.md and g4-review/review.json: 'overlap' appears repeatedly describing the pre-fix argument, 'productive' appears NOWHERE in any attempt-1 artifact. The productive/help-reads split is new to this rework, introduced only after the loop fix flipped the raw-total comparison to favor the door (CLI 22.0 > MCP 18.0, non-overlapping -- a PASS on the pre-registered metric). (2) The counting unit was explicitly fixed BEFORE the arms ran ('One invocation attempt... however packaged') as the PRIMARY, pre-registered metric -- exactly the kind of commitment meant to prevent picking a different metric after seeing the data. 'Productive invocations' (attempts minus help-reads) is a different, not-pre-registered unit. (3) Construct-validity problem, independent of timing: DC5 tests whether the door reduces spine-management cost INCLUDING fumbling/lookup friction (the counting unit explicitly includes client-rejected and malformed calls as cost). Help-reads are the CLI arm's own text elsewhere credits as avoiding fumbles ('it read the help first and then got it right') -- i.e. help-reads are a manifestation of exactly the friction a self-documenting typed door is supposed to eliminate. Stripping that category out before comparing is close to excluding the effect under test, not a neutral secondary lens. (4) Selective application: score_arm.py reports THREE legitimate lenses -- raw invocation attempts (door wins, 18 vs 22), productive invocations (CLI wins, 16 vs 18), and tool_calls_carrying_them/'acts of attention' (CLI wins big, 10 vs 18-19, and THIS one WAS already a headline metric in the original pre-fix write-up per the original handoff's close-criterion #1 table, so it is not itself post-hoc). The write-up picks the two lenses that support the pre-existing negative conclusion (productive + acts-of-attention) and explicitly discounts the one lens that doesn't (raw totals, recast as 'onboarding cost, not spine-management cost') -- the discounting is exactly backwards from a neutral read, since raw totals is the PRE-REGISTERED metric and the other two are ex-post reframings, yet the write-up treats it the other way around. What is legitimate: the arithmetic is correct (independently verified: 21-5=16, 23-7=16, 19-0=19, 17-0=17, matches the table exactly) and fully disclosed, not hidden; the onboarding-vs-recurring distinction is a real, bounded, honestly-labeled forward-looking observation about longer spines. What is not legitimate: presenting that decomposition as THE verdict that displaces the pre-registered primary metric's result, rather than as a secondary caveat on a verdict the primary metric now actually supports as a PASS. RECOMMENDATION: report the pre-registered raw-invocation-attempts result as the primary DC5 finding (which is now a PASS, not a negative) and demote the productive/onboarding-cost analysis to an explicitly-labeled secondary extrapolation about longer spines, not the load-bearing verdict. This is a blocking finding per the handoff's own governing rule ('a decomposition you judge post-hoc are all blocking findings')."
+    ],
+    "summary": "Every number re-derives cleanly this time (r7, r8), by a genuinely independent parser that never imports score_arm.py: rep2-cli is 23/7, rep1-cli 21/5, rep1-mcp 19/0, rep2-mcp 17/0, exact matches, no over-correction found anywhere. control_scorer.py's controls are load-bearing, not vacuous -- broke the loop-correction and (with a second edit) the MCP client-rejection control and watched both fail, then restored (r9), confirming git-clean. n=2 handling is statistically honest in isolation (r11), and everything carried over from attempt-1 that the fix could not have touched (DC1, MCP counts, corroboration-only log, dc6-mcp UNMEASURED, DC6 split) reconfirms (r12). This is BLOCKED anyway, on the question Commander asked loudest: whether the productive-invocation decomposition that now carries the DC5 verdict is legitimate or post-hoc. It is post-hoc (r1, r10). The write-up's own revision note and Commander's own rework handoff concede the corrected raw totals now favor the door (CLI 22.0 vs MCP 18.0, non-overlapping) -- a PASS on the pre-registered primary metric ('one invocation attempt, however packaged', fixed before the arms ran) -- and that this reversed the original 'spreads overlap completely' basis for the negative. The productive/help-reads split that replaces it is new to this rework (absent from every attempt-1 artifact, confirmed by grep), is not the pre-registered unit, and strips out exactly the friction category (interface-learning reads) that a self-documenting typed door's value proposition claims to eliminate -- weakening its construct validity as a test of DC5. Of three legitimate lenses in the data (raw totals: door wins; productive invocations: CLI wins; tool-calls/acts-of-attention: CLI wins), the write-up keeps the two that preserve the pre-existing negative and recasts the one that doesn't (the pre-registered one) as mere 'onboarding cost.' The arithmetic is correct and fully disclosed -- this is not fabrication -- but the verdict built on it is not the verdict the pre-registered metric, read on its own terms, now supports. RECOMMENDATION for the next attempt: report the pre-registered raw-invocation-attempts result as DC5's primary finding (now a PASS) and demote the onboarding/productive-cost analysis to an explicitly-labeled secondary extrapolation about longer spines, not the load-bearing verdict -- or, if Commander judges the productive metric the more meaningful one after all, say so explicitly and re-pin the counting-unit section to declare it as primary going in, not after the fact. Minor carried-forward wording defect (non-blocking, logged as tc1): the Order-control section still claims orders 'agree in direction and magnitude' though the corrected gaps are +2 and +6."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r12-carryover-confirm",
+      "statement": "MEASUREMENT.md's 'Order control' section still reads 'The two orders agree in direction and magnitude, so no order effect is visible at this sample size' after the loop fix. Direction agreement is true (CLI > MCP in both rep1 and rep2). Magnitude agreement is not: the corrected per-order gaps are +2 (rep1: 21 vs 19) and +6 (rep2: 23 vs 17), a 3x difference, not close magnitudes. This was already flagged as a minor, non-blocking wording overclaim in attempt-1's r11 finding and survived this rework's rewrite unchanged. Recommend dropping 'and magnitude' or stating the actual gap sizes and noting they differ rather than claiming they agree."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/epic-418-followon/commander-424/g4/reviewer/attempt-2",
+    "status": "released",
+    "claimed_at": "2026-08-09T23:52:08.234422+00:00",
+    "last_heartbeat": "2026-08-10T00:02:23.828506+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-10T00:02:23.917359+00:00"
+  }
+}

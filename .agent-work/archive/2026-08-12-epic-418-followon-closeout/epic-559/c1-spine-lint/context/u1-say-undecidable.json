@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "u1-say-undecidable",
+  "files": [],
+  "repo_rev": {
+    "commit": "26f2a2f4828b6449e0588318d6714e9d46c14776"
+  },
+  "run": {
+    "work_id": "epic-559/c1-spine-lint",
+    "generated_at": "2026-08-11T14:26:39Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/c1-spine-lint",
+      "repo": "/home/tommy/projects/constellation-skills-wt/c1-spine-lint",
+      "durable": "/home/tommy/projects/constellation-skills-wt/c1-spine-lint"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/c1-spine-lint"
+    }
+  }
+}

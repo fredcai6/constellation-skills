@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r9-caveat-consistency",
+  "mechanical": {
+    "run": "epic-418-followon/commander-424",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r9-caveat-consistency",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon/commander-424-r9-caveat-consistency@43d4e14ff2f399b2c3e3e2eff340b3921967d6d5",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon/commander-424",
+    "generated_at": "2026-08-10T00:25:45Z"
+  }
+}

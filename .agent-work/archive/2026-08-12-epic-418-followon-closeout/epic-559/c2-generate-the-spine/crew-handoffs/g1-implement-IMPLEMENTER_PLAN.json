@@ -1,0 +1,401 @@
+{
+  "work_id": "epic-559/c2-generate-the-spine/g1-implement",
+  "type": "gated",
+  "config_ref": null,
+  "items": [
+    "m0-context",
+    "m1-core-red",
+    "m2-core-green",
+    "m3-probes-cli-red",
+    "m4-probes-cli-green",
+    "m5-behavioral-green",
+    "m6-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read DESIGN_NOTE.md in full, docs/CHECKLIST_SCHEMA.md (Task table, Condition table, three check kinds, Rendering section), scripts/validate_spine.py (all 665 lines), scripts/checklist_engine.py lines 2089-2196 (_directive_leaf, _render_directive_lines, render_human), and scripts/init_work_area.py's _RESOLVER_OWNED_TOKEN_RE. Verify the g1-implement-handoff.md is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "DESIGN_NOTE.md, CHECKLIST_SCHEMA.md, validate_spine.py, and the render_human/directive-rendering region of checklist_engine.py read in full; handoff verified complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "DESIGN_NOTE.md, CHECKLIST_SCHEMA.md, validate_spine.py (665 lines), checklist_engine.py 2089-2196, init_work_area._RESOLVER_OWNED_TOKEN_RE all read in full. Handoff verified complete: task, protected intent, test mode, close criteria (11), allowed scope, exclusions, constraints, map anchors, deliverable path check, required evidence, wiring grep, verification commands, model tier, authority, stop conditions, return format all present."
+        }
+      ],
+      "constraints": [
+        "Do not modify validate_spine.py, checklist_engine.py, or any shipped template.",
+        "Create only scripts/generate_spine.py and tests/test_generate_spine.py (plus fixtures under tests/)."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-core-red": {
+      "id": "m1-core-red",
+      "title": "RED: pure-core compiler tests",
+      "imperative": "Write tests/test_generate_spine.py's pure-core tests: CHECK_KINDS constant equals (\"qualitative\",\"pytest\",\"script\",\"population\",\"artifact\"); compile_condition output for each of the 5 kinds matches DESIGN_NOTE.md section 4 exactly (qualitative statement-append, pytest shlex-quoted idiom, script shlex.join, population count-command, artifact passthrough importing ACCEPTED_ARTIFACT_TYPES_WITHOUT_MATCH); compile_spec applies compiler-supplied defaults (preconditions: [], satisfied: false, status: pending, etc), injects the directives.handback contract on every gate (DESIGN_NOTE.md section 5, exact shape), injects the claim escalation c-escalation postcondition + directives.claim + directives.claims_rollup on magnitude=large (section 6), and every spec-shape fault in section 7 (spec-unknown-check-kind, spec-missing-field, spec-empty-because, spec-gated-missing-postconditions, spec-all-qualitative-postconditions, spec-duplicate-gate-id, spec-duplicate-condition-id, spec-reserved-id, spec-config-ref-not-json). Run `python -m pytest -q tests/test_generate_spine.py` and observe it fail (scripts/generate_spine.py does not exist yet). Attest c1 with the failure observed.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "pure-core test file written; run observed to fail (module import error) for the right reason",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tests/test_generate_spine.py written (CHECK_KINDS, compile_condition x5 kinds, compile_spec defaults, handback injection, claim escalation, spec_shape_faults x9+1 codes). Run observed RED: ModuleNotFoundError: No module named 'generate_spine' -- correct reason, module not yet written."
+        }
+      ],
+      "constraints": [
+        "compile_spec/compile_condition must be pure: no Path, open, or subprocess reachable from them."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-core-green": {
+      "id": "m2-core-green",
+      "title": "GREEN: implement the pure core",
+      "imperative": "Implement scripts/generate_spine.py's pure layer: CHECK_KINDS module constant, compile_condition(cond, *, repo_root_token) and compile_spec(spec) exactly as DESIGN_NOTE.md section 4 (five kinds), section 5 (handback), section 6 (claim escalation), and section 7 (spec-shape faults) specify. Import ACCEPTED_ARTIFACT_TYPES_WITHOUT_MATCH and _RESOLVER_OWNED_TOKEN_RE rather than re-declaring them. Make the m1-core-red tests pass.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "RED observed for the right reason",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "pure-core tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_generate_spine.py -k \"CheckKinds or CompileQualitative or CompilePytest or CompileScript or CompilePopulation or CompileArtifact or SpecShape or Handback or ClaimEscalation or CompilerDefaults\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-core-green-1"
+        }
+      ],
+      "constraints": [
+        "compile_spec/compile_condition pure: dict in, dict out."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-core-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_generate_spine.py -k \"CheckKinds or CompileQualitative or CompilePytest or CompileScript or CompilePopulation or CompileArtifact or SpecShape or Handback or ClaimEscalation or CompilerDefaults\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-probes-cli-red": {
+      "id": "m3-probes-cli-red",
+      "title": "RED: probe + CLI tests",
+      "imperative": "Write tests covering: the pytest probe (collect-only count vs min_collect); the script probe (ast.parse only, never imports; >=2 VIOLATING, >=2 INNOCENT, populated ACCEPTED_FALSE_ALARM fixtures modeled on tests/test_mcp_adoption.py::_cli_only_verb_violations); the population probe (executes the compiled command string itself, not a separate Python-side glob); main()'s order of operations and exit codes (tomllib.load, spec-shape exit 2, compile_spec, probes exit 3, validate_spine.validate as the literal last statement before success exit 4, write, exit 0; --check-only writes nothing); the control pairing (one spec that compiles but the guarded CLI refuses with nothing written, and the same spec corrected and written); the undecidable refusal (never writes, no flag to skip it). Run and observe these fail (probes/main do not exist yet). Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "pure core green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "probe/CLI test file extended; run observed to fail for the right reason",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "27 failed / 1 passed -- every probe/CLI test fails with AttributeError (module has no attribute _probe_pytest/_probe_script/_probe_population/main), the correct reason since none is implemented yet."
+        }
+      ],
+      "constraints": [
+        "The script probe never imports its target -- ast.parse only.",
+        "Undecidable refuses; no flag to skip it."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-probes-cli-green": {
+      "id": "m4-probes-cli-green",
+      "title": "GREEN: implement probes, oracle call, write, main()",
+      "imperative": "Implement the impure layer below compile_spec/compile_condition in scripts/generate_spine.py: the three probes (pytest, script, population), the validate_spine.validate(spine, repo_root=root) call as the literal last statement before success, the file write, and main() with the exact order of operations and exit codes from DESIGN_NOTE.md section 8. Make the m3-probes-cli-red tests pass.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "RED observed for the right reason",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "probe/CLI tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_generate_spine.py -k \"Probe or MainCLI or ControlPairing or Undecidable\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-probes-cli-green-1"
+        }
+      ],
+      "constraints": [
+        "Do not modify validate_spine.py: import and call it.",
+        "Every emitted command check is anchored cd <repo-root> && ..."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-probes-cli-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_generate_spine.py -k \"Probe or MainCLI or ControlPairing or Undecidable\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-behavioral-green": {
+      "id": "m5-behavioral-green",
+      "title": "Behavioral proof: handback verbs, render_human, falsification floor",
+      "imperative": "Add three more tests to tests/test_generate_spine.py: (1) render a generated gate through checklist_engine.render_human and assert the handback block appears in the actual rendered text, not a JSON-shape check; (2) drive each of the three handback verbs (attach, flag-candidate, block) against a generated spine and assert the record lands where the contract says (gate evidence[], top-level triage_candidates[], top-level blockers[]); (3) a falsification-floor test in the tests/test_mutation_floor.py style: delete the c-escalation injection from a copy of generate_spine.py, re-run the claim-escalation test class against that copy, and assert it goes red; assert the unmutated original stays green. These exercise already-implemented behavior so no separate RED step is required. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "probes/CLI green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handback-verb, render_human, and falsification-floor tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_generate_spine.py -k \"HandbackVerb or RenderHuman or FalsificationFloor\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-behavioral-green-1"
+        }
+      ],
+      "constraints": [
+        "A guard whose own removal changes nothing is the defect this epic exists to find."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-behavioral-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_generate_spine.py -k \"HandbackVerb or RenderHuman or FalsificationFloor\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-verify": {
+      "id": "m6-verify",
+      "title": "Full verification + wiring grep + result write",
+      "imperative": "Run the full declared test mode over tests/, confirm python scripts/validate_spine.py --sweep --root . still reports exactly 23 fault lines, run and paste the wiring grep for generate_spine, and write the complete IMPLEMENTER_RESULT to .agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g1-implement-result.md with Return status: complete on its own line. Attest c1 once the file is written.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all behavioral tests green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite passes in the declared test mode",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "validate_spine --sweep --root . still reports exactly 23 fault lines",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && test $(python scripts/validate_spine.py --sweep --root /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine | grep -cE '^  \\[') -eq 23"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-verify-2"
+        },
+        {
+          "id": "c3",
+          "statement": "IMPLEMENTER_RESULT written to crew-handoffs/g1-implement-result.md with a lowercase 'complete' return status",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT written to crew-handoffs/g1-implement-result.md with 'Return status: complete' on its own line, lowercase."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine && test $(python scripts/validate_spine.py --sweep --root /home/tommy/projects/constellation-skills-wt/c2-generate-the-spine | grep -cE '^  \\[') -eq 23",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "impl-c2-g1",
+    "status": "released",
+    "claimed_at": "2026-08-11T16:41:12.071885+00:00",
+    "last_heartbeat": "2026-08-11T17:02:47.146102+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-11T17:02:49.697106+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Read DESIGN_NOTE.md, CHECKLIST_SCHEMA.md, validate_spine.py in full, and the render_human/directive-rendering region of checklist_engine.py; confirmed the handoff is complete against its own required-fields checklist. Plan: 7-gate TDD build (pure core red/green, probes+CLI red/green, behavioral proof, full verify).",
+      "mechanical": false,
+      "ts": "2026-08-11T16:41:24.136368+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-core-red",
+      "why": "Wrote the full pure-core test file up front (all 5 kinds, compiler defaults, handback contract, claim escalation + rollup, all 9 named spec-shape faults plus one generator-specific extension for artifact-missing-match). Confirmed RED via ModuleNotFoundError -- the only possible red at this stage since nothing is implemented yet.",
+      "mechanical": false,
+      "ts": "2026-08-11T16:45:13.176669+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-core-green",
+      "why": "Implemented CHECK_KINDS, spec_shape_faults (9 named codes + 1 generator-specific extension spec-artifact-missing-match, decided where the note was silent), compile_condition for all 5 kinds, compile_spec (compiler defaults, handback injection on every gate, claim escalation + rollup). All 43 pure-core tests green: env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_generate_spine.py -k \"CheckKinds or CompileQualitative or CompilePytest or CompileScript or CompilePopulation or CompileArtifact or SpecShape or Handback or ClaimEscalation or CompilerDefaults or PureBoundary\" -> 43 passed.",
+      "mechanical": false,
+      "ts": "2026-08-11T16:48:23.851111+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-probes-cli-red",
+      "why": "Wrote probe+CLI tests: pytest probe (2 VIOLATING/2 INNOCENT), script probe (2 VIOLATING/2 INNOCENT/1 ACCEPTED_FALSE_ALARM -- second-positional add_argument literal is a real, documented limitation from DESIGN_NOTE section 4's own 'first positional argument' wording, plus a never-imports guard and a missing-target fault), population probe (2 VIOLATING/2 INNOCENT/1 ACCEPTED_FALSE_ALARM -- pathlib dotfile exclusion), main()'s 5 exit codes (1 malformed TOML, 2 spec-shape, 3 probe fault, 4 oracle fault via the control pairing, 0 success), --check-only writes nothing, undecidable refuses with no skip flag, and the control pairing itself (compile_spec translates a literal placeholder-shaped script arg VALUE that its own probe does not examine since it only checks -- flags; the oracle's own falsifiable-unresolved-placeholder fault is what actually refuses it -- both halves in one test class). RED confirmed: 27 failed / 1 passed, all AttributeError on the not-yet-implemented probes/main.",
+      "mechanical": false,
+      "ts": "2026-08-11T16:52:09.479525+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-probes-cli-green",
+      "why": "Implemented the impure layer: Undecidable dataclass, _probe_pytest (real collect-only subprocess vs min_collect), _probe_script (ast.parse only, never imports, first-positional add_argument literal collection per DESIGN_NOTE section 4's own wording), _probe_population (executes the compiled command string itself -- one implementation), probe_spec dispatcher, and main() with the exact 6-step order/exit-code contract (1 malformed TOML, 2 spec-shape, 3 probe fault/undecidable, 4 oracle fault/undecidable via validate_spine.validate as the literal last statement, 0 success, --check-only writes nothing). Fixed 4 test bugs found while turning green: missing tomllib import, a default TOML fixture whose lone qualitative postcondition self-tripped spec-all-qualitative-postconditions (switched to artifact/user-decision), a duplicate-gate-id fixture that concatenated two full spec headers into invalid TOML (switched to one header, two [[gate]] blocks), and a mistaken dotfile population false-alarm premise -- measured live that this host's pathlib.Path.glob DOES match dotfiles with a bare '*', so replaced it with the real, measured ** semantics gotcha (matches the top level too, not just subdirectories). Full file green: 70 passed.",
+      "mechanical": false,
+      "ts": "2026-08-11T16:54:51.522054+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-behavioral-green",
+      "why": "Added the behavioral proof: render_human shows the handback block on a generated gate (checklist_engine.current() called directly on the in-memory compiled spine dict -- actual rendered text, not a JSON-shape assertion); all three handback verbs (attach, flag-candidate, block) driven against a generated spine, landing exactly where the contract says (gate evidence[], top-level triage_candidates[], top-level blockers[]); and a falsification-floor test in the test_mutation_floor.py style -- the c-escalation injection block is mechanically deleted from a real COPY of generate_spine.py (occurrence-count-verified before/after so the harness itself cannot fake a kill), a throwaway pytest file exercising only that postcondition is run against the mutant in a subprocess and asserted red, and the same run against the unmutated original is asserted green first. All 6 new tests passed on first run (no red/green cycle needed -- exercising already-working code). Full file: 76 passed.",
+      "mechanical": false,
+      "ts": "2026-08-11T16:56:45.194693+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-verify",
+      "why": "Full declared-mode suite: 2765 passed, 3 skipped, 1121 subtests (baseline 2689 + 76 new, zero regressions). validate_spine --sweep unchanged at 23 fault lines (no shipped template touched). Wiring grep confirms every generate_spine reference is inside its own test file -- built and verified, not yet called by anything else; role specs land at g2 per the handoff's own scope note. IMPLEMENTER_RESULT.md written with full evidence, findings (oracle config_ref-not-json gap restated per DESIGN_NOTE, no shipped-template disagreement found), 7 documented decisions where the note was silent, and workflow feedback (a self-caught, self-corrected false-alarm-fixture assumption about pathlib dotfile globbing that I verified live before shipping).",
+      "mechanical": false,
+      "ts": "2026-08-11T17:02:47.146085+00:00"
+    }
+  ]
+}

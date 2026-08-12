@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "closeout",
+  "mechanical": {
+    "run": "epic-418-followon",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "refusals": 4,
+    "spine-step": "closeout",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon-closeout@4d7051631154bb696288ab04dce44bc74ab45359",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon",
+    "generated_at": "2026-08-12T14:57:45Z"
+  }
+}

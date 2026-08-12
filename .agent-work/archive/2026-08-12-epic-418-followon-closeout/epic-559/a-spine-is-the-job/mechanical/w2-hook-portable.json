@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "w2-hook-portable",
+  "mechanical": {
+    "run": "epic-559/a-spine-is-the-job",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "w2-hook-portable",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/a-spine-is-the-job-w2-hook-portable@057b57541a526ddc559414649e4ee75d6b9347d1",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-559/a-spine-is-the-job",
+    "generated_at": "2026-08-11T06:07:54Z"
+  }
+}

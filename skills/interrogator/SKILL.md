@@ -23,7 +23,9 @@ You were handed a goal to resolve, not to answer from assumption. The moment thi
 
 Compliance/engine-drive rule: inherited — see `references/global-everyone.md`.
 
-Drive the question list as a `survey` from `templates/INTERROGATION.template.json` through the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): ask one question at a time and resolve its answer; `append` follow-ups and new branches as answers open them; `skip` questions an earlier answer settled; then `consolidate` into the resolved understanding.
+Drive the question list as a `survey` from `templates/INTERROGATION.template.json`: ask one question at a time and resolve its answer, then `consolidate` into the resolved understanding. Default path, when your survey file *is* the spine this process's MCP door was launched for: the door's `spine_status`/`spine_survey_result`/`spine_evidence` tools (see workbench `references/checklist-engine.md` — MCP door). CLI fallback, always available: the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`). **Use the CLI whenever the door is bound to someone else's spine — which is the usual case here.** Interrogator runs in the invoking agent's own human-reachable context, so it shares that agent's process and therefore that agent's door binding: a Commander drives `interrogation.json` through this skill while its own door stays bound to `spine.json`, and a door call from inside the interrogation would operate on the Commander's spine, not on the survey you own. Check what the door is bound to before you reach for it; when in doubt, the CLI is always correct.
+
+Two verbs on this loop have no door tool at all and always take the CLI: `append` follow-ups and new branches as answers open them, and `skip` questions an earlier answer settled.
 
 ## Facts vs. decisions — resolve one, block on the other
 

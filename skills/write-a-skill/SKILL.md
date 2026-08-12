@@ -33,7 +33,7 @@ Draft `SKILL.md` (+ `references/`, `templates/` as needed) to satisfy `_shared/s
 
 ## 4. Clear the one rail
 
-`py scripts/verify_skill_registered.py --skill <short-name>` must pass. It refuses a **mechanically broken** skill (unparseable, no when-to-use marker, missing exclusion on a confusable skill, no invoker) or an **unregistered dead seam** — one not wired into `install_constellation.py`'s bundles, so it installs with no doctrine or rail script. It composes `curate_corpus.py` + `install --dry-run`. So **register the skill** while minting: add it to `SKILL_SCRIPT_BUNDLES` (if it ships a script) and `SKILL_REFERENCE_BUNDLES` (doctrine), and add `constellation-<name>` to the installer test's `SKILL_NAMES`. That missing registration is the failure mode the rail guards.
+`python <skill-dir>/scripts/verify_skill_registered.py --skill <short-name>` must pass. It refuses a **mechanically broken** skill (unparseable, no when-to-use marker, missing exclusion on a confusable skill, no invoker) or an **unregistered dead seam** — one not wired into `install_constellation.py`'s bundles, so it installs with no doctrine or rail script. It composes `curate_corpus.py` + `install --dry-run`. So **register the skill** while minting: add it to `SKILL_SCRIPT_BUNDLES` (if it ships a script) and `SKILL_REFERENCE_BUNDLES` (doctrine), and add `constellation-<name>` to the installer test's `SKILL_NAMES`. That missing registration is the failure mode the rail guards.
 
 Semantic goodness is **not gated** — the rail proves the skill installs and is registered, never that it is *good*.
 

@@ -1,0 +1,15 @@
+{
+  "symptom": "<observed behavior that disagrees with what was intended>",
+  "altitude": "runtime | disconnect",
+  "oracle": "<runtime: the failing test | disconnect: the map/intent claim probed against actual behavior>",
+  "status": "suspected | confirmed | explained-by-design",
+  "cause": "<the localized mechanism the loop found>",
+  "falsifier": "<the observation that would disprove `cause`; required to confirm>",
+  "observed_result": "<the reproduce/instrument result actually seen; required to confirm>",
+  "map_staleness_caveat": "<disconnect only: the map/intent oracle may be stale; the reviewer weighs it>",
+  "route": "triage | reviewer | note",
+  "rail_exception": {
+    "reviewer_cosign": "<INDEPENDENT reviewer name/id — never the author; the only way a confirmed cause skips reproduce evidence>",
+    "log": "<why this trivial case may skip the loop>"
+  }
+}

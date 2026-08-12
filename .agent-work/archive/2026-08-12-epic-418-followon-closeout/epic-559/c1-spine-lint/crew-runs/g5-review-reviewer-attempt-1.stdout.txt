@@ -1,0 +1,7 @@
+Review complete — **BLOCK**, written to `.agent-work/epic-559/c1-spine-lint/REVIEWER_RESULT.md`.
+
+All standard items (r0–r6) and three of five decisive items (v2, v3, v4, v5) passed. The decisive item, **v1 (false positives), failed**: I swept every archived spine under `.agent-work/` (539 files) plus the 12 shipped templates and hand-verified every distinct fault trigger.
+
+The headline finding: **fault 2 (zero-collect pytest selector) has a real, reproducible false-positive bug.** The corpus's own recommended self-checking idiom — `test $(pytest ... --collect-only 2>/dev/null | grep -c '::') -ge N && pytest ...`, which the repo's own doctrine tells authors to write — gets misparsed: `2>/dev/null` is swallowed as a bogus positional pytest target, corrupting the check's first-segment verdict before the real second segment ever runs. Minimal repro: a check running 32 real, passing tests gets flagged as vacuous, identical severity to `check: null`. It fires on this very epic's own gates and three other real spines. A related mechanism (`_collects_zero` trusts `sys.executable` rather than the check's own named interpreter, with no fallback signal) produces the same false BLOCK whenever the checker itself runs under a Python lacking pytest — a documented hazard on this exact host.
+
+Both are narrow, fixable bugs, but as shipped this is exactly the "refuses spines that are fine" outcome the handoff named as decisive. Faults 1, 3, and 4 held up clean under the same hand-inspection — no false positives there.

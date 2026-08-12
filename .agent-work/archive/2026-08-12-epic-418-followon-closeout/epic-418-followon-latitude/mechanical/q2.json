@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "q2",
+  "mechanical": {
+    "run": "epic-418-followon-latitude",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 1,
+    "spine-step": "q2",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon-latitude-q2@ce6bd1cab27d0e477fe8dc5e2d7d6c1c727738a6",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon-latitude",
+    "generated_at": "2026-08-09T14:54:49Z"
+  }
+}

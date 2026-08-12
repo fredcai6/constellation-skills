@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "v4-is-it-usable-as-a-module",
+  "files": [],
+  "repo_rev": {
+    "commit": "9aa094dd5402b124e5f638e98d1a187c04bed403"
+  },
+  "run": {
+    "work_id": "epic-559/c1-spine-lint",
+    "generated_at": "2026-08-11T11:32:26Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/c1-spine-lint",
+      "repo": "/home/tommy/projects/constellation-skills-wt/c1-spine-lint",
+      "durable": "/home/tommy/projects/constellation-skills-wt/c1-spine-lint"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/c1-spine-lint"
+    }
+  }
+}

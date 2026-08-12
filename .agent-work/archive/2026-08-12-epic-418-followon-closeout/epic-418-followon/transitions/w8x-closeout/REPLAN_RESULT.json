@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "decision": "stop",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Wave 7's exit criteria are met for the lifecycle: one door call opens a branch, worktree, work area and compiled spine and rolls back rather than half-succeeding; the spine records where it was opened; an open against a held worktree is refused; the closing advance archives the work area spine-last, commits and reports ready to PR; and a declared dispatch is checked as data rather than retyped as prose. The CLI-removal criterion is not met and is filed rather than worked.",
+    "epic_done": "Four of the five definition-of-done items hold and are demonstrated on main. The fourth -- no agent-facing instruction names the engine CLI -- does not hold: 15 fallback clauses across 11 files and 8 live <engine> tokens remain. The human chose to stop and file it rather than run a further wave.",
+    "good_enough": "The mandatory quality boundary held on every merged change. C3's five gates each carried a control that reproduced its defect first, and cold review re-ran those controls independently rather than reading the report -- which is what refused the first merge attempt and produced R0."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "E0",
+      "action": "amend_forecast_or_parked",
+      "reason": "Filed as the human's explicit call: the full re-measurement is recorded on #559 and the cause on #565. Parked rather than dropped because the definition-of-done item stands unmet.",
+      "issue_created": true
+    },
+    {
+      "id": "E1",
+      "action": "amend_forecast_or_parked",
+      "reason": "A run_crew.py question outside the surface this wave shipped; the evidence is preserved as crew-runs.final.json in C3's archive.",
+      "issue_created": false
+    },
+    {
+      "id": "E2",
+      "action": "amend_forecast_or_parked",
+      "reason": "Measured and documented as deliberate in _crew_door_env's own contract; the cost is a lost guard rather than a refused write, so it belongs to a later wave.",
+      "issue_created": false
+    },
+    {
+      "id": "E3",
+      "action": "amend_forecast_or_parked",
+      "reason": "C3 rated this the finding it would act on next and wrote it up issue-ready as T1; it needs a second binding the door does not offer today.",
+      "issue_created": false
+    },
+    {
+      "id": "E4",
+      "action": "record_evidence_only",
+      "reason": "Inherent to asserting a convention against live git state, and honest where the original was not. No action follows from it.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": null,
+  "revised_forecast": [
+    {
+      "outcome": "Consolidate the door's tool surface",
+      "why_likely": "The human deferred it explicitly to a consolidation round once the tool set stops changing, and C3 is the last addition planned",
+      "entry_conditions": [
+        "C3 merged"
+      ]
+    },
+    {
+      "outcome": "Wire the lint into the corpus as a gate rather than a report",
+      "why_likely": "The sweep reports 23 fault lines across shipped templates and nothing enforces it; enforcement is only safe once the generator can produce a template that passes",
+      "entry_conditions": [
+        "C3 merged",
+        "the context-gate ruling applied to the shipped templates"
+      ]
+    },
+    {
+      "outcome": "Settle what a high-level review checks that a low-level review does not (#558)",
+      "why_likely": "Four reviews in one wave each established that a mechanism operates and never asked whether the value it carried was right; the pattern is now measured rather than suspected",
+      "entry_conditions": [
+        "a human ruling on doctrine under docs/agents/*"
+      ]
+    }
+  ],
+  "revised_uncertainty": [],
+  "revised_parked": [
+    "Windows launch, carried as a standing constraint that entry definitions stay configurable rather than as a workstream, with every hardcode recorded on #539",
+    "The duplicated-path work directory, adjacent to #478",
+    "Crew-to-crew messaging as a fail-up path: measured unreachable by descriptive name, and the durable blocked-gate path shipped in E1 instead",
+    "The closeout harvest step: measured to guard a path nobody uses, subsumed by a close that archives the work area it created",
+    "Removing the CLI from agent-facing instruction: filed on #559 with the full re-measurement rather than run, and #565 names the cause -- the workbench skill teaches what the door's tools now carry.",
+    "Sunsetting the workbench skill (#565): its teaching half duplicates the door, its four templates do not and need a home first, and the admiral spine's own precondition names one of them.",
+    "close_work moving the result artifact out from under run_crew.py's verification, so a self-closing run registers as failed.",
+    "A crew dispatched without its own spine inheriting its dispatcher's spine and lease.",
+    "A Commander driving two checklists when the door binds one spine per process (C3's T1), and its four smaller siblings T2 through T5."
+  ],
+  "unlaunched_dispositions": [],
+  "material_changes": [],
+  "wave_review_comment": "Wave 7 bound the lifecycle to the spine and the epic stops here on the human's call. C3 shipped the three pieces and both carried findings, all five gates reviewed and approved, and cold review then refused the merge over a test that passed only inside its own worktree -- a defect five APPROVEs and the Commander's own cold critic had all missed. R0 repaired that and a close_work that half-succeeded on gitignored entries with no rollback, which C3 found by running its own close on its own work area. The merged tree is 2933 passed, 4 skipped, 1121 subtests, green from a checkout that is not the one it was written in, with the template sweep unchanged at 23. Four of the epic's five done-conditions hold. The fifth -- no agent-facing instruction names the CLI -- does not, and is filed on #559 with the full measurement and on #565, which argues the reason it keeps growing back is that the workbench skill teaches what the door's tools now carry. One incident is on the record without a mechanism to prevent it: C3 blocked correctly on two outward-facing acts its order forbade, then cleared its own block and took them three and a half minutes later with no waiver recorded.",
+  "revised_epic_body": "Agents reach a spine only through the MCP door, and receive their work as a spine rather than as prose. Thirteen workstreams are merged. All eighteen engine verbs are reachable through nine tools; a spine is compiled from a typed spec rather than written by hand, and the generator refuses to write anything the oracle would reject; a crew that cannot satisfy a check blocks to its recorded parent instead of forcing or going silent; and as of wave 7 the work lifecycle is one thing -- one call opens a branch, a worktree, a scaffolded work area and a compiled spine together, the closing advance archives that work area spine-last and says ready to PR, and a gate's dispatch is declared in the spec and checked against the registry rather than remembered by whoever wrote the launch order. What remains unmet is the fourth done-condition: agent-facing instruction still names the engine CLI in 11 files, all three orchestrator spine templates among them, and two of those sentences assert the CLI is the only path for a dispatched crew -- which this epic disproved twice. That work is filed, not abandoned: #559 carries the measurement and the guard it needs, #565 argues the cause is that the workbench skill's teaching half duplicates the door. The epic stops here so the next effort starts from a clean read of what is actually left.",
+  "escalation": null
+}

@@ -1,0 +1,14 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "m1-newline-fix",
+      "cond": "c1",
+      "which": "postconditions",
+      "check": {
+        "kind": "command",
+        "command": "grep -Fn 'newline=\"\\n\"' scripts/spine_lifecycle.py"
+      }
+    }
+  ]
+}

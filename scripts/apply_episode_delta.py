@@ -129,8 +129,35 @@ _utf8_stdio()
 
 # --- the record's fixed vocabulary (EPISODE_STORE.md sections 2-4) ---------------
 
-ID_RE = re.compile(r"[a-z0-9][a-z0-9-]*-[0-9]{3,}")
-RUN_RE = re.compile(r"[a-z0-9][a-z0-9-]*")
+# A RUN is a work-id, and a work-id is a PATH under `.agent-work/` that may NEST:
+# the epic/commander convention writes `epic-418-followon/commander-424`. The run is
+# what `verify_episode_captured.py <work-id>` matches on, and the closeout spine
+# passes the work-id verbatim — so a run grammar that refuses `/` made the mandated
+# closeout step impossible to complete: the writer forbade exactly the id the gate
+# demanded. Each `/`-separated segment keeps the old flat kebab grammar, so `..`, an
+# empty segment (leading/trailing/doubled separator) and an absolute path are all
+# still refused.
+RUN_SEGMENT = r"[a-z0-9][a-z0-9-]*"
+RUN_RE = re.compile(rf"{RUN_SEGMENT}(?:/{RUN_SEGMENT})*")
+
+# An episode ID is a FILENAME (`active/<id>.md`), and the store's layout invariant is
+# that every episode sits DIRECTLY inside active/ or retired/ — `_layout_episode_ids`
+# refuses a record one level deeper as misfiled. So the id may not carry the run's
+# separators; it carries the run FLATTENED by `run_to_id_stem` below. `_` is the
+# flattening character precisely because no run segment can contain one, which makes
+# the mapping injective: an id stem determines its run and no two runs collide.
+ID_RE = re.compile(r"[a-z0-9][a-z0-9_-]*-[0-9]{3,}")
+
+
+def run_to_id_stem(run: str) -> str:
+    """The episode-id stem for `run` — the run with its path separators flattened.
+
+    Injective by construction (see `ID_RE`): `/` cannot appear in an id and `_`
+    cannot appear in a run, so `a/b -> a_b` is reversible and `a/b` and any literal
+    flat run can never mint the same stem. This is a FILENAME encoding, not a
+    normalization of identity: the episode's `- run:` line keeps the work-id exactly
+    as given, which is what the capture gate matches on."""
+    return run.replace("/", "_")
 
 # Mechanical bin allowlist (section 4). artifact-ref is repeated/list-shaped; every
 # other mechanical field is a scalar. This is the ONE place a mechanical field name is
@@ -861,15 +888,19 @@ def _next_episode_id(run: str, known_ids: set[str]) -> str:
     """Zero-agent-effort id assignment: scan existing <run>-*.md basenames (across
     every episode for that run regardless of retirement status — a retired episode's
     sequence number is still taken) for the current max and increment. No counter
-    file, no UUID."""
-    prefix = f"{run}-"
+    file, no UUID.
+
+    The scan is over the run's FLATTENED stem (`run_to_id_stem`), because that is
+    what the ids on disk carry. Scanning the raw run instead would find nothing for
+    a nested run and hand out `-001` forever, overwriting the previous episode."""
+    prefix = f"{run_to_id_stem(run)}-"
     max_seq = 0
     for eid in known_ids:
         if eid.startswith(prefix):
             suffix = eid[len(prefix) :]
             if suffix.isdigit():
                 max_seq = max(max_seq, int(suffix))
-    return f"{run}-{max_seq + 1:03d}"
+    return f"{prefix}{max_seq + 1:03d}"
 
 
 # --- validate (pure — no disk I/O, so a structurally-invalid delta is rejected before
@@ -936,7 +967,12 @@ def _validate_create(op: dict) -> None:
             _reject_newline(value, f"create.mechanical.{key}")
     run = mech["run"]
     if not RUN_RE.fullmatch(run):
-        raise EpisodeDeltaError(f"create.mechanical.run: {run!r} must be kebab-case")
+        raise EpisodeDeltaError(
+            f"create.mechanical.run: {run!r} must be kebab-case, optionally nested "
+            f"with '/' ({RUN_RE.pattern}) — a work-id like "
+            "'epic-418-followon/commander-424' is fine; an empty segment, '..' and an "
+            "absolute path are not"
+        )
 
     artifact_refs = mech.get("artifact-ref", [])
     if not isinstance(artifact_refs, list) or any(not isinstance(r, str) for r in artifact_refs):

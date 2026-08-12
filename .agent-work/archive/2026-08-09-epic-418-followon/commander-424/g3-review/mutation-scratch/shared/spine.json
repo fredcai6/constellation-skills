@@ -1,0 +1,49 @@
+{
+  "work_id": "mutation-shared",
+  "type": "gated",
+  "config": {
+    "rework_cap": 99
+  },
+  "items": [
+    "g1"
+  ],
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "tasks": {
+    "g1": {
+      "id": "g1",
+      "title": "marker gate",
+      "imperative": "MARKER::SHARED-MUTATION-MARK",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "done",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "refusals": 5,
+  "engine_session": {
+    "session_id": "dc2-sess-a",
+    "status": "active",
+    "claimed_at": "2026-08-09T22:13:25.213748+00:00",
+    "last_heartbeat": "2026-08-09T22:13:33.216838+00:00",
+    "claimed_by": "agent-A",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  }
+}

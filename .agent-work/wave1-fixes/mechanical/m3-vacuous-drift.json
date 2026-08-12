@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-vacuous-drift",
+  "mechanical": {
+    "run": "wave1-fixes",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 6,
+    "spine-step": "m3-vacuous-drift",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-wave1-fixes-m3-vacuous-drift@70ec32d7642f835c81e9d58cac9ae795a559996b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "wave1-fixes",
+    "generated_at": "2026-08-10T04:46:13Z"
+  }
+}

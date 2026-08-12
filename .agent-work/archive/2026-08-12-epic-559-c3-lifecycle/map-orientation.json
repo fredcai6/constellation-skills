@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "work_id": "epic-559/c3-lifecycle",
+  "root": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "map/INDEX.md",
+      "content_hash": "e4a01b270fc8adfb5332b4940e846d7b82356c911317f201b21812edf4f88358",
+      "source": "agent-declared"
+    },
+    {
+      "path": "README.md",
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb",
+      "source": "known-fallback"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "70fc98d8194a28f9f8fc2be73e8455ba556e15b81e9b28fdd82eeb11883b6b10",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/GLOSSARY.md",
+      "content_hash": "574e9ef4f494522653ea8d62cb58a1138f5bf385a17e95a75629bccd3c0340ee",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/CREW_CONTEXT.md",
+      "content_hash": "ae350e5230538440ba7f0f832dd479d4a3dcfa79ac75c9c21574d670fe5bbec5",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "No docs/architecture/ packet map exists in this repo at all (no generated/map.json, no index.md, no packets dir); map/ids.jsonl is empty so the code map carries no citable anchor ids.",
+    "The lifecycle surface this ask touches -- scripts/mcp_spine_server.py (the door), scripts/generate_spine.py, scripts/checklist_engine.py, scripts/agent_work_root.py, scripts/run_crew.py, scripts/verify_worktree_isolation.py -- has no map entry; structure will be read from source and from the C2 DESIGN_NOTE.md contract."
+  ],
+  "escalation": "Recorded to the Admiral (admiral-epic-418-followon) in COMMANDER_RETURN.md: this repo has no Cartographer packet map, so every Commander run here orients degraded. Not fixable inside this launch order (skills/** and docs/agents/* are no-go).",
+  "emitted_at": "2026-08-12T08:29:09.902029+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

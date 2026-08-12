@@ -1,0 +1,367 @@
+{
+ "work_id": "epic-559/c2-generate-the-spine",
+ "ops": [
+  {
+   "op": "retire",
+   "id": "epic-559-c2-generate-the-spine-001",
+   "reason": "Mechanical field written wrong at capture: `run` was recorded as the kebab-cased 'epic-559-c2-generate-the-spine' rather than the work-id verbatim, 'epic-559/c2-generate-the-spine'. The store's own capture gate (verify_episode_captured.py) matches `- run: <work-id>` exactly, so these eight record a run no reader can resolve. Superseded by re-created equivalents in the same delta; retired rather than hand-edited because this writer is the only write path into the store."
+  },
+  {
+   "op": "retire",
+   "id": "epic-559-c2-generate-the-spine-002",
+   "reason": "Mechanical field written wrong at capture: `run` was recorded as the kebab-cased 'epic-559-c2-generate-the-spine' rather than the work-id verbatim, 'epic-559/c2-generate-the-spine'. The store's own capture gate (verify_episode_captured.py) matches `- run: <work-id>` exactly, so these eight record a run no reader can resolve. Superseded by re-created equivalents in the same delta; retired rather than hand-edited because this writer is the only write path into the store."
+  },
+  {
+   "op": "retire",
+   "id": "epic-559-c2-generate-the-spine-003",
+   "reason": "Mechanical field written wrong at capture: `run` was recorded as the kebab-cased 'epic-559-c2-generate-the-spine' rather than the work-id verbatim, 'epic-559/c2-generate-the-spine'. The store's own capture gate (verify_episode_captured.py) matches `- run: <work-id>` exactly, so these eight record a run no reader can resolve. Superseded by re-created equivalents in the same delta; retired rather than hand-edited because this writer is the only write path into the store."
+  },
+  {
+   "op": "retire",
+   "id": "epic-559-c2-generate-the-spine-004",
+   "reason": "Mechanical field written wrong at capture: `run` was recorded as the kebab-cased 'epic-559-c2-generate-the-spine' rather than the work-id verbatim, 'epic-559/c2-generate-the-spine'. The store's own capture gate (verify_episode_captured.py) matches `- run: <work-id>` exactly, so these eight record a run no reader can resolve. Superseded by re-created equivalents in the same delta; retired rather than hand-edited because this writer is the only write path into the store."
+  },
+  {
+   "op": "retire",
+   "id": "epic-559-c2-generate-the-spine-005",
+   "reason": "Mechanical field written wrong at capture: `run` was recorded as the kebab-cased 'epic-559-c2-generate-the-spine' rather than the work-id verbatim, 'epic-559/c2-generate-the-spine'. The store's own capture gate (verify_episode_captured.py) matches `- run: <work-id>` exactly, so these eight record a run no reader can resolve. Superseded by re-created equivalents in the same delta; retired rather than hand-edited because this writer is the only write path into the store."
+  },
+  {
+   "op": "retire",
+   "id": "epic-559-c2-generate-the-spine-006",
+   "reason": "Mechanical field written wrong at capture: `run` was recorded as the kebab-cased 'epic-559-c2-generate-the-spine' rather than the work-id verbatim, 'epic-559/c2-generate-the-spine'. The store's own capture gate (verify_episode_captured.py) matches `- run: <work-id>` exactly, so these eight record a run no reader can resolve. Superseded by re-created equivalents in the same delta; retired rather than hand-edited because this writer is the only write path into the store."
+  },
+  {
+   "op": "retire",
+   "id": "epic-559-c2-generate-the-spine-007",
+   "reason": "Mechanical field written wrong at capture: `run` was recorded as the kebab-cased 'epic-559-c2-generate-the-spine' rather than the work-id verbatim, 'epic-559/c2-generate-the-spine'. The store's own capture gate (verify_episode_captured.py) matches `- run: <work-id>` exactly, so these eight record a run no reader can resolve. Superseded by re-created equivalents in the same delta; retired rather than hand-edited because this writer is the only write path into the store."
+  },
+  {
+   "op": "retire",
+   "id": "epic-559-c2-generate-the-spine-008",
+   "reason": "Mechanical field written wrong at capture: `run` was recorded as the kebab-cased 'epic-559-c2-generate-the-spine' rather than the work-id verbatim, 'epic-559/c2-generate-the-spine'. The store's own capture gate (verify_episode_captured.py) matches `- run: <work-id>` exactly, so these eight record a run no reader can resolve. Superseded by re-created equivalents in the same delta; retired rather than hand-edited because this writer is the only write path into the store."
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "epic-559/c2-generate-the-spine",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "plan",
+    "context-manifest-ref": ".agent-work/epic-559/c2-generate-the-spine/STATE_NOTE.md",
+    "refusals": 0,
+    "reopens": 0,
+    "rework-count": 0,
+    "failed-commands": 0,
+    "artifact-ref": [
+     ".agent-work/epic-559/c2-generate-the-spine/crew-handoffs/plan-critic-intent-fit-result.md",
+     ".agent-work/epic-559/c2-generate-the-spine/plan-critic.md",
+     ".agent-work/epic-559/c2-generate-the-spine/DESIGN_NOTE.md"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Give every generated gate a place to record beliefs, concerns and open questions, riding in the `directives` substrate the engine already renders on the active gate."
+    },
+    "expected-behavior": {
+     "strength": "strong",
+     "statement": "A `directives.handback` block carrying `beliefs`/`concerns`/`open_questions` arrays would be a place a crew could write into, and `current` would render what it wrote."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "A cold critic searched the engine, the CLI and the MCP surface for any verb that appends to a `directives` field on the gate a crew is actively working, and found none: `amend`'s `rescope` op is restricted to PENDING gates and demands --authority/--reason, so it categorically cannot touch the active gate. It then rendered the exact designed shape through `render_human` and pasted the output -- three labels each followed by a colon and nothing else, on every gate, permanently. The design was caught before any crew implemented it."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "Zero implementation cost, because it was caught at the plan step by a critic that ran the renderer instead of reading the plan. Had it shipped, every generated gate would have carried three permanently empty fields that looked like a working handback channel."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "The arrays were deleted. The contract now names the three verbs that do persist -- `attach` to the gate's evidence, `flag-candidate` to top-level triage_candidates, `block` to top-level blockers and the recorded parent -- and a test drives each verb against a generated spine and asserts where the record lands."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "epic-559/c2-generate-the-spine",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "execute",
+    "context-manifest-ref": ".agent-work/epic-559/c2-generate-the-spine/STATE_NOTE.md",
+    "refusals": 0,
+    "reopens": 0,
+    "rework-count": 1,
+    "failed-commands": 0,
+    "artifact-ref": [
+     ".agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g2-review-result.md",
+     ".agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g2-implement-rework-handoff.md"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Make a large claim change what a gate needs to close, so judgment is carried up to a reviewer rather than sitting inside a gate nobody opens."
+    },
+    "expected-behavior": {
+     "strength": "strong",
+     "statement": "An injected artifact postcondition requiring a review-result matching verdict APPROVE would prevent the gate closing until an independent reviewer approved, on any checklist type."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "It holds on `gated` and is inert on `survey`. A cold reviewer copied the generated reviewer survey to scratch, drove every item through `record`, and consolidated: the survey reached verdict APPROVE with the injected postcondition still unsatisfied and no review-result ever attached. Reading the engine explains it -- `record()` on a survey item evaluates only command-kind postconditions (#422/#328) and `consolidate()` reads only each item's `result` field, while `advance()` on a gated gate checks every postcondition with no kind filter. The reviewer reproduced it a second time against bare checklist_engine dicts with no generator in the loop."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "One full rework round: the gate was reopened, a fresh implementer and a fresh reviewer were dispatched. It also invalidated a claim in the run's own frozen design note, which had named a narrower residual (a spoofable APPROVE) than the real one (nothing needs to be attached at all)."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "The generator now injects nothing for a large claim on a survey and instead states the non-enforcement in `directives.claim.enforcement` and the rollup, naming the mechanism. The tempting alternative -- a command-kind check, which `record` does evaluate -- was declined because no artifact in the corpus could honestly satisfy it, which would have turned a gate that cannot fail into one that cannot pass."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "epic-559/c2-generate-the-spine",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "execute",
+    "context-manifest-ref": ".agent-work/epic-559/c2-generate-the-spine/STATE_NOTE.md",
+    "refusals": 1,
+    "reopens": 0,
+    "rework-count": 0,
+    "failed-commands": 0,
+    "artifact-ref": [
+     ".agent-work/epic-559/c2-generate-the-spine/dispatch-proof/spine.json",
+     ".agent-work/epic-559/c2-generate-the-spine/dispatch-proof/probe.spine.toml",
+     ".agent-work/epic-559/c2-generate-the-spine/COMMANDER_RETURN.md"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Author a `script`-kind check in the dispatch-proof spec that runs the generator over the reviewer spec in check-only mode, to prove the reviewer spec still generates after a probe change."
+    },
+    "expected-behavior": {
+     "strength": "strong",
+     "statement": "The generator's script probe validates the check before emitting it, so an unusable check would be refused at generation time rather than reaching a driven spine."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "The check omitted `--out`, which argparse marks required=True unconditionally -- `--check-only` skips the WRITE step, not the CLI's own argument parsing. The generator emitted the check and `validate_spine.py` accepted the resulting spine. Run verbatim it exits 2 on `the following arguments are required: --out`, before any spec is opened, so it could never have passed. The probe checks that every flag an author NAMED exists in the target's add_argument literals; it has no view of a required flag the author FAILED to name. The defect was authored by the Commander who wrote the mission's own design note."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "The driven crew blocked its gate rather than completing the run, costing a resume, an amendment and a relaunch. It also changed the run's headline answer: the wrong-invocation class of defect is narrowed, not closed, and the report says so."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "The crew blocked with the parent named; the Commander resumed the gate, repaired the check text through `amend --delta` with a single `retext-check` op under its own authority, and relaunched a fresh crew into the same job file, which drove it to terminal."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "epic-559/c2-generate-the-spine",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "execute",
+    "context-manifest-ref": ".agent-work/epic-559/c2-generate-the-spine/STATE_NOTE.md",
+    "refusals": 0,
+    "reopens": 0,
+    "rework-count": 0,
+    "failed-commands": 2,
+    "artifact-ref": [
+     ".agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g2-implement-result.md",
+     "map/INDEX.md"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Add a new module, `scripts/generate_spine.py`, and keep the suite green at every gate boundary."
+    },
+    "expected-behavior": {
+     "strength": "strong",
+     "statement": "Adding a module changes only the files the change touches and their tests."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "It staled `map/INDEX.md`, which asserts the module and entity counts: 57 modules against 56 committed. It surfaced as one red test in an unrelated file, `tests/test_code_map.py`. The implementer stashed its own changes, saw the failure persist, and reported it as pre-existing -- a true statement about its own diff and the wrong conclusion, because the module had been added by the previous gate's own commit, already underneath the stash. The same thing happened a second time when the driven crew extended the module."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "Two cycles of diagnosis, one of them by a crew that then filed an incorrect attribution in its result, plus two map regenerations by the Commander."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "`python -m scripts.code_map build --root .` both times, and the Commander checked the crew's inference rather than accepting it, which is how the misattribution was caught."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "epic-559/c2-generate-the-spine",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "execute",
+    "context-manifest-ref": ".agent-work/epic-559/c2-generate-the-spine/STATE_NOTE.md",
+    "refusals": 0,
+    "reopens": 0,
+    "rework-count": 0,
+    "failed-commands": 0,
+    "artifact-ref": [
+     ".agent-work/epic-559/c2-generate-the-spine/crew-runs.json",
+     ".agent-work/epic-559/c2-generate-the-spine/triage-candidates/RECOMMENDATIONS.md"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Run the crew-recovery check before each dispatch, as doctrine requires, to avoid duplicating a crew whose work is already done."
+    },
+    "expected-behavior": {
+     "strength": "strong",
+     "statement": "A crew that `run_crew.py` recorded as completed classifies as complete."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "For a spine-only dispatch it does not. `run_crew.py` judged the crew completed on spine_terminal and wrote status=completed with completed_at set and result=None into crew-runs.json; `recover_crews.py` then reported the same entry as `NEEDS-ABANDON -- not running and no result; require explicit --abandon ... --relaunch`. Its classifier keys on a result artifact, which a spine-only dispatch deliberately never writes -- `--result` is documented as optional when `--spine` is given precisely because such a crew is judged on its spine reaching a terminal state instead."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "No cost in this run, because the Commander read the registry directly and saw status=completed. The advice, if followed, would have relaunched a crew whose work was finished and whose spine was terminal with its lease released -- the exact duplication the recovery check exists to prevent."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "The Commander read `crew-runs.json` directly rather than acting on the classification, and recorded the mismatch as a triage candidate."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "epic-559/c2-generate-the-spine",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "execute",
+    "context-manifest-ref": ".agent-work/epic-559/c2-generate-the-spine/STATE_NOTE.md",
+    "refusals": 3,
+    "reopens": 0,
+    "rework-count": 0,
+    "failed-commands": 0,
+    "artifact-ref": [
+     ".agent-work/epic-559/c2-generate-the-spine/execute.json.journal",
+     ".agent-work/epic-559/c2-generate-the-spine/triage-candidates/RECOMMENDATIONS.md"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Drive the Commander's own `execute.json` through the MCP door, as the human's ruling requires -- the agents should not know about the CLI."
+    },
+    "expected-behavior": {
+     "strength": "strong",
+     "statement": "Every verb needed to drive a checklist is reachable through the door."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "The door binds exactly one file at import time -- `SPINE = Path(os.environ['SPINE_FILE']).resolve()` in mcp_spine_server.py -- and exposes no per-call spine addressing on any of its nine tools, while the Commander spine's own `execute` step requires driving a second checklist. No door verb can name it. The four unresolvable `<engine>` tokens the launch order flags in the orchestrator-tier templates are the same defect's symptom; no token substitution reaches this."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "Every engine call against execute.json in this run went through the CLI. One of those calls lost part of its recorded `--why` text: it contained backticks, which bash consumed as command substitution, printing a syntax error while the verb still succeeded. A door tool takes a JSON string and cannot do that."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "execute.json was driven through checklist_engine.py directly, with every call journaled to execute.json.journal so the work stayed engine-driven and auditable, and the gap was recorded as a triage candidate and a float rather than worked around silently."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "epic-559/c2-generate-the-spine",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "execute",
+    "context-manifest-ref": ".agent-work/epic-559/c2-generate-the-spine/STATE_NOTE.md",
+    "refusals": 0,
+    "reopens": 0,
+    "rework-count": 0,
+    "failed-commands": 1,
+    "artifact-ref": [
+     ".agent-work/epic-559/c2-generate-the-spine/execute.json",
+     ".agent-work/epic-559/c2-generate-the-spine/DESIGN_NOTE.md"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Point the authored execute.json's `config_ref` at the document standing in for the absent docs/agents/engine-config.json."
+    },
+    "expected-behavior": {
+     "strength": "strong",
+     "statement": "A `config_ref` the engine cannot use is either ignored or refused with a message naming the file."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "`checklist_engine.load_config` calls `json.loads` on any `config_ref` whose path EXISTS, so pointing it at a markdown file raised an unhandled JSONDecodeError out of main() before any rail text could print. A MISSING path falls through to `{}` and is harmless -- which is why every shipped template's nonexistent `docs/agents/engine-config.json` has never surfaced this. `validate_spine.py` carries no fault for the crashing shape, so the lint reports such a spine clean."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "One traceback and one diagnosis before any gate had begun. It became a design input: the generator refuses the shape as a named spec-shape fault."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "`config_ref` was set to `docs/agents/engine-config.json`, the same nonexistent path every shipped template uses, so config falls through to defaults; the oracle's own gap was recorded rather than patched, since moving the oracle was outside latitude."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "epic-559/c2-generate-the-spine",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "execute",
+    "context-manifest-ref": ".agent-work/epic-559/c2-generate-the-spine/STATE_NOTE.md",
+    "refusals": 0,
+    "reopens": 0,
+    "rework-count": 0,
+    "failed-commands": 0,
+    "artifact-ref": [
+     ".agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g1-review-result.md",
+     ".agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g2-review-result.md"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Dispatch cold reviewers through run_crew.py with a handoff, so each reviews a gate independently."
+    },
+    "expected-behavior": {
+     "strength": "strong",
+     "statement": "A crew dispatched without `--spine` has no spine bound to it."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "Both reviewers found `SPINE_FILE` and `SPINE_SESSION` pointing at the Commander's own spine -- the `execute` gate, session `commander` -- inherited from the dispatching process's environment. Each recognized it was not a spine bound to them and built its own survey from REVIEW_SURVEY.template.json instead, and each reported the leak unprompted in its workflow feedback."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "No damage, because both crews' own doctrine told them not to drive a spine they were not given. The spine they would have driven is their dispatcher's."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "Neither crew drove it; both reported it. The Commander recorded it as a triage candidate."
+    }
+   }
+  }
+ ]
+}

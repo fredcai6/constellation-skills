@@ -1,0 +1,455 @@
+{
+  "work_id": "g3-implement-mcp-identity-424",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-dc2-separate-readings",
+    "m2-dc2-concurrency-collision-control",
+    "m3-dc3-positive-control",
+    "m4-dc3-inheritance-mechanism",
+    "m5-dc3-live-experiment",
+    "m6-full-suite-and-map",
+    "m7-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read references/global-crew.md and references/global-everyone.md (inherited doctrine), then the g3-implementer-handoff.md in full, MISSION_FRAME.md, STATE_NOTE.md, scripts/mcp_spine_server.py, scripts/gen_mcp_config.py, tests/test_mcp_spine_server.py, and the relevant slices of scripts/checklist_engine.py (claim/current/render_human). Verify the handoff names task, scope, exclusions, required evidence, test mode, stop conditions. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff + doctrine + engine surface read; DC2/DC3 scope and the mechanism-disambiguation trap understood",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "read global-crew.md/global-everyone.md, g3-implementer-handoff.md, MISSION_FRAME.md, STATE_NOTE.md, mcp_spine_server.py, gen_mcp_config.py, test_mcp_spine_server.py, checklist_engine.py claim()/current()/render_human(); DC2/DC3 scope, exclusions, mechanism-disambiguation trap, and the corrected 0-failed baseline all understood"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-dc2-separate-readings": {
+      "id": "m1-dc2-separate-readings",
+      "title": "DC2: two server instances, two spines, each returns its own reading",
+      "imperative": "Create tests/test_mcp_identity.py. Add a DC2 test class that launches two real mcp_spine_server.py subprocess instances bound (via SPINE_FILE/SPINE_SESSION env) to two DIFFERENT scratch spine files, each carrying a distinguishing marker in its active gate's imperative text. Prove spine_status through instance A returns A's marker/gate and through instance B returns B's, never crossed. This is the baseline correctness slice; genuine concurrency and the collision-detectability control are m2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded in m0"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/test_mcp_identity.py exists; DC2 separate-readings test class passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py -k DC2SeparateReadings"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-dc2-separate-readings-1"
+        }
+      ],
+      "constraints": [
+        "work only in the worktree",
+        "do not touch fenced files",
+        "do not edit the engine or its lease semantics"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-dc2-separate-readings-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py -k DC2SeparateReadings",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-dc2-concurrency-collision-control": {
+      "id": "m2-dc2-concurrency-collision-control",
+      "title": "DC2: genuine concurrency + a collision scenario that could actually have been caught",
+      "imperative": "Extend the DC2 coverage: (a) prove genuine concurrency (not sequential) between the two instances -- interleaved in-flight requests and/or overlapping timed windows via threads, not just back-to-back calls; (b) add a deliberate collision-control test that points two DISTINCT server processes at the SAME underlying spine file and shows a lease/claim taken through one IS visible through the other (red/collision reproduces), then contrasts that with the genuinely-separate-files case showing no such cross-visibility (green) -- this is the 'how do you know a real leak would have been caught' proof the handoff demands, applied to DC2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 separate-readings baseline passes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 passed 2/2"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "DC2 concurrency + collision-control test classes pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py -k DC2"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-dc2-concurrency-collision-control-1"
+        }
+      ],
+      "constraints": [
+        "genuinely concurrent, not sequential",
+        "collision scenario must be demonstrably catchable"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-dc2-concurrency-collision-control-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py -k DC2",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-dc3-positive-control": {
+      "id": "m3-dc3-positive-control",
+      "title": "DC3: positive control in the assertion path, demonstrated red and green",
+      "imperative": "Add the DC3 positive-control helper (asserts the door is genuinely up and serving real engine output before any no-identity result is allowed to count) and a test class that demonstrates it going RED when the server is unreachable/misconfigured (assertRaises on the control itself, with proof the manipulation actually applied -- e.g. a bad SPINE_ENGINE path or a killed process) and GREEN when it responds normally. The control must sit in the assertion path of the later DC3 tests (m4), not be decorative prose.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "DC2 tests pass",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "DC2 5/5 passing, stable across repeats"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "DC3 positive-control red/green demonstration passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py -k DC3PositiveControl"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-dc3-positive-control-1"
+        }
+      ],
+      "constraints": [
+        "control must be in the assertion path, not prose",
+        "must demonstrate the red state, not just claim it"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-dc3-positive-control-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py -k DC3PositiveControl",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-dc3-inheritance-mechanism": {
+      "id": "m4-dc3-inheritance-mechanism",
+      "title": "DC3: no-special-configuration dispatch gets refusal/no identity, never the parent's reading",
+      "imperative": "Add the DC3 mechanism test(s): using the positive control from m3 in the assertion path, prove that a subprocess launched the way a 'no special configuration' subagent would be launched (inheriting ambient process environment, no explicit --mcp-config) never ends up reading a PARENT's already-claimed lease/gate through this repo's actual per-dispatch delivery mechanism (gen_mcp_config.py's env-scoped config never mutates the calling process's own os.environ). Include the mirror collision-control: an explicit ambient-env-leak counterfactual (deliberately exporting the parent's SPINE_FILE/SPINE_SESSION into the subagent's environment) that DOES reproduce cross-identity, proving the no-leak assertions above are not vacuous. Do NOT touch checklist_engine.py or its lease semantics; do not conflate this with the two-spines-share-a-session-id CLI/engine fact named in the handoff -- keep that distinction explicit in the test file's own comments.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "DC3 positive control demonstrated red/green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "positive control 4/4 passing, red demonstrated for 3 distinct manipulations"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "DC3 inheritance-mechanism test class passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py -k DC3"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-dc3-inheritance-mechanism-1"
+        }
+      ],
+      "constraints": [
+        "do not fix engine bugs #439/#446/#427/#443",
+        "do not change engine lease semantics",
+        "F's scope is the door, not the engine's lease-identity semantics"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-dc3-inheritance-mechanism-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py -k DC3",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-dc3-live-experiment": {
+      "id": "m5-dc3-live-experiment",
+      "title": "Best-effort live measurement of the named Commander question (scratch, not committed suite)",
+      "imperative": "Attempt, as a throwaway scratch experiment (not part of tests/), a live measurement of the Commander's exact named question -- whether an in-session Task-tool subagent shares its parent's already-launched MCP server -- by dispatching a headless `claude -p` process with a per-dispatch spine config and asking it to use its own Task tool to spawn a subagent that attempts the same spine_status tool call, observing whether the subagent can reach it. Bound the attempt with a firm timeout. Whatever the outcome (clean YES, clean NO with control green, or genuinely inconclusive/blocked), record it honestly -- an inconclusive result is reported as UNMEASURED with the precise blocker, never dressed up as a negative.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "DC3 mechanism tests pass",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "DC3 mechanism tests 12/12 passing, stable across 3 repeats"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the live-experiment attempt and its honest outcome (YES measured / NO measured with control green / UNMEASURED with precise blocker) are recorded for the result file",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "YES, measured: live claude -p 2.1.226 headless dispatch with one --strict-mcp-config server; Task-tool subagent reached the same spine/session identity as its parent with no config of its own, reproduced twice with fresh unguessable nonces both times, corroborated by exactly 2 server-side engine calls per run (top-level + subagent, no more). Evidence at crew-plans/scratch-g3-live/*"
+        }
+      ],
+      "constraints": [
+        "never report UNMEASURED as a negative",
+        "do not let this block or delay the committed deliverable"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m6-full-suite-and-map": {
+      "id": "m6-full-suite-and-map",
+      "title": "Rebuild the code map; full suite reads 0 failed",
+      "imperative": "Rebuild the code map (python -m scripts.code_map build --root .) since adding tests/test_mcp_identity.py makes map/INDEX.md stale. Run the full suite and confirm 0 failed against the corrected green baseline (2163 passed, 1 skipped, 1061 subtests passed measured immediately before this gate) -- any failure is yours or a real regression, not pre-existing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "DC2 and DC3 tests pass",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "DC2 + DC3 tests all pass"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map/INDEX.md rebuilt and fresh",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && python -m pytest -q tests/test_code_map.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-full-suite-and-map-1"
+        },
+        {
+          "id": "c2",
+          "statement": "full suite: 0 failed",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-full-suite-and-map-2"
+        }
+      ],
+      "constraints": [
+        "gate is 0 failed, not 'set has not grown'"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-full-suite-and-map-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && python -m pytest -q tests/test_code_map.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-full-suite-and-map-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-closeout": {
+      "id": "m7-closeout",
+      "title": "Commit and write IMPLEMENTER_RESULT",
+      "imperative": "git add tests/test_mcp_identity.py and the rebuilt map/, commit to epic-418/f-424-mcp-door. Write IMPLEMENTER_RESULT to the path the handoff names, including the DC3 verdict section, exact commands with real output/exit codes, Map Impact, and a blunt Workflow Feedback section. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "full suite is 0 failed and map is fresh",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "0 failed, map fresh"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "committed; IMPLEMENTER_RESULT.md written with DC3 verdict + Workflow Feedback",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "committed 50fb7987 to epic-418/f-424-mcp-door (tests/test_mcp_identity.py + map/INDEX.md + my own plan/journal + scratch-g3-live evidence); IMPLEMENTER_RESULT written with DC3 verdict (YES, measured) and Workflow Feedback"
+        }
+      ],
+      "constraints": [
+        "write the result file before ending the turn"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g3-impl-424-1",
+    "status": "released",
+    "claimed_at": "2026-08-09T21:01:07.896063+00:00",
+    "last_heartbeat": "2026-08-09T21:22:29.173572+00:00",
+    "claimed_by": "g3-implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T21:22:34.470014+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-09T21:01:21.327427+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-dc2-separate-readings",
+      "why": "DC2 baseline: two real server instances bound to two different spine files each return only their own marked gate text and only their own lease; verified against both the wrapper text and the raw spine JSON",
+      "mechanical": false,
+      "ts": "2026-08-09T21:04:36.755169+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-dc2-concurrency-collision-control",
+      "why": "genuine concurrency proven via interleaved in-flight requests (write-write-read-read over 25 rounds) and via threaded overlapping wall-clock windows; collision-detectability proven by pointing two processes at one shared spine file (red) and contrasting with two separate files (green) -- run 3x to check for flakiness, stable",
+      "mechanical": false,
+      "ts": "2026-08-09T21:06:07.974382+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-dc3-positive-control",
+      "why": "positive control demonstrated red for three distinct manipulations (server-never-started, config-never-delivered, wrong-content) with proof each manipulation genuinely applied via exit code + stderr, and green when the server responds correctly; the control lives in a real assertion helper, not prose",
+      "mechanical": false,
+      "ts": "2026-08-09T21:06:51.583530+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-dc3-inheritance-mechanism",
+      "why": "DC3 measured at the env-seam mcp_spine_server.py itself names as the identity seam: this repo's actual per-dispatch delivery (gen_mcp_config.py) never leaks into the calling process's own os.environ (measured, not assumed); a subagent inheriting that clean environment with no special config crashes with no identity, never the parent's reading; the parent's own door stays up and correct throughout; and the ambient-leak counterfactual proves the no-leak assertion is not vacuous. Kept explicitly distinct from the CLI/engine-lease shared-session-id fact and from any product-internal Task-tool connection-reuse question, which this class cannot observe -- scope boundary recorded for the result file",
+      "mechanical": false,
+      "ts": "2026-08-09T21:08:48.885370+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-dc3-live-experiment",
+      "why": "live experiment succeeded cleanly and reproduced -- YES, measured, not UNMEASURED: a Task-tool subagent shares its parent's already-launched MCP server/identity when the parent dispatch used --strict-mcp-config; recorded for the IMPLEMENTER_RESULT's DC3 verdict section",
+      "mechanical": false,
+      "ts": "2026-08-09T21:12:24.882915+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-full-suite-and-map",
+      "why": "map rebuilt fresh (test_code_map.py 148 passed, 63 subtests); full suite 2175 passed, 1 skipped, 1061 subtests passed, 0 failed -- exactly baseline (2163) + my 12 new tests, skip count and subtest count both match baseline exactly, confirming no regression anywhere else",
+      "mechanical": false,
+      "ts": "2026-08-09T21:16:24.236743+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-closeout",
+      "why": "deliverable committed, result file written with all required sections including the exact DC3 verdict heading, evidence with real commands/output/exit codes, Map Impact, and Workflow Feedback",
+      "mechanical": false,
+      "ts": "2026-08-09T21:22:29.173563+00:00"
+    }
+  ]
+}

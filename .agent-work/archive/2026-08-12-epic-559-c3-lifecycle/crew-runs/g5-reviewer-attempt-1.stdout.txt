@@ -1,0 +1,7 @@
+The g5 review is complete: **APPROVE**.
+
+I drove a full survey (r0–r6) through `checklist_engine.py`, independently reproducing every claim rather than trusting the implementer's report — the six `not_yet_written` type-guard cases, the fault message against `compile_condition` source, the full pytest suite (2932 passed/3 skipped/1121 subtests), and the sweep count (23). The load-bearing check was item 3: I mechanically parsed all 33 `Fault(` call sites in `scripts/generate_spine.py` (23 unique codes: 17 `spec-*`, 6 `probe-*`) and diffed that against `DESIGN_NOTE.md` §7's list — an exact item-for-item match. The Commander's flagged 17-vs-18 discrepancy resolved to grep noise (`spec-shape` from prose, not a fault code), exactly as the handoff's calibration note predicted.
+
+No blocking findings. One non-blocking triage candidate: the design note has no formal list of the 6 `probe-*` fault codes the way §7 now has for `spec-*` — out of this wave's scope since §7's own title scopes it to spec-shape faults specifically. Fowler pass came back clean (11 absent, 1 comments-as-deodorant overridden against an existing repo convention).
+
+Result written to `.agent-work/epic-559/c3-lifecycle/crew-handoffs/g5-reviewer-result.md`; the survey lease is released and the tracked source tree is untouched by the review.

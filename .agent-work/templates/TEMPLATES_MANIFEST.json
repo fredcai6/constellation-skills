@@ -1,0 +1,287 @@
+{
+  "generated": "2026-08-10",
+  "source_commit": "3697e12c99ea3e7673bae675faf40c824598d452",
+  "baseline_origin": "baseline-from-install",
+  "templates": [
+    {
+      "skill": "constellation-admiral",
+      "template": "ADMIRAL_LOG.template.md",
+      "sha256": "07fd86d61f5c789c8d5645ecf1150d9790571f05bed1aff57a8b1eb3d06f8b0b"
+    },
+    {
+      "skill": "constellation-admiral",
+      "template": "ADMIRAL_SPINE.template.json",
+      "sha256": "a4c6377aa4cc2a4f9f6e54907fd419236150e8431c1d14769e1ddb0788b208e9"
+    },
+    {
+      "skill": "constellation-admiral",
+      "template": "LATITUDE_CONTRACT.template.md",
+      "sha256": "ff48f370ad2437ab0473295ea3478ad7d14ebe0c7b9c7256bd9127b8c87a6b32"
+    },
+    {
+      "skill": "constellation-admiral",
+      "template": "LAUNCH_ORDER.template.md",
+      "sha256": "960545da3fbcf7bb9fce92e705aa06b88627305c9a35ff6dbaed2fbbd2628bca"
+    },
+    {
+      "skill": "constellation-cartographer",
+      "template": "ARCHITECTURE_DECISION.template.md",
+      "sha256": "a018ea8e1c668f8ea42375fa43b457970dd77f066443ebff120bce5549a520eb"
+    },
+    {
+      "skill": "constellation-cartographer",
+      "template": "ARCHITECTURE_INDEX.template.md",
+      "sha256": "ef4bb035286510a7458c5387506894dc40c5667ebab8c2552b045c0d579184a3"
+    },
+    {
+      "skill": "constellation-cartographer",
+      "template": "ARCHITECTURE_PACKET.template.md",
+      "sha256": "fd78562b65807b281039934cff393d463c2ef549a852c47455b94d7955d9aa65"
+    },
+    {
+      "skill": "constellation-cartographer",
+      "template": "CARTOGRAPHER.template.json",
+      "sha256": "e9e6fe0c17fd8e1510247924b4f9f25a3bd4d4c2ed9a2458da1ade2753a6d77a"
+    },
+    {
+      "skill": "constellation-cartographer",
+      "template": "MAP_BUILD.template.md",
+      "sha256": "6b29a83b14253d85ff9f07bd18989df198f8a00c3acf05302b920ea3b46195fc"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "AGENTS.pointer.template.md",
+      "sha256": "70733e78a5976437f45985ea571e0ecccb678b852ca8586e23ec3e615c6096a1"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "AGENT_GUIDE.template.md",
+      "sha256": "da6b2e5c7f3fa8d9b3f2685e30305b921504ce0b9431af946e930b08545062da"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "CHARTER.template.json",
+      "sha256": "c0a3397f0d142ab90d3d1929147bda4d5f2ff7a0280a68091e0c85e8b88fcb9c"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "CHARTER_OPEN_QUESTIONS.template.md",
+      "sha256": "8a1be2be5d9cc7f17cb923517e3b7239ba63acc9a3ab8668d59c93bb708cad40"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "CHARTER_STARTING_QUESTIONS.template.md",
+      "sha256": "a5cda8e389c3735359332386ff8f6324713701a1bcc471d3855caac2a4353f9b"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "CLAUDE.pointer.template.md",
+      "sha256": "650af80278bca3324c9a19c70c0abacdfdcfaf3dd2782e279fd00aa1d7625429"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "CREW_CONTEXT.template.md",
+      "sha256": "96db84e4a899d9699e506148b1565784a3174f0d20b5798ccde9d8512ed3b6d9"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "ENGINE_CONFIG.template.json",
+      "sha256": "49ec04c49da9dc61099718780328a785542db1ca0e2328f38b831bf47b1cdca3"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "GLOSSARY.template.md",
+      "sha256": "acaed9c03c3260176fb42bee7034f846efe0f2789da9f773eac66f33b080c208"
+    },
+    {
+      "skill": "constellation-charter",
+      "template": "ORCHESTRATOR_CONTEXT.template.md",
+      "sha256": "3f61f6ce9d6e7ac4aa63899c8f8db831134862b3c065d3341aa01c93e129d1fc"
+    },
+    {
+      "skill": "constellation-commander",
+      "template": "COMMANDER_SPINE.template.json",
+      "sha256": "7f7e50139e3829a3c290e353ca9eb5ed7f370a3ac2c2dc604a9db976f59ca232"
+    },
+    {
+      "skill": "constellation-commander",
+      "template": "COMMANDER_STARTING_QUESTIONS.template.md",
+      "sha256": "91ba7dfc8e9445c3da5c6cbb590577c5cccc2234f198ab02b585e209aaa5569f"
+    },
+    {
+      "skill": "constellation-commander",
+      "template": "EXECUTE_PLAN.template.json",
+      "sha256": "a503f2461b8fe8d10c5aa05d20c90e507d3f7d8bf94a9d29e1fc0d96c3b704ba"
+    },
+    {
+      "skill": "constellation-commander",
+      "template": "IMPLEMENTER_HANDOFF.template.md",
+      "sha256": "66d3b864836a6ca95e2e61951d2d8758f5098ecdc68cd9360058641519de0478"
+    },
+    {
+      "skill": "constellation-commander",
+      "template": "MISSION_FRAME.template.md",
+      "sha256": "2b80507f44613d080cc8def7609ae0c8575dc53f287dd9bdb36021fe71564800"
+    },
+    {
+      "skill": "constellation-commander",
+      "template": "REVIEWER_HANDOFF.template.md",
+      "sha256": "376ed1ccc8db981b371be6fd399e12fdb487ce67c772f38629ecdd28d831ba94"
+    },
+    {
+      "skill": "constellation-diagnose",
+      "template": "FINDING.template.json",
+      "sha256": "3d9f926684402761932ddbd9495c4854a6ef1a62230300f89eb376a099c56f2f"
+    },
+    {
+      "skill": "constellation-explorer",
+      "template": "CRITIC_HANDOFF.template.md",
+      "sha256": "97e8c9051a8013233774ecdf5a885984a07c03268e4cc04dd5a5844ed7775b1a"
+    },
+    {
+      "skill": "constellation-explorer",
+      "template": "CYCLE.template.json",
+      "sha256": "5b26f62c0d9accda0eff1d3d673629ca46ea7859fabaa40b3bd8a786ddd20131"
+    },
+    {
+      "skill": "constellation-explorer",
+      "template": "DESIGN_SPEC.template.md",
+      "sha256": "f9994e809d21c3e1825715ab0754a160c17456d790cd18b79a96e79cefc30204"
+    },
+    {
+      "skill": "constellation-explorer",
+      "template": "EXCURSION_BRIEF.template.md",
+      "sha256": "96d847cacf373cf2c075efca30fe41157cda8ef513394b9a2f8a00ab08e5f545"
+    },
+    {
+      "skill": "constellation-explorer",
+      "template": "EXPLORER_SPINE.template.json",
+      "sha256": "e541d4f1430d8f870a389ea8a236ab9b63789b9aa35545d6309eae80f1affc6b"
+    },
+    {
+      "skill": "constellation-explorer",
+      "template": "EXPLORER_STARTING_QUESTIONS.template.md",
+      "sha256": "60af3e76c82699fb447ab01d4cfa4ac10f1c5bd37483ea86caf981a6d1b995a6"
+    },
+    {
+      "skill": "constellation-explorer",
+      "template": "IDEAS_BOARD.template.md",
+      "sha256": "3206b4f59ec0c7083174e832a8444baa596146082e99f6af0f7796a0b47366b4"
+    },
+    {
+      "skill": "constellation-implementer",
+      "template": "IMPLEMENTER_PLAN.template.json",
+      "sha256": "fb59f37d832360fb235e66b1360ebf7535a8e21430b6fac377d13282cbe64990"
+    },
+    {
+      "skill": "constellation-implementer",
+      "template": "IMPLEMENTER_RESULT.template.md",
+      "sha256": "ace6e0ec6592c346f20c5785d2ce2491bf8e06d634d2b04753448b08dfb0e47c"
+    },
+    {
+      "skill": "constellation-interrogator",
+      "template": "INTERROGATION.template.json",
+      "sha256": "93fec9d26564c411fa1d81f1e0ad7260ad8d5226ba71fc082036788f6dc3d3fc"
+    },
+    {
+      "skill": "constellation-interrogator",
+      "template": "INTERROGATION_RECORD.template.json",
+      "sha256": "679d68da7b14c1216a53e291c83de79c25ca3c6e3b4ae9bc41b3c2f8b239fe02"
+    },
+    {
+      "skill": "constellation-prototyper",
+      "template": "PROTOTYPE_HANDOFF.template.md",
+      "sha256": "98d56db96bb8a8854920cc8aca4883482fa0dde69cf9c5df42cc362420dd977b"
+    },
+    {
+      "skill": "constellation-prototyper",
+      "template": "PROTOTYPE_RESULT.template.md",
+      "sha256": "33797e652fe8277182d68f452934ba0164c9fc7a05eb469a5f40fbc4d14dcb67"
+    },
+    {
+      "skill": "constellation-replan",
+      "template": "REPLAN_INPUT.template.json",
+      "sha256": "5d8222288721c6a236f288c0037d8fe93d58b8588f8b6716434c7e141402aed0"
+    },
+    {
+      "skill": "constellation-replan",
+      "template": "REPLAN_RESULT.template.json",
+      "sha256": "d872f3703bff6e1f0683303eb0c3b68534ae27e40de77e5af0d698df3f61697e"
+    },
+    {
+      "skill": "constellation-reviewer",
+      "template": "FOWLER_PASS.template.json",
+      "sha256": "e9338e94a391bcec876a6a8a6e1249728ff374527fcd710e75c22d55d93f9a90"
+    },
+    {
+      "skill": "constellation-reviewer",
+      "template": "REVIEW_RESULT.template.md",
+      "sha256": "f75ca3015cf6221fb644586e55ca9a918fd0836c4974e486c51b1eb47d4f9842"
+    },
+    {
+      "skill": "constellation-reviewer",
+      "template": "REVIEW_SURVEY.template.json",
+      "sha256": "1212e8864e60a53f19941b4de867bd65aa9d0f6724fb8d33345eb62de25a3c80"
+    },
+    {
+      "skill": "constellation-scout",
+      "template": "SCOUT.template.json",
+      "sha256": "46b287b4208086b683413a93451498e45eeb6eb389f4091df9decec7c7298b6f"
+    },
+    {
+      "skill": "constellation-scout",
+      "template": "SCOUT_REPORT.template.md",
+      "sha256": "3e6ba5df8e88f46f34d7a6d7b582359e60cadc9bec2b5453196354ea1b28bd3f"
+    },
+    {
+      "skill": "constellation-to-initial-issues",
+      "template": "INITIAL_ISSUE_SET.template.json",
+      "sha256": "4e1fc03b078e57ebe509f0ce964969d6d86eec119897f320eca679e309ebcfa8"
+    },
+    {
+      "skill": "constellation-to-initial-issues",
+      "template": "SHAPED_BRIEF.template.json",
+      "sha256": "677361ad4f7371cb2d718a9381fe5cdf37313be450ca0e0eb1d5eb80a8b8cf06"
+    },
+    {
+      "skill": "constellation-triage",
+      "template": "TRIAGE_RECOMMENDATION.template.md",
+      "sha256": "e18003732554f9094c360aa85ed44ee47c515f19e1ee97e999f85247e557e784"
+    },
+    {
+      "skill": "constellation-workbench",
+      "template": "CONSTELLATION_FEEDBACK.template.md",
+      "sha256": "2c4cdcf70371a0fe42e43709877d984266f08428a509c91a8eb827fea0f1876f"
+    },
+    {
+      "skill": "constellation-workbench",
+      "template": "DEFAULT.template.json",
+      "sha256": "1075284e44b8175f3a790407b45be68a62a00623381f9f16e9b80fa7940fbbc0"
+    },
+    {
+      "skill": "constellation-workbench",
+      "template": "STATE_NOTE.template.md",
+      "sha256": "a158a2625eb6947f9507e0c9f8278125b1722802f5a46b6fd0104d1a0f1678c8"
+    },
+    {
+      "skill": "constellation-workbench",
+      "template": "WORKFLOW_CLOSEOUT.template.md",
+      "sha256": "1ee4916ff5a2427a14a892e4e6c569b4b01326adb66d39fd2857abd58af4be72"
+    },
+    {
+      "skill": "constellation-write-a-skill",
+      "template": "gated-engine-SKILL.template.md",
+      "sha256": "759ac1d2c0fd7b55f47b4c6c0c9599d56747dda0e9011f0dbe0b9a21b6c59815"
+    },
+    {
+      "skill": "constellation-write-a-skill",
+      "template": "lean-SKILL.template.md",
+      "sha256": "7f7fa1b0bd3421a626c63629bc2b826c98bfb40966b89b08bff72751930c3894"
+    },
+    {
+      "skill": "constellation-write-a-skill",
+      "template": "survey-SKILL.template.md",
+      "sha256": "f562a1637f1592907bce54b97d4409c1a0768dc887060cdf6d52baf39aa7d220"
+    }
+  ]
+}

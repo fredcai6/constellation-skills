@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-server-fix-green",
+  "mechanical": {
+    "run": "g3fix2-utf8-mcp-door",
+    "project": "constellation-skills",
+    "role": "g3fix2-implementer",
+    "refusals": 1,
+    "spine-step": "m2-server-fix-green",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3fix2-utf8-mcp-door-m2-server-fix-green@8b5b9986f19ac16ca08a35fc73a344a3f737a4d4",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3fix2-utf8-mcp-door",
+    "generated_at": "2026-08-10T02:02:21Z"
+  }
+}

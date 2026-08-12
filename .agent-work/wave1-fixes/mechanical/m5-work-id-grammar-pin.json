@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-work-id-grammar-pin",
+  "mechanical": {
+    "run": "wave1-fixes",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 8,
+    "spine-step": "m5-work-id-grammar-pin",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-wave1-fixes-m5-work-id-grammar-pin@90f6ff2106c2d32051823ae892c8bc10460907ac",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "wave1-fixes",
+    "generated_at": "2026-08-10T04:49:32Z"
+  }
+}

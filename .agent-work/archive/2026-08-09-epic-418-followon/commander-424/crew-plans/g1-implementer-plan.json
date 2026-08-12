@@ -1,0 +1,411 @@
+{
+  "work_id": "g1-implement-mcp-door-424",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-server-core",
+    "m2-drive-to-done",
+    "m3-config-gen",
+    "m4-mcpjson-fallback",
+    "m5-tests",
+    "m6-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), project deltas (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md), the g1 implementer handoff in full, MISSION_FRAME.md, checklist-engine.md, and the six prototype files at git object de6a0844 (proto/mcp_spine_server.py, drive_via_mcp.py, engine_cli.py, make_toy_spine.py, run_arm.py, score.py). Read checklist_engine.py's parse_args/dispatch/_run_verb/main to pin exact CLI flag shapes for every verb the tools will wrap. Verify the handoff is complete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + prototype + engine CLI surface read; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md + GLOSSARY.md, the g1 implementer handoff in full, MISSION_FRAME.md, checklist-engine.md, and all six proto files at de6a0844. Read checklist_engine.py parse_args/dispatch/_run_verb/main/render_human for exact CLI flag shapes. Handoff verified complete: task, protected intent, why-per-dispatch, lift source, grouping guidance, constraints, test mode, close criteria, required evidence, exclusions, reporting all present."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-server-core": {
+      "id": "m1-server-core",
+      "title": "scripts/mcp_spine_server.py: zero-dep JSON-RPC server, full 7-tool surface, wraps main() only",
+      "imperative": "Build scripts/mcp_spine_server.py: newline-delimited JSON-RPC 2.0 over stdio, zero dependencies, binding SPINE_FILE/SPINE_ENGINE/SPINE_SESSION from the environment (never tool args). Every tool builds an argv and calls checklist_engine.main(argv), capturing stdout/stderr/exit code -- never reimplements engine logic. Implement all 7 tools now (spine_status=current; spine_lease=claim|release|heartbeat; spine_start=start; spine_advance=advance; spine_evidence=attest|attach|waive; spine_halt=block|resume; spine_survey_result=record|consolidate) plus initialize and tools/list. A refusal (exit!=0) must map to isError:true carrying the engine's stdout+stderr verbatim (its own refusal text + recovery hint), never reworded. Prove the door is genuinely up BEFORE anything else: drive raw JSON-RPC (initialize, tools/list, one real spine_status call against a throwaway spine) and capture the server's actual reply showing genuine engine output -- this is DC3's positive control and it must exist before any later no-identity result counts. Attach the CLI-fallback table (verbs NOT covered: skip, reopen, append, amend, flag-candidate, and why) to the module docstring.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: doctrine, handoff, prototype, engine CLI surface read."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "server smoke-proof: initialize returns serverInfo, tools/list returns exactly the 7 tools, and one real spine_status tool call against a throwaway spine returns genuine engine `current` output (not a stub) -- captured to a transcript file",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && python .agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/smoke_test.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-server-core-1"
+        }
+      ],
+      "constraints": [
+        "no engine logic duplicated: every tool builds an argv and calls checklist_engine.main()",
+        "zero third-party dependencies",
+        "server config comes from env vars, never tool arguments"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-server-core-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && python .agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/smoke_test.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-drive-to-done": {
+      "id": "m2-drive-to-done",
+      "title": "Prove the full tool surface: drive a throwaway spine to DONE, prove refusal->isError, prove byte-identical imperative text",
+      "imperative": "Build a throwaway scratch gated spine (mixed condition kinds: command-checked and attested postconditions, at least one waivable postcondition with override_policy.allowed=true, and one gate needing attach for a user-decision-shaped artifact) under crew-plans/scratch-mcp/. Write a raw-JSON-RPC driver (no model in the loop) that speaks to the server over stdio and drives the spine through claim -> start -> attest/attach -> advance ... to DONE, exercising every one of the 7 tools at least once (spine_status, spine_lease claim+release, spine_start, spine_advance, spine_evidence attest+attach+waive, spine_halt block+resume, spine_survey_result on a small survey fixture). Separately prove refusal shape: attempt an illegal advance (unmet postcondition) through spine_advance and assert the tool result has isError:true and its text contains the engine's own REFUSED/recovery text verbatim. Separately prove byte-identity: for the same spine state, capture `python scripts/checklist_engine.py --file <spine> current` stdout and the spine_status tool result text, and assert they are byte-identical (say how the check could fail: mutate the server to add a leading space and show the assertion catches it).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "server core built and its up-and-serving smoke proof is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 smoke test green: initialize/tools-list/spine_status all proven against real engine output."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "driver runs end to end, reaches DONE, exercises all 7 tools, refusal->isError proven with recovery text present, byte-identity proven with a demonstrated-failing mutation; transcript captured",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && python .agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/drive_via_mcp.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-drive-to-done-1"
+        }
+      ],
+      "constraints": [
+        "scratch spine built via hand-authored JSON (throwaway, like the prototype's make_toy_spine.py) or engine verbs only -- never by hand-editing the live worktree spine.json/execute.json",
+        "the byte-identity check must be shown capable of failing, not just capable of passing"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-drive-to-done-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && python .agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/drive_via_mcp.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-config-gen": {
+      "id": "m3-config-gen",
+      "title": "scripts/gen_mcp_config.py + a real headless claude -p dispatch using it",
+      "imperative": "Build scripts/gen_mcp_config.py: emits a per-dispatch MCP config JSON for one agent, keyed by session_id#agentId, binding that agent's SPINE_FILE/SPINE_ENGINE/SPINE_SESSION into the generated server's env block. Then prove it for real: run a headless `claude -p \"<task using one tool>\" --mcp-config <generated>.json --strict-mcp-config --allowedTools \"mcp__<server>__<tool>\"` dispatch against a throwaway spine and capture that it actually returned genuine tool output (not a hand-inspected file, not a claim -- the literal dispatch output).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 green: full tool surface proven end to end",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 green: full tool surface driven end to end to DONE, 18/18 assertions passed."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gen_mcp_config.py emits a config keyed session_id#agentId; a real headless claude -p --mcp-config --strict-mcp-config --allowedTools dispatch using the generated file returns genuine engine tool output; transcript captured",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && python .agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/prove_headless_dispatch.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-config-gen-1"
+        }
+      ],
+      "constraints": [
+        "settings.json is never written at any scope"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-config-gen-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && python .agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/prove_headless_dispatch.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-mcpjson-fallback": {
+      "id": "m4-mcpjson-fallback",
+      "title": "Project-scope .mcp.json for the interactive path + CLI-fallback table finished",
+      "imperative": "Write .mcp.json at the worktree root, project scope, for the interactive convenience path only (known Pending-approval limitation for cold agents, documented -- not the delivery mechanism, gen_mcp_config.py is). Finish the CLI-fallback table in the server module's docstring: every one of the 5 uncovered verbs (skip, reopen, append, amend, flag-candidate) with its exact CLI invocation shape and one line on why it stayed uncovered.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 green: config generation proven",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 green: gen_mcp_config.py proved via a real headless claude -p dispatch."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": ".mcp.json exists at worktree root, valid JSON, project scope; CLI-fallback table in the server docstring names all 5 uncovered verbs with invocation + rationale",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && python -c \"import json; json.load(open('.mcp.json')); s=open('scripts/mcp_spine_server.py').read(); assert all(v in s for v in ['skip','reopen','append','amend','flag-candidate']); print('OK')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-mcpjson-fallback-1"
+        }
+      ],
+      "constraints": [
+        "settings.json is never written at any scope",
+        "do not promote anything into docs/agents/*"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-mcpjson-fallback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && python -c \"import json; json.load(open('.mcp.json')); s=open('scripts/mcp_spine_server.py').read(); assert all(v in s for v in ['skip','reopen','append','amend','flag-candidate']); print('OK')\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-tests": {
+      "id": "m5-tests",
+      "title": "tests/test_mcp_spine_server.py, full suite at baseline",
+      "imperative": "Write tests/test_mcp_spine_server.py: unit/integration coverage of the server (initialize/tools/list shape, each of the 7 tools calling through to a real engine on a scratch fixture, refusal->isError with engine text, byte-identity of imperative text vs CLI, gen_mcp_config.py's session_id#agentId keying and env binding). Run the full suite (settled invocation, do not re-derive) and confirm the pinned six-test red set has not grown.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 green: .mcp.json + CLI-fallback table done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 green: .mcp.json + CLI-fallback table done."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/test_mcp_spine_server.py passes on its own",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_spine_server.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-tests-1"
+        },
+        {
+          "id": "c2",
+          "statement": "full suite run; pinned six-test red set has not grown (may shrink)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Full suite: cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests -> 6 failed, 2157 passed, 1061 subtests passed in 94.20s. The 6 failures are EXACTLY the pinned red set named in the handoff, no more no less: test_feedback_tooling.py::FreshnessPathTokenTests::test_installed_path_rewritten_template_is_up_to_date, test_feedback_tooling.py::FreshnessPathTokenTests::test_token_working_copy_up_to_date_against_promoted_baseline, test_install_constellation.py::InterpreterProbeTests::test_sidecar_records_resolved_via_for_probe_success_and_fallback, test_install_constellation.py::TemplateBaselineTests::test_seeded_working_copy_reads_up_to_date_against_baseline, test_run_skill_eval.py::test_real_runner_process_death_leaves_resumable_state, test_spine_rail.py::test_same_path_windows_normcase_sep_equivalence. Red set has NOT grown."
+        }
+      ],
+      "constraints": [
+        "do not edit scripts/install_constellation.py, tests/test_feedback_tooling.py, tests/test_install_constellation.py, tests/test_run_skill_eval.py, tests/test_spine_rail.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_spine_server.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-closeout": {
+      "id": "m6-closeout",
+      "title": "Blast radius, commit, IMPLEMENTER_RESULT",
+      "imperative": "Enumerate by command (never memory) every file this change touches or that references the engine's verb surface, confirm nothing outside scope changed (git diff --stat), commit to epic-418/f-424-mcp-door, then write the IMPLEMENTER_RESULT to crew-handoffs/g1-implementer-result.md covering every required-evidence item in the handoff.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "tests green and red set has not grown",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m5 complete: tests/test_mcp_spine_server.py passes (24/24), full suite red set confirmed unchanged (exactly the 6 pinned failures)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT written with all required evidence, blast radius enumerated, work committed",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-closeout-1"
+        }
+      ],
+      "constraints": [
+        "do not close the issue",
+        "do not promote anything into docs/agents/*"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-closeout-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/epic-418-followon/commander-424/crew-handoffs/g1-implementer-result.md",
+            "return_status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g1-impl-424-1786294452",
+    "status": "released",
+    "claimed_at": "2026-08-09T16:54:12.841989+00:00",
+    "last_heartbeat": "2026-08-09T17:27:37.824832+00:00",
+    "claimed_by": "g1-implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T17:27:43.671772+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff is complete. Design decision made: 7 tools (spine_status=current; spine_lease=claim/release/heartbeat; spine_start=start; spine_advance=advance; spine_evidence=attest/attach/waive; spine_halt=block/resume; spine_survey_result=record/consolidate) covering 13/18 verbs, deliberately including attach+waive per handoff's explicit load-bearing guidance; skip/reopen/append/amend/flag-candidate go to the CLI-fallback table. Server wraps main() only, per prototype's proven shape (env-bound SPINE_FILE/ENGINE/SESSION, argv-build, capture stdout+stderr+code, isError=code!=0).",
+      "mechanical": false,
+      "ts": "2026-08-09T16:54:29.488459+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-server-core",
+      "why": "Server built: 7 tools (spine_status/lease/start/advance/evidence/halt/survey_result), zero deps, wraps main() only via run_engine(), refusals map to isError via as_result (code!=0). CLI-fallback table for skip/reopen/append/amend/flag-candidate lives in the module docstring. Smoke test proves DC3's positive control: initialize returns serverInfo, tools/list returns exactly the 7 committed tools, and a real spine_status call against a fresh scratch spine returns genuine engine 'current' output (ACTIVE g1, the real imperative text, real postcondition ids, real next-verb hint) -- not a stub.",
+      "mechanical": false,
+      "ts": "2026-08-09T16:57:36.532484+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-drive-to-done",
+      "why": "Full tool surface driven end to end through the MCP tools alone: scratch spine reached DONE (with WAIVED g3.c1 recorded), all 7 tools exercised (status/lease-claim-release/start/advance/evidence-attest-attach-waive/halt-block-resume/survey_result-record-consolidate), 18/18 assertions passed 0 failed. Refusal proven: premature advance g1 returned isError:true carrying the engine's literal REFUSED + Recovery: text verbatim. Byte-identity proven: spine_status text == CLI current stdout exactly, AND a mutated copy of the CLI text was shown NOT equal, proving the assertion can fail. Transcript at crew-plans/scratch-mcp/drive_via_mcp.transcript.",
+      "mechanical": false,
+      "ts": "2026-08-09T16:58:50.294001+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-config-gen",
+      "why": "gen_mcp_config.py built: emits {mcpServers: {<name>: {command, args:[server], env:{SPINE_FILE,SPINE_ENGINE,SPINE_SESSION=session_id#agent_id}}}}. Proved for real, not by inspection: a headless 'claude -p ... --mcp-config <generated> --strict-mcp-config --allowedTools mcp__spine__spine_status' dispatch against a fresh scratch spine whose g1 imperative carried an unguessable per-run nonce. The dispatch's final answer contained the exact nonce and the real engine current() output verbatim (RAIL line, ACTIVE g1, real postcondition ids, next-verb hint) -- a model cannot guess a random 16-hex-char nonce, so this proves the tool call round-tripped through the generated per-dispatch server and back. Corroborated by the server's own mcp_calls.jsonl logging a real 'current' engine call with matching stdout. Transcript at crew-plans/scratch-mcp/prove_headless_dispatch.transcript.",
+      "mechanical": false,
+      "ts": "2026-08-09T17:01:11.574579+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-mcpjson-fallback",
+      "why": "Wrote .mcp.json at worktree root, project scope, relative paths (command python3, args scripts/mcp_spine_server.py; env SPINE_FILE/SPINE_ENGINE relative, SPINE_SESSION empty so it works session-less, matching the engine's no-lease legacy behavior) so it is portable, not machine-pinned like a generated per-dispatch config. Points at a small throwaway interactive-demo spine (crew-plans/scratch-mcp/interactive-demo/, with its own README) rather than any live project spine, so opening this worktree interactively cannot mutate real run state through the door. Verified relative-path resolution works when the server is launched with cwd=repo root (Claude Code's project-scope convention), by spawning it directly with relative env values and getting genuine engine output back. CLI-fallback table for skip/reopen/append/amend/flag-candidate is in the server module's docstring with exact invocation shape + one-line rationale each; verified all 5 verb names present.",
+      "mechanical": false,
+      "ts": "2026-08-09T17:03:31.147358+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-tests",
+      "why": "tests/test_mcp_spine_server.py written: 24 tests covering protocol shape (initialize/tools-list exactly 7 tools), every tool genuinely wrapping the engine (verified against real fixture spines, not mocks), refusal->isError with engine text verbatim (cross-checked against the identical CLI call, same session id), byte-identity of spine_status vs CLI current (plus a negative control proving the check can fail), waive satisfying without the underlying check ever becoming true, gen_mcp_config.py's session_id#agentId keying, its generated config launching a real server that answers a real tool call, and .mcp.json's portability + CLI-fallback table completeness. Found and fixed a real bug while writing these: an eager f-string assert message (self.assertTrue(line, f'...{proc.stderr.read()}')) evaluated proc.stderr.read() UNCONDITIONALLY even on the success path, deadlocking because the child's stderr pipe never hit EOF while still running -- confirmed via faulthandler.dump_traceback_later pinpointing the exact blocked line, fixed by moving the stderr read inside an explicit 'if not line' branch. Also fixed a session-id mismatch in the refusal-comparison test. Full suite already run and attested at c2: 6 failed (exactly the pinned red set, unchanged) / 2157 passed / 1061 subtests.",
+      "mechanical": false,
+      "ts": "2026-08-09T17:24:03.728564+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-closeout",
+      "why": "Blast radius enumerated by command: git diff --stat -- scripts/checklist_engine.py is empty (engine never touched); git grep confirmed no existing file references the new modules except the Commander's own execute.json (expected) and two unrelated archive files. execute.json's own modification predates this session (confirmed against the session's opening git status) and was never touched by me. IMPLEMENTER_RESULT written to crew-handoffs/g1-implementer-result.md covering all 7 close criteria with commands+output, the tool-grouping decision and reasoning, Map Impact, triage candidates (duplicated epic-418-followon path tree, the attest-refusal-shape fumble, and the eager-assert-message footgun), and Workflow Feedback. Work committed to epic-418/f-424-mcp-door at 71c03f99 (59 files, 3980 insertions, only new files -- nothing existing modified).",
+      "mechanical": false,
+      "ts": "2026-08-09T17:27:37.824823+00:00"
+    }
+  ]
+}

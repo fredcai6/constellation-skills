@@ -160,7 +160,10 @@ class ResolutionMatrix(unittest.TestCase):
         repo.file("notes/my-map.md", REAL_PACKET)
         orient(repo.root, "w", "--entrypoint", "notes/my-map.md")
         tried = receipt_of(repo.root)["candidates_tried"]
-        self.assertEqual([c["kind"] for c in tried], ["entrypoint", "generated-map", "index", "packets-dir"])
+        self.assertEqual(
+            [c["kind"] for c in tried],
+            ["entrypoint", "generated-map", "index", "packets-dir", "code-map-index", "code-map-ids"],
+        )
         # The entrypoint hit first, yet the later index.md hit is still on the record.
         self.assertEqual(tried[0]["outcome"], "hit")
         self.assertEqual(tried[2]["outcome"], "hit")
@@ -262,18 +265,83 @@ class CitableContent(unittest.TestCase):
         )
         self.assertEqual(verdict(orient(repo.root)), "DEGRADED-UNPARSEABLE")
 
-    def test_this_repo_resolves_degraded(self):
-        """This repo has no docs/architecture/ -- the honest verdict is DEGRADED.
+    def test_this_repo_resolves_non_degraded_no_map(self):
+        """Regression for #534: this repo's real map is `map/INDEX.md`
+        (scripts/code_map/render.py, held fresh by tests/test_code_map.py), not
+        `docs/architecture/` -- so DEGRADED-NO-MAP ("I looked and the map is
+        absent") is a false negative here, indistinguishable from a genuinely
+        map-less repo to any caller. Before candidate 5/6 existed (#534) this
+        exact assertion failed: probing only `docs/architecture/` found nothing
+        and reported the confident-but-wrong absence.
 
-        This will legitimately flip the day this repo grows a real map. That is
-        the point: the floor tracks reality rather than asserting a wish.
+        Deliberately calls the pure resolution layer directly, the same way
+        `cmd_orient` does internally, rather than shelling out to the `orient`
+        CLI: the CLI writes a receipt into `<root>/.agent-work/<work-id>/`, and
+        `.agent-work/` is TRACKED in this repo (see .gitignore) -- a real CLI
+        run against ROOT would leave an untracked file in the actual checkout
+        on every test run. `probe_root` + `collect_candidates` +
+        `build_orientation` together ARE `cmd_orient`'s resolution (see its
+        body), so this exercises the identical code path without the
+        side effect.
+
+        This is expected to flip again -- from DEGRADED-UNPARSEABLE to
+        RESOLVED -- the day this module learns to cite `scripts/code_map`'s own
+        id scheme (see the module docstring's "Resolution rule" section). That
+        is a separate, larger change, deliberately not taken here: the floor
+        tracks reality rather than asserting a wish.
         """
         proof = mo.probe_root(ROOT)
         candidates = mo.collect_candidates(ROOT, None)
         orientation = mo.build_orientation(ROOT.as_posix(), proof, candidates)
         self.assertTrue(proof.proven, proof.evidence)
-        self.assertEqual(orientation.mode, "DEGRADED-NO-MAP")
-        self.assertEqual(orientation.anchor_count, 0)
+        self.assertNotEqual(orientation.mode, "DEGRADED-NO-MAP")
+        # Pinned to the CURRENT honest reason too, not merely "not
+        # DEGRADED-NO-MAP": map/INDEX.md is found and has real content, but
+        # none of it is citable in the struct:/capability:/... vocabulary this
+        # module scans for (see CODE_MAP_INDEX in the module docstring).
+        self.assertEqual(orientation.mode, "DEGRADED-UNPARSEABLE")
+        by_kind = {c.kind: c for c in orientation.candidates}
+        self.assertIn("code-map-index", by_kind)
+        self.assertEqual(by_kind["code-map-index"].path, "map/INDEX.md")
+        self.assertTrue(by_kind["code-map-index"].exists, "map/INDEX.md must exist in this repo")
+
+
+# =============================================================================
+# #534 root-cause guard: the freshness-enforcing side (scripts/code_map) and
+# the orientation side (this module) must not drift apart on where the map
+# lives. They cannot share a live import -- map_orient.py ships standalone
+# into consuming repos with no scripts/code_map -- so this cross-checks the
+# two sides' literals instead. Only meaningful in THIS repo (the one that
+# ships both halves); a consuming repo has nothing here to check.
+# =============================================================================
+
+
+class CodeMapCandidateAlignment(unittest.TestCase):
+    def test_code_map_dirname_matches_the_renderer_default_output_dir(self):
+        from scripts.code_map import cli as code_map_cli
+
+        self.assertEqual(mo.CODE_MAP_DIRNAME, code_map_cli.MAP_DIRNAME)
+
+    def test_code_map_index_matches_the_renderer_top_index_filename(self):
+        from scripts.code_map import render as code_map_render
+
+        self.assertEqual(
+            mo.CODE_MAP_INDEX, f"{mo.CODE_MAP_DIRNAME}/{code_map_render.TOP_INDEX_FILENAME}"
+        )
+
+    def test_code_map_ids_matches_the_renderer_ids_filename(self):
+        from scripts.code_map import render as code_map_render
+
+        self.assertEqual(
+            mo.CODE_MAP_IDS, f"{mo.CODE_MAP_DIRNAME}/{code_map_render.IDS_FILENAME}"
+        )
+
+    def test_the_committed_map_actually_lives_where_both_sides_claim(self):
+        """The filesystem is the final oracle: not just do the two literals
+        agree with each other, but does the checked-in map/ really sit there.
+        """
+        self.assertTrue((ROOT / mo.CODE_MAP_INDEX).is_file(), mo.CODE_MAP_INDEX)
+        self.assertTrue((ROOT / mo.CODE_MAP_IDS).is_file(), mo.CODE_MAP_IDS)
 
 
 # =============================================================================

@@ -1,0 +1,259 @@
+{
+  "work_id": "g3fix4-posix-test-f-portability",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-implement-and-demonstrate",
+    "m2-sweep",
+    "m3-full-suite-baseline",
+    "m4-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read references/global-crew.md and references/global-everyone.md (inherited doctrine), then the g3-implementer-handoff-posix.md in full, tests/test_mcp_spine_server.py's write_gated_spine() fixture (lines 46-105) and the four failing test bodies (ToolsWrapEngineTests around lines 260-330), and the portable house pattern at tests/test_checklist_engine.py lines 25-26 (PASS_COMMAND/FAIL_COMMAND via sys.executable). Also read scripts/checklist_engine.py's _run_check_command/_find_posix_shell (lines 736-800) to understand exactly how a command-kind postcondition is executed (POSIX shell -- bash on Windows via Git for Windows, sh on POSIX; a missing shell fails visibly with rc 127, never silently through cmd.exe). Verify the handoff names task, scope, exclusions, required evidence, test mode, stop conditions. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff + fixture + house pattern + engine shell-selection code read and understood",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-implement-and-demonstrate": {
+      "id": "m1-implement-and-demonstrate",
+      "title": "Replace both `test -f` checks with a portable, argv-passed file-existence check; demonstrate both directions with real exit codes",
+      "imperative": "In tests/test_mcp_spine_server.py ONLY: add a small helper (near write_gated_spine, module scope) that builds a command-kind postcondition string driving a genuine file-existence test through `sys.executable -c '...'` (the house pattern) instead of the POSIX `test` builtin. Pass the target path as a `python -c` argv element (sys.argv[1]) rather than interpolating it into the python source text, and shlex.quote() both the python source and the path when assembling the outer shell command line -- this survives Windows paths (backslashes, possible spaces in a TEMP dir) because shlex.quote wraps anything containing a backslash in single quotes, which a POSIX shell (bash on Windows, sh on POSIX) treats as fully literal with zero escape processing, unlike the naive unquoted f-string interpolation this replaces (unquoted backslash-letter sequences are stripped by the shell, mangling the path). The check must genuinely exit 0 when the file exists and non-zero when it does not -- do not weaken it into an always-pass check, since g3's optional_report.txt postcondition depends on it failing while the file is absent (that failure is what makes the later `waive` test meaningful). Replace both call sites (current lines 67 and 92) to use the new helper. Demonstrate the check both directions YOURSELF before trusting the test suite: run the built command string once with the target file absent (expect non-zero exit) and once after creating it (expect exit 0), and paste both real exit codes into your why. Then run tests/test_mcp_spine_server.py and confirm all tests pass, including the four previously-Windows-only-red tests.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: doctrine, handoff, fixture, house pattern, and engine shell-selection code all read"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "test -f replaced at both sites with a portable, argv-passed, shlex.quote'd sys.executable check that still genuinely fails when the file is absent; tests/test_mcp_spine_server.py passes in full",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_spine_server.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-implement-and-demonstrate-1"
+        }
+      ],
+      "constraints": [
+        "scope is tests/test_mcp_spine_server.py only in this step",
+        "do not weaken the optional_report.txt check -- it must still genuinely fail while the file is absent",
+        "do not change scripts/mcp_spine_server.py, scripts/checklist_engine.py, .mcp.json, any template, or any imperative text",
+        "do not hand-edit checklist JSON or anything under episodes/"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-implement-and-demonstrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_spine_server.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-sweep": {
+      "id": "m2-sweep",
+      "title": "Sweep all three workstream files for remaining POSIX-only assumptions",
+      "imperative": "Grep tests/test_mcp_spine_server.py, tests/test_mcp_identity.py, and tests/test_mcp_imperative_equivalence.py for: shell builtins or sh-only syntax in check text or subprocess calls (test -f/-e/-d, [ ... ], shell=True), forward-slash-only path assembly inside command strings, os.kill/signal use, /dev/null, backticks used as shell command substitution, and && / || chaining inside a check command. For each hit, decide in-scope-fix vs deliberately-left-alone and record the reason (e.g. a backtick inside a markdown-style docstring is not shell syntax; select.select comments in test_mcp_identity.py describe an already-fixed prior defect, not a live one; an f-string building a human-readable `imperative` field is never executed by a shell so backslash/quoting mangling cannot occur there). If a real portability defect turns up outside tests/test_mcp_spine_server.py, name it and fix it in scope; if none does, say so plainly. Attest c1 with the grep commands and their output captured in your why.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 checks portable and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 checks portable and verified: 22 passed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "sweep complete across all three files; findings and deliberate non-fixes both recorded with reasons",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "the other two files are in scope only if the sweep finds a real portability defect; name anything changed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-full-suite-baseline": {
+      "id": "m3-full-suite-baseline",
+      "title": "Full suite matches the 2178 passed / 1 skipped / 1061 subtests / 0 failed baseline",
+      "imperative": "Run the full suite and confirm it matches the stated baseline exactly (2178 passed, 1 skipped, 1061 subtests, 0 failed).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "sweep complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "sweep complete, no other files touched"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite: 2178 passed, 1 skipped, 1061 subtests, 0 failed",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-full-suite-baseline-1"
+        }
+      ],
+      "constraints": [
+        "bar is the stated baseline, not merely 0 failed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-full-suite-baseline-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-closeout": {
+      "id": "m4-closeout",
+      "title": "Commit and write IMPLEMENTER_RESULT",
+      "imperative": "git add tests/test_mcp_spine_server.py (and this plan file), commit to epic-418/f-424-mcp-door. Write IMPLEMENTER_RESULT to the path the handoff names: exact commands with real output/exit codes, both directions of the new check demonstrated with real exit codes, the sweep findings (what was found and what was deliberately left alone, with reasons), an explicit local-vs-reasoned-about-Windows split, Map Impact (if any), and a blunt Workflow Feedback section. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "full suite matches baseline",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "full suite matches baseline exactly: 2178 passed, 1 skipped, 1061 subtests, 0 failed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "committed to epic-418/f-424-mcp-door; IMPLEMENTER_RESULT written with all required sections",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "write the result file before ending the turn"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/archive/2026-08-09-epic-418-followon/commander-424/g3fix4/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-10T02:49:23.604092+00:00",
+    "last_heartbeat": "2026-08-10T03:00:19.854374+00:00",
+    "claimed_by": "g3fix4-implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-10T03:00:42.909726+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "read global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md; read the g3-implementer-handoff-posix.md in full; read write_gated_spine() fixture and the four failing test bodies (ToolsWrapEngineTests lines 266-322); read the house pattern PASS_COMMAND/FAIL_COMMAND at tests/test_checklist_engine.py lines 25-26; read _run_check_command/_find_posix_shell at scripts/checklist_engine.py lines 736-800, confirming command checks run via subprocess.run([shell,'-c',command]) with returncode==0 as the pass criterion, and CREW_CONTEXT.md's rule to invoke pytest via 'python -m pytest', not 'py -m pytest' (py has no pytest installed). Handoff is complete: task, scope, exclusions, evidence, stop conditions all named.",
+      "mechanical": false,
+      "ts": "2026-08-10T02:49:54.949105+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-implement-and-demonstrate",
+      "why": "Added file_exists_check() helper (module scope, near write_gated_spine): sys.executable -c '<snippet>' <path>, path passed as a python -c argv element (sys.argv[1]), snippet and path both shlex.quote'd -- shlex.quote single-quotes anything containing a backslash or space, and a POSIX shell applies zero escape processing inside single quotes, so a Windows path survives byte for byte through the outer shell command line, unlike the unquoted f-string this replaces. Replaced both call sites (notes.txt at former line 67, optional_report.txt at former line 92). Demonstrated both directions myself, routed through the same shell-selection logic the engine uses (sh/bash -c), against a temp dir deliberately named with a space to exercise the quoting: absent -> exit 1 (non-zero), created the file -> exit 0. tests/test_mcp_spine_server.py: 22 passed in 0.81s (python -m pytest, not py -m pytest per CREW_CONTEXT.md), including the four previously-Windows-only-red tests (test_spine_start_and_advance_drive_a_gate_to_complete, test_spine_advance_mechanical_flag, test_spine_evidence_attach_satisfies_artifact_postcondition, test_spine_evidence_waive_satisfies_without_making_check_true).",
+      "mechanical": false,
+      "ts": "2026-08-10T02:51:16.571816+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-sweep",
+      "why": "Swept all three files for 6 categories: (1) shell builtins/sh-only syntax in command checks -- ONLY the two file_exists_check() call sites remain as 'command' postconditions, both now portable via sys.executable, no test -f / [ ] / shell=True anywhere else. (2) /dev/null -- zero hits. (3) os.kill/signal -- zero hits. (4) backticks -- every hit is markdown code-span formatting inside docstrings/comments (e.g. `mcp_spine_server.py`, `test -f`), never shell command substitution; not shell syntax, deliberately left alone. (5) && / || chaining inside a check command -- zero hits. (6) forward-slash path assembly inside f-strings -- three residual hits: the g1 'imperative' field text (f'create {w}/notes.txt', line 87) is human-readable prose rendered to a client, never executed by a shell, so backslash/quoting mangling cannot occur there -- deliberately left alone; a pytest assertion message in test_mcp_imperative_equivalence.py (line 359, 'checked/len(gates)') is also prose, not a command -- deliberately left alone; the two file_exists_check(f'{w}/...') sites are the fix itself, already portable via shlex.quote. (7) select.select -- three hits in test_mcp_identity.py, all comments describing the ALREADY-FIXED prior defect (the winfix reader-thread rewrite), not a live import or call -- deliberately left alone, no live select.select remains (confirmed separately: 'import select' is absent from that file). CONCLUSION: no real portability defect found outside the two test -f sites already fixed in m1; tests/test_mcp_identity.py and tests/test_mcp_imperative_equivalence.py needed no changes.",
+      "mechanical": false,
+      "ts": "2026-08-10T02:51:57.405012+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-full-suite-baseline",
+      "why": "First run hit test_map_tree_freshness_root_index_matches_a_fresh_build failing (3564 vs 3565 entities) -- adding file_exists_check()/_FILE_EXISTS_SNIPPET as new module-scope symbols in tests/test_mcp_spine_server.py shifted the code map's entity count by 1, same class of map-staleness the winfix round hit. Rebuilt via python -m scripts.code_map build --root . (only map/INDEX.md changed: tests total 3564->3565, tests.test_mcp_spine_server 50->51 entities). Re-ran full suite: 2178 passed, 1 skipped, 1061 subtests passed in 98.40s -- exact baseline match, 0 failed.",
+      "mechanical": false,
+      "ts": "2026-08-10T02:58:15.879872+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-closeout",
+      "why": "Committed fd754ed9 to epic-418/f-424-mcp-door (fix + map rebuild + engine plan/journal/gauge artifacts + crew-handoffs/crew-runs.json bookkeeping, matching the winfix precedent). IMPLEMENTER_RESULT written at crew-handoffs/g3-implementer-result-posix.md with exact commands/output/exit codes for the target file (22 passed) and full suite (2178 passed, 1 skipped, 1061 subtests, 0 failed after the map rebuild), both directions of the new check demonstrated with real exit codes (absent -> 1, present -> 0) against a space-containing temp path, the full sweep table across all six categories plus the select.select informational check, an explicit local-vs-reasoned-about-Windows split, Map Impact, and a blunt Workflow Feedback section.",
+      "mechanical": false,
+      "ts": "2026-08-10T03:00:19.854365+00:00"
+    }
+  ]
+}

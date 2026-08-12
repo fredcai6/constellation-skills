@@ -8,6 +8,38 @@ A checklist is **one plan that one agent works through** — not the whole multi
 
 Composition is **by reference, not by nesting.** A gate that delegates work points to a **child checklist** (a separate artifact / work-id); it does not inline the sub-agent's tasks. Every agent has its own plan: Commander (spine and execute.json), implementer, reviewer. The implementer's plan is self-authored, full of primitives, and simply never handed further down.
 
+## Who writes a checklist (epic-559/c2)
+
+Until now every checklist in this corpus was hand-authored. `scripts/generate_spine.py` is the first
+**producer** of the shape this document describes: it compiles a TOML spec into a checklist and calls
+`scripts/validate_spine.py`'s `validate()` as the literal last statement before writing, so it cannot
+emit anything the oracle would reject. The spec has **no raw-command field** — a check is one of five
+typed kinds (`qualitative`, `pytest`, `script`, `population`, `artifact`), each with a generation-time
+probe — because a check typed from memory is where hand-authored spines actually broke.
+
+Nothing about the on-disk format changed. The engine is unchanged; this is a new writer of an existing
+shape, and `docs/agents/*` is untouched.
+
+Three engine behaviours this document already implies were measured directly while building it, and
+their **consequences** are worth stating here because a reader can otherwise miss them:
+
+- **No artifact-based gate can be enforced on a `survey`.** §Two checklist types already records that
+  `null`/`artifact`-kind postconditions on a survey item are unevaluated by `record` (#422/#328). The
+  consequence, verified by driving a survey to consolidation: `consolidate` reads only each item's
+  `result` field, so an `artifact` postcondition on a survey item is never consulted by *either* closing
+  verb. A survey reaches `APPROVE` with such a postcondition unsatisfied and no evidence attached. On a
+  `gated` gate, `advance` checks every postcondition with no kind filter, so the same postcondition is
+  genuinely load-bearing there. The asymmetry is real and pre-existing; the generator now refuses to
+  emit a postcondition the engine will never consult, and states the non-enforcement instead.
+- **`config_ref` is a crash surface.** `load_config` calls `json.loads` on any `config_ref` that
+  **exists**, so a `config_ref` pointing at a real non-JSON file raises an unhandled `JSONDecodeError`
+  before any rail text can print. A *missing* path falls through to `{}` and is harmless, which is why
+  every shipped template's nonexistent `docs/agents/engine-config.json` is fine. `validate_spine.py`
+  carries no fault for the crashing case.
+- **A `command` check receives no `cwd`.** Already noted in `init_work_area.resolve_spine`'s docstring
+  (#341); measured live here as a check that silently found nothing when run from outside the repo.
+  Every command the generator emits is therefore anchored `cd <repo-root> && …`.
+
 ## Two checklist types
 
 Every checklist is an ordered list of items and declares one type:

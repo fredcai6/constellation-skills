@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "f4-tell-the-crew",
+  "files": [],
+  "repo_rev": {
+    "commit": "90b39e2bb5009fa4f61c2a6ed196453ba6de0e63"
+  },
+  "run": {
+    "work_id": "epic-559/e1-fail-up",
+    "generated_at": "2026-08-11T11:44:17Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/e1-fail-up",
+      "repo": "/home/tommy/projects/constellation-skills-wt/e1-fail-up",
+      "durable": "/home/tommy/projects/constellation-skills-wt/e1-fail-up"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/e1-fail-up"
+    }
+  }
+}

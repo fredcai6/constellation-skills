@@ -1,0 +1,236 @@
+{
+  "schema_version": 1,
+  "decision": "replan",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Wave 4's exit criteria are met for M2 and M3 and remain measurable; #555 is carried unworked by design, and its disposition returns to the human.",
+    "epic_done": "The epic is not complete. Three of four definition-of-done items now hold; the third -- agent instructions naming the door and not the CLI -- is untouched and is this wave's subject.",
+    "good_enough": "The mandatory quality boundary is preserved and was exercised: every merged change had a control that reproduced its defect first, and a cold reviewer independent of the implementer re-ran those controls."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "D0",
+      "action": "revise_plan",
+      "reason": "The wave-4 conclusion that binding is not sufficient rested on crews that had no bound door. The basis is gone, so planning truth is revised rather than merely annotated.",
+      "issue_created": false
+    },
+    {
+      "id": "D1",
+      "action": "revise_plan",
+      "reason": "Withholding the engine by omitting it from an allow-list does not work, because Bash reaches it. N2 is planned against a deny mechanism instead.",
+      "issue_created": false
+    },
+    {
+      "id": "D2",
+      "action": "revise_plan",
+      "reason": "A fixed decision contradicts a human ruling; the correction is proposed as an escalation rather than applied.",
+      "issue_created": false
+    },
+    {
+      "id": "D3",
+      "action": "record_evidence_only",
+      "reason": "An Admiral practice failure, corrected within the same run and owed as an episode at closeout.",
+      "issue_created": false
+    },
+    {
+      "id": "D4",
+      "action": "amend_forecast_or_parked",
+      "reason": "Adjacent to #478 and outside this epic's intent; parked with the observation recorded rather than fixed silently.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Make the door the only interface an agent has to a spine: close the five-verb gap, withhold the engine from the crew grant, and remove the CLI from agent-facing instruction -- in that order, because removing the CLI before the door covers those verbs strands an agent mid-run.",
+    "exit_criteria": [
+      "All 18 engine verbs are reachable through mcp__spine__ tools, each exercised against a real spine through a real JSON-RPC handshake rather than asserted in prose.",
+      "amend's delta reaches the engine as a pass-through file under the task's own .agent-work/ directory, confined the way spine_advance.from_child already is, with no second definition of the delta grammar at the MCP boundary.",
+      "A crew dispatched through run_crew.py cannot reach checklist_engine.py even when instructed to, proven by a control that reaches it before the change.",
+      "No agent-facing instruction in skills/ or templates/ names checklist_engine.py or the <engine> token, and the shared doctrine names the spine MCP server and states that the mcp__spine__ prefix follows the server key in .mcp.json.",
+      "A cold reviewer independent of each implementer has approved each change.",
+      "#555 is carried unchanged and unworked for a second wave; its terms stay verbatim, no spend is authorized against it, and its disposition returns to the human."
+    ],
+    "issues": [
+      {
+        "id": "N1",
+        "title": "Close the verb gap: skip, reopen, append, amend and flag-candidate reachable through the door",
+        "desired_outcome": "spine_halt extends to skip and reopen; a new spine_capture covers append and flag-candidate; a new spine_amend passes a delta file through to the engine. The door's 13-of-18 rationale and its CLI-fallback table are removed, because the decision they record is overturned.",
+        "useful_now": "Every other part of this wave depends on it: remove the CLI first and an agent strands on a verb it can no longer reach.",
+        "appetite": "One implementer plus a cold reviewer.",
+        "acceptance_or_falsification_evidence": "Each of the five verbs driven against a real scratch spine over a real JSON-RPC handshake, with a control showing it unreachable through the door beforehand.",
+        "implementation_latitude": "The tool grouping is a recommendation; a better grouping is welcome if argued and kept near the same tool count.",
+        "hard_constraints_no_gos": [
+          "_identity_violation is not weakened",
+          "no per-call spine addressing",
+          "checklist_engine.py is not modified",
+          "settings.json and docs/agents/* untouched",
+          "no merge or push to main"
+        ],
+        "local_unknowns": [
+          "Whether spine_halt should be renamed once it also skips and reopens -- a rename breaks agents mid-run, so stability wins for now"
+        ],
+        "anchors": [
+          "scripts/mcp_spine_server.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "N2",
+        "title": "Withhold the engine CLI from the crew grant",
+        "desired_outcome": "A dispatched crew can reach the door and cannot reach checklist_engine.py. Omission from the allow-list is not enough, because the grant includes unrestricted Bash.",
+        "useful_now": "Instruction alone is untestable while the CLI stays reachable; this is what turns the ruling into a property.",
+        "appetite": "One implementer plus a cold reviewer.",
+        "acceptance_or_falsification_evidence": "A control in which a crew reaches the engine through Bash before the change, and is refused after, with the refusal legible enough that the crew files a finding rather than silently failing.",
+        "implementation_latitude": "Deny rule, wrapper, or another mechanism -- the property matters, not the means.",
+        "hard_constraints_no_gos": [
+          "a crew must still be able to do ordinary engineering work",
+          "settings.json untouched",
+          "no merge or push to main"
+        ],
+        "local_unknowns": [
+          "Whether a deny rule can name a script path precisely enough to avoid blocking unrelated Bash"
+        ],
+        "anchors": [
+          "scripts/run_crew.py"
+        ],
+        "type": "AFK",
+        "blocks": [
+          "N1"
+        ]
+      },
+      {
+        "id": "N3",
+        "title": "Remove the CLI from agent-facing instruction and name the MCP server",
+        "desired_outcome": "The 19 checklist_engine mentions across 13 corpus files lose their CLI-fallback clauses; all 9 <engine> occurrences disappear with them, since every one sits inside such a clause. Shared doctrine names the spine MCP server and explains that the tool prefix follows the server key in .mcp.json.",
+        "useful_now": "It is the ruling's literal text: agents should not know about the CLI.",
+        "appetite": "One implementer plus a cold reviewer.",
+        "acceptance_or_falsification_evidence": "grep for checklist_engine and <engine> across skills/ and templates/ returns nothing agent-facing, and a role driven end to end from the rewritten text reaches DONE using only the door.",
+        "implementation_latitude": "Wording is the implementer's; the canonical source is skills/_shared/global-*.md, never a role's references/ copy, which the installer regenerates.",
+        "hard_constraints_no_gos": [
+          "docs/agents/CREW_CONTEXT.md is the human's call and is left alone",
+          "edits go to skills/_shared/global-*.md, not to regenerated copies",
+          "no merge or push to main"
+        ],
+        "local_unknowns": [
+          "Whether any non-agent reader depends on the fallback clauses"
+        ],
+        "anchors": [
+          "skills/_shared/global-everyone.md",
+          "skills/workbench/references/checklist-engine.md",
+          "skills/"
+        ],
+        "type": "AFK",
+        "blocks": [
+          "N1"
+        ]
+      },
+      {
+        "id": "555",
+        "title": "Make the door launch where python3 is not a command (carried, unworked)",
+        "desired_outcome": "Carried verbatim; disposition returns to the human.",
+        "useful_now": "It is a launched identity and may not be silently dropped.",
+        "appetite": "No spend authorized this wave.",
+        "acceptance_or_falsification_evidence": "None sought this wave.",
+        "implementation_latitude": "None.",
+        "hard_constraints_no_gos": [
+          "terms preserved byte-identical",
+          "no spend"
+        ],
+        "local_unknowns": [],
+        "anchors": [
+          "scripts/install_constellation.py",
+          ".mcp.json"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "Measure adoption now that the CLI is unreachable",
+      "why_likely": "The confound is removed: door use can no longer be explained by preference",
+      "entry_conditions": [
+        "N1, N2 and N3 merged"
+      ]
+    },
+    {
+      "outcome": "#421",
+      "why_likely": "Its entry condition -- agents reach the engine only through the door -- is what this wave establishes",
+      "entry_conditions": [
+        "N2 merged"
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether instruction or enforcement drives door adoption",
+      "affects": "How much of the corpus rewrite is load-bearing",
+      "settle_by": "Comparing crew call records before and after N2, with N3's instruction change held constant",
+      "current_evidence": "Two of two post-M1 dispatches used the door with the CLI still reachable, which is suggestive and far too small a base",
+      "next_probe": "Dispatch under N2 and read the call record"
+    },
+    {
+      "unknown": "Whether a Bash deny rule can name the engine precisely without blocking ordinary work",
+      "affects": "N2's feasibility",
+      "settle_by": "N2's control",
+      "current_evidence": "None; the reviewer established only that unrestricted Bash reaches the engine",
+      "next_probe": "N2's red control"
+    }
+  ],
+  "revised_parked": [
+    "Windows launch, carried as a standing constraint that entry definitions stay configurable rather than as a workstream",
+    "The duplicated-path work directory, adjacent to #478"
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "559",
+      "action": "keep",
+      "reason": "Launched this wave as N1, N2 and N3"
+    },
+    {
+      "id": "560",
+      "action": "keep",
+      "reason": "Untouched and independent"
+    },
+    {
+      "id": "421",
+      "action": "keep",
+      "reason": "Entry condition is what N2 establishes"
+    },
+    {
+      "id": "instruction-causes-adoption",
+      "action": "keep",
+      "reason": "Still unsettled, and this wave is designed to separate instruction from enforcement"
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "plan_of_record",
+      "before": "fixed_decisions carried 'The CLI door stays as a fallback; F is additive' beside its replacement.",
+      "after": "fixed_decisions carries the ratified set proposed by the w5x-fixed-boundary-cli packet.",
+      "reason": "That packet proposed the change and, being inapplicable by construction, could authorize no launch. The ratifying authority is the human's ruling of 2026-08-10, given verbatim and categorically: 'anything that we want to do for the spine needs to be accessible via mcp. the agents should not know about the cli. period. anything that we can only do via the cli is a defect.' This packet proceeds from the ratified boundary and proposes no further change to it."
+    },
+    {
+      "surface": "current_wave.objective",
+      "before": "Make running things require no thought: the launcher grants what a crew needs, entry definitions resolve per machine, and the documentation stops being wrong.",
+      "after": "Make the door the only interface an agent has to a spine.",
+      "reason": "Wave 4 merged M2 and M3, discharging its objective. The human's ruling makes the door's completeness the next thing that must be true."
+    },
+    {
+      "surface": "current_wave.issues",
+      "before": "M2, M3 and #555 carried.",
+      "after": "N1, N2 and N3 added; M2 and M3 completed and dropped; #555 carried verbatim for a second wave.",
+      "reason": "M2 merged as 8ddea47d and M3 as 724e6f87. #555 remains a launched identity that may not be silently dropped."
+    },
+    {
+      "surface": "wave_evidence",
+      "before": "Binding is necessary and not sufficient: crews with a bound door still chose the CLI.",
+      "after": "Retracted. Nine of ten dispatch scripts never bound a door; the crews had no working door to prefer.",
+      "reason": "The basis for the earlier claim does not hold, and planning must not carry a conclusion whose evidence is gone."
+    }
+  ],
+  "wave_review_comment": "## Wave review -- w4-mechanical\n\nM2 and M3 merged; #555 carried unworked, its disposition still the human's.\n\n**M1 is proven in production.** The two dispatches after it merged exported no SPINE_FILE in their scripts, and both bound their own door and claimed a derived, assignment-keyed identity with no attempt tail -- one of them a reviewer, the route where the identity used to be hand-typed.\n\n**The wave's headline finding is a retraction.** Wave 4 recorded that binding a crew's door is necessary but not sufficient, because crews with bound doors still used the CLI. That basis does not hold: nine of this epic's ten dispatch scripts never set SPINE_FILE, so those crews had a door bound to a wave-1 scratch demo spine and the CLI was the only path to their own spine. They behaved correctly in a broken environment. Binding had been hand-typed per dispatch and was right once in ten -- which is the case for making it mechanical, stated as a measurement.\n\n**Two rules were corrected by being broken.** A tracked config that code also reads directly must be launchable as committed, or a placeholder breaks every reader that runs before wiring. And omitting a tool from a crew's allow-list does not withhold the capability, because unrestricted Bash reaches the engine anyway -- found by the cold reviewer before N2 was dispatched rather than by a crew mid-flight.\n\n**One Admiral error:** main was red and reported green. M3 deleted a documentation line that an approval file pins verbatim, and the suite was not re-run on merged main. Corrected in the same run; the M2 merge closed it, verified on merged main at 2522 passed.",
+  "revised_epic_body": "## Current planning truth\n\nAgents drive their spines through the MCP door and never touch the engine CLI. The CLI is an implementation detail behind the door; anything reachable only through it is a defect.\n\nThree of the four definition-of-done items now hold. A dispatched crew drives its own spine through the door, measured from its own call record. A respawn resumes its lease rather than force-claiming, because the lease keys on the assignment and the identity is derived from the spine's own work_id. No shipped entry definition hardcodes an interpreter: the value resolves per machine at install time, and the committed file still works as committed.\n\nThe item that does not yet hold is the one this wave is for: **agent instructions still name the CLI.** Nineteen mentions across thirteen corpus files, and nine occurrences of an `<engine>` token that nothing in the corpus defines -- every one of them inside a CLI-fallback clause. The door reaches thirteen of the engine's eighteen verbs, so removing those clauses today would strand an agent on a verb it could no longer reach. Hence the order: close the verb gap, then withhold the engine, then rewrite the instruction.\n\nWithholding is not omission. A crew's grant includes unrestricted Bash, which reaches the engine whatever the MCP allow-list says, so enforcement needs a deny mechanism rather than a shorter list.\n\n**Nonbinding forecast.** Once the CLI is unreachable, adoption becomes measurable for the first time: door use can no longer be explained by preference. #421 opens on the same condition. Windows launch stays parked as a standing constraint that entry definitions remain configurable, with every hardcode recorded on #539.",
+  "escalation": null
+}

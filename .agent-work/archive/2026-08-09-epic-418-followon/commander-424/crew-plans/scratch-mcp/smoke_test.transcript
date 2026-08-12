@@ -1,0 +1,12 @@
+INITIALIZE: {"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2025-06-18", "capabilities": {"tools": {"listChanged": false}}, "serverInfo": {"name": "spine", "version": "0.1.0"}}}
+
+TOOLS: ["spine_advance", "spine_evidence", "spine_halt", "spine_lease", "spine_start", "spine_status", "spine_survey_result"]
+
+SPINE_STATUS: RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+ACTIVE g1 [pending] — Create /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/arm-smoke/workspace/notes.txt with one line, then confirm you understand this scratch spine's four gates.
+postconditions:
+  c1 [unmet] command — notes.txt exists
+  c2 [unmet] null — gates understood
+0/2 met
+next: start g1

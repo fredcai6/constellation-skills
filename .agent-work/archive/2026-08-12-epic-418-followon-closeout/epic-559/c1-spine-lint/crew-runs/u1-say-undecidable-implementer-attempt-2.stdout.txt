@@ -1,0 +1,1 @@
+Gate `u1-say-undecidable` is driven and complete: all five postconditions verified independently and re-confirmed by the engine's own `advance` re-check, lease released, and the result written to `.agent-work/epic-559/c1-spine-lint/UNDECIDABLE_RESULT.md`. No code changes were needed — the prior commit was correct; only the missing engine drive was the gap.

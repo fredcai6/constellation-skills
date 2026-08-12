@@ -1,0 +1,387 @@
+{
+  "work_id": "epic-418-followon",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "init",
+    "latitude",
+    "execute",
+    "closeout"
+  ],
+  "tasks": {
+    "init": {
+      "id": "init",
+      "title": "Set up epic work area",
+      "imperative": "Run: python3 /home/tommy/.claude/skills/constellation-admiral/scripts/init_work_area.py epic-418-followon. Claim the engine session lease on this spine: <engine> claim --session-id admiral-epic-418-followon --claimed-by admiral --worktree . From here on, pass --session-id on every mutating engine call against this spine. Create the ADMIRAL_LOG from templates/ADMIRAL_LOG.template.md at .agent-work/epic-418-followon/ADMIRAL_LOG.md.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area scaffolded and ADMIRAL_LOG created",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "work area scaffolded at .agent-work/epic-418-followon/ and ADMIRAL_LOG.md created from template"
+        },
+        {
+          "id": "c2",
+          "statement": "engine session lease claimed for this spine",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "engine lease claimed: session 86708414..., claimed-by admiral, worktree ."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "latitude": {
+      "id": "latitude",
+      "title": "Confirm authorization and latitude with the human",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then docs/agents/ORCHESTRATOR_CONTEXT.md if present. In this context, load constellation-interrogator and settle the latitude contract with the human: epic intent and success shape (honest-null acceptability), checkpoint protocol (stop-and-present vs cleared-through), decision classes delegated vs surfaced, float-up routing for Commander user-decisions, comms style, budget/model parameters, pre-rulings, and contract expiry (time or event). Fill templates/LATITUDE_CONTRACT.template.md into .agent-work/epic-418-followon/LATITUDE_CONTRACT.md. Decisions fitting no listed class are out-of-taxonomy and always escalate. Get explicit human confirmation of the contract.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "work area ready",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "init complete: work area + spine + log ready"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "latitude contract written with decision classes, float-up routing, and expiry",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "LATITUDE_CONTRACT.md written: decision classes incl. two costly-to-revert surfaced exceptions, permission prerequisites pre-cleared per #145 for both measurement missions, float-up routing (decision/query/refresh), and expiry at the wave-1 boundary or 72h from 2026-08-09T14:45Z"
+        },
+        {
+          "id": "c2",
+          "statement": "latitude contract confirmed by the human",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-latitude-1",
+          "attested": {
+            "evidence": "e-latitude-1",
+            "note": "confirmed in session by Tommy: 'agree all' against six presented decisions"
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-latitude-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "agree all",
+            "by": "Tommy",
+            "date": "2026-08-09",
+            "scope": "#424 F + #421 C + #423 E (terminal, spanning both sets of work), plus routed cheap fixes and the folded-in governor trip band",
+            "record": ".agent-work/epic-418-followon/INTERROGATION_RECORD.json",
+            "verifier": "verify_interrogation.py exit 0, 8 questions, mode=interactive"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "execute": {
+      "id": "execute",
+      "title": "Run the epic",
+      "imperative": "Before entering this step and before EACH detached wave launch, (re)write the crash-resume state note at .agent-work/epic-418-followon/STATE_NOTE.md (step \u00b7 slug \u00b7 next command \u00b7 PID \u00b7 expected artifact) from .agent-work/templates/STATE_NOTE.template.md, or the bundled skills/workbench/templates/STATE_NOTE.template.md when the project has no .agent-work/templates/ overlay \u2014 a wave dies to all three kill vectors, and the engine refuses to start execute until it is filled (precondition p2). Then do what the epic needs within the latitude contract: plan waves, dispatch one Commander per issue (each in an isolated worktree, each with a completed templates/LAUNCH_ORDER.template.md carrying pasted prior-wave verdicts, pre-rulings, honest-null clause, findings-file assignment, stop conditions, and inherited latitude), adjudicate what Commanders float (inside delegated classes as logged RULINGs, otherwise escalate), merge green reviewed PRs sequentially gated on check exit codes, and stop at wave checkpoints per the contract. Treat forecast as provisional. At every wave boundary or material exception, write .agent-work/epic-418-followon/NEXT_WAVE.json with the exact boundary_id, launch_id, and trigger; consume exact ../constellation-replan/templates/REPLAN_INPUT.template.json and ../constellation-replan/templates/REPLAN_RESULT.template.json packets under .agent-work/epic-418-followon/transitions/<boundary-id>/; append exactly one '- TRANSITION | boundary=<boundary-id> | decision=<decision> | verified' line to ADMIRAL_LOG.md; and run python3 /home/tommy/.claude/skills/constellation-admiral/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-418-followon in the foreground before any next launch. A nonzero result refuses launch. The verifier requires a unique advance|repair|replan|stop exit, enforces repair safety, and writes CURRENT_TRUTH.md plus WAVE_REVIEW.md from revised_epic_body and wave_review_comment. Planning makes no direct gh/network mutation; future posting goes only through the authorized tracker port after normal gates. Log every ruling, incident, wave launch, transition exit, merge, and owned error in the ADMIRAL_LOG as it happens \u2014 an unlogged ruling didn't happen. Never run a Commander's issue yourself; never put two Commanders in one worktree. If the contract expires, a fixed-boundary proposal exceeds latitude, or the ground shifts under it, surface a contract-refresh or human decision before continuing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "latitude contract confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "latitude complete and confirmed"
+        },
+        {
+          "id": "p2",
+          "statement": "crash-resume state note written before any detached wave launch (step, slug, next command, pid, expected artifact)",
+          "check": {
+            "kind": "command",
+            "command": "python3 /home/tommy/.claude/skills/constellation-admiral/scripts/verify_state_note.py epic-418-followon"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-execute-1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every epic issue dispositioned (merged, honest-null closed, deferred with ruling, or escalated)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "ADMIRAL_LOG current through the last wave: all rulings, incidents, merges, transition exits, and errors logged",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c3",
+          "statement": "NEXT_WAVE names a boundary whose exact transition is uniquely audit-recorded, G2-verified, repair-safe, and rendered before launch",
+          "check": {
+            "kind": "command",
+            "command": "python3 /home/tommy/.claude/skills/constellation-admiral/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-418-followon"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-execute-2"
+        }
+      ],
+      "constraints": [],
+      "directives": {
+        "wave_transition": {
+          "input_template": "../constellation-replan/templates/REPLAN_INPUT.template.json",
+          "result_template": "../constellation-replan/templates/REPLAN_RESULT.template.json",
+          "next_wave": ".agent-work/epic-418-followon/NEXT_WAVE.json",
+          "transition_root": ".agent-work/epic-418-followon/transitions/<boundary-id>",
+          "audit": ".agent-work/epic-418-followon/ADMIRAL_LOG.md",
+          "triggers": [
+            "wave_boundary",
+            "material_exception"
+          ],
+          "decisions": [
+            "advance",
+            "repair",
+            "replan",
+            "stop"
+          ],
+          "one_exit_before_next_launch": true,
+          "forecast_is_provisional": true,
+          "repair_holds_forecast": true,
+          "render": [
+            "revised_epic_body",
+            "wave_review_comment"
+          ],
+          "posting": "authorized-tracker-port-after-gates",
+          "direct_gh_or_network_mutation": false,
+          "check": "verify_iterative_role_artifacts.py admiral-prelaunch"
+        }
+      },
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "blocker": "Surfaced decision + expired contract, both needing the human. (1) The MCP door is connected but binds to examples/mcp-interactive-demo/spine.json, because nothing in any shipped launch path sets SPINE_FILE: grep -rln SPINE_FILE scripts/ returns only mcp_spine_server.py, which merely reads it, and run_crew.py has zero MCP references. Proved by handshake that the same server with SPINE_FILE set returns this epic's execute gate and live lease, so the server is sound and the binding is the whole defect. Choosing how the door learns its spine changes a production default and the door's binding shape, both surfaced classes in the latitude contract. (2) The latitude contract expired at its own stated expiry, the wave-1 boundary, and 424 merged two waves ago; the human's 2026-08-10 re-goaling to MCP adoption supersedes the confirmed wave plan and is not yet written into a refreshed contract.",
+        "authority_needed": "human",
+        "next_action": "Human picks the binding path (per-session env var, a launch-time pointer default in .mcp.json plus SPINE_FILE wiring in run_crew.py, or accept one-spine-per-session and scope 559 to the top-level driver), then confirms a refreshed latitude contract scoped to the MCP-adoption goal. A session restart is needed for any door-binding change to take effect; no re-approval is needed, since enableAllProjectMcpServers is already true in .claude/settings.local.json.",
+        "resume_reason": "Human ruled on both blockers in session: (1) confirmed the ownership model \u2014 a spine belongs to a TASK, spines nest for traceability, invocation is per task, each claim carries a who, identity must survive respawn, and conflicts raise a flag rather than being foolproof; explicitly confirmed the lease keys on the ASSIGNMENT (constellation/<work-id>/<gate>/<role>, no attempt tail) with 'that sounds about right, or at least good enough to start working'. (2) Granted refreshed latitude and went AFK: 'you're free to get stuff rolling again. I'm going afk, so you have latitude to try things and use your best judgement.'"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 /home/tommy/.claude/skills/constellation-admiral/scripts/verify_state_note.py epic-418-followon",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 /home/tommy/.claude/skills/constellation-admiral/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-418-followon",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "closeout": {
+      "id": "closeout",
+      "title": "Lessons audit, reconcile, hygiene, acceptance",
+      "imperative": "The run cannot close without a record of what happened. 1) Write the epic retrospective as EPISODES: one episode per distinct thing that happened across the epic \u2014 not one per wave, and not a summary \u2014 each stating its task-intent, expected-behavior, observed-behavior, impact-cost and workaround, and each harvesting what the ADMIRAL_LOG, the crew Workflow Feedback and the Commander returns actually recorded. An episode is a record, not a rule: write what you observed, and do NOT write a rule for a future agent to follow \u2014 a rule to follow belongs in docs/agents/* and is a human's call. Write the delta to .agent-work/epic-418-followon/episode-delta.json and apply it deterministically: python3 /home/tommy/.claude/skills/constellation-admiral/scripts/apply_episode_delta.py --delta .agent-work/epic-418-followon/episode-delta.json --store-root episodes. Pass --store-root on every invocation: the writer's default resolves relative to the installed skill directory, so an installed copy would silently build a store at ~/.claude/skills/constellation-admiral/episodes \u2014 outside the repo \u2014 while every gate reported green. Never hand-edit a file under episodes/: that writer is the only write path into it. Then run the capture gate before advancing: python3 /home/tommy/.claude/skills/constellation-admiral/scripts/verify_episode_captured.py epic-418-followon --store-root episodes --phase feedback. 2) When any part of this closeout edits a shipped compact-format JSON template, edit the raw text surgically (never round-trip it through json.load/json.dump, which reflows the file and destroys blame) and re-validate with json.load afterward. 3) Hand the epic's net change to a constellation-cartographer subagent for architecture reconcile. 4) Hygiene: every branch merged or dispositioned, worktrees swept, ADMIRAL_LOG archived under .agent-work/archive/. 5) Present the epic summary and get user acceptance. Then release the lease: <engine> release --session-id admiral-epic-418-followon.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execute complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the epic's observations recorded as episodes \u2014 what was observed, with no rule written for a future agent to follow",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Twenty episodes written through apply_episode_delta.py --store-root episodes and now under episodes/active/epic-418-followon-001..020.md. Fourteen cover waves 1-6; six cover this session: the Admiral's own door misbinding at closeout, C3 clearing its own block and taking the two outward-facing acts it had blocked on, the cold review refusing a merge five APPROVEs had passed, close_work failing on its first real use, the crew inheriting the dispatcher's lease through _crew_door_env, and R0 implementing before it reproduced and disclosing it. Each records task-intent, expected, observed, impact-cost and workaround. No episode states a rule for a future agent to follow; rules belong in docs/agents/* and are the human's call."
+        },
+        {
+          "id": "c2",
+          "statement": "at least one episode in the store records this epic's work id",
+          "check": {
+            "kind": "command",
+            "command": "python3 /home/tommy/.claude/skills/constellation-admiral/scripts/verify_episode_captured.py epic-418-followon --store-root episodes --phase feedback"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-closeout-3"
+        },
+        {
+          "id": "c3",
+          "statement": "architecture reconciled for the epic's net change",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Reconcile ran and returned a measured no-op, recorded at .agent-work/epic-418-followon/map-orientation.json. scripts/map_orient.py orient tried all five entrypoints against this repo root and found none: docs/architecture/generated/map.json, docs/architecture/index.md and docs/architecture/ are absent; map/ids.jsonl is empty; map/INDEX.md has content but carries no citable anchor id. Verdict DEGRADED-UNPARSEABLE, anchor_count 0. The receipt hash-pins the four sources read instead (mcp_spine_server.py, checklist_engine.py, spine_lifecycle.py, run_crew.py), names what stayed unmapped (the door's eleven tools, the eighteen verbs, and wave 7's work lifecycle), and escalates to the human that this repo carries no packet map, so building one is out of this epic's scope. Separately measured and worth the human's eye: map/INDEX.md is regenerated by commit c66d2ffa yet the orientation tool cannot cite an anchor from it."
+        },
+        {
+          "id": "c4",
+          "statement": "repo hygiene complete: branches dispositioned, worktrees swept, ADMIRAL_LOG archived",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Harvest ran before the sweep: the c3-lifecycle worktree held no CONSTELLATION_FEEDBACK.md outside tracked paths already on main, and its two modified files carried R0's crew run record past its last commit, both copied into main. Worktree removed and pruned; only the main checkout remains. 16 fully merged branches deleted. Four refs are dispositioned rather than deleted: epic-418/f-424-mcp-door, epic-418/f2-mcp-adoption and epic-418/posix-suite-green are squash-merged with their files verified present on main, and epic-559/c2-generate-the-spine is merged to HEAD; 'git branch -D' was refused by the harness permission classifier and the refusal was not routed around, so those four remain for the human. fix/mcp-door-launchable is kept deliberately: it carries the #555 fix and main's .mcp.json still hardcodes python3, which is Windows-deferred by human decision. ADMIRAL_LOG.md, STATE_NOTE.md and the orientation receipt are archived under .agent-work/archive/2026-08-12-epic-418-followon-closeout/."
+        },
+        {
+          "id": "c5",
+          "statement": "epic summary accepted by the human",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-closeout-2",
+          "attested": {
+            "evidence": "e-closeout-2",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "blocker": "The engine refused 'start closeout' at 23% context and instructed that a fresh agent begin this gate; the refresh is recorded on the spine as e-closeout-1 (seam=closeout, why_ref=w-3). Starting a full retrospective, reconcile, sweep and archive at this headroom risks a half-applied episode store, which is worse than not starting. The refusal was not routed around.",
+        "authority_needed": "human",
+        "next_action": "Relaunch a fresh Admiral into .agent-work/epic-418-followon/spine.json, cold-started from 'current' alone. Re-claim lease 717403d3-70be-436f-bc06-ce9ac3e34e05 (idempotent for the same session id), then 'start closeout' and work the ordered remainder in STATE_NOTE.md: apply the 14-op episode delta plus the six episodes this session owes, verify the capture, record a reasoned no-op reconcile (this repo has no packet map), run the dogfood feedback sweep, harvest CONSTELLATION_FEEDBACK.md from the c3-lifecycle worktree before removing it, archive ADMIRAL_LOG.md, present the summary for acceptance, and release the lease last.",
+        "resume_reason": "Context compacted; the gauge no longer reports a soft or hard trip on a fresh reading, and the human reaffirmed the instruction to finish the closeout in this session. The blocker was the engine's own refusal to begin at low headroom, and that condition no longer holds."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-closeout-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "closeout",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-closeout-2",
+          "type": "user-decision",
+          "payload": {
+            "decision": "close the epic",
+            "artifact": ".agent-work/epic-418-followon/EPIC_SUMMARY.md",
+            "quote": "go ahead and close up shop on this effort / you should be able to wrap this up now",
+            "scope": "Authorizes the close. The instruction was given before the summary existed, so it does not ratify the summary contents."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-closeout-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 /home/tommy/.claude/skills/constellation-admiral/scripts/verify_episode_captured.py epic-418-followon --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "717403d3-70be-436f-bc06-ce9ac3e34e05",
+    "status": "released",
+    "claimed_at": "2026-08-10T16:38:30.807086+00:00",
+    "last_heartbeat": "2026-08-12T15:09:46.075177+00:00",
+    "claimed_by": "admiral",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-12T15:09:58.010130+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "init",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-09T14:45:24.535374+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "latitude",
+      "why": "The follow-on is the last three links of #418's confirmed chain, and the contract is written to what each one actually needs rather than to a generic dial: F goes first because A2 settled the verb meanings it types and because the spec's F-before-C link is real, C's preparation overlaps wave 1 because its observables must be named before unit selection or the measure self-fulfils, and E is terminal by its own body and now reads across the redux as well as this run. The two costly-to-revert items the spec names \u2014 C's tranche boundary and E's cluster boundaries \u2014 are carved out as surfaced exceptions inside otherwise-delegated classes, and both measurement missions have their core mechanics pre-cleared per #145 so the harness classifier cannot veto the thing they were dispatched to run.",
+      "mechanical": false,
+      "ts": "2026-08-09T14:58:07.885356+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "execute",
+      "why": "Thirteen workstreams merged. Wave 7 bound the lifecycle to the spine and the human called the stop; the w8x-closeout transition records decision=stop and the prelaunch verifier accepts it. Four of five done-conditions hold on main; the fifth is filed on #559 and #565 rather than worked.",
+      "mechanical": false,
+      "ts": "2026-08-12T14:51:32.642480+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "closeout",
+      "why": "The epic closes with its record written rather than asserted. Twenty-one episodes are in the store through the only write path, and the capture gate passes. The reconcile ran and returned a measured no-op with a receipt, because this repo has no packet map to reconcile against. The last worktree was harvested before it was swept, sixteen merged branches are gone, and the four refs that remain are dispositioned in the log with the reason they were not deleted: the harness refused the force-delete and I did not route around it. Four of five done-conditions hold; the fifth is filed on #559 and #565 with its full measurement, because the human chose to file it rather than run it. The tree is green in a foreign checkout, which is the only green this epic learned to trust.",
+      "mechanical": false,
+      "ts": "2026-08-12T15:09:46.075153+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "closeout",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.2283,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-12T14:51:43.124081+00:00"
+    }
+  ]
+}

@@ -1,0 +1,299 @@
+{
+  "work_id": "epic-559/c1-spine-lint",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "g1-shape",
+    "g2-falsifiable",
+    "g3-corpus",
+    "g4-verify"
+  ],
+  "tasks": {
+    "g1-shape": {
+      "id": "g1-shape",
+      "title": "Refuse a spine the engine cannot read",
+      "imperative": "Write scripts/validate_spine.py: a checker that reads a spine or template file and exits nonzero with a specific message per fault. Start with the faults that stop a spine dead. The top-level ordered list must be `items` -- the Admiral shipped two spines keyed `gates` this week and the engine raised a bare KeyError on the first `current` call, before any rail text could print, so both crews had to repair the file before starting. Every id in `items` must have a task and every task must be in `items`. Every check must carry a `kind` the engine implements. A `gated` spine's tasks need preconditions/postconditions lists; a `survey` needs items with results. Report every fault found, not just the first.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the shape checker refuses each malformed shape and accepts every shipped template",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -m pytest -q tests/test_validate_spine.py -k Shape --collect-only 2>/dev/null | grep -c '::') -ge 6 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_validate_spine.py -k Shape"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-shape-1"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+        "Do not touch settings.json or docs/agents/*.",
+        "No merge or push to main. Commit on this branch before you finish."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-g1-shape-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_validate_spine.py -k Shape --collect-only 2>/dev/null | grep -c '::') -ge 6 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_validate_spine.py -k Shape",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-falsifiable": {
+      "id": "g2-falsifiable",
+      "title": "Refuse a check that cannot fail",
+      "imperative": "This is the point of the whole task. Extend the checker with the falsifiability lint (#518). Four faults, each with its own message: (1) a gate whose postconditions are all `check: null` -- across 113 archived spines zero have every check null, and the Admiral authored five such spines this epic, so this is authorable and real; (2) a `command` check whose pytest selector collects zero tests, which is how issue-456 recurred -- a distinct, gate-specific `-k` selector that collected nothing, satisfying a one-proof-per-gate rule while being exactly as vacuous as `check: null`; (3) an `artifact` check with no `match` whose statement asserts a property rather than mere arrival -- that is #562, and the engine's `all(...)` over an empty match is vacuously true; (4) a command check whose text still holds an unresolved <placeholder> after instantiation. Faults 3 and 4 need judgment about what counts, so build the repo's proven three-way fixture set for each: VIOLATING cases the lint must catch, INNOCENT cases it must not flag, and ACCEPTED exceptions named explicitly. tests/test_mcp_adoption.py::_cli_only_verb_violations is the pattern to copy.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1-shape complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-shape closed complete via spine_advance; verified live."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "each of the four falsifiability faults is caught, with a false-positive boundary pinned",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -m pytest -q tests/test_validate_spine.py -k 'Falsifiab or Boundary' --collect-only 2>/dev/null | grep -c '::') -ge 10 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_validate_spine.py -k 'Falsifiab or Boundary'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-falsifiable-1"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+        "Do not touch settings.json or docs/agents/*.",
+        "No merge or push to main. Commit on this branch before you finish."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-g2-falsifiable-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_validate_spine.py -k 'Falsifiab or Boundary' --collect-only 2>/dev/null | grep -c '::') -ge 10 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_validate_spine.py -k 'Falsifiab or Boundary'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-corpus": {
+      "id": "g3-corpus",
+      "title": "Run it over every template the repo ships, and report honestly",
+      "imperative": "Run the checker over every gated-or-survey checklist template in the repo. A cold reviewer counted twelve by reading each file's own `type` field, while the Template set table in skills/workbench/references/checklist-engine.md names six, and two separate crews each picked a different non-overlapping six in good faith. Enumerate the real population yourself from the `type` field, not from the table. Write what you find into your result: every template, every fault, no quiet omissions. Fix nothing in the templates -- this gate measures. If a shipped template fails the lint, that is the finding, and a later wave decides what to do about it. Add a test that runs the checker over the whole population and asserts how many templates it examined, so a broken discovery step cannot read as a clean pass.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2-falsifiable complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2-falsifiable closed complete via spine_advance; verified live."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the corpus sweep runs over the discovered population and asserts its own count",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -m pytest -q tests/test_validate_spine.py -k Corpus --collect-only 2>/dev/null | grep -c '::') -ge 2 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_validate_spine.py -k Corpus"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-corpus-1"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+        "Do not touch settings.json or docs/agents/*.",
+        "No merge or push to main. Commit on this branch before you finish."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-g3-corpus-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_validate_spine.py -k Corpus --collect-only 2>/dev/null | grep -c '::') -ge 2 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_validate_spine.py -k Corpus",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-verify": {
+      "id": "g4-verify",
+      "title": "Full suite green, map fresh, work committed",
+      "imperative": "Run the full suite with real counts. Rebuild map/INDEX.md (python -m scripts.code_map build --root .) -- you are adding modules, so it will drift, and a sibling crew shipped a stale map this week and turned the suite red. Write IMPLEMENTER_RESULT.md from the implementer skill's template including Workflow Feedback, and commit before you finish.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3-corpus complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g3-corpus closed complete via spine_advance; verified live."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite passes",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the working tree is committed",
+          "check": {
+            "kind": "command",
+            "command": "test -z \"$(git status --porcelain -- scripts tests skills map)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-verify-2"
+        },
+        {
+          "id": "c3",
+          "statement": "the result artifact exists",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/epic-559/c1-spine-lint/IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-verify-3"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+        "Do not touch settings.json or docs/agents/*.",
+        "No merge or push to main. Commit on this branch before you finish."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-g4-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -z \"$(git status --porcelain -- scripts tests skills map)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-verify-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/epic-559/c1-spine-lint/IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/epic-559/c1-spine-lint/g1-shape/implementer",
+    "status": "released",
+    "claimed_at": "2026-08-11T10:24:10.733066+00:00",
+    "last_heartbeat": "2026-08-11T10:51:17.200868+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-11T10:51:23.128419+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "g1-shape",
+      "why": "Built scripts/validate_spine.py's shape layer: items/tasks must exist, cross-reference both ways, every check.kind must be one the engine implements (command/artifact/git-change-policy), gated tasks need >=1 postcondition, survey tasks need a result field. validate() is defensive by design -- it always attempts the falsifiability walk even over a malformed shape, since a badly-shaped file should still surface what falsifiability faults it can. Verified against all 12 real shipped templates (discover_checklist_templates, enumerated by each file's own type field) with zero shape faults.",
+      "mechanical": false,
+      "ts": "2026-08-11T10:36:08.656582+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g2-falsifiable",
+      "why": "Implemented all four falsifiability faults per #518/#562: (1) all-postconditions-null on a gated task (scoped to gated only -- survey postconditions are usually unused); (2) a pytest -k selector actually run with --collect-only against the real filesystem, flagging zero-collected selectors, verified against both a bare selector and the corpus's own inline self-check idiom; (3) an artifact check with no match whose statement asserts a property, via a narrow property-assertion regex (is <Value>, ==, negated 'no X' claims) tuned to zero false positives across the real corpus, with user-decision evidence_type as the named ACCEPTED exception (no structured field exists to match); (4) an unresolved <placeholder> in a command check, ACCEPTED-exempting the resolver-owned token families by importing init_work_area's own regex rather than re-declaring it. Faults 3 and 4 both carry VIOLATING/INNOCENT/ACCEPTED fixture sets per the test_mcp_adoption pattern, plus boundary tests reading the real shipped EXECUTE_PLAN.template.json and REVIEW_SURVEY.template.json gates live. Also found and retext-check-amended a shell-quoting defect in this gate's own frozen postcondition (unquoted 'or'-joined -k expression) -- recorded in the amendment, not silently worked around.",
+      "mechanical": false,
+      "ts": "2026-08-11T10:38:18.686520+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g3-corpus",
+      "why": "Ran validate_spine over the discovered 12-template population (enumerated by each file's own type field, not the stale 6-row checklist-engine.md table). Findings, measured not guessed: 4 of 12 templates clean (ADMIRAL_SPINE, CYCLE, INTERROGATION, REVIEW_SURVEY); 21 falsifiable-all-null gates across 8 templates (CARTOGRAPHER x4, CHARTER x6, COMMANDER_SPINE x1, EXECUTE_PLAN x1, EXPLORER_SPINE x3, IMPLEMENTER_PLAN x1, SCOUT x3, DEFAULT x2) -- almost always a bootstrapping 'context'-style gate authored with check: null and an imperative literally saying 'Attest c1', which is precisely the epic's central claim (#518) made concrete; 2 falsifiable-unresolved-placeholder hits, both the `<exact test command>` authoring scaffold in EXECUTE_PLAN.template.json (g1-integrate.c1) and IMPLEMENTER_PLAN.template.json (m1.c2) -- expected, since these are fill-in-the-blank templates, not driven spines. Also discovered and fixed a false positive of my own: the bare `<skill-dir>` token (EXPLORER_SPINE, INTERROGATION) is resolved by init_work_area.resolve_spine via a hardcoded special case that its own _RESOLVER_OWNED_TOKEN_RE regex does not cover -- added it as a named ACCEPTED exception rather than letting my checker refuse a token the real resolver already handles. Fixed nothing in the templates themselves per the gate's instruction; findings are written up in full in IMPLEMENTER_RESULT.md. TestCorpusSweepPopulation and TestCorpusSweepFindings assert the population count and the measured totals so a broken discovery step or a checker regression cannot read as a clean pass.",
+      "mechanical": false,
+      "ts": "2026-08-11T10:40:37.782434+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g4-verify",
+      "why": "Full suite green (2638 passed, 1 skipped, 1121 subtests). Along the way found and fixed a real regression: my own docstring citing episodes/active/issue-456-001.md tripped test_retirement_guard.py's unapproved-store-mention leg (constraint:episodes-are-not-prescriptions) -- reworded the citation to drop the literal store-path pattern rather than adding a census exception, since the mention was incidental prose, not a load-bearing reference. Rebuilt map/INDEX.md after staging the new files by name (code_map discovers from git ls-files, so an untracked new module silently drops out of the map -- staged first, then rebuilt, confirmed scripts.validate_spine and tests.test_validate_spine both appear). Wrote IMPLEMENTER_RESULT.md with full Workflow Feedback including the g2 postcondition quoting bug and the init_work_area token-family gap. Committed scripts/tests/map plus the .agent-work run artifacts by name (never git add -A) at 303b7f19.",
+      "mechanical": false,
+      "ts": "2026-08-11T10:51:17.200856+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-11T10:38:02.361369+00:00",
+      "reason": "The frozen check text passes an unquoted two-word pytest -k expression ('-k Falsifiab or Boundary') to the shell. Verified live: bash word-splits it into three argv tokens, so pytest receives 'or' and 'Boundary' as bare positional path arguments and errors with 'file or directory not found: or' (exit 4, zero collected) -- this command cannot pass no matter what the test file names, which is exactly the class of defect this epic exists to catch, just not one of the four in scope for this checker. Quoting the -k expression ('Falsifiab or Boundary') is the only change; the check's intent (collect >=10 Falsifiability/Boundary-labeled tests, then run them) is unchanged and verified green with the corrected text.",
+      "authority": "implementer (constellation/epic-559/c1-spine-lint/g1-shape/implementer); corrects an authoring defect (missing shell quoting) in this gate's own frozen postcondition check text, same pattern as prior commander self-corrections of authoring defects in this repo's spines",
+      "ops": [
+        "retext-check g2-falsifiable.c1"
+      ]
+    }
+  ]
+}

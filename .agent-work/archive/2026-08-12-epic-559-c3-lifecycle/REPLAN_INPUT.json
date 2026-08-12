@@ -1,0 +1,310 @@
+{
+ "schema_version": 1,
+ "current_plan": {
+  "schema_version": 1,
+  "epic": {
+   "title": "C3: the work lifecycle is one thing, and it is currently three",
+   "spec_path": ".agent-work/epic-559/c3-lifecycle/LAUNCH_ORDER.md",
+   "intent_and_why": "An agent creates work the same way it drives work -- through the door, in one call -- and the closing advance puts the work away and says it is ready to PR."
+  },
+  "definition_of_done": [
+   "open, close and the declared dispatch each ship with a violating fixture, or are refuted with the measurement that refuted them",
+   "both carried findings are fixed",
+   "the corpus sweep still reports exactly 23 fault lines and the suite is green"
+  ],
+  "good_enough": {
+   "mandatory_quality": "every guard has a VIOLATING case and an INNOCENT case; a happy-path-only test measures the mechanism, not the boundary",
+   "sufficient_evidence": "targeted tests plus the full suite, per docs/agents/ORCHESTRATOR_CONTEXT.md's strengthened-durable-system profile",
+   "appetite": "one bounded wave, five gates"
+  },
+  "hard_constraints": [
+   "checklist_engine.py's on-disk format is not changed",
+   "the close ordering (advance, release, move spine-last, commit, report) is fixed",
+   "close never opens a PR and never removes a worktree",
+   "stage by name; never git add -A",
+   "settings.json, .mcp.json and docs/agents/* untouched",
+   "skills/** untouched -- R1 owns it",
+   "no merge or push to main",
+   "never two crews in one worktree"
+  ],
+  "fixed_decisions": [
+   "launched identities remain stable: every crew is dispatched with --parent naming this Commander and an explicit --model",
+   "the worktree record lives inside the spine as a top-level origin block",
+   "open and close are two tools, never one action switch",
+   "no shell CLI adapter ships -- agents must not know about the CLI"
+  ],
+  "current_wave": {
+   "objective": "mechanize the work lifecycle at both ends and make the dispatch checkable data",
+   "exit_criteria": [
+    "all five gates integrated with an APPROVE from an independent reviewer",
+    "suite green and sweep exactly 23 at every gate boundary"
+   ],
+   "issues": [
+    {
+     "id": "g1",
+     "title": "open — the lifecycle module and open_work",
+     "desired_outcome": "One call creates branch, worktree, work area and spine, verifies its own result, and rolls back rather than half-succeeding.",
+     "useful_now": "Nothing in the corpus provisions a worktree today; it is typed by hand every time.",
+     "acceptance_or_falsification_evidence": "VIOLATING fixtures for occupied-path, active-session, late-failure rollback, and self-verify-says-no.",
+     "appetite": "one gate",
+     "implementation_latitude": "choose internals; the frozen LIFECYCLE_CONTRACT.md sections are the boundary",
+     "hard_constraints_no_gos": [
+      "skills/** untouched",
+      ".mcp.json untouched"
+     ],
+     "local_unknowns": [],
+     "anchors": [
+      "scripts/spine_lifecycle.py",
+      "scripts/mcp_spine_server.py",
+      "scripts/generate_spine.py"
+     ],
+     "type": "AFK",
+     "blocks": []
+    },
+    {
+     "id": "g2",
+     "title": "close — archive, commit, and say it is ready",
+     "desired_outcome": "The terminal advance moves the work area, spine last, commits by name, and reports 'ready to PR'.",
+     "useful_now": "Close currently rediscovers what creation did, in a hand-typed two-commit shell game.",
+     "acceptance_or_falsification_evidence": "A spine driven to terminal and released is archived spine-last, proven with a differing-basename fixture.",
+     "appetite": "one gate",
+     "implementation_latitude": "choose internals; the frozen LIFECYCLE_CONTRACT.md sections are the boundary",
+     "hard_constraints_no_gos": [
+      "skills/** untouched",
+      ".mcp.json untouched"
+     ],
+     "local_unknowns": [],
+     "anchors": [
+      "scripts/spine_lifecycle.py",
+      "scripts/mcp_spine_server.py",
+      "scripts/generate_spine.py"
+     ],
+     "type": "AFK",
+     "blocks": []
+    },
+    {
+     "id": "g3",
+     "title": "the door — spine_open and spine_close",
+     "desired_outcome": "The lifecycle is reachable through the MCP door, so an agent never needs the CLI.",
+     "useful_now": "generate_spine.py is shell-only, which the standing ruling makes a defect today.",
+     "acceptance_or_falsification_evidence": "The existing call_tool pin is unmodified and green; the lifecycle surface carries its own containment pin.",
+     "appetite": "one gate",
+     "implementation_latitude": "choose internals; the frozen LIFECYCLE_CONTRACT.md sections are the boundary",
+     "hard_constraints_no_gos": [
+      "skills/** untouched",
+      ".mcp.json untouched"
+     ],
+     "local_unknowns": [],
+     "anchors": [
+      "scripts/spine_lifecycle.py",
+      "scripts/mcp_spine_server.py",
+      "scripts/generate_spine.py"
+     ],
+     "type": "AFK",
+     "blocks": []
+    },
+    {
+     "id": "g4",
+     "title": "the dispatch is emitted, not remembered",
+     "desired_outcome": "A spec declares the crews a gate dispatches and the generator emits parent and model already in it.",
+     "useful_now": "Six sub-crews last wave named the wrong parent and carried no model, with both instructions present in the order.",
+     "acceptance_or_falsification_evidence": "A registry entry naming the wrong parent fails the injected postcondition.",
+     "appetite": "one gate",
+     "implementation_latitude": "choose internals; the frozen LIFECYCLE_CONTRACT.md sections are the boundary",
+     "hard_constraints_no_gos": [
+      "skills/** untouched",
+      ".mcp.json untouched"
+     ],
+     "local_unknowns": [],
+     "anchors": [
+      "scripts/spine_lifecycle.py",
+      "scripts/mcp_spine_server.py",
+      "scripts/generate_spine.py"
+     ],
+     "type": "AFK",
+     "blocks": []
+    },
+    {
+     "id": "g5",
+     "title": "the two carried findings",
+     "desired_outcome": "not_yet_written refuses a non-bool, and DESIGN_NOTE sections 4, 7 and 10 stop contradicting the code.",
+     "useful_now": "A TOML string 'false' currently compiles the check to None -- the gate silently loses its check.",
+     "acceptance_or_falsification_evidence": "VIOLATING fixtures for the string forms; three INNOCENT cases for the real bools and the omitted field.",
+     "appetite": "one gate",
+     "implementation_latitude": "choose internals; the frozen LIFECYCLE_CONTRACT.md sections are the boundary",
+     "hard_constraints_no_gos": [
+      "skills/** untouched",
+      ".mcp.json untouched"
+     ],
+     "local_unknowns": [],
+     "anchors": [
+      "scripts/spine_lifecycle.py",
+      "scripts/mcp_spine_server.py",
+      "scripts/generate_spine.py"
+     ],
+     "type": "AFK",
+     "blocks": []
+    }
+   ]
+  },
+  "wave_forecast": [
+   {
+    "outcome": "R1 clears the CLI residue from skills/**",
+    "why_likely": "the launch order sequences it behind this run and fences it from this Commander",
+    "entry_conditions": [
+     "C3 merges"
+    ]
+   }
+  ],
+  "uncertainty_register": [
+   {
+    "unknown": "whether a Commander can drive its own gate plan through the door at all",
+    "affects": "every future Commander run, not just this one",
+    "settle_by": "a second door binding that does not require a hand-edited user-level config",
+    "current_evidence": "_identity_violation refuses any argv resolving --file off the bound spine; the only shipped second binding is the Admiral's hand-registered spine-epic entry in ~/.claude.json",
+    "next_probe": "decide whether the door should accept a confined second binding, or whether the gate plan should stop being an engine checklist"
+   },
+   {
+    "unknown": "whether spec-dispatch-undeclared narrows the forgetting hole enough to matter",
+    "affects": "the answer to the launch order's own open question about the defect moving",
+    "settle_by": "a wave that dispatches crews from generated specs",
+    "current_evidence": "detection is textual, over three markers",
+    "next_probe": "count declared-versus-actual dispatches on the next wave"
+   }
+  ],
+  "parked_possibilities": [
+   "retrofitting origin onto spines opened by hand",
+   "an engine-level notion of a dispatch, which would close the textual-detection hole"
+  ]
+ },
+ "completed_outcomes": [
+  {
+   "issue_id": "g1",
+   "outcome": "open ships: open_work plus the pure helpers, with rollback of worktree AND branch, an in-process self-verify that overrides a zero git exit code, and a top-level origin block proven to survive a real engine drive",
+   "evidence": "d8305d9c; suite 2824 -> 2856; reviewed twice, first BLOCK on a missing newline write that no test asserted against, second APPROVE"
+  },
+  {
+   "issue_id": "g2",
+   "outcome": "close ships: closeout_refusal as the whole pure ordering predicate, and close_work archiving spine-last with names DERIVED from the bound spine path rather than the literal spine.json",
+   "evidence": "d0358a3d; suite 2856 -> 2875; the mandatory differing-basename test falsified by the Commander by mutating the derivation to the literal, and it goes red; reviewer APPROVE"
+  },
+  {
+   "issue_id": "g3",
+   "outcome": "the door ships: spine_open and spine_close on the already-registered spine server, dispatched from a module-level sibling of call_tool with their own containment pin; generate_spine is now reachable through MCP",
+   "evidence": "386d7635 (code 2f6b932e); suite 2875 -> 2884; call_tool body proven byte-identical by AST comparison; new pin falsified by injecting a SESSION reference; reviewer APPROVE"
+  },
+  {
+   "issue_id": "g4",
+   "outcome": "the declared dispatch ships: [[gate.dispatch]] with role and model required, three new spec-shape faults, and an injected command-kind postcondition reading crew-runs.json",
+   "evidence": "b88f13a4 (code 90e88984); suite 2884 -> 2920; Commander confirmed directly that a recorded admiral parent against a declared commander parent exits 1, wrong model exits 1, matching exits 0; reviewer APPROVE"
+  },
+  {
+   "issue_id": "g5",
+   "outcome": "both carried findings ship: not_yet_written REFUSES a non-bool as spec-not-yet-written-not-bool, and DESIGN_NOTE sections 4, 7 and 10 are reconciled with section 7 enumerated mechanically from source",
+   "evidence": "51feb36c; suite 2920 -> 2932; Commander ran all six cases directly, three refuse by fault name and three are unchanged; reviewer APPROVE"
+  }
+ ],
+ "wave_evidence": [
+  {
+   "claim": "the launch order's stated chicken-and-egg is the door's import-time KeyError",
+   "expected": "mcp_spine_server raises KeyError without SPINE_FILE, so an open tool cannot live there",
+   "observed": ".mcp.json binds SPINE_FILE with a shell default, so the server always starts; the real obstacle is the call_tool choke-point pin and _identity_violation",
+   "source": "read of .mcp.json and scripts/mcp_spine_server.py:106, plus tests/test_mcp_identity.py:1460"
+  },
+  {
+   "claim": "the worktree record cannot live inside the spine because the engine's format is frozen",
+   "expected": "an unknown top-level key would be dropped or refused",
+   "observed": "a top-level origin block survived claim/start/attest/advance byte-identical, and validate_spine has no unknown-key fault",
+   "source": "live engine drive on a scratch spine, 2026-08-12"
+  },
+  {
+   "claim": "the corpus enforces never two crews in one worktree",
+   "expected": "a mechanical guard refuses a second crew in an occupied worktree",
+   "observed": "active_duplicate (run_crew.py:253) keys on work-id/gate/ROLE/worktree, so two differently-roled crews in one worktree are permitted; the rule is prose in five places and stricter than the machinery",
+   "source": "read of scripts/run_crew.py:253-270"
+  },
+  {
+   "claim": "the archive convention is .agent-work/archive/<work-id>/",
+   "expected": "archive entries are named by work id",
+   "observed": "38 of 41 entries use <YYYY-MM-DD>-<slug>, one uses an older dash-less date form, one is not a work area at all, and none is nested",
+   "source": "ls .agent-work/archive/, 2026-08-12"
+  },
+  {
+   "claim": "not_yet_written is misread as a declaration when it is a TOML string",
+   "expected": "a string 'false' is truthy and reads as declared",
+   "observed": "worse -- compile_spec returns check None, so the gate silently loses its check entirely",
+   "source": "generate_spine.compile_spec driven directly on a fixture spec, 2026-08-12"
+  },
+  {
+   "claim": "the baseline on 293b7721 is 2824 passed, 3 skipped, 1121 subtests and 23 sweep faults",
+   "expected": "as stated in the launch order",
+   "observed": "reproduced exactly",
+   "source": "pytest -q tests and validate_spine.py --sweep, 2026-08-12"
+  }
+ ],
+ "discrepancies": [
+  {
+   "id": "D1",
+   "signal": "A Commander drives two checklists but the door binds one spine per process, and the only shipped second binding is a hand-edited user-level config that cannot take effect mid-session.",
+   "classification": "invalidates_forecast_or_decomposition",
+   "affects": "every Commander run in this corpus, and this run's own ability to drive GATE_PLAN.json through the engine",
+   "evidence": "_identity_violation (mcp_spine_server.py:174) refuses any argv resolving --file off the bound spine; ~/.claude.json registers spine-epic bound to the Admiral's own spine",
+   "reason": "This is the same unautomated class the epic exists to remove, one tier up; it is evidence for the next planning turn, not an issue to file."
+  },
+  {
+   "id": "D2",
+   "signal": "The gate-plan template's default filename is execute.json, which collides with this Commander's own spine when an Admiral names the spine execute.json.",
+   "classification": "evidence_only",
+   "affects": "any delegated Commander whose spine is named execute.json",
+   "evidence": "SPINE_FILE resolves to .agent-work/epic-559/c3-lifecycle/execute.json; the gate plan was written to GATE_PLAN.json to avoid overwriting the spine mid-run",
+   "reason": "Recorded as workflow feedback; no issue filed this wave."
+  },
+  {
+   "id": "D3",
+   "signal": "validate_spine has no not_yet_written concept, so a legitimately-TDD-red check and a permanently-vacuous one are indistinguishable to the oracle.",
+   "classification": "later_only",
+   "affects": "any hand-authored gate plan whose tests do not exist yet",
+   "evidence": "GATE_PLAN.json reports exactly five falsifiable-zero-collected faults, one per gate, all for tests this run's own gates write",
+   "reason": "validate_spine.py is a no-go this wave; forecast amendment is sufficient."
+  },
+  {
+   "id": "D4",
+   "signal": "main advanced six commits under this run, all of them Admiral bookkeeping under .agent-work/epic-418-followon/.",
+   "classification": "drop",
+   "affects": "nothing in this run's scope",
+   "evidence": "git diff --stat 293b7721..main touches 14 files, every one under .agent-work/epic-418-followon/",
+   "reason": "The evidence falsified it as a base-moved stop condition: the diff is disjoint from every path this run touches."
+  },
+  {
+   "id": "D5",
+   "signal": "The cold plan critic's headline finding carried a wrong supporting number (execute.json 20 vs spine.json 7).",
+   "classification": "evidence_only",
+   "affects": "how much a single critic's measurements are trusted without re-running them",
+   "evidence": "re-measured 48 vs 40 at depth 3, 98 vs 93 overall, 43 vs 42 excluding the archive; the finding survives its own wrong number",
+   "reason": "Exactly the two-question standard this wave inherits, observed in the reviewer rather than in the implementer."
+  }
+ ],
+ "open_current_wave_issue_ids": [],
+ "unlaunched_items": [
+  {
+   "id": "R1-cli-residue",
+   "kind": "forecast"
+  },
+  {
+   "id": "U-second-door-binding",
+   "kind": "uncertainty"
+  },
+  {
+   "id": "U-origin-retrofit",
+   "kind": "parked"
+  }
+ ],
+ "repo_state": {
+  "anchors": [
+   "scripts/spine_lifecycle.py",
+   "scripts/mcp_spine_server.py",
+   "scripts/generate_spine.py"
+  ],
+  "map_status": "DEGRADED-UNPARSEABLE -- no docs/architecture packet map; five hash-pinned substitutes recorded in map-orientation.json"
+ }
+}

@@ -34,7 +34,7 @@ Each agent drives a JSON checklist via the engine. A role's own template is its 
 
 ## Checklist engine
 
-Drive a controller one step at a time with the absolute path to this installed skill's bundled `scripts/checklist_engine.py` (canonical JSON state). Do not run `scripts/checklist_engine.py` relative to the target repo unless that repo vendors the script. Two types: `gated` (ordered execution; failure blocks) and `survey` (verification/inquiry; visit all, append, never block, consolidate). The engine enforces ordering, evidence shape, the rework cap, and the consolidation guard; it never judges quality. Obey its refusals as the next instruction. See `references/checklist-engine.md`.
+Drive a controller one step at a time — by default via the MCP door's `spine_status`/`spine_lease`/`spine_start`/`spine_advance`/`spine_evidence`/`spine_halt`/`spine_survey_result` tools when this agent owns the process's bound spine (see `references/checklist-engine.md` — MCP door); CLI fallback, always available and the only path for an in-session dispatched crew member driving its own plan or survey: the absolute path to this installed skill's bundled `scripts/checklist_engine.py` (canonical JSON state). Do not run `scripts/checklist_engine.py` relative to the target repo unless that repo vendors the script. Two types: `gated` (ordered execution; failure blocks) and `survey` (verification/inquiry; visit all, append, never block, consolidate). The engine enforces ordering, evidence shape, the rework cap, and the consolidation guard; it never judges quality. Obey its refusals as the next instruction. See `references/checklist-engine.md`.
 
 ## Closeout
 

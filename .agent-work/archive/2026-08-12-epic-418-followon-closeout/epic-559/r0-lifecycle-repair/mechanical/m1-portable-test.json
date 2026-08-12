@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1-portable-test",
+  "mechanical": {
+    "run": "epic-559/r0-lifecycle-repair",
+    "project": "constellation-skills",
+    "spine-step": "m1-portable-test",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/r0-lifecycle-repair-m1-portable-test@cefa5d770ee637de5c2b4dae58761d753156dce6",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "epic-559/r0-lifecycle-repair",
+    "generated_at": "2026-08-12T14:13:53Z"
+  }
+}

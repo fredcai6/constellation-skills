@@ -1,0 +1,54 @@
+{
+  "work_id": "epic-418-followon/commander-f2",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon/commander-f2",
+        "project": "constellation-skills",
+        "role": "implementer",
+        "spine-step": "g2-implement",
+        "context-manifest-ref": "ctx-epic-418-followon/commander-f2-g2-implement@3fbabd5546028bf0d03832837566272cdb04b4a2",
+        "refusals": 2,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "scripts/mcp_spine_server.py",
+          "tests/test_mcp_friction_capture.py",
+          ".agent-work/epic-418-followon/commander-f2/evidence/g2-friction-capture/mcp_rejections.jsonl",
+          ".agent-work/epic-418-followon/commander-f2/evidence/g2-friction-capture/seed_rejections.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Instrumented the MCP door (scripts/mcp_spine_server.py) to record its own rejections -- unknown tool name, unknown multiplexed action, missing required argument -- to a door-side JSONL, because those three classes return _tool_error(...) before run_engine() is ever called and so never reach the engine's own refusals counter or mcp_calls.jsonl (reproduced independently by demo_engine_refusal_reaches_episode.py before any code changed)."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A new wrapper function around _tool_error(), logging one record per rejection, could be substituted at every call site in call_tool() and in main()'s tools/call branch without disturbing anything else in the module."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "call_tool()'s own choke-point pin (tests/test_mcp_identity.py::IdentityBindingPinTests.test_call_tool_can_only_produce_content_two_ways, closed earlier in this same run's g1 gate) restricts every return in that function to literally as_result(run_engine(...)) or _tool_error(...), checked by an AST walk keyed on the called function's own name. Wiring a differently-named wrapper at all 14 in-scope call sites and running the full suite produced one failing assertion naming 14 offenders, even though the wrapper never touched run_engine() and never bypassed the engine -- the pin is blind to what a call does and exact about what it is named."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Caught before commit by running the full relevant test slice rather than only the new file: the AST pin fired on the first run that included tests/test_mcp_identity.py, immediately naming the exact 14 offending lines by line number."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Folded the two new facts (tool, rejection_class) into _tool_error() itself as optional keyword-only arguments, so every call site's function name stayed literally _tool_error and the pin's AST check kept passing. python -m pytest -q tests/test_mcp_friction_capture.py tests/test_mcp_spine_server.py tests/test_mcp_identity.py tests/test_mcp_imperative_equivalence.py reported 55 passed after the refactor; a real subprocess seeding run against a throwaway spine produced 3 rejection records (unknown-action, missing-required-argument, unknown-tool), one per induced rejection."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "An AST-shape pin that keys on a called function's literal name is exact about call SHAPE but blind to the parameters flowing through that name, which is why extending the door's behavior at those return sites had to happen inside the sanctioned name rather than through a new one."
+        }
+      ]
+    }
+  ]
+}

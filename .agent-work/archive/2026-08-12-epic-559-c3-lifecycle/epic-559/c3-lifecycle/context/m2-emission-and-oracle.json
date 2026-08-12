@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m2-emission-and-oracle",
+  "files": [],
+  "repo_rev": {
+    "commit": "386d763526d050595df72d0e7353f6a58eaf175d"
+  },
+  "run": {
+    "work_id": "epic-559/c3-lifecycle",
+    "generated_at": "2026-08-12T12:11:15Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle",
+      "repo": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle",
+      "durable": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle"
+    }
+  }
+}

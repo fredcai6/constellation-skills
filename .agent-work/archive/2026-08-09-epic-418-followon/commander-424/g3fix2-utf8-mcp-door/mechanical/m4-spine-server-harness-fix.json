@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-spine-server-harness-fix",
+  "mechanical": {
+    "run": "g3fix2-utf8-mcp-door",
+    "project": "constellation-skills",
+    "role": "g3fix2-implementer",
+    "refusals": 1,
+    "spine-step": "m4-spine-server-harness-fix",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3fix2-utf8-mcp-door-m4-spine-server-harness-fix@86eb9c56509a375e24aceff6bf94964635bd3282",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3fix2-utf8-mcp-door",
+    "generated_at": "2026-08-10T02:03:38Z"
+  }
+}

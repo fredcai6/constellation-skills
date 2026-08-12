@@ -1,0 +1,57 @@
+{
+  "work_id": "probe2",
+  "type": "gated",
+  "items": [
+    "g1"
+  ],
+  "tasks": {
+    "g1": {
+      "id": "g1",
+      "title": "g1",
+      "imperative": "Write the single line PROBE-POS-OK into .agent-work/epic-559/a-spine-is-the-job/probe2/pos.txt, then attest c1 and advance g1. Do not write any other file.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "pos.txt exists with the line PROBE-POS-OK",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Created pos.txt with line PROBE-POS-OK"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/probe2-rev2/p1/implementer",
+    "status": "released",
+    "claimed_at": "2026-08-11T06:37:05.985389+00:00",
+    "last_heartbeat": "2026-08-11T06:37:09.934754+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-11T06:37:13.305278+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "g1",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-11T06:37:09.934744+00:00"
+    }
+  ]
+}

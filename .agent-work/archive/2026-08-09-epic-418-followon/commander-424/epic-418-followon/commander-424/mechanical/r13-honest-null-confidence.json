@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r13-honest-null-confidence",
+  "mechanical": {
+    "run": "epic-418-followon/commander-424",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r13-honest-null-confidence",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon/commander-424-r13-honest-null-confidence@012627a35257a0863935a8b7875c324f18df3e38",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon/commander-424",
+    "generated_at": "2026-08-09T23:42:31Z"
+  }
+}

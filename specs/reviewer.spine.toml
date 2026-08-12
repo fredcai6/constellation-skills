@@ -1,0 +1,93 @@
+work_id    = "<work-id>"
+type       = "survey"
+config_ref = "docs/agents/engine-config.json"
+parent     = "<parent>"
+
+# g2 of epic-559/c2-generate-the-spine: the first real survey role spec.
+# Intent matches the shipped skills/reviewer/templates/REVIEW_SURVEY.template.json
+# -- seven items, most a bare qualitative record, r6-fowler the one item that
+# already carried a real `command` check in the shipped JSON. r6-fowler also
+# carries this spec's large claim (see its [gate.claim] below): it is the one
+# item whose scope is genuinely the whole diff rather than one narrow question.
+
+[[gate]]
+id    = "r0-context"
+title = "Load baseline context"
+imperative = """
+Read your inherited global doctrine (this skill's references/global-crew.md and
+references/global-everyone.md), then the project deltas if present:
+docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the
+diff, and the relevant packet. Record pass when loaded.
+"""
+
+  [[gate.postconditions]]
+  id        = "c1"
+  statement = "context + glossary + handoff + diff + packet loaded"
+  kind      = "qualitative"
+  because   = "no doctrine mechanically verifies an agent's comprehension of prose it read; this stated form is what `record --result pass` points at, since a survey item's postcondition list is otherwise empty here"
+
+[[gate]]
+id    = "r1-handoff"
+title = "Handoff compliance"
+imperative = "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding."
+
+[[gate]]
+id    = "r2-scope"
+title = "Scope drift"
+imperative = "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding."
+
+[[gate]]
+id    = "r3-evidence"
+title = "Required evidence"
+imperative = "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding."
+
+[[gate]]
+id    = "r4-quality"
+title = "Quality vs inherited rules"
+imperative = "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding."
+
+[[gate]]
+id    = "r5-reconciliation"
+title = "Reconciliation check"
+imperative = "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope."
+
+[[gate]]
+id    = "r6-fowler"
+title = "Refactoring pass (Fowler code smells)"
+imperative = """
+Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a
+verdict on each Fowler baseline smell (long method, large class, duplicated
+code, feature envy, data clumps, primitive obsession, long parameter list,
+shotgun surgery, divergent change, message chains, speculative generality,
+comments-as-deodorant): flagged / overridden / absent. Smells are judgment
+calls, ALWAYS subordinate to the repo's documented standards -- an override
+needs a logged standard + reason. Record the pass to
+.agent-work/<work-id>/FOWLER_PASS.json (from
+templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py
+.agent-work/<work-id>/FOWLER_PASS.json (it refuses a skipped smell or an
+unlogged override), then record pass/fail with a finding. This item's
+postcondition command resolves the record path from <work-id> alone -- the
+same substitution you already make everywhere else in this survey -- so no
+separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only
+if the record path ever needs to move off that fixed convention, correct it
+through the engine with `amend --delta <file>` whose single op is
+`retext-check` on this item's c1, never by hand-editing this survey. There,
+--authority is the dispatching Commander named in your reviewer handoff (never
+a string you invent), and --reason is why the path changed. Do NOT silently
+skip this item.
+"""
+constraints = [
+  "Fowler smells are subordinate to documented repo standards; never hard violations",
+  "an override (smell not flagged because a standard wins) needs a logged reason",
+]
+
+  [[gate.postconditions]]
+  id        = "c1"
+  statement = "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override"
+  kind      = "script"
+  path      = "scripts/verify_fowler_pass.py"
+  args      = [".agent-work/<work-id>/FOWLER_PASS.json"]
+
+  [gate.claim]
+  magnitude = "large"
+  text      = "The Fowler-pass verdict spans the ENTIRE diff, not one narrow question the way the survey's other six items do -- a false 'absent' or an unlogged override lets a real code smell through with no other checkpoint behind it. It is the one item in either role spec whose scope is genuinely broad rather than narrowly targeted, which is why the escalation belongs here and not on a throwaway stand-in."

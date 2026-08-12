@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "h2-verify",
+  "mechanical": {
+    "run": "epic-559/d1-stale-pins",
+    "project": "constellation-skills",
+    "spine-step": "h2-verify",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/d1-stale-pins-h2-verify@49d7c7001a629211d8be0c0af21df7d1d9a8c97c",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "epic-559/d1-stale-pins",
+    "generated_at": "2026-08-11T10:44:04Z"
+  }
+}

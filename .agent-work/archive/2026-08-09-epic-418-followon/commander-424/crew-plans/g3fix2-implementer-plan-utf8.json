@@ -1,0 +1,424 @@
+{
+  "work_id": "g3fix2-utf8-mcp-door",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-red-conformance-test",
+    "m2-server-fix-green",
+    "m3-identity-harness-fix",
+    "m4-spine-server-harness-fix",
+    "m5-engine-capture-and-scope-note",
+    "m6-full-suite-baseline",
+    "m7-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read references/global-crew.md, references/global-everyone.md and references/windows.md (inherited doctrine), then g3-implementer-handoff-utf8.md in full, scripts/mcp_spine_server.py's stdin/stdout loop (around line 530 and 563-572), scripts/checklist_engine.py's own _utf8_stdio() precedent (~line 43-55) and its load()/save() (~174-209), and both named test files' Popen/subprocess.run call sites. Verify the handoff names task, scope, exclusions, required evidence, test mode, stop conditions. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff + target files read; existing _utf8_stdio() precedent and load()/save() UTF-8 pinning understood as the pattern to mirror",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-red-conformance-test": {
+      "id": "m1-red-conformance-test",
+      "title": "TDD red: add a byte-level, platform-independent stdin-conformance test against the UNFIXED server",
+      "imperative": "In tests/test_mcp_spine_server.py ONLY, add a new test that spawns the real (still-unfixed) scripts/mcp_spine_server.py with PYTHONIOENCODING=cp1252 forced in its env (the portable, documented stand-in for Windows' unconfigured ANSI-codepage stdio default), writes a RAW JSON-RPC request line built with json.dumps(..., ensure_ascii=False) (genuine multi-byte UTF-8 bytes on the wire -- the shape a real non-Python MCP client sends; this repo's own McpRpcClient/ServerInstance default to ensure_ascii=True and would never exercise this path) carrying a non-ASCII claimed_by value (em dash + e-acute), reads the raw reply bytes itself over binary pipes, and asserts the value round-trips BYTE FOR BYTE (compare .encode('utf-8'), not just string equality) through a second spine_status call's rendered LEASE line. Run it once against the still-unfixed server and confirm it FAILS (mismatched bytes / mojibake) -- this is the RED step, manual attest (c1, check must stay null so the engine does not run the by-design-failing test). Do not yet touch scripts/mcp_spine_server.py.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; context loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new test written; run once against the unfixed server and observed to FAIL with a byte mismatch (not an error/crash) -- manual attest with the captured failure output",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "New test Utf8StdioConformanceTests.test_claimed_by_round_trips_byte_for_byte_even_with_a_non_utf8_ambient_default added to tests/test_mcp_spine_server.py. Run against the still-unfixed server with PYTHONIOENCODING=cp1252 forced in the server env: FAILED cleanly (0.07s, no hang) with AssertionError: sent b'tester\\xe2\\x80\\x94caf\\xc3\\xa9' (tester-em_dash-cafe UTF-8) but got back b'tester\\xc3\\xa2\\xe2\\x82\\xac\\xe2\\x80\\x9dcaf\\xc3\\x83\\xc2\\xa9', decoded as the literal mojibake string 'tester\u00e2\u20ac\u201dcaf\u00e9' -- the exact signature the handoff describes. This reproduces the Windows cp1252-default hazard on Linux via PYTHONIOENCODING, without needing Windows itself."
+        }
+      ],
+      "constraints": [
+        "scope for this item is tests/test_mcp_spine_server.py only",
+        "do not touch scripts/mcp_spine_server.py, scripts/checklist_engine.py, any .template.json, or tests/test_mcp_identity.py in this step",
+        "assert against rendered LEASE-line behaviour, never against the raw argument merely echoed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-server-fix-green": {
+      "id": "m2-server-fix-green",
+      "title": "The real fix: pin scripts/mcp_spine_server.py's stdin/stdout/stderr to UTF-8 explicitly; new test goes green",
+      "imperative": "In scripts/mcp_spine_server.py ONLY: add an explicit UTF-8 reconfigure for sys.stdin, sys.stdout and sys.stderr, called once at the real entry point, with a comment naming Windows/cp1252 (mirroring scripts/checklist_engine.py's own _utf8_stdio() precedent, extended to cover stdin since the CLI never reads stdin but this door does). This is conformance with the MCP stdio transport spec (UTF-8), not a workaround. Do not change any imperative text, template, or engine file. Re-run the m1 test: it must now PASS.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "red observed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed at m1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "stdin/stdout/stderr explicitly pinned to UTF-8 with a Windows/cp1252-naming comment; the new conformance test passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_spine_server.py -k utf8 -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-server-fix-green-1"
+        }
+      ],
+      "constraints": [
+        "scope is scripts/mcp_spine_server.py only",
+        "do not edit any .template.json or scripts/checklist_engine.py",
+        "do not weaken DC4's byte-identity property"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-server-fix-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_spine_server.py -k utf8 -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-identity-harness-fix": {
+      "id": "m3-identity-harness-fix",
+      "title": "tests/test_mcp_identity.py: pin ServerInstance's Popen to explicit UTF-8; full file green",
+      "imperative": "In tests/test_mcp_identity.py ONLY, add encoding='utf-8' to ServerInstance's subprocess.Popen call (around line 118-122) so the client explicitly decodes the door's pipes as UTF-8 instead of the platform default. Run the full file and confirm all tests pass (DC2/DC3 unweakened -- same assertions, same test count).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "server fix green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "server fix green at m2"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "ServerInstance Popen pinned to UTF-8; tests/test_mcp_identity.py fully green",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-identity-harness-fix-1"
+        }
+      ],
+      "constraints": [
+        "scope is tests/test_mcp_identity.py only",
+        "do not weaken DC2/DC3"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-identity-harness-fix-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-spine-server-harness-fix": {
+      "id": "m4-spine-server-harness-fix",
+      "title": "tests/test_mcp_spine_server.py: pin every remaining child-pipe read to explicit UTF-8; file + DC4 population test green",
+      "imperative": "In tests/test_mcp_spine_server.py ONLY, add encoding='utf-8' to every remaining subprocess.Popen/subprocess.run call that opens a child's pipes in text mode without an explicit encoding (McpRpcClient's Popen ~line 141-145, ToolsWrapEngineTests._cli_current's subprocess.run ~line 224-226, the CLI-refusal subprocess.run ~line 376-380, and the var-expansion launch test's Popen ~line 466-469). Run this file plus tests/test_mcp_imperative_equivalence.py (which imports and reuses ServerInstance from test_mcp_identity.py, already fixed at m3) and confirm both are green with DC4's byte-for-byte comparison unweakened (same assertions, not normalised/ASCII-folded).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "identity harness fixed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "identity harness fixed at m3"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "all remaining Popen/subprocess.run text=True call sites in the file pinned to UTF-8; tests/test_mcp_spine_server.py and tests/test_mcp_imperative_equivalence.py both green",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_spine_server.py tests/test_mcp_identity.py tests/test_mcp_imperative_equivalence.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-spine-server-harness-fix-1"
+        }
+      ],
+      "constraints": [
+        "scope is tests/test_mcp_spine_server.py only",
+        "do not weaken DC4's byte-identity comparison"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-spine-server-harness-fix-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_spine_server.py tests/test_mcp_identity.py tests/test_mcp_imperative_equivalence.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-engine-capture-and-scope-note": {
+      "id": "m5-engine-capture-and-scope-note",
+      "title": "Verify the engine's own io.StringIO capture needs no treatment; flag the one genuine out-of-scope gap found",
+      "imperative": "Confirm (do not assume) that scripts/mcp_spine_server.py's run_engine() capturing checklist_engine.main() output via io.StringIO is unicode-native and needs no encoding treatment -- state the reasoning. Separately: tests/test_mcp_imperative_equivalence.py's cli_current_text() (~line 180-182) has the identical missing-encoding defect (a bare subprocess.run(..., text=True) reading the CLI child's raw, non-JSON stdout, which genuinely carries raw multi-byte UTF-8 bytes for the rendered ACTIVE line) but that file is NOT in this handoff's stated scope (scripts/mcp_spine_server.py, tests/test_mcp_identity.py, tests/test_mcp_spine_server.py only). Do not edit it. Instead flag-candidate it as a triage item so Commander can decide whether to amend scope or route it as a follow-up -- this is likely the literal file/line the handoff's pasted CI failure trace originates from.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both harness files fixed and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "both harness files fixed and green at m3/m4"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "io.StringIO capture verified unicode-safe (reasoning stated); cli_current_text() gap flagged as a triage candidate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Verified empirically: io.StringIO is a built-in C class operating purely on Python str objects; contextlib.redirect_stdout(io.StringIO()) swaps sys.stdout for the duration, and print()/.write() on it never invokes any encode/decode step. Confirmed with a direct repro (print of an em-dash into a redirected StringIO, .getvalue() returns the correct str). run_engine()'s capture needs no encoding treatment on any platform. Separately filed triage candidate tc1 for tests/test_mcp_imperative_equivalence.py:182's identical-but-out-of-scope gap."
+        }
+      ],
+      "constraints": [
+        "do not edit tests/test_mcp_imperative_equivalence.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m6-full-suite-baseline": {
+      "id": "m6-full-suite-baseline",
+      "title": "Full suite matches the 2177 passed / 1 skipped / 1061 subtests / 0 failed baseline",
+      "imperative": "Stage changes, rebuild map/INDEX.md if any module-level entity changed (python -m scripts.code_map build --root .), then run the full suite and confirm it matches the stated baseline exactly.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "scope note filed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "scope note filed at m5"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite: 2177 passed, 1 skipped, 1061 subtests, 0 failed",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-full-suite-baseline-1"
+        }
+      ],
+      "constraints": [
+        "bar is the stated baseline, not merely 0 failed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-full-suite-baseline-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-closeout": {
+      "id": "m7-closeout",
+      "title": "Commit and write IMPLEMENTER_RESULT",
+      "imperative": "git add the changed files (and this plan file), commit to epic-418/f-424-mcp-door. Write IMPLEMENTER_RESULT to the path the handoff names: exact commands with real output/exit codes, the byte-level round-trip red-then-green evidence, an explicit local-vs-reasoned-about-Windows split, Map Impact (if any), and a blunt Workflow Feedback section including the cli_current_text() scope gap. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "full suite matches baseline",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "full suite matches baseline plus new test, 0 failed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "committed to epic-418/f-424-mcp-door; IMPLEMENTER_RESULT written with all required sections",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Committed eeec4f5d (fix + plan + tests) and 01298376 (result-file hash addendum) to epic-418/f-424-mcp-door. IMPLEMENTER_RESULT written at crew-handoffs/g3-implementer-result-utf8.md with exact commands/output/exit codes, byte-level red-then-green round-trip evidence, explicit local-vs-reasoned-about-Windows split, Map Impact, triage candidate tc1, and a blunt Workflow Feedback section."
+        }
+      ],
+      "constraints": [
+        "write the result file before ending the turn"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m5-engine-capture-and-scope-note",
+      "statement": "tests/test_mcp_imperative_equivalence.py:182 cli_current_text() calls subprocess.run([sys.executable, ENGINE, ..., 'current'], capture_output=True, text=True) with NO explicit encoding -- the identical missing-encoding defect this gate (g3fix2) fixed in tests/test_mcp_identity.py and tests/test_mcp_spine_server.py, but this file was explicitly NOT in the g3-implementer-handoff-utf8.md scope list (scripts/mcp_spine_server.py, tests/test_mcp_identity.py, tests/test_mcp_spine_server.py only). checklist_engine.py's own _utf8_stdio() already pins the CLI child's stdout to UTF-8 on write, so the CLI subprocess emits genuine raw multi-byte UTF-8 bytes for its rendered 'ACTIVE <id> [<status>] -- <imperative>' line (unlike the MCP door's JSON-RPC responses, which are ASCII-safe by construction via json.dumps' default ensure_ascii=True); on Windows this parent-side read would decode those raw bytes with the platform cp1252 default and mojibake exactly like 'tester\u00e2\u20ac\u201dcaf\u00e9', breaking the ACTIVE_LINE_RE match this file's extract_imperative() requires -- this is very likely the literal file/line the handoff's pasted CI failure trace ('projection for g1-implement has an ACTIVE line that does not match the expected shape ... \u00e2\u20ac\u201d') originates from. Verified locally: this exact reasoning was confirmed by reproducing the analogous bug in tests/test_mcp_spine_server.py via PYTHONIOENCODING=cp1252 (see this plan's m1 evidence); the Windows-CI claim for THIS specific file is reasoned by symmetry, not independently reproduced (cannot run Windows). Recommend Commander decide: amend g3fix2's scope by one file and add 'encoding=utf-8' to this one subprocess.run call, or route as an immediate follow-up issue -- either way, until it lands, the DC4 population test may still fail with mojibake on Windows CI even after this fix merges."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/archive/2026-08-09-epic-418-followon/commander-424/g3fix2/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-10T01:46:47.462895+00:00",
+    "last_heartbeat": "2026-08-10T02:14:14.871060+00:00",
+    "claimed_by": "g3fix2-implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-10T02:14:19.620617+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "read global-crew.md, global-everyone.md, windows.md, g3-implementer-handoff-utf8.md in full, scripts/mcp_spine_server.py's stdio loop (line ~528-573), checklist_engine.py's own _utf8_stdio() (~43-55, module-level, stdout/stderr only) and load()/save() (~174-209, both already explicit encoding=utf-8), test_mcp_identity.py's ServerInstance Popen (~118-122, text=True no encoding), test_mcp_spine_server.py's 4 Popen/subprocess.run text=True call sites (McpRpcClient ~141-145, _cli_current ~224-226, CLI-refusal ~376-380, var-expansion ~466-469), and test_mcp_imperative_equivalence.py's cli_current_text (~180-182, same defect, NOT in handoff scope). Handoff is complete: task/scope/exclusions/evidence/stop-conditions all named. Key finding: json.dumps ensure_ascii=True (default, used throughout the JSON-RPC layer) ASCII-escapes the protocol payload, so the reachable defect is specifically sys.stdin decoding a raw (non-ASCII-escaped) request from a real non-Python MCP client, not the Python test clients which never emit raw non-ASCII bytes.",
+      "mechanical": false,
+      "ts": "2026-08-10T01:47:17.854699+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-red-conformance-test",
+      "why": "Added Utf8StdioConformanceTests to tests/test_mcp_spine_server.py, using a bounded reader thread + queue (not a naked blocking readline -- an earlier draft of this test deadlocked exactly like the doctrine's own named anti-pattern: an eager f-string assert message calling proc.stderr.read() unconditionally, which blocks forever while the child is alive; fixed by deferring stderr.read() to the failure path only, mirroring McpJsonVarExpansionLaunchTests' own established pattern in this same file). Run against the still-unfixed server (PYTHONIOENCODING=cp1252 forced in its env, a raw ensure_ascii=False request): FAILED cleanly, sent vs received bytes differ, decoded mismatch shows literal mojibake 'tester\u00e2\u20ac\u201dcaf\u00e9' -- matching the handoff's reported symptom exactly. RED confirmed, no code changes to mcp_spine_server.py yet.",
+      "mechanical": false,
+      "ts": "2026-08-10T02:02:14.166201+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-server-fix-green",
+      "why": "Added _utf8_stdio() to scripts/mcp_spine_server.py: reconfigures sys.stdin/stdout/stderr to encoding='utf-8' explicitly, called at the top of main(), with a comment naming Windows/cp1252 and mirroring checklist_engine.py's own precedent (extended to cover stdin, which that CLI never reads but this door does). New conformance test now passes: 1 passed in 0.05s (was 1 failed with a byte mismatch before this change).",
+      "mechanical": false,
+      "ts": "2026-08-10T02:03:00.383461+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-identity-harness-fix",
+      "why": "Added encoding='utf-8' to ServerInstance's Popen call (tests/test_mcp_identity.py, ~line 118-122), alongside the existing text=True, with a comment tying it to the mcp_spine_server.py protocol-encoding fix. Full file: 12 passed in 0.65s (same count as before -- DC2/DC3 unweakened).",
+      "mechanical": false,
+      "ts": "2026-08-10T02:03:31.488118+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-spine-server-harness-fix",
+      "why": "Pinned encoding='utf-8' on all 4 remaining Popen/subprocess.run text=True call sites in tests/test_mcp_spine_server.py: McpRpcClient's Popen (~143-150), ToolsWrapEngineTests._cli_current's subprocess.run (~230-236), the CLI-refusal subprocess.run (~386-389), and the var-expansion launch test's Popen (~476-479). tests/test_mcp_spine_server.py + tests/test_mcp_identity.py + tests/test_mcp_imperative_equivalence.py together: 39 passed in 3.80s, 0 failed. DC4's byte-identity assertions in test_mcp_imperative_equivalence.py were not touched (still assertEqual against the raw imperative substrings, not normalised/ASCII-folded). Confirmed one remaining un-pinned call site OUTSIDE this scope: tests/test_mcp_imperative_equivalence.py:182 cli_current_text() has the identical missing-encoding defect but that file is not in the handoff's stated scope -- flagging at m5, not editing it here.",
+      "mechanical": false,
+      "ts": "2026-08-10T02:05:21.796954+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-engine-capture-and-scope-note",
+      "why": "io.StringIO capture verified unicode-safe by direct repro (not assumed). Filed flag-candidate tc1 for tests/test_mcp_imperative_equivalence.py's out-of-scope cli_current_text() gap, with the reasoning for why it is very likely the literal origin of the handoff's pasted CI failure trace, and an explicit local-vs-reasoned split.",
+      "mechanical": false,
+      "ts": "2026-08-10T02:06:00.696485+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-full-suite-baseline",
+      "why": "python -m scripts.code_map build --root . rebuilt map/INDEX.md (scripts.mcp_spine_server 7->8 entities for the new _utf8_stdio helper; tests.test_mcp_spine_server 44->50 entities for the new Utf8StdioConformanceTests class); per-symbol sub-pages under map/<module>/ are gitignored (map/*), only map/INDEX.md is tracked. tests/test_code_map.py: 148 passed, 63 subtests passed -- freshness confirmed. Full suite: 2178 passed, 1 skipped, 1061 subtests passed, 0 failed in 98.89s -- exactly the 2177/1/1061/0 baseline plus the one new conformance test, 0 failed.",
+      "mechanical": false,
+      "ts": "2026-08-10T02:11:49.356977+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-closeout",
+      "why": "Committed eeec4f5d + 01298376 to epic-418/f-424-mcp-door. IMPLEMENTER_RESULT written with all required sections at the exact path the handoff named.",
+      "mechanical": false,
+      "ts": "2026-08-10T02:14:14.871052+00:00"
+    }
+  ]
+}

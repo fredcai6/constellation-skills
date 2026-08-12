@@ -1,0 +1,20 @@
+{
+  "work_id": "epic-559/c3-lifecycle",
+  "diff_ref": "working-tree diff vs HEAD (b88f13a4) -- scripts/generate_spine.py, tests/test_generate_spine.py, .agent-work/epic-559/c2-generate-the-spine/DESIGN_NOTE.md (g5: not_yet_written type guard + DESIGN_NOTE reconciliation)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "_cond_faults grew from ~65 to 77 lines by adding one ~12-line kind=='pytest' branch alongside its existing per-kind branches (qualitative/population/pytest/artifact/reserved-id). Each branch stays short and single-purpose; the dispatch-by-kind shape predates this diff.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "Module has no classes; functions only.", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "The new guard is structurally similar to _numeric_field_faults's isinstance check but operates on a different field/type (bool vs int) and is not extracted into a shared helper. Two call sites of a similar shape is a hypothetical seam per the deep-module doctrine (one adapter = hypothetical, two = real) -- with only one bool-typed field guard existing, extraction would be speculative.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "not_yet_written is a bool primitive by design -- it is a spec-authored TOML/JSON field, not an internal domain concept needing a value object.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "Three files touched (generator, tests, design note) for one coherent change -- code + test + frozen-contract doc kept in sync for a single concept, not scattered edits across unrelated modules for one concept.", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "Guard is scoped exactly to kind=='pytest' where the field is read; no coercion path, no generalized type-guard framework added ahead of a second use case.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "overridden", "finding": "tests/test_generate_spine.py adds a 9-line comment block grounding the new test class in the carried finding before TestNotYetWrittenTypeGuard.", "override": {"repo_standard": "docs/agents/CREW_CONTEXT.md 'match the surrounding code's naming, labeling, and in-file documentation conventions' (inherited via global-crew.md); the same file already carries an identical-shape comment ('# Blocker 4 (rework handoff): ...') immediately preceding another test class.", "reason": "The comment explains WHY the test exists (a carried finding with a specific silent-failure mechanism) and grounds a non-obvious invariant (bare truthiness reading a TOML string), not WHAT the code does -- it matches an established, pre-existing convention in this exact file rather than papering over unclear code."}}
+  ],
+  "rail_exception": null
+}

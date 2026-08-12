@@ -1,0 +1,11 @@
+The spine is complete and the lease released. Summary:
+
+**What changed** (all committed at `6fc83013` on `epic-559/a-spine-is-the-job`, in `scripts/run_crew.py`, `skills/implementer/SKILL.md`, `skills/reviewer/SKILL.md`, plus tests and a mechanical `map/INDEX.md` regen):
+
+1. `build_crew_argv` now has a spine-carried prompt branch — when a crew has a bound spine and no handoff, the prompt names no document and tells it to call `spine_status` and drive gate by gate. The handoff-branch prompt stayed byte-identical.
+2. `--handoff` is optional; a dispatch is refused only when neither `--handoff` nor `--spine` is given. The external backend still requires a handoff (it can't bind a spine).
+3. Both SKILL.md files stopped routing a dispatched crew to the CLI fallback — a crew's spine is bound for it, `spine_status` is its first call, no CLI is ever mentioned.
+4. A crew can no longer waive its own gate: a `PreToolUse` hook (delivered inline via `--settings`, no new file) denies `spine_evidence`'s `waive` action while leaving `attest`/`attach` untouched, and points a blocked crew at `spine_halt`.
+5. `CREW_ALLOWED_TOOLS` grew from 7 to the door's real 9 tools and is now tied to `mcp_spine_server.TOOL_NAMES` by a drift-detecting test (module-scope import was ruled out — it needs `SPINE_FILE`/`SPINE_ENGINE` set to even import).
+
+Full suite: **2548 passed, 1 skipped**. Two pre-existing tests in `tests/test_mcp_adoption.py` that pinned the old CLI-routing fact for these two files were replaced with tests pinning the new one — noted in the result's Workflow Feedback along with two triage candidates. `IMPLEMENTER_RESULT.md` is written at `.agent-work/epic-559/a-spine-is-the-job/IMPLEMENTER_RESULT.md`.

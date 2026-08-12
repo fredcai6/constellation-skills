@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1-is-git-tracked",
+  "files": [],
+  "repo_rev": {
+    "commit": "1b6f3e725b273374438b65ca3aa0c284086d9ce1"
+  },
+  "run": {
+    "work_id": "wave1-fixes",
+    "generated_at": "2026-08-10T04:42:38Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/integrate-wave1",
+      "repo": "/home/tommy/projects/constellation-skills-wt/integrate-wave1",
+      "durable": "/home/tommy/projects/constellation-skills-wt/integrate-wave1"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/integrate-wave1"
+    }
+  }
+}

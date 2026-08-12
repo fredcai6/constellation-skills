@@ -1,0 +1,9 @@
+The result artifact is written. Summary:
+
+**Candidate `smallest-diff`:** two new tool schemas (`spine_open`/`spine_close`) dispatched from one new sibling function beside `call_tool` in `mcp_spine_server.py`; the actual open/close logic lives as new functions added to `scripts/init_work_area.py` (reused as a library, not a new module); the worktree record is a top-level `origin` block riding the spine's existing unknown-key tolerance; the declared-dispatch check reuses `generate_spine.py`'s existing `[gate.claim]`-injection pattern plus one small new verifier script (`verify_declared_dispatch.py`) — the only genuinely new module.
+
+**Gate count:** 6 (`g0` reasoning gate freezing the contract, `g1`–`g4` implementer crew gates for the carried findings / open / close / declared dispatch, `g5` one independent reviewer gate covering all four, since `g2`/`g3` carry large claims for the destructive git operations).
+
+**Path:** `.agent-work/epic-559/c3-lifecycle/crew-handoffs/plan-alt-a-result.md`
+
+Notably, the plan found a concrete implementation trap the mission frame hadn't called out at that granularity: the existing identity-pin test sweeps `module.TOOLS` and calls `call_tool` directly on every entry, which would `KeyError` on the two new lifecycle tools unless deliberately scoped — flagged in §4(a) and §7 as a required, plan-time decision rather than something to discover mid-build.

@@ -1,0 +1,13 @@
+The review is complete. **Verdict: APPROVE**, written to `.agent-work/epic-559/c2-generate-the-spine/crew-handoffs/g3-review-result.md`.
+
+Summary of what I verified by running, not reading:
+
+- The driven spine (`dispatch-proof/spine.json`) is genuinely terminal (both items `complete`, lease `released`), and the journal shows a real block→resume→amend→advance sequence across two distinct crew processes.
+- Regenerating the spine from `probe.spine.toml` structurally matches the driven file, modulo expected resolver-token substitution and the one known amendment.
+- The original `m1.c2` check text fails (missing required `--out`, exit 2) and the amended text passes (exit 0) — reproduced directly.
+- `_probe_script`'s positional-argument rule is correct: exercised the three-way logic directly against the real function (wrong path caught, real path/resolver-token path/non-path-shaped left alone), and confirmed both role specs — including `r6-fowler`'s trap case — still generate clean.
+- The `spec-malformed-claim` fault refuses a malformed `[[gate.claim]]` by name instead of crashing with `AttributeError` — verified end-to-end and against the test suite.
+- `validate_spine.py --sweep` reports exactly 23 fault lines; no shipped template, `validate_spine.py`, or `checklist_engine.py` touched.
+- Full suite: exactly **2788 passed, 3 skipped, 1121 subtests**, matching the expected count with pre-existing, unrelated skips.
+
+On the two questions that mattered most: a generated spine did really drive to terminal in a real dispatch, but `spine_terminal` itself is a purely structural check that proves nothing on its own — what made this proof real was that `m1`'s postconditions were engine-executed `command` checks (confirmed by reading `checklist_engine._check_condition`), not crew attestation. On the adjudication question, I concluded the Commander's block→amend→resume was legitimate: `retext-check` is the sanctioned, narrowly-scoped repair tool for exactly this kind of check-authoring bug, it didn't move the substantive goalpost, and authority was correctly separated from the crew doing the work.

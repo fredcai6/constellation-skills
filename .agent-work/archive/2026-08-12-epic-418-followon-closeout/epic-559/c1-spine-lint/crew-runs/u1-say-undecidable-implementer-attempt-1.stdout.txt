@@ -1,0 +1,9 @@
+All five postconditions of `u1-say-undecidable` are satisfied:
+
+- **c1** — an unevaluable check now reports `undecidable` in `validate_file`'s result rather than reading as a silent OK.
+- **c2** — pinned by 8 new/updated tests matching `Undecid|Unevaluat`.
+- **c3** — `check_corpus_fp.py` (not mine to edit) still passes, 26 checklists examined.
+- **c4** — full suite green (2658 passed, 1 skipped).
+- **c5** — working tree clean; committed as `26f2a2f4`.
+
+**What changed:** `_collects_zero` now returns a `(_CollectOutcome, reason)` pair distinguishing `ZERO`/`SOME`/`NOT_APPLICABLE`/`UNDECIDABLE` instead of collapsing "couldn't tell" and "not applicable" into a bare `None`. `validate()` returns a new `ValidationResult` (a `list[Fault]` subclass, so every existing caller keeps working unchanged) with an added `.undecidable` list and a `str()` that names both counts. `main()` now prints the undecidable count and detail right after its `OK`/`N fault(s)` line — exit code is untouched, since undecidable still isn't a failure. Appended a `u1` section to `IMPLEMENTER_RESULT.md`, rebuilt `map/INDEX.md`, and committed.

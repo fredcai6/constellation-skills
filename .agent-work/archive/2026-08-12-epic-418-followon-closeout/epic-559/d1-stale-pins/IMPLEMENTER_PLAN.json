@@ -1,0 +1,170 @@
+{
+  "work_id": "epic-559/d1-stale-pins",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "h1-pins",
+    "h2-verify"
+  ],
+  "tasks": {
+    "h1-pins": {
+      "id": "h1-pins",
+      "title": "A pin asserting a false fact is worse than no pin",
+      "imperative": "tests/test_mcp_adoption.py holds two constants that were true when written and are false now. CLI_ONLY_VERBS = ('skip','reopen','append','amend','flag-candidate') -- all five became reachable through the MCP door when the door grew to cover all 18 engine verbs. DOOR_TOOL_NAMES lists seven tools; the door ships nine (spine_capture and spine_amend were added). Three separate crews flagged this and correctly left it alone as out of their scope. It is your scope. Make both constants true, and tie them to their sources rather than restating them a fourth time: DOOR_TOOL_NAMES should derive from or be pinned against mcp_spine_server.TOOL_NAMES, and the CLI-only set should derive from the engine's own verb registry rather than a hand-typed list -- the engine's argparse subparsers are the source of truth and the verb surface is currently restated in eight places with no tie to them. If deriving proves genuinely awkward, say why in your result and add a test that goes red when the lists diverge; a fifth hand-typed copy is not acceptable. Preserve what the file does well: _cli_only_verb_violations pins its own false-positive and false-negative boundary with VIOLATING / INNOCENT / ACCEPTED_FALSE_ALARM fixtures. Keep that structure intact.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the door tool list and the CLI-only verb set are tied to their sources, pinned by tests",
+          "check": {
+            "kind": "command",
+            "command": "test $(python -m pytest -q tests/test_mcp_adoption.py -k \"Door or Tie or Registry\" --collect-only 2>/dev/null | grep -c '::') -ge 3 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_mcp_adoption.py -k \"Door or Tie or Registry\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-h1-pins-3"
+        },
+        {
+          "id": "c2",
+          "statement": "no test asserts a verb is CLI-only when the door reaches it",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import sys;sys.path.insert(0,'scripts');import mcp_spine_server as m;import re;s=open('tests/test_mcp_adoption.py').read();sys.exit(0 if 'flag-candidate' not in re.search(r'CLI_ONLY_VERBS\\s*=\\s*\\(([^)]*)\\)',s).group(1) else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-h1-pins-4"
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+        "Do not touch settings.json or docs/agents/*.",
+        "No merge or push to main. Commit on this branch before you finish."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "evidence": [
+        {
+          "id": "e-h1-pins-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_mcp_adoption.py -k Door or Tie or Registry --collect-only 2>/dev/null | grep -c '::') -ge 3 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_mcp_adoption.py -k Door or Tie or Registry",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-h1-pins-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import sys;sys.path.insert(0,'scripts');import mcp_spine_server as m;import re;s=open('tests/test_mcp_adoption.py').read();sys.exit(0 if 'flag-candidate' not in re.search(r'CLI_ONLY_VERBS\\s*=\\s*\\(([^)]*)\\)',s).group(1) else 1)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-h1-pins-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test $(python -m pytest -q tests/test_mcp_adoption.py -k \"Door or Tie or Registry\" --collect-only 2>/dev/null | grep -c '::') -ge 3 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE NO_COLOR=1 python -m pytest -q tests/test_mcp_adoption.py -k \"Door or Tie or Registry\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-h1-pins-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import sys;sys.path.insert(0,'scripts');import mcp_spine_server as m;import re;s=open('tests/test_mcp_adoption.py').read();sys.exit(0 if 'flag-candidate' not in re.search(r'CLI_ONLY_VERBS\\s*=\\s*\\(([^)]*)\\)',s).group(1) else 1)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "h2-verify": {
+      "id": "h2-verify",
+      "title": "Full suite green and work committed",
+      "imperative": "Run the full suite with real counts, rebuild map/INDEX.md if it drifts, write IMPLEMENTER_RESULT.md from the implementer skill's template including Workflow Feedback, and commit before you finish.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "h1-pins complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "h1-pins advanced to complete (verified via spine_status)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite passes",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the working tree is committed",
+          "check": {
+            "kind": "command",
+            "command": "test -z \"$(git status --porcelain -- scripts tests skills map)\""
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the result artifact exists",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/epic-559/d1-stale-pins/IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Never git add -A: .agent-work/ is tracked here. Stage by name.",
+        "Do not modify scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+        "Do not touch settings.json or docs/agents/*.",
+        "No merge or push to main. Commit on this branch before you finish."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-11T10:43:47.920359+00:00",
+      "reason": "c1's check command has an unquoted -k value (\"-k Door or Tie or Registry\" with no surrounding quotes): the shell splits \"or\"/\"Tie\"/\"Registry\" into separate positional arguments, which pytest treats as file/dir paths that don't exist (\"ERROR: file or directory not found: or\"), so the check fails with 0 tests collected for ANY implementer regardless of test content -- confirmed by running the exact JSON-literal command text verbatim (bash -c with no added quoting). This retext-check only wraps the existing -k value in quotes; the semantic bar (>=3 collected Door/Tie/Registry-named tests, all passing) is unchanged and I still have to satisfy it for real. mcp_spine_server's PreToolUse hook (run_crew.py) denies only spine_evidence action=waive to a dispatched crew, not spine_amend, so this authoring fix (never marks a condition satisfied -- resets c1 to unsatisfied and re-runs the corrected check on the next advance) is within a crew's granted tools.",
+      "authority": "implementer (self-service authoring fix to a shell-quoting bug in the crew's own bound check text, not a waive -- see reason)",
+      "ops": [
+        "retext-check h1-pins.c1"
+      ]
+    }
+  ],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "h1-pins",
+      "why": "tests/test_mcp_adoption.py's two stale constants (DOOR_TOOL_NAMES at 7, CLI_ONLY_VERBS naming 5 CLI-only verbs) are now factually correct (9 door tools, 0 CLI-only verbs -- issue #559 made all 18 engine verbs door-reachable) and tied to their sources by a new TestDoorSurfaceTiesToTheEngineRegistry class rather than hand-typed a fourth/fifth time: DOOR_TOOL_NAMES ties to mcp_spine_server.TOOL_NAMES (scratch-env import, run_crew.py's CREW_ALLOWED_TOOLS shape), CLI_ONLY_VERBS ties to the gap between checklist_engine's argparse verb registry and mcp_spine_server's own run_engine() dispatch text. Correcting DOOR_TOOL_NAMES surfaced a genuine pre-existing gap in skills/workbench/references/checklist-engine.md's '## MCP door' section (still described 7 tools/13 verbs/5 CLI-only, never updated when the door grew) -- fixed that one paragraph minimally since the full-suite postcondition needs it and it is not in the constraint's no-go list. _cli_only_verb_violations kept its VIOLATING/INNOCENT/ACCEPTED_FALSE_ALARM self-test machinery fully intact via a decoupled verbs= param. c1's check command also had a pre-existing shell-quoting bug (unquoted -k value) that failed for any implementer regardless of test content; corrected via spine_amend retext-check, which does not weaken the check -- only quotes the same -k value.",
+      "mechanical": false,
+      "ts": "2026-08-11T10:43:55.818826+00:00"
+    }
+  ]
+}

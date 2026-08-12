@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r10-dc4-positive-control",
+  "mechanical": {
+    "run": "epic-418-followon/commander-424",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r10-dc4-positive-control",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon/commander-424-r10-dc4-positive-control@09210097d0fcbdb57dfd006c1d2c5d4c484baa05",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon/commander-424",
+    "generated_at": "2026-08-09T23:07:38Z"
+  }
+}

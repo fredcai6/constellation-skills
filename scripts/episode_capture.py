@@ -178,17 +178,39 @@ def resolve_roots(base_dir: Any = None) -> dict[str, Path]:
     }
 
 
-def manifest_root(base_dir: Any) -> Path:
+def manifest_root(base_dir: Any, work_id: Any = None) -> Path:
     """The `agent_work_root` handed to `context_manifest.manifest_path()`.
 
     `manifest_path` composes `<root>/<work-id>/context/<step>.json`, and a run's
     checklist lives at `<agent-work>/<work-id>/spine.json` — so the root is the
-    checklist directory's PARENT, and the manifest lands beside the spine it
-    describes, inside the same work area. Deliberately not the durable root: the
-    manifest belongs to one run, and durable resolution is shared across every
-    linked worktree of a repo, where concurrent runs would collide.
+    checklist directory with the work-id STRIPPED OFF, and the manifest lands beside
+    the spine it describes, inside the same work area. Deliberately not the durable
+    root: the manifest belongs to one run, and durable resolution is shared across
+    every linked worktree of a repo, where concurrent runs would collide.
+
+    "Strip the work-id", not "take the parent", because a work-id may NEST: the
+    epic/commander convention writes `epic-418-followon/commander-424`, and
+    `manifest_path` re-appends BOTH segments. Stripping only one left the run's
+    provenance at
+    `.agent-work/epic-418-followon/epic-418-followon/commander-424/context/` — a
+    doubled path, one level away from where every other tool looks, written in
+    silence because nothing here raises.
+
+    `work_id` is optional and the strip is conditional on the directory actually
+    ENDING in it. A checklist that does not sit under its own work-id (scratch
+    spines under an evidence directory do not) is a different question than this one,
+    and guessing at it is how the doubled path was written in the first place; those
+    keep the historical parent-of-base_dir answer exactly.
     """
-    return Path(os.path.abspath(os.fspath(Path(base_dir)))).parent
+    base = Path(os.path.abspath(os.fspath(Path(base_dir))))
+    segments = [s for s in str(work_id).split("/") if s] if work_id else []
+    node, tail = base, []
+    for _ in segments:
+        tail.append(node.name)
+        node = node.parent
+    if segments and list(reversed(tail)) == segments:
+        return node
+    return base.parent
 
 
 # --------------------------------------------------------------------------- #
@@ -356,7 +378,7 @@ def manifest_ref(checklist: Mapping[str, Any], step: str, base_dir: Any) -> str 
     try:
         import context_manifest as cm
 
-        path = cm.manifest_path(manifest_root(base_dir), work_id, step)
+        path = cm.manifest_path(manifest_root(base_dir, work_id), work_id, step)
         with open(path, "rb") as handle:
             revision = cm.rev(handle.read())
     except (OSError, ValueError, ImportError):
@@ -452,7 +474,7 @@ def snapshot_path(base_dir: Any, work_id: Any, step: str) -> Path:
     holds. Deliberately not under `episodes/`: this is the mechanical HALF of an
     episode, and a directory called `episodes` next to the real store at
     `episodes/active/` would invite exactly the wrong reading."""
-    return Path(manifest_root(base_dir)) / str(work_id) / "mechanical" / f"{step}.json"
+    return Path(manifest_root(base_dir, work_id)) / str(work_id) / "mechanical" / f"{step}.json"
 
 
 def emit_mechanical_snapshot(
@@ -542,7 +564,9 @@ def emit_step_manifest(
         roots = resolve_roots(base_dir)
         manifest = cm.build_manifest(checklist, roots)
         destination = cm.manifest_path(
-            manifest_root(base_dir), checklist.get("work_id"), manifest["step"]
+            manifest_root(base_dir, checklist.get("work_id")),
+            checklist.get("work_id"),
+            manifest["step"],
         )
         # Write-if-absent: the snapshot belongs to the moment the step activated.
         # Checked against the path derived from the manifest we just built, so the
@@ -584,7 +608,7 @@ def _write_failure_stub(
         import context_manifest as cm
 
         destination = cm.manifest_path(
-            manifest_root(base_dir), checklist.get("work_id"), iid
+            manifest_root(base_dir, checklist.get("work_id")), checklist.get("work_id"), iid
         )
         if destination.exists():
             return destination

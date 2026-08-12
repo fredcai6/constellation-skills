@@ -1,0 +1,20 @@
+{
+  "work_id": "epic-418-followon/commander-424",
+  "diff_ref": "MEASUREMENT.md only (rewritten Headline/DC5-verdict/Order-control/Secondary-observations/Revision-note sections) under gate g4, rework attempt 3 (rework 2). evidence/g4-dc5/score_arm.py and control_scorer.py are byte-unchanged since attempt-2 (confirmed r11) -- this round's diff is prose, not code.",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "No code changed this round; carried-forward score_arm.py observation from attempt-2's pass (score() remains one ~65-line function) is unchanged and not re-flagged here since the diff under review this round touches no code.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "flagged", "finding": "Not a code smell in the Fowler sense (no code changed), but the analogous documentation-quality defect is real and already recorded on r7/r4-quality: MEASUREMENT.md lines 216-225 contain a near-verbatim duplicated paragraph (secondary observation (c) immediately followed by an unlabelled restatement of the same point in flatter, more negative language). Recording it here too so the Fowler pass does not appear to have missed it -- see r7-framing-first-read for the full finding and recommended one-line fix.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "This round's change is confined to one file (MEASUREMENT.md); no ripple into the instrument files.", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "overridden", "finding": "MEASUREMENT.md's Revision note and the 'How this verdict was arrived at' prose narrate the full review-driven correction history in long form rather than as a terse changelog.", "override": {"repo_standard": "CREW_CONTEXT.md 'Verification Discipline' + global-everyone.md 'Pin a claim to the revision you read it at' -- this repo's convention is to make measurement/decision rationale and provenance explicit and durable in the artifact a second party re-derives from, especially one whose own numbers and verdict changed twice under review.", "reason": "These are decision-provenance narration for an independent auditor, not comments compensating for code that should have been simplified instead -- the same override attempt-2's Fowler pass already logged for this document, unchanged in kind by this round's edits, which only extended the same narrative pattern to cover the third correction."}}
+  ],
+  "rail_exception": null
+}

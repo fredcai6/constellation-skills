@@ -1,0 +1,1135 @@
+{
+ "work_id": "epic-559/c3-lifecycle",
+ "type": "gated",
+ "config_ref": "docs/agents/engine-config.json",
+ "items": [
+  "e0-context",
+  "g1-implement",
+  "g1-review",
+  "g1-integrate",
+  "g2-implement",
+  "g2-review",
+  "g2-integrate",
+  "g3-implement",
+  "g3-review",
+  "g3-integrate",
+  "g4-implement",
+  "g4-review",
+  "g4-integrate",
+  "g5-implement",
+  "g5-review",
+  "g5-integrate"
+ ],
+ "tasks": {
+  "e0-context": {
+   "id": "e0-context",
+   "title": "Load execution context",
+   "imperative": "Read the inherited global doctrine and the project deltas, then LAUNCH_ORDER.md, PROBLEM_STATEMENT.md, MISSION_FRAME.md and LIFECYCLE_CONTRACT.md in this work area. Confirm the frozen plan's intent and scope, then attest c1.",
+   "preconditions": [],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "execution context loaded; the frozen contract's intent and scope confirmed",
+     "check": null,
+     "satisfied": false
+    },
+    {
+     "id": "c2",
+     "statement": "the four frozen plan documents are present in the work area",
+     "check": {
+      "kind": "command",
+      "command": "test -s /home/tommy/projects/constellation-skills-wt/c3-lifecycle/.agent-work/epic-559/c3-lifecycle/LAUNCH_ORDER.md && test -s /home/tommy/projects/constellation-skills-wt/c3-lifecycle/.agent-work/epic-559/c3-lifecycle/PROBLEM_STATEMENT.md && test -s /home/tommy/projects/constellation-skills-wt/c3-lifecycle/.agent-work/epic-559/c3-lifecycle/MISSION_FRAME.md && test -s /home/tommy/projects/constellation-skills-wt/c3-lifecycle/.agent-work/epic-559/c3-lifecycle/LIFECYCLE_CONTRACT.md"
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [],
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g1-implement": {
+   "id": "g1-implement",
+   "title": "open — the lifecycle module and open_work: implement",
+   "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for g1 and dispatch a constellation-implementer crew through scripts/run_crew.py with --parent naming THIS Commander session (never the Admiral) and an explicit --model sonnet. TASK: Build scripts/spine_lifecycle.py per LIFECYCLE_CONTRACT.md sections 2 and 3: the pure helpers (worktree_path_for, branch_name_for, archive_name_for, build_origin, closeout_refusal) and the impure open_work. open_work derives branch and worktree from work_id, refuses an occupied path AND a work id whose spine carries an engine_session with status 'active' (the ONLY two statuses checklist_engine ever writes are 'active' and 'released' -- there is no 'abandoned' engine_session; that field belongs to crew-runs.json, not here), provisions with git worktree add, scaffolds via init_work_area, compiles via generate_spine (imported, never re-implemented), injects the top-level origin block and re-validates, then self-verifies with verify_worktree_isolation.check_distinct_real in-process rather than trusting git's exit code. Any failure at or after the worktree add rolls back the worktree AND the branch this call created, scoped to what this call created, and refuses legibly. No door wiring in this gate. Regenerate the code map (python -m scripts.code_map build) because this gate adds a module; never hand-edit map/INDEX.md.\n\nCLOSE CRITERIA:\n- open_work refuses an occupied worktree path, and refuses a work id whose spine carries an active non-abandoned engine_session -- both by name, both with a VIOLATING fixture\n- a late failure after git worktree add leaves NO worktree and NO branch behind (rollback proven against git worktree list --porcelain, not against an assertion string)\n- check_distinct_real returning not-ok forces a rollback even when git worktree add exited 0\n- the origin block survives a real claim/start/attest/advance drive byte-identical\n- the pure helpers take today/wt_root as parameters so no test needs to freeze a clock or a host path\n- open_work writes the spine as spine.json and LIFECYCLE_CONTRACT.md section 3 says so; close_work must never assume that name (see g2)\n\nEvery guard needs a VIOLATING case and an INNOCENT case in the tests/test_mcp_adoption.py::_cli_only_verb_violations house style -- a test that exercises only the happy path measures the mechanism, not the boundary. Attach the returned IMPLEMENTER_RESULT with --field status=complete.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "the prior gate is integrated (or this is the first gate)",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "implementer-result",
+      "match": {
+       "status": "complete"
+      }
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "checklist_engine.py's on-disk format is NOT changed",
+    "validate_spine.py is NOT changed",
+    "settings.json, .mcp.json and docs/agents/* are untouched",
+    "skills/** is untouched -- a different crew owns it; float it, never take it",
+    "never run scripts/install_constellation.py",
+    "no merge and no push to main",
+    "stage by name; never git add -A and never a bare dot",
+    "never two crews in one worktree",
+    "close never opens a PR and never removes a worktree"
+   ],
+   "anchors": {
+    "structural": [
+     "struct:spine-lifecycle — scripts/spine_lifecycle.py, module — the seam this epic places",
+     "struct:mcp-door — scripts/mcp_spine_server.py, module — the pass-through door, extended not rewritten",
+     "struct:generator — scripts/generate_spine.py, module — the spec compiler C2 shipped"
+    ],
+    "capability": [
+     "capability:open-work — one call creates branch, worktree, work area and spine",
+     "capability:close-work — the terminal advance archives and reports readiness",
+     "capability:declared-dispatch — the generator emits parent and model so they cannot be forgotten"
+    ],
+    "constraint": [
+     "checklist_engine.py's on-disk format is NOT changed",
+     "validate_spine.py is NOT changed",
+     "settings.json, .mcp.json and docs/agents/* are untouched",
+     "skills/** is untouched -- a different crew owns it; float it, never take it",
+     "never run scripts/install_constellation.py",
+     "no merge and no push to main",
+     "stage by name; never git add -A and never a bare dot",
+     "never two crews in one worktree",
+     "close never opens a PR and never removes a worktree"
+    ],
+    "decision": [
+     "decision:lifecycle-module — open and close live in scripts/spine_lifecycle.py, not spread across init_work_area.py @grade: settled/measured · leans g1,g2,g3 · the smallest-diff candidate argued for this structure in its own hurt section",
+     "decision:origin-in-spine — the worktree record is a top-level origin block on the spine @grade: settled/measured · leans g1,g2 · settle: an unknown top-level key survived a full engine drive",
+     "decision:two-tools — spine_open and spine_close are separate tools, never one action switch @grade: guess · leans g3 · settle: g3 shipping it against the real pin",
+     "decision:no-cli-adapter — no shell CLI ships; the standing ruling is that agents must not know about the CLI @grade: settled/human · leans g1,g2,g3",
+     "decision:archive-date-prefix — .agent-work/archive/<YYYY-MM-DD>-<work-id flattened>/ @grade: settled/measured · leans g2 · 39 of 41 shipped archive entries use it",
+     "decision:dispatch-is-checked-data — a command-kind postcondition reads crew-runs.json @grade: guess · leans g4 · settle: g4 shipping the VIOLATING wrong-parent fixture"
+    ],
+    "evidence": [
+     "claim:suite-green — 2824 passed, 3 skipped, 1121 subtests on 293b7721",
+     "claim:sweep-23 — validate_spine.py --sweep reports exactly 23 fault lines"
+    ],
+    "confidence_flags": [
+     "the repo has NO Cartographer packet map (docs/architecture absent, map/ids.jsonl empty); this run oriented DEGRADED and every structural claim above is a re-runnable measurement recorded in MISSION_FRAME.md rather than a map anchor -- verify, never trust"
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g1-review": {
+   "id": "g1-review",
+   "title": "open — the lifecycle module and open_work: review",
+   "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a constellation-reviewer crew through scripts/run_crew.py with --parent naming THIS Commander session and an explicit --model sonnet. CARRY THE INHERITED REVIEW STANDARD VERBATIM INTO THE HANDOFF: C2's branch was reviewed five times; the first four each ran real commands, each answered its own questions correctly, and each missed something different -- a field that was never quoted (invisible because ABSENT), a stale session id on nine of nine gates (invisible because UBIQUITOUS), that same id written into a review's own evidence line as proof of completeness, and a divergence one reviewer saw, described accurately, then scoped away. A review establishes that a mechanism OPERATES and does not ask whether the VALUE IT CARRIES is right. So for every check: ask BOTH questions -- does this mechanism work, and is the value it carries correct? Treat your own green results as questions. Re-run every pasted command yourself; a claim you cannot reproduce is a defect, not an accepted fact.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "IMPLEMENTER_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "REVIEW_RESULT returned",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result"
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "checklist_engine.py's on-disk format is NOT changed",
+    "validate_spine.py is NOT changed",
+    "settings.json, .mcp.json and docs/agents/* are untouched",
+    "skills/** is untouched -- a different crew owns it; float it, never take it",
+    "never run scripts/install_constellation.py",
+    "no merge and no push to main",
+    "stage by name; never git add -A and never a bare dot",
+    "never two crews in one worktree",
+    "close never opens a PR and never removes a worktree"
+   ],
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g1-integrate": {
+   "id": "g1-integrate",
+   "title": "open — the lifecycle module and open_work: integrate",
+   "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's claimed side-effects against the world yourself -- re-run the verification commands, confirm the IMPLEMENTER_RESULT is fresh via scripts/run_crew.py --verify-result, and confirm the postconditions pass in your hands -- then advance. BLOCK: return the implementer for rework, or raise a blocker. Harvest the result's Workflow Feedback into the run's lesson pool and log out-of-scope finds as triage candidates. Commit this gate.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "REVIEW_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "open — the lifecycle module and open_work: the gate's own tests collect at least 10 and pass",
+     "check": {
+      "kind": "command",
+      "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 test $(env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q -k \"SpineLifecycleOpen or LifecyclePure or OriginRoundTrip\" --collect-only tests/test_spine_lifecycle.py 2>/dev/null | grep -c '::') -ge 10 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q -k \"SpineLifecycleOpen or LifecyclePure or OriginRoundTrip\" tests/test_spine_lifecycle.py"
+     },
+     "satisfied": false,
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     }
+    },
+    {
+     "id": "c2",
+     "statement": "reviewer verdict is APPROVE",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result",
+      "match": {
+       "verdict": "APPROVE"
+      }
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c3",
+     "statement": "the full suite is green at this gate boundary",
+     "check": {
+      "kind": "command",
+      "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+     },
+     "satisfied": false,
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     }
+    },
+    {
+     "id": "c4",
+     "statement": "no shipped template moved: the corpus sweep still reports exactly 23 fault lines",
+     "check": {
+      "kind": "command",
+      "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && test $(python scripts/validate_spine.py --sweep --root . 2>&1 | grep -cE '^\\s+\\[') -eq 23"
+     },
+     "satisfied": false,
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     }
+    }
+   ],
+   "constraints": [
+    "checklist_engine.py's on-disk format is NOT changed",
+    "validate_spine.py is NOT changed",
+    "settings.json, .mcp.json and docs/agents/* are untouched",
+    "skills/** is untouched -- a different crew owns it; float it, never take it",
+    "never run scripts/install_constellation.py",
+    "no merge and no push to main",
+    "stage by name; never git add -A and never a bare dot",
+    "never two crews in one worktree",
+    "close never opens a PR and never removes a worktree"
+   ],
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g2-implement": {
+   "id": "g2-implement",
+   "title": "close — archive, commit, and say it is ready: implement",
+   "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for g2 and dispatch a constellation-implementer crew through scripts/run_crew.py with --parent naming THIS Commander session (never the Admiral) and an explicit --model sonnet. TASK: Add closeout_refusal (pure) and close_work (impure) to scripts/spine_lifecycle.py per LIFECYCLE_CONTRACT.md section 4. close_work refuses doing NOTHING AT ALL unless the lease is released, every item is terminal (computed from the spine dict INSIDE the pure closeout_refusal -- do NOT call run_crew.spine_terminal from it: that function takes a PATH and reads the file, so a pure dict-in predicate cannot call it. Instead ship a DIFFERENTIAL test asserting closeout_refusal's terminality verdict agrees with run_crew.spine_terminal on the same spine, over one terminal and one non-terminal case), and the archive directory does not already exist. Then it git mv's every top-level entry under .agent-work/<work-id>/ EXCEPT the bound spine and its journal -- names DERIVED from Path(spine_path).name and that name plus '.journal', NEVER the literal strings 'spine.json'/'spine.json.journal', each call naming its own paths; then the spine and its journal LAST; then commits. Never git add -A and never a bare dot. It reports a verdict naming branch, HEAD and 'ready to PR'. It does NOT open a PR and does NOT remove a worktree. Archive name is <YYYY-MM-DD>-<work-id with / replaced by ->, with today passed in as a parameter.\n\nCLOSE CRITERIA:\n- close_work called with the lease still active refuses and leaves the work area byte-for-byte untouched\n- close_work called with a non-terminal gate refuses and names the offending gate\n- close_work called when the archive directory already exists refuses rather than overwriting\n- a real spine driven to terminal and released is archived with spine.json LAST -- an interruption after the other entries move leaves spine.json and its journal still at the ORIGINAL path, so a retry finds them\n- a source guard over close_work's own body proves no 'git add -A' and no bare '.' reaches a staging call, with a MUTATED copy of the function as the positive control proving the guard can fail\n- the archived spine keeps origin and every gate's evidence[] intact\n- MANDATORY, and untestable by any matched-pair fixture: close a spine whose basename is NOT what open_work writes (an execute.json) and assert it still moved LAST. Every other fixture closes a spine open_work itself created, so a literal hardcode would pass all of them -- and this Commander's own driving spine is named execute.json (measured: spine.json 48 vs execute.json 40 at depth 3 under .agent-work/; 43 vs 42 excluding the archive -- both conventions are in heavy use)\n- the interruption fixture is SIMULATED, and say so: monkeypatch the mover to raise after the non-spine entries move and before the spine-last step, then assert the spine and journal are still at the ORIGINAL path. A real process kill between two git operations is out of scope for this gate\n\nEvery guard needs a VIOLATING case and an INNOCENT case in the tests/test_mcp_adoption.py::_cli_only_verb_violations house style -- a test that exercises only the happy path measures the mechanism, not the boundary. Attach the returned IMPLEMENTER_RESULT with --field status=complete.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "the prior gate is integrated (or this is the first gate)",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "implementer-result",
+      "match": {
+       "status": "complete"
+      }
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "checklist_engine.py's on-disk format is NOT changed",
+    "validate_spine.py is NOT changed",
+    "settings.json, .mcp.json and docs/agents/* are untouched",
+    "skills/** is untouched -- a different crew owns it; float it, never take it",
+    "never run scripts/install_constellation.py",
+    "no merge and no push to main",
+    "stage by name; never git add -A and never a bare dot",
+    "never two crews in one worktree",
+    "close never opens a PR and never removes a worktree"
+   ],
+   "anchors": {
+    "structural": [
+     "struct:spine-lifecycle — scripts/spine_lifecycle.py, module — the seam this epic places",
+     "struct:mcp-door — scripts/mcp_spine_server.py, module — the pass-through door, extended not rewritten",
+     "struct:generator — scripts/generate_spine.py, module — the spec compiler C2 shipped"
+    ],
+    "capability": [
+     "capability:open-work — one call creates branch, worktree, work area and spine",
+     "capability:close-work — the terminal advance archives and reports readiness",
+     "capability:declared-dispatch — the generator emits parent and model so they cannot be forgotten"
+    ],
+    "constraint": [
+     "checklist_engine.py's on-disk format is NOT changed",
+     "validate_spine.py is NOT changed",
+     "settings.json, .mcp.json and docs/agents/* are untouched",
+     "skills/** is untouched -- a different crew owns it; float it, never take it",
+     "never run scripts/install_constellation.py",
+     "no merge and no push to main",
+     "stage by name; never git add -A and never a bare dot",
+     "never two crews in one worktree",
+     "close never opens a PR and never removes a worktree"
+    ],
+    "decision": [
+     "decision:lifecycle-module — open and close live in scripts/spine_lifecycle.py, not spread across init_work_area.py @grade: settled/measured · leans g1,g2,g3 · the smallest-diff candidate argued for this structure in its own hurt section",
+     "decision:origin-in-spine — the worktree record is a top-level origin block on the spine @grade: settled/measured · leans g1,g2 · settle: an unknown top-level key survived a full engine drive",
+     "decision:two-tools — spine_open and spine_close are separate tools, never one action switch @grade: guess · leans g3 · settle: g3 shipping it against the real pin",
+     "decision:no-cli-adapter — no shell CLI ships; the standing ruling is that agents must not know about the CLI @grade: settled/human · leans g1,g2,g3",
+     "decision:archive-date-prefix — .agent-work/archive/<YYYY-MM-DD>-<work-id flattened>/ @grade: settled/measured · leans g2 · 39 of 41 shipped archive entries use it",
+     "decision:dispatch-is-checked-data — a command-kind postcondition reads crew-runs.json @grade: guess · leans g4 · settle: g4 shipping the VIOLATING wrong-parent fixture"
+    ],
+    "evidence": [
+     "claim:suite-green — 2824 passed, 3 skipped, 1121 subtests on 293b7721",
+     "claim:sweep-23 — validate_spine.py --sweep reports exactly 23 fault lines"
+    ],
+    "confidence_flags": [
+     "the repo has NO Cartographer packet map (docs/architecture absent, map/ids.jsonl empty); this run oriented DEGRADED and every structural claim above is a re-runnable measurement recorded in MISSION_FRAME.md rather than a map anchor -- verify, never trust"
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g2-review": {
+   "id": "g2-review",
+   "title": "close — archive, commit, and say it is ready: review",
+   "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a constellation-reviewer crew through scripts/run_crew.py with --parent naming THIS Commander session and an explicit --model sonnet. CARRY THE INHERITED REVIEW STANDARD VERBATIM INTO THE HANDOFF: C2's branch was reviewed five times; the first four each ran real commands, each answered its own questions correctly, and each missed something different -- a field that was never quoted (invisible because ABSENT), a stale session id on nine of nine gates (invisible because UBIQUITOUS), that same id written into a review's own evidence line as proof of completeness, and a divergence one reviewer saw, described accurately, then scoped away. A review establishes that a mechanism OPERATES and does not ask whether the VALUE IT CARRIES is right. So for every check: ask BOTH questions -- does this mechanism work, and is the value it carries correct? Treat your own green results as questions. Re-run every pasted command yourself; a claim you cannot reproduce is a defect, not an accepted fact.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "IMPLEMENTER_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "REVIEW_RESULT returned",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result"
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "checklist_engine.py's on-disk format is NOT changed",
+    "validate_spine.py is NOT changed",
+    "settings.json, .mcp.json and docs/agents/* are untouched",
+    "skills/** is untouched -- a different crew owns it; float it, never take it",
+    "never run scripts/install_constellation.py",
+    "no merge and no push to main",
+    "stage by name; never git add -A and never a bare dot",
+    "never two crews in one worktree",
+    "close never opens a PR and never removes a worktree"
+   ],
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g2-integrate": {
+   "id": "g2-integrate",
+   "title": "close — archive, commit, and say it is ready: integrate",
+   "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's claimed side-effects against the world yourself -- re-run the verification commands, confirm the IMPLEMENTER_RESULT is fresh via scripts/run_crew.py --verify-result, and confirm the postconditions pass in your hands -- then advance. BLOCK: return the implementer for rework, or raise a blocker. Harvest the result's Workflow Feedback into the run's lesson pool and log out-of-scope finds as triage candidates. Commit this gate.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "REVIEW_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "close — archive, commit, and say it is ready: the gate's own tests collect at least 10 and pass",
+     "check": {
+      "kind": "command",
+      "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 test $(env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q -k \"SpineLifecycleClose or CloseOrdering or StagesByName\" --collect-only tests/test_spine_lifecycle.py 2>/dev/null | grep -c '::') -ge 10 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q -k \"SpineLifecycleClose or CloseOrdering or StagesByName\" tests/test_spine_lifecycle.py"
+     },
+     "satisfied": false,
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     }
+    },
+    {
+     "id": "c2",
+     "statement": "reviewer verdict is APPROVE",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result",
+      "match": {
+       "verdict": "APPROVE"
+      }
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c3",
+     "statement": "the full suite is green at this gate boundary",
+     "check": {
+      "kind": "command",
+      "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+     },
+     "satisfied": false,
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     }
+    },
+    {
+     "id": "c4",
+     "statement": "no shipped template moved: the corpus sweep still reports exactly 23 fault lines",
+     "check": {
+      "kind": "command",
+      "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && test $(python scripts/validate_spine.py --sweep --root . 2>&1 | grep -cE '^\\s+\\[') -eq 23"
+     },
+     "satisfied": false,
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     }
+    }
+   ],
+   "constraints": [
+    "checklist_engine.py's on-disk format is NOT changed",
+    "validate_spine.py is NOT changed",
+    "settings.json, .mcp.json and docs/agents/* are untouched",
+    "skills/** is untouched -- a different crew owns it; float it, never take it",
+    "never run scripts/install_constellation.py",
+    "no merge and no push to main",
+    "stage by name; never git add -A and never a bare dot",
+    "never two crews in one worktree",
+    "close never opens a PR and never removes a worktree"
+   ],
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g3-implement": {
+   "id": "g3-implement",
+   "title": "the door — spine_open and spine_close: implement",
+   "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for g3 and dispatch a constellation-implementer crew through scripts/run_crew.py with --parent naming THIS Commander session (never the Admiral) and an explicit --model sonnet. TASK: Add spine_open and spine_close to scripts/mcp_spine_server.py per LIFECYCLE_CONTRACT.md section 6. They are dispatched from call_lifecycle_tool, a NEW MODULE-LEVEL SIBLING of call_tool. call_tool's body is NOT TOUCHED and its choke-point pin stays exactly as strict. spine_open takes work_id/spec/base and never references SPINE, SESSION or run_engine; spine_close takes NO arguments and acts on the bound spine alone. main()'s tools/call branch (line 962) routes every known name to call_tool unconditionally, so main() MUST grow a branch sending the two lifecycle names to call_lifecycle_tool -- route in main(), never inside call_tool. THE TRAP, named at plan time so it is not discovered mid-flight: adding two tools to TOOLS breaks THREE coupled sites in THREE files -- tests/test_mcp_identity.py:998-999 (iterates module.TOOLS, indexes TOOL_MINIMAL_ARGS[tool['name']] -> KeyError); tests/test_mcp_adoption.py:236,246 (set(DOOR_TOOL_NAMES) == server.TOOL_NAMES, and len(...) == 9); tests/test_crew_launcher.py:536,551 (derives the crew grant from TOOL_NAMES, asserts len(...) == 9). The last two are deliberate regression pins that exist BECAUSE the door once grew 7->9 while a hand-typed list froze, so updating them is the required work, not a workaround -- and :536 means the lifecycle tools must also be added to CREW_ALLOWED_TOOLS or a dispatched crew cannot call them. The REQUIRED fix is to scope the identity sweep to the engine tools (TOOL_NAMES minus the lifecycle tool names) and update the two counts and the grant. The FORBIDDEN fix is to handle the new tools inside call_tool to make the sweep pass -- that is the exact regression the pin exists to catch, arriving disguised as test maintenance. Ship the lifecycle surface its OWN containment pin: an AST pin over call_lifecycle_tool with a mutated positive control, and an assertion that spine_open's path never references SPINE/SESSION/run_engine.\n\nCLOSE CRITERIA:\n- test_call_tool_can_only_produce_content_two_ways is UNMODIFIED and green\n- a new AST pin over call_lifecycle_tool refuses any third return shape, with a mutated positive control\n- a check proves spine_open's dispatch path never references SPINE, SESSION or run_engine\n- a full stdio JSON-RPC round trip opens a throwaway work id in a tmp git repo and closes it, with the readiness verdict naming branch, commit and 'ready to PR'\n- .mcp.json is not modified -- a tool is not a server\n- all three coupled sites updated, and tests/test_mcp_adoption.py + tests/test_crew_launcher.py green\n\nEvery guard needs a VIOLATING case and an INNOCENT case in the tests/test_mcp_adoption.py::_cli_only_verb_violations house style -- a test that exercises only the happy path measures the mechanism, not the boundary. Attach the returned IMPLEMENTER_RESULT with --field status=complete.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "the prior gate is integrated (or this is the first gate)",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "implementer-result",
+      "match": {
+       "status": "complete"
+      }
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "checklist_engine.py's on-disk format is NOT changed",
+    "validate_spine.py is NOT changed",
+    "settings.json, .mcp.json and docs/agents/* are untouched",
+    "skills/** is untouched -- a different crew owns it; float it, never take it",
+    "never run scripts/install_constellation.py",
+    "no merge and no push to main",
+    "stage by name; never git add -A and never a bare dot",
+    "never two crews in one worktree",
+    "close never opens a PR and never removes a worktree"
+   ],
+   "anchors": {
+    "structural": [
+     "struct:spine-lifecycle — scripts/spine_lifecycle.py, module — the seam this epic places",
+     "struct:mcp-door — scripts/mcp_spine_server.py, module — the pass-through door, extended not rewritten",
+     "struct:generator — scripts/generate_spine.py, module — the spec compiler C2 shipped"
+    ],
+    "capability": [
+     "capability:open-work — one call creates branch, worktree, work area and spine",
+     "capability:close-work — the terminal advance archives and reports readiness",
+     "capability:declared-dispatch — the generator emits parent and model so they cannot be forgotten"
+    ],
+    "constraint": [
+     "checklist_engine.py's on-disk format is NOT changed",
+     "validate_spine.py is NOT changed",
+     "settings.json, .mcp.json and docs/agents/* are untouched",
+     "skills/** is untouched -- a different crew owns it; float it, never take it",
+     "never run scripts/install_constellation.py",
+     "no merge and no push to main",
+     "stage by name; never git add -A and never a bare dot",
+     "never two crews in one worktree",
+     "close never opens a PR and never removes a worktree"
+    ],
+    "decision": [
+     "decision:lifecycle-module — open and close live in scripts/spine_lifecycle.py, not spread across init_work_area.py @grade: settled/measured · leans g1,g2,g3 · the smallest-diff candidate argued for this structure in its own hurt section",
+     "decision:origin-in-spine — the worktree record is a top-level origin block on the spine @grade: settled/measured · leans g1,g2 · settle: an unknown top-level key survived a full engine drive",
+     "decision:two-tools — spine_open and spine_close are separate tools, never one action switch @grade: guess · leans g3 · settle: g3 shipping it against the real pin",
+     "decision:no-cli-adapter — no shell CLI ships; the standing ruling is that agents must not know about the CLI @grade: settled/human · leans g1,g2,g3",
+     "decision:archive-date-prefix — .agent-work/archive/<YYYY-MM-DD>-<work-id flattened>/ @grade: settled/measured · leans g2 · 39 of 41 shipped archive entries use it",
+     "decision:dispatch-is-checked-data — a command-kind postcondition reads crew-runs.json @grade: guess · leans g4 · settle: g4 shipping the VIOLATING wrong-parent fixture"
+    ],
+    "evidence": [
+     "claim:suite-green — 2824 passed, 3 skipped, 1121 subtests on 293b7721",
+     "claim:sweep-23 — validate_spine.py --sweep reports exactly 23 fault lines"
+    ],
+    "confidence_flags": [
+     "the repo has NO Cartographer packet map (docs/architecture absent, map/ids.jsonl empty); this run oriented DEGRADED and every structural claim above is a re-runnable measurement recorded in MISSION_FRAME.md rather than a map anchor -- verify, never trust"
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g3-review": {
+   "id": "g3-review",
+   "title": "the door — spine_open and spine_close: review",
+   "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a constellation-reviewer crew through scripts/run_crew.py with --parent naming THIS Commander session and an explicit --model sonnet. CARRY THE INHERITED REVIEW STANDARD VERBATIM INTO THE HANDOFF: C2's branch was reviewed five times; the first four each ran real commands, each answered its own questions correctly, and each missed something different -- a field that was never quoted (invisible because ABSENT), a stale session id on nine of nine gates (invisible because UBIQUITOUS), that same id written into a review's own evidence line as proof of completeness, and a divergence one reviewer saw, described accurately, then scoped away. A review establishes that a mechanism OPERATES and does not ask whether the VALUE IT CARRIES is right. So for every check: ask BOTH questions -- does this mechanism work, and is the value it carries correct? Treat your own green results as questions. Re-run every pasted command yourself; a claim you cannot reproduce is a defect, not an accepted fact.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "IMPLEMENTER_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "REVIEW_RESULT returned",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result"
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "checklist_engine.py's on-disk format is NOT changed",
+    "validate_spine.py is NOT changed",
+    "settings.json, .mcp.json and docs/agents/* are untouched",
+    "skills/** is untouched -- a different crew owns it; float it, never take it",
+    "never run scripts/install_constellation.py",
+    "no merge and no push to main",
+    "stage by name; never git add -A and never a bare dot",
+    "never two crews in one worktree",
+    "close never opens a PR and never removes a worktree"
+   ],
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g3-integrate": {
+   "id": "g3-integrate",
+   "title": "the door — spine_open and spine_close: integrate",
+   "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's claimed side-effects against the world yourself -- re-run the verification commands, confirm the IMPLEMENTER_RESULT is fresh via scripts/run_crew.py --verify-result, and confirm the postconditions pass in your hands -- then advance. BLOCK: return the implementer for rework, or raise a blocker. Harvest the result's Workflow Feedback into the run's lesson pool and log out-of-scope finds as triage candidates. Commit this gate.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "REVIEW_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "the door — spine_open and spine_close: the gate's own tests collect at least 8 and pass",
+     "check": {
+      "kind": "command",
+      "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 test $(env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q -k \"LifecycleDoor or LifecycleChokePoint or IdentityBindingPinTests\" --collect-only tests/test_mcp_lifecycle.py tests/test_mcp_identity.py 2>/dev/null | grep -c '::') -ge 8 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q -k \"LifecycleDoor or LifecycleChokePoint or IdentityBindingPinTests\" tests/test_mcp_lifecycle.py tests/test_mcp_identity.py"
+     },
+     "satisfied": false,
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     }
+    },
+    {
+     "id": "c2",
+     "statement": "reviewer verdict is APPROVE",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result",
+      "match": {
+       "verdict": "APPROVE"
+      }
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c3",
+     "statement": "the full suite is green at this gate boundary",
+     "check": {
+      "kind": "command",
+      "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+     },
+     "satisfied": false,
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     }
+    },
+    {
+     "id": "c4",
+     "statement": "no shipped template moved: the corpus sweep still reports exactly 23 fault lines",
+     "check": {
+      "kind": "command",
+      "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && test $(python scripts/validate_spine.py --sweep --root . 2>&1 | grep -cE '^\\s+\\[') -eq 23"
+     },
+     "satisfied": false,
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     }
+    }
+   ],
+   "constraints": [
+    "checklist_engine.py's on-disk format is NOT changed",
+    "validate_spine.py is NOT changed",
+    "settings.json, .mcp.json and docs/agents/* are untouched",
+    "skills/** is untouched -- a different crew owns it; float it, never take it",
+    "never run scripts/install_constellation.py",
+    "no merge and no push to main",
+    "stage by name; never git add -A and never a bare dot",
+    "never two crews in one worktree",
+    "close never opens a PR and never removes a worktree"
+   ],
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g4-implement": {
+   "id": "g4-implement",
+   "title": "the dispatch is emitted, not remembered: implement",
+   "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for g4 and dispatch a constellation-implementer crew through scripts/run_crew.py with --parent naming THIS Commander session (never the Admiral) and an explicit --model sonnet. TASK: Extend scripts/generate_spine.py with [[gate.dispatch]] per LIFECYCLE_CONTRACT.md section 5: role and model required, parent filled from the spec's top-level parent (never declared per entry). Three new spec-shape faults refused before any probe: spec-dispatch-missing-field, spec-dispatch-unresolved-parent, and spec-dispatch-undeclared (a gate whose imperative names any dispatch marker -- run_crew.py, constellation-implementer, constellation-reviewer -- but declares no dispatch). Be honest in the fault text and the DESIGN_NOTE about what this does: detection is TEXTUAL, so an imperative phrased with none of the markers stays invisible. It NARROWS the hole, it does not close it, and that is the direct answer to the launch order's own open question. The compiler renders directives.dispatch AND injects one command-kind postcondition per entry reading crew-runs.json, refusing advance unless a non-abandoned entry for that gate and role carries the declared parent and model. command-kind, never artifact -- DESIGN_NOTE.md section 6's correction records that record/consolidate never evaluate artifact postconditions on a survey item. The two shipped specs declare no dispatch, so the sweep must still report exactly 23.\n\nCLOSE CRITERIA:\n- a declared dispatch missing model, and one missing role, are each refused by fault name\n- a dispatch declared on a spec with no top-level parent is refused rather than emitting 'unknown'\n- a gate whose imperative names run_crew.py with no declared dispatch is refused\n- a registry entry naming the WRONG parent fails the injected postcondition -- the exact defect the launch order names, reproduced as a VIOLATING fixture\n- an abandoned bad attempt does not block (ACCEPTED_FALSE_ALARM, pinned so a naive checker's false alarm cannot come back)\n- a gate with no [[gate.dispatch]] gets no postcondition and no fault (INNOCENT)\n\nEvery guard needs a VIOLATING case and an INNOCENT case in the tests/test_mcp_adoption.py::_cli_only_verb_violations house style -- a test that exercises only the happy path measures the mechanism, not the boundary. Attach the returned IMPLEMENTER_RESULT with --field status=complete.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "the prior gate is integrated (or this is the first gate)",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "implementer-result",
+      "match": {
+       "status": "complete"
+      }
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "checklist_engine.py's on-disk format is NOT changed",
+    "validate_spine.py is NOT changed",
+    "settings.json, .mcp.json and docs/agents/* are untouched",
+    "skills/** is untouched -- a different crew owns it; float it, never take it",
+    "never run scripts/install_constellation.py",
+    "no merge and no push to main",
+    "stage by name; never git add -A and never a bare dot",
+    "never two crews in one worktree",
+    "close never opens a PR and never removes a worktree"
+   ],
+   "anchors": {
+    "structural": [
+     "struct:spine-lifecycle — scripts/spine_lifecycle.py, module — the seam this epic places",
+     "struct:mcp-door — scripts/mcp_spine_server.py, module — the pass-through door, extended not rewritten",
+     "struct:generator — scripts/generate_spine.py, module — the spec compiler C2 shipped"
+    ],
+    "capability": [
+     "capability:open-work — one call creates branch, worktree, work area and spine",
+     "capability:close-work — the terminal advance archives and reports readiness",
+     "capability:declared-dispatch — the generator emits parent and model so they cannot be forgotten"
+    ],
+    "constraint": [
+     "checklist_engine.py's on-disk format is NOT changed",
+     "validate_spine.py is NOT changed",
+     "settings.json, .mcp.json and docs/agents/* are untouched",
+     "skills/** is untouched -- a different crew owns it; float it, never take it",
+     "never run scripts/install_constellation.py",
+     "no merge and no push to main",
+     "stage by name; never git add -A and never a bare dot",
+     "never two crews in one worktree",
+     "close never opens a PR and never removes a worktree"
+    ],
+    "decision": [
+     "decision:lifecycle-module — open and close live in scripts/spine_lifecycle.py, not spread across init_work_area.py @grade: settled/measured · leans g1,g2,g3 · the smallest-diff candidate argued for this structure in its own hurt section",
+     "decision:origin-in-spine — the worktree record is a top-level origin block on the spine @grade: settled/measured · leans g1,g2 · settle: an unknown top-level key survived a full engine drive",
+     "decision:two-tools — spine_open and spine_close are separate tools, never one action switch @grade: guess · leans g3 · settle: g3 shipping it against the real pin",
+     "decision:no-cli-adapter — no shell CLI ships; the standing ruling is that agents must not know about the CLI @grade: settled/human · leans g1,g2,g3",
+     "decision:archive-date-prefix — .agent-work/archive/<YYYY-MM-DD>-<work-id flattened>/ @grade: settled/measured · leans g2 · 39 of 41 shipped archive entries use it",
+     "decision:dispatch-is-checked-data — a command-kind postcondition reads crew-runs.json @grade: guess · leans g4 · settle: g4 shipping the VIOLATING wrong-parent fixture"
+    ],
+    "evidence": [
+     "claim:suite-green — 2824 passed, 3 skipped, 1121 subtests on 293b7721",
+     "claim:sweep-23 — validate_spine.py --sweep reports exactly 23 fault lines"
+    ],
+    "confidence_flags": [
+     "the repo has NO Cartographer packet map (docs/architecture absent, map/ids.jsonl empty); this run oriented DEGRADED and every structural claim above is a re-runnable measurement recorded in MISSION_FRAME.md rather than a map anchor -- verify, never trust"
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g4-review": {
+   "id": "g4-review",
+   "title": "the dispatch is emitted, not remembered: review",
+   "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a constellation-reviewer crew through scripts/run_crew.py with --parent naming THIS Commander session and an explicit --model sonnet. CARRY THE INHERITED REVIEW STANDARD VERBATIM INTO THE HANDOFF: C2's branch was reviewed five times; the first four each ran real commands, each answered its own questions correctly, and each missed something different -- a field that was never quoted (invisible because ABSENT), a stale session id on nine of nine gates (invisible because UBIQUITOUS), that same id written into a review's own evidence line as proof of completeness, and a divergence one reviewer saw, described accurately, then scoped away. A review establishes that a mechanism OPERATES and does not ask whether the VALUE IT CARRIES is right. So for every check: ask BOTH questions -- does this mechanism work, and is the value it carries correct? Treat your own green results as questions. Re-run every pasted command yourself; a claim you cannot reproduce is a defect, not an accepted fact.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "IMPLEMENTER_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "REVIEW_RESULT returned",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result"
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "checklist_engine.py's on-disk format is NOT changed",
+    "validate_spine.py is NOT changed",
+    "settings.json, .mcp.json and docs/agents/* are untouched",
+    "skills/** is untouched -- a different crew owns it; float it, never take it",
+    "never run scripts/install_constellation.py",
+    "no merge and no push to main",
+    "stage by name; never git add -A and never a bare dot",
+    "never two crews in one worktree",
+    "close never opens a PR and never removes a worktree"
+   ],
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g4-integrate": {
+   "id": "g4-integrate",
+   "title": "the dispatch is emitted, not remembered: integrate",
+   "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's claimed side-effects against the world yourself -- re-run the verification commands, confirm the IMPLEMENTER_RESULT is fresh via scripts/run_crew.py --verify-result, and confirm the postconditions pass in your hands -- then advance. BLOCK: return the implementer for rework, or raise a blocker. Harvest the result's Workflow Feedback into the run's lesson pool and log out-of-scope finds as triage candidates. Commit this gate.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "REVIEW_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "the dispatch is emitted, not remembered: the gate's own tests collect at least 10 and pass",
+     "check": {
+      "kind": "command",
+      "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 test $(env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q -k \"DeclaredDispatch or DispatchSpecShape or DispatchRegistry\" --collect-only tests/test_generate_spine.py tests/test_declared_dispatch.py 2>/dev/null | grep -c '::') -ge 10 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q -k \"DeclaredDispatch or DispatchSpecShape or DispatchRegistry\" tests/test_generate_spine.py tests/test_declared_dispatch.py"
+     },
+     "satisfied": false,
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     }
+    },
+    {
+     "id": "c2",
+     "statement": "reviewer verdict is APPROVE",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result",
+      "match": {
+       "verdict": "APPROVE"
+      }
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c3",
+     "statement": "the full suite is green at this gate boundary",
+     "check": {
+      "kind": "command",
+      "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+     },
+     "satisfied": false,
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     }
+    },
+    {
+     "id": "c4",
+     "statement": "no shipped template moved: the corpus sweep still reports exactly 23 fault lines",
+     "check": {
+      "kind": "command",
+      "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && test $(python scripts/validate_spine.py --sweep --root . 2>&1 | grep -cE '^\\s+\\[') -eq 23"
+     },
+     "satisfied": false,
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     }
+    }
+   ],
+   "constraints": [
+    "checklist_engine.py's on-disk format is NOT changed",
+    "validate_spine.py is NOT changed",
+    "settings.json, .mcp.json and docs/agents/* are untouched",
+    "skills/** is untouched -- a different crew owns it; float it, never take it",
+    "never run scripts/install_constellation.py",
+    "no merge and no push to main",
+    "stage by name; never git add -A and never a bare dot",
+    "never two crews in one worktree",
+    "close never opens a PR and never removes a worktree"
+   ],
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g5-implement": {
+   "id": "g5-implement",
+   "title": "the two carried findings: implement",
+   "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for g5 and dispatch a constellation-implementer crew through scripts/run_crew.py with --parent naming THIS Commander session (never the Admiral) and an explicit --model sonnet. TASK: Two carried findings from C2. First: cond.get('not_yet_written') at scripts/generate_spine.py lines 424 and 673 is read with bare truthiness, so a TOML string 'false' is truthy and is misread as a declaration. Per LIFECYCLE_CONTRACT.md section 7 this REFUSES as a new spec-shape fault naming the field and its type -- it does not silently coerce. That is stricter than the launch order's literal 'add the isinstance guard', deliberately: a guard that silently reinterprets a value reproduces the exact silence this generator exists to end. Second: reconcile DESIGN_NOTE.md sections 4, 7 and 10 against shipped behaviour and against section 6's own CORRECTION block -- correct or DELETE every claim the code contradicts, and add the new fault codes from this gate and from g4 to the section 7 vocabulary. A wrong frozen contract is worse than none.\n\nCLOSE CRITERIA:\n- not_yet_written = \"false\" (TOML string) is REFUSED by fault name, not silently treated as absent\n- not_yet_written = \"true\" (TOML string) is REFUSED too -- the guard is about type, not about value\n- not_yet_written = true and = false (real bools) and the field omitted entirely all behave exactly as they do today (three INNOCENT cases)\n- DESIGN_NOTE.md sections 4, 7 and 10 carry no claim the shipped code contradicts, and section 7 lists every fault code the generator can now raise\n\nEvery guard needs a VIOLATING case and an INNOCENT case in the tests/test_mcp_adoption.py::_cli_only_verb_violations house style -- a test that exercises only the happy path measures the mechanism, not the boundary. Attach the returned IMPLEMENTER_RESULT with --field status=complete.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "the prior gate is integrated (or this is the first gate)",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "implementer-result",
+      "match": {
+       "status": "complete"
+      }
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "checklist_engine.py's on-disk format is NOT changed",
+    "validate_spine.py is NOT changed",
+    "settings.json, .mcp.json and docs/agents/* are untouched",
+    "skills/** is untouched -- a different crew owns it; float it, never take it",
+    "never run scripts/install_constellation.py",
+    "no merge and no push to main",
+    "stage by name; never git add -A and never a bare dot",
+    "never two crews in one worktree",
+    "close never opens a PR and never removes a worktree"
+   ],
+   "anchors": {
+    "structural": [
+     "struct:spine-lifecycle — scripts/spine_lifecycle.py, module — the seam this epic places",
+     "struct:mcp-door — scripts/mcp_spine_server.py, module — the pass-through door, extended not rewritten",
+     "struct:generator — scripts/generate_spine.py, module — the spec compiler C2 shipped"
+    ],
+    "capability": [
+     "capability:open-work — one call creates branch, worktree, work area and spine",
+     "capability:close-work — the terminal advance archives and reports readiness",
+     "capability:declared-dispatch — the generator emits parent and model so they cannot be forgotten"
+    ],
+    "constraint": [
+     "checklist_engine.py's on-disk format is NOT changed",
+     "validate_spine.py is NOT changed",
+     "settings.json, .mcp.json and docs/agents/* are untouched",
+     "skills/** is untouched -- a different crew owns it; float it, never take it",
+     "never run scripts/install_constellation.py",
+     "no merge and no push to main",
+     "stage by name; never git add -A and never a bare dot",
+     "never two crews in one worktree",
+     "close never opens a PR and never removes a worktree"
+    ],
+    "decision": [
+     "decision:lifecycle-module — open and close live in scripts/spine_lifecycle.py, not spread across init_work_area.py @grade: settled/measured · leans g1,g2,g3 · the smallest-diff candidate argued for this structure in its own hurt section",
+     "decision:origin-in-spine — the worktree record is a top-level origin block on the spine @grade: settled/measured · leans g1,g2 · settle: an unknown top-level key survived a full engine drive",
+     "decision:two-tools — spine_open and spine_close are separate tools, never one action switch @grade: guess · leans g3 · settle: g3 shipping it against the real pin",
+     "decision:no-cli-adapter — no shell CLI ships; the standing ruling is that agents must not know about the CLI @grade: settled/human · leans g1,g2,g3",
+     "decision:archive-date-prefix — .agent-work/archive/<YYYY-MM-DD>-<work-id flattened>/ @grade: settled/measured · leans g2 · 39 of 41 shipped archive entries use it",
+     "decision:dispatch-is-checked-data — a command-kind postcondition reads crew-runs.json @grade: guess · leans g4 · settle: g4 shipping the VIOLATING wrong-parent fixture"
+    ],
+    "evidence": [
+     "claim:suite-green — 2824 passed, 3 skipped, 1121 subtests on 293b7721",
+     "claim:sweep-23 — validate_spine.py --sweep reports exactly 23 fault lines"
+    ],
+    "confidence_flags": [
+     "the repo has NO Cartographer packet map (docs/architecture absent, map/ids.jsonl empty); this run oriented DEGRADED and every structural claim above is a re-runnable measurement recorded in MISSION_FRAME.md rather than a map anchor -- verify, never trust"
+    ]
+   },
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g5-review": {
+   "id": "g5-review",
+   "title": "the two carried findings: review",
+   "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a constellation-reviewer crew through scripts/run_crew.py with --parent naming THIS Commander session and an explicit --model sonnet. CARRY THE INHERITED REVIEW STANDARD VERBATIM INTO THE HANDOFF: C2's branch was reviewed five times; the first four each ran real commands, each answered its own questions correctly, and each missed something different -- a field that was never quoted (invisible because ABSENT), a stale session id on nine of nine gates (invisible because UBIQUITOUS), that same id written into a review's own evidence line as proof of completeness, and a divergence one reviewer saw, described accurately, then scoped away. A review establishes that a mechanism OPERATES and does not ask whether the VALUE IT CARRIES is right. So for every check: ask BOTH questions -- does this mechanism work, and is the value it carries correct? Treat your own green results as questions. Re-run every pasted command yourself; a claim you cannot reproduce is a defect, not an accepted fact.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "IMPLEMENTER_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "REVIEW_RESULT returned",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result"
+     },
+     "satisfied": false
+    }
+   ],
+   "constraints": [
+    "checklist_engine.py's on-disk format is NOT changed",
+    "validate_spine.py is NOT changed",
+    "settings.json, .mcp.json and docs/agents/* are untouched",
+    "skills/** is untouched -- a different crew owns it; float it, never take it",
+    "never run scripts/install_constellation.py",
+    "no merge and no push to main",
+    "stage by name; never git add -A and never a bare dot",
+    "never two crews in one worktree",
+    "close never opens a PR and never removes a worktree"
+   ],
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  },
+  "g5-integrate": {
+   "id": "g5-integrate",
+   "title": "the two carried findings: integrate",
+   "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's claimed side-effects against the world yourself -- re-run the verification commands, confirm the IMPLEMENTER_RESULT is fresh via scripts/run_crew.py --verify-result, and confirm the postconditions pass in your hands -- then advance. BLOCK: return the implementer for rework, or raise a blocker. Harvest the result's Workflow Feedback into the run's lesson pool and log out-of-scope finds as triage candidates. Commit this gate.",
+   "preconditions": [
+    {
+     "id": "p1",
+     "statement": "REVIEW_RESULT received for this gate",
+     "check": null,
+     "satisfied": false
+    }
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "the two carried findings: the gate's own tests collect at least 5 and pass",
+     "check": {
+      "kind": "command",
+      "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 test $(env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q -k \"NotYetWrittenType or DesignNoteReconciled\" --collect-only tests/test_generate_spine.py 2>/dev/null | grep -c '::') -ge 5 && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q -k \"NotYetWrittenType or DesignNoteReconciled\" tests/test_generate_spine.py"
+     },
+     "satisfied": false,
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     }
+    },
+    {
+     "id": "c2",
+     "statement": "reviewer verdict is APPROVE",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "review-result",
+      "match": {
+       "verdict": "APPROVE"
+      }
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c3",
+     "statement": "the full suite is green at this gate boundary",
+     "check": {
+      "kind": "command",
+      "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+     },
+     "satisfied": false,
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     }
+    },
+    {
+     "id": "c4",
+     "statement": "no shipped template moved: the corpus sweep still reports exactly 23 fault lines",
+     "check": {
+      "kind": "command",
+      "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && test $(python scripts/validate_spine.py --sweep --root . 2>&1 | grep -cE '^\\s+\\[') -eq 23"
+     },
+     "satisfied": false,
+     "override_policy": {
+      "allowed": true,
+      "authority": "human",
+      "reason_required": true
+     }
+    }
+   ],
+   "constraints": [
+    "checklist_engine.py's on-disk format is NOT changed",
+    "validate_spine.py is NOT changed",
+    "settings.json, .mcp.json and docs/agents/* are untouched",
+    "skills/** is untouched -- a different crew owns it; float it, never take it",
+    "never run scripts/install_constellation.py",
+    "no merge and no push to main",
+    "stage by name; never git add -A and never a bare dot",
+    "never two crews in one worktree",
+    "close never opens a PR and never removes a worktree"
+   ],
+   "directives": null,
+   "child_checklist": null,
+   "status": "pending",
+   "status_detail": {},
+   "result": null,
+   "finding": null,
+   "evidence": [],
+   "rework_count": 0
+  }
+ },
+ "consolidation": null,
+ "triage_candidates": [],
+ "blockers": []
+}

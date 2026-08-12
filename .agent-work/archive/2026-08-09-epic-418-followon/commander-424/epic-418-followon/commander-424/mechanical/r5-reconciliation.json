@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r5-reconciliation",
+  "mechanical": {
+    "run": "epic-418-followon/commander-424",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r5-reconciliation",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon/commander-424-r5-reconciliation@6d506d224f6cecdbf3429c8172013a84ff704b8b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon/commander-424",
+    "generated_at": "2026-08-10T00:24:35Z"
+  }
+}

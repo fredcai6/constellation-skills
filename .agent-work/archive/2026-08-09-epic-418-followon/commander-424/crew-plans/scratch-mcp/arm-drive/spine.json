@@ -1,0 +1,257 @@
+{
+  "work_id": "scratch-mcp-424",
+  "type": "gated",
+  "config": {
+    "rework_cap": 99
+  },
+  "items": [
+    "g1",
+    "g2",
+    "g3",
+    "g4"
+  ],
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "tasks": {
+    "g1": {
+      "id": "g1",
+      "title": "Set up the work area",
+      "imperative": "Create /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/arm-drive/workspace/notes.txt with one line, then confirm you understand this scratch spine's four gates.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "notes.txt exists",
+          "check": {
+            "kind": "command",
+            "command": "test -f /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/arm-drive/workspace/notes.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-2"
+        },
+        {
+          "id": "c2",
+          "statement": "gates understood",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "four gates understood: setup, decision, waivable check, closeout"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/arm-drive/workspace/notes.txt",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/arm-drive/workspace/notes.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2": {
+      "id": "g2",
+      "title": "A human-decision checkpoint",
+      "imperative": "Record the principal's decision on whether to proceed, as a user-decision artifact.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "a user-decision artifact is attached",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "proceed",
+            "by": "human"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3": {
+      "id": "g3",
+      "title": "A check the principal accepts as non-blocking",
+      "imperative": "Normally requires /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/arm-drive/workspace/optional_report.txt to exist; the principal has decided this check is non-blocking for this run.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "optional_report.txt exists",
+          "check": {
+            "kind": "command",
+            "command": "test -f /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/arm-drive/workspace/optional_report.txt"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-1",
+          "waived": {
+            "authority": "human",
+            "reason": "principal accepts this check as non-blocking for this scratch run",
+            "evidence": "e-g3-1",
+            "forced": false
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-1",
+          "type": "waiver",
+          "payload": {
+            "cond": "c1",
+            "authority": "human",
+            "reason": "principal accepts this check as non-blocking for this scratch run",
+            "forced": false
+          },
+          "produced_by": "human",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4": {
+      "id": "g4",
+      "title": "Close out the run",
+      "imperative": "Write /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/arm-drive/workspace/SUMMARY.md summarizing the run in two or three sentences.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "SUMMARY.md exists",
+          "check": {
+            "kind": "command",
+            "command": "test -f /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/arm-drive/workspace/SUMMARY.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-1"
+        },
+        {
+          "id": "c2",
+          "statement": "summary honestly describes the run",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "summary read back, honestly describes the run"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "blocker": "waiting on a fabricated dependency to prove spine_halt",
+        "authority_needed": "human",
+        "next_action": "",
+        "resume_reason": "fabricated dependency resolved"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/arm-drive/workspace/SUMMARY.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "scratch-drive",
+    "status": "released",
+    "claimed_at": "2026-08-09T16:58:50.087812+00:00",
+    "last_heartbeat": "2026-08-09T16:58:50.230573+00:00",
+    "claimed_by": "scratch-driver",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T16:58:50.233203+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "g1",
+      "why": "workspace set up, notes.txt written, gates understood",
+      "mechanical": false,
+      "ts": "2026-08-09T16:58:50.159011+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g2",
+      "why": "principal decision attached: proceed",
+      "mechanical": false,
+      "ts": "2026-08-09T16:58:50.182810+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g3",
+      "why": "check waived by the principal; optional_report.txt intentionally absent",
+      "mechanical": false,
+      "ts": "2026-08-09T16:58:50.205607+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g4",
+      "why": "closeout summary written and verified",
+      "mechanical": false,
+      "ts": "2026-08-09T16:58:50.230568+00:00"
+    }
+  ]
+}
