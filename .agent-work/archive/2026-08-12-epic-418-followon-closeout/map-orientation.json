@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "work_id": "epic-418-followon",
+  "root": "/home/tommy/projects/constellation-skills",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "scripts/mcp_spine_server.py",
+      "content_hash": "388661c0fef6ffff20462cd1fc43598690192ab8caf56602fe6e8e8c718caec6",
+      "source": "agent-declared"
+    },
+    {
+      "path": "scripts/checklist_engine.py",
+      "content_hash": "a5bd6a601415e349cebed845c5c4ec2968c66bf3366e09b9a3f7fd93681ad984",
+      "source": "agent-declared"
+    },
+    {
+      "path": "scripts/spine_lifecycle.py",
+      "content_hash": "1bb01b04b2cb9f840cd9e1fc883d009c441a340764a8e05552602f80ca33c132",
+      "source": "agent-declared"
+    },
+    {
+      "path": "scripts/run_crew.py",
+      "content_hash": "a2d1b32201c7e063b718c9ddb3a5b258c3a784c510317c99a2cabfd810f61c89",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "The MCP door's eleven tools and the eighteen engine verbs they cover have no packet in map/; map/ids.jsonl is empty and docs/architecture/ does not exist in this repo.",
+    "The work lifecycle added in wave 7 (spine_open, spine_close, spine_lifecycle.py) is unmapped for the same reason."
+  ],
+  "escalation": "Reported to the human at this epic's closeout: this repo carries no architecture packet map, so a cartographer reconcile has nothing to reconcile against. Filing a map is out of this epic's scope and is the human's call.",
+  "emitted_at": "2026-08-12T15:00:39.578394+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

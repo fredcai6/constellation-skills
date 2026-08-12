@@ -1,66 +1,63 @@
 # Crash-resume state note — epic-418-followon (Admiral)
 
-## WHERE THE RUN IS (rewritten 2026-08-12 at the refresh handoff)
+## WHERE THE RUN IS
 
-- **step:** `closeout` **[pending]**, refresh requested and recorded on the spine as `e-closeout-1`.
-  `execute` is **complete**. The engine refused `start closeout` at 23% context and asked for a fresh
-  agent to begin it. Nothing was routed around that refusal.
-- **next command:** relaunch a fresh Admiral into this same spine
-  (`.agent-work/epic-418-followon/spine.json`) and cold-start it from `current` alone. Re-claim the
-  lease with the same session id — it is idempotent. Then `start closeout` and work the list below.
-- **lease:** `717403d3-70be-436f-bc06-ce9ac3e34e05`, **still held**, released last and only last.
-- **main:** green at the tip. **2933 passed, 4 skipped, 1121 subtests.** Template sweep **23 fault
-  lines across 8 files**.
+**Closed.** `closeout` advanced, the spine is terminal, the lease is released. Nothing here needs
+resuming. This file is kept as the run's own record; the archived copy is under
+`.agent-work/archive/2026-08-12-epic-418-followon-closeout/`.
 
-## The one thing that will bite the next agent immediately
+- **main:** green at the tip. **2933 passed, 4 skipped, 1121 subtests**, measured in a detached
+  foreign checkout with `SPINE_FILE`, `SPINE_SESSION` and `SPINE_ENGINE` unset.
+- **worktrees:** only the main checkout.
+- **episodes:** 21 at `episodes/active/epic-418-followon-001..021.md`.
+- **summary:** `.agent-work/epic-418-followon/EPIC_SUMMARY.md`.
 
-**This session's MCP door was bound to a wave-1 scratch demo spine, not to this epic's spine.** The
-Admiral drove its own closeout through the engine directly because the door pointed elsewhere — the
-exact defect this epic exists to remove, landing on the Admiral at its own closeout. Check
-`spine_status` before assuming the door is yours; if it names someone else's gates, the dispatch did
-not bind `SPINE_FILE`. This is owed as an episode and is not yet written.
+## What this epic did
 
-## Closeout, in order, with what is already true
-
-1. **Episodes (c1, c2).** `.agent-work/epic-418-followon/episode-delta.json` holds **14 ready `create`
-   ops**, dry-run clean, covering the epic through wave 6. **Not yet applied.** Add the ones this
-   session produced before applying: the Admiral's own door misbinding above; C3 clearing its own
-   block and taking two forbidden outward-facing acts; cold review refusing a merge that five
-   APPROVEs had passed; `close_work` failing on its own first real use; the crew-inherits-the-
-   dispatcher's-lease measurement; and R0 implementing before it reproduced and saying so.
-   Apply with `apply_episode_delta.py --delta ... --store-root episodes`, then
-   `verify_episode_captured.py epic-418-followon --store-root episodes --phase feedback`.
-   **Never hand-edit anything under `episodes/`.** C3's own 8 episodes are already committed there.
-2. **Architecture reconcile (c3).** This repo has **no packet map**: `docs/architecture/` is absent
-   and `map/ids.jsonl` is empty. C3 measured that and orients degraded because of it. A reasoned
-   no-op is the compliant answer here — record why rather than blocking on an absent map.
-3. **Dogfood feedback sweep.** This epic ran against this repo itself, so run a fresh
-   `collect_feedback.py` over the roots in `docs/DEBT_SWEEP_CADENCE.md`.
-4. **Hygiene (c4).** One worktree remains: `/home/tommy/projects/constellation-skills-wt/c3-lifecycle`
-   on branch `epic-559/c3-lifecycle`, merged. **Harvest its `CONSTELLATION_FEEDBACK.md` BEFORE
-   `git worktree remove`** — look in both the worktree root and
-   `.agent-work/staged-feedback/<work-id>/`. Then remove, prune, and archive `ADMIRAL_LOG.md` under
-   `.agent-work/archive/`.
-5. **Summary and acceptance (c5).** Present the epic summary and attach the human's decision as
-   evidence.
-6. **Release the lease last.** After closeout's final `advance`, never before it.
-
-## What this epic did, for the summary
-
-Thirteen workstreams merged. All eighteen engine verbs reach through nine door tools; a spine is
-compiled from a typed spec and the generator refuses to write anything the oracle would reject; a
-crew that cannot satisfy a check blocks to its recorded parent; and wave 7 made the work lifecycle
-one thing — one call opens branch, worktree, work area and spine together, the closing advance
-archives that work area spine-last and says ready to PR, and a gate's dispatch is declared in the
-spec and checked against the registry.
+Thirteen workstreams merged. All eighteen engine verbs reach through the MCP door's tools; a spine is
+compiled from a typed spec and the generator refuses to write anything the oracle would reject; a crew
+that cannot satisfy a check blocks to its recorded parent; and wave 7 made the work lifecycle one
+thing — one call opens branch, worktree, work area and spine together, the closing advance archives
+that work area spine-last, and a gate's dispatch is declared in the spec and checked against the
+registry.
 
 **Four of the five done-conditions hold. The fifth does not:** agent-facing instruction still names
 the engine CLI in 11 files — 15 fallback clauses and 8 live `<engine>` tokens, all three orchestrator
-spine templates among them. The human chose to **file it rather than run it**: #559 carries the full
+spine templates among them. The human chose to file it rather than run it: **#559** carries the full
 re-measurement and the guard it needs, and **#565** argues the cause is that the workbench skill
 teaches what the door's tools now carry, which is why the clauses keep growing back.
 
-## Rulings still in force
+## Open, filed, not worked
+
+- **#559** — the CLI still named in agent-facing instruction. Full spec on the issue.
+- **#565** — sunset the workbench skill; its teaching half is what the door now carries.
+- **#566** — `collect_feedback.py` reports a clean sweep when it read no export at all.
+- **#555** — the door does not launch where `python3` is not a command. The fix exists unmerged on
+  `fix/mcp-door-launchable`; main's `.mcp.json` still hardcodes `python3`. Windows is deferred by
+  human decision.
+- **#539** — the interpreter hardcodes, and the installer rewriting the tracked `.mcp.json`.
+- Reported, unfiled: `map/INDEX.md` is regenerated by commit `c66d2ffa` yet `map_orient.py` cannot
+  cite an anchor from it, so the repo orients degraded.
+
+## Branch refs left for the human
+
+`git branch -D` was refused by the harness permission classifier and was not routed around. Four refs
+are stale but safe to delete — their content is verified on main:
+
+```
+epic-418/f-424-mcp-door      epic-418/f2-mcp-adoption
+epic-418/posix-suite-green   epic-559/c2-generate-the-spine
+```
+
+`fix/mcp-door-launchable` is kept deliberately — it carries the #555 fix.
+
+## Untracked work areas left in place for the cleanup pass
+
+`.agent-work/d2-verify/`, `.agent-work/epic-418-followon-latitude/`, `.agent-work/probe-admiral/`, and
+the `.pid` files under `.agent-work/epic-418-followon/`. Left rather than swept: sorting them is the
+step-back the human asked for, not this run's call.
+
+## Rulings in force at close
 
 1. Agents do not know about the CLI; anything reachable only through the CLI is a defect.
 2. Hardcoding this host's interpreter is allowed, provided every hardcode is recorded on **#539**.
@@ -77,6 +74,7 @@ teaches what the door's tools now carry, which is why the clauses keep growing b
 - **Never `git add -A`**, and a pathspec-scoped `-A` is still `-A`. `.agent-work/` is tracked.
 - **Run the suite as `python -m pytest`**, and run it in a **foreign checkout** before believing a
   green number — that is what caught the one defect five reviews missed.
+- **`/usr/bin/python3` has no pytest here.** Use `/home/tommy/.local/share/pyfix-venv/bin/python`.
 - **The installer rewrites the tracked `.mcp.json`.** Revert after. Recorded on #539.
-- **Windows is deferred by human decision.** Main is red on Windows CI since 08-11; the measurement
-  is on the record and no one is working it.
+- **Check `spine_status` before trusting the door.** If it names someone else's gates, the dispatch
+  did not bind `SPINE_FILE`. This landed on the Admiral itself at this closeout.

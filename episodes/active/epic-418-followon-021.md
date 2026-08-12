@@ -1,0 +1,62 @@
+<!-- episode-state: schema=1 id=epic-418-followon-021 status=active -->
+
+# episode: epic-418-followon-021
+
+## Mechanical
+- run: epic-418-followon
+- project: constellation-skills
+- role: admiral
+- spine-step: closeout
+- context-manifest-ref: .agent-work/epic-418-followon/STATE_NOTE.md
+- refusals: 0
+- reopens: 0
+- rework-count: 0
+- failed-commands: 0
+- artifact-ref: .agent-work/debt-sweeps/2026-08-12-epic-418-followon.md
+
+## Agent-supplied
+
+### assertion:epic-418-followon-021.a1
+- kind: task-intent
+- strength: strong
+- lifecycle-standing: active
+- statement: Run the cross-project dogfood feedback sweep at closeout, which docs/DEBT_SWEEP_CADENCE.md exists to keep from going dormant.
+
+### assertion:epic-418-followon-021.a2
+- kind: expected-behavior
+- strength: strong
+- lifecycle-standing: active
+- statement: The sweep reads each consuming repo's .agent-work/CONSTELLATION_FEEDBACK.md and reports what it found.
+
+### assertion:epic-418-followon-021.a3
+- kind: observed-behavior
+- strength: strong
+- lifecycle-standing: active
+- statement: All three roots in the cadence doc are Windows paths (C:/Programs/...) and none exists on this Linux host. collect_feedback.py's collect() skips a root whose export is not a file (scripts/collect_feedback.py:306) and the sweep exited 0 with 'No new or open candidates.' An absent root and an export with nothing new produce the same report.
+
+### assertion:epic-418-followon-021.a4
+- kind: impact-cost
+- strength: strong
+- lifecycle-standing: active
+- statement: The closeout gate for the dogfood sweep can be satisfied by a run that read no file at all, on a host where the sweep cannot work. The mechanism written to keep the feedback loop from going dormant reports green while dormant.
+
+### assertion:epic-418-followon-021.a5
+- kind: workaround
+- strength: strong
+- lifecycle-standing: active
+- statement: Checked each root's existence directly before believing the report, and recorded that this run swept nothing rather than that it found nothing.
+
+## Diagnosis (optional)
+
+### assertion:epic-418-followon-021.d1
+- kind: suspected-cause
+- strength: strong
+- lifecycle-standing: active
+- statement: Skipping a missing export is right when a consuming repo simply has no feedback yet, and the same branch also swallows a root that is not on this machine; the report cannot tell the two apart because collect() does not carry the distinction out.
+
+## Retirement
+- status: active
+- retired-reason: 
+- retired-at: 
+- consolidated-into: 
+- superseded-by: 

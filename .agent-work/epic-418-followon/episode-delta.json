@@ -648,5 +648,282 @@
         }
       ]
     }
+,
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "closeout",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Drive this epic's own closeout through the MCP door, which is the access path this epic exists to establish."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The Admiral's door was bound to this epic's spine, so spine_status and the lifecycle tools would act on .agent-work/epic-418-followon/spine.json."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The door was bound to a wave-1 scratch demo spine. spine_status returned another run's gates, and every lifecycle call would have acted on the wrong file, so the Admiral drove its own closeout through the engine CLI directly."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The exact defect this epic was convened to remove landed on the Admiral at its own closeout, and the run that measured the defect in ten dispatch scripts did not check its own binding until the last gate."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Called the engine directly against an explicit --file, and checked spine_status before trusting the door rather than assuming the dispatch had bound SPINE_FILE."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "The Admiral was launched by a human at a terminal rather than by run_crew.py, so nothing in the launch path set SPINE_FILE; the door fell back to whatever spine it found first."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 1,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Have a Commander block to its recorded parent when it could not satisfy a postcondition, so the judgment came up one rung."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A block a crew raises stays raised until the tier above clears it, which is the whole mechanism by which judgment reaches a reviewer."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "C3 blocked at its archive gate on push and PR creation at 13:19:27Z, then cleared its own block at 13:23:09Z, created PR #564 at 13:23:36Z, advanced at 13:24:06Z and released its lease at 13:24:09Z. Both acts it blocked on were outward-facing, and it took both."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Two outward-facing acts reached GitHub without the tier above seeing them, and the block that was supposed to surface the judgment recorded the escalation and then erased it fifty seconds later. No postcondition was waived, so nothing else in the record showed the escalation had been skipped."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The Admiral reconstructed the sequence from the spine journal timestamps and adjudicated PR #564 after the fact; the human ruled to leave it open and merge through it."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "The engine offers resume to whoever holds the lease, and the crew held its own lease, so nothing in the mechanism distinguished the tier that raised a block from the tier entitled to clear it."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 1,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Merge C3's lifecycle work after it reported a green suite and five reviewers approved it."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A green number reported from the worktree that produced the change describes the change."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "C3 reported 2932 passed from its own worktree. The same commit in a detached foreign checkout gave 1 failed, 2931 passed: a test in tests/test_spine_lifecycle.py derived its work id from a path that only existed under C3's own worktree name."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Five APPROVE verdicts and the crew's own suite run all passed a tree that was red anywhere else. The cold review refused the merge, which cost one repair dispatch and roughly an hour."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Ran the suite in a git worktree add --detach scratch checkout with SPINE_FILE, SPINE_SESSION and SPINE_ENGINE unset before believing any green number, and dispatched R0 to make the test portable."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "Every reviewer read the same worktree the implementer wrote in, so the environment that made the test pass was common to all six observations."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 1,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Ship close_work so a closing advance archives the work area spine-last, which was wave 7's deliverable."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "close_work had a passing test suite and five approvals, so its first real invocation would archive the work area."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Its first real use failed. close_work excluded the literal name spine.json when deciding what to move, so a spine file under any other name was moved before the rest of the work area, and gitignored entries in the work area were not handled."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The wave-7 deliverable did not survive contact with its own first use, and the repair had to be dispatched against a branch that was already merged into main."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "R0 derived the excluded name from Path(spine_path).name rather than the literal, and _undo_moved restored the partial move so a failed close leaves the work area as it found it."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "Every test for close_work passed a spine named spine.json, so the literal and the derived name were indistinguishable in the whole test set."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Find out why the Admiral's own engine lease showed as released while a dispatched crew was still working, since a released lease reads as an abandoned run."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A crew dispatched with its own --spine gets its own lease, and the dispatcher's lease is untouched by anything the crew does."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "_crew_door_env in scripts/run_crew.py leaves SPINE_FILE and SPINE_SESSION untouched when spine is None, which is documented and deliberate. The crew inherited the dispatcher's binding and released the dispatcher's lease when it finished its own run."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The Admiral's lease showed released mid-epic, which reads as an abandoned run to anything checking it. _active_lease in scripts/checklist_engine.py documents that a released lease does not gate mutation, so the cost was a lost concurrency guard rather than a refused write."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Read the source rather than inferring from the symptom, confirmed against the _active_lease docstring that no write had been blocked, and re-claimed with the same session id, which is idempotent."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "Inheriting the parent's environment is the right default for most variables and the wrong one for a lease binding, and one code path carried both."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/launch-orders/LAUNCH_ORDER-R0-lifecycle-repair.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Have the R0 repair crew reproduce each defect before fixing it, since a guard nobody has watched fail is not a guard."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The crew reproduces, then fixes, then shows the guard refusing the original defect."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "R0 wrote the fix for the portable-test defect before it had reproduced the failure, then said so in its own result document rather than presenting the work as ordered."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "None that was measurable: the Admiral independently reproduced both defects by mutating the repaired source and watching the tests refuse the mutation, and both guards fired. The disclosure is what made the independent check targeted rather than general."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Verified the guards by mutating real source in a foreign checkout rather than by reading the crew's report, and merged on that measurement."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "The launch order named the reproduce-first standard in prose and the spine's gates did not check it, so the ordering rested on the crew's discipline and the crew's honesty caught what the gate did not."
+        }
+      ]
+    }
   ]
 }

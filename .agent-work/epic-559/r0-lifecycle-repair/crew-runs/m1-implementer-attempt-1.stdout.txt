@@ -1,0 +1,8 @@
+Working tree clean, all commits pushed. The run is complete.
+
+**Summary:** Both defects blocking C3's merge (PR #564) are fixed, proven RED-before/GREEN-after against unmodified code, and pushed to `epic-559/c3-lifecycle` (no merge to `main`).
+
+1. **Portable worktree test** — `TestWorktreePathForRealWorktree` no longer hardcodes `"epic-559/c3-lifecycle"`; it derives the work id from the checkout's own directory name and skips (naming why/where) outside the `<wt_root>/<work-slug>` convention.
+2. **`close_work` gitignored-entry handling** — classifies each top-level entry (tracked / untracked-not-ignored / untracked-and-ignored) and moves the ignored case on the filesystem directly, since `git add` refuses it outright. A mid-batch failure now rolls back everything already moved; spine-last stays outside that rollback, preserving the retryable-at-original-path property that saved C3's real run.
+
+Verified green from a foreign detached checkout at the fix commit (2933 passed, 4 skipped — the new test correctly skipping there), spine sweep unchanged at 23 fault lines. The already-known third defect (`run_crew.py` registering a self-closing run as `failed`) was reported, not fixed, per the launch order. Full detail, evidence, and workflow feedback are in `.agent-work/epic-559/r0-lifecycle-repair/IMPLEMENTER_RESULT.md`.
