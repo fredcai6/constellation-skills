@@ -1,0 +1,265 @@
+{
+  "schema_version": 1,
+  "decision": "replan",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Wave 6's exit criteria are met. A spec format exists that an author writes without knowing the engine's JSON shape; the generator refuses anything validate_spine would reject and writes nothing when it does; every generated gate carries room for beliefs, concerns and open questions on the substrate the engine already renders; an uncheckable gate must say it is qualitative; a placeholder surviving into an instantiated spine is refused; role specs exist for the implementer and the reviewer and one drove to terminal in a real dispatch; and a cold reviewer independent of the implementer approved the change.",
+    "epic_done": "The epic is not complete, and one definition-of-done item recorded as holding does not hold: agent-facing instruction still names the CLI in 11 shipped files. The generator also sits behind a shell rather than the door, which the human's standing ruling makes a defect by definition.",
+    "good_enough": "The quality boundary held and cost five review rounds on one branch. Four of those rounds ran real commands, answered their own questions correctly, and each missed a different defect. The fifth caught them by treating its own green results as questions rather than as answers."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "E0",
+      "action": "revise_plan",
+      "reason": "A definition-of-done item the plan recorded as holding is refuted by measurement, so the residue becomes a launched workstream (R1, issue #559) rather than a footnote.",
+      "issue_created": true
+    },
+    {
+      "id": "E1",
+      "action": "revise_plan",
+      "reason": "The human's ruling is that a template exists so a property takes effort to remove rather than effort to remember. C3's spec format gains the dispatch, so parent and model are emitted rather than recalled.",
+      "issue_created": true
+    },
+    {
+      "id": "E2",
+      "action": "revise_plan",
+      "reason": "The open and close halves of the lifecycle both land on the single door tool C3 was already forecast to build, which is what makes 'one call opens the spine and its worktree' possible at all.",
+      "issue_created": true
+    },
+    {
+      "id": "E3",
+      "action": "amend_forecast_or_parked",
+      "reason": "Review doctrine under docs/agents/* is a human's call and #558 already carries the question. The wave records the evidence -- absence and ubiquity both read as correct -- and routes it there rather than writing a rule.",
+      "issue_created": false
+    },
+    {
+      "id": "E4",
+      "action": "record_evidence_only",
+      "reason": "Zero untracked exports across 20 worktrees. A mechanized close archives the whole work area it created, which is correct either way, so the measurement is owed as an episode rather than as work.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Bind the lifecycle to the spine. One door call opens a spine and its worktree together; the closing advance archives the work and says ready to PR; a dispatch is emitted from the spec rather than remembered; and no agent-facing instruction names the CLI.",
+    "exit_criteria": [
+      "One call through the door takes a work id and a spec and produces the branch, the worktree, the scaffolded work area, the spine compiled into it, and the crew's environment binding -- refusing and rolling back rather than half-succeeding.",
+      "The spine records the worktree path and branch it was opened at, so close reads it rather than rediscovering it.",
+      "An open against a worktree another crew holds is refused with a legible reason, proven by a control that is accepted once the holder is gone.",
+      "The closing advance on the terminal gate archives the work area to .agent-work/archive/, stages by name, commits, and reports ready to PR -- without opening a PR and without removing the worktree.",
+      "A spec declares the crews a gate dispatches, and the generator emits a dispatch already carrying its parent and its model; one missing either is refused at generation.",
+      "Zero CLI-fallback clauses and zero <engine> tokens survive in shipped skills and templates, with the tests that policed the old text now refusing a reintroduction.",
+      "A cold reviewer independent of each implementer has approved each change."
+    ],
+    "issues": [
+      {
+        "id": "C3",
+        "title": "One door call opens a spine and its worktree; the closing advance archives it and says ready to PR",
+        "desired_outcome": "An agent creates work the same way it drives work: through the door. One call takes a work id and a spec and produces the branch, the worktree, the scaffolded work area, the spine compiled into it, and the environment a crew binds to -- refusing rather than half-succeeding. The spine records the worktree and branch it was opened at. The closing advance on the terminal gate archives the work area, stages by name, commits, and reports ready to PR. And a spec declares the crews a gate dispatches, so the generator emits a dispatch already carrying its parent and its model.",
+        "useful_now": "Nothing in this corpus provisions a worktree -- two after-the-fact verifiers and three paragraphs of prose, and the act typed by hand every time. Because creation is manual, close has to rediscover which worktree, which branch, and where .agent-work landed, which durable_root() answers two different ways depending on whether an epic lease is held. The generator that would remove the guesswork shipped in C2 and is reachable only from a shell, which is the defect the human's own ruling names.",
+        "appetite": "One Commander, owning understand, plan, execute and reconcile across as many implementer and reviewer rounds as the work needs.",
+        "acceptance_or_falsification_evidence": "A spine opened through the door in one call, driven to terminal by a real dispatch, archived by its own closing advance, with the engine still able to read the archived spine afterward. Plus a control at each guard: a half-open that is rolled back, an open refused against a worktree another crew holds, and a spec declaring a dispatch without a parent or a model that is refused at generation and accepted once the field is supplied.",
+        "implementation_latitude": "Whether open and close are one tool or two, how the spine records its worktree, and how a spec names the crews a gate dispatches are all the Commander's to design.",
+        "hard_constraints_no_gos": [
+          "checklist_engine.py's on-disk format is not changed; the door and the generator emit what the engine already reads",
+          "close archives and reports; it never opens a PR and never removes a worktree",
+          "the ordering is fixed: satisfy postconditions, final advance, release the lease, then move the work area with the spine file last, then commit, then report",
+          "stage by name -- .agent-work/ is tracked here and git add -A is forbidden",
+          "settings.json, .mcp.json and docs/agents/* untouched",
+          "skills/** untouched -- the CLI residue is R1's exclusively and a second writer would collide",
+          "no merge or push to main"
+        ],
+        "local_unknowns": [
+          "Whether the spine's worktree record belongs in the spine file the engine reads or beside it",
+          "Whether a generated dispatch can be emitted as data the engine consults or only as an imperative a crew must run"
+        ],
+        "anchors": [
+          "scripts/generate_spine.py",
+          "scripts/mcp_spine_server.py",
+          "scripts/init_work_area.py",
+          "scripts/agent_work_root.py",
+          "scripts/verify_worktree_isolation.py"
+        ],
+        "type": "AFK",
+        "blocks": [
+          "R1"
+        ]
+      },
+      {
+        "id": "R1",
+        "title": "Remove the CLI from agent-facing instruction, including the two clauses that assert a falsehood (#559)",
+        "desired_outcome": "No shipped skill, template or reference tells an agent to run the engine CLI. Zero CLI-fallback clauses and zero <engine> tokens outside history and the tests that police them.",
+        "useful_now": "This is a definition-of-done item recorded as holding that measurement refutes: 15 clauses across 11 files and 9 tokens across 5 files survive on merged main, all three orchestrator spine templates among them. Two of the clauses call the CLI the only path for an in-session dispatched crew, which wave 5 disproved by dispatching one.",
+        "appetite": "One implementer with a plan, plus a cold reviewer.",
+        "acceptance_or_falsification_evidence": "A grep over the shipped corpus returning zero for both patterns, with the two tests that pin the removed text updated to police absence rather than the exact removed string.",
+        "implementation_latitude": "How each imperative reads once its fallback sentence is gone, provided it still names the door tool that does the work.",
+        "hard_constraints_no_gos": [
+          "scripts/ untouched except where a test fixture demands it -- C3 owns that surface this wave",
+          "the two guard tests must end up refusing a reintroduction, not merely tolerating the removal",
+          "history under docs/superpowers/plans/ is left alone -- it records what was true then",
+          "settings.json and .mcp.json untouched",
+          "no merge or push to main"
+        ],
+        "local_unknowns": [
+          "Whether tests/data/store_mentions.approved.txt is regenerated by a script or hand-maintained"
+        ],
+        "anchors": [
+          "skills/admiral/templates/ADMIRAL_SPINE.template.json",
+          "skills/commander/templates/COMMANDER_SPINE.template.json",
+          "skills/explorer/templates/EXPLORER_SPINE.template.json",
+          "skills/commander/references/commander-core.md",
+          "tests/test_mcp_adoption.py",
+          "tests/data/store_mentions.approved.txt"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "555",
+        "title": "Make the door launch where python3 is not a command (carried, unworked)",
+        "desired_outcome": "Carried verbatim; disposition returns to the human.",
+        "useful_now": "It is a launched identity and may not be silently dropped.",
+        "appetite": "No spend authorized this wave.",
+        "acceptance_or_falsification_evidence": "None sought this wave.",
+        "implementation_latitude": "None.",
+        "hard_constraints_no_gos": [
+          "terms preserved byte-identical",
+          "no spend"
+        ],
+        "local_unknowns": [],
+        "anchors": [
+          "scripts/install_constellation.py",
+          ".mcp.json"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "Consolidate the door's tool surface",
+      "why_likely": "The human deferred it explicitly to a consolidation round once the tool set stops changing, and C3 is the last addition planned",
+      "entry_conditions": [
+        "C3 merged"
+      ]
+    },
+    {
+      "outcome": "Wire the lint into the corpus as a gate rather than a report",
+      "why_likely": "The sweep reports 23 fault lines across shipped templates and nothing enforces it; enforcement is only safe once the generator can produce a template that passes",
+      "entry_conditions": [
+        "C3 merged",
+        "the context-gate ruling applied to the shipped templates"
+      ]
+    },
+    {
+      "outcome": "Settle what a high-level review checks that a low-level review does not (#558)",
+      "why_likely": "Four reviews in one wave each established that a mechanism operates and never asked whether the value it carried was right; the pattern is now measured rather than suspected",
+      "entry_conditions": [
+        "a human ruling on doctrine under docs/agents/*"
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether a generated dispatch can be data the engine consults or only an imperative a crew must run",
+      "affects": "Whether 'the dispatch is emitted, not remembered' removes the failure mode or relocates it into a longer imperative",
+      "settle_by": "C3's spec format -- if a declared dispatch still renders as prose a crew must retype, the defect has moved rather than gone",
+      "current_evidence": "Six sub-crews were dispatched with the wrong parent and no model against a launch order that stated both",
+      "next_probe": "Read what C3's dispatch declaration compiles to"
+    },
+    {
+      "unknown": "Whether the spine's own file is the right home for its worktree record",
+      "affects": "Whether close reads the spine or a sidecar, and whether the engine's on-disk format has to grow a field",
+      "settle_by": "C3's design, under the constraint that checklist_engine.py's format is not changed",
+      "current_evidence": "durable_root() already resolves the same path two ways depending on whether an epic lease is held, which is what makes rediscovery hard",
+      "next_probe": "Read where C3 puts it and whether the engine still loads an archived spine"
+    },
+    {
+      "unknown": "Whether the context gate is genuinely qualitative or is the defect the lint was built to find",
+      "affects": "Whether the shipped templates need changing before the lint can be a gate",
+      "settle_by": "The ruling applied to the shipped corpus now that the generator can emit the stated form",
+      "current_evidence": "Nine of twelve templates carry it and none states the choice, so the uniformity is a default rather than a decision",
+      "next_probe": "Apply the ruling to one template and see whether the stated form reads as honest or as ceremony"
+    },
+    {
+      "unknown": "Whether instruction or enforcement drives door adoption",
+      "affects": "How much of the corpus rewrite is load-bearing",
+      "settle_by": "Reading crew call records across dispatches",
+      "current_evidence": "C2's crews drove their spines through the door; the base is still small",
+      "next_probe": "Read the call records of C3's crews"
+    }
+  ],
+  "revised_parked": [
+    "Windows launch, carried as a standing constraint that entry definitions stay configurable rather than as a workstream, with every hardcode recorded on #539",
+    "The duplicated-path work directory, adjacent to #478",
+    "Crew-to-crew messaging as a fail-up path: measured unreachable by descriptive name, and the durable blocked-gate path shipped in E1 instead",
+    "The closeout harvest step: measured to guard a path nobody uses, subsumed by a close that archives the work area it created"
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "560",
+      "action": "keep",
+      "reason": "Untouched and independent"
+    },
+    {
+      "id": "421",
+      "action": "keep",
+      "reason": "Its entry condition holds; it stays a candidate for the wave after this one"
+    },
+    {
+      "id": "consolidate-door-tools",
+      "action": "keep",
+      "reason": "Deferred by the human until the tool set stops changing, which C3 is the last planned change to"
+    },
+    {
+      "id": "wire-lint-as-gate",
+      "action": "keep",
+      "reason": "Still gated on the shipped templates being able to pass the lint"
+    },
+    {
+      "id": "instruction-causes-adoption",
+      "action": "keep",
+      "reason": "Still unsettled; each wave's call records add to the base"
+    },
+    {
+      "id": "windows-launch",
+      "action": "keep",
+      "reason": "Parked as a standing constraint"
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "current_wave.objective",
+      "before": "Stop hand-authoring spines.",
+      "after": "Bind the lifecycle to the spine, and finish removing the CLI from agent-facing instruction.",
+      "reason": "Wave 6 discharged its objective: a generator compiles a typed spec into a spine and refuses to write one the lint would reject. What remains is that creating the work is still three unconnected manual acts, and that the generator is reachable only from a shell."
+    },
+    {
+      "surface": "current_wave.issues",
+      "before": "C2 dispatched to a Commander; #555 carried unworked.",
+      "after": "C2 merged as e4c80f85 and dropped. C3 added as a Commander wave. R1 added for issue #559. #555 carried verbatim for a fourth wave.",
+      "reason": "C3 was already forecast; it grows to carry both halves of the lifecycle and the emitted dispatch. R1 is new, and it exists because a definition-of-done item recorded as holding was measured false."
+    },
+    {
+      "surface": "wave_evidence",
+      "before": "No agent-facing instruction names the engine CLI.",
+      "after": "Retracted. 15 CLI-fallback clauses across 11 shipped files and 9 <engine> tokens across 5 files survive on merged main.",
+      "reason": "Wave 5's cleanup covered the crew-facing skills and left the orchestrator tier untouched, and the claim was carried forward without being remeasured."
+    },
+    {
+      "surface": "wave_evidence",
+      "before": "Independent review rounds catch what a single review misses.",
+      "after": "Qualified. Four consecutive reviews each ran real commands, answered their own questions correctly, and each missed a different defect -- absence and ubiquity both read as correct.",
+      "reason": "The fifth review caught what the four missed, and the difference was method rather than diligence: it treated its own green results as questions. That is the evidence #558 needs."
+    },
+    {
+      "surface": "current_wave.exit_criteria",
+      "before": "Silent on how work is created and closed.",
+      "after": "Six criteria covering one-call open, the recorded worktree, refusal on a held worktree, the archiving close, the emitted dispatch, and zero CLI residue.",
+      "reason": "The human's directive is that worktrees and spines are completely connected and that spine closeout archives and reports ready to PR. These are wave-level design rulings inside delegated latitude, not changes to the epic's fixed boundaries."
+    }
+  ],
+  "wave_review_comment": "## Wave review -- w6-generator\n\nOne issue merged: C2 (e4c80f85), plus G1 (2a22c00a) and C1 (0ab7ecab) landing alongside it. Suite on merged main: 2824 passed, 3 skipped, 1121 subtests. The corpus sweep held at exactly 23 fault lines throughout, which is what proves no shipped template was quietly moved to make the generator's output validate.\n\n**The wave did what it set out to do.** `scripts/generate_spine.py` compiles a typed spec into an engine-native spine and calls `validate_spine.validate` as the literal last statement before writing -- any fault or undecidable entry refuses with nothing written. There is no raw-command field anywhere in the spec format: a check is authored as one of five typed kinds, never as a shell string typed from memory, which is the class of defect the generator exists to close. Role specs exist for the implementer and the reviewer, and one drove to a terminal state in a real dispatch.\n\n**TDD got a supported form rather than a hole.** A pytest check may declare `not_yet_written`, and generation reports `undecidable-pytest-not-yet-written` rather than a fault. The obvious risk is that this becomes a general-purpose way to author a gate that cannot fail, so it was attacked directly: a gate whose only postcondition is such a declaration is refused by `falsifiable-all-null`, with nothing written.\n\n**The finding that changes the plan is about review, not code.** This branch was reviewed five times. The first four each ran real commands and each answered its own questions correctly, and each missed something different: a field that was never quoted, a stale session id present on nine of nine gates, that same id written into a review's own evidence line as proof of completeness, and a divergence that one reviewer saw, described accurately, and then scoped away. The pattern is one sentence: a review establishes that a mechanism operates and does not ask whether the value it carries is right. Absence and ubiquity both read as correct. The fifth review broke it by treating its own green results as questions -- and found nine stale session ids nobody had looked for. That evidence belongs to #558.\n\n**A definition-of-done item recorded as holding does not hold.** Agent-facing instruction still names the engine CLI in 11 shipped files -- 15 fallback clauses and 9 `<engine>` tokens, including all three orchestrator spine templates. Two of those clauses call the CLI the only path for an in-session dispatched crew, which wave 5 disproved by dispatching one. Wave 5's cleanup covered the crew-facing tier and the claim was carried forward without remeasurement. It is now a launched workstream.\n\n**Carried:** #555 unworked and verbatim, for a fourth wave. Windows launch parked as a standing constraint. The closeout harvest step is newly parked: measured across 20 worktrees, not one carries the untracked export it exists to rescue.",
+  "revised_epic_body": "## Current planning truth\n\nAgents drive their spines through the MCP door, and a spine is now compiled from a typed spec rather than written by hand. All eighteen engine verbs are reachable through nine tools. `generate_spine.py` refuses to write anything `validate_spine.py` would reject, calling the oracle as the literal last statement before the write, and its spec format has no raw-command field at all -- a check is a typed kind, never a shell string typed from memory.\n\n**Four of the five definition-of-done items hold. One does not.** Agent-facing instruction still names the engine CLI in 11 shipped files: 15 fallback clauses and 9 `<engine>` tokens, with all three orchestrator spine templates among them. Two of those clauses assert that the CLI is the only path for an in-session dispatched crew, which wave 5 disproved by dispatching one. That is wave 7's R1, against issue #559.\n\n**What the wave found is that creating the work is still three unconnected manual acts.** Nothing in this corpus provisions a worktree -- `grep -rl 'worktree add' scripts/ skills/` returns two after-the-fact verifiers and three paragraphs of prose. The worktree is typed by hand, the spine is created by a second unrelated command, and because creation is manual, close has to rediscover which worktree, which branch, and where `.agent-work/` actually landed -- a question `durable_root()` answers two different ways depending on whether an epic lease is held. The human's directive is that worktrees and spines are completely connected, and that spine closeout archives everything and reports ready to PR.\n\n**Wave 7 is the lifecycle.** One door call takes a work id and a spec and produces the branch, the worktree, the scaffolded work area, the spine compiled into it, and the crew's environment binding -- refusing and rolling back rather than half-succeeding, and refusing outright to reuse a worktree another crew holds. The spine records where it was opened, so close reads it instead of guessing. The closing advance archives the work area with the spine file last, stages by name, commits, and reports ready to PR -- it does not open the PR, does not remove the worktree, and does not decide the work was good.\n\n**And the dispatch itself moves into the spec.** Six sub-crews last wave were dispatched naming the wrong parent and carrying no model, against a launch order that stated both. The human's ruling settles the remedy: a template exists so a property takes effort to remove rather than effort to remember. A spec declares the crews a gate dispatches, and the generator emits a dispatch already carrying its parent and its model.\n\n**Nonbinding forecast.** The consolidation round the human deferred, once C3 stops the tool set changing. Then wiring the lint into the corpus as a gate rather than a report, safe only once the shipped templates can pass it. Then #558 -- what a high-level review checks that a low-level review does not -- which now has five rounds of evidence behind it and needs a human ruling because it is doctrine.",
+  "escalation": null
+}

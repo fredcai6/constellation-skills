@@ -1,5 +1,5 @@
 {
-  "boundary_id": "w6x-generate-the-spine",
-  "launch_id": "w6-generator",
+  "boundary_id": "w7x-lifecycle",
+  "launch_id": "w7-lifecycle",
   "trigger": "wave_boundary"
 }

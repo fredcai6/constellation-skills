@@ -1,40 +1,39 @@
 # Crash-resume state note — epic-418-followon (Admiral)
 
-## ACTIVE DISPATCH (rewritten 2026-08-11 before the C2 Commander launch)
+## ACTIVE DISPATCH (rewritten 2026-08-12 before the C3 Commander launch)
 
-- **step:** execute (in-progress) · MERGED+PUSHED through `0ab7ecab`: M1, M2, M3, N1, A (`9a056105`), B (`90b39e2b`), D1 (`3c0fc7d2`), E1 (`094f573a`), C1 (`0ab7ecab`) · wave `w6-generator` launching **C2 as a Commander**
-- **slug:** `epic-559/c2-generate-the-spine` · branch of the same name off `main`@`0ab7ecab` · worktree `/home/tommy/projects/constellation-skills-wt/c2-generate-the-spine`
-- **next command:** poll `/home/tommy/projects/constellation-skills-wt/c2-generate-the-spine/.agent-work/epic-559/c2-generate-the-spine/COMMANDER_RETURN.md` **inside the turn**; approve the Commander's gate plan when it floats it (`plan.c3` is pre-empted to the Admiral); cold-review its result; merge locally on green
-- **pid:** see `.agent-work/epic-418-followon/c2-generate-the-spine.pid`
-- **expected artifact:** `COMMANDER_RETURN.md` carrying a verdict, the generator's refusal control shown two-sided, and the honest answer to whether the role spec still makes its author type a shell command
+- **step:** execute (in-progress) · MERGED+PUSHED through `293b7721`: M1, M2, M3, N1, A (`9a056105`), B (`90b39e2b`), D1 (`3c0fc7d2`), E1 (`094f573a`), C1 (`0ab7ecab`), G1 (`2a22c00a`), C2 (`e4c80f85`) · wave `w7-lifecycle` launching **C3 as a Commander**
+- **slug:** `epic-559/c3-lifecycle` · branch of the same name off `main`@`293b7721` · worktree `/home/tommy/projects/constellation-skills-wt/c3-lifecycle`
+- **next command:** poll `/home/tommy/projects/constellation-skills-wt/c3-lifecycle/.agent-work/epic-559/c3-lifecycle/COMMANDER_RETURN.md` **inside the turn**; approve its gate plan when it floats (`plan.c3` pre-empted to the Admiral); cold-review; merge locally on green; **then dispatch R1 (#559, CLI residue) off the merged base** — C3 blocks R1 by design so R1 also cleans whatever C3 adds
+- **pid:** see `.agent-work/epic-418-followon/c3-lifecycle.pid`
+- **expected artifact:** `COMMANDER_RETURN.md` carrying a verdict, a spine opened through the door in one call and archived by its own closing advance, and the honest answer to whether a generated dispatch is data the engine consults or prose a crew retypes
 
-## What this dispatch is testing, beyond its own task
+## What C3 is, in one line
 
-**This is the first Commander dispatched in this epic.** Every prior workstream was an
-implementer-with-plan whose spine the Admiral hand-authored. The human asked why, directly, and the
-answer was that right-sizing was correct on each first pass and never revisited as three of the six
-grew into multi-round workstreams.
+One door call opens a spine **and** its worktree; the closing advance archives the work area and says
+"ready to PR"; and the dispatch itself moves into the spec so parent and model are emitted rather
+than remembered. Full spec: `.agent-work/epic-418-followon/context/lifecycle-spec.md`, copied into
+the worktree.
 
-So this run measures two things at once: whether the generator can be built, and whether the
-**Commander path itself works** after wave 5's changes. Two known rough edges, recorded rather than
-hidden:
+## The ordering hazard a successor must not re-derive
 
-- The Commander template's `g1-implement` gate could not fail until B fixed it on 2026-08-11.
-- `child_checklist` is `null` on all four gates of `EXECUTE_PLAN.template.json`, and `--from-child`
-  appears zero times under `skills/commander/`, so the parent-child link is hand-carried rather than
-  engine-verified.
+Closeout moves the work area that contains the spine driving the closeout. Required order, fixed:
+satisfy postconditions → **final `advance`** → **`release`** the lease → move the work area with the
+spine file **last** → commit → report. Release before the closing advance and the journal carries
+entries after the release, failing the terminal provenance check.
 
-If the Commander path fails here, that is a finding of the same weight as the generator itself. Do
-not rescue it by taking the work back in-session — record what broke.
+## Wave 7 is two issues, deliberately sequenced
 
-## The Commander's own spine carries four `<engine>` tokens
+- **C3** (Commander, Opus; crews Sonnet) — the lifecycle. Running now.
+- **R1** (#559, implementer-with-plan, Sonnet) — the CLI residue: **15 `CLI fallback` clauses across
+  11 files and 9 `<engine>` tokens across 5 files** on `293b7721`. Two clauses
+  (`skills/workbench/SKILL.md:37`, `skills/workbench/references/checklist-engine.md:5`) call the CLI
+  *"the only path for an in-session dispatched crew member"*, which wave 5 disproved by dispatching
+  one. **Runs after C3 merges**, so it also cleans anything C3 introduces. `tests/test_mcp_adoption.py`
+  and `tests/data/store_mentions.approved.txt` pin the exact removed text and must move with it.
 
-`.agent-work/epic-559/c2-generate-the-spine/spine.json`, instantiated from
-`COMMANDER_SPINE.template.json`, still has four unresolvable `<engine>` tokens in the `init` and
-`archive` imperatives, instructing the CLI. Wave 5 removed the token from crew-facing skills and left
-it in the orchestrator tier: `COMMANDER_SPINE`, `ADMIRAL_SPINE`, `EXPLORER_SPINE`, and
-`commander-core.md`. The launch order tells the Commander to ignore them and use the door, and names
-fixing them as in-scope-if-it-wants. **A successor must not read those tokens as sanctioned.**
+**A successor must not read the surviving `<engine>` tokens as sanctioned.** C3's own spine carries
+them in its `init` and `archive` imperatives; its launch order tells it to use the door instead.
 
 ## The human's rulings, current as of 2026-08-11
 
