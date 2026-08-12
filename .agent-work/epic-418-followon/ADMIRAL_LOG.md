@@ -3386,3 +3386,21 @@ Entry grammar (one line of date + tag, then the substance):
 - RULING | 2026-08-12 | **R1 runs as an implementer-with-plan dispatched by the Admiral (human's call, 2026-08-12).** The work is one bounded deletion — 15 CLI-fallback clauses, 8 live `<engine>` tokens — plus a guard test that must be seen to fire. A Commander tier would cost more than the work. **Tripwire, so this is not the wave-5 failure repeating:** if R1 needs a second review round, it escalates to a Commander rather than the Admiral hand-authoring a third handoff. The wave-5 defect was not choosing an implementer-with-plan; it was never revisiting that choice as three workstreams grew.
 - STATE | 2026-08-12 | **Fleet: one Commander live (C3), 11 crews under it, nothing dispatched directly by the Admiral.** For the record against the human's question: waves 1-5 were ten implementer-with-plan crews dispatched by the Admiral; wave 6 was C2 as the first Commander; wave 7 is C3 plus R1 as a single deliberate exception with the tripwire above.
 - HOLD | 2026-08-12 | **R1 is held pending the human's go (human, 2026-08-12).** It does not launch on C3's merge. When C3 returns I cold-review it, merge on green, and stop there — presenting the result rather than chaining into the next dispatch. The R1 launch order stays written and ready at `.agent-work/epic-418-followon/launch-orders/LAUNCH_ORDER-R1-cli-residue.md`; nothing is provisioned for it.
+
+- OBSERVATION | 2026-08-12 05:40 | **C3 liveness check on a "nothing is happening" query.** PID 638842
+  up 4h11m; g1–g4 each implemented, reviewed and integrated as commits through `b88f13a4`; 14 crew
+  entries, every one `model=sonnet`. It looked idle because it had just committed g4 and started a
+  full suite run (`pytest -q tests`, 1m in at the time of the check). Suite 2884 → 2920 across g4;
+  corpus sweep unchanged at 23. Gate g5 (the two carried findings) is the last.
+- FINDING | 2026-08-12 05:40 | **C3's engine session shows `status: released` at 11:03Z while the run
+  continues** (`execute.json.engine_session`, last heartbeat 11:02Z, journal's last entry 10:00Z, git
+  commits at 12:37Z). Journal entries written after a release fail the terminal provenance check at
+  `archive`. Not intervened in mid-flight — the engine refuses verbs without a claim, so C3's next
+  engine action should force a re-claim. **Verify at cold review** that the lease covers every
+  journaled action.
+- FINDING | 2026-08-12 05:40 | **C3's `GATE_PLAN.json` is entirely `pending` and has no journal.**
+  All five gates were driven in prose and git, not through the engine. Its crews carry `spine=None`
+  in the registry — none was given a spine of its own, where C2's implementer had
+  `IMPLEMENTER_PLAN.json` plus a journal. The door's `_identity_violation` guard refuses argv that
+  resolves `--file` away from the bound spine, so a headless Commander bound to `execute.json`
+  **cannot** drive a second spine through the door. Candidate root cause; measure at cold review.
