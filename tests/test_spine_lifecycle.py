@@ -1,9 +1,9 @@
 """Tests for scripts/spine_lifecycle.py -- open and close Constellation work in one
 call each.
 
-Frozen contract: .agent-work/epic-559/c3-lifecycle/LIFECYCLE_CONTRACT.md, sections
-2-4. `open_work` and its pure helpers are g1's; `closeout_refusal` and `close_work`
-are g2's.
+Frozen contract: .agent-work/archive/2026-08-12-epic-559-c3-lifecycle/LIFECYCLE_CONTRACT.md,
+sections 2-4 (archived alongside the rest of that work area at closeout). `open_work`
+and its pure helpers are g1's; `closeout_refusal` and `close_work` are g2's.
 
 House style (tests/test_mcp_adoption.py::_cli_only_verb_violations): every guard
 gets a VIOLATING fixture that trips it and an INNOCENT fixture that does not, so a
@@ -120,7 +120,7 @@ def wt_root(tmp_path):
 
 class TestWorktreePathFor:
     def test_nested_work_id_uses_last_segment(self):
-        assert sl.worktree_path_for("epic-559/c3-lifecycle", wt_root="/x/wt") == "/x/wt/c3-lifecycle"
+        assert sl.worktree_path_for("epic-100/sample-slug", wt_root="/x/wt") == "/x/wt/sample-slug"
 
     def test_single_segment_work_id(self):
         assert sl.worktree_path_for("issue-310", wt_root="/x/wt") == "/x/wt/issue-310"
@@ -136,22 +136,38 @@ class TestWorktreePathFor:
 class TestWorktreePathForRealWorktree:
     def test_reproduces_this_runs_real_worktree(self):
         # The ONE test allowed to read this worktree's own real git state --
-        # confirms the default wt_root convention against the live tree
-        # rather than a hardcoded path, so it stays true on any host.
+        # confirms the default wt_root convention against the live tree.
+        # The work id's last segment is DERIVED from this checkout's own
+        # directory name rather than naming one (`worktree_path_for` only
+        # ever looks at that last segment), so this holds from any worktree
+        # created under the convention, not just one specific archived
+        # worktree -- a hardcoded work id passes only from that one checkout
+        # and starts failing everywhere else the moment it is archived away.
+        #
+        # Applies only inside a worktree directly under <primary>-wt/: skips,
+        # and says why, from the primary checkout or a scratch worktree
+        # created elsewhere (e.g. a detached review checkout). It runs and
+        # passes from a worktree following the convention -- this repo's own
+        # <primary>-wt/<slug> checkout is one such worktree.
         primary = Path(vwi.primary_checkout())
         default_wt_root = sl._default_wt_root(primary)
-        got = sl.worktree_path_for("epic-559/c3-lifecycle", wt_root=default_wt_root)
+        if ROOT.parent.resolve() != Path(default_wt_root).resolve():
+            pytest.skip(
+                f"this checkout ({ROOT}) is not directly inside {default_wt_root}; "
+                "only applies to a worktree following the <wt_root>/<work-slug> convention"
+            )
+        got = sl.worktree_path_for(ROOT.name, wt_root=default_wt_root)
         assert Path(got).resolve() == ROOT.resolve()
 
 
 class TestBranchNameFor:
     def test_verbatim(self):
-        assert sl.branch_name_for("epic-559/c3-lifecycle") == "epic-559/c3-lifecycle"
+        assert sl.branch_name_for("epic-100/sample-slug") == "epic-100/sample-slug"
 
 
 class TestArchiveNameFor:
     def test_format(self):
-        assert sl.archive_name_for("epic-559/c3-lifecycle", today="2026-08-12") == "2026-08-12-epic-559-c3-lifecycle"
+        assert sl.archive_name_for("epic-100/sample-slug", today="2026-08-12") == "2026-08-12-epic-100-sample-slug"
 
     def test_today_is_never_read_inside(self):
         import inspect
@@ -542,20 +558,39 @@ def _terminal_spine(**overrides):
     return spine
 
 
-def _make_work_area(repo: Path, work_id: str, spine_name: str, spine: dict) -> dict:
+def _make_work_area(
+    repo: Path, work_id: str, spine_name: str, spine: dict, *, ignored_file: str | None = None,
+) -> dict:
     """Scaffold `.agent-work/<work_id>/` under `repo` with a spine file named
     `spine_name` plus the usual init_work_area.py subdirectories -- one
     (`crew-handoffs/`) holding a real file, the other two (`evidence/`,
     `triage-candidates/`) left genuinely empty, so every close_work test
     exercises BOTH the tracked/untracked-file path and the empty-directory
     path through `_stage_and_move` at once. Nothing here is `git add`ed or
-    committed -- a freshly scaffolded work area routinely isn't either."""
+    committed -- a freshly scaffolded work area routinely isn't either.
+
+    `ignored_file`, when given, adds a top-level entry gitignored via a
+    `.gitignore` COMMITTED at the repo root (never left dangling, so it does
+    not itself show up as an untracked file in a later `git status`) --
+    reproducing the MCP door's `mcp_calls.jsonl` / `mcp_server_started`,
+    which a real work area always carries beside the spine."""
     work_dir = repo / ".agent-work" / work_id
     for sub in ("crew-handoffs", "evidence", "triage-candidates"):
         (work_dir / sub).mkdir(parents=True, exist_ok=True)
     (work_dir / "crew-handoffs" / "note.md").write_text("hello\n", encoding="utf-8", newline="\n")
     spine_path = work_dir / spine_name
     spine_path.write_text(json.dumps(spine), encoding="utf-8", newline="\n")
+    if ignored_file is not None:
+        (repo / ".gitignore").write_text(f"{ignored_file}\n", encoding="utf-8", newline="\n")
+        subprocess.run(
+            ["git", "-C", str(repo), "-c", "user.email=t@t", "-c", "user.name=t",
+             "add", ".gitignore"], check=True, capture_output=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(repo), "-c", "user.email=t@t", "-c", "user.name=t",
+             "commit", "-q", "-m", "add .gitignore"], check=True, capture_output=True,
+        )
+        (work_dir / ignored_file).write_text("ignored content\n", encoding="utf-8", newline="\n")
     return {"work_dir": work_dir, "spine_path": spine_path}
 
 
@@ -732,6 +767,88 @@ class TestCloseWorkInnocentProceeds:
             ["git", "-C", str(repo), "status", "--porcelain"], check=True, capture_output=True, text=True,
         ).stdout
         assert status.strip() == "", f"the move was not fully committed:\n{status}"
+
+
+# --------------------------------------------------------------------------- #
+# close_work -- a real work area always carries a gitignored top-level entry
+# beside the spine (the MCP door's `mcp_calls.jsonl`, `mcp_server_started`).
+# `git add` refuses an untracked path that matches a gitignore rule outright
+# -- this reproduces the closeout defect C3 found by running close_work on
+# its own work area (22 entries moved, then refused, no rollback).
+# --------------------------------------------------------------------------- #
+
+@requires_git
+class TestCloseWorkGitignoredEntry:
+    def test_innocent_gitignored_top_level_file_moves_without_git_add_refusing(self, repo):
+        spine = _terminal_spine()
+        area = _make_work_area(repo, "w1", "spine.json", spine, ignored_file="mcp_calls.jsonl")
+
+        result = sl.close_work(area["spine_path"], root=repo, today="2026-08-12")
+
+        archive_dir = repo / ".agent-work" / "archive" / "2026-08-12-w1"
+        assert (archive_dir / "mcp_calls.jsonl").read_text() == "ignored content\n"
+        assert not (area["work_dir"] / "mcp_calls.jsonl").exists()
+        assert result["message"].endswith("ready to PR.")
+
+        status = subprocess.run(
+            ["git", "-C", str(repo), "status", "--porcelain"], check=True, capture_output=True, text=True,
+        ).stdout
+        assert status.strip() == "", f"the move was not fully committed:\n{status}"
+
+
+# --------------------------------------------------------------------------- #
+# close_work -- a failure partway through the "everything else" batch rolls
+# the whole batch back rather than leaving the work area split (required
+# evidence: criterion matching C3's own incident -- 22 entries moved, then a
+# refusal, no rollback). Forces the failure on the LAST batch entry so the
+# fixture proves entries already moved (including the gitignored one, moved
+# on the filesystem, not through git) are genuinely restored, not merely
+# never touched.
+# --------------------------------------------------------------------------- #
+
+@requires_git
+class TestCloseWorkBatchFailureRollsBack:
+    def test_violating_mid_batch_failure_restores_every_already_moved_entry(self, repo, monkeypatch):
+        spine = _terminal_spine()
+        area = _make_work_area(repo, "w1", "spine.json", spine, ignored_file="mcp_calls.jsonl")
+        before = _snapshot(repo / ".agent-work")
+
+        real_git = sl._git
+        def watching_git(args, *, cwd):
+            # "triage-candidates" sorts last among the batch entries
+            # (crew-handoffs, evidence, mcp_calls.jsonl, triage-candidates)
+            # -- everything else in the batch has already moved by the time
+            # this fires, including the gitignored file (moved on the
+            # filesystem, never reaching `_git` at all).
+            if any("triage-candidates" in str(a) for a in args):
+                raise RuntimeError("simulated failure on the last batch entry")
+            return real_git(args, cwd=cwd)
+        monkeypatch.setattr(sl, "_git", watching_git)
+
+        with pytest.raises(RuntimeError):
+            sl.close_work(area["spine_path"], root=repo, today="2026-08-12")
+
+        # Nothing left in the archive -- the whole batch was undone.
+        archive_root = repo / ".agent-work" / "archive"
+        assert not archive_root.exists() or not any(archive_root.rglob("*"))
+
+        # Every entry, including the gitignored one, is back at its original
+        # path -- byte-for-byte identical to before close_work ran.
+        assert area["spine_path"].is_file()
+        assert (area["work_dir"] / "mcp_calls.jsonl").read_text() == "ignored content\n"
+        assert (area["work_dir"] / "crew-handoffs" / "note.md").is_file()
+        assert (area["work_dir"] / "evidence").is_dir()
+        assert (area["work_dir"] / "triage-candidates").is_dir()
+        assert _snapshot(repo / ".agent-work") == before
+
+        # And nothing was left staged either.
+        status = subprocess.run(
+            ["git", "-C", str(repo), "status", "--porcelain"], check=True, capture_output=True, text=True,
+        ).stdout
+        # Only the untouched work-area entries remain, all untracked -- no
+        # staged renames or adds left dangling from the rolled-back batch.
+        for line in status.splitlines():
+            assert not line.startswith(("A ", "R ", "M ")), f"leftover staged change:\n{status}"
 
 
 # --------------------------------------------------------------------------- #

@@ -1,0 +1,25 @@
+[
+  {
+    "crew_id": "constellation/epic-559/r0-lifecycle-repair/m1/implementer/attempt-1",
+    "work_id": "epic-559/r0-lifecycle-repair",
+    "gate": "m1",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/epic-559/r0-lifecycle-repair/m1/implementer/attempt-1",
+    "backend": "cli",
+    "pid": 1965632,
+    "worktree": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle",
+    "handoff": ".agent-work/epic-559/r0-lifecycle-repair/LAUNCH_ORDER.md",
+    "result": ".agent-work/epic-559/r0-lifecycle-repair/IMPLEMENTER_RESULT.md",
+    "spine": ".agent-work/epic-559/r0-lifecycle-repair/plan.json",
+    "parent": "admiral-epic-418-followon",
+    "stdout": ".agent-work/epic-559/r0-lifecycle-repair/crew-runs/m1-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/epic-559/r0-lifecycle-repair/crew-runs/m1-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-08-12T13:56:50.960150+00:00",
+    "last_heartbeat": "2026-08-12T13:56:50.960150+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "model": "sonnet"
+  }
+]

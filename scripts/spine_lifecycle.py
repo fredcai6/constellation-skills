@@ -33,6 +33,7 @@ from __future__ import annotations
 import contextlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -198,9 +199,20 @@ def _git(args: list[str], *, cwd: Path) -> str:
 
 def _best_effort_git(args: list[str], *, cwd: Path) -> None:
     """Runs a git command and ignores the outcome -- never raises, exit code
-    unchecked. `_rollback`'s only caller: best-effort cleanup must never itself
+    unchecked. Rollback's only caller: best-effort cleanup must never itself
     fail the rollback it is part of."""
     subprocess.run(["git", *args], cwd=str(cwd), capture_output=True, text=True)
+
+
+def _is_ignored(path: Path, *, cwd: Path) -> bool:
+    """Whether `path` itself matches a gitignore rule -- `git check-ignore`,
+    never a hand-maintained pattern list, so this tracks whatever `.gitignore`
+    actually says. Independent of tracked status: a tracked file whose path
+    happens to match a pattern still reads `True` here, which is why callers
+    check `tracked` first -- `git add` never refuses an already-tracked path,
+    ignored-looking or not."""
+    proc = subprocess.run(["git", "check-ignore", "-q", str(path)], cwd=str(cwd), capture_output=True, text=True)
+    return proc.returncode == 0
 
 
 def _rollback(worktree: str, branch: str, root: Path) -> None:
@@ -372,6 +384,28 @@ def close_work(
     moved on the filesystem directly, since there is nothing for git to stage
     either way.
 
+    Every entry is classified first: TRACKED (`git ls-files` already sees it)
+    or UNTRACKED, and if untracked, whether it is itself gitignored (`git
+    check-ignore`). A real work area always carries gitignored top-level
+    entries beside the spine (the MCP door's `mcp_calls.jsonl` and
+    `mcp_server_started`) -- `git add` refuses an untracked path that matches
+    a gitignore rule, so an ignored entry is moved on the filesystem directly,
+    the same as an empty directory. Tracked and untracked-not-ignored entries
+    both go through `git add` (a no-op for the former) then `git mv` (or a
+    filesystem rename if nothing trackable landed under it).
+
+    The "everything else" batch is wrapped: if any of its entries' moves
+    raises, every entry already moved in this batch -- including a
+    gitignored one moved on the filesystem, and any partially-staged git
+    rename -- is restored to its original path before the exception
+    propagates, so a failure mid-batch never leaves the work area split
+    across the original directory and the archive. The spine/journal step
+    is deliberately NOT covered by this rollback: a failure there already
+    leaves a directly resumable state (spine and journal still at their
+    original path, everything else already archived), which a retry finds
+    and continues from -- this is the property that let the real run this
+    defect was found on recover from its own interruption.
+
     The excluded names are DERIVED from `spine_path`'s own basename, never the
     literal strings `"spine.json"`/`"spine.json.journal"` -- a spine opened by
     `open_work` is always named `spine.json`, but this Commander's own driving
@@ -409,25 +443,65 @@ def close_work(
         p.name for p in work_dir.iterdir() if p.name not in (spine_name, journal_name)
     )
 
+    moved: list[tuple[Path, Path, bool]] = []  # (src, dest, via_git)
+
     def _stage_and_move(src: Path, dest: Path) -> None:
         """Move one top-level work-area entry, staged by its own explicit
-        path (never `-A`, never a bare `.`). `git add <src>` first, so
-        content `git mv` has never seen committed (a freshly scaffolded work
-        area routinely holds some) is tracked before the move -- a no-op for
-        content already tracked. If `src` has no trackable content at all (an
-        empty directory), `git add` stages nothing and `git mv` would refuse
-        it outright ("source directory is empty"); there is nothing for git
-        to know about either way, so the entry is moved on the filesystem
-        directly."""
+        path (never `-A`, never a bare `.`). Classified first: an entry that
+        is untracked AND itself gitignored (the MCP door's `mcp_calls.jsonl`,
+        `mcp_server_started`) is moved on the filesystem directly, since `git
+        add` refuses an untracked ignored path outright. Otherwise `git add
+        <src>` first, so content `git mv` has never seen committed (a freshly
+        scaffolded work area routinely holds some) is tracked before the
+        move -- a no-op for content already tracked. If `src` has no
+        trackable content at all (an empty directory), `git add` stages
+        nothing and `git mv` would refuse it outright ("source directory is
+        empty"); there is nothing for git to know about either way, so the
+        entry is moved on the filesystem directly. Every successful move is
+        recorded in `moved` so a later failure can restore it."""
+        tracked = bool(_git(["ls-files", str(src)], cwd=root))
+        if not tracked and _is_ignored(src, cwd=root):
+            shutil.move(str(src), str(dest))
+            moved.append((src, dest, False))
+            return
         _git(["add", str(src)], cwd=root)
-        if _has_any_file(src):
-            _git(["mv", str(src), str(dest)], cwd=root)
-        else:
-            src.rename(dest)
+        try:
+            if _has_any_file(src):
+                _git(["mv", str(src), str(dest)], cwd=root)
+                moved.append((src, dest, True))
+            else:
+                src.rename(dest)
+                moved.append((src, dest, False))
+        except Exception:
+            _best_effort_git(["reset", "--", str(src)], cwd=root)
+            raise
+
+    def _undo_moved() -> None:
+        """Best-effort: restores every entry `moved` recorded, most recent
+        first, so a failure partway through the batch never leaves the work
+        area split across the original directory and the archive."""
+        for src, dest, via_git in reversed(moved):
+            if via_git:
+                _best_effort_git(["mv", str(dest), str(src)], cwd=root)
+            elif dest.exists():
+                shutil.move(str(dest), str(src))
+            _best_effort_git(["reset", "--", str(src)], cwd=root)
 
     archive_dir.mkdir(parents=True)
-    for name in other_entries:
-        _stage_and_move(work_dir / name, archive_dir / name)
+    try:
+        for name in other_entries:
+            _stage_and_move(work_dir / name, archive_dir / name)
+    except Exception:
+        # Restore the batch -- never leave the work area split. The
+        # spine/journal step below is deliberately OUTSIDE this wrapping: a
+        # failure there already leaves a directly resumable state (the spine
+        # and journal still at their original path, everything else already
+        # in the archive) and a retry finds them there -- the property that
+        # saved the real run this defect was found on.
+        _undo_moved()
+        if archive_dir.exists() and not any(archive_dir.iterdir()):
+            archive_dir.rmdir()
+        raise
 
     # Spine and journal, LAST -- so an interruption before this point leaves
     # them findable at their original path for a retry.

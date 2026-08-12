@@ -2,7 +2,12 @@
   "work_id": "epic-559/r0-lifecycle-repair",
   "type": "gated",
   "config_ref": "docs/agents/engine-config.json",
-  "items": ["m0-context", "m1-portable-test", "m2-close-work", "m3-verify"],
+  "items": [
+    "m0-context",
+    "m1-portable-test",
+    "m2-close-work",
+    "m3-verify"
+  ],
   "tasks": {
     "m0-context": {
       "id": "m0-context",
@@ -10,56 +15,289 @@
       "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff at .agent-work/epic-559/r0-lifecycle-repair/LAUNCH_ORDER.md. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Then reproduce BOTH defects before changing anything: run the suite in this worktree and record the count, and read the two named sites. Attest c1.",
       "preconditions": [],
       "postconditions": [
-        {"id": "c1", "statement": "crew context + glossary + handoff loaded; handoff complete", "check": null, "satisfied": false},
-        {"id": "c2", "statement": "both defects reproduced before any change, and their observed behaviour written to BASELINE.md -- the suite count in this worktree, the failure text from a foreign checkout, and what close_work did on a work area carrying a gitignored entry", "check": {"kind": "command", "command": "test -s .agent-work/epic-559/r0-lifecycle-repair/BASELINE.md"}, "satisfied": false}
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, and LAUNCH_ORDER.md. Handoff is complete: task, intent, scope, exclusions, evidence, test mode, stop conditions all present."
+        },
+        {
+          "id": "c2",
+          "statement": "both defects reproduced before any change, and their observed behaviour written to BASELINE.md -- the suite count in this worktree, the failure text from a foreign checkout, and what close_work did on a work area carrying a gitignored entry",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/epic-559/r0-lifecycle-repair/BASELINE.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m0-context-1"
+        }
       ],
-      "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m0-context-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/epic-559/r0-lifecycle-repair/BASELINE.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
     },
     "m1-portable-test": {
       "id": "m1-portable-test",
       "title": "The real-worktree test passes from any checkout",
       "imperative": "Fix tests/test_spine_lifecycle.py::TestWorktreePathForRealWorktree::test_reproduces_this_runs_real_worktree so it no longer depends on running inside a checkout named c3-lifecycle. Keep its INTENT -- confirm the wt_root convention against live git state rather than a hardcoded path. Derive the work id from the checkout under test, or state and enforce the condition under which the test applies. A skip that fires everywhere is not a fix: if you skip, the test must still run and pass somewhere reachable and you must name where. Attest c1 (the precondition) BEFORE start.",
-      "preconditions": [{"id": "p1", "statement": "context loaded and handoff complete", "check": null, "satisfied": false}],
-      "postconditions": [
-        {"id": "c1", "statement": "RED observed: the current test was run from a checkout other than this worktree and seen to fail -- manual attest, recording the failure text", "check": null, "satisfied": false},
-        {"id": "c2", "statement": "the test no longer names a single work id literally", "check": {"kind": "command", "command": "! grep -q 'epic-559/c3-lifecycle' tests/test_spine_lifecycle.py"}, "satisfied": false},
-        {"id": "c3", "statement": "GREEN: the lifecycle test file passes in this worktree", "check": {"kind": "command", "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_spine_lifecycle.py"}, "satisfied": false}
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Context and handoff already loaded and verified in m0-context."
+        }
       ],
-      "constraints": ["stage by name, never git add -A, and a scoped -A is still -A", "do not touch skills/**, .mcp.json, settings.json or docs/agents/*"],
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED observed: the current test was run from a checkout other than this worktree and seen to fail -- manual attest, recording the failure text",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed in BASELINE.md: detached scratch worktree at unmodified HEAD 42df99fd, ran `python -m pytest -q tests/test_spine_lifecycle.py -k TestWorktreePathForRealWorktree`, got: AssertionError: assert PosixPath('/home/tommy/projects/constellation-skills-wt/c3-lifecycle') == PosixPath('/tmp/tmp.Ub0TDwcEld/foreign-checkout'). Confirms the hardcoded work id only passes from the one specific checkout."
+        },
+        {
+          "id": "c2",
+          "statement": "the test no longer names a single work id literally",
+          "check": {
+            "kind": "command",
+            "command": "! grep -q 'epic-559/c3-lifecycle' tests/test_spine_lifecycle.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-portable-test-3"
+        },
+        {
+          "id": "c3",
+          "statement": "GREEN: the lifecycle test file passes in this worktree",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_spine_lifecycle.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-portable-test-4"
+        }
+      ],
+      "constraints": [
+        "stage by name, never git add -A, and a scoped -A is still -A",
+        "do not touch skills/**, .mcp.json, settings.json or docs/agents/*"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-portable-test-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -q 'epic-559/c3-lifecycle' tests/test_spine_lifecycle.py",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-portable-test-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_spine_lifecycle.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-portable-test-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -q 'epic-559/c3-lifecycle' tests/test_spine_lifecycle.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-portable-test-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_spine_lifecycle.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
     },
     "m2-close-work": {
       "id": "m2-close-work",
       "title": "close_work refuses rather than half-succeeding",
       "imperative": "Fix scripts/spine_lifecycle.py close_work so a real work area -- one containing gitignored entries such as the door's mcp_calls.jsonl and mcp_server_started -- moves cleanly, and so any failure restores what it already moved rather than leaving the work area split across two directories. Preserve spine-last: the spine and its journal move after everything else, which is the property that let C3's interrupted run retry. Write a fixture whose work area contains a gitignored file, because a real one always does -- every existing close_work fixture builds its area with open_work, which never produces one. Then mutate the real source and watch your test refuse; record what you mutated and what it said.",
-      "preconditions": [{"id": "p1", "statement": "m1 complete", "check": null, "satisfied": false}],
-      "postconditions": [
-        {"id": "c1", "statement": "RED observed: a fixture work area containing a gitignored entry was seen to fail against the unfixed close_work -- manual attest, recording the failure text", "check": null, "satisfied": false},
-        {"id": "c2", "statement": "FALSIFIED: the real source was mutated and the new test refused it -- manual attest, naming the mutation and the failure message", "check": null, "satisfied": false},
-        {"id": "c3", "statement": "GREEN: the lifecycle tests pass, gitignored-entry fixture included", "check": {"kind": "command", "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_spine_lifecycle.py"}, "satisfied": false}
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-portable-test is complete (advanced above)."
+        }
       ],
-      "constraints": ["do not patch C3's approved code beyond these two defects; a third finding is reported, not fixed", "no merge to main; PR #564 is open and the merge is the Admiral's"],
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED observed: a fixture work area containing a gitignored entry was seen to fail against the unfixed close_work -- manual attest, recording the failure text",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed in BASELINE.md: a fixture work area (crew-handoffs/note.md, evidence/, triage-candidates/, spine.json, plus mcp_calls.jsonl gitignored via a committed .gitignore) run against unmodified close_work raised: \"git add /.../mcp_calls.jsonl failed ...: The following paths are ignored by one of your .gitignore files: .agent-work/w1/mcp_calls.jsonl\". State after: archive_dir held crew-handoffs and evidence already moved, while mcp_calls.jsonl, spine.json, and triage-candidates were stranded at their original path -- the work area split across two directories, matching C3's reported incident exactly."
+        },
+        {
+          "id": "c2",
+          "statement": "FALSIFIED: the real source was mutated and the new test refused it -- manual attest, naming the mutation and the failure message",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "FALSIFIED. Mutated scripts/spine_lifecycle.py:463 -- `if not tracked and _is_ignored(src, cwd=root):` became `if False and not tracked and _is_ignored(src, cwd=root):  # MUTATION`, disabling the ignored-entry classification and reverting to the old unconditional `git add`. Ran the two new tests against the mutated source: both went red. TestCloseWorkGitignoredEntry::test_innocent_gitignored_top_level_file_moves_without_git_add_refusing failed with SpineLifecycleError: \"git add .../mcp_calls.jsonl failed ...: The following paths are ignored by one of your .gitignore files: .agent-work/w1/mcp_calls.jsonl\". TestCloseWorkBatchFailureRollsBack failed the same way at the mcp_calls.jsonl entry before ever reaching its own injected failure point. Restored the source via `cp` from a pre-mutation copy, diffed clean (no residual change), reran the same two tests: both green again (2 passed)."
+        },
+        {
+          "id": "c3",
+          "statement": "GREEN: the lifecycle tests pass, gitignored-entry fixture included",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_spine_lifecycle.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-close-work-1"
+        }
+      ],
+      "constraints": [
+        "do not patch C3's approved code beyond these two defects; a third finding is reported, not fixed",
+        "no merge to main; PR #564 is open and the merge is the Admiral's"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-close-work-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_spine_lifecycle.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
     },
     "m3-verify": {
       "id": "m3-verify",
       "title": "Green from a checkout that is not this worktree",
       "imperative": "Prove the tree is green somewhere other than the worktree it was written in -- the exact thing that hid defect 1. c1 creates a detached worktree at HEAD and runs the whole suite there; it is the gate, not a formality. Then run the spine sweep and account for any movement from 23. Write IMPLEMENTER_RESULT.md including its Workflow Feedback section, commit by name, and push to the existing branch. Do not merge PR #564.",
-      "preconditions": [{"id": "p1", "statement": "m2 complete", "check": null, "satisfied": false}],
-      "postconditions": [
-        {"id": "c1", "statement": "the full suite passes from a foreign detached checkout at HEAD", "check": {"kind": "command", "command": "git worktree remove --force ../r0-verify 2>/dev/null; git worktree prune; git worktree add --detach ../r0-verify HEAD && cd ../r0-verify && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"}, "satisfied": false},
-        {"id": "c2", "statement": "the spine sweep still reports 23 fault lines, or the movement is explained in the result", "check": {"kind": "command", "command": "test \"$(python scripts/validate_spine.py --sweep --root . 2>&1 | grep -cE '^\\s+\\[')\" -eq 23"}, "satisfied": false},
-        {"id": "c3", "statement": "IMPLEMENTER_RESULT.md exists and carries a Workflow Feedback section", "check": {"kind": "command", "command": "grep -q 'Workflow Feedback' .agent-work/epic-559/r0-lifecycle-repair/IMPLEMENTER_RESULT.md"}, "satisfied": false}
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-close-work is complete (advanced above)."
+        }
       ],
-      "constraints": ["block rather than force; a block you raise stays raised until the tier above clears it"],
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the full suite passes from a foreign detached checkout at HEAD",
+          "check": {
+            "kind": "command",
+            "command": "git worktree remove --force ../r0-verify 2>/dev/null; git worktree prune; git worktree add --detach ../r0-verify HEAD && cd ../r0-verify && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the spine sweep still reports 23 fault lines, or the movement is explained in the result",
+          "check": {
+            "kind": "command",
+            "command": "test \"$(python scripts/validate_spine.py --sweep --root . 2>&1 | grep -cE '^\\s+\\[')\" -eq 23"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "IMPLEMENTER_RESULT.md exists and carries a Workflow Feedback section",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'Workflow Feedback' .agent-work/epic-559/r0-lifecycle-repair/IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "block rather than force; a block you raise stays raised until the tier above clears it"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     }
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": []
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff verified complete (task, intent, scope, exclusions, evidence, test mode, stop conditions all present). Both defects reproduced against unmodified HEAD 42df99fd before any fix: the worktree test fails in a detached foreign checkout with the exact hardcoded-path mismatch the handoff described; close_work raises on a work area carrying a gitignored top-level file (mcp_calls.jsonl) and leaves the work area split across two directories with no rollback, exactly as C3 reported. Evidence recorded in BASELINE.md.",
+      "mechanical": false,
+      "ts": "2026-08-12T14:13:46.817841+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-portable-test",
+      "why": "Fixed the test: work id is now derived from the checkout's own directory name (ROOT.name) rather than the hardcoded literal \"epic-559/c3-lifecycle\" -- worktree_path_for only ever looks at the last segment, so this holds for any worktree following the <wt_root>/<work-slug> convention, not just one archived worktree. Added an explicit skip (naming why and where it's reachable) for checkouts outside that convention. The gate's c2 check (grep for the literal anywhere in the file) also caught three UNRELATED pure-function example tests (TestWorktreePathFor, TestBranchNameFor, TestArchiveNameFor) using that same literal as generic sample data, plus a module-docstring path reference that had gone stale after C3's work area was archived -- updated the docstring to the real archived path and swapped the unrelated tests to a different sample work id (same coverage, no behavior change). tests/test_spine_lifecycle.py passes in full (53 passed) in this worktree.",
+      "mechanical": false,
+      "ts": "2026-08-12T14:16:43.893719+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-close-work",
+      "why": "close_work now classifies each top-level entry (tracked / untracked-not-ignored / untracked-and-ignored via git check-ignore) and moves the untracked-ignored case on the filesystem directly, since git add refuses an untracked ignored path outright -- this is exactly the mcp_calls.jsonl/mcp_server_started shape the MCP door leaves behind. The \"everything else\" batch is wrapped: a failure partway through restores every already-moved entry (including a filesystem-moved ignored one and a partially-staged git rename) before the exception propagates, so the work area is never left split. Spine-last stays deliberately OUTSIDE that rollback wrapping: a failure at that already-last step still leaves spine and journal at their original, retryable path -- unchanged, still covered by the existing TestCloseWorkSpineLastUnderInterruption / TestCloseWorkDifferingBasenameMandatory tests, both still green. New fixture (_make_work_area with ignored_file=) builds a work area carrying a gitignored file via a real, committed .gitignore. RED observed and FALSIFIED both attested with the mutation experiment (c2). Full suite: 2934 passed, 3 skipped, 1121 subtests (baseline was 2932; +2 for the two new tests).",
+      "mechanical": false,
+      "ts": "2026-08-12T14:19:41.536146+00:00"
+    }
+  ]
 }

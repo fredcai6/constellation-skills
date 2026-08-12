@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "files": [],
+  "repo_rev": {
+    "commit": "42df99fd8d7267ee469f4179501f78aae0935eb0"
+  },
+  "run": {
+    "work_id": "epic-559/r0-lifecycle-repair",
+    "generated_at": "2026-08-12T13:57:10Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle",
+      "repo": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle",
+      "durable": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle"
+    }
+  }
+}
