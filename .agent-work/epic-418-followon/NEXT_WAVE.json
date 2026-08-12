@@ -1,5 +1,5 @@
 {
-  "boundary_id": "w7x-lifecycle",
-  "launch_id": "w7-lifecycle",
+  "boundary_id": "w8x-closeout",
+  "launch_id": "w8-none-stop",
   "trigger": "wave_boundary"
 }

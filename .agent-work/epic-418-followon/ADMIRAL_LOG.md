@@ -3504,3 +3504,5 @@ Entry grammar (one line of date + tag, then the substance):
   unrelated tests using it as sample data and a docstring path that went stale the moment C3's work
   area was archived. My check was too broad; R0 fixed all four in-scope rather than blocking, and
   named the ambiguity. Both are episode material.
+
+- TRANSITION | boundary=w8x-closeout | decision=stop | verified

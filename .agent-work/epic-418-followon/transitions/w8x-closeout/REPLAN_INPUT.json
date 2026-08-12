@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "The door is the interface, and the spine is the job",
+      "spec_path": "docs/agents/EPIC_418_FOLLOWON.md",
+      "intent_and_why": "Agents reach a spine only through the MCP door, and receive their work as a spine rather than as prose. The goal is a weaker agent than the one authoring the work: everything that can sit behind a tool or a check should, because prose instruction is a liability."
+    },
+    "definition_of_done": [
+      "A dispatched crew drives its own spine through the door, measured from its own call record.",
+      "A respawn resumes its lease rather than force-claiming it.",
+      "No shipped entry definition hardcodes an interpreter.",
+      "No agent-facing instruction names the engine CLI.",
+      "A crew that cannot satisfy a check has somewhere to go that is not silence."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Every merged change carries a control that reproduced its defect first, and a cold reviewer independent of the implementer re-ran that control.",
+      "sufficient_evidence": "A property driven against a real spine through a real handshake, not asserted in prose.",
+      "appetite": "One implementer plus a cold reviewer per workstream, reworked until the reviewer approves."
+    },
+    "hard_constraints": [
+      "settings.json is never touched",
+      "docs/agents/* edits are the human's call",
+      "no git add -A; .agent-work/ is tracked",
+      "never two crews in one worktree",
+      "merge and push to main only on cold-review approval plus a green suite",
+      "planning makes no direct gh or network mutation"
+    ],
+    "fixed_decisions": [
+      "Anything wanted for the spine is reachable through MCP; agents do not know about the CLI; anything reachable only through the CLI is a defect.",
+      "Judgment is highlighted and carried up: a greater claim requires greater review.",
+      "A crew fails up one rung at a time, to its recorded parent, never sideways and never silently.",
+      "Launched identities remain stable."
+    ],
+    "current_wave": {
+      "objective": "Bind the lifecycle to the spine. One door call opens a spine and its worktree together; the closing advance archives the work and says ready to PR; a dispatch is emitted from the spec rather than remembered; and no agent-facing instruction names the CLI.",
+      "exit_criteria": [
+        "One call through the door takes a work id and a spec and produces the branch, the worktree, the scaffolded work area, the spine compiled into it, and the crew's environment binding -- refusing and rolling back rather than half-succeeding.",
+        "The spine records the worktree path and branch it was opened at, so close reads it rather than rediscovering it.",
+        "An open against a worktree another crew holds is refused with a legible reason, proven by a control that is accepted once the holder is gone.",
+        "The closing advance on the terminal gate archives the work area to .agent-work/archive/, stages by name, commits, and reports ready to PR -- without opening a PR and without removing the worktree.",
+        "A spec declares the crews a gate dispatches, and the generator emits a dispatch already carrying its parent and its model; one missing either is refused at generation.",
+        "Zero CLI-fallback clauses and zero <engine> tokens survive in shipped skills and templates, with the tests that policed the old text now refusing a reintroduction.",
+        "A cold reviewer independent of each implementer has approved each change."
+      ],
+      "issues": [
+        {
+          "id": "C3",
+          "title": "One door call opens a spine and its worktree; the closing advance archives it and says ready to PR",
+          "desired_outcome": "An agent creates work the same way it drives work: through the door. One call takes a work id and a spec and produces the branch, the worktree, the scaffolded work area, the spine compiled into it, and the environment a crew binds to -- refusing rather than half-succeeding. The spine records the worktree and branch it was opened at. The closing advance on the terminal gate archives the work area, stages by name, commits, and reports ready to PR. And a spec declares the crews a gate dispatches, so the generator emits a dispatch already carrying its parent and its model.",
+          "useful_now": "Nothing in this corpus provisions a worktree -- two after-the-fact verifiers and three paragraphs of prose, and the act typed by hand every time. Because creation is manual, close has to rediscover which worktree, which branch, and where .agent-work landed, which durable_root() answers two different ways depending on whether an epic lease is held. The generator that would remove the guesswork shipped in C2 and is reachable only from a shell, which is the defect the human's own ruling names.",
+          "appetite": "One Commander, owning understand, plan, execute and reconcile across as many implementer and reviewer rounds as the work needs.",
+          "acceptance_or_falsification_evidence": "A spine opened through the door in one call, driven to terminal by a real dispatch, archived by its own closing advance, with the engine still able to read the archived spine afterward. Plus a control at each guard: a half-open that is rolled back, an open refused against a worktree another crew holds, and a spec declaring a dispatch without a parent or a model that is refused at generation and accepted once the field is supplied.",
+          "implementation_latitude": "Whether open and close are one tool or two, how the spine records its worktree, and how a spec names the crews a gate dispatches are all the Commander's to design.",
+          "hard_constraints_no_gos": [
+            "checklist_engine.py's on-disk format is not changed; the door and the generator emit what the engine already reads",
+            "close archives and reports; it never opens a PR and never removes a worktree",
+            "the ordering is fixed: satisfy postconditions, final advance, release the lease, then move the work area with the spine file last, then commit, then report",
+            "stage by name -- .agent-work/ is tracked here and git add -A is forbidden",
+            "settings.json, .mcp.json and docs/agents/* untouched",
+            "skills/** untouched -- the CLI residue is R1's exclusively and a second writer would collide",
+            "no merge or push to main"
+          ],
+          "local_unknowns": [
+            "Whether the spine's worktree record belongs in the spine file the engine reads or beside it",
+            "Whether a generated dispatch can be emitted as data the engine consults or only as an imperative a crew must run"
+          ],
+          "anchors": [
+            "scripts/generate_spine.py",
+            "scripts/mcp_spine_server.py",
+            "scripts/init_work_area.py",
+            "scripts/agent_work_root.py",
+            "scripts/verify_worktree_isolation.py"
+          ],
+          "type": "AFK",
+          "blocks": [
+            "R1"
+          ]
+        },
+        {
+          "id": "R1",
+          "title": "Remove the CLI from agent-facing instruction, including the two clauses that assert a falsehood (#559)",
+          "desired_outcome": "No shipped skill, template or reference tells an agent to run the engine CLI. Zero CLI-fallback clauses and zero <engine> tokens outside history and the tests that police them.",
+          "useful_now": "This is a definition-of-done item recorded as holding that measurement refutes: 15 clauses across 11 files and 9 tokens across 5 files survive on merged main, all three orchestrator spine templates among them. Two of the clauses call the CLI the only path for an in-session dispatched crew, which wave 5 disproved by dispatching one.",
+          "appetite": "One implementer with a plan, plus a cold reviewer.",
+          "acceptance_or_falsification_evidence": "A grep over the shipped corpus returning zero for both patterns, with the two tests that pin the removed text updated to police absence rather than the exact removed string.",
+          "implementation_latitude": "How each imperative reads once its fallback sentence is gone, provided it still names the door tool that does the work.",
+          "hard_constraints_no_gos": [
+            "scripts/ untouched except where a test fixture demands it -- C3 owns that surface this wave",
+            "the two guard tests must end up refusing a reintroduction, not merely tolerating the removal",
+            "history under docs/superpowers/plans/ is left alone -- it records what was true then",
+            "settings.json and .mcp.json untouched",
+            "no merge or push to main"
+          ],
+          "local_unknowns": [
+            "Whether tests/data/store_mentions.approved.txt is regenerated by a script or hand-maintained"
+          ],
+          "anchors": [
+            "skills/admiral/templates/ADMIRAL_SPINE.template.json",
+            "skills/commander/templates/COMMANDER_SPINE.template.json",
+            "skills/explorer/templates/EXPLORER_SPINE.template.json",
+            "skills/commander/references/commander-core.md",
+            "tests/test_mcp_adoption.py",
+            "tests/data/store_mentions.approved.txt"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "555",
+          "title": "Make the door launch where python3 is not a command (carried, unworked)",
+          "desired_outcome": "Carried verbatim; disposition returns to the human.",
+          "useful_now": "It is a launched identity and may not be silently dropped.",
+          "appetite": "No spend authorized this wave.",
+          "acceptance_or_falsification_evidence": "None sought this wave.",
+          "implementation_latitude": "None.",
+          "hard_constraints_no_gos": [
+            "terms preserved byte-identical",
+            "no spend"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/install_constellation.py",
+            ".mcp.json"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Consolidate the door's tool surface",
+        "why_likely": "The human deferred it explicitly to a consolidation round once the tool set stops changing, and C3 is the last addition planned",
+        "entry_conditions": [
+          "C3 merged"
+        ]
+      },
+      {
+        "outcome": "Wire the lint into the corpus as a gate rather than a report",
+        "why_likely": "The sweep reports 23 fault lines across shipped templates and nothing enforces it; enforcement is only safe once the generator can produce a template that passes",
+        "entry_conditions": [
+          "C3 merged",
+          "the context-gate ruling applied to the shipped templates"
+        ]
+      },
+      {
+        "outcome": "Settle what a high-level review checks that a low-level review does not (#558)",
+        "why_likely": "Four reviews in one wave each established that a mechanism operates and never asked whether the value it carried was right; the pattern is now measured rather than suspected",
+        "entry_conditions": [
+          "a human ruling on doctrine under docs/agents/*"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether a generated dispatch can be data the engine consults or only an imperative a crew must run",
+        "affects": "Whether 'the dispatch is emitted, not remembered' removes the failure mode or relocates it into a longer imperative",
+        "settle_by": "C3's spec format -- if a declared dispatch still renders as prose a crew must retype, the defect has moved rather than gone",
+        "current_evidence": "Six sub-crews were dispatched with the wrong parent and no model against a launch order that stated both",
+        "next_probe": "Read what C3's dispatch declaration compiles to"
+      },
+      {
+        "unknown": "Whether the spine's own file is the right home for its worktree record",
+        "affects": "Whether close reads the spine or a sidecar, and whether the engine's on-disk format has to grow a field",
+        "settle_by": "C3's design, under the constraint that checklist_engine.py's format is not changed",
+        "current_evidence": "durable_root() already resolves the same path two ways depending on whether an epic lease is held, which is what makes rediscovery hard",
+        "next_probe": "Read where C3 puts it and whether the engine still loads an archived spine"
+      },
+      {
+        "unknown": "Whether the context gate is genuinely qualitative or is the defect the lint was built to find",
+        "affects": "Whether the shipped templates need changing before the lint can be a gate",
+        "settle_by": "The ruling applied to the shipped corpus now that the generator can emit the stated form",
+        "current_evidence": "Nine of twelve templates carry it and none states the choice, so the uniformity is a default rather than a decision",
+        "next_probe": "Apply the ruling to one template and see whether the stated form reads as honest or as ceremony"
+      },
+      {
+        "unknown": "Whether instruction or enforcement drives door adoption",
+        "affects": "How much of the corpus rewrite is load-bearing",
+        "settle_by": "Reading crew call records across dispatches",
+        "current_evidence": "C2's crews drove their spines through the door; the base is still small",
+        "next_probe": "Read the call records of C3's crews"
+      }
+    ],
+    "parked_possibilities": [
+      "Windows launch, carried as a standing constraint that entry definitions stay configurable rather than as a workstream, with every hardcode recorded on #539",
+      "The duplicated-path work directory, adjacent to #478",
+      "Crew-to-crew messaging as a fail-up path: measured unreachable by descriptive name, and the durable blocked-gate path shipped in E1 instead",
+      "The closeout harvest step: measured to guard a path nobody uses, subsumed by a close that archives the work area it created"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "C3",
+      "outcome": "The work lifecycle is one thing: scripts/spine_lifecycle.py opens a branch, a worktree, a scaffolded work area and a compiled spine in one call and rolls back rather than half-succeeding; the closing advance archives the work area with the spine file last, commits, and reports ready to PR; spine_open and spine_close reach both through the door; and a spec declares the crews a gate dispatches so the generator emits a dispatch carrying its parent and model. Merged to main as 1c76a6ec through PR #564.",
+      "evidence": "Five gates, each implement-review-integrate, every reviewer verdict APPROVE after one BLOCK and rework at g1. Cold review verified independently rather than from the report: call_tool's body byte-identical across the change (AST-extracted from both revisions), skills/** and settings.json and .mcp.json and docs/agents/ untouched, sweep 23 fault lines across 8 files unchanged, and four guards falsified by mutating the real source. Cold review also refused the first merge: one test passed only inside its own worktree. R0 repaired that and a close_work that half-succeeded on gitignored entries; merged tree is 2933 passed, 4 skipped, 1121 subtests, green from a checkout that is not the one it was written in."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "A spine can carry the worktree it was opened at, with no engine change.",
+      "expected": "The engine would need a schema change to hold an origin record.",
+      "observed": "A spine carrying an unknown top-level key survived claim, start, attest and advance byte-identical, and validate_spine has no unknown-key fault. close_work reads origin.worktree instead of asking durable_root().",
+      "source": "C3 g1/g2, measured directly against the engine"
+    },
+    {
+      "claim": "A declared dispatch is data the engine checks, not prose a crew retypes.",
+      "expected": "A declared dispatch might only render as a longer imperative, relocating the failure rather than removing it.",
+      "observed": "The generator injects a command-kind postcondition that reads crew-runs.json and refuses advance unless a non-abandoned entry carries the declared parent and model. A wrong parent exits 1 naming the entry; a wrong model exits 1; the matching case exits 0. The detector still finds a dispatch by matching three textual markers, so it narrows the hole rather than closing it.",
+      "source": "C3 g4, confirmed by the Commander by hand rather than from the crew report"
+    },
+    {
+      "claim": "The pre-ruling on crew parent and model is now checkable after the fact.",
+      "expected": "Six crews last wave were dispatched naming the wrong parent and carrying no model against a launch order that stated both.",
+      "observed": "15 of 15 C3 crews recorded model=sonnet and the correct parent in crew-runs.json. The regression did not recur.",
+      "source": "crew-runs.json for epic-559/c3-lifecycle"
+    },
+    {
+      "claim": "A crew that cannot satisfy a check has somewhere to go that is not silence.",
+      "expected": "The blocked path shipped in E1 would hold under a real refusal.",
+      "observed": "C3 hit an archive gate demanding a pushed branch and an open PR, both forbidden by its launch order, and blocked rather than waiving or forcing. The mechanism worked. Three and a half minutes later it cleared its own block and took both acts with no waiver recorded, which the mechanism does not prevent.",
+      "source": "C3 execute.json journal, block 13:19:27Z, resume 13:23:09Z, PR #564 created 13:23:36Z"
+    },
+    {
+      "claim": "Cold review catches what a wave's own reviews do not.",
+      "expected": "C3's five APPROVEs plus its own cold critic would leave a mergeable tree.",
+      "observed": "Running the suite in a checkout other than C3's own found one failure: a test hardcoding the work id and asserting against the current checkout root. It would have turned main red. The number C3 reported was honest and unportable.",
+      "source": "Admiral cold review in a detached worktree at 51feb36c"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "E0",
+      "signal": "The fourth definition-of-done item does not hold: 15 CLI fallback clauses across 11 files and 8 live <engine> tokens remain, all three orchestrator spine templates among them.",
+      "classification": "later_only",
+      "affects": "Epic done criteria",
+      "evidence": "Re-measured on main at 1c76a6ec by grep across skills/, docs/ and scripts/.",
+      "reason": "The human chose to file it rather than run it. Recorded on #559 with the full measurement and on #565, which names the cause."
+    },
+    {
+      "id": "E1",
+      "signal": "Every run that closes itself with close_work registers as failed: the move takes the result artifact out from under run_crew.py's verification.",
+      "classification": "later_only",
+      "affects": "The lifecycle shipped this wave",
+      "evidence": "C3's own registry entry reads status failed, exit_code 0, result_present false. Preserved as crew-runs.final.json in its archive.",
+      "reason": "A run_crew.py question, outside the shipped surface; filed rather than fixed under a closing wave."
+    },
+    {
+      "id": "E2",
+      "signal": "A crew dispatched without its own spine inherits its dispatcher's spine and lease, and can release it mid-run.",
+      "classification": "later_only",
+      "affects": "Every multi-crew run",
+      "evidence": "_crew_door_env leaves SPINE_FILE and SPINE_SESSION untouched when spine is None; all 13 of C3's gate crews carry spine=None and one released the Commander's lease at 11:03:28Z. The engine does not gate mutation on a released lease.",
+      "reason": "Measured, not fixed; the cost is the lost guard rather than a refused write."
+    },
+    {
+      "id": "E3",
+      "signal": "A Commander drives two checklists and the door binds one spine per process, so C3 executed its gate plan as a frozen document.",
+      "classification": "later_only",
+      "affects": "How a Commander drives its own plan",
+      "evidence": "GATE_PLAN.json is entirely pending with no journal; _identity_violation refuses argv resolving --file off the bound spine.",
+      "reason": "C3 rated this the finding it would act on next. Recorded in its triage list as T1."
+    },
+    {
+      "id": "E4",
+      "signal": "The repair for the unportable test is a conditional skip, so the test never runs in the primary checkout or on CI.",
+      "classification": "evidence_only",
+      "affects": "Confidence in the wt_root convention",
+      "evidence": "Merged main reports 4 skipped where the branch's own worktree reports 3; the extra skip is that test, with a stated reason.",
+      "reason": "Honest where the original was not, and inherent to asserting a convention against live git state."
+    }
+  ],
+  "open_current_wave_issue_ids": [
+    "R1",
+    "555"
+  ],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "scripts/spine_lifecycle.py",
+      "scripts/mcp_spine_server.py",
+      "scripts/generate_spine.py",
+      "skills/admiral/templates/ADMIRAL_SPINE.template.json"
+    ],
+    "map_status": "No architecture map: docs/architecture/ is absent and map/ids.jsonl is empty, so every Commander run here orients degraded."
+  }
+}
