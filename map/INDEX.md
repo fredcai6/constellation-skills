@@ -4,7 +4,7 @@
 evals: 12 modules, 54 entities
 scripts: 58 modules, 1167 entities
 skills: 1 modules, 18 entities
-tests: 75 modules, 4371 entities
+tests: 76 modules, 4399 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -102,7 +102,7 @@ tests: 75 modules, 4371 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (75 modules, 4371 entities)
+## tests (76 modules, 4399 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -154,6 +154,7 @@ tests: 75 modules, 4371 entities
 - [tests.test_mcp_friction_capture](tests.test_mcp_friction_capture/INDEX.md) (23 entities, 12 holes): Tests for the MCP door's own rejection capture (issue #541, epic-418-followon wave 2, gate g2).
 - [tests.test_mcp_identity](tests.test_mcp_identity/INDEX.md) (65 entities, 23 holes): DC2 (separation) and DC3 (inheritance fails closed) acceptance tests for the MCP front door (issue #424, workstream F, gate g3).
 - [tests.test_mcp_imperative_equivalence](tests.test_mcp_imperative_equivalence/INDEX.md) (23 entities, 12 holes): DC4 acceptance test for the MCP front door (issue #424, workstream F, gate g2): the CLI projection and the MCP tool result carry the SAME imperative text for EV
+- [tests.test_mcp_lifecycle](tests.test_mcp_lifecycle/INDEX.md) (28 entities, 16 holes): Tests for the MCP lifecycle door -- `spine_open`/`spine_close` (`scripts/mcp_spine_server.py`'s `call_lifecycle_tool`, issue #559, C3/g3).
 - [tests.test_mcp_spine_server](tests.test_mcp_spine_server/INDEX.md) (60 entities, 41 holes): Tests for scripts/mcp_spine_server.py (issue #424, workstream F: the MCP front door on the checklist engine).
 - [tests.test_measure_overread](tests.test_measure_overread/INDEX.md) (23 entities, 23 holes): Unit tests for scripts/measure_overread.py.
 - [tests.test_mutation_floor](tests.test_mutation_floor/INDEX.md) (32 entities, 18 holes): EXECUTED falsifiability for scripts/map_orient.py.
