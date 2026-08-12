@@ -1,7 +1,7 @@
 work_id    = "<work-id>"
 type       = "survey"
 config_ref = "docs/agents/engine-config.json"
-parent     = "admiral-epic-418-followon"
+parent     = "<parent>"
 
 # g2 of epic-559/c2-generate-the-spine: the first real survey role spec.
 # Intent matches the shipped skills/reviewer/templates/REVIEW_SURVEY.template.json

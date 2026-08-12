@@ -150,4 +150,5 @@ constraints = [
   statement = "the reviewer role spec still generates after the change -- its positional path carries an unresolved resolver-owned token and must be skipped, not refused"
   kind      = "script"
   path      = "scripts/generate_spine.py"
-  args      = ["specs/reviewer.spine.toml", "--check-only", "--root", "."]
+  args      = ["specs/reviewer.spine.toml", "--check-only", "--root", ".", "--out",
+               ".agent-work/epic-559/c2-generate-the-spine/generated/reviewer.spine.json"]

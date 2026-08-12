@@ -36,10 +36,13 @@ def _qualitative_cond(id_="c1", statement="reviewer read the diff", because="no 
     return {"id": id_, "statement": statement, "kind": "qualitative", "because": because}
 
 
-def _pytest_cond(id_="c1", statement="tests pass", selector="Door or Tie", min_collect=4, targets=None):
+def _pytest_cond(id_="c1", statement="tests pass", selector="Door or Tie", min_collect=4, targets=None,
+                  not_yet_written=None):
     d = {"id": id_, "statement": statement, "kind": "pytest", "selector": selector, "min_collect": min_collect}
     if targets is not None:
         d["targets"] = targets
+    if not_yet_written is not None:
+        d["not_yet_written"] = not_yet_written
     return d
 
 
@@ -641,6 +644,144 @@ class TestSpecShapeFaults:
 
 
 # --------------------------------------------------------------------------- #
+# Numeric field type faults -- rework Blocker 1/2. `selector`, `targets`,
+# `path`, `args`, `root`, `glob` are all shlex.quote'd/shlex.join'd; the four
+# NUMERIC fields (population.expected/expected_min/expected_max,
+# pytest.min_collect) are interpolated unquoted and untyped, so a string value
+# compiles a check that cannot fail: `{"kind":"population","root":".",
+# "glob":"*.py","expected":"1 || echo PWNED"}` -> `test $(...) -eq 1 || echo
+# PWNED`, exit 0 regardless of the count (verified live against a real shell:
+# `test $(echo 99) -eq 1 || echo PWNED` exits 0). VIOLATING/INNOCENT modeled on
+# tests/test_mcp_adoption.py::_cli_only_verb_violations, per DESIGN_NOTE.md
+# section 9 / the rework handoff's Blocker 2 -- a guard proven only against an
+# INNOCENT case is the same defect one tier up: absence does not announce
+# itself.
+# --------------------------------------------------------------------------- #
+
+class TestNumericFieldTypeFaults:
+    #: The Admiral's own repro, verbatim, through spec_shape_faults (not just
+    #: compile_condition) -- before this fix it returned no faults at all.
+    def test_admiral_repro_population_expected_injection_is_now_refused(self):
+        spec = _spec(gates=[_gate(postconditions=[
+            {"id": "c1", "statement": "count matches", "kind": "population",
+             "root": ".", "glob": "*.py", "expected": "1 || echo PWNED"},
+        ])])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert any(f.code == "spec-non-integer-field" for f in faults), faults
+
+    VIOLATING = {
+        "population expected -- shell injection string": _spec(gates=[_gate(postconditions=[
+            {"id": "c1", "statement": "x", "kind": "population", "root": ".", "glob": "*.py",
+             "expected": "1 || echo PWNED"},
+        ])]),
+        "population expected_min -- non-integer string": _spec(gates=[_gate(postconditions=[
+            {"id": "c1", "statement": "x", "kind": "population", "root": ".", "glob": "*.py",
+             "expected_min": "1 || echo PWNED", "expected_max": 5},
+        ])]),
+        "population expected_max -- non-integer string": _spec(gates=[_gate(postconditions=[
+            {"id": "c1", "statement": "x", "kind": "population", "root": ".", "glob": "*.py",
+             "expected_min": 1, "expected_max": "5 || echo PWNED"},
+        ])]),
+        "population expected -- float, not int": _spec(gates=[_gate(postconditions=[
+            {"id": "c1", "statement": "x", "kind": "population", "root": ".", "glob": "*.py",
+             "expected": 1.5},
+        ])]),
+        "population expected -- bool, not int (isinstance(True, int) is True in Python)": _spec(gates=[_gate(postconditions=[
+            {"id": "c1", "statement": "x", "kind": "population", "root": ".", "glob": "*.py",
+             "expected": True},
+        ])]),
+        "pytest min_collect -- shell injection string": _spec(gates=[_gate(
+            postconditions=[_pytest_cond(min_collect="1; echo PWNED")],
+        )]),
+        "pytest min_collect -- bool, not int": _spec(gates=[_gate(
+            postconditions=[_pytest_cond(min_collect=False)],
+        )]),
+    }
+
+    INNOCENT = {
+        "population expected -- valid int": _spec(gates=[_gate(postconditions=[_population_cond(expected=3)])]),
+        "population band -- valid ints": _spec(gates=[_gate(postconditions=[
+            {"id": "c1", "statement": "band", "kind": "population", "root": "specs", "glob": "*.toml",
+             "expected_min": 2, "expected_max": 5},
+        ])]),
+        "pytest min_collect -- valid int": _spec(gates=[_gate(postconditions=[_pytest_cond(min_collect=4)])]),
+        "pytest min_collect -- absent (default applies)": _spec(gates=[_gate(postconditions=[
+            {k: v for k, v in _pytest_cond().items() if k != "min_collect"},
+        ])]),
+    }
+
+    @pytest.mark.parametrize("label", sorted(VIOLATING))
+    def test_violating_is_refused(self, label):
+        faults = gs.spec_shape_faults(self.VIOLATING[label], repo_root=ROOT)
+        assert any(f.code == "spec-non-integer-field" for f in faults), (label, faults)
+
+    @pytest.mark.parametrize("label", sorted(INNOCENT))
+    def test_innocent_is_left_alone(self, label):
+        faults = gs.spec_shape_faults(self.INNOCENT[label], repo_root=ROOT)
+        assert not any(f.code == "spec-non-integer-field" for f in faults), (label, faults)
+
+    def test_valid_spec_compiled_output_is_unchanged(self):
+        # Blocker 1's own constraint: the fix must not change compiled output
+        # for a spec whose numeric fields are already valid integers.
+        spec = _spec(gates=[_gate(postconditions=[_population_cond(expected=3)])])
+        assert gs.spec_shape_faults(spec, repo_root=ROOT) == []
+        compiled = gs.compile_spec(spec)
+        cmd = compiled["tasks"]["m1"]["postconditions"][0]["check"]["command"]
+        assert cmd == "cd <repo-root> && test $(python -c " + shlex.quote(gs._POPULATION_COUNTER_PY) + \
+            " " + shlex.quote("specs") + " " + shlex.quote("*.toml") + ") -eq 3"
+
+
+# --------------------------------------------------------------------------- #
+# Blocker 4 (rework handoff): specs/implementer.spine.toml and
+# specs/reviewer.spine.toml both shipped with one Admiral session's id
+# hardcoded as `parent` -- a reusable role TEMPLATE, not a per-run dispatch
+# spec. `shipped_spec_session_specific_parent_faults` is deliberately NOT
+# wired into `spec_shape_faults` (a real per-run spec legitimately carries a
+# concrete parent); it is exercised directly, here and against the real
+# shipped files, per DESIGN_NOTE.md section 9 / Blocker 2's VIOLATING+INNOCENT
+# shape.
+# --------------------------------------------------------------------------- #
+
+class TestShippedSpecParentGuard:
+    #: The EXACT value that shipped -- proves the guard would have caught the
+    #: real defect, not just a synthetic stand-in.
+    VIOLATING = {
+        "the exact prior shipped value": {"parent": "admiral-epic-418-followon"},
+        "a different concrete commander session id": {"parent": "constellation/epic-1/x/execute/commander"},
+        "not a string at all": {"parent": 12345},
+    }
+
+    INNOCENT = {
+        "placeholder token": {"parent": "<parent>"},
+        "absent": {},
+        "explicit None": {"parent": None},
+    }
+
+    @pytest.mark.parametrize("label", sorted(VIOLATING))
+    def test_violating_is_caught(self, label):
+        faults = gs.shipped_spec_session_specific_parent_faults(self.VIOLATING[label])
+        assert any(f.code == "spec-shipped-session-specific-parent" for f in faults), (label, faults)
+
+    @pytest.mark.parametrize("label", sorted(INNOCENT))
+    def test_innocent_is_left_alone(self, label):
+        faults = gs.shipped_spec_session_specific_parent_faults(self.INNOCENT[label])
+        assert not faults, (label, faults)
+
+    @pytest.mark.parametrize("spec_name", ["implementer.spine.toml", "reviewer.spine.toml"])
+    def test_real_shipped_spec_is_now_clean(self, spec_name):
+        spec = tomllib.loads((ROOT / "specs" / spec_name).read_text(encoding="utf-8"))
+        faults = gs.shipped_spec_session_specific_parent_faults(spec)
+        assert not faults, (spec_name, faults)
+
+    def test_real_shipped_spec_still_carries_a_placeholder_not_silence(self):
+        # Absence would also pass the guard, but the intent here is a filled
+        # slot, not a dropped field -- pin the actual chosen form.
+        for spec_name in ("implementer.spine.toml", "reviewer.spine.toml"):
+            spec = tomllib.loads((ROOT / "specs" / spec_name).read_text(encoding="utf-8"))
+            assert spec.get("parent") == "<parent>", spec_name
+
+
+# --------------------------------------------------------------------------- #
 # Purity guard on the module boundary itself
 # --------------------------------------------------------------------------- #
 
@@ -706,6 +847,136 @@ class TestPytestProbe:
         faults, undecidable = gs._probe_pytest("m1", "c1", self.INNOCENT[label], repo_root=ROOT)
         assert not faults, (label, faults)
         assert not undecidable, (label, undecidable)
+
+
+# --------------------------------------------------------------------------- #
+# Blocker 0 (rework handoff) -- the pytest probe asserted a close-time truth
+# at generation time, so the generator could not author a TDD-shaped plan: a
+# gate whose own imperative is "write this test" cannot declare a pytest
+# postcondition on itself, because at GENERATION time the test does not exist
+# yet. `not_yet_written` is the stated declaration (never inferred): well-
+# formedness (selector syntax, target existence) is still checked either way;
+# only the min_collect/count assertion is deferred to gate-close, where the
+# compiled command (UNCHANGED) enforces it strictly. Silence keeps today's
+# strict default -- this is VIOLATING both ways per Blocker 2: a wrong
+# selector with no declaration must still refuse, and a declared-not-yet-
+# written test must not be refused.
+# --------------------------------------------------------------------------- #
+
+class TestPytestNotYetWritten:
+    # (a) declared + short collect -> Undecidable, not Fault, non-blocking.
+    def test_declared_short_collect_is_undecidable_not_fault(self):
+        cond = _pytest_cond(selector="ThisSelectorMatchesNothingAtAll12345", min_collect=1, not_yet_written=True)
+        faults, undecidable = gs._probe_pytest("m1", "c1", cond, repo_root=ROOT)
+        assert not faults, faults
+        assert len(undecidable) == 1
+        assert undecidable[0].code == "undecidable-pytest-not-yet-written"
+        assert undecidable[0].blocking is False
+
+    # (b) declared + malformed selector -> well-formedness still checked, still a Fault.
+    def test_declared_malformed_selector_still_faults(self):
+        cond = _pytest_cond(selector="TestFoo and (", min_collect=1, not_yet_written=True)
+        faults, undecidable = gs._probe_pytest("m1", "c1", cond, repo_root=ROOT)
+        assert any(f.code == "probe-pytest-malformed-selector" for f in faults), faults
+        assert not undecidable, undecidable
+
+    # (c) declared + a named target that does not exist -> Undecidable, non-blocking, not a Fault.
+    def test_declared_missing_target_is_undecidable_not_fault(self):
+        cond = _pytest_cond(selector="AnythingAtAll", min_collect=1,
+                             targets=["tests/_gs_not_yet_written_target.py"], not_yet_written=True)
+        faults, undecidable = gs._probe_pytest("m1", "c1", cond, repo_root=ROOT)
+        assert not faults, faults
+        assert len(undecidable) == 1
+        assert undecidable[0].code == "undecidable-pytest-not-yet-written"
+        assert undecidable[0].blocking is False
+
+    # (d) silence + short collect -> unchanged strict Fault (regression pin).
+    def test_silence_keeps_strict_default(self):
+        cond = _pytest_cond(selector="ThisSelectorMatchesNothingAtAll12345", min_collect=1)
+        assert "not_yet_written" not in cond
+        faults, undecidable = gs._probe_pytest("m1", "c1", cond, repo_root=ROOT)
+        assert not undecidable, undecidable
+        assert any(f.code == "probe-pytest-below-min-collect" for f in faults), faults
+
+    # A wrong selector with no declaration must still refuse -- Blocker 2's
+    # "both ways" VIOLATING pairing with (a) above.
+    def test_no_declaration_wrong_selector_still_refused(self):
+        cond = _pytest_cond(selector="NoSuchTestEverExistedZZZ9876", min_collect=1)
+        faults, undecidable = gs._probe_pytest("m1", "c1", cond, repo_root=ROOT)
+        assert any(f.code == "probe-pytest-below-min-collect" for f in faults), faults
+
+    # (e) the declaration renders on the gate -- a reviewer sees the claim.
+    def test_compiled_statement_carries_the_declaration(self):
+        cond = _pytest_cond(statement="tests pass", not_yet_written=True)
+        out = gs.compile_condition(cond, repo_root_token="<repo-root>")
+        assert "NOT YET WRITTEN" in out["statement"]
+        assert out["statement"].startswith("tests pass")
+
+    def test_compiled_statement_unchanged_when_silent(self):
+        cond = _pytest_cond(statement="tests pass", not_yet_written=None)
+        out = gs.compile_condition(cond, repo_root_token="<repo-root>")
+        assert out["statement"] == "tests pass"
+
+    # The compiled CHECK becomes `null` (a manual attest) when declared --
+    # `validate_spine.validate()` (out of scope to edit, and the literal
+    # last statement before success) unconditionally re-probes any
+    # `command`-kind pytest check LIVE and refuses a genuine zero-collect;
+    # there is no compiled shape that both keeps a strict command AND
+    # survives that oracle check before the test exists. `null` mirrors
+    # qualitative's own shape and the shipped IMPLEMENTER_PLAN.template.json's
+    # existing TDD-red convention (check:null, never a command, for the
+    # by-design-failing step).
+    def test_compiled_check_becomes_null_when_declared(self):
+        declared = gs.compile_condition(_pytest_cond(not_yet_written=True), repo_root_token="<repo-root>")
+        assert declared["check"] is None
+
+    def test_compiled_check_stays_a_strict_command_when_silent(self):
+        plain = gs.compile_condition(_pytest_cond(not_yet_written=None), repo_root_token="<repo-root>")
+        assert plain["check"]["kind"] == "command"
+        assert "pytest" in plain["check"]["command"]
+
+    # (f) end-to-end through main(): this is the actual proof the generator
+    # can now author a TDD-shaped plan -- a gate whose test does not exist
+    # yet still generates.
+    def test_main_writes_the_spine_for_a_not_yet_written_gate(self, tmp_path):
+        extra = (
+            "\n  [[gate.postconditions]]\n"
+            '  id = "c2"\n'
+            '  statement = "the new test passes"\n'
+            '  kind = "pytest"\n'
+            '  selector = "TestThisDoesNotExistYetAtAll"\n'
+            "  min_collect = 1\n"
+            "  not_yet_written = true\n"
+        )
+        spec_path = tmp_path / "tdd.spine.toml"
+        spec_path.write_text(_real_toml_spec_text(extra_gate_toml=extra), encoding="utf-8")
+        out_path = tmp_path / "out.json"
+        rc = gs.main([str(spec_path), "--out", str(out_path), "--root", str(ROOT)])
+        assert rc == 0, "the generator must be able to author a TDD-shaped plan (Blocker 0)"
+        assert out_path.exists()
+        written = json.loads(out_path.read_text(encoding="utf-8"))
+        posted = written["tasks"]["m1"]["postconditions"][1]
+        assert posted["check"] is None
+        assert "NOT YET WRITTEN" in posted["statement"]
+        assert "TestThisDoesNotExistYetAtAll" in posted["statement"]
+
+    # Same shape, but WITHOUT the declaration -- must still refuse (the
+    # control pairing for (f), Blocker 2's "both ways" at the CLI layer).
+    def test_main_without_declaration_still_refuses(self, tmp_path):
+        extra = (
+            "\n  [[gate.postconditions]]\n"
+            '  id = "c2"\n'
+            '  statement = "the new test passes"\n'
+            '  kind = "pytest"\n'
+            '  selector = "TestThisDoesNotExistYetAtAll"\n'
+            "  min_collect = 1\n"
+        )
+        spec_path = tmp_path / "no_tdd.spine.toml"
+        spec_path.write_text(_real_toml_spec_text(extra_gate_toml=extra), encoding="utf-8")
+        out_path = tmp_path / "out.json"
+        rc = gs.main([str(spec_path), "--out", str(out_path), "--root", str(ROOT)])
+        assert rc == 3
+        assert not out_path.exists()
 
 
 class TestScriptProbe:
@@ -1003,6 +1274,32 @@ class TestRealRoleSpecsRegenerateClean:
         rc = gs.main([str(spec_path), "--out", str(out_path), "--root", str(ROOT), "--check-only"])
         assert rc == 0
         assert not out_path.exists()  # --check-only writes nothing
+
+
+# --------------------------------------------------------------------------- #
+# "The artifact diverged from its source" (rework handoff): the g3 --out fix
+# was applied by `amend` to the GENERATED spine, leaving the SOURCE spec
+# (dispatch-proof/probe.spine.toml) stale -- regenerating from that TOML
+# reproduced the broken check. Fixed at the source; this pins that the
+# source itself, not a one-off manual patch, is what carries --out now, so
+# regenerating never regresses it again.
+# --------------------------------------------------------------------------- #
+
+class TestDispatchProofOutFlagRegression:
+    def test_m1_c2_compiled_command_carries_out_flag(self):
+        spec_path = ROOT / ".agent-work" / "epic-559" / "c2-generate-the-spine" / "dispatch-proof" / "probe.spine.toml"
+        spec = tomllib.loads(spec_path.read_text(encoding="utf-8"))
+        assert gs.spec_shape_faults(spec, repo_root=ROOT) == []
+        compiled = gs.compile_spec(spec)
+        cmd = [c for c in compiled["tasks"]["m1"]["postconditions"] if c["id"] == "c2"][0]["check"]["command"]
+        assert "--out" in cmd, "the source spec regressed to missing --out -- see rework handoff 'artifact diverged from its source'"
+
+    def test_regenerating_check_only_from_the_real_source_succeeds(self, tmp_path):
+        spec_path = ROOT / ".agent-work" / "epic-559" / "c2-generate-the-spine" / "dispatch-proof" / "probe.spine.toml"
+        out_path = tmp_path / "probe.spine.json"
+        rc = gs.main([str(spec_path), "--out", str(out_path), "--root", str(ROOT), "--check-only"])
+        assert rc == 0
+        assert not out_path.exists()
 
 
 # --------------------------------------------------------------------------- #

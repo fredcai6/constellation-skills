@@ -138,6 +138,32 @@ _REQUIRED_COND_FIELDS = {
 }
 
 
+#: The four fields that are interpolated into a compiled `command` UNQUOTED --
+#: `population.expected`/`expected_min`/`expected_max` and `pytest.min_collect`
+#: (rework Blocker 1). Every other field that reaches a compiled command
+#: (`selector`, `targets`, `path`, `args`, `root`, `glob`) is `shlex.quote`d or
+#: `shlex.join`ed, so a string value there is inert; these four are not, and a
+#: string value here compiles a check that cannot fail (`test $(...) -eq 1 ||
+#: echo PWNED` exits 0 regardless of the count). `bool` is deliberately
+#: excluded even though `isinstance(True, int)` is `True` in Python -- a
+#: TOML/JSON `true`/`false` value must still refuse.
+def _numeric_field_faults(where: str, cond: dict, *fields: str) -> list[Fault]:
+    faults: list[Fault] = []
+    for field in fields:
+        if field not in cond:
+            continue
+        value = cond[field]
+        if isinstance(value, bool) or not isinstance(value, int):
+            faults.append(Fault(
+                "spec-non-integer-field", where,
+                f"{cond.get('kind')} condition field {field!r} must be an integer, "
+                f"got {value!r} ({type(value).__name__}) -- interpolated unquoted into "
+                f"the compiled command, so a non-integer here can compile a check that "
+                f"cannot fail",
+            ))
+    return faults
+
+
 def _cond_faults(where: str, cond: dict) -> list[Fault]:
     faults: list[Fault] = []
     kind = cond.get("kind")
@@ -171,6 +197,10 @@ def _cond_faults(where: str, cond: dict) -> list[Fault]:
                 "population condition needs exactly one of `expected` or the "
                 "`expected_min`/`expected_max` pair",
             ))
+        faults.extend(_numeric_field_faults(where, cond, "expected", "expected_min", "expected_max"))
+
+    if kind == "pytest":
+        faults.extend(_numeric_field_faults(where, cond, "min_collect"))
 
     if kind == "artifact":
         evidence_type = cond.get("evidence_type")
@@ -300,6 +330,36 @@ def spec_shape_faults(spec: dict, *, repo_root: Path) -> list[Fault]:
     return faults
 
 
+#: A shipped role spec under specs/ is a reusable TEMPLATE, instantiated by
+#: many future runs -- `<parent>` (or any other single bracket-wrapped
+#: token) is a legitimate slot filled in at instantiation; a concrete session
+#: id baked into the template is not (rework Blocker 4: specs/implementer
+#: .spine.toml and specs/reviewer.spine.toml both shipped with one specific
+#: Admiral session hardcoded, so every future instantiation inherited a
+#: `hand_back_to` naming a session that no longer exists).
+_SHIPPED_SPEC_PLACEHOLDER_PARENT_RE = re.compile(r"^<[A-Za-z0-9-]+>$")
+
+
+def shipped_spec_session_specific_parent_faults(spec: dict) -> list[Fault]:
+    """Only meaningful against a spec meant to SHIP as a reusable template
+    (specs/*.spine.toml) -- NOT called from `spec_shape_faults`, which runs
+    against every spec including a real per-run dispatch spec, where a
+    concrete `parent` is exactly correct. `parent` absent, or a
+    bracket-wrapped placeholder token, is the only accepted shape for a
+    shipped template; anything else is a session-specific literal baked in."""
+    parent = spec.get("parent")
+    if parent is None:
+        return []
+    if isinstance(parent, str) and _SHIPPED_SPEC_PLACEHOLDER_PARENT_RE.fullmatch(parent):
+        return []
+    return [Fault(
+        "spec-shipped-session-specific-parent", "<top-level>.parent",
+        f"parent {parent!r} looks like a concrete session id, not a placeholder "
+        f"(e.g. '<parent>') or absent -- a reusable role template under specs/ must "
+        f"not hardcode one run's session",
+    )]
+
+
 # --------------------------------------------------------------------------- #
 # compile_condition / compile_spec -- PURE (dict in, dict out)
 # --------------------------------------------------------------------------- #
@@ -361,6 +421,23 @@ def compile_condition(cond: dict, *, repo_root_token: str) -> dict:
     if kind == "qualitative":
         statement = f"{statement} -- QUALITATIVE: {cond['because']}"
         check = None
+    elif kind == "pytest" and cond.get("not_yet_written"):
+        # Blocker 0: no compiled shape keeps this a `command` check AND lets
+        # generation succeed before the test exists -- validate_spine's own
+        # zero-collect oracle check is unconditional and out of scope to
+        # edit. `check: null` mirrors qualitative's own shape (and the
+        # shipped IMPLEMENTER_PLAN.template.json's TDD-red convention): a
+        # manual attest at gate close rather than a machine check, with the
+        # declaration and its terms rendered into the statement itself so a
+        # reviewer sees the claim.
+        check = None
+        selector = cond["selector"]
+        min_collect = cond.get("min_collect", 1)
+        statement = (
+            f"{statement} -- NOT YET WRITTEN AT GENERATION: pytest -k {selector!r} must "
+            f"collect >= {min_collect} and pass when this gate closes; attested manually, "
+            f"not machine-checked, until the test exists"
+        )
     elif kind == "pytest":
         check = _compile_pytest(cond, repo_root_token)
     elif kind == "script":
@@ -500,28 +577,108 @@ class Undecidable:
     """One condition a probe could not evaluate at all -- not a Fault (the
     check might be sound), and not silence either. Mirrors
     `validate_spine.Undecidable`'s own contract at the generator's probe
-    layer."""
+    layer.
+
+    `blocking` defaults `True` -- the historical, still-correct behaviour for
+    a probe that genuinely could not run (pytest missing, an unparseable
+    script). The one exception (rework Blocker 0) is a `pytest` condition
+    whose author STATED `not_yet_written = true`: at generation time the
+    truth genuinely is "could not tell" (the test does not exist yet by
+    design), but that is a stated declaration a reviewer sees rendered on the
+    gate, not an unexplained probe failure -- so it must not refuse
+    generation the way a genuine infra-level undecidable does."""
 
     code: str
     where: str
     message: str
+    blocking: bool = True
 
     def __str__(self) -> str:
         return f"[{self.code}] {self.where}: {self.message}"
 
 
+def _run_pytest_collect(selector: str, targets: list[str], *, repo_root: Path):
+    """`python -m pytest --collect-only -q -k <selector> <targets>`, run once.
+    Returns the completed process, or `None` plus the exception text when the
+    subprocess itself could not be launched at all (missing interpreter,
+    timeout) -- distinct from pytest running and reporting a usage error."""
+    cmd = ["python", "-m", "pytest", "--collect-only", "-q", "-k", selector, *targets]
+    try:
+        return subprocess.run(cmd, cwd=str(repo_root), capture_output=True, text=True, timeout=120), None
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return None, str(exc)
+
+
+def _probe_pytest_not_yet_written(gid: str, cid: str, cond: dict, *, repo_root: Path) -> tuple[list[Fault], list[Undecidable]]:
+    """Blocker 0 (rework handoff): `not_yet_written = true` is a stated
+    declaration that this pytest condition asserts a CLOSE-TIME truth, not a
+    generation-time one -- the entire point of a red step. Generation still
+    verifies well-formedness (selector parses, targets resolve); it does not
+    assert the check is already green -- there IS no live count to assert:
+    `compile_condition` compiles this condition to `check: null` (never a
+    `command`), because `validate_spine.validate()` -- out of scope to edit,
+    and the literal last statement before success -- unconditionally re-probes
+    any `command`-kind pytest check and refuses a genuine zero-collect live.
+    There is no compiled shape that is both a strict command AND survives
+    that oracle check before the test exists, so the declared case is
+    attested manually at gate close, exactly the shape the shipped
+    `IMPLEMENTER_PLAN.template.json` already uses for a TDD red step
+    (`check: null`, never a command check for the by-design-failing step)."""
+    selector = cond["selector"]
+    targets = cond.get("targets") or []
+    where = f"{gid}.{cid}"
+
+    # Targets resolve: a target that does not exist IS the declared scenario
+    # (the whole test file may not exist yet) -- pytest itself cannot tell
+    # "missing file" apart from "bad -k syntax" (both exit 4), so this must be
+    # decided from the filesystem before pytest ever runs, or the declared,
+    # expected case would be refused as if it were a typo.
+    missing = [t for t in targets
+               if not _RESOLVER_OWNED_TOKEN_RE.search(t) and not (Path(repo_root) / t).exists()]
+    if missing:
+        return [], [Undecidable(
+            "undecidable-pytest-not-yet-written", where,
+            f"declared not_yet_written -- target(s) {missing} do not exist yet; attested "
+            f"manually when this gate closes, not machine-checked at generation",
+            blocking=False,
+        )]
+
+    proc, exc = _run_pytest_collect(selector, targets, repo_root=repo_root)
+    if proc is None:
+        return [], [Undecidable("undecidable-pytest-collect", where, f"could not run pytest --collect-only: {exc}")]
+    if proc.returncode == 4:
+        # Selector parses: a usage error with every named target present on
+        # disk means the -k expression itself is malformed -- a real
+        # authoring defect the declaration does not excuse.
+        return [Fault(
+            "probe-pytest-malformed-selector", where,
+            f"selector {selector!r} is not valid pytest -k syntax (pytest usage error): "
+            f"{proc.stderr.strip()}",
+        )], []
+    return [], [Undecidable(
+        "undecidable-pytest-not-yet-written", where,
+        f"declared not_yet_written -- selector {selector!r} is well-formed; whether it "
+        f"collects and passes is attested manually when this gate closes, not "
+        f"machine-checked at generation",
+        blocking=False,
+    )]
+
+
 def _probe_pytest(gid: str, cid: str, cond: dict, *, repo_root: Path) -> tuple[list[Fault], list[Undecidable]]:
     """DESIGN_NOTE.md section 4: run `python -m pytest --collect-only -q -k
     <selector> <targets>` and refuse below min_collect, reporting the actual
-    count."""
+    count. Silence (no `not_yet_written` declaration) keeps this strict
+    default -- load-bearing for regression guards, where refusing a
+    zero-collect selector is correct."""
+    if cond.get("not_yet_written"):
+        return _probe_pytest_not_yet_written(gid, cid, cond, repo_root=repo_root)
+
     selector = cond["selector"]
     min_collect = cond.get("min_collect", 1)
     targets = cond.get("targets") or []
     where = f"{gid}.{cid}"
-    cmd = ["python", "-m", "pytest", "--collect-only", "-q", "-k", selector, *targets]
-    try:
-        proc = subprocess.run(cmd, cwd=str(repo_root), capture_output=True, text=True, timeout=120)
-    except (OSError, subprocess.TimeoutExpired) as exc:
+    proc, exc = _run_pytest_collect(selector, targets, repo_root=repo_root)
+    if proc is None:
         return [], [Undecidable("undecidable-pytest-collect", where, f"could not run pytest --collect-only: {exc}")]
     count = proc.stdout.count("::")
     if count < min_collect:
@@ -716,15 +873,23 @@ def main(argv: list[str] | None = None) -> int:
     # 3. compile_spec -- pure.
     compiled = compile_spec(spec)
 
-    # 4. Probes -- the expensive, environment-touching layer. Undecidable
-    #    refuses exactly like a fault; there is no flag to skip it.
+    # 4. Probes -- the expensive, environment-touching layer. An undecidable
+    #    that could not be helped (a probe that genuinely could not run)
+    #    refuses exactly like a fault; there is no flag to skip THAT. A
+    #    non-blocking undecidable (Blocker 0: a STATED `not_yet_written`
+    #    declaration) is printed but does not refuse -- it is a different
+    #    channel from silence, not an escape hatch from one.
     probe_faults, probe_undecidable = probe_spec(spec, repo_root=root)
-    if probe_undecidable:
-        _print_faults("undecidable -- could not tell", probe_undecidable)
+    blocking_undecidable = [u for u in probe_undecidable if u.blocking]
+    non_blocking_undecidable = [u for u in probe_undecidable if not u.blocking]
+    if blocking_undecidable:
+        _print_faults("undecidable -- could not tell", blocking_undecidable)
         return 3
     if probe_faults:
         _print_faults("probe refused", probe_faults)
         return 3
+    if non_blocking_undecidable:
+        _print_faults("undecidable -- declared not yet written (informational, not blocking)", non_blocking_undecidable)
 
     # 5. validate_spine.validate() -- the literal last statement before success.
     #    Imported and called, never re-implemented. Fault messages print
