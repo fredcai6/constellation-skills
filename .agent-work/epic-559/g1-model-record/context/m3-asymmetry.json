@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m3-asymmetry",
+  "files": [],
+  "repo_rev": {
+    "commit": "575f080ae9c724a5f41070492b65d7943dea9316"
+  },
+  "run": {
+    "work_id": "epic-559/g1-model-record",
+    "generated_at": "2026-08-12T04:48:51Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/g1-model-record",
+      "repo": "/home/tommy/projects/constellation-skills-wt/g1-model-record",
+      "durable": "/home/tommy/projects/constellation-skills-wt/g1-model-record"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/g1-model-record"
+    }
+  }
+}
