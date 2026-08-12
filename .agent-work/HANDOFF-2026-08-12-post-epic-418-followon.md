@@ -182,7 +182,32 @@ only path for an in-session dispatched crew member" — both halves are false as
 The instruction has been given three times and grown back twice. The deliverable is a guard, not a
 deletion.
 
-### W7 — Smaller, but real
+### W7 — Twenty-four archived spines still hold an active lease
+
+Found while confirming my own session was closed. Of **91 tracked spines carrying an engine session,
+24 are still `active`** — runs that were archived without ever releasing. The oldest heartbeat is
+2026-07-10; the newest is 2026-08-09, one day before this epic started.
+
+```
+2026-07-10  commander-103          .agent-work/archive/2026-07-10-epic-101/harvest/issue-103/full/issue-103/spine.json
+2026-07-24  admiral-epic-226-b     .agent-work/archive/2026-07-25-epic-226/spine.json
+2026-08-05  admiral-epic-418       .agent-work/archive/2026-08-07-epic-418-waves-0-1/epic-418/spine.json
+2026-08-06  root-418-iterative     .agent-work/archive/2026-08-07-epic-418-waves-0-1/issue-418-iterative-planning/spine.json
+2026-08-09  dc2-sess-a             .agent-work/archive/2026-08-09-epic-418-followon/commander-424/g3-review/mutation-scratch/shared/spine.json
+                                   ... and 19 more, mostly under epic-298 and issue-467 scratch dirs
+```
+
+Roughly half are throwaway probe and scratch spines where it does not matter. **Two are Admirals** —
+`admiral-epic-226-b` and `admiral-epic-418` — which are real runs that ended without the closing
+release. The full list is reproducible by scanning `git ls-files '*spine.json'` for
+`engine_session.status == "active"`.
+
+What I do not know, and did not chase: whether a stale active lease on an archived spine blocks
+anything, or is inert. `_active_lease` in `scripts/checklist_engine.py` documents that a released lease
+does not gate mutation, but says nothing about the reverse case. If it is inert, this is just an
+inaccurate record of which runs finished cleanly. If it is not, there are 24 of them.
+
+### W8 — Smaller, but real
 
 - **Windows CI red since 08-11**, deferred by your decision. The fix for **#555** exists unmerged on
   `fix/mcp-door-launchable`; main's `.mcp.json` still hardcodes `python3`.
