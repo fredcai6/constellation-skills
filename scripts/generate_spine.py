@@ -61,6 +61,21 @@ CHECK_KINDS = ("qualitative", "pytest", "script", "population", "artifact")
 #: that declares a condition with this id is refused at spec-shape time.
 RESERVED_CONDITION_ID = "c-escalation"
 
+#: The reserved id FAMILY the declared-dispatch postconditions (section 5) own
+#: -- one `c-dispatch-<idx>` per declared [[gate.dispatch]] entry, injected in
+#: `_compile_gate`. An author who declares a postcondition/precondition id
+#: matching this family collides with an injected one silently (the same
+#: hazard RESERVED_CONDITION_ID/c-escalation already guards against), so it is
+#: refused here too, before compile_spec ever runs.
+_RESERVED_DISPATCH_ID_RE = re.compile(r"^c-dispatch-\d+$")
+
+#: DESIGN_NOTE.md section 5 / LIFECYCLE_CONTRACT.md section 5: textual markers
+#: that name a dispatch in a gate's prose imperative. Detection is TEXTUAL --
+#: an imperative phrased without any of these ("hand this to an implementer
+#: crew") stays invisible; spec-dispatch-undeclared narrows the hole, it does
+#: not close it.
+_DISPATCH_MARKERS = ("run_crew.py", "constellation-implementer", "constellation-reviewer")
+
 #: `directives.claim.enforcement` on a `gated` spec (g2 rework round 2, the
 #: DESIGN_NOTE.md section 6 defect the cold review found): `c-escalation` IS
 #: injected here, and `checklist_engine.advance()` -- the `gated` closing verb
@@ -213,8 +228,15 @@ def _cond_faults(where: str, cond: dict) -> list[Fault]:
                 f"this shape; failing here is a better error than failing at the spine",
             ))
 
-    if cond.get("id") == RESERVED_CONDITION_ID:
+    cid = cond.get("id")
+    if cid == RESERVED_CONDITION_ID:
         faults.append(Fault("spec-reserved-id", where, f"{RESERVED_CONDITION_ID!r} is a reserved condition id"))
+    elif isinstance(cid, str) and _RESERVED_DISPATCH_ID_RE.fullmatch(cid):
+        faults.append(Fault(
+            "spec-reserved-id", where,
+            f"{cid!r} is a reserved condition id -- the c-dispatch-<n> family is injected per "
+            f"declared [[gate.dispatch]] entry",
+        ))
 
     return faults
 
@@ -253,6 +275,70 @@ def _claim_faults(gid: str, claim) -> list[Fault]:
     return []
 
 
+def _dispatch_faults(gid: str, gate: dict, *, spec_parent) -> list[Fault]:
+    """LIFECYCLE_CONTRACT.md section 5: `[[gate.dispatch]]`, `role` and `model`
+    required, `parent` never declared per entry -- it is filled from the
+    spec's own top-level `parent` at compile time. Three faults, refused
+    before any probe:
+
+    - `spec-dispatch-missing-field` -- a declared entry missing `role` or
+      `model`.
+    - `spec-dispatch-unresolved-parent` -- a dispatch declared while the
+      spec's own top-level `parent` is absent, so there is nothing concrete
+      to fill in. Refused rather than emitting a dispatch naming "unknown".
+    - `spec-dispatch-undeclared` -- a gate whose imperative names a dispatch
+      marker but declares no `[[gate.dispatch]]` at all. Detection is
+      TEXTUAL (see `_DISPATCH_MARKERS`'s own docstring) -- this NARROWS the
+      hole, it does not close it."""
+    faults: list[Fault] = []
+    raw_dispatch = gate.get("dispatch")
+
+    if raw_dispatch is None:
+        imperative = gate.get("imperative") or ""
+        found = [m for m in _DISPATCH_MARKERS if m in imperative]
+        if found:
+            faults.append(Fault(
+                "spec-dispatch-undeclared", gid,
+                f"gate {gid!r}'s imperative names dispatch marker(s) {found} but declares no "
+                f"[[gate.dispatch]] -- detection is textual, so this narrows the hole rather "
+                f"than closing it: an imperative phrased with none of {_DISPATCH_MARKERS} "
+                f"stays invisible",
+            ))
+        return faults
+
+    if not isinstance(raw_dispatch, list):
+        faults.append(Fault(
+            "spec-dispatch-missing-field", gid,
+            f"gate.dispatch must be an array of tables (`[[gate.dispatch]]`), not "
+            f"{type(raw_dispatch).__name__} -- did you write `[gate.dispatch]` (a single "
+            f"table) instead?",
+        ))
+        return faults
+
+    for idx, entry in enumerate(raw_dispatch):
+        where = f"{gid}.dispatch[{idx}]"
+        if not isinstance(entry, dict):
+            faults.append(Fault(
+                "spec-dispatch-missing-field", where,
+                f"gate.dispatch entry must be a table, got {type(entry).__name__}",
+            ))
+            continue
+        for field in ("role", "model"):
+            if not entry.get(field):
+                faults.append(Fault(
+                    "spec-dispatch-missing-field", where,
+                    f"dispatch entry is missing required field {field!r}",
+                ))
+        if not spec_parent:
+            faults.append(Fault(
+                "spec-dispatch-unresolved-parent", where,
+                f"gate {gid!r} declares a dispatch but the spec's top-level `parent` is "
+                f"absent -- refusing rather than emitting a dispatch naming \"unknown\"",
+            ))
+
+    return faults
+
+
 def spec_shape_faults(spec: dict, *, repo_root: Path) -> list[Fault]:
     """Every DESIGN_NOTE.md section 7 fault in `spec` (a tomllib-parsed spec
     dict), checked before `compile_spec` ever runs. Pure except for one cheap,
@@ -273,6 +359,7 @@ def spec_shape_faults(spec: dict, *, repo_root: Path) -> list[Fault]:
                 faults.append(Fault("spec-missing-field", gid, f"gate is missing required field {field!r}"))
 
         faults.extend(_claim_faults(gid, g.get("claim")))
+        faults.extend(_dispatch_faults(gid, g, spec_parent=spec.get("parent")))
 
         pre = g.get("preconditions") or []
         post = g.get("postconditions") or []
@@ -476,8 +563,42 @@ def _escalation_postcondition(text: str) -> dict:
     }
 
 
+def _compile_dispatch_entry(idx: int, entry: dict, *, gid: str, work_id: str, parent: str,
+                             repo_root_token: str) -> tuple[dict, dict]:
+    """One declared `[[gate.dispatch]]` entry -> (the rendered dict for
+    `directives.dispatch`, the injected postcondition). PURE: no Path, no
+    open, no subprocess. Assumes `entry` already passed `_dispatch_faults` --
+    `role`/`model` present, `parent` concrete (never "unknown").
+
+    `command`, never `artifact` -- LIFECYCLE_CONTRACT.md section 5 /
+    DESIGN_NOTE.md section 6's own correction: `record`/`consolidate` never
+    evaluate artifact-kind postconditions on a survey item, so an artifact
+    check would be silently inert there. The command shells out to
+    `scripts/verify_declared_dispatch.py`, which reuses `run_crew.py`'s own
+    registry loading and `is_abandoned` rather than re-parsing `crew-runs.json`."""
+    role = entry["role"]
+    model = entry["model"]
+    rendered = {"role": role, "model": model, "parent": parent}
+    command = (
+        f"cd {repo_root_token} && python scripts/verify_declared_dispatch.py --root . "
+        f"--work-id {shlex.quote(work_id)} --gate {shlex.quote(gid)} "
+        f"--role {shlex.quote(role)} --parent {shlex.quote(parent)} --model {shlex.quote(model)}"
+    )
+    postcondition = {
+        "id": f"c-dispatch-{idx}",
+        "statement": (
+            f"declared dispatch -- role={role!r} model={model!r} parent={parent!r} must be "
+            f"recorded by a non-abandoned crew-runs.json entry for gate {gid!r} role {role!r} "
+            f"before this gate can advance"
+        ),
+        "check": {"kind": "command", "command": command},
+        "satisfied": False,
+    }
+    return rendered, postcondition
+
+
 def _compile_gate(g: dict, *, hand_back_to: str, is_last: bool,
-                   large_claims: list[tuple[str, str, str]], spec_type: str) -> dict:
+                   large_claims: list[tuple[str, str, str]], spec_type: str, work_id: str) -> dict:
     preconditions = [compile_condition(c, repo_root_token=_REPO_ROOT_TOKEN) for c in g.get("preconditions") or []]
     postconditions = [compile_condition(c, repo_root_token=_REPO_ROOT_TOKEN) for c in g.get("postconditions") or []]
 
@@ -521,6 +642,18 @@ def _compile_gate(g: dict, *, hand_back_to: str, is_last: bool,
             for gid, text, enforcement in large_claims
         }
 
+    dispatch_entries = g.get("dispatch") or []
+    if dispatch_entries:
+        rendered_dispatch = []
+        for idx, entry in enumerate(dispatch_entries):
+            rendered, postcondition = _compile_dispatch_entry(
+                idx, entry, gid=g["id"], work_id=work_id, parent=hand_back_to,
+                repo_root_token=_REPO_ROOT_TOKEN,
+            )
+            rendered_dispatch.append(rendered)
+            postconditions.append(postcondition)
+        directives["dispatch"] = rendered_dispatch
+
     return {
         "id": g["id"],
         "title": g["title"],
@@ -554,7 +687,8 @@ def compile_spec(spec: dict) -> dict:
     for idx, g in enumerate(gates):
         is_last = idx == len(gates) - 1
         tasks[g["id"]] = _compile_gate(g, hand_back_to=hand_back_to, is_last=is_last,
-                                        large_claims=large_claims, spec_type=spec_type)
+                                        large_claims=large_claims, spec_type=spec_type,
+                                        work_id=spec["work_id"])
     return {
         "work_id": spec["work_id"],
         "type": spec.get("type", "gated"),

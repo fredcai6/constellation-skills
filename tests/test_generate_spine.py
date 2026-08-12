@@ -65,7 +65,7 @@ def _artifact_cond(id_="c1", statement="human decided", evidence_type="user-deci
 
 
 def _gate(id_="m1", title="do it", imperative="do the thing", postconditions=None, preconditions=None,
-          constraints=None, claim=None):
+          constraints=None, claim=None, dispatch=None):
     g = {"id": id_, "title": title, "imperative": imperative}
     if postconditions is not None:
         g["postconditions"] = postconditions
@@ -75,7 +75,13 @@ def _gate(id_="m1", title="do it", imperative="do the thing", postconditions=Non
         g["constraints"] = constraints
     if claim is not None:
         g["claim"] = claim
+    if dispatch is not None:
+        g["dispatch"] = dispatch
     return g
+
+
+def _dispatch(role="implementer", model="sonnet"):
+    return {"role": role, "model": model}
 
 
 def _spec(gates=None, *, work_id="w1", type_="gated", config_ref="docs/agents/engine-config.json", parent=None):
@@ -519,6 +525,230 @@ class TestClaimEnforcementDrivenThroughEngine:
 
 
 # --------------------------------------------------------------------------- #
+# Declared dispatch emission (LIFECYCLE_CONTRACT.md section 5, g4): for each
+# declared [[gate.dispatch]] entry, _compile_gate renders {role, model,
+# parent} into directives.dispatch AND injects one command-kind (never
+# artifact -- DESIGN_NOTE.md section 6's own correction) postcondition that
+# shells out to scripts/verify_declared_dispatch.py.
+# --------------------------------------------------------------------------- #
+
+class TestDeclaredDispatchEmission:
+    def test_directives_dispatch_renders_role_model_parent(self):
+        spec = _spec(parent="constellation/w1/execute/commander/attempt-1", gates=[_gate(
+            id_="g4", postconditions=[_qualitative_cond()],
+            dispatch=[_dispatch(role="implementer", model="sonnet")],
+        )])
+        spine = gs.compile_spec(spec)
+        assert spine["tasks"]["g4"]["directives"]["dispatch"] == [
+            {"role": "implementer", "model": "sonnet", "parent": "constellation/w1/execute/commander/attempt-1"},
+        ]
+
+    def test_injected_postcondition_is_command_kind_never_artifact(self):
+        spec = _spec(parent="constellation/w1/execute/commander/attempt-1", gates=[_gate(
+            id_="g4", postconditions=[_qualitative_cond()], dispatch=[_dispatch()],
+        )])
+        spine = gs.compile_spec(spec)
+        posts = spine["tasks"]["g4"]["postconditions"]
+        dispatch_post = next(c for c in posts if c["id"] == "c-dispatch-0")
+        assert dispatch_post["check"]["kind"] == "command"
+        assert dispatch_post["satisfied"] is False
+
+    def test_command_anchored_and_every_token_quoted(self):
+        spec = _spec(work_id="w1", parent="constellation/w1/execute/commander/attempt-1", gates=[_gate(
+            id_="g4", postconditions=[_qualitative_cond()],
+            dispatch=[_dispatch(role="implementer", model="sonnet")],
+        )])
+        spine = gs.compile_spec(spec)
+        command = next(c for c in spine["tasks"]["g4"]["postconditions"] if c["id"] == "c-dispatch-0")["check"]["command"]
+        assert command.startswith("cd <repo-root> && python scripts/verify_declared_dispatch.py ")
+        assert "--work-id " + shlex.quote("w1") in command
+        assert "--gate " + shlex.quote("g4") in command
+        assert "--role " + shlex.quote("implementer") in command
+        assert "--parent " + shlex.quote("constellation/w1/execute/commander/attempt-1") in command
+        assert "--model " + shlex.quote("sonnet") in command
+
+    def test_command_quotes_a_parent_with_shell_metacharacters(self):
+        # `parent` is a free-form string filled from the spec's own top-level
+        # field, not a validated identifier -- an unquoted `$(...)`/`;` there
+        # would be Defect 1's own shape one layer up.
+        spec = _spec(parent="constellation/w1/x; rm -rf /", gates=[_gate(
+            id_="g4", postconditions=[_qualitative_cond()], dispatch=[_dispatch()],
+        )])
+        spine = gs.compile_spec(spec)
+        command = next(c for c in spine["tasks"]["g4"]["postconditions"] if c["id"] == "c-dispatch-0")["check"]["command"]
+        assert shlex.quote("constellation/w1/x; rm -rf /") in command
+        # Round-trip through shlex to prove the shell would see ONE token.
+        tokens = shlex.split(command.split(" && ", 1)[1])
+        assert "constellation/w1/x; rm -rf /" in tokens
+
+    def test_multiple_dispatch_entries_get_distinct_ids_and_all_render(self):
+        spec = _spec(parent="constellation/w1/execute/commander/attempt-1", gates=[_gate(
+            id_="g4", postconditions=[_qualitative_cond()],
+            dispatch=[_dispatch(role="implementer", model="sonnet"), _dispatch(role="reviewer", model="opus")],
+        )])
+        spine = gs.compile_spec(spec)
+        posts = spine["tasks"]["g4"]["postconditions"]
+        ids = [c["id"] for c in posts if c["id"].startswith("c-dispatch-")]
+        assert ids == ["c-dispatch-0", "c-dispatch-1"]
+        assert spine["tasks"]["g4"]["directives"]["dispatch"] == [
+            {"role": "implementer", "model": "sonnet", "parent": "constellation/w1/execute/commander/attempt-1"},
+            {"role": "reviewer", "model": "opus", "parent": "constellation/w1/execute/commander/attempt-1"},
+        ]
+
+    def test_no_dispatch_declared_gets_no_directive_and_no_postcondition(self):
+        # INNOCENT (close criterion 7): a gate with no [[gate.dispatch]] and
+        # no marker in its imperative gets no postcondition and no fault.
+        spec = _spec(gates=[_gate(id_="g4", postconditions=[_qualitative_cond()])])
+        spine = gs.compile_spec(spec)
+        assert "dispatch" not in spine["tasks"]["g4"]["directives"]
+        assert not any(c["id"].startswith("c-dispatch-") for c in spine["tasks"]["g4"]["postconditions"])
+
+
+# --------------------------------------------------------------------------- #
+# Driven proof (close criteria 4, 5, 6, 8, 9): the injected postcondition
+# ACTUALLY refuses a wrong-parent/wrong-model/missing registry entry and
+# ACTUALLY lets a matching one through -- not just a shape assertion on
+# compile_spec's dict output. `<repo-root>` is resolved by hand (this file has
+# no resolver in its dependency graph) to a throwaway fake repo whose
+# scripts/ is symlinked to the real one, so scripts/verify_declared_dispatch.py
+# and its scripts/run_crew.py import are genuinely reachable, and crew-runs.json
+# lives under THAT fake root's .agent-work/ -- never under the real repo's.
+# --------------------------------------------------------------------------- #
+
+class TestDeclaredDispatchDrivenThroughEngine:
+    @pytest.fixture
+    def fake_repo(self, tmp_path):
+        (tmp_path / "scripts").symlink_to(ROOT / "scripts")
+        return tmp_path
+
+    def _spine_with_dispatch(self, *, work_id, parent, role="implementer", model="sonnet"):
+        spec = _spec(work_id=work_id, parent=parent, gates=[_gate(
+            id_="g4", postconditions=[_qualitative_cond()],
+            dispatch=[_dispatch(role=role, model=model)],
+        )])
+        return gs.compile_spec(spec)
+
+    def _resolve_repo_root(self, spine, gid, fake_repo):
+        post = next(c for c in spine["tasks"][gid]["postconditions"] if c["id"] == "c-dispatch-0")
+        post["check"]["command"] = post["check"]["command"].replace("<repo-root>", str(fake_repo))
+        return post["check"]["command"]
+
+    def test_wrong_parent_fails_the_compiled_command_and_advance(self, fake_repo):
+        from run_crew import registry_path, save_registry
+
+        declared_parent = "constellation/w1/execute/commander/attempt-1"
+        offending_parent = "admiral-epic-418-followon"  # realistic, not garbage
+        save_registry(registry_path("w1", fake_repo), [{
+            "crew_id": "constellation/w1/g4/implementer/attempt-1",
+            "session_name": "constellation/w1/g4/implementer/attempt-1",
+            "work_id": "w1", "gate": "g4", "role": "implementer",
+            "parent": offending_parent, "model": "sonnet",
+            "status": "completed", "abandoned": False,
+        }])
+
+        spine = self._spine_with_dispatch(work_id="w1", parent=declared_parent)
+        command = self._resolve_repo_root(spine, "g4", fake_repo)
+
+        # 1. The compiled command, run exactly as the engine would run it:
+        #    nonzero exit, message naming the offending entry.
+        proc = subprocess.run(["bash", "-c", command], capture_output=True, text=True)
+        assert proc.returncode != 0, proc.stdout + proc.stderr
+        assert offending_parent in proc.stdout
+
+        # 2. Driven through the real engine: advance refuses on this exact
+        #    postcondition id.
+        checklist_engine.start(spine, "g4")
+        checklist_engine.attest(spine, "g4", "c1", "postconditions", "qualitative, attested")
+        with pytest.raises(checklist_engine.EngineError) as excinfo:
+            checklist_engine.advance(spine, "g4", mechanical=True)
+        assert "c-dispatch-0" in str(excinfo.value)
+
+    def test_wrong_model_fails(self, fake_repo):
+        from run_crew import registry_path, save_registry
+
+        declared_parent = "constellation/w1/execute/commander/attempt-1"
+        save_registry(registry_path("w1", fake_repo), [{
+            "crew_id": "constellation/w1/g4/implementer/attempt-1",
+            "session_name": "constellation/w1/g4/implementer/attempt-1",
+            "work_id": "w1", "gate": "g4", "role": "implementer",
+            "parent": declared_parent, "model": "haiku",
+            "status": "completed", "abandoned": False,
+        }])
+        spine = self._spine_with_dispatch(work_id="w1", parent=declared_parent)
+        command = self._resolve_repo_root(spine, "g4", fake_repo)
+        proc = subprocess.run(["bash", "-c", command], capture_output=True, text=True)
+        assert proc.returncode != 0, proc.stdout + proc.stderr
+        assert "haiku" in proc.stdout
+
+    def test_no_registry_entry_at_all_fails(self, fake_repo):
+        declared_parent = "constellation/w1/execute/commander/attempt-1"
+        spine = self._spine_with_dispatch(work_id="w1", parent=declared_parent)
+        command = self._resolve_repo_root(spine, "g4", fake_repo)
+        proc = subprocess.run(["bash", "-c", command], capture_output=True, text=True)
+        assert proc.returncode != 0, proc.stdout + proc.stderr
+
+    def test_matching_entry_passes_the_compiled_command_and_advance(self, fake_repo):
+        from run_crew import registry_path, save_registry
+
+        declared_parent = "constellation/w1/execute/commander/attempt-1"
+        save_registry(registry_path("w1", fake_repo), [{
+            "crew_id": "constellation/w1/g4/implementer/attempt-1",
+            "session_name": "constellation/w1/g4/implementer/attempt-1",
+            "work_id": "w1", "gate": "g4", "role": "implementer",
+            "parent": declared_parent, "model": "sonnet",
+            "status": "completed", "abandoned": False,
+        }])
+        spine = self._spine_with_dispatch(work_id="w1", parent=declared_parent)
+        command = self._resolve_repo_root(spine, "g4", fake_repo)
+
+        proc = subprocess.run(["bash", "-c", command], capture_output=True, text=True)
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+
+        checklist_engine.start(spine, "g4")
+        checklist_engine.attest(spine, "g4", "c1", "postconditions", "qualitative, attested")
+        msg = checklist_engine.advance(spine, "g4", mechanical=True)
+        assert spine["tasks"]["g4"]["status"] == "complete"
+        assert "complete" in msg
+
+    #: Close criterion 8, ACCEPTED_FALSE_ALARM -- populated, not merely named
+    #: (DESIGN_NOTE.md section 9): an abandoned wrong-parent entry must NOT
+    #: block, driven through the real command AND the real engine, not just
+    #: check_declared_dispatch() in isolation (test_declared_dispatch.py
+    #: already covers that layer).
+    def test_abandoned_wrong_parent_entry_does_not_block_advance(self, fake_repo):
+        from run_crew import registry_path, save_registry
+
+        declared_parent = "constellation/w1/execute/commander/attempt-1"
+        save_registry(registry_path("w1", fake_repo), [
+            {
+                "crew_id": "constellation/w1/g4/implementer/attempt-1",
+                "session_name": "constellation/w1/g4/implementer/attempt-1",
+                "work_id": "w1", "gate": "g4", "role": "implementer",
+                "parent": "admiral-epic-418-followon", "model": "sonnet",
+                "status": "abandoned", "abandoned": True,
+            },
+            {
+                "crew_id": "constellation/w1/g4/implementer/attempt-2",
+                "session_name": "constellation/w1/g4/implementer/attempt-2",
+                "work_id": "w1", "gate": "g4", "role": "implementer",
+                "parent": declared_parent, "model": "sonnet",
+                "status": "completed", "abandoned": False,
+            },
+        ])
+        spine = self._spine_with_dispatch(work_id="w1", parent=declared_parent)
+        command = self._resolve_repo_root(spine, "g4", fake_repo)
+
+        proc = subprocess.run(["bash", "-c", command], capture_output=True, text=True)
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+        assert "attempt-2" in proc.stdout
+
+        checklist_engine.start(spine, "g4")
+        checklist_engine.attest(spine, "g4", "c1", "postconditions", "qualitative, attested")
+        msg = checklist_engine.advance(spine, "g4", mechanical=True)
+        assert "complete" in msg
+
+
+# --------------------------------------------------------------------------- #
 # Spec-shape faults (DESIGN_NOTE.md section 7) -- refused before any probe
 # --------------------------------------------------------------------------- #
 
@@ -641,6 +871,100 @@ class TestSpecShapeFaults:
                                    claim={"magnitude": "large", "text": "big deal"})])
         faults = gs.spec_shape_faults(spec, repo_root=ROOT)
         assert not any(f.code == "spec-malformed-claim" for f in faults)
+
+
+# --------------------------------------------------------------------------- #
+# Declared dispatch -- LIFECYCLE_CONTRACT.md section 5 (g4). `[[gate.dispatch]]`
+# declares the crews a gate dispatches (role + model required; parent is filled
+# from the spec's own top-level `parent`, never declared per entry). Three new
+# spec-shape faults, refused before any probe -- house style
+# tests/test_mcp_adoption.py::_cli_only_verb_violations (VIOLATING/INNOCENT).
+# --------------------------------------------------------------------------- #
+
+class TestDeclaredDispatchSpecShapeFaults:
+    VIOLATING = {
+        "missing role": _spec(parent="constellation/w1/execute/commander/attempt-1", gates=[_gate(
+            postconditions=[_qualitative_cond()],
+            dispatch=[{"model": "sonnet"}],
+        )]),
+        "missing model": _spec(parent="constellation/w1/execute/commander/attempt-1", gates=[_gate(
+            postconditions=[_qualitative_cond()],
+            dispatch=[{"role": "implementer"}],
+        )]),
+        "missing both role and model": _spec(parent="constellation/w1/execute/commander/attempt-1", gates=[_gate(
+            postconditions=[_qualitative_cond()],
+            dispatch=[{}],
+        )]),
+    }
+
+    @pytest.mark.parametrize("label", sorted(VIOLATING))
+    def test_missing_field_is_refused_by_name(self, label):
+        faults = gs.spec_shape_faults(self.VIOLATING[label], repo_root=ROOT)
+        assert any(f.code == "spec-dispatch-missing-field" for f in faults), (label, faults)
+
+    def test_missing_role_names_the_gate_and_field(self):
+        spec = _spec(parent="constellation/w1/execute/commander/attempt-1", gates=[_gate(
+            id_="m1", postconditions=[_qualitative_cond()], dispatch=[{"model": "sonnet"}],
+        )])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        fault = next(f for f in faults if f.code == "spec-dispatch-missing-field")
+        assert "m1" in fault.where
+        assert "role" in fault.message
+
+    def test_missing_model_names_the_gate_and_field(self):
+        spec = _spec(parent="constellation/w1/execute/commander/attempt-1", gates=[_gate(
+            id_="m1", postconditions=[_qualitative_cond()], dispatch=[{"role": "implementer"}],
+        )])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        fault = next(f for f in faults if f.code == "spec-dispatch-missing-field")
+        assert "m1" in fault.where
+        assert "model" in fault.message
+
+    def test_dispatch_declared_with_no_top_level_parent_is_refused(self):
+        # No `parent=` passed to _spec() -- absent, not "unknown".
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond()], dispatch=[_dispatch()])])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert any(f.code == "spec-dispatch-unresolved-parent" for f in faults), faults
+
+    @pytest.mark.parametrize("marker", ["run_crew.py", "constellation-implementer", "constellation-reviewer"])
+    def test_dispatch_marker_in_imperative_with_no_declared_dispatch_is_refused(self, marker):
+        spec = _spec(parent="constellation/w1/execute/commander/attempt-1", gates=[_gate(
+            imperative=f"dispatch a crew through {marker}", postconditions=[_qualitative_cond()],
+        )])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert any(f.code == "spec-dispatch-undeclared" for f in faults), (marker, faults)
+
+    def test_imperative_with_none_of_the_three_markers_stays_invisible(self):
+        # The honest residual (LIFECYCLE_CONTRACT.md section 5): textual
+        # detection cannot see an imperative phrased without any marker.
+        spec = _spec(parent="constellation/w1/execute/commander/attempt-1", gates=[_gate(
+            imperative="hand this to an implementer crew", postconditions=[_qualitative_cond()],
+        )])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert not any(f.code == "spec-dispatch-undeclared" for f in faults), faults
+
+    def test_reserved_dispatch_condition_id_is_refused(self):
+        spec = _spec(gates=[_gate(postconditions=[_qualitative_cond(id_="c-dispatch-0")])])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        assert any(f.code == "spec-reserved-id" for f in faults), faults
+
+    INNOCENT = {
+        "role + model + concrete parent, single entry": _spec(
+            parent="constellation/w1/execute/commander/attempt-1",
+            gates=[_gate(postconditions=[_qualitative_cond()], dispatch=[_dispatch()])],
+        ),
+        "no dispatch, no marker in imperative": _spec(gates=[_gate(postconditions=[_qualitative_cond()])]),
+        "dispatch marker present AND dispatch declared": _spec(
+            parent="constellation/w1/execute/commander/attempt-1",
+            gates=[_gate(imperative="dispatch via run_crew.py", postconditions=[_qualitative_cond()],
+                         dispatch=[_dispatch()])],
+        ),
+    }
+
+    @pytest.mark.parametrize("label", sorted(INNOCENT))
+    def test_innocent_is_left_alone(self, label):
+        faults = gs.spec_shape_faults(self.INNOCENT[label], repo_root=ROOT)
+        assert not any(f.code.startswith("spec-dispatch") for f in faults), (label, faults)
 
 
 # --------------------------------------------------------------------------- #
