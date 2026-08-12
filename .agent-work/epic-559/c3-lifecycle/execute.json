@@ -633,7 +633,7 @@
     }
   ],
   "blockers": [],
-  "refusals": 3,
+  "refusals": 4,
   "engine_session": {
     "session_id": "constellation/epic-559/c3-lifecycle/execute/commander",
     "status": "released",
