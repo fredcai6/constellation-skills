@@ -4,7 +4,7 @@
 evals: 12 modules, 54 entities
 scripts: 59 modules, 1172 entities
 skills: 1 modules, 18 entities
-tests: 77 modules, 4439 entities
+tests: 77 modules, 4448 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -103,7 +103,7 @@ tests: 77 modules, 4439 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (77 modules, 4439 entities)
+## tests (77 modules, 4448 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -140,7 +140,7 @@ tests: 77 modules, 4439 entities
 - [tests.test_gauge_chain_writer_to_trip](tests.test_gauge_chain_writer_to_trip/INDEX.md) (34 entities, 1 holes): The Context Governor chain, traversed end to end with REAL OS subprocesses:
 - [tests.test_gauge_reader](tests.test_gauge_reader/INDEX.md) (97 entities, 78 holes): HOLE: no docstring
 - [tests.test_gauge_writer](tests.test_gauge_writer/INDEX.md) (89 entities, 21 holes): Unit tests for scripts/hooks/gauge_writer_hook.py.
-- [tests.test_generate_spine](tests.test_generate_spine/INDEX.md) (181 entities, 181 holes): Tests for scripts/generate_spine.py -- the spine spec compiler and generator.
+- [tests.test_generate_spine](tests.test_generate_spine/INDEX.md) (190 entities, 190 holes): Tests for scripts/generate_spine.py -- the spine spec compiler and generator.
 - [tests.test_grade_lint](tests.test_grade_lint/INDEX.md) (50 entities, 35 holes): Tests for scripts/grade_lint.py — the @grade: inline-tag linter (issue #230, epic-226).
 - [tests.test_implementer_vocab](tests.test_implementer_vocab/INDEX.md) (7 entities, 7 holes): Light vocabulary assertion for the constellation-implementer sharpening (DESIGN_SPEC Section D2 — vertical-slice vocabulary).
 - [tests.test_init_work_area](tests.test_init_work_area/INDEX.md) (41 entities, 35 holes): HOLE: no docstring

@@ -216,6 +216,18 @@ def _cond_faults(where: str, cond: dict) -> list[Fault]:
 
     if kind == "pytest":
         faults.extend(_numeric_field_faults(where, cond, "min_collect"))
+        if "not_yet_written" in cond:
+            value = cond["not_yet_written"]
+            if not isinstance(value, bool):
+                faults.append(Fault(
+                    "spec-not-yet-written-not-bool", where,
+                    f"pytest condition field 'not_yet_written' must be a bool, got "
+                    f"{value!r} ({type(value).__name__}) -- compile_condition and "
+                    f"_probe_pytest both read it with bare truthiness, so a TOML string "
+                    f"like 'false' is truthy in Python and would be silently read as a "
+                    f"declaration, compiling the check to `None` and losing it entirely; "
+                    f"refused rather than coerced",
+                ))
 
     if kind == "artifact":
         evidence_type = cond.get("evidence_type")
@@ -1041,7 +1053,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     # 6. Write.
-    Path(args.out).write_text(json.dumps(compiled, indent=2) + "\n", encoding="utf-8")
+    Path(args.out).write_text(json.dumps(compiled, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(f"wrote {args.out}")
     return 0
 

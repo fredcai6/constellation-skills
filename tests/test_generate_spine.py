@@ -1056,6 +1056,97 @@ class TestNumericFieldTypeFaults:
 
 
 # --------------------------------------------------------------------------- #
+# g5 carried finding: `compile_condition` and `_probe_pytest` both read
+# `cond.get("not_yet_written")` with bare truthiness -- a TOML STRING
+# `not_yet_written = "false"` is truthy in Python, so it was silently read as
+# a declaration, and `compile_condition` compiled the postcondition's check
+# to `None`: the gate lost its check entirely, with no fault anywhere. Fixed
+# by refusing at spec-shape time (before either call site ever runs), house
+# style TestNumericFieldTypeFaults: `isinstance(x, bool)` is the correct
+# predicate -- `bool` is a subclass of `int` in Python, so `1`/`0` must also
+# be refused, not just the falsy-looking string spelling.
+# --------------------------------------------------------------------------- #
+
+class TestNotYetWrittenTypeGuard:
+    VIOLATING = {
+        "TOML string 'false' -- the exact carried-finding repro": _spec(gates=[_gate(
+            postconditions=[_pytest_cond(not_yet_written="false")],
+        )]),
+        "TOML string 'true' -- type guard, not a value guard": _spec(gates=[_gate(
+            postconditions=[_pytest_cond(not_yet_written="true")],
+        )]),
+        "int 1 -- bool is a subclass of int, but 1 is not a bool": _spec(gates=[_gate(
+            postconditions=[_pytest_cond(not_yet_written=1)],
+        )]),
+    }
+
+    INNOCENT = {
+        "bool true": _spec(gates=[_gate(postconditions=[_pytest_cond(not_yet_written=True)])]),
+        "bool false": _spec(gates=[_gate(postconditions=[_pytest_cond(not_yet_written=False)])]),
+        "field omitted entirely": _spec(gates=[_gate(postconditions=[_pytest_cond()])]),
+    }
+
+    @pytest.mark.parametrize("label", sorted(VIOLATING))
+    def test_violating_is_refused(self, label):
+        faults = gs.spec_shape_faults(self.VIOLATING[label], repo_root=ROOT)
+        assert any(f.code == "spec-not-yet-written-not-bool" for f in faults), (label, faults)
+
+    @pytest.mark.parametrize("label", sorted(INNOCENT))
+    def test_innocent_is_left_alone(self, label):
+        faults = gs.spec_shape_faults(self.INNOCENT[label], repo_root=ROOT)
+        assert not any(f.code == "spec-not-yet-written-not-bool" for f in faults), (label, faults)
+
+    def test_fault_names_field_gate_condition_and_type(self):
+        spec = _spec(gates=[_gate(id_="m1", postconditions=[_pytest_cond(id_="c1", not_yet_written="false")])])
+        faults = gs.spec_shape_faults(spec, repo_root=ROOT)
+        matches = [f for f in faults if f.code == "spec-not-yet-written-not-bool"]
+        assert len(matches) == 1, faults
+        fault = matches[0]
+        assert "not_yet_written" in fault.message
+        assert "m1" in fault.where
+        assert "c1" in fault.where
+        assert "str" in fault.message
+
+    # The carried finding's own repro, driven through `compile_condition`
+    # directly (not just `spec_shape_faults`) -- before this fix,
+    # `compile_condition` compiled a TOML-string `not_yet_written = "false"`
+    # straight to `check: None`, silently losing the gate's check.
+    def test_pre_fix_repro_is_now_caught_before_compile_condition_ever_sees_it(self):
+        spec = _spec(gates=[_gate(postconditions=[_pytest_cond(not_yet_written="false")])])
+        assert gs.spec_shape_faults(spec, repo_root=ROOT) != [], \
+            "a spec carrying this must be refused at spec-shape time, before compile_spec runs"
+
+    # INNOCENT true still compiles to check: null and still carries the
+    # non-blocking undecidable-pytest-not-yet-written note (close criterion
+    # 4's own wording) -- unchanged by this fix.
+    def test_innocent_true_still_compiles_to_null_check(self):
+        out = gs.compile_condition(_pytest_cond(not_yet_written=True), repo_root_token="<repo-root>")
+        assert out["check"] is None
+
+    def test_innocent_true_still_probes_as_non_blocking_undecidable(self):
+        cond = _pytest_cond(selector="ThisSelectorMatchesNothingAtAll12345", min_collect=1, not_yet_written=True)
+        faults, undecidable = gs._probe_pytest("m1", "c1", cond, repo_root=ROOT)
+        assert not faults, faults
+        assert len(undecidable) == 1
+        assert undecidable[0].code == "undecidable-pytest-not-yet-written"
+        assert undecidable[0].blocking is False
+
+    # INNOCENT false and omitted still take the strict probe path -- unchanged.
+    def test_innocent_false_still_takes_strict_probe_path(self):
+        cond = _pytest_cond(selector="ThisSelectorMatchesNothingAtAll12345", min_collect=1, not_yet_written=False)
+        faults, undecidable = gs._probe_pytest("m1", "c1", cond, repo_root=ROOT)
+        assert not undecidable, undecidable
+        assert any(f.code == "probe-pytest-below-min-collect" for f in faults), faults
+
+    def test_innocent_omitted_still_takes_strict_probe_path(self):
+        cond = _pytest_cond(selector="ThisSelectorMatchesNothingAtAll12345", min_collect=1)
+        assert "not_yet_written" not in cond
+        faults, undecidable = gs._probe_pytest("m1", "c1", cond, repo_root=ROOT)
+        assert not undecidable, undecidable
+        assert any(f.code == "probe-pytest-below-min-collect" for f in faults), faults
+
+
+# --------------------------------------------------------------------------- #
 # Blocker 4 (rework handoff): specs/implementer.spine.toml and
 # specs/reviewer.spine.toml both shipped with one Admiral session's id
 # hardcoded as `parent` -- a reusable role TEMPLATE, not a per-run dispatch
