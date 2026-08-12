@@ -3482,3 +3482,25 @@ Entry grammar (one line of date + tag, then the substance):
   after the child's last action, so the verification always runs against the moved-away path. This is
   a `run_crew.py` question, out of R0's scope; R0 names it and does not fix it. Evidence preserved as
   `crew-runs.final.json` in C3's archive rather than dropped.
+- MERGE | 2026-08-12 07:31 | **C3 + R0 merged into `main` as `1c76a6ec`; PR #564 is MERGED.**
+  Gate: cold review plus a green suite, both satisfied before the merge. Independent measurements on
+  the merged tree — **2933 passed, 3 skipped + 1 conditional skip, 1121 subtests**; sweep **23** fault
+  lines across 8 files, unchanged; `skills/**`, `settings.json`, `.mcp.json` and `docs/agents/`
+  untouched by the whole branch. Four guards falsified by mutating the real source, two of them mine
+  and independent of R0's own: the batch rollback disabled, and `_is_ignored` forced to `False`. Both
+  fired, naming the right test. `main` pushed to origin, which closed the PR as merged.
+- FINDING | 2026-08-12 07:31 | **R0's fix for the unportable test is a conditional skip, and its
+  practical coverage is small.** `TestWorktreePathForRealWorktree` now derives the work id from the
+  checkout's own directory name and skips, with a stated reason, unless the checkout sits directly
+  under `<primary>-wt/`. It therefore **always skips in the primary checkout and on CI**, and runs
+  only from a convention-following linked worktree. That is inherent to what the test asserts — a
+  convention checked against live git state — and it is honest where the original was not, but the
+  test is now near-unreachable in automation. Recorded, not blocked on.
+- OBSERVATION | 2026-08-12 07:31 | **R0 implemented before it reproduced, and said so.** Its m0 gate
+  required pre-change evidence in `BASELINE.md`; it wrote both fixes first, noticed the gate wanted
+  RED first, and reconstructed both reproductions against the unmodified `42df99fd` before advancing.
+  The evidence is genuinely pre-fix and the disclosure is unprompted and specific. Also worth keeping:
+  the m1 check I wrote was a **whole-file** grep for the literal work id, so it also caught three
+  unrelated tests using it as sample data and a docstring path that went stale the moment C3's work
+  area was archived. My check was too broad; R0 fixed all four in-scope rather than blocking, and
+  named the ambiguity. Both are episode material.
