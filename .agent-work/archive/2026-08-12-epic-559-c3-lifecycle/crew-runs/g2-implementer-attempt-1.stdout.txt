@@ -1,0 +1,14 @@
+## Summary
+
+Implemented `closeout_refusal` (pure) and `close_work` (impure) in `scripts/spine_lifecycle.py` per `LIFECYCLE_CONTRACT.md` §4, with 19 new tests (51 total) in `tests/test_spine_lifecycle.py`.
+
+Key findings during implementation, recorded in the result artifact's Workflow Feedback:
+- The excluded spine/journal basenames are derived from `Path(spine_path).name` (mandatory per the handoff) — proved with a live mutation experiment (hardcoded literal → red, restored → green).
+- A scaffolded work area routinely holds untracked or genuinely empty directories at close time; a naive `git mv` fails on both. `close_work` now stages each entry by its own explicit path (`git add <path>`, never `-A`/bare `.`) before moving it, falling back to a plain filesystem rename for content git can never track (empty directories).
+- Staging logic lives in a closure nested inside `close_work` so the "no `git add -A`, no bare `.`" guard genuinely covers `close_work`'s own source per the handoff's literal wording.
+
+Full suite: 2875 passed, 3 skipped, 1121 subtests (baseline was 2856; +19 matches this file's growth exactly). Sweep: exactly 23. `map/INDEX.md` was regenerated (required, within allowed scope) to reflect the two new functions.
+
+Result artifact written and complete at `.agent-work/epic-559/c3-lifecycle/crew-handoffs/g2-implementer-result.md` with `Return status: complete`.
+
+One note: my environment had `SPINE_FILE` bound to the Commander's own top-level `execute.json` orchestration spine rather than a dedicated implementer checklist — I did not attempt to drive that (advancing it is the Commander's job, not an implementer's); I flagged this rather than acting on it, and focused on the concrete, self-contained handoff task instead.

@@ -1,0 +1,9 @@
+The rework is complete. Summary:
+
+- **Fixed** the missing `newline="\n"` on `scripts/spine_lifecycle.py:258`'s only write site (audited the whole module — no other write sites exist).
+- **Added** a byte-level regression test plus an AST-based source check (house style of `test_mcp_adoption.py::_cli_only_verb_violations`), ran a real mutation experiment: confirmed the byte-level check stays green even with the bug reintroduced (can't go red on Linux, as anticipated), while the AST check correctly goes red — then restored the fix and confirmed all 4 new tests pass.
+- **Refactored** `_rollback`'s three inline `subprocess.run` calls into a `_best_effort_git` helper, behavior unchanged (verified against existing rollback tests).
+- Full suite: **2856 passed** (baseline 2852 + 4 new), sweep unchanged at **23**. Regenerated `map/INDEX.md` (required by the entity-count shift) and confirmed idempotent.
+- Drove the whole rework through the checklist engine via CLI (not the MCP door, which stays bound to the Commander's own `execute.json` — a mismatch already flagged by the earlier implementer and reviewer for this gate).
+
+Result artifact written at `.agent-work/epic-559/c3-lifecycle/crew-handoffs/g1-rework-result.md` with `Return status: complete`.

@@ -1,0 +1,184 @@
+{
+  "work_id": "epic-559/c3-lifecycle",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, GLOSSARY.md, g4-implementer-handoff.md, g4-implementer-result.md, g4-reviewer-handoff.md. Diff scope confirmed via git diff 386d7635..HEAD --stat: map/INDEX.md, scripts/generate_spine.py, scripts/verify_declared_dispatch.py (new), tests/test_declared_dispatch.py (new), tests/test_generate_spine.py -- matches allowed scope exactly.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Handoff's verify order (1-7) all independently confirmed. (1) Built own fixture spec, ran real generate_spine.py -> directives.dispatch and injected c-dispatch-0 postcondition byte-match implementer's claimed evidence. Built own crew-runs.json in an isolated /tmp fake repo (symlinked scripts/), ran the emitted command against a wrong-parent entry: exit 1, message names offending entry 'constellation/epic-559/c3-lifecycle/g4/implementer/attempt-1 (parent=admiral-epic-418-followon, model=sonnet)' -- both the right gate/role and both mismatched fields named correctly. Same fixture with matching parent: exit 0, names the matching entry. (2) Check kind confirmed 'command' not 'artifact' directly off the compiled spine JSON. (3) Read _dispatch_faults and _DISPATCH_MARKERS -- textual substring match on exactly 3 literal markers, confirmed by test_imperative_with_none_of_the_three_markers_stays_invisible; LIFECYCLE_CONTRACT.md sec5 and the injected fault message both state the narrowing honestly, no overclaim found in code, fault text, or contract. (4) verify_declared_dispatch.py imports is_abandoned/load_registry/registry_path from run_crew.py, zero re-implementation (grep confirms 0 occurrences of json.loads in the module, asserted by its own test). (5) _compile_dispatch_entry shlex.quotes every token and anchors cd via the same _REPO_ROOT_TOKEN every other compiled check uses -- confirmed by reading the code and by test_command_quotes_a_parent_with_shell_metacharacters. (6) Reproduced full suite: 2920 passed, 3 skipped, 1121 subtests (matches claim exactly). Reproduced sweep: exactly 23 (matches claim, nothing shipped moved -- neither specs/implementer.spine.toml nor specs/reviewer.spine.toml declare dispatch). (7) generate_spine.py:511/807 (shifted from the handoff's cited 424/673 by the diff's own insertions, same lines) still read not_yet_written with bare truthiness, confirmed unchanged; the missing newline='\\n' on the Path.write_text at line 1044 is also still absent, left alone as instructed (g5's).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "5 files changed (git diff 386d7635..HEAD --stat), all within the allowed-scope boundary: scripts/generate_spine.py, scripts/verify_declared_dispatch.py (new), tests/test_declared_dispatch.py (new), tests/test_generate_spine.py, map/INDEX.md (regenerated) -- matches the implementer handoff's Allowed Scope list exactly, no extra files. Specific exclusions independently confirmed untouched via empty git diff: scripts/spine_lifecycle.py, scripts/mcp_spine_server.py, scripts/validate_spine.py, .agent-work/epic-559/c2-generate-the-spine/DESIGN_NOTE.md, .mcp.json, settings.json, docs/agents/, skills/. Branch is epic-559/c3-lifecycle, not main; no push observed.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All required evidence independently reproduced from scratch, not read off the report: wrong-parent fixture (exit 1, correct entry named), ACCEPTED_FALSE_ALARM abandoned-entry fixture (exit 0, matches attempt-2, ignores the abandoned wrong-parent attempt-1), real generate_spine.py run against my own fixture spec (directives.dispatch + c-dispatch-0 byte-match the implementer's pasted evidence), full suite (2920/3/1121) and sweep (23) both reproduced exactly. Confirmed abandoned-handling reuses run_crew.is_abandoned (imported directly, not reimplemented) rather than a second predicate that could drift. No evidence item rests on the crew's report alone.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Constraints checked one by one against the diff: checklist_engine.py and validate_spine.py both diff-empty 386d7635..HEAD (confirmed above under r2). spine_lifecycle.py/mcp_spine_server.py/DESIGN_NOTE.md/.mcp.json/settings.json/docs/agents/skills all diff-empty. verify_declared_dispatch.py performs no writes at all (grep for write_text/open confirms none), so the encoding=utf-8,newline=\\n write rule is not applicable to it; the one write site in generate_spine.py (Path.write_text at line 1044) is pre-existing and untouched by this diff (still missing newline='\\n', left alone per exclusions -- g5's). No git add -A evidence (diff --stat shows exactly the 5 allowed-scope files, no stray additions). Branch is epic-559/c3-lifecycle; no push to main observed. Verification-discipline rules from CREW_CONTEXT.md also satisfied: the wrong-parent check demonstrably reaches a failing state (TDD red->green evidence plus my own independent mutation-free fixture reproducing red), assertions are against structural shape (dict keys, check.kind) not text, and find_candidates' empty-candidates branch is explicit rather than silently passing.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map Impact notes verified against the diff: struct:generator (scripts/generate_spine.py) gained _dispatch_faults/_compile_dispatch_entry and dispatch-aware _compile_gate/compile_spec signatures -- confirmed present. New module scripts/verify_declared_dispatch.py with exactly 3 entities (find_candidates, check_declared_dispatch, main) -- confirmed by reading the file. capability:declared-dispatch and decision:dispatch-is-checked-data (guess -> settled/measured, pinned by the wrong-parent fixture) both match what actually shipped. No undisclosed architectural divergence found. The one residual (spec-dispatch-undeclared's textual-marker detection) is explicitly named as accepted, not hidden, in both LIFECYCLE_CONTRACT.md section 5 and the implementer's own result -- correctly not re-raised as a fresh triage candidate since the contract already owns it. Nothing here requires Commander reconciliation beyond what the contract and handoff already scoped.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/epic-559/c3-lifecycle/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/epic-559/c3-lifecycle/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-559/c3-lifecycle/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass recorded at FOWLER_PASS.json, verified against my own independent read of the diff (spot-checked duplicated-code, data-clumps' active_duplicate/find_entry precedent, and comments-as-deodorant's claims against the actual source). All 12 baseline smells rendered: 9 absent, 3 overridden (data-clumps, primitive-obsession, comments-as-deodorant) each with a logged repo standard + reason (global-crew.md 'no speculative abstraction' / 'match surrounding conventions' plus run_crew.py's own pre-existing identity-tuple and untyped-string precedent), 0 flagged. scripts/verify_fowler_pass.py exits 0 (smells=12, flagged=[], overridden=[data-clumps, primitive-obsession, comments-as-deodorant]).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-559/c3-lifecycle/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-559/c3-lifecycle/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "All 7 survey items pass. The injected postcondition genuinely refuses a wrong-parent registry entry and passes a matching one -- independently reproduced from scratch (not read off the implementer's report) in an isolated fake repo. It is command-kind, not artifact. spec-dispatch-undeclared is honestly textual and both the code and LIFECYCLE_CONTRACT.md sec5 state the narrowing without overclaiming closure. abandoned is respected via a direct import of run_crew.is_abandoned, not a reimplementation. Every emitted token is shlex.quoted and cd is anchored via the standard _REPO_ROOT_TOKEN. Nothing shipped moved: sweep is exactly 23. not_yet_written and the missing newline='\\n' at generate_spine.py:1044 are both confirmed untouched, left for g5. Full suite reproduced exactly: 2920 passed, 3 skipped, 1121 subtests. Diff stays exactly inside allowed scope (5 files); every specific exclusion confirmed untouched. Fowler pass: 12/12 smells rendered, 0 flagged, 3 honestly overridden against logged repo precedent, rail exits 0."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "constellation/epic-559/c3-lifecycle/g4/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-12T12:29:35.680992+00:00",
+    "last_heartbeat": "2026-08-12T12:35:56.223989+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-12T12:36:08.066712+00:00"
+  }
+}

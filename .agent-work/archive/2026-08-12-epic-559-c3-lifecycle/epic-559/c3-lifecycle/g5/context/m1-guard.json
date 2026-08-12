@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1-guard",
+  "files": [],
+  "repo_rev": {
+    "commit": "b88f13a4b72205d9db5bdb65ea0c5d77ff2982ec"
+  },
+  "run": {
+    "work_id": "epic-559/c3-lifecycle/g5",
+    "generated_at": "2026-08-12T12:43:25Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-workbench",
+      "repo": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle",
+      "durable": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle"
+    }
+  }
+}

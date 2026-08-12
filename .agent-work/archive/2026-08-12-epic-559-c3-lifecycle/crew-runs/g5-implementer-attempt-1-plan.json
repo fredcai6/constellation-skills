@@ -1,0 +1,255 @@
+{
+  "work_id": "epic-559/c3-lifecycle/g5",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-guard",
+    "m2-design-note",
+    "m3-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the inherited global doctrine (constellation-implementer skill's references/global-crew.md and references/global-everyone.md), then the project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, then .agent-work/epic-559/c3-lifecycle/crew-handoffs/g5-implementer-handoff.md, LIFECYCLE_CONTRACT.md sections 7 and 7b, the whole c2-generate-the-spine/DESIGN_NOTE.md, and g4-implementer-result.md (for the new fault codes g4 added). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + contract + design note + g4 result loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "read global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md, g5-implementer-handoff.md, LIFECYCLE_CONTRACT.md sec 7/7b, full DESIGN_NOTE.md, g4-implementer-result.md; handoff verified complete"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-guard": {
+      "id": "m1-guard",
+      "title": "Refuse a non-bool not_yet_written, and fix the missing newline on write",
+      "imperative": "In scripts/generate_spine.py's `_cond_faults`, for a `pytest` condition, add a new spec-shape fault `spec-not-yet-written-not-bool` when the `not_yet_written` key is present with a non-bool value (isinstance(x, bool) is the right predicate -- bool is a subclass of int in Python, so 1/0 must still be refused). Name the field, the gate, the condition, and the offending type in the fault message. This runs before any probe, alongside the other spec-* faults. Also fix generate_spine.py's `Path(args.out).write_text(...)` call in main() to pass `newline=\"\\n\"` (docs/agents/CREW_CONTEXT.md:43 requires it on every write; this file is already being edited). TDD: write a new test class (VIOLATING: not_yet_written='false' string, 'true' string, and int 1; INNOCENT: true, false, and the field omitted) in tests/test_generate_spine.py, following the TestNumericFieldTypeFaults precedent, observe it RED first (attest c1), then implement the guard and get it GREEN (c2). Attest any check:null precondition before start.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new test class for spec-not-yet-written-not-bool written and observed failing -- manual attest, not a command check",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "TestNotYetWrittenTypeGuard added: 5 failed, 7 passed (RED) before the guard exists"
+        },
+        {
+          "id": "c2",
+          "statement": "the new fault-guard tests pass, and the newline=\"\\n\" fix is in place",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q -k TestNotYetWrittenTypeGuard tests/test_generate_spine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-guard-1"
+        }
+      ],
+      "constraints": [
+        "checklist_engine.py's on-disk format unchanged; validate_spine.py unchanged",
+        "settings.json, .mcp.json, docs/agents/* untouched",
+        "skills/** untouched",
+        "encoding=\"utf-8\", newline=\"\\n\" on every write",
+        "never run scripts/install_constellation.py; no merge, no push to main; never git add -A"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-guard-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q -k TestNotYetWrittenTypeGuard tests/test_generate_spine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-design-note": {
+      "id": "m2-design-note",
+      "title": "Reconcile DESIGN_NOTE.md sections 4, 7, and 10",
+      "imperative": "Mechanically enumerate, by command, from scripts/generate_spine.py's source (never from memory or from the note's existing list) every spec-shape fault code the generator can now raise. State the count. Reconcile c2-generate-the-spine/DESIGN_NOTE.md section 4 (kind vocabulary, and that `not_yet_written` compiles to `check: null`), section 7 (the full fault-code list with the count), and section 10 (the four-defect table) against the code as it stands after g4 and your own m1-guard change, and against section 6's own CORRECTION block. Correct or delete each stale claim with a one-line reason per changed claim; leave a correct claim exactly as it is. Attest c1 once the enumeration command and its output are recorded and the doc is reconciled.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-guard complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "fault codes enumerated by command with the count stated; DESIGN_NOTE.md sections 4, 7, 10 reconciled, correct-or-delete, one-line reason per changed claim",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "enumerated via grep -oE '\"spec-[a-z0-9-]+\"' scripts/generate_spine.py | tr -d '\"' | sort -u -- 17 codes, 16 reachable via spec_shape_faults(); DESIGN_NOTE.md sections 4 and 7 reconciled (not_yet_written documented, full fault list restated with per-code notes and fixed referent ambiguity); section 10's four rows re-verified against current source and found accurate, left unchanged"
+        }
+      ],
+      "constraints": [
+        "DESIGN_NOTE.md is the only doc in scope besides generate_spine.py and its test file",
+        "encoding=\"utf-8\", newline=\"\\n\" on every write"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-verify": {
+      "id": "m3-verify",
+      "title": "Full suite, sweep count, and result artifact",
+      "imperative": "Run the full test suite and the validate_spine.py sweep exactly as the handoff's Required evidence commands specify, confirm the sweep count is still exactly 23, and write the result artifact at .agent-work/epic-559/c3-lifecycle/crew-handoffs/g5-implementer-result.md with Return status: complete, before ending the turn.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2-design-note complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "sweep count is still exactly 23",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && test $(python scripts/validate_spine.py --sweep --root . 2>&1 | grep -cE '^\\s+\\[') -eq 23"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-verify-2"
+        },
+        {
+          "id": "c3",
+          "statement": "result artifact written with Return status: complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "result artifact written at .agent-work/epic-559/c3-lifecycle/crew-handoffs/g5-implementer-result.md, Return status: complete"
+        }
+      ],
+      "constraints": [
+        "never two crews in one worktree",
+        "never waive -- spine_halt block if a check cannot be satisfied"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_ENGINE FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/c3-lifecycle && test $(python scripts/validate_spine.py --sweep --root . 2>&1 | grep -cE '^\\s+\\[') -eq 23",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/epic-559/c3-lifecycle/g5/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-12T12:43:10.517579+00:00",
+    "last_heartbeat": "2026-08-12T12:55:34.441583+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-12T12:55:37.304192+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-12T12:43:23.058805+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-guard",
+      "why": "spec-not-yet-written-not-bool refuses a non-bool not_yet_written at spec-shape time (before compile_condition/probe ever see it); TDD red observed (5 failed) before the guard, green (12 passed) after; newline=\"\\n\" added to the compiled-spine write",
+      "mechanical": false,
+      "ts": "2026-08-12T12:44:28.145662+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-design-note",
+      "why": "spec-shape faults enumerated mechanically (17 total, 16 wired into spec_shape_faults, 1 separate/unwired); DESIGN_NOTE.md sections 4 and 7 corrected to match; section 10 checked row-by-row against current source, all four still accurate, left as-is",
+      "mechanical": false,
+      "ts": "2026-08-12T12:47:38.823284+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-verify",
+      "why": "spec-not-yet-written-not-bool refuses all three VIOLATING shapes (TOML strings 'false'/'true', int 1) at spec-shape time; all three INNOCENT shapes (true/false/omitted) unchanged; DESIGN_NOTE.md sections 4/7/10 reconciled; full suite and sweep re-verified green/23; result artifact written with Return status: complete",
+      "mechanical": false,
+      "ts": "2026-08-12T12:55:34.441567+00:00"
+    }
+  ]
+}

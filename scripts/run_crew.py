@@ -427,6 +427,12 @@ CREW_ALLOWED_TOOLS = (
     "mcp__spine__spine_status", "mcp__spine__spine_lease", "mcp__spine__spine_start",
     "mcp__spine__spine_advance", "mcp__spine__spine_evidence", "mcp__spine__spine_halt",
     "mcp__spine__spine_survey_result", "mcp__spine__spine_capture", "mcp__spine__spine_amend",
+    # The lifecycle door (issue #559, C3/g3): without these, a dispatched crew
+    # is silently denied spine_open/spine_close even though the door itself
+    # advertises them -- exactly the "two tools silently denied to every crew"
+    # failure this tuple's own drift-guard test (test_crew_launcher.py) exists
+    # to catch.
+    "mcp__spine__spine_open", "mcp__spine__spine_close",
 )
 
 # Ruling (human, verbatim): "agent cannot waive itself. I'll allow commander to

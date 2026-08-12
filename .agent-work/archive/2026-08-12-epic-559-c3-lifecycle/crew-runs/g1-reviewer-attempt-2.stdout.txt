@@ -1,0 +1,16 @@
+The result artifact exists, the survey is consolidated APPROVE with the lease released, and the working tree is unmodified relative to where it started (only pre-existing rework changes and Commander bookkeeping remain — no leftover scratch files from my mutation/spy testing).
+
+## Summary
+
+Re-reviewed the g1 rework as attempt-2. I independently reproduced and falsified every claim from the rework result rather than trusting the transcript:
+
+- **Fix completeness** — confirmed via independent grep: exactly one `write_text` call in the module, now carrying `newline="\n"`.
+- **Guard falsifiability** — personally stripped the fix, reran the tests, got the same 2-failure signature, restored, reconfirmed green.
+- **Byte-level test** — confirmed it genuinely reads bytes but is inert on Linux by design; the AST-level check is the layer that actually catches regressions here.
+- **`_rollback` never-raises** — confirmed the refactor is a pure extraction with an identical raise surface, backed by two ad-hoc spy tests (written and deleted this session) proving rollback fires against state that genuinely existed, not "never created."
+- **Gate as a whole** — re-verified rollback, forced-rollback, and origin round-trip against real git/engine rather than inheriting the first reviewer's approval.
+- **Constraints** — all held (verified via diff against each named file/dir).
+- **Evidence** — reproduced exactly: 2856 passed/3 skipped/1121 subtests, sweep 23.
+- **Fowler pass** — fresh pass on the rework diff, 0 flagged, 0 overridden.
+
+**Verdict: APPROVE.** Result written to `.agent-work/epic-559/c3-lifecycle/crew-handoffs/g1-rereview-result.md`.

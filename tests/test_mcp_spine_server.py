@@ -238,9 +238,13 @@ class ServerProtocolTests(unittest.TestCase):
     def test_tools_list_is_exactly_the_nine_committed_tools(self):
         tools = self.client.rpc("tools/list")["result"]["tools"]
         names = {t["name"] for t in tools}
-        self.assertEqual(EXPECTED_TOOLS, names)
-        self.assertEqual(9, len(tools),
-                          "9 tools covering all 18 verbs (issue #559, N1) -- "
+        # issue #559, C3/g3 added 2 lifecycle tools (spine_open, spine_close)
+        # that are not engine pass-throughs (see mcp_spine_server.py's module
+        # docstring, "The lifecycle door") -- EXPECTED_TOOLS names the
+        # original 9 engine tools this test was written for, unchanged.
+        self.assertEqual(EXPECTED_TOOLS, names - {"spine_open", "spine_close"})
+        self.assertEqual(11, len(tools),
+                          "9 engine tools + 2 lifecycle tools (issue #559, N1/C3) -- "
                           "not one tool per verb, and no verb left uncovered")
         for t in tools:
             self.assertIn("description", t)
@@ -708,7 +712,13 @@ class AllEighteenVerbsCoveredTests(unittest.TestCase):
 
     def test_every_engine_verb_maps_to_a_tool_the_live_door_actually_advertises(self):
         tools = self.client.rpc("tools/list")["result"]["tools"]
-        advertised = {t["name"] for t in tools}
+        # issue #559, C3/g3's spine_open/spine_close never call run_engine and so
+        # cover no engine verb by design (see mcp_spine_server.py's module
+        # docstring, "The lifecycle door") -- excluded here the same way
+        # tests/test_mcp_identity.py's runtime sweep scopes itself off
+        # LIFECYCLE_TOOL_NAMES, so this stays a completeness claim about the 9
+        # engine tools, not a claim that a lifecycle tool must map to a verb.
+        advertised = {t["name"] for t in tools} - {"spine_open", "spine_close"}
         self.assertEqual(
             18, len(VERB_TO_TOOL),
             "VERB_TO_TOOL must name all 18 engine verbs, or this test is vacuous",

@@ -107,9 +107,14 @@ qualitative and why. Silence is refused (missing or empty `because` is a spec-sh
 `validate_spine`'s own `falsifiable-all-null` wording quoted, because the oracle would refuse it
 anyway and failing at the spec is a better error than failing at the spine.
 
+The pytest `not_yet_written` declaration below compiles to this identical `"check": null` shape, for
+a different reason: not "there is no automatable signal" but "there is no *live* signal yet, by
+design, until this gate closes."
+
 ### `pytest`
 
-Fields: `selector` (required), `min_collect` (int ≥ 1, default 1), `targets` (list[str], optional).
+Fields: `selector` (required), `min_collect` (int ≥ 1, default 1), `targets` (list[str], optional),
+`not_yet_written` (bool, optional, default `false` — see below).
 
 Compiles to the corpus's documented self-checking idiom, with the selector quoted by `shlex.quote` and
 targets joined by `shlex.join`:
@@ -122,7 +127,27 @@ The author writes a selector and a number and never sees a shell quote. **Defect
 impossible here** — there is no shell-text field to leave unquoted.
 
 **Probe:** run `python -m pytest --collect-only -q -k <selector> <targets>` and refuse below
-`min_collect`, reporting the actual count.
+`min_collect`, reporting the actual count. This is the **silent-default** path — the field
+omitted, or stated `false` — and is unchanged by everything below.
+
+**`not_yet_written`** (added in rework, carried finding fixed at `g5`): a stated declaration that
+this pytest condition asserts a **close-time** truth, not a generation-time one — the shape a
+TDD-red gate needs, where the test does not exist yet. When `true`, `compile_condition` compiles
+the check to `"check": null` (never a `command`, for the reason the qualitative paragraph above
+gives — `validate_spine.validate()` unconditionally re-probes any `command`-kind pytest check live
+and would refuse a genuine zero-collect before the test exists) and appends `-- NOT YET WRITTEN AT
+GENERATION: ...` to the statement, so a reviewer sees the claim rendered on the gate itself. The
+probe still checks well-formedness — the selector parses, named targets resolve (a
+`<resolver-owned>` token is exempted) — but reports a **non-blocking**
+`undecidable-pytest-not-yet-written` rather than asserting a live collect/pass count; there is no
+live count to assert before the test exists.
+
+The field must be a literal TOML/JSON bool. `compile_condition` and the probe both read it with
+bare Python truthiness (`cond.get("not_yet_written")`), and a TOML **string** is truthy regardless
+of its spelling — `not_yet_written = "false"` compiled the check straight to `None`, silently
+losing it, with no fault anywhere. Fixed at spec-shape time (section 7): a `not_yet_written` value
+that is not a `bool` (`isinstance(x, bool)` — `1`/`0` are `int`, not `bool`, and are refused too) is
+refused as `spec-not-yet-written-not-bool` before either call site ever sees it.
 
 ### `script`
 
@@ -310,25 +335,79 @@ test in the `tests/test_mutation_floor.py` style — deleting the injection must
 
 ## 7. Spec-shape faults — refused before any probe
 
+**Enumerated mechanically against the shipped source, not from memory or from this list's own prior
+content** (the prior version of this section was itself under-inclusive — see "Reconciled at g5"
+below):
+
+```
+$ grep -oE '"spec-[a-z0-9-]+"' scripts/generate_spine.py | tr -d '"' | sort -u
+spec-all-qualitative-postconditions
+spec-artifact-missing-match
+spec-config-ref-not-json
+spec-dispatch-missing-field
+spec-dispatch-undeclared
+spec-dispatch-unresolved-parent
+spec-duplicate-condition-id
+spec-duplicate-gate-id
+spec-empty-because
+spec-gated-missing-postconditions
+spec-malformed-claim
+spec-missing-field
+spec-non-integer-field
+spec-not-yet-written-not-bool
+spec-reserved-id
+spec-shipped-session-specific-parent
+spec-unknown-check-kind
+```
+
+**17** distinct `spec-*` fault-code string literals in the module. **16** are reachable through
+`spec_shape_faults()`, the function `main()` actually calls (section 8, step 2) before `compile_spec`
+ever runs:
+
 `spec-unknown-check-kind` · `spec-missing-field` · `spec-empty-because` ·
-`spec-gated-missing-postconditions` · `spec-all-qualitative-postconditions` · `spec-duplicate-gate-id` ·
-`spec-duplicate-condition-id` (pre- and postcondition ids must be **disjoint** within a gate — the
-schema's stated invariant, since `attest`'s `--which` fallback resolves by first match) ·
-`spec-reserved-id` (`c-escalation`) · `spec-config-ref-not-json` · **`spec-malformed-claim`**.
+`spec-non-integer-field` (a `population`/`pytest` numeric field — `expected`, `expected_min`,
+`expected_max`, `min_collect` — interpolated **unquoted** into the compiled command; a non-integer
+here, including a `bool`, compiles a check that cannot fail) ·
+`spec-not-yet-written-not-bool` (section 4 above: a pytest condition's `not_yet_written` must be a
+literal `bool` — both `compile_condition` and the probe read it with bare truthiness) ·
+`spec-artifact-missing-match` (an `artifact` check with no `match` whose `evidence_type` is not in
+`validate_spine.ACCEPTED_ARTIFACT_TYPES_WITHOUT_MATCH`) · `spec-gated-missing-postconditions` ·
+`spec-all-qualitative-postconditions` · `spec-duplicate-gate-id` · `spec-duplicate-condition-id`
+(pre- and postcondition ids must be **disjoint** within a gate — the schema's stated invariant,
+since `attest`'s `--which` fallback resolves by first match) · `spec-reserved-id` (the
+`c-escalation` id, and — since g4 — the `c-dispatch-<n>` family reserved for injected
+declared-dispatch postconditions) · `spec-config-ref-not-json` · `spec-malformed-claim` ·
+`spec-dispatch-missing-field` · `spec-dispatch-unresolved-parent` · `spec-dispatch-undeclared` (g4,
+LIFECYCLE_CONTRACT.md section 5: the three declared-dispatch faults).
 
-That last one is g3-dispatch/m1's second task, also found live: `[gate.claim]` is a TOML *table*, and an
-author who writes `[[gate.claim]]` (array-of-tables) instead gets a `list` where `compile_spec` expects a
-`dict` — `(g.get("claim") or {}).get("magnitude")` then raises an unhandled `AttributeError: 'list' object
+**`spec-malformed-claim`**: `[gate.claim]` is a TOML *table*, and an author who writes
+`[[gate.claim]]` (array-of-tables) instead gets a `list` where `compile_spec` expects a `dict` —
+`(g.get("claim") or {}).get("magnitude")` then raises an unhandled `AttributeError: 'list' object
 has no attribute 'get'`, a traceback with no fault code, exactly the class of mistake this generator
-exists to catch before it reaches the compiler. `spec-malformed-claim` now refuses, by name, a `claim`
-that is not a table, carries a `magnitude` outside `{normal, large}`, or is `large` with no `text` —
-before `compile_spec` ever runs.
+exists to catch before it reaches the compiler. `spec-malformed-claim` now refuses, by name, a
+`claim` that is not a table, carries a `magnitude` outside `{normal, large}`, or is `large` with no
+`text` — before `compile_spec` ever runs.
 
-That last one is not theoretical: I hit it in this very run. `checklist_engine.load_config` calls
-`json.loads` on **any** `config_ref` that exists, so a `config_ref` pointing at a real non-JSON file
-crashes the engine with an unhandled `JSONDecodeError` before any rail text can print — and
-`validate_spine.py` has no fault for it. The generator refuses it; the gap in the oracle is a finding
-for the return report, not a change to the oracle.
+**`spec-config-ref-not-json`**: not theoretical — hit live in the original run. `checklist_engine
+.load_config` calls `json.loads` on **any** `config_ref` that exists, so a `config_ref` pointing at
+a real non-JSON file crashes the engine with an unhandled `JSONDecodeError` before any rail text can
+print, and `validate_spine.py` has no fault for it. The generator refuses it; the gap in the oracle
+is a finding for the return report, not a change to the oracle.
+
+**The 17th, `spec-shipped-session-specific-parent`**, is *not* one of the 16 above: it is emitted by
+a separate function, `shipped_spec_session_specific_parent_faults`, deliberately **not** wired into
+`spec_shape_faults` or `main()` — a real per-run dispatch spec legitimately carries a concrete
+`parent`; only a spec meant to *ship* as a reusable template under `specs/` must not (section 10's
+own Blocker 4). A caller auditing shipped templates invokes it directly (see
+`TestShippedSpecParentGuard`); running `python scripts/generate_spine.py <spec.toml>` itself can
+never raise it.
+
+**Reconciled at g5.** This section previously listed 10 of the 16 `spec_shape_faults()` codes,
+omitting `spec-non-integer-field` (added in the original rework, never folded back in),
+`spec-artifact-missing-match` (present since this note's own first draft, never listed), and all
+three g4 dispatch codes (added after this note was frozen). It also carried an ambiguous "that last
+one" back-reference across two consecutive fault explanations that named different codes; the codes
+are now named explicitly instead. `spec-not-yet-written-not-bool` (g5) is new.
 
 ## 8. The generator
 

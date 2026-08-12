@@ -233,17 +233,25 @@ class TestDoorSurfaceTiesToTheEngineRegistry:
 
     def test_door_tool_names_tie_to_mcp_spine_servers_own_registry(self, tmp_path):
         server = _load_mcp_spine_server(tmp_path)
-        assert set(DOOR_TOOL_NAMES) == server.TOOL_NAMES, (
-            "DOOR_TOOL_NAMES has drifted from mcp_spine_server.TOOL_NAMES -- a tool the "
-            "door added or removed is not reflected in this file's pin"
+        # Scoped to the engine tools (TOOL_NAMES - LIFECYCLE_TOOL_NAMES): issue #559,
+        # C3/g3 added spine_open/spine_close, which are NOT pass-throughs this file's
+        # Tier3 "## MCP door" section describes (see TestTier3ChecklistEngineReference
+        # below, which pins DOOR_TOOL_NAMES against that doc section -- a lifecycle tool
+        # is a different surface and documenting it there is a follow-on, not this pin's
+        # job). DOOR_TOOL_NAMES itself stays exactly the 9 it always named.
+        engine_tools = server.TOOL_NAMES - server.LIFECYCLE_TOOL_NAMES
+        assert set(DOOR_TOOL_NAMES) == engine_tools, (
+            "DOOR_TOOL_NAMES has drifted from mcp_spine_server.TOOL_NAMES's engine tools -- "
+            "a tool the door added or removed is not reflected in this file's pin"
         )
 
     def test_door_has_all_nine_tools_todays_pin_expects(self, tmp_path):
         # CONTROL for the tie test above: pins the count so a future door regression
         # (e.g. a tool silently dropped) cannot slip through by shrinking both sides of
-        # the comparison in lockstep.
+        # the comparison in lockstep. Scoped the same way: 9 engine tools, not counting
+        # the 2 lifecycle tools (issue #559, C3/g3).
         server = _load_mcp_spine_server(tmp_path)
-        assert len(server.TOOL_NAMES) == 9
+        assert len(server.TOOL_NAMES - server.LIFECYCLE_TOOL_NAMES) == 9
 
     def test_engine_has_all_eighteen_verbs_todays_pins_expect(self):
         # CONTROL for the gap test below, same reason: pins the engine's own verb count

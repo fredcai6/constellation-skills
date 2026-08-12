@@ -1,0 +1,11 @@
+The g4 implementer run is complete. Summary of what shipped:
+
+**Code** (2 commits: `90e88984` feat, `b051b069` chore/map):
+- `scripts/generate_spine.py`: `[[gate.dispatch]]` spec support — `_dispatch_faults` (three new spec-shape faults: `spec-dispatch-missing-field`, `spec-dispatch-unresolved-parent`, `spec-dispatch-undeclared`), a reserved `c-dispatch-<n>` condition-id family, and `_compile_dispatch_entry` wired into `_compile_gate`/`compile_spec` to emit `directives.dispatch` plus one injected `command`-kind postcondition per entry.
+- `scripts/verify_declared_dispatch.py` (new): the oracle the injected postcondition shells out to, reusing `run_crew.py`'s own `registry_path`/`load_registry`/`is_abandoned`.
+- `tests/test_generate_spine.py` + `tests/test_declared_dispatch.py` (new): 36 new tests, TDD red→green on the two riskiest slices, covering every close criterion — wrong-parent, wrong-model, no-entry, matching, and the abandoned-entry `ACCEPTED_FALSE_ALARM`, driven through both the raw compiled command and the real engine.
+- `map/INDEX.md` regenerated.
+
+**Verified:** full suite 2920 passed/3 skipped/1121 subtests (up from 2884 baseline), sweep still exactly 23 — nothing shipped moved.
+
+**Result artifact** written at `.agent-work/epic-559/c3-lifecycle/crew-handoffs/g4-implementer-result.md` with `Return status: complete`, all required evidence pasted verbatim, and an honest statement that `spec-dispatch-undeclared` narrows the textual-detection hole rather than closing it. The local implementer plan was driven fully through the checklist engine and its lease released.

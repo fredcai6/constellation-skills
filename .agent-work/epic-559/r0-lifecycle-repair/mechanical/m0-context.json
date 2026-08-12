@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "epic-559/r0-lifecycle-repair",
+    "project": "constellation-skills",
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-559/r0-lifecycle-repair-m0-context@537f855076a3d3296d275c387d7e7bd3bf9fc4ba",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "epic-559/r0-lifecycle-repair",
+    "generated_at": "2026-08-12T13:57:10Z"
+  }
+}

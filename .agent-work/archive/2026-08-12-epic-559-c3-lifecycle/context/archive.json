@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "archive",
+  "files": [],
+  "repo_rev": {
+    "commit": "0c606ef79b162d48f68aac0f90e902e134aa7d9c"
+  },
+  "run": {
+    "work_id": "epic-559/c3-lifecycle",
+    "generated_at": "2026-08-12T13:17:42Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle",
+      "repo": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle",
+      "durable": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/c3-lifecycle"
+    }
+  }
+}

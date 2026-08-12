@@ -1,0 +1,189 @@
+{
+  "work_id": "epic-559/c3-lifecycle",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, GLOSSARY.md, LIFECYCLE_CONTRACT.md \u00a77/\u00a77b, g5-implementer-handoff.md, g5-implementer-result.md, and the full working-tree diff (git diff, since HEAD==b88f13a4 and this wave is uncommitted).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 7 handoff verify items reproduced independently: (1) six not_yet_written type-guard cases match claimed refuse/pass behavior exactly; (2) fault message's None/compile_condition claim confirmed against source line 523-532; (3) mechanical enumeration = 23 total fault codes (17 spec-*, 6 probe-*); DESIGN_NOTE.md \u00a77 lists all 17 spec-* codes item-for-item, the doc's own 18-vs-17 grep noise is 'spec-shape' prose not a code, exactly as the calibration note warned; (4) \u00a74 now documents not_yet_written->check:null; \u00a710 four-defect table untouched and still accurate (g4 dispatch faults are outside the four-defect framework's scope); (5) DESIGN_NOTE.md rewrite of ambiguous back-references was justified, not needless churn, and disclosed in a new 'Reconciled at g5' paragraph; (6) generate_spine.py's sole write_text call now has newline=\"\\n\"; (7) sweep reproduced at exactly 23, no shipped spec uses not_yet_written. Suite reproduced at 2932 passed/3 skipped/1121 subtests, matching claim.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Modified files confined to allowed scope: scripts/generate_spine.py, tests/test_generate_spine.py, .agent-work/epic-559/c2-generate-the-spine/DESIGN_NOTE.md, map/INDEX.md (regenerated, benign entity-count delta for the 9 new tests). checklist_engine.py, validate_spine.py, spine_lifecycle.py, mcp_spine_server.py, .mcp.json, settings.json, docs/agents/*, skills/** all untouched (git status --short confirms). No commits made by this crew (HEAD still b88f13a4); no push to main.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Load-bearing evidence reproduced independently, not accepted on the report's say-so: full pytest run under exact env prefix (2932 passed, 3 skipped, 1121 subtests, 117.91s); validate_spine.py --sweep count = 23; grep for not_yet_written under specs/ returns nothing; six type-guard cases run directly against gs.spec_shape_faults/compile_condition via the test module's own _spec/_gate/_pytest_cond helpers, matching claimed behavior exactly.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "CREW_CONTEXT.md rules honored: newline='\\n' fix applied at the module's sole write_text call; fault code follows existing spec-<field>-<problem> naming convention; new tests added rather than an unfalsifiable guard (VIOLATING vs INNOCENT split covers the type/value distinction directly). global-crew.md 'minimal change / no speculative abstraction' honored: guard is scoped to kind=='pytest' only, matching where the field is actually read; no coercion path added.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture divergence needing Commander reconciliation. One triage candidate (out of this wave's scope): the 6 probe-* fault codes (probe-population-count-mismatch, probe-pytest-below-min-collect, probe-pytest-malformed-selector, probe-script-not-found, probe-script-positional-path-not-found, probe-script-unknown-flag) have no formal enumerated list anywhere in DESIGN_NOTE.md the way spec-* now does in section 7 -- they're described narratively per-kind in section 4, and only one (probe-script-positional-path-not-found) is named literally. Section 7's own title ('Spec-shape faults -- refused before any probe') scopes it to spec-* by design, so this is not a defect in this wave, but a future note reconciliation could add a parallel probe-fault list for completeness.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/epic-559/c3-lifecycle/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/epic-559/c3-lifecycle/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-559/c3-lifecycle/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass complete over the g5 diff: 11 smells absent, 1 (comments-as-deodorant) overridden with a logged repo-standard reason (matches an existing identical-shape comment convention already in tests/test_generate_spine.py). verify_fowler_pass.py exits 0 (smells=12, flagged=[], overridden=['comments-as-deodorant']).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "pass",
+            "summary": "Fowler pass complete, verify_fowler_pass.py exit 0"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-559/c3-lifecycle/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "All 7 handoff verify items and both stop-condition constraints reproduced independently and confirmed accurate. Six not_yet_written type-guard cases match exactly. Fault message's None claim verified against compile_condition source. Mechanical enumeration: 23 total fault codes (17 spec-*, 6 probe-*); DESIGN_NOTE.md section 7 lists all 17 spec-* codes item-for-item, matching the source exactly -- the 17-vs-18 discrepancy the Commander flagged is grep noise ('spec-shape' prose), not a missing code. Section 4 and section 10 verified accurate; section 10 untouched and correctly so (g4 dispatch faults are outside its four-defect scope). No needless churn -- the section 7 rewrite fixed a real ambiguous back-reference, disclosed in a new Reconciled-at-g5 paragraph. generate_spine.py:910's newline fix present. Sweep reproduced at exactly 23. Suite reproduced at 2932 passed/3 skipped/1121 subtests. All constraints (untouched files, no push to main) hold. Fowler pass clean (verify_fowler_pass.py exit 0). One non-blocking triage candidate flagged: no formal enumerated list of the 6 probe-* fault codes anywhere in DESIGN_NOTE.md."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "DESIGN_NOTE.md has no formal enumerated list of the 6 probe-* fault codes (probe-population-count-mismatch, probe-pytest-below-min-collect, probe-pytest-malformed-selector, probe-script-not-found, probe-script-positional-path-not-found, probe-script-unknown-flag), unlike section 7's now-complete spec-* list. Out of g5 scope (section 7's own title scopes it to spec-shape faults) but a future note pass could add a parallel probe-fault enumeration for completeness."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/epic-559/c3-lifecycle/g5/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-12T12:58:07.123483+00:00",
+    "last_heartbeat": "2026-08-12T13:05:43.788495+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-12T13:06:42.279681+00:00"
+  }
+}

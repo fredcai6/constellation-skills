@@ -1,0 +1,10 @@
+The g1 implementer run is complete. Summary:
+
+- Built `scripts/spine_lifecycle.py` (pure helpers `worktree_path_for`/`branch_name_for`/`archive_name_for`/`build_origin`, plus impure `open_work`) and `tests/test_spine_lifecycle.py` (28 tests, every guard with VIOLATING/INNOCENT fixtures), per `LIFECYCLE_CONTRACT.md` §2–3.
+- Verified with real fixtures (not mocks pretending): rollback leaves zero worktree/branch trace on a late failure at both step 6 and step 7, `check_distinct_real` returning no forces rollback even though `git worktree add` exits 0, rollback is correctly scoped (a sibling worktree survives), and `origin` survives a real `claim → start → attest → advance` engine drive byte-identical.
+- Full suite: 2852 passed (2824 baseline + 28 new), 3 skipped, 1121 subtests — sweep still exactly 23 fault lines.
+- Committed `scripts/spine_lifecycle.py`, `tests/test_spine_lifecycle.py`, and the regenerated `map/INDEX.md` locally (not pushed); the result artifact at `.agent-work/epic-559/c3-lifecycle/crew-handoffs/g1-implementer-result.md` is left uncommitted for the Commander, with `Return status: complete`.
+
+Two things worth your attention, both recorded in the result's Workflow Feedback / Assumptions:
+1. `SPINE_SESSION`'s exact derivation is genuinely unspecified by both the contract and handoff — I judged it as `f"constellation/{work_id}"` and flagged it for g3/g4 to confirm.
+2. The bound `SPINE_FILE`/`SPINE_SESSION` env vars in my process pointed at the Commander's own top-level `execute.json` (not a dedicated g1 spine, since that door doesn't exist until g3) — I didn't touch that spine and tracked my own steps locally instead.

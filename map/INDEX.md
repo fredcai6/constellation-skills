@@ -2,9 +2,9 @@
 
 ## packages
 evals: 12 modules, 54 entities
-scripts: 57 modules, 1142 entities
+scripts: 59 modules, 1174 entities
 skills: 1 modules, 18 entities
-tests: 74 modules, 4273 entities
+tests: 77 modules, 4453 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -29,7 +29,7 @@ tests: 74 modules, 4273 entities
 - [evals.euler-5-smallest-multiple.checks.spine_completed](evals.euler-5-smallest-multiple.checks.spine_completed/INDEX.md) (9 entities, 2 holes): PROCESS check (gating): a constellation ENGINE spine reached a terminal state WITH engine-written provenance -- not merely agent-written JSON (issue #127).
 - [evals.euler-5-smallest-multiple.checks.tests_green](evals.euler-5-smallest-multiple.checks.tests_green/INDEX.md) (3 entities, 3 holes): PROCESS check (gating): tests were WRITTEN and PASS in the workspace.
 
-## scripts (57 modules, 1142 entities)
+## scripts (59 modules, 1174 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -60,22 +60,24 @@ tests: 74 modules, 4273 entities
 - [scripts.episode_capture](scripts.episode_capture/INDEX.md) (15 entities): Assembly seam: the context manifest as a **byproduct of starting a step**.
 - [scripts.file_issue_set](scripts.file_issue_set/INDEX.md) (44 entities, 41 holes): File only the runnable current wave from a verified initial issue set.
 - [scripts.gauge_reader](scripts.gauge_reader/INDEX.md) (11 entities): Gauge reader -- fail-safe read of the context-fullness gauge file.
-- [scripts.generate_spine](scripts.generate_spine/INDEX.md) (29 entities, 13 holes): Compile a `specs/<role>.spine.toml` spec into an engine-native spine JSON, and refuse to emit anything `scripts/validate_spine.py` would reject.
+- [scripts.generate_spine](scripts.generate_spine/INDEX.md) (31 entities, 13 holes): Compile a `specs/<role>.spine.toml` spec into an engine-native spine JSON, and refuse to emit anything `scripts/validate_spine.py` would reject.
 - [scripts.grade_lint](scripts.grade_lint/INDEX.md) (32 entities, 24 holes): Lint `@grade:` decision tags — a plan decision's fixedness as an inline, greppable property of the decision itself, so no second hand-maintained ledger ever has
 - [scripts.init_work_area](scripts.init_work_area/INDEX.md) (7 entities, 2 holes): Scaffold a Constellation work area: .agent-work/<work-id>/ and its subdirs.
 - [scripts.install_constellation](scripts.install_constellation/INDEX.md) (85 entities, 31 holes): HOLE: no docstring
 - [scripts.map_orient](scripts.map_orient/INDEX.md) (61 entities, 17 holes): Orient an agent against a repo's architecture map -- or REPORT that it cannot.
-- [scripts.mcp_spine_server](scripts.mcp_spine_server/INDEX.md) (12 entities, 4 holes): MCP front door for the checklist engine (issue #424, workstream F of epic #418).
+- [scripts.mcp_spine_server](scripts.mcp_spine_server/INDEX.md) (19 entities, 4 holes): MCP front door for the checklist engine (issue #424, workstream F of epic #418).
 - [scripts.measure_overread](scripts.measure_overread/INDEX.md) (10 entities, 2 holes): measure_overread.py -- count STRUCTURAL READS per agent run in a transcript.
 - [scripts.prove_docstring_only](scripts.prove_docstring_only/INDEX.md) (3 entities, 1 holes): Decide — not assert — whether a Python file's change is docstring-only.
 - [scripts.query_episodes](scripts.query_episodes/INDEX.md) (22 entities, 7 holes): Deterministic retrieval over the episode store (docs/EPISODE_STORE.md section 8).
 - [scripts.recover_crews](scripts.recover_crews/INDEX.md) (8 entities, 3 holes): Recovery classifier over the durable crew-run registry.
 - [scripts.run_crew](scripts.run_crew/INDEX.md) (59 entities, 11 holes): Safe crew launcher with a durable session-recovery registry.
 - [scripts.run_skill_eval](scripts.run_skill_eval/INDEX.md) (42 entities, 10 holes): Corpus skill-eval runner — the PURE, agent-free core (#106, gate g2).
+- [scripts.spine_lifecycle](scripts.spine_lifecycle/INDEX.md) (20 entities, 3 holes): Open and close Constellation work in one call each: `open_work` builds a worktree, a branch, a scaffolded work area, and a compiled, origin-stamped spine; `clos
 - [scripts.validate_spine](scripts.validate_spine/INDEX.md) (23 entities, 10 holes): Refuse a spine or spine template the engine cannot read, or that carries a check which cannot fail.
 - [scripts.verify_context_declaration](scripts.verify_context_declaration/INDEX.md) (7 entities, 1 holes): Lint: every declared `context_refs` path must appear verbatim in its own task's `imperative` prose.
 - [scripts.verify_coverage_ledger](scripts.verify_coverage_ledger/INDEX.md) (6 entities, 2 holes): Verify the removability coverage ledger against the installed-externals manifest.
 - [scripts.verify_cycles](scripts.verify_cycles/INDEX.md) (4 entities, 3 holes): Verify a work area's exploration cycles are consolidated before explore closes.
+- [scripts.verify_declared_dispatch](scripts.verify_declared_dispatch/INDEX.md) (3 entities, 1 holes): Refuse to advance a gate whose declared `[[gate.dispatch]]` (LIFECYCLE_CONTRACT.md section 5) was not actually recorded.
 - [scripts.verify_diagnosis](scripts.verify_diagnosis/INDEX.md) (10 entities, 3 holes): Refuse an unreproduced diagnosis — the constellation-diagnose RAIL.
 - [scripts.verify_epic_418_demo](scripts.verify_epic_418_demo/INDEX.md) (29 entities, 28 holes): Generate or verify the hash-pinned, fully offline Epic #418 demonstration.
 - [scripts.verify_episode_captured](scripts.verify_episode_captured/INDEX.md) (6 entities, 2 holes): Capture gate: refuse to advance until THIS run left an episode in the store.
@@ -101,7 +103,7 @@ tests: 74 modules, 4273 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (74 modules, 4273 entities)
+## tests (77 modules, 4453 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -122,6 +124,7 @@ tests: 74 modules, 4273 entities
 - [tests.test_crew_delivery_addressing](tests.test_crew_delivery_addressing/INDEX.md) (11 entities, 7 holes): Relaunch acceptance test for #507 / #370 / #413 (crew delivery addressing).
 - [tests.test_crew_launcher](tests.test_crew_launcher/INDEX.md) (226 entities, 176 holes): HOLE: no docstring
 - [tests.test_curate_corpus](tests.test_curate_corpus/INDEX.md) (40 entities, 23 holes): Golden-fixture suite for scripts/curate_corpus.py.
+- [tests.test_declared_dispatch](tests.test_declared_dispatch/INDEX.md) (14 entities, 14 holes): Tests for scripts/verify_declared_dispatch.py -- the oracle the generator's injected `[[gate.dispatch]]` postcondition (LIFECYCLE_CONTRACT.md section 5) shells 
 - [tests.test_diagnose](tests.test_diagnose/INDEX.md) (32 entities, 27 holes): Tests for the constellation-diagnose skill's rail (scripts/verify_diagnosis.py).
 - [tests.test_docent_freshness](tests.test_docent_freshness/INDEX.md) (18 entities, 17 holes): Unit tests for scripts/docent_freshness.py.
 - [tests.test_engine_survey_retext_and_newlines](tests.test_engine_survey_retext_and_newlines/INDEX.md) (10 entities, 4 holes): Issue #465: the engine must not churn a file's line endings, and `amend`'s `retext-check` op must be usable on a SURVEY checklist.
@@ -137,7 +140,7 @@ tests: 74 modules, 4273 entities
 - [tests.test_gauge_chain_writer_to_trip](tests.test_gauge_chain_writer_to_trip/INDEX.md) (34 entities, 1 holes): The Context Governor chain, traversed end to end with REAL OS subprocesses:
 - [tests.test_gauge_reader](tests.test_gauge_reader/INDEX.md) (97 entities, 78 holes): HOLE: no docstring
 - [tests.test_gauge_writer](tests.test_gauge_writer/INDEX.md) (89 entities, 21 holes): Unit tests for scripts/hooks/gauge_writer_hook.py.
-- [tests.test_generate_spine](tests.test_generate_spine/INDEX.md) (155 entities, 155 holes): Tests for scripts/generate_spine.py -- the spine spec compiler and generator.
+- [tests.test_generate_spine](tests.test_generate_spine/INDEX.md) (190 entities, 190 holes): Tests for scripts/generate_spine.py -- the spine spec compiler and generator.
 - [tests.test_grade_lint](tests.test_grade_lint/INDEX.md) (50 entities, 35 holes): Tests for scripts/grade_lint.py — the @grade: inline-tag linter (issue #230, epic-226).
 - [tests.test_implementer_vocab](tests.test_implementer_vocab/INDEX.md) (7 entities, 7 holes): Light vocabulary assertion for the constellation-implementer sharpening (DESIGN_SPEC Section D2 — vertical-slice vocabulary).
 - [tests.test_init_work_area](tests.test_init_work_area/INDEX.md) (41 entities, 35 holes): HOLE: no docstring
@@ -153,6 +156,7 @@ tests: 74 modules, 4273 entities
 - [tests.test_mcp_friction_capture](tests.test_mcp_friction_capture/INDEX.md) (23 entities, 12 holes): Tests for the MCP door's own rejection capture (issue #541, epic-418-followon wave 2, gate g2).
 - [tests.test_mcp_identity](tests.test_mcp_identity/INDEX.md) (65 entities, 23 holes): DC2 (separation) and DC3 (inheritance fails closed) acceptance tests for the MCP front door (issue #424, workstream F, gate g3).
 - [tests.test_mcp_imperative_equivalence](tests.test_mcp_imperative_equivalence/INDEX.md) (23 entities, 12 holes): DC4 acceptance test for the MCP front door (issue #424, workstream F, gate g2): the CLI projection and the MCP tool result carry the SAME imperative text for EV
+- [tests.test_mcp_lifecycle](tests.test_mcp_lifecycle/INDEX.md) (28 entities, 16 holes): Tests for the MCP lifecycle door -- `spine_open`/`spine_close` (`scripts/mcp_spine_server.py`'s `call_lifecycle_tool`, issue #559, C3/g3).
 - [tests.test_mcp_spine_server](tests.test_mcp_spine_server/INDEX.md) (60 entities, 41 holes): Tests for scripts/mcp_spine_server.py (issue #424, workstream F: the MCP front door on the checklist engine).
 - [tests.test_measure_overread](tests.test_measure_overread/INDEX.md) (23 entities, 23 holes): Unit tests for scripts/measure_overread.py.
 - [tests.test_mutation_floor](tests.test_mutation_floor/INDEX.md) (32 entities, 18 holes): EXECUTED falsifiability for scripts/map_orient.py.
@@ -165,6 +169,7 @@ tests: 74 modules, 4273 entities
 - [tests.test_run_skill_eval](tests.test_run_skill_eval/INDEX.md) (121 entities, 106 holes): Agent-free unit layer for scripts/run_skill_eval.py (#106, gate g2).
 - [tests.test_shipped_check_commands_resolve](tests.test_shipped_check_commands_resolve/INDEX.md) (14 entities, 10 holes): Every shipped command check must actually run after instantiation (epic-559/b-instructions-to-checks, rework r3).
 - [tests.test_shipped_template_gates_satisfiable](tests.test_shipped_template_gates_satisfiable/INDEX.md) (8 entities, 7 holes): Prove the shipped EXECUTE_PLAN.template.json's g1-implement gate is actually satisfiable by a real drive of the real engine (epic-559/b-instructions-to-checks, 
+- [tests.test_spine_lifecycle](tests.test_spine_lifecycle/INDEX.md) (103 entities, 96 holes): Tests for scripts/spine_lifecycle.py -- open and close Constellation work in one call each.
 - [tests.test_spine_provenance_check](tests.test_spine_provenance_check/INDEX.md) (34 entities, 32 holes): Provenance hardening for the eval `spine_completed` process check (issue #127).
 - [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (135 entities, 70 holes): Unit tests for scripts/hooks/spine_rail.py.
 - [tests.test_state_note](tests.test_state_note/INDEX.md) (15 entities, 15 holes): HOLE: no docstring
