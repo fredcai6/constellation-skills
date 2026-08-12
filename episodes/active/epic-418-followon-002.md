@@ -44,7 +44,8 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
-- statement: Compile the spine from a typed spec whose check kinds are a closed vocabulary, and refuse to write anything the oracle would reject; a check is never a shell string typed from memory.
+- statement: The generator built later in the epic compiles the spine from a typed spec whose check kinds are a closed vocabulary and refuses to write anything the oracle would reject, which took hand-typed shell strings out of the authoring path that produced these four faults.
+- history: restated — Restated as an observation. The original was written in the imperative and read as a rule for a future agent to follow; an episode records what happened, and a rule belongs in docs/agents/*. Caught by scripts/verify_episode_observations.py at the epic's closeout. — original statement was: Compile the spine from a typed spec whose check kinds are a closed vocabulary, and refuse to write anything the oracle would reject; a check is never a shell string typed from memory.
 
 ## Diagnosis (optional)
 

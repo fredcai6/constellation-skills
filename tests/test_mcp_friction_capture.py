@@ -5,7 +5,7 @@ wave 2, gate g2).
 already reaches the run's episode today: `checklist_engine.main()` counts it into
 `refusals`, and `episode_capture.mechanical_fields()` composes that value into the
 `## Mechanical` bin. Reproduced independently, on a real server subprocess, by
-`.agent-work/epic-418-followon/commander-f2/demo_engine_refusal_reaches_episode.py`
+`.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/demo_engine_refusal_reaches_episode.py`
 -- do not re-test that half here.
 
 **What is actually silent** is the door's OWN rejection: every `_tool_error(...)`

@@ -58,7 +58,8 @@
 - kind: proposed-remedy
 - strength: medium
 - lifecycle-standing: active
-- statement: Before attributing a behaviour to an agent's judgment, verify the agent had the alternative available; the launcher's own environment is the first thing to measure.
+- statement: The behaviour was attributed to the agents' judgment before the launcher's own environment was measured. Measuring it showed the agents had no alternative available, so the attribution was describing the dispatch scripts rather than the agents.
+- history: restated — Restated as an observation. The original was written in the imperative and read as a rule for a future agent to follow; an episode records what happened, and a rule belongs in docs/agents/*. Caught by scripts/verify_episode_observations.py at the epic's closeout. — original statement was: Before attributing a behaviour to an agent's judgment, verify the agent had the alternative available; the launcher's own environment is the first thing to measure.
 
 ## Retirement
 - status: active

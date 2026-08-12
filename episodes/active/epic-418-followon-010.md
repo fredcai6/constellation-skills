@@ -44,7 +44,8 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
-- statement: Group the synchronous half explicitly, or run the commit and the detached launch as separate commands; never read state from the same chain that backgrounds itself.
+- statement: The synchronous half was grouped explicitly and the commit and the detached launch were run as separate commands. Reading state from the same chain that backgrounded itself is what produced the wrong read in the first place.
+- history: restated — Restated as an observation. The original was written in the imperative and read as a rule for a future agent to follow; an episode records what happened, and a rule belongs in docs/agents/*. Caught by scripts/verify_episode_observations.py at the epic's closeout. — original statement was: Group the synchronous half explicitly, or run the commit and the detached launch as separate commands; never read state from the same chain that backgrounds itself.
 
 ## Retirement
 - status: active

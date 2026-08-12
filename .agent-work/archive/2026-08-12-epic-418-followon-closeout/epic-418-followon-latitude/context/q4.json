@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "q4",
+  "files": [],
+  "repo_rev": {
+    "commit": "ef890dd3d20c6f25844285b7193b7dd7e59c2d20"
+  },
+  "run": {
+    "work_id": "epic-418-followon-latitude",
+    "generated_at": "2026-08-09T14:54:49Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-interrogator",
+      "repo": "/home/tommy/projects/constellation-skills",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills"
+    }
+  }
+}

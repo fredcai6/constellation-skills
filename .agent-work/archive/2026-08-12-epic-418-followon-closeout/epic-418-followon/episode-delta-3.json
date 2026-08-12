@@ -1,0 +1,61 @@
+{
+  "work_id": "epic-418-followon",
+  "ops": [
+    {
+      "op": "restate-assertion",
+      "id": "epic-418-followon-001",
+      "assertion": "d2",
+      "statement": "The behaviour was attributed to the agents' judgment before the launcher's own environment was measured. Measuring it showed the agents had no alternative available, so the attribution was describing the dispatch scripts rather than the agents.",
+      "history": "Restated as an observation. The original was written in the imperative and read as a rule for a future agent to follow; an episode records what happened, and a rule belongs in docs/agents/*. Caught by scripts/verify_episode_observations.py at the epic's closeout."
+    },
+    {
+      "op": "restate-assertion",
+      "id": "epic-418-followon-002",
+      "assertion": "a5",
+      "statement": "The generator built later in the epic compiles the spine from a typed spec whose check kinds are a closed vocabulary and refuses to write anything the oracle would reject, which took hand-typed shell strings out of the authoring path that produced these four faults.",
+      "history": "Restated as an observation. The original was written in the imperative and read as a rule for a future agent to follow; an episode records what happened, and a rule belongs in docs/agents/*. Caught by scripts/verify_episode_observations.py at the epic's closeout."
+    },
+    {
+      "op": "restate-assertion",
+      "id": "epic-418-followon-005",
+      "assertion": "a5",
+      "statement": "Verification ran against the process command line rather than the record, until the record was shown to carry the field. The record was then fixed and both paths pinned, because the asymmetry between them was the defect.",
+      "history": "Restated as an observation. The original was written in the imperative and read as a rule for a future agent to follow; an episode records what happened, and a rule belongs in docs/agents/*. Caught by scripts/verify_episode_observations.py at the epic's closeout."
+    },
+    {
+      "op": "restate-assertion",
+      "id": "epic-418-followon-010",
+      "assertion": "a5",
+      "statement": "The synchronous half was grouped explicitly and the commit and the detached launch were run as separate commands. Reading state from the same chain that backgrounded itself is what produced the wrong read in the first place.",
+      "history": "Restated as an observation. The original was written in the imperative and read as a rule for a future agent to follow; an episode records what happened, and a rule belongs in docs/agents/*. Caught by scripts/verify_episode_observations.py at the epic's closeout."
+    },
+    {
+      "op": "restate-assertion",
+      "id": "epic-418-followon-011",
+      "assertion": "a5",
+      "statement": "The worktree sweep found the branch that already answered the issue. Nothing before the sweep had looked for one, which is how the issue stayed carried as unworked for three waves.",
+      "history": "Restated as an observation. The original was written in the imperative and read as a rule for a future agent to follow; an episode records what happened, and a rule belongs in docs/agents/*. Caught by scripts/verify_episode_observations.py at the epic's closeout."
+    },
+    {
+      "op": "restate-assertion",
+      "id": "epic-418-followon-013",
+      "assertion": "a5",
+      "statement": "The generator refuses a non-integer on every numeric field and calls the oracle as the literal last statement before writing, so a fault or an undecidable entry refuses with nothing written.",
+      "history": "Restated as an observation. The original was written in the imperative and read as a rule for a future agent to follow; an episode records what happened, and a rule belongs in docs/agents/*. Caught by scripts/verify_episode_observations.py at the epic's closeout."
+    },
+    {
+      "op": "restate-assertion",
+      "id": "epic-418-followon-014",
+      "assertion": "a5",
+      "statement": "A missing config_ref was handled as a refusal rather than a silent default. This matched the known adjacent defect where a non-JSON config_ref crashes the engine outright: the same field was unchecked in both directions.",
+      "history": "Restated as an observation. The original was written in the imperative and read as a rule for a future agent to follow; an episode records what happened, and a rule belongs in docs/agents/*. Caught by scripts/verify_episode_observations.py at the epic's closeout."
+    },
+    {
+      "op": "restate-assertion",
+      "id": "epic-418-followon-019",
+      "assertion": "a5",
+      "statement": "The source was read rather than the cause inferred from the symptom. The _active_lease docstring confirmed that no write had been blocked, and the lease was re-claimed with the same session id, which is idempotent.",
+      "history": "Restated as an observation. The original was written in the imperative and read as a rule for a future agent to follow; an episode records what happened, and a rule belongs in docs/agents/*. Caught by scripts/verify_episode_observations.py at the epic's closeout."
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 """Compile a `specs/<role>.spine.toml` spec into an engine-native spine JSON, and
 refuse to emit anything `scripts/validate_spine.py` would reject.
 
-Frozen contract: `.agent-work/epic-559/c2-generate-the-spine/DESIGN_NOTE.md`. There
+Frozen contract: `.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-559/c2-generate-the-spine/DESIGN_NOTE.md`. There
 is no raw-command field anywhere in the spec format -- a check is authored as a
 typed, closed-vocabulary kind (`CHECK_KINDS`), never a shell string typed from
 memory, which is the class of defect (issue epic-559) this generator exists to

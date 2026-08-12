@@ -1,6 +1,6 @@
 """Tests for scripts/generate_spine.py -- the spine spec compiler and generator.
 
-Frozen contract: .agent-work/epic-559/c2-generate-the-spine/DESIGN_NOTE.md. Where a
+Frozen contract: .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-559/c2-generate-the-spine/DESIGN_NOTE.md. Where a
 test encodes a choice the design note leaves silent, the choice and its rationale are
 named in the test's own docstring/comment, and restated in IMPLEMENTER_RESULT.md.
 """
@@ -1702,7 +1702,7 @@ class TestRealRoleSpecsRegenerateClean:
 
 class TestDispatchProofOutFlagRegression:
     def test_m1_c2_compiled_command_carries_out_flag(self):
-        spec_path = ROOT / ".agent-work" / "epic-559" / "c2-generate-the-spine" / "dispatch-proof" / "probe.spine.toml"
+        spec_path = ROOT / ".agent-work" / "archive" / "2026-08-12-epic-418-followon-closeout" / "epic-559" / "c2-generate-the-spine" / "dispatch-proof" / "probe.spine.toml"
         spec = tomllib.loads(spec_path.read_text(encoding="utf-8"))
         assert gs.spec_shape_faults(spec, repo_root=ROOT) == []
         compiled = gs.compile_spec(spec)
@@ -1710,7 +1710,7 @@ class TestDispatchProofOutFlagRegression:
         assert "--out" in cmd, "the source spec regressed to missing --out -- see rework handoff 'artifact diverged from its source'"
 
     def test_regenerating_check_only_from_the_real_source_succeeds(self, tmp_path):
-        spec_path = ROOT / ".agent-work" / "epic-559" / "c2-generate-the-spine" / "dispatch-proof" / "probe.spine.toml"
+        spec_path = ROOT / ".agent-work" / "archive" / "2026-08-12-epic-418-followon-closeout" / "epic-559" / "c2-generate-the-spine" / "dispatch-proof" / "probe.spine.toml"
         out_path = tmp_path / "probe.spine.json"
         rc = gs.main([str(spec_path), "--out", str(out_path), "--root", str(ROOT), "--check-only"])
         assert rc == 0

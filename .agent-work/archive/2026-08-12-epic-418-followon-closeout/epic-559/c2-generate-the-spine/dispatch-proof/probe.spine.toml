@@ -27,7 +27,7 @@ and there is no result artifact to write. Your run is complete when this spine
 reaches a terminal state, and nothing else.
 
 Read, in this order:
-  1. .agent-work/epic-559/c2-generate-the-spine/DESIGN_NOTE.md -- the frozen
+  1. .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-559/c2-generate-the-spine/DESIGN_NOTE.md -- the frozen
      format. Section 4's `script` entry is what you are changing.
   2. scripts/generate_spine.py -- specifically `_probe_script` and
      `_add_argument_literals`.
@@ -89,8 +89,8 @@ that could not fail into one that cannot pass is the exact defect this whole
 epic exists to find. Regenerate BOTH role specs after your change and confirm
 they still emit and still validate clean:
 
-    python scripts/generate_spine.py specs/implementer.spine.toml --out .agent-work/epic-559/c2-generate-the-spine/generated/implementer.spine.json --root .
-    python scripts/generate_spine.py specs/reviewer.spine.toml --out .agent-work/epic-559/c2-generate-the-spine/generated/reviewer.spine.json --root .
+    python scripts/generate_spine.py specs/implementer.spine.toml --out .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-559/c2-generate-the-spine/generated/implementer.spine.json --root .
+    python scripts/generate_spine.py specs/reviewer.spine.toml --out .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-559/c2-generate-the-spine/generated/reviewer.spine.json --root .
 
 Add tests to the existing `TestScriptProbe` class in
 tests/test_generate_spine.py, following the three-way shape already there:
@@ -125,7 +125,7 @@ Attest p1 BEFORE `start m1`: the engine refuses to start a gate whose
 precondition is unmet, and the refusal is non-destructive -- attest, then retry.
 """
 constraints = [
-  "Only scripts/generate_spine.py, tests/test_generate_spine.py, DESIGN_NOTE.md and the two regenerated spines under .agent-work/epic-559/c2-generate-the-spine/generated/ may change",
+  "Only scripts/generate_spine.py, tests/test_generate_spine.py, DESIGN_NOTE.md and the two regenerated spines under .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-559/c2-generate-the-spine/generated/ may change",
   "specs/reviewer.spine.toml must still generate cleanly after the change -- a positional path carrying a resolver-owned token is skipped, never refused",
   "_RESOLVER_OWNED_TOKEN_RE is imported from init_work_area, never re-declared, so this probe and the oracle cannot drift apart",
   "there is no raw-command field in this format and you are not to add one",
@@ -151,4 +151,4 @@ constraints = [
   kind      = "script"
   path      = "scripts/generate_spine.py"
   args      = ["specs/reviewer.spine.toml", "--check-only", "--root", ".", "--out",
-               ".agent-work/epic-559/c2-generate-the-spine/generated/reviewer.spine.json"]
+               ".agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-559/c2-generate-the-spine/generated/reviewer.spine.json"]

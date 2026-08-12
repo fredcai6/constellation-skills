@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "zc-consolidate",
+  "mechanical": {
+    "run": "epic-418-followon-latitude",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 1,
+    "spine-step": "zc-consolidate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon-latitude-zc-consolidate@bc052c23de07f8d570deab6e83e0c640e83aea09",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon-latitude",
+    "generated_at": "2026-08-09T14:55:50Z"
+  }
+}

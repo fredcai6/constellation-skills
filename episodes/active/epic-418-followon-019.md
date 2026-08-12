@@ -44,7 +44,8 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
-- statement: Read the source rather than inferring from the symptom, confirmed against the _active_lease docstring that no write had been blocked, and re-claimed with the same session id, which is idempotent.
+- statement: The source was read rather than the cause inferred from the symptom. The _active_lease docstring confirmed that no write had been blocked, and the lease was re-claimed with the same session id, which is idempotent.
+- history: restated — Restated as an observation. The original was written in the imperative and read as a rule for a future agent to follow; an episode records what happened, and a rule belongs in docs/agents/*. Caught by scripts/verify_episode_observations.py at the epic's closeout. — original statement was: Read the source rather than inferring from the symptom, confirmed against the _active_lease docstring that no write had been blocked, and re-claimed with the same session id, which is idempotent.
 
 ## Diagnosis (optional)
 

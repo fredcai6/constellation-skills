@@ -44,7 +44,8 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
-- statement: Before carrying an issue as unworked, check whether a branch already answers it; the worktree sweep found this one, which means nothing before the sweep was looking.
+- statement: The worktree sweep found the branch that already answered the issue. Nothing before the sweep had looked for one, which is how the issue stayed carried as unworked for three waves.
+- history: restated — Restated as an observation. The original was written in the imperative and read as a rule for a future agent to follow; an episode records what happened, and a rule belongs in docs/agents/*. Caught by scripts/verify_episode_observations.py at the epic's closeout. — original statement was: Before carrying an issue as unworked, check whether a branch already answers it; the worktree sweep found this one, which means nothing before the sweep was looking.
 
 ## Diagnosis (optional)
 

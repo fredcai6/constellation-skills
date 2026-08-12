@@ -44,7 +44,8 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
-- statement: Verify against the process command line, not the record, until the record is proven to carry the field; then fix the record and pin both paths, because the asymmetry between them is the bug.
+- statement: Verification ran against the process command line rather than the record, until the record was shown to carry the field. The record was then fixed and both paths pinned, because the asymmetry between them was the defect.
+- history: restated — Restated as an observation. The original was written in the imperative and read as a rule for a future agent to follow; an episode records what happened, and a rule belongs in docs/agents/*. Caught by scripts/verify_episode_observations.py at the epic's closeout. — original statement was: Verify against the process command line, not the record, until the record is proven to carry the field; then fix the record and pin both paths, because the asymmetry between them is the bug.
 
 ## Diagnosis (optional)
 

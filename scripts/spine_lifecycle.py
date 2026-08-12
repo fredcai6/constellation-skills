@@ -7,7 +7,7 @@ a caller that must already know the worktree/branch/archive conventions and
 hand-drive `git worktree add`, `init_work_area.py`, `generate_spine.py` and
 the close-ordering rules itself.
 
-Frozen contract: `.agent-work/epic-559/c3-lifecycle/LIFECYCLE_CONTRACT.md`, sections
+Frozen contract: `.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-559/c3-lifecycle/LIFECYCLE_CONTRACT.md`, sections
 2-4. No MCP door wiring happens here (g3).
 
 Pure/impure split at FUNCTION granularity, matching `generate_spine.py`,

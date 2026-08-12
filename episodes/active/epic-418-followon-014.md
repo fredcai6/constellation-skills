@@ -44,7 +44,8 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
-- statement: Treat a missing config_ref as a refusal rather than a silent default, matching the known adjacent defect where a non-JSON config_ref crashes the engine outright -- the same field is unchecked in both directions.
+- statement: A missing config_ref was handled as a refusal rather than a silent default. This matched the known adjacent defect where a non-JSON config_ref crashes the engine outright: the same field was unchecked in both directions.
+- history: restated — Restated as an observation. The original was written in the imperative and read as a rule for a future agent to follow; an episode records what happened, and a rule belongs in docs/agents/*. Caught by scripts/verify_episode_observations.py at the epic's closeout. — original statement was: Treat a missing config_ref as a refusal rather than a silent default, matching the known adjacent defect where a non-JSON config_ref crashes the engine outright -- the same field is unchecked in both directions.
 
 ## Diagnosis (optional)
 

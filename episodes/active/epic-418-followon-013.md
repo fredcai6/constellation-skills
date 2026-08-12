@@ -44,7 +44,8 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
-- statement: Refuse a non-integer on every numeric field, and call the oracle as the literal last statement before writing so any fault or undecidable entry refuses with nothing written.
+- statement: The generator refuses a non-integer on every numeric field and calls the oracle as the literal last statement before writing, so a fault or an undecidable entry refuses with nothing written.
+- history: restated — Restated as an observation. The original was written in the imperative and read as a rule for a future agent to follow; an episode records what happened, and a rule belongs in docs/agents/*. Caught by scripts/verify_episode_observations.py at the epic's closeout. — original statement was: Refuse a non-integer on every numeric field, and call the oracle as the literal last statement before writing so any fault or undecidable entry refuses with nothing written.
 
 ## Diagnosis (optional)
 

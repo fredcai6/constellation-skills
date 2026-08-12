@@ -1,7 +1,7 @@
 """Tests for the MCP lifecycle door -- `spine_open`/`spine_close`
 (`scripts/mcp_spine_server.py`'s `call_lifecycle_tool`, issue #559, C3/g3).
 
-Frozen contract: `.agent-work/epic-559/c3-lifecycle/LIFECYCLE_CONTRACT.md` section 6.
+Frozen contract: `.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-559/c3-lifecycle/LIFECYCLE_CONTRACT.md` section 6.
 `scripts/spine_lifecycle.py`'s `open_work`/`close_work` are g1/g2's, frozen; this
 file tests the DOOR wiring onto them, never their own behaviour (that lives in
 `tests/test_spine_lifecycle.py`).

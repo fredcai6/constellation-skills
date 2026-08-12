@@ -786,7 +786,7 @@ class IdentityBindingPinTests(unittest.TestCase):
             [], offenders,
             "a tool now accepts an argument that could point the door at a different "
             f"spine or identity: {offenders}. If the identity trade was deliberately "
-            "re-opened, update .agent-work/epic-418-followon/commander-f2/IDENTITY_TRADE.md "
+            "re-opened, update .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/IDENTITY_TRADE.md "
             "in the same change -- this test exists so that cannot happen silently.",
         )
 
@@ -1554,7 +1554,7 @@ class IdentityBindingPinTests(unittest.TestCase):
         record has been deleted is a rule nobody can look up the reason for.
         `identity-trade-is-recorded` makes silence a gate failure, so absence
         is red rather than skipped."""
-        trade = ROOT / ".agent-work" / "epic-418-followon" / "commander-f2" / "IDENTITY_TRADE.md"
+        trade = ROOT / ".agent-work" / "archive" / "2026-08-12-epic-418-followon-closeout" / "epic-418-followon" / "commander-f2" / "IDENTITY_TRADE.md"
         self.assertTrue(trade.is_file(), f"the recorded identity trade is missing: {trade}")
         text = trade.read_text(encoding="utf-8")
         for required in ("property given up", "granularity", "spine_rail"):
