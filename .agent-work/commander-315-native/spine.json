@@ -369,7 +369,18 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "execute",
+            "why_ref": "w-4"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "reconcile": {
@@ -636,7 +647,7 @@
     "session_id": "commander-315-native",
     "status": "active",
     "claimed_at": "2026-08-13T04:29:29.939177+00:00",
-    "last_heartbeat": "2026-08-13T05:10:31.642295+00:00",
+    "last_heartbeat": "2026-08-13T05:13:02.247522+00:00",
     "claimed_by": "commander-delegated",
     "worktree": "/home/tommy/projects/constellation-skills-wt/epic-568-315-native",
     "previous_session_id": null,
