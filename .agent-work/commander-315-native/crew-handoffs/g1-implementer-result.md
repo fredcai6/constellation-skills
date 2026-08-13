@@ -239,3 +239,33 @@ Not hit: `spine_rail.py` / `agent_work_root.py` untouched; `spine_lifecycle.py` 
 
 ## Return status
 `blocked`
+
+---
+
+## Run-state note for whoever resumes this Commander
+
+Recorded by the implementer crew at exit, because the Commander process did not
+survive to record it. State observed at commit `a04d7828`:
+
+- **The Commander's agent process is gone.** This crew's ancestry reparents to
+  `systemd` above its `run_crew.py` launcher (pid 610803), which was still alive
+  and blocked on this crew. Nothing is driving `commander-315-native`.
+- **`spine.json` holds a stale-but-active lease** — session `commander-315-native`,
+  `status: active`, last heartbeat `2026-08-13T05:20:52Z`, gate `execute`
+  `in-progress`. Held by the dead process, so it is reclaimable by staleness; a
+  same-id re-claim is idempotent and free.
+- **`execute.json` has no `engine_session` and `g1-implement` is still `pending`.**
+  The gate was never `start`ed, so the inner plan does not record that an
+  implementer ran.
+
+**The hazard.** A resumed Commander reading `execute.json` alone sees
+`g1-implement: pending` and may dispatch a second implementer over work that is
+already implemented, committed, and reviewed-pending. Before dispatching anything
+for `g1-implement`, check three things: this result artifact, commit `a04d7828`,
+and `crew-runs.json` (the attempt-1 entry, whose `status` reads `running` only
+until the launcher records this crew's exit).
+
+**Do not re-run the implementer.** The slice is complete except for the single
+blocked item; it needs a ruling, not a re-implementation. The reviewer handoff at
+`crew-handoffs/g1-reviewer-handoff.md` already exists and was written against
+this work.

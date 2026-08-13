@@ -122,9 +122,35 @@ Derive any failure distribution mechanically with the `grep`/`uniq -c` command a
 
 Do not fix anything. Do not edit production code, tests, or docs. Report findings. If you must modify the tree to run the arming reverts, restore it exactly and confirm `git status` matches what you started with.
 
+## The known open collision — do not re-litigate it, but do audit my reasoning
+
+The implementer returned `blocked` on a finding the Commander has **reproduced independently**:
+
+`tests/test_mcp_lifecycle.py::FullStdioRoundTripTests::test_open_drive_close_round_trip_names_branch_commit_and_ready_to_pr` fails. `spine_open` creates a **new** worktree and stamps `origin.worktree` to it; the next verb on that spine is `claim`, issued in-process through the door; the door's process cannot already be cwd'd inside a directory that did not exist a moment earlier. So `spine_open` → `claim` in one session is now impossible through the door, by construction.
+
+This is a genuine collision between the guard and `mcp_spine_server.py`'s deliberate cwd-independence, and it is **floated to the Admiral** — it is not the implementer's fault, not a defect in the guard's internals, and **not yours to fix**.
+
+The Commander's handoff to the implementer gave four reasons for the no-bypass ruling, and **reason #1 was false**: it asserted that a dispatched crew's cwd is its spine's worktree, but `run_crew.launch_process` (`scripts/run_crew.py:676`) passes no `cwd=`, so a crew inherits the *dispatcher's* cwd. The Commander has confirmed this.
+
+**What the Commander wants from you here** — audit the reasoning, not the fix:
+
+- Confirm the failure reproduces, and that it is the **only** failure.
+- Confirm reason #1 is indeed false as stated (`launch_process` passes no `cwd=`).
+- Say whether you find any **honest fix inside the allowed scope** that the Commander and implementer both missed. Specifically assess: would having the door supply its own binding (`SPINE.parent`'s toplevel) as the measured side be a real fix, or does it collapse the comparison into the `X == X` tautology this issue exists to avoid? Reason it through and say which.
+- Say whether adjusting the **verb scope** could resolve it. (The Commander's reading: no — the round trip drives verbs that are in `MUTATING_VERBS`, so dropping `claim` alone would not help. Check that reading.)
+
+## Scoping your verdict
+
+Return **two** judgments, clearly separated:
+
+1. **`Verdict`** — `APPROVE` or `BLOCK` on **jobs 1 through 7 and the additional checks**, i.e. the integrity of the change as built. Judge this **excluding** the `test_mcp_lifecycle.py` failure, which is the floated collision.
+2. **`Merge readiness`** — a separate plain statement. It is `NOT READY` while that failure stands; the launch order's merge gate is an empty failure-set difference against `main`'s baseline. Do not let the float turn an otherwise-sound change into a `BLOCK` on job 1-7 grounds, and do not let a clean `APPROVE` on jobs 1-7 read as merge-ready.
+
+`main`'s baseline is 0 failed, so the current set difference is exactly `{tests/test_mcp_lifecycle.py}`. Verify that.
+
 ## Return Format
 
-Return `REVIEW_RESULT` with a **`Verdict`** field of exactly `APPROVE` or `BLOCK`.
+Return `REVIEW_RESULT` with a **`Verdict`** field of exactly `APPROVE` or `BLOCK`, plus the separate `Merge readiness` statement described above.
 
 `APPROVE` only if every job above passes on evidence you reproduced yourself. `BLOCK` with a specific, reproducible finding otherwise. A finding must name the file, the line, what is wrong, and how you observed it.
 

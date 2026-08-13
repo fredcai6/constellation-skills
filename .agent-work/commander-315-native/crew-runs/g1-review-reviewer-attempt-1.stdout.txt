@@ -1,0 +1,24 @@
+I ran the recovery diagnostic, and it settles this. The unresolved crew it reports is **me**:
+
+```
+constellation/commander-315-native/g1-implement/implementer/attempt-1: COMPLETE — recoverable/complete; do not rerun
+constellation/commander-315-native/g1-review/reviewer/attempt-1:      ACTIVE — active crew (pid alive); block duplicate launch
+summary: 2 crew(s), 1 unresolved
+```
+
+That inverts the hook's premise. **My staying resident is what keeps the run from advancing.** `recover_crews.py` reports my crew unresolved *because my pid is alive*; the imperative the hook is quoting says a Commander may only launch "when it reports no unresolved running/resumable/conflicting crew." So as long as I hold this turn open to satisfy the hook, I am the thing blocking the gate it wants driven. My exit is the completion event — `run_crew.py` (pid 710547, blocked on me) then verifies the result artifact and flips my registry entry to COMPLETE.
+
+**On the two exits the hook offers, I checked both against the engine rather than assuming:**
+
+- **`waive`** — forbidden. A crew never waives its own gate, I have no human authority, and this session has a `PreToolUse` hook that denies it outright.
+- **`block`** — `checklist_engine.py:2463-2480` overwrites the target item's `status` and `status_detail`. All seven of my items are recorded `pass`/`fail` and consolidated. Blocking one would destroy a real recorded result to satisfy a rail — hand-falsifying the record the consolidate guard exists to protect. The alternative, `append` a new item purely so I can `block` it, manufactures engine state whose only purpose is to stop a hook firing. Both are the fabricated-evidence failure wearing procedural clothes.
+
+The doctrine's block trigger is "a check you cannot satisfy." I don't have one. Every check is satisfied and reproduced.
+
+**What's actually true:** this is an out-of-scope stop, not a blocked one. The hook is a session-level Stop hook watching `commander-315-native`'s spine — it was installed for the Commander session that this conversation was originally seeded as, and it outlived that framing when the user turn re-tasked this process as a `run_crew.py`-launched reviewer crew. It is firing on a spine this process doesn't own. Reporting that misfit is compliance, not deviation, and it's now recorded in my result's Workflow Feedback and run-state note.
+
+**Delivered:** `.agent-work/commander-315-native/crew-handoffs/g1-reviewer-result.md` — `Verdict: APPROVE` on jobs 1-7, `Merge readiness: NOT READY`, one `fail` carried through `--override-reason`, four triage candidates, production tree confirmed clean.
+
+**Outstanding, and not crew work:** the ruling on the floated `test_mcp_lifecycle.py` collision, and ratification of `EXPECTED_COMMAND_CHECK_COUNT 13 → 12`.
+
+If you want this conversation to become the resumed Commander and drive `execute`, that's a different dispatch than the one I was given — say the word and I'll reclaim the stale lease (same-id re-claim is idempotent) and work the gate properly. I won't do it unasked from inside a crew.

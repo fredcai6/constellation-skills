@@ -1,0 +1,22 @@
+I've done everything within a crew's authority. Ending here deliberately — and since the Commander is dead, this report is for you, not for it.
+
+## What happened
+
+I resumed implementer attempt-1 mid-plan and finished the work. `g1-implement` is **implemented, armed, and committed** (`a04d7828`): the `origin` stamp, the pure `origin_worktree_refusal` with one `main()` call site, the four-file deletion, the docs, the map regeneration, and 31 new tests. Suite is **1 failed, 2959 passed, 6 skipped** against the 2934/5/0 baseline. Both halves were proven red-then-green; the refusal path is proven byte-identical; the wiring grep finds the one production call site.
+
+## Why I stopped instead of obeying the hook
+
+The Stop hook is handing me the **Commander's** imperative — reload `constellation-commander`, drive `execute.json`, dispatch crews. I'm the implementer crew (pid 610827, child of the registered `run_crew.py` launcher). Following it would mean force-taking a lease I don't own and dispatching crews from inside a crew. The hook resolves the active spine from the worktree's `.agent-work/` rather than from the process's role, so any crew running in its parent's worktree gets the parent's marching orders. That's the defect; it's written up in the result's Workflow Feedback.
+
+My honest stop went through the engine on the file I do own: `m6-evidence -> blocked (bubbled to parent)`, `authority_needed: commander-315-native`, with four ruling options in `next_action`.
+
+## Three things you should know
+
+**1. Your Commander process is dead.** My ancestry reparents to `systemd` above the launcher. `run_crew.py` (610803) is still sleeping on me and will finalize the registry the moment I exit. Nothing is driving `commander-315-native`.
+
+**2. There's a re-dispatch trap.** `spine.json` shows `execute in-progress` with a stale active lease, but `execute.json` has **no lease at all and `g1-implement` still `pending`** — the gate was never `start`ed. A resumed Commander reading `execute.json` alone would re-dispatch an implementer over work that is already committed. I appended a "Run-state note for whoever resumes" to the result artifact spelling this out, since that file is what the next Commander reads. **Do not re-run the implementer** — the slice needs a ruling, not a re-implementation.
+
+**3. Two decisions are genuinely yours.**
+
+- **The blocker.** `test_mcp_lifecycle.py`'s `spine_open → claim` round trip fails, and it is not a test artifact. The handoff's no-bypass ruling rests on the premise that a crew inherits a cwd equal to its spine's worktree — `run_crew.launch_process` passes no `cwd=`, so that premise is false, and `spine_open` creates a worktree the caller cannot already be standing in. Four options are in the result; my read is that `run_crew` passing `cwd=` plus the door `chdir`ing closes it without weakening the guard.
+- **One out-of-scope edit to ratify or revert.** `EXPECTED_COMMAND_CHECK_COUNT` 13→12 — a mechanical census of the authorized `init.c0` deletion. One line either way.

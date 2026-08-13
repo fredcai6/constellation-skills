@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g1-implement",
+  "files": [],
+  "repo_rev": {
+    "commit": "a04d78281dc2669a55a4ad649851af9da0a0b92f"
+  },
+  "run": {
+    "work_id": "commander-315-native",
+    "generated_at": "2026-08-13T05:59:28Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills",
+      "repo": "/home/tommy/projects/constellation-skills-wt/epic-568-315-native",
+      "durable": "/home/tommy/projects/constellation-skills-wt/epic-568-315-native"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/epic-568-315-native"
+    }
+  }
+}

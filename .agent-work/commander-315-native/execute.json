@@ -42,7 +42,8 @@
           "id": "p1",
           "statement": "execution context loaded and the frozen scope confirmed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e0-context is complete: doctrine, project deltas, mission frame, converged design, critic report and critic triage all loaded, and the frozen scope confirmed against the launch order as amended 2026-08-13. Attested late -- the gate was dispatched before it was started, which is my sequencing error, caught by the implementer crew's exit note."
         }
       ],
       "postconditions": [
@@ -119,8 +120,13 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "The guard collides with the in-process MCP caller and the collision is structural. spine_open creates a NEW worktree and stamps origin.worktree to it; the next verb on that spine is claim, issued in-process through the door at mcp_spine_server.py:361, which never chdirs; the door process cannot already stand inside a directory that did not exist a moment earlier. So spine_open then claim in one session is now impossible through the door, by construction. tests/test_mcp_lifecycle.py FullStdioRoundTripTests fails and is the only failure. Reproduced independently by the Commander and again by the reviewer. The Commander's own handoff reason 1 was false: run_crew.launch_process at scripts/run_crew.py:676 passes no cwd=, so a dispatched crew inherits the dispatcher's cwd, not its spine's worktree. Verb scope cannot fix it (the round trip drives start, attach and advance, all in MUTATING_VERBS). Having the door supply SPINE.parent's toplevel cannot fix it either: measured equal to the stamped origin.worktree by construction, which is the X equals X tautology this issue exists to avoid. Every honest fix changes who sets cwd, in run_crew.py or mcp_spine_server.py, both outside allowed scope and both production behaviour, which the launch order requires be floated.",
+        "authority_needed": "Commander commander-315-native; floated to the Admiral of epic 568",
+        "next_action": "Admiral rules on the collision: option 1, run_crew.launch_process passes cwd=<the spine's worktree>, correct on independent merits but does not fix spine_open then claim; option 2, the door chdirs around its in-process main() call, fixes both halves and costs mcp_spine_server its deliberate cwd-independence; option 4, accept the break only if spine_open then claim in one session is genuinely unsupported, which the test asserts it is not. Commander recommends 1 plus 2.",
+        "prior_status": "in-progress"
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -171,7 +177,20 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "scope": "jobs-1-7-excluding-the-floated-collision",
+            "merge_readiness": "NOT-READY",
+            "artifact": ".agent-work/commander-315-native/crew-handoffs/g1-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g1-integrate": {
@@ -259,7 +278,14 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "g1-implement",
+      "blocker": "The guard collides with the in-process MCP caller and the collision is structural. spine_open creates a NEW worktree and stamps origin.worktree to it; the next verb on that spine is claim, issued in-process through the door at mcp_spine_server.py:361, which never chdirs; the door process cannot already stand inside a directory that did not exist a moment earlier. So spine_open then claim in one session is now impossible through the door, by construction. tests/test_mcp_lifecycle.py FullStdioRoundTripTests fails and is the only failure. Reproduced independently by the Commander and again by the reviewer. The Commander's own handoff reason 1 was false: run_crew.launch_process at scripts/run_crew.py:676 passes no cwd=, so a dispatched crew inherits the dispatcher's cwd, not its spine's worktree. Verb scope cannot fix it (the round trip drives start, attach and advance, all in MUTATING_VERBS). Having the door supply SPINE.parent's toplevel cannot fix it either: measured equal to the stamped origin.worktree by construction, which is the X equals X tautology this issue exists to avoid. Every honest fix changes who sets cwd, in run_crew.py or mcp_spine_server.py, both outside allowed scope and both production behaviour, which the launch order requires be floated.",
+      "authority_needed": "Commander commander-315-native; floated to the Admiral of epic 568",
+      "next_action": "Admiral rules on the collision: option 1, run_crew.launch_process passes cwd=<the spine's worktree>, correct on independent merits but does not fix spine_open then claim; option 2, the door chdirs around its in-process main() call, fixes both halves and costs mcp_spine_server its deliberate cwd-independence; option 4, accept the break only if spine_open then claim in one session is genuinely unsupported, which the test asserts it is not. Commander recommends 1 plus 2."
+    }
+  ],
   "amendments": [
     {
       "ts": "2026-08-13T05:20:32.320754+00:00",
