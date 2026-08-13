@@ -366,8 +366,13 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "in-progress",
-      "status_detail": {},
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "g1-implement is blocked on a decision outside Commander latitude, so execute's c1 (every gate closed with integrated evidence) cannot be honestly attested. The change is implemented, committed at ed25bf8f, and independently reviewed APPROVE on integrity, with PR #577 open and unmerged. One failure remains and it is the whole blocker: tests/test_mcp_lifecycle.py FullStdioRoundTripTests. scripts/mcp_spine_server.py:361 calls checklist_engine.main() in-process and never chdirs, and spine_open creates a NEW worktree and stamps origin.worktree to it, so spine_open then claim in one session is impossible through the door by construction. Verb scope cannot fix it and neither can having the door supply SPINE.parent's toplevel, which measures equal to origin.worktree by construction. Every honest fix changes who sets cwd, in scripts/run_crew.py or scripts/mcp_spine_server.py, both outside allowed scope and both production behaviour. Also on the record: the Commander's own launch-order reason that a dispatched crew's cwd is its spine's worktree is FALSE -- run_crew.launch_process at scripts/run_crew.py:676 passes no cwd=. Full account in .agent-work/commander-315-native/COMMANDER_RESULT.md.",
+        "authority_needed": "Commander commander-315-native; floated to the Admiral of epic 568",
+        "next_action": "Admiral rules on the collision. Commander recommends option 1 (run_crew.launch_process passes cwd=<the spine's worktree>, correct on independent merits, does not fix the pre-dispatch half) PLUS option 2 (the door chdirs around its in-process main() call, fixes both halves, costs mcp_spine_server its cwd-independence invariant). Option 3, accept the break, only if spine_open then claim in one session is genuinely unsupported, which the test asserts it is not. After the ruling, relaunch a Commander on the same session id; the lease is left HELD and the plan is frozen.",
+        "prior_status": "in-progress"
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -651,15 +656,57 @@
       "id": "tc5",
       "from": "plan",
       "statement": "docs/CHECKLIST_SCHEMA.md does not document origin as a top-level key, and the LIFECYCLE_CONTRACT.md that build_origin cites as its contract exists only inside .agent-work/archive/. The engine is about to refuse verbs on a key specified nowhere a reader will look."
+    },
+    {
+      "id": "tc6",
+      "from": "execute",
+      "statement": "run_crew.launch_process (scripts/run_crew.py:676) spawns every crew with no cwd=, so a crew's working directory is an accident of whoever dispatched it rather than the worktree its spine lives in. Worth fixing on its own merits, independent of epic 568."
+    },
+    {
+      "id": "tc7",
+      "from": "execute",
+      "statement": "scripts/mcp_spine_server.py is architected to be cwd-independent -- every path derivation takes an explicit cwd= anchored on SPINE's own location -- and now stands in tension with an engine that reads ambient cwd. The tension will recur for any future cwd-sensitive engine behaviour. Needs an architectural ruling, not a patch."
+    },
+    {
+      "id": "tc8",
+      "from": "execute",
+      "statement": "The origin stamp reaches only init_work_area and spine_lifecycle. Child checklists created elsewhere (review.json, IMPLEMENTER_PLAN.json), which is where crew subagents actually work, carry no origin and so fall back to the unguarded path. Extending the stamp to the other instantiation paths is a separate issue."
+    },
+    {
+      "id": "tc9",
+      "from": "execute",
+      "statement": "A spine stamped with origin becomes unclaimable once its worktree is removed at closeout. release is exempt so lease clearing survives, but claim --force against a removed worktree has no hatch."
+    },
+    {
+      "id": "tc10",
+      "from": "execute",
+      "statement": "tests/test_shipped_check_commands_resolve.py's EXPECTED_COMMAND_CHECK_COUNT is a hand-maintained census that no template edit updates automatically; a deletion elsewhere breaks it silently until the suite runs."
+    },
+    {
+      "id": "tc11",
+      "from": "execute",
+      "statement": "tests/test_gauge_chain_writer_to_trip.py::test_containment_repo_agent_work_untouched_by_the_chain snapshots the repo's live .agent-work directory and asserts equality, so ANY concurrent writer breaks it. It failed once during this run while a crew launcher was still writing crew-runs.json, and passed on re-run and in isolation. The test cannot distinguish 'the gauge chain wrote' from 'anything else wrote'."
+    },
+    {
+      "id": "tc12",
+      "from": "execute",
+      "statement": "instantiate_spine now re-serializes with json.dumps(indent=2), so an instantiated spine is escaped (ensure_ascii defaults True; 34 non-ASCII chars in COMMANDER_SPINE become \\\\uXXXX) and reflowed. Parsed content, key order and rendered text are unchanged and no consumer reads a spine as raw text, so it is a recorded behaviour change rather than a defect. ensure_ascii=False would remove half of it."
     }
   ],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "execute",
+      "blocker": "g1-implement is blocked on a decision outside Commander latitude, so execute's c1 (every gate closed with integrated evidence) cannot be honestly attested. The change is implemented, committed at ed25bf8f, and independently reviewed APPROVE on integrity, with PR #577 open and unmerged. One failure remains and it is the whole blocker: tests/test_mcp_lifecycle.py FullStdioRoundTripTests. scripts/mcp_spine_server.py:361 calls checklist_engine.main() in-process and never chdirs, and spine_open creates a NEW worktree and stamps origin.worktree to it, so spine_open then claim in one session is impossible through the door by construction. Verb scope cannot fix it and neither can having the door supply SPINE.parent's toplevel, which measures equal to origin.worktree by construction. Every honest fix changes who sets cwd, in scripts/run_crew.py or scripts/mcp_spine_server.py, both outside allowed scope and both production behaviour. Also on the record: the Commander's own launch-order reason that a dispatched crew's cwd is its spine's worktree is FALSE -- run_crew.launch_process at scripts/run_crew.py:676 passes no cwd=. Full account in .agent-work/commander-315-native/COMMANDER_RESULT.md.",
+      "authority_needed": "Commander commander-315-native; floated to the Admiral of epic 568",
+      "next_action": "Admiral rules on the collision. Commander recommends option 1 (run_crew.launch_process passes cwd=<the spine's worktree>, correct on independent merits, does not fix the pre-dispatch half) PLUS option 2 (the door chdirs around its in-process main() call, fixes both halves, costs mcp_spine_server its cwd-independence invariant). Option 3, accept the break, only if spine_open then claim in one session is genuinely unsupported, which the test asserts it is not. After the ruling, relaunch a Commander on the same session id; the lease is left HELD and the plan is frozen."
+    }
+  ],
   "refusals": 3,
   "engine_session": {
     "session_id": "commander-315-native",
     "status": "active",
     "claimed_at": "2026-08-13T04:29:29.939177+00:00",
-    "last_heartbeat": "2026-08-13T05:20:52.848538+00:00",
+    "last_heartbeat": "2026-08-13T06:22:26.611698+00:00",
     "claimed_by": "commander-delegated",
     "worktree": "/home/tommy/projects/constellation-skills-wt/epic-568-315-native",
     "previous_session_id": null,

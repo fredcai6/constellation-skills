@@ -73,12 +73,16 @@
       {
         "outcome": "Extend the origin stamp to the other spine instantiation paths, so child checklists carry it too.",
         "why_likely": "The stamp lands only in init_work_area and spine_lifecycle; child checklists such as review.json and IMPLEMENTER_PLAN.json are created elsewhere and stay unguarded.",
-        "entry_conditions": ["This change is merged."]
+        "entry_conditions": [
+          "This change is merged."
+        ]
       },
       {
         "outcome": "Close the claim --force gap for a spine whose worktree was removed at closeout.",
         "why_likely": "release is exempt so lease clearing survives, but claim --force against a removed worktree is refused with no hatch.",
-        "entry_conditions": ["A run actually hits it."]
+        "entry_conditions": [
+          "A run actually hits it."
+        ]
       }
     ],
     "uncertainty_register": [
@@ -95,9 +99,77 @@
     ]
   },
   "completed_outcomes": [],
-  "wave_evidence": [],
-  "discrepancies": [],
-  "open_current_wave_issue_ids": ["commander-315-native"],
+  "wave_evidence": [
+    {
+      "claim": "The native refusal fires where init.c0 used to catch, and takes no lease.",
+      "expected": "origin spine driven from the main checkout is REFUSED and writes nothing.",
+      "observed": "REFUSED; spine byte-identical and mtime-identical; no journal sidecar. Decided on the state fact, not on the refusal prose.",
+      "source": "repro_native.py plus the reviewer independent probe"
+    },
+    {
+      "claim": "Every new check has a failing side.",
+      "expected": "Reverting each half reds the new tests.",
+      "observed": "Stamp reverted reds the origin-carrying tests; main() call site reverted reds the mismatch tests. Reproduced by the reviewer with its own edits.",
+      "source": "tests"
+    },
+    {
+      "claim": "The origin-less fallback is untouched.",
+      "expected": "Eleven unusable origin shapes take the pre-change path and none raises.",
+      "observed": "All eleven pass; test_worktree_precondition_wiring.py green and unweakened.",
+      "source": "tests"
+    },
+    {
+      "claim": "A dispatched crew runs in its spine worktree.",
+      "expected": "run_crew.launch_process sets cwd to the worktree.",
+      "observed": "FALSE. scripts/run_crew.py:676 passes no cwd=; a crew inherits the dispatcher cwd.",
+      "source": "source read, verified three times independently"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "spine_open then claim in one session is impossible through the MCP door: spine_open creates a new worktree and stamps origin.worktree to it, and the in-process caller at mcp_spine_server.py:361 never chdirs, so it cannot already stand inside a directory that did not exist a moment earlier.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "The merge gate; the no-bypass ruling on the in-process caller.",
+      "evidence": "tests/test_mcp_lifecycle.py FullStdioRoundTripTests fails and is the only failure. Reproduced by the Commander and the reviewer. Verb scope cannot fix it; the door supplying SPINE.parent toplevel measures equal to origin.worktree by construction.",
+      "reason": "Every honest fix changes who sets cwd, in run_crew.py or mcp_spine_server.py, both outside allowed scope and both production behaviour. Floated to the Admiral."
+    },
+    {
+      "id": "D1",
+      "signal": "The Commander launch-order reason that a crew cwd is its spine worktree is false.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "The premise the no-bypass ruling rested on.",
+      "evidence": "scripts/run_crew.py:676 passes no cwd=.",
+      "reason": "The ruling was settled on an unverified empirical claim and must be reopened."
+    },
+    {
+      "id": "D2",
+      "signal": "The origin stamp does not reach child checklists (review.json, IMPLEMENTER_PLAN.json), which is where crew subagents work.",
+      "classification": "later_only",
+      "affects": "Coverage of the guard.",
+      "evidence": "The stamp lands only in init_work_area and spine_lifecycle.",
+      "reason": "A scoped limit, not a defect in this change. Filed as tc8."
+    },
+    {
+      "id": "D3",
+      "signal": "instantiate_spine now writes escaped and reflowed JSON rather than the resolved text verbatim.",
+      "classification": "evidence_only",
+      "affects": "The bytes of every instantiated spine.",
+      "evidence": "34 non-ASCII chars in COMMANDER_SPINE become escapes; condition dicts reflow. Parsed content, key order and rendered text unchanged; no consumer reads a spine as raw text.",
+      "reason": "A recorded behaviour change, not a defect. Left unpatched so the merged change is the reviewed change. Filed as tc12."
+    },
+    {
+      "id": "D4",
+      "signal": "tests/test_gauge_chain_writer_to_trip containment test failed once.",
+      "classification": "drop",
+      "affects": "Nothing in this change.",
+      "evidence": "Passed on re-run and three times in isolation; it snapshots the live .agent-work tree and a crew launcher was writing into it concurrently.",
+      "reason": "Environmental, falsified as a finding against this change. Filed as tc11."
+    }
+  ],
+  "open_current_wave_issue_ids": [
+    "commander-315-native"
+  ],
   "unlaunched_items": [],
   "repo_state": {
     "anchors": [
