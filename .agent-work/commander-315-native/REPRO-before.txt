@@ -1,0 +1,19 @@
+main checkout          : /tmp/tmpi_4zy6ez/main
+worktree               : /tmp/tmpi_4zy6ez/wt
+origin stamped in spine: (none -- stamp not landed yet)
+
+A  origin spine, cwd = WORKTREE ROOT -> PASS     (want PASS)
+B  origin spine, cwd = MAIN CHECKOUT -> PASS     (want REFUSED after the change)
+C  no-origin,    cwd = MAIN CHECKOUT -> PASS     (want PASS in both worlds -- the fallback)
+D  origin spine, cwd = WT SUBDIR     -> PASS     (want PASS -- containment, not equality)
+
+--- B's engine output (the case that must change) ---
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance init`.
+
+claimed lease s-b -> active
+
+--- C's engine output (the fallback, must be unchanged) ---
+claimed lease s-c -> active
+
+B refused AND took no lease (state fact): False
+GATE ARMED: False

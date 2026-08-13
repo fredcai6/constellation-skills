@@ -1,220 +1,144 @@
-# commander-315 working notes — issue #315, command-check cwd
+# commander-315-native working notes — engine-native isolation against a stored spine origin
 
-## Worktree isolation (run first, before any git action)
+Run: `commander-315-native`, epic 568 wave 1 recut.
+Branch `epic-568/c2-native-isolation`, base `9bb8c1b6`.
+Launch order: `.agent-work/epic-568/LAUNCH_ORDER-wave1-recut.md` (in the main checkout).
+
+The prior Commander's notes for issue #315 lived at this same path and are preserved in
+git history at `9bb8c1b6:notes-1.md`. This file is now this run's notes, per the launch
+order's file-ownership section.
+
+## Worktree isolation (first git-adjacent action)
 
 ```
 $ py /home/tommy/.claude/skills/constellation-admiral/scripts/verify_worktree_isolation.py \
-     --here /home/tommy/projects/constellation-skills-wt/epic-568-315
-worktree OK: in /home/tommy/projects/constellation-skills-wt/epic-568-315
+     --here /home/tommy/projects/constellation-skills-wt/epic-568-315-native
+worktree OK: in /home/tommy/projects/constellation-skills-wt/epic-568-315-native
 EXIT=0
 ```
 
-## The defect, confirmed in place
+## Problem statement
 
-`scripts/checklist_engine.py:787`
+A spine does not record where it lives. Every judgment about "is this agent in the right
+tree" is therefore delegated to a subprocess command check that measures the **ambient
+cwd** as its subject. The engine cannot check the thing itself, so the check can be
+disarmed by anything that controls the child's cwd.
 
-```python
-proc = subprocess.run([shell, "-c", command], capture_output=True, text=True)
-```
+The fix is two halves that must land together:
 
-No `cwd=`. The child inherits the engine process's cwd, which is the launcher's
-cwd, not the spine's location.
+1. **Write side** — `init_work_area.py` stamps an `origin` block carrying `worktree` (the
+   resolved root) when it instantiates a spine. Line 148 already computes
+   `Path(root).resolve().as_posix()` and throws it away.
+2. **Read side** — `checklist_engine.py` reads `origin.worktree` and compares it against
+   the engine's **own `Path.cwd()`** at verb entry. Spines with no `origin` fall back to
+   inherited cwd, i.e. today's behaviour exactly.
 
-**`base_dir` is already threaded to this exact point and is simply not used
-here.** `main()` computes `base_dir = path.parent` (the spine file's directory,
-line 3299) and passes it through `dispatch` → `_run_verb` → `advance`/`start`/
-`record` → `_check_condition(cond, t, base_dir)`. Inside `_check_condition`, the
-`git-change-policy` branch consumes it (line 862) but the `command` branch (line
-831) calls `_run_check_command(chk["command"])` and drops it. So the plumbing
-exists; only the last hop is missing.
+The read side alone is inert (no spine carries `origin`, so it would report green while
+doing nothing). The write side alone changes nothing. Hence one change.
 
-## The design question: cwd resolves to WHAT?
+## The trap, and why the comparison must be engine-native
 
-`base_dir` is the **spine's directory** (e.g. `.agent-work/commander-315/`).
-That is NOT the same as the repo root, and the difference decides the whole
-blast radius. Three candidates:
-
-- **A. `cwd = base_dir`** (spine directory)
-- **B. `cwd = the repo/worktree root enclosing the spine`**
-- **C. no change** (honest null)
-
-Prior art in the repo, all pointing at B:
-
-- `docs/CHECKLIST_SCHEMA.md:39-41` records the current behaviour as a known
-  defect and states the workaround: *"A `command` check receives no `cwd`.
-  Already noted in `init_work_area.resolve_spine`'s docstring (#341); measured
-  live here as a check that silently found nothing when run from outside the
-  repo. Every command the generator emits is therefore anchored `cd <repo-root>
-  && ...`."* The anchor the corpus already reaches for is the **repo root**.
-- `scripts/generate_spine.py:946` probes candidate checks at generation time
-  with `subprocess.run(["bash", "-c", command], cwd=str(repo_root), ...)` — the
-  generator already validates checks **against the repo root**. If the engine
-  ran them anywhere else, the generator's probe would be testing a different
-  thing than the engine runs.
-
-The enumeration below settles it empirically.
-
-## Blast-radius enumeration (by command, not from memory)
-
-Enumerator: `scratchpad/enumerate_checks.py` — parses each checklist JSON,
-walks every `check` object with `kind == "command"`, and classifies the command
-text. Two distinct cwd-dependence classes, because the second is invisible to a
-grep:
-
-- **R1-RELATIVE** — the check text itself contains a relative path token
-  (`scripts/x.py`, `.agent-work/<work-id>/y.json`, `--store-root episodes`).
-- **R2-CWD-SCRIPT** — the check text has no relative token, but it invokes a
-  script whose project root **defaults to cwd**, without pinning `--root`
-  absolutely. Measured by reading each script's argparse default:
-
-  | script | root default | verdict |
-  |---|---|---|
-  | `init_work_area.py` | `--root` → cwd | cwd-defaulting |
-  | `verify_state_note.py` | `--root`, `default=Path(".")` | cwd-defaulting |
-  | `verify_cycles.py` | `--root`, `default="."` | cwd-defaulting |
-  | `verify_spec_confirmed.py` | `--root`, `default="."` | cwd-defaulting |
-  | `verify_iterative_role_artifacts.py` | hardcoded `Path.cwd()`, no `--root` | cwd-defaulting |
-  | `map_orient.py` | `--root` | cwd-defaulting **unless** `--root` passed |
-  | `verify_episode_captured.py` | `--store-root` → skill dir (absolute) | clean unless passed a relative value |
-  | `verify_interrogation.py`, `verify_fowler_pass.py`, `verify_worktree_isolation.py` | take explicit paths | clean |
-
-Command run:
+Storing the root and passing it to `verify_worktree_isolation.py --here` as a forwarded
+`cwd=` reproduces the defect byte for byte: `origin.worktree` and the EXPECTED value in
+the check text both derive from the same resolved root at creation, so the comparison
+becomes `X == X`. Demonstrated by the prior wave (pasted in the launch order):
 
 ```
-py scratchpad/enumerate_checks.py $(git ls-files 'skills/*/templates/*.json')
-py scratchpad/enumerate_checks.py $(git ls-files '.agent-work/templates/*.json' | grep -v '/.baseline/')
+origin.worktree stored in the spine : /tmp/tmp.8uTC5OULCX/wt
+EXPECTED inside the check text      : /tmp/tmp.8uTC5OULCX/wt
+IDENTICAL? True
+cwd = launcher's own (today)        : REFUSED  (gate works)
+cwd = origin.worktree (direction D) : PASS     (gate disarmed)
 ```
 
-### Counts
+The engine asking the OS where its own process stands cannot be lied to by a child
+process's cwd. That is the whole point: two independent sources — stored state, and the
+live process location — instead of one source compared with itself.
 
-| corpus | total command checks | R1 | R2 | cwd-dependent | clean |
-|---|---|---|---|---|---|
-| `skills/*/templates/*.json` (source of truth, what installs to users) | 22 | 6 | 11 | **17** | 5 |
-| `.agent-work/templates/*.json` (this project's installed mirror) | 21 | 5 | 10 | **15** | 6 |
+## What I measured before planning
 
-The 5 "clean" in the source corpus: 2 × `map_orient.py --root <repo-root>`
-(root pinned absolutely), 2 × `<exact test command>` (an unfilled placeholder
-the authoring role supplies per run — not measurable here), and 1 × the
-`gh pr list` check. That last one is honestly a sixth cwd-dependent case:
-`gh` resolves the repo from cwd. Its `git -C <repo-root>` half is pinned; its
-`gh` half is not. Counted as clean by the tool, flagged here as an undercount.
+### Blast radius of a native refusal — who actually runs the engine
 
-### Disposition of every hit
+Enumerated by command over the tree (`grep -rln checklist_engine scripts/ tests/`),
+excluding `.agent-work/archive/`:
 
-**Zero repairs needed.** The decisive measurement:
+| Caller | How it reaches the engine | Exposure to a native cwd refusal |
+|---|---|---|
+| `scripts/hooks/spine_rail.py` | **never subprocesses the engine** — reads the spine state file and reconstructs `current` in-process (module docstring line 16; its one subprocess is `git worktree list`, line 507) | **none** |
+| `scripts/hooks/gauge_writer_hook.py` | writes `gauge.json`; the engine reads it | **none** |
+| `scripts/mcp_spine_server.py` | `checklist_engine.main(argv)` in-process, **never chdirs** (no `chdir` anywhere in the file) | real: server cwd is the MCP host's, not the spine's |
+| `scripts/run_crew.py` | launches crews; does not drive the engine's verbs | none |
+| 41 test files | import the engine or drive spines built in temp dirs; none stamp `origin` today | none (fallback path) |
 
-```
-$ ... | grep -cE '\.\./|spine\.json|gauge\.json'
-0
-```
+The launch order warned that "the wired hooks call the engine you are changing". Measured:
+**they do not.** `spine_rail.py` states the contract explicitly and keeps it. This is a
+measured negative on a stated risk, and it removes the hook hazard from this change.
 
-**No shipped check is authored relative to the spine directory.** Every single
-relative check — all 17 — is authored relative to the **repo root**. So:
+### Which verbs the comparison may guard
 
-- Under **option B (cwd = repo root)**: all 17 resolve correctly. Every hit is
-  *ruled correct under the new resolution*, none need repair. The fix is the
-  engine change alone.
-- Under **option A (cwd = spine dir)**: all 17 break at once, because
-  `.agent-work/<work-id>/` is two levels below the root every check assumes.
-  Option A would turn a one-line engine fix into a 17-check corpus rewrite and
-  break every already-archived spine as well.
+The MCP server measurement above is the honest-null pressure point: a server process
+launched from the main checkout serving a worktree spine would be refused on **every**
+call if the comparison guarded every verb.
 
-That asymmetry is the answer to the design question. **Option B.**
+Independent of the door, doctrine mandates a cross-tree read-only workflow:
+`references/global-orchestrator.md` §idle-subagent-adjudication has the invoker read a
+subordinate's `current` to see a `REFRESH REQUESTED:` line. An Admiral in the main
+checkout reading a Commander's `current` is legitimate and load-bearing.
 
-### Was "five" right?
+So: **the comparison guards mutating verbs and `claim`, never read-only verbs.**
+`current`, `heartbeat` and `release` stay reachable from anywhere. Doing work in the
+wrong tree is the defect; reading state from elsewhere is a supported workflow. This is
+the scope choice the launch order left in my latitude, decided on the evidence above.
 
-**No. Filed: 5. Measured: 17** cwd-dependent command checks in the shipped
-source corpus (22 total), of which 6 carry a literal relative path token and 11
-are cwd-dependent only through a script whose root defaults to cwd.
+### The `init.c0` collision — measured, and floated
 
-If "five shipped relative checks" was counting only literal relative path
-tokens, the nearest defensible number is **6** (R1 in the source corpus) — still
-not 5, and it misses the 11 R2 cases entirely, which are the ones a reader would
-never find by grepping for a slash. The filed number understates the exposure by
-roughly 3x. This is a reporting finding, not a scope change: the repair count is
-still zero, because the fix moves the resolution rule to the root all 17 already
-assume.
-
-## Pre-fix suite baseline (so "green after" means something)
+Mission item 3 says delete `COMMANDER_SPINE`'s `init.c0` command check. Measured:
 
 ```
-$ py -m pytest tests/test_checklist_engine.py -q
-441 passed, 140 subtests passed in 2.06s
-
-$ py -m pytest tests/ -q -p no:randomly
-2932 passed, 5 skipped, 1121 subtests passed in 120.53s
+$ py -c "...strip tasks.init.preconditions..."   # deliberate breakage
+$ py -m pytest tests/test_worktree_precondition_wiring.py -q
+3 failed, 4 passed in 0.23s
 ```
 
-## Fix shape
+Failing:
+- `EnumerationDeliberateBreakage::test_refuses_broken_copy_and_passes_real_fixed_tree`
+- `EnumerationGeneralizesPastOneEntry::test_refuses_new_second_entry_without_naming_known_fixed_entry`
+- `EnumerationGeneralizesPastOneEntry::test_passes_once_new_entry_carries_the_precondition`
 
-Thread the existing `base_dir` into `_run_check_command` and resolve it to the
-enclosing repo/worktree root:
+Cause: `scripts/verify_worktree_precondition_coverage.py` exists to assert that
+`COMMANDER_SPINE.template.json`'s `init` gate wires a command check containing
+`verify_worktree_isolation.py`. Three tests in the merged guard pin that contract, one of
+them by using the real template as the known-good entry that must **not** be named in a
+failure. Deleting the check makes the guard's own premise false.
 
-- walk up from `base_dir` for a `.git` entry (a **file** in a linked worktree, a
-  **directory** in a plain checkout — both count), no subprocess, no git dependency;
-- no `.git` found (spine in a bare temp dir, as most engine tests do) → fall back
-  to inherited cwd, i.e. exactly today's behaviour. Conservative: no test that
-  builds a spine outside a repo changes meaning.
-- `base_dir is None` (checklist processed without a file path) → inherited cwd.
+The two instructions collide head on: item 3 says delete it; the same launch order says
+the tripwire must be green and must not be weakened. I did not resolve that by picking an
+authority source. See "Float" below.
 
-`agent_work_root.durable_root()` is deliberately **not** used: it redirects a
-linked worktree to the MAIN checkout, which is the opposite of what a check
-needs — a check must run against its own worktree's files. Using it would make
-this worktree's checks verify the Admiral's checkout. It is also a forbidden
-file this wave; not edited, and not depended on.
+## What I am shipping
 
-The POSIX-shell routing and the `returncode 127` / `no-posix-shell` path are
-untouched — `cwd=` is added only to the branch that already calls
-`subprocess.run`.
+Items 1 and 2, together, as one change. `init.c0` stays for now — with the honest note
+that after this change it is a check that cannot fail for any spine carrying `origin`
+(the native comparison already proved cwd is inside the worktree before the command check
+runs, so `git rev-parse --show-toplevel` necessarily equals `<repo-root>`).
 
----
+## Float to the Admiral — item 3
 
-## OVERRIDE: the enumeration's conclusion was wrong in its highest-consequence row
+`decision:delete-not-repair-init-c0` is graded `settled/measured`. Inherited doctrine for
+that tier: "you may re-measure; a contradicting new measurement is evidence: revisit, and
+log the new measurement as the new provenance." The measurement above is that evidence.
 
-Everything above about R1/R2 and the repo-root target stands as measurement, but
-the conclusion "option B, zero repairs" does **not** survive.
+Deleting `init.c0` coherently requires **also** retiring
+`scripts/verify_worktree_precondition_coverage.py` and its three enumeration tests,
+because per-template wiring coverage is the wrong question once enforcement is
+engine-native and no template can omit it. Retargeting the coverage script instead would
+make it vacuous — a guard that passes in both the healthy and the defective world, which
+is the exact defect the script was written to prevent.
 
-A cold plan critic found a third class the enumerator cannot represent: a check
-where **cwd is the subject, not a path base**. There is exactly one in the
-shipped corpus, and it is the most consequential one —
-`verify_worktree_isolation.py --here <repo-root>` on `COMMANDER_SPINE`'s
-`init.c0`. It runs `git rev-parse --show-toplevel` from the ambient cwd and
-compares it to EXPECTED. Force cwd to the spine's enclosing root and the
-comparison becomes `X == X`.
+That is a structural change and a scope change. Both are named in the launch order's
+"must float" list, so it is floated rather than taken.
 
-Line 79 of these notes classified that script as "clean — takes explicit paths."
-That is exactly backwards. It is the single most cwd-dependent check in the
-corpus.
-
-Proven through the real engine path (`.agent-work/commander-315/s1_production.sh`):
-unmodified engine REFUSES a wrong-worktree launcher, naive-fix engine ADVANCES it.
-
-See `.agent-work/commander-315/COMMANDER_RESULT.md` for the full result.
-
-
----
-
-## WITHDRAWN: the "394 already-anchored checks" immunity number
-
-The Admiral bucketed it and it does not survive. Of 1747 command checks in
-tracked JSON, **1649 sit under `.agent-work/archive/`** -- finished runs that
-will never execute again -- and 355 of those carry the `cd <abs> &&` prefix.
-
-The **live template corpus has 64 command checks and zero carry a `cd` prefix.**
-
-The immunity is real and almost entirely in dead scrap. My enumeration of the
-template corpus (17 of 22) was correct and reproduced cell for cell; it is the
-immunity number specifically that counted corpses. Withdrawn.
-
-## Admiral ruling: direction D, and the costing
-
-The human rejected options A, B and C. The direction is: a spine records its own
-repo reference when it is created. Costing at
-`.agent-work/commander-315/COSTING-stored-origin.md`.
-
-Headline: ~40 lines across two modules, one template deletion, zero edits to the
-17. The trap is that the naive reading of this direction -- store the root, pass
-it as `cwd` -- **re-breaks the isolation gate exactly as before**, because the
-stored root and the check's EXPECTED are the same value. The gate has to become
-engine-native in the same change. The guard on PR #576 is what catches it if
-someone builds only half.
+Cost if the Admiral rules "delete": remove `init.c0` from the template, delete
+`scripts/verify_worktree_precondition_coverage.py`, delete the three enumeration test
+classes, keep `EngineDeliberateBreakage` and `IsolationGateSurvivesThroughTheCLI` (which
+test the engine, not the template wiring, and stay green either way).
