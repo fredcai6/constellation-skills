@@ -12,6 +12,21 @@ because they are never re-derived here. A refusal (non-zero exit) is surfaced
 as `isError: true` carrying the engine's own stdout+stderr verbatim -- the
 model sees a failed tool call, not prose it has to parse to notice failure.
 
+This door used to be strictly cwd-independent: it read its whole world from
+the environment and never changed the process's working directory. That is no
+longer true, in ONE narrow place, on purpose (issue #568). The engine's
+worktree guard (`checklist_engine.origin_worktree_refusal`) compares a spine's
+stamped `origin.worktree` against the engine's AMBIENT cwd, and this door calls
+the engine IN PROCESS -- so for the duration of that one call, `run_engine`
+stands in the bound spine's own worktree and restores the previous directory in
+a `finally` (`_standing_in_the_bound_spines_worktree`). Without it, the very
+first verb on a spine `spine_open` had just created in a NEW worktree was
+refused by construction, because no process can already be standing inside a
+directory that did not exist a moment earlier. Everything else here stays
+cwd-independent, and the helpers that ask git a question still pass `cwd`
+explicitly -- more strictly than before, since the process's own cwd is now a
+thing that moves.
+
 Ambient state is bound at server-launch time from the environment, NOT exposed
 as tool arguments (so a model cannot point the door at a different spine or
 identity mid-conversation):
@@ -188,6 +203,17 @@ def _resolve_confined(
     `value` exactly as `Path(value).resolve()` would, matching the engine
     faithfully rather than asserting a base directory `amend()` never uses.
 
+    One wrinkle since issue #568: `run_engine` stands in the bound spine's
+    worktree while the engine runs, so "the process's own cwd" is not the same
+    directory here as it is inside `main()`. This function is called from
+    `_identity_violation`, which runs BEFORE that move and is deliberately
+    left outside it -- resolving a containment check against a directory the
+    door is about to enter would change what "confined" means mid-check. No
+    live divergence follows: this door only ever hands the engine an ABSOLUTE
+    `--delta` (`_write_amend_delta`) and joins a relative `from_child` to
+    `SPINE.parent`, so no relative path reaches the engine to be resolved
+    under either cwd.
+
     `bound_dir` defaults to `SPINE.parent` -- exactly what every call inside
     `_identity_violation` needs, unchanged -- but is a parameter so
     `spine_open`'s own containment check (`tests/test_mcp_lifecycle.py`) can
@@ -316,12 +342,14 @@ def _identity_violation(argv: list[str]) -> str | None:
     # predicate (`_resolve_confined`) rather than a second one -- but NOT the same
     # relative-path rule: `amend()` does a bare `Path(args.delta).read_text()`,
     # with no base-dir join of its own (unlike `advance()`'s from_child), so a
-    # relative --delta resolves against the process's cwd, not SPINE.parent. This
-    # door only ever writes the delta file itself, beside the spine it amends
-    # (see `_write_amend_delta`, always an absolute path), so this whole branch is
-    # defense in depth against a future change to that call site, not a path a
-    # caller can steer today -- `delta` is declared as a JSON object in the tool
-    # schema, never as a path argument.
+    # relative --delta resolves against the process's cwd, not SPINE.parent -- and
+    # since issue #568 that cwd is the bound spine's worktree by the time the
+    # engine reads it, while this check runs before the door moves there (see
+    # `_resolve_confined`'s docstring). This door only ever writes the delta file
+    # itself, beside the spine it amends (see `_write_amend_delta`, always an
+    # absolute path), so this whole branch is defense in depth against a future
+    # change to that call site, not a path a caller can steer today -- `delta` is
+    # declared as a JSON object in the tool schema, never as a path argument.
     resolved_delta = getattr(ns, "delta", None)
     if resolved_delta:
         resolved, escapes = _resolve_confined(resolved_delta, join_relative_to=None)
@@ -335,6 +363,62 @@ def _identity_violation(argv: list[str]) -> str | None:
     return None
 
 
+@contextlib.contextmanager
+def _standing_in_the_bound_spines_worktree():
+    """Stand in the bound spine's OWN worktree for the duration of the block,
+    then return to where the process was, unconditionally (issue #568).
+
+    Why the door moves at all. `checklist_engine.origin_worktree_refusal`
+    compares a spine's stamped `origin.worktree` against the engine's AMBIENT
+    cwd, and `run_engine` calls the engine IN PROCESS -- so "where this door's
+    process happens to stand" became load-bearing engine input. It is not
+    input this door can supply by argument: the guard deliberately has no off
+    switch outside the spine. The structural case is `spine_open`, which
+    creates a NEW worktree and stamps `origin.worktree` to it; the next verb on
+    that spine is `claim`, and a process cannot already be standing inside a
+    directory that did not exist a moment earlier. Moving for the length of one
+    engine call is what makes the door genuinely BE in the tree it is driving,
+    rather than exempt from a rule everyone else obeys.
+
+    The derivation is `_worktree_root_for_lifecycle` (defined below, resolved at
+    call time) -- `git rev-parse --show-toplevel` from the spine's own
+    directory. Deliberately the same one `spine_close` uses, not a second
+    derivation that could disagree with it.
+
+    Unresolvable is NOT a failure. A spine outside any worktree, a removed
+    directory, no `git` on PATH: no chdir happens and the call proceeds exactly
+    as it did before this change. A door that cannot locate a tree must not
+    become a door that cannot run.
+
+    `chdir` is process-global, so this is only safe because the door handles
+    exactly ONE request at a time: `main()` is a plain `for line in sys.stdin:`
+    loop that writes each reply before reading the next line, and the module
+    imports no threading, asyncio or multiprocessing. There is no second
+    in-flight request whose cwd this could corrupt.
+    `tests/test_mcp_door_engine_cwd.py::SingleThreadedDoorPinTests` pins both
+    halves of that so a future concurrent door fails there instead of here.
+
+    The restore is in a `finally`, so it runs on a normal return, on an
+    exception and on `SystemExit` alike. It is NOT itself guarded: if the
+    directory we came from has vanished, that surfaces as a failed call rather
+    than a server left silently standing somewhere it did not choose."""
+    moved = False
+    previous = None
+    try:
+        previous = os.getcwd()
+        target = _worktree_root_for_lifecycle()
+        if target.is_dir():
+            os.chdir(target)
+            moved = True
+    except Exception:  # noqa: BLE001 - any failure to locate the tree means "do not move"
+        moved = False
+    try:
+        yield
+    finally:
+        if moved:
+            os.chdir(previous)
+
+
 def run_engine(verb: str, *rest: str, mutating: bool = True) -> dict:
     """Call the real engine main() with a constructed argv. This is the ONLY
     place this module talks to the engine, and it never inspects or rewrites
@@ -346,7 +430,14 @@ def run_engine(verb: str, *rest: str, mutating: bool = True) -> dict:
     purpose: `parse_args` writes a usage block to stderr and raises
     SystemExit(2) on malformed argv, and outside this block that text would
     escape onto the real transport's stderr and the exit would take the whole
-    server process down with it."""
+    server process down with it.
+
+    The engine call itself runs inside `_standing_in_the_bound_spines_worktree`
+    -- the door deliberately stands in the spine's own tree for that call, and
+    only for that call. `_identity_violation` stays OUTSIDE it: it resolves
+    caller-supplied paths for containment, and resolving them against a
+    directory this door just moved to would change what "confined" means
+    mid-check."""
     argv = ["--file", str(SPINE), verb, *rest]
     if mutating and SESSION:
         argv += ["--session-id", SESSION]
@@ -358,7 +449,8 @@ def run_engine(verb: str, *rest: str, mutating: bool = True) -> dict:
                 code = 2
                 err.write(violation + "\n")
             else:
-                code = checklist_engine.main(argv)
+                with _standing_in_the_bound_spines_worktree():
+                    code = checklist_engine.main(argv)
     except SystemExit as exc:  # argparse rejected the argv (e.g. missing required flag)
         code = int(exc.code or 0)
     except Exception as exc:  # noqa: BLE001 - surface everything, never swallow
@@ -451,10 +543,22 @@ def _write_amend_delta(delta: dict) -> Path:
 
 def _git_rev_parse(*args: str, cwd: Path) -> str:
     """Run one read-only `git rev-parse`, with `cwd` an explicit parameter --
-    never the process's own ambient cwd, which this door's request-handling
-    loop never changes and should not start changing merely to answer one
-    lifecycle question. Raises `RuntimeError` on a non-zero exit, naming the
-    directory and git's own stderr."""
+    never the process's own ambient cwd.
+
+    That used to be justified by "this door's request-handling loop never
+    changes cwd". It now does, deliberately and narrowly: `run_engine` stands
+    in the bound spine's own worktree for the duration of one in-process
+    engine call (`_standing_in_the_bound_spines_worktree`, issue #568),
+    because the engine's `origin.worktree` guard reads the ambient cwd and a
+    door that cannot enter the tree it is driving cannot drive it at all.
+
+    So the explicit parameter is no longer a stylistic preference -- it is
+    what keeps every lifecycle question answerable against a NAMED directory
+    while the process's own cwd is a thing that moves. Do not "simplify" it
+    back to an ambient read.
+
+    Raises `RuntimeError` on a non-zero exit, naming the directory and git's
+    own stderr."""
     proc = subprocess.run(["git", "rev-parse", *args], cwd=str(cwd), capture_output=True, text=True)
     if proc.returncode != 0:
         raise RuntimeError(f"git rev-parse {' '.join(args)} failed in {cwd}: {proc.stderr.strip()}")
@@ -478,7 +582,14 @@ def _primary_checkout_for_lifecycle() -> Path:
     process's ambient cwd; this does the identical join, explicit about
     `cwd` instead. A linked worktree's common dir is already absolute; the
     primary checkout's own is `.git`, relative to `cwd` -- joined against
-    `spine_dir`, never `Path.resolve()`'s implicit reliance on the real cwd."""
+    `spine_dir`, never `Path.resolve()`'s implicit reliance on the real cwd.
+
+    That last distinction hardened from preference into requirement when
+    `run_engine` began entering the bound spine's worktree for the length of
+    one engine call (`_standing_in_the_bound_spines_worktree`, issue #568).
+    Nothing here runs inside that window, but this process's cwd is no longer
+    a constant, so an ambient read would be answering a different question
+    depending on when it ran."""
     spine_dir = Path(os.environ["SPINE_FILE"]).resolve().parent
     common = Path(_git_rev_parse("--git-common-dir", cwd=spine_dir))
     if not common.is_absolute():

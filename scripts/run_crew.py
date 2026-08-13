@@ -663,17 +663,67 @@ def _print_drift_hint_if_any(stderr_path: Path) -> None:
         print(hint, file=sys.stderr)
 
 
-def launch_process(argv: list[str], *, stdin: bytes, env: dict[str, str], stdout_path: Path, stderr_path: Path) -> int:
+def crew_cwd(worktree: str | None, root: Path) -> Path | None:
+    """The absolute directory a crew assigned to `worktree` must be spawned in,
+    or `None` when the caller recorded no worktree at all.
+
+    A relative `root` is first resolved against the CLI invocation directory;
+    then a relative `worktree` is joined onto that absolute repo root rather than
+    resolved independently against some unrelated dispatcher directory. This
+    preserves the addressed-root contract while making the returned spawn cwd
+    absolute. `--root` and `--worktree` both default to `"."`, so the common case
+    is the absolute invocation repo root itself.
+
+    `None` is the legacy shape: a `crew-runs.json` entry recorded before the
+    worktree was threaded to the spawn has no `worktree` key, and a resume of
+    one must degrade to the inherited directory rather than raise."""
+    if worktree is None:
+        return None
+    path = Path(worktree)
+    return path if path.is_absolute() else (root.resolve() / path).resolve()
+
+
+def launch_process(
+    argv: list[str], *, stdin: bytes, env: dict[str, str], stdout_path: Path,
+    stderr_path: Path, cwd: Path | str | None = None,
+) -> int:
     """The ONE place a real crew subprocess is spawned. Tests monkeypatch this to
     simulate exit codes and to write (or withhold) the result artifact, so no
     test ever launches a real agent CLI.
 
     Foreground/blocking: we feed the supplied (empty) stdin, capture stdout/stderr
-    to the deterministic files, and return the child's exit code."""
+    to the deterministic files, and return the child's exit code.
+
+    `cwd` is the crew's OWN worktree (issue #568). Before it was threaded here,
+    this call passed no `cwd=` at all and a crew therefore inherited the
+    DISPATCHER's directory -- an accident of whoever launched it, and one the
+    engine reads directly: `checklist_engine.origin_worktree_refusal` compares a
+    spine's stamped `origin.worktree` against the engine's ambient cwd, so "which
+    tree is this crew standing in" stopped being cosmetic. Passing it makes the
+    fact explicit instead of assumed.
+
+    Keyword-only WITH a default on purpose: this function is a monkeypatch seam
+    (see above), and a required parameter would break every double at once. A
+    double that does not declare `cwd` keeps working only for callers that omit
+    it; the dispatch paths pass it, so their doubles declare it.
+
+    A missing or non-directory `cwd` is refused BY NAME here, before the spawn.
+    `subprocess.run` would otherwise raise a bare `FileNotFoundError` that names
+    only the errno and reads like the agent CLI itself is missing -- a wrong
+    diagnosis for a worktree that was never created."""
+    if cwd is not None and not Path(cwd).is_dir():
+        raise CrewLaunchError(
+            f"refusing to spawn a crew in {str(cwd)!r}: that worktree does not exist "
+            f"(or is not a directory). Create the worktree first, or dispatch with a "
+            f"--worktree that does exist."
+        )
     stdout_path.parent.mkdir(parents=True, exist_ok=True)
     stderr_path.parent.mkdir(parents=True, exist_ok=True)
     with stdout_path.open("wb") as out, stderr_path.open("wb") as err:
-        proc = subprocess.run(argv, input=stdin, stdout=out, stderr=err, env=env)
+        proc = subprocess.run(
+            argv, input=stdin, stdout=out, stderr=err, env=env,
+            cwd=(None if cwd is None else str(cwd)),
+        )
     return proc.returncode
 
 
@@ -1132,7 +1182,8 @@ class CliBackend(CrewBackend):
             work_id=spec.work_id, gate=spec.gate, role=spec.role, spine=spec.spine, root=root,
             parent=spec.parent,
         )
-        exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path)
+        exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path,
+                           cwd=crew_cwd(spec.worktree, root))
 
         final = finalize_from_exit_code(
             entry, exit_code=exit_code, result=spec.result, root=root, since=started, spine=spec.spine,
@@ -1190,7 +1241,8 @@ class CliBackend(CrewBackend):
             work_id=entry["work_id"], gate=entry["gate"], role=entry["role"],
             spine=entry.get("spine"), root=root, parent=entry.get("parent"),
         )
-        exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path)
+        exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path,
+                           cwd=crew_cwd(entry.get("worktree"), root))
 
         final = finalize_from_exit_code(
             entry, exit_code=exit_code, result=entry["result"], root=root, since=resumed_at,
