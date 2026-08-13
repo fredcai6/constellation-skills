@@ -158,13 +158,28 @@ is **not a prerequisite**, and making it one would gate a ~40-line change behind
 **It shrinks — further than you expected — but stored `origin` does not do it
 alone, and that distinction is load-bearing.**
 
-**Stored `origin` by itself does not save the gate.** If the engine sets
-`cwd = origin.worktree`, then `verify_worktree_isolation.py --here <repo-root>`
-still compares the ambient cwd (now the stored root) against EXPECTED (also the
-stored root, substituted from the same value at init). It is `X == X` again —
-the identical tautology I was blocked on, arrived at by a different route. Any
-version of this direction that only stores a root and forwards it as `cwd`
-**re-breaks the gate**, and the guard I landed on PR #576 will catch it.
+**Stored `origin` by itself does not save the gate.** This is demonstrated, not
+argued — `.agent-work/commander-315/d_trap_demo.sh`, a spine carrying a real
+`origin` block and the shipped `init.c0` check:
+
+```
+  origin.worktree stored in the spine : /tmp/…/wt
+  EXPECTED inside the check text      : /tmp/…/wt
+  IDENTICAL? True
+
+  launcher standing in the WRONG worktree (the main checkout):
+  cwd = launcher's own (today)        : REFUSED (gate works)
+  cwd = origin.worktree (direction D) : PASS (gate disarmed)
+```
+
+The two values are byte-identical because both derive from the same root at
+creation time — `origin.worktree` is written by the process that made the
+worktree, and EXPECTED is `<repo-root>` substituted from that same root at
+`init_work_area.py:148`. So an engine that sets `cwd = origin.worktree` runs the
+check **from the very path the check asserts it is standing in**. It is `X == X`
+again — the identical tautology I was blocked on, arrived at by a different
+route. Any version of this direction that only stores a root and forwards it as
+`cwd` **re-breaks the gate**, and the guard I landed on PR #576 will catch it.
 
 **What does save it:** with `origin.worktree` stored, the isolation gate no
 longer needs to be a command check at all. The engine can make the comparison
