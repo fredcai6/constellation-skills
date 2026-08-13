@@ -1,0 +1,25 @@
+[
+  {
+    "crew_id": "constellation/commander-315-native/g1-implement/implementer/attempt-1",
+    "work_id": "commander-315-native",
+    "gate": "g1-implement",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/commander-315-native/g1-implement/implementer/attempt-1",
+    "backend": "cli",
+    "pid": 610803,
+    "worktree": "/home/tommy/projects/constellation-skills-wt/epic-568-315-native",
+    "handoff": ".agent-work/commander-315-native/crew-handoffs/g1-implementer-handoff.md",
+    "result": ".agent-work/commander-315-native/crew-handoffs/g1-implementer-result.md",
+    "spine": null,
+    "parent": "commander-315-native",
+    "stdout": ".agent-work/commander-315-native/crew-runs/g1-implement-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/commander-315-native/crew-runs/g1-implement-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-08-13T05:24:52.723245+00:00",
+    "last_heartbeat": "2026-08-13T05:35:50.589043+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "model": "opus"
+  }
+]

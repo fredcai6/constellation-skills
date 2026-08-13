@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-wire",
+  "mechanical": {
+    "run": "implementer-315-native-g1",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m3-wire",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-implementer-315-native-g1-m3-wire@04a6835060400c7e4643a1a8b32355d617ba0cbd",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "implementer-315-native-g1",
+    "generated_at": "2026-08-13T05:32:27Z"
+  }
+}

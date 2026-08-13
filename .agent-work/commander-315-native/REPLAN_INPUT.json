@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic 568 wave 1 recut - engine-native isolation against a stored spine origin",
+      "spec_path": ".agent-work/epic-568/LAUNCH_ORDER-wave1-recut.md",
+      "intent_and_why": "Engine state must carry who it belongs to. This issue is the same defect one layer over: state that does not know where it lives. A spine carries its own repo reference from creation and the engine enforces worktree isolation natively against it, instead of delegating that judgment to a subprocess check wired into one template."
+    },
+    "definition_of_done": [
+      "A spine stamped with origin at creation.",
+      "The engine refuses guarded verbs driven from outside that origin, natively, without forwarding a cwd.",
+      "The superseded template check and its coverage apparatus are gone.",
+      "A test exercises a spine that actually carries origin, on both the match and the mismatch side."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Every new check demonstrated failing in the defective world and passing in the healthy one.",
+      "sufficient_evidence": "Full suite with no new failures against main's baseline, plus an arming repro decided on state facts rather than refusal prose.",
+      "appetite": "One Commander, serialized lane, no concurrent dispatch on the engine-core files."
+    },
+    "hard_constraints": [
+      "Engine-native comparison; never forward a cwd to a subprocess check.",
+      "The stamp and the native check land as ONE change; the read side alone is inert.",
+      "The resolved root is a parameter distinct from base_dir.",
+      "scripts/hooks/spine_rail.py and scripts/agent_work_root.py must not be edited.",
+      "scripts/spine_lifecycle.py gets zero changes.",
+      "Do not enter or reuse /home/tommy/projects/constellation-skills-wt/epic-568-315."
+    ],
+    "fixed_decisions": [
+      "decision:engine-native-not-forwarded-cwd",
+      "decision:both-halves-one-change",
+      "decision:delete-not-repair-init-c0",
+      "decision:door-not-a-prerequisite",
+      "decision:root-distinct-from-base-dir"
+    ],
+    "current_wave": {
+      "objective": "Land the stored spine origin and the engine-native isolation guard as one change, with coverage that can actually fail.",
+      "exit_criteria": [
+        "Full suite passes with no new failures against main's Linux baseline of 2934 passed, 5 skipped, 0 failed.",
+        "The before/after repro arms the gate on state facts.",
+        "tests/test_spine_origin_isolation.py covers a spine carrying origin on both sides.",
+        "init.c0 and verify_worktree_precondition_coverage.py are gone.",
+        "An independent reviewer returns APPROVE."
+      ],
+      "issues": [
+        {
+          "id": "commander-315-native",
+          "title": "Stored spine origin plus engine-native worktree isolation",
+          "desired_outcome": "The engine enforces worktree isolation for every spine on every guarded verb, against a value the spine cannot edit.",
+          "useful_now": "It is the substrate the rest of the epic 568 tranche reads from.",
+          "appetite": "One gate, three halves plus docs.",
+          "acceptance_or_falsification_evidence": "The native refusal fires in the case init.c0 used to catch, and leaves no lease on the spine.",
+          "implementation_latitude": "How the root is threaded, where the comparison sits, which verbs are guarded, whether the live origin-less spines are backfilled.",
+          "hard_constraints_no_gos": [
+            "No forwarded cwd.",
+            "No write on the refusal path.",
+            "No edit to spine_rail.py or agent_work_root.py."
+          ],
+          "local_unknowns": [
+            "Whether the guard breaks the in-process MCP caller at scripts/mcp_spine_server.py:361."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "scripts/init_work_area.py",
+            "skills/commander/templates/COMMANDER_SPINE.template.json"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Extend the origin stamp to the other spine instantiation paths, so child checklists carry it too.",
+        "why_likely": "The stamp lands only in init_work_area and spine_lifecycle; child checklists such as review.json and IMPLEMENTER_PLAN.json are created elsewhere and stay unguarded.",
+        "entry_conditions": ["This change is merged."]
+      },
+      {
+        "outcome": "Close the claim --force gap for a spine whose worktree was removed at closeout.",
+        "why_likely": "release is exempt so lease clearing survives, but claim --force against a removed worktree is refused with no hatch.",
+        "entry_conditions": ["A run actually hits it."]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether guarding claim and heartbeat breaks a real cross-tree workflow.",
+        "affects": "Verb scope.",
+        "settle_by": "The full suite plus the in-process MCP shape test.",
+        "current_evidence": "current stays exempt, which is the read path the MCP door is most used for.",
+        "next_probe": "Watch for refusals in live runs after merge."
+      }
+    ],
+    "parked_possibilities": [
+      "Guarding current as well, which both plan candidates rejected because it would break the cross-tree REFRESH REQUESTED read."
+    ]
+  },
+  "completed_outcomes": [],
+  "wave_evidence": [],
+  "discrepancies": [],
+  "open_current_wave_issue_ids": ["commander-315-native"],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/init_work_area.py"
+    ],
+    "map_status": "DEGRADED-UNPARSEABLE, anchor count 0 - map_orient.py cannot orient the repo, so file paths are used instead of map anchors."
+  }
+}

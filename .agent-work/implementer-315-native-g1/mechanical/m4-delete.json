@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-delete",
+  "mechanical": {
+    "run": "implementer-315-native-g1",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m4-delete",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-implementer-315-native-g1-m4-delete@5aba9669b30e33ff6dff2aec3a2c6251709a8647",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "implementer-315-native-g1",
+    "generated_at": "2026-08-13T05:33:27Z"
+  }
+}
