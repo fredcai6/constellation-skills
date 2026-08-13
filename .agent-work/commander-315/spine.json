@@ -620,6 +620,21 @@
       "id": "tc6",
       "from": "plan",
       "statement": "docs/CHECKLIST_SCHEMA.md lines 39-41 and scripts/init_work_area.py lines 129-134 both state the no-cwd behaviour as present fact and cite issue 341 as the tracking issue. No test asserts either, so they will silently go stale the day a cwd fix lands."
+    },
+    {
+      "id": "tc7",
+      "from": "plan",
+      "statement": "The spine_open MCP door is dead, so the disciplined init path is unreachable in production and the undisciplined one (init_work_area.py plus a hand-run git worktree add) is the only path anyone takes. Measured: 0 of 108 tracked spine.json files carry an origin block. Worth fixing on its own merits, separately from 315."
+    },
+    {
+      "id": "tc8",
+      "from": "plan",
+      "statement": "open_work requires a compiled spec, and only 2 spec files exist (specs/implementer.spine.toml, specs/reviewer.spine.toml) against 12 role spine templates instantiated by init_work_area.py. Routing the roles through open_work is a 10-spec migration and should not be made a prerequisite for anything."
+    },
+    {
+      "id": "tc9",
+      "from": "plan",
+      "statement": "init_work_area.py discards the repo root twice in one function: resolve_spine line 148 computes Path(root).resolve().as_posix() for placeholder substitution and drops it, and instantiate_spine line 170 calls json.loads purely as a validity guard and drops the parsed dict. Both are already in hand at the moment the spine is written."
     }
   ],
   "blockers": [
@@ -633,14 +648,13 @@
   "refusals": 3,
   "engine_session": {
     "session_id": "commander-315-s1",
-    "status": "released",
-    "claimed_at": "2026-08-12T20:25:53.462909+00:00",
-    "last_heartbeat": "2026-08-12T20:51:29.006889+00:00",
-    "claimed_by": "agent",
+    "status": "active",
+    "claimed_at": "2026-08-13T02:56:29.440076+00:00",
+    "last_heartbeat": "2026-08-13T02:59:50.236654+00:00",
+    "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null,
-    "released_at": "2026-08-12T20:54:23.547729+00:00"
+    "takeover_reason": null
   },
   "why_trail": [
     {

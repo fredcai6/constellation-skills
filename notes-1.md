@@ -190,3 +190,31 @@ Proven through the real engine path (`.agent-work/commander-315/s1_production.sh
 unmodified engine REFUSES a wrong-worktree launcher, naive-fix engine ADVANCES it.
 
 See `.agent-work/commander-315/COMMANDER_RESULT.md` for the full result.
+
+
+---
+
+## WITHDRAWN: the "394 already-anchored checks" immunity number
+
+The Admiral bucketed it and it does not survive. Of 1747 command checks in
+tracked JSON, **1649 sit under `.agent-work/archive/`** -- finished runs that
+will never execute again -- and 355 of those carry the `cd <abs> &&` prefix.
+
+The **live template corpus has 64 command checks and zero carry a `cd` prefix.**
+
+The immunity is real and almost entirely in dead scrap. My enumeration of the
+template corpus (17 of 22) was correct and reproduced cell for cell; it is the
+immunity number specifically that counted corpses. Withdrawn.
+
+## Admiral ruling: direction D, and the costing
+
+The human rejected options A, B and C. The direction is: a spine records its own
+repo reference when it is created. Costing at
+`.agent-work/commander-315/COSTING-stored-origin.md`.
+
+Headline: ~40 lines across two modules, one template deletion, zero edits to the
+17. The trap is that the naive reading of this direction -- store the root, pass
+it as `cwd` -- **re-breaks the isolation gate exactly as before**, because the
+stored root and the check's EXPECTED are the same value. The gate has to become
+engine-native in the same change. The guard on PR #576 is what catches it if
+someone builds only half.
