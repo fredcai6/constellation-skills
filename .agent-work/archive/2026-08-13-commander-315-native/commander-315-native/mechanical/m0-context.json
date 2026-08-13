@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "commander-315-native",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-commander-315-native-m0-context@ad786148c48bc1ce10f8d9d5754df5a408b383a2",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "commander-315-native",
+    "generated_at": "2026-08-13T08:54:09Z"
+  }
+}

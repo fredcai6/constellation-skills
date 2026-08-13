@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "cr4-backends",
+  "mechanical": {
+    "run": "commander-315-native/g1b-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "cr4-backends",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-commander-315-native/g1b-review-cr4-backends@19ab2f91ad26d0f2c88bd49f394bc676fbcdb39f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "commander-315-native/g1b-review",
+    "generated_at": "2026-08-13T13:52:47Z"
+  }
+}

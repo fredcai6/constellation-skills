@@ -1,0 +1,1 @@
+{"ops": [{"op": "retext-check", "id": "g1-integrate", "cond": "c1", "which": "postconditions", "command": "env -u SPINE_FILE -u SPINE_ENGINE -u SPINE_SESSION python -m pytest tests/ -q -p no:randomly"}]}

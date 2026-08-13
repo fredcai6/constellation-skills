@@ -1,0 +1,20 @@
+{
+  "work_id": "commander-315-native/g1c-review",
+  "diff_ref": "git diff 9bb8c1b6 plus uncommitted g1b/g1c follow-up and explicit untracked tests",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, skills/_shared/global-crew.md, skills/_shared/global-everyone.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "flagged", "finding": "The three-part origin guarantee and ambient-cwd limitation are repeated in checklist_engine.py, CHECKLIST_SCHEMA.md, and test_spine_origin_isolation.py, creating a manual synchronization obligation.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "flagged", "finding": "checklist_engine.py already owns leases, gauges, rails, journals, trips, and checklist execution; worktree identity adds another independent reason for the roughly 3,400-line module to change.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "flagged", "finding": "ORIGIN_EXEMPT_VERBS has no production consumer; runtime consults only ORIGIN_GUARDED_VERBS while the exempt constant exists for tests and explanatory partitioning.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

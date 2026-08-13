@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r5-reconciliation",
+  "mechanical": {
+    "run": "commander-315-native/g1b-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r5-reconciliation",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-commander-315-native/g1b-review-r5-reconciliation@753feadf8e136de6cda510906eb2ac801cbc332e",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "commander-315-native/g1b-review",
+    "generated_at": "2026-08-13T13:50:01Z"
+  }
+}

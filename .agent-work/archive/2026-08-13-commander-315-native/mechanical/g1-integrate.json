@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g1-integrate",
+  "mechanical": {
+    "run": "commander-315-native",
+    "project": "constellation-skills",
+    "spine-step": "g1-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-commander-315-native-g1-integrate@5cb7e307fe2e6c9a924f181193569e6f803635a7",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "commander-315-native",
+    "generated_at": "2026-08-13T14:26:13Z"
+  }
+}

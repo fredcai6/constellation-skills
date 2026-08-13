@@ -1,0 +1,416 @@
+{
+  "work_id": "commander-315-native",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-crew-cwd",
+    "m2-door-chdir",
+    "m3-docs",
+    "m4-arming",
+    "m5-suite",
+    "m6-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the inherited global doctrine (references/global-everyone.md), the handoff at .agent-work/commander-315-native/crew-handoffs/g1b-implementer-handoff.md, and COMMANDER_RESULT.md section 6. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Read the two target call sites (scripts/run_crew.py launch_process + callers, scripts/mcp_spine_server.py run_engine) and reproduce the named failure. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff loaded; handoff complete; the named failure reproduced at HEAD",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-crew-cwd": {
+      "id": "m1-crew-cwd",
+      "title": "Change 1 - launch_process spawns the crew in its own worktree",
+      "imperative": "Add a keyword-only `cwd` parameter with a default to run_crew.launch_process, pass it to subprocess.run, and refuse with a clear message when the directory does not exist. Thread the registry's recorded worktree through CliBackend.dispatch and CliBackend.resume, resolving a relative value against `root`. Reconcile any test double whose explicit signature refuses the new keyword. Write the new test FIRST and observe it red (attest c1), then make it green (c2).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new test asserting the spawn receives the worktree as cwd written and observed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "a crew spawned through launch_process receives its worktree as cwd, asserted on the value passed to the spawn; run_crew tests green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_crew_worktree_cwd.py tests/test_crew_launcher.py -q -p no:randomly"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-crew-cwd-1"
+        }
+      ],
+      "constraints": [
+        "forbidden: scripts/hooks/spine_rail.py, scripts/agent_work_root.py, scripts/checklist_engine.py, scripts/init_work_area.py, scripts/spine_lifecycle.py, tests/test_spine_origin_isolation.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-crew-cwd-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_crew_worktree_cwd.py tests/test_crew_launcher.py -q -p no:randomly",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-door-chdir": {
+      "id": "m2-door-chdir",
+      "title": "Change 2 - the door stands in the bound spine's worktree for an engine call",
+      "imperative": "In mcp_spine_server.run_engine, chdir into the bound spine's own worktree for the duration of the in-process checklist_engine.main(argv) call and restore the previous cwd in a finally, unconditionally, including on SystemExit and on any exception. Derive the target by reusing _worktree_root_for_lifecycle; when it cannot be resolved, do not chdir and do not fail. Establish and state whether the door can handle more than one request at a time, citing what was read. Write the new test FIRST and observe it red (attest c1), then make it green (c2).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "change 1 landed and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new door test (engine call on a spine whose worktree is not the server's cwd; cwd restored before and after, including the failure path) written and observed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the door's in-process engine call succeeds on a foreign-worktree spine and the process cwd is restored; test_mcp_lifecycle.py passes untouched",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_mcp_door_engine_cwd.py tests/test_mcp_lifecycle.py -q -p no:randomly"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-door-chdir-1"
+        }
+      ],
+      "constraints": [
+        "restore cwd in finally, unconditionally",
+        "never adjust an assertion to match observed output"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-door-chdir-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_mcp_door_engine_cwd.py tests/test_mcp_lifecycle.py -q -p no:randomly",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-docs": {
+      "id": "m3-docs",
+      "title": "Change 2b - update every place that documents cwd-independence as load-bearing",
+      "imperative": "Enumerate by command every place in scripts/mcp_spine_server.py (module docstring included) that asserts the door's cwd-independence, and update each one to record that the door now deliberately stands in the bound spine's tree for the duration of an engine call, and why. Do not delete the reasoning. State the count found and the count updated.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "change 2 landed and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every enumerated cwd-independence claim updated; count stated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the module's own test suites stay green after the doc edits",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_mcp_spine_server.py tests/test_mcp_identity.py tests/test_mcp_adoption.py tests/test_mcp_friction_capture.py tests/test_mcp_imperative_equivalence.py -q -p no:randomly"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-docs-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-docs-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_mcp_spine_server.py tests/test_mcp_identity.py tests/test_mcp_adoption.py tests/test_mcp_friction_capture.py tests/test_mcp_imperative_equivalence.py -q -p no:randomly",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-arming": {
+      "id": "m4-arming",
+      "title": "Prove both changes are armed",
+      "imperative": "Revert change 1 in place and show its new test goes red; restore. Revert change 2 in place and show test_mcp_lifecycle.py (and the new door test) goes red; restore. Capture the observed output of each red. Then run the wiring grep: one command per new symbol showing a call site outside its own definition and outside any self-test, stating the count. Zero external call sites is a stop condition.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both changes landed and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "each change independently reverted and observed red, then restored; both reds captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "wiring grep run per new symbol with counts stated; every count is non-zero",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c3",
+          "statement": "the tree is restored: both changes' tests green again after the reverts",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_crew_worktree_cwd.py tests/test_mcp_door_engine_cwd.py tests/test_mcp_lifecycle.py -q -p no:randomly"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-arming-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-arming-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_crew_worktree_cwd.py tests/test_mcp_door_engine_cwd.py tests/test_mcp_lifecycle.py -q -p no:randomly",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-suite": {
+      "id": "m5-suite",
+      "title": "Full suite, mechanical distribution, and the repro",
+      "imperative": "Run the four commands the handoff names: the full suite, the FAILED distribution, the targeted trio, and repro_native.py. State both counts and the failure-set difference against main's 2934 passed / 5 skipped / 0 failed baseline explicitly. If tests/test_gauge_chain_writer_to_trip.py::test_containment_repo_agent_work_untouched_by_the_chain reds, re-run it in isolation before calling it a regression and say which it was.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "arming proven",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite counts, distribution, targeted trio and repro_native.py all recorded; failure-set difference stated explicitly",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the full suite runs with an empty failure-set difference against main's baseline",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/ -q -p no:randomly"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-suite-1"
+        }
+      ],
+      "constraints": [
+        "an honest null is a complete deliverable - report the measurement rather than forcing it"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -q -p no:randomly",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-result": {
+      "id": "m6-result",
+      "title": "Write IMPLEMENTER_RESULT",
+      "imperative": "Write the result to .agent-work/commander-315-native/crew-handoffs/g1b-implementer-result.md in the handoff's return format: completed slice, files changed, evidence, assumptions, stop conditions hit, out-of-scope observations, workflow feedback, map impact, and a lowercase Return status.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all evidence gathered",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "result artifact exists at the named path with a lowercase Return status",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/commander-315-native/crew-handoffs/g1b-implementer-result.md && grep -q 'Return status' .agent-work/commander-315-native/crew-handoffs/g1b-implementer-result.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/commander-315-native/g1b-implement/implementer/attempt-1",
+    "status": "active",
+    "claimed_at": "2026-08-13T08:54:03.719137+00:00",
+    "last_heartbeat": "2026-08-13T09:10:45.415694+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "handoff complete on all eight fields; failure reproduced at HEAD 890ff76f: claim refused, spine worktree /tmp/.../roundtrip-work vs engine cwd epic-568-315-native",
+      "mechanical": false,
+      "ts": "2026-08-13T08:54:14.789445+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-crew-cwd",
+      "why": "launch_process gained keyword-only cwd (default None) + crew_cwd() resolver; threaded through CliBackend.dispatch and .resume; one double reconciled (tests/test_crew_launcher.py fake_launch). 169 passed.",
+      "mechanical": false,
+      "ts": "2026-08-13T08:57:08.900074+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-door-chdir",
+      "why": "run_engine wraps checklist_engine.main in _standing_in_the_bound_spines_worktree (contextmanager, reuses _worktree_root_for_lifecycle, restores in finally, no-op when unresolvable). Door is single-threaded: main() is one for-line-in-stdin loop, no threading/asyncio imports - pinned by SingleThreadedDoorPinTests. test_mcp_lifecycle.py passes UNTOUCHED. 19 passed.",
+      "mechanical": false,
+      "ts": "2026-08-13T09:00:01.875571+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-docs",
+      "why": "Enumerated by grep -n -i 'ambient|cwd|working directory|chdir' over the module: 5 prose sites assert or depend on cwd-independence; 5 updated - module docstring (new paragraph), _git_rev_parse, _primary_checkout_for_lifecycle, _resolve_confined, and the --delta inline comment. Reasoning kept, not deleted. 256 passed, 2 skipped.",
+      "mechanical": false,
+      "ts": "2026-08-13T09:01:39.153063+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-arming",
+      "why": "Arming: run_crew.py to HEAD -> 7 red; threading-only revert (parameter kept) -> 4 red; chdir-only revert -> 3 red including test_mcp_lifecycle round trip. Each restored byte-identical. Wiring: crew_cwd 2 external call sites (run_crew.py:1185,:1244); _standing_in_the_bound_spines_worktree 1 executable call site (mcp_spine_server.py:452) + 4 prose refs. No zero counts.",
+      "mechanical": false,
+      "ts": "2026-08-13T09:02:25.837628+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-suite",
+      "why": "Full suite: 2979 passed, 6 skipped, 0 failed, 1130 subtests (main baseline 2934/5/0). FAILED distribution EMPTY. Failure-set difference: {} - the handoff bar met. Targeted trio 42 passed 1 skipped. repro_native GATE ARMED: True (A PASS B REFUSED C PASS D PASS). No gauge-chain transient this run. map/INDEX.md regenerated: +2 entities, exactly my two new functions.",
+      "mechanical": false,
+      "ts": "2026-08-13T09:10:40.585059+00:00"
+    }
+  ]
+}

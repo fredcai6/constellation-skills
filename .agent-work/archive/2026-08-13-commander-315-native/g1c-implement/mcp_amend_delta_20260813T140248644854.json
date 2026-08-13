@@ -1,0 +1,1 @@
+{"ops": [{"op": "retext-check", "id": "m1", "which": "postconditions", "cond": "c2", "command": "python -m pytest tests/test_crew_worktree_cwd.py tests/test_crew_launcher.py -q -p no:randomly"}]}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "rc3-door-cwd",
+  "mechanical": {
+    "run": "commander-315-native/g1b-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "rc3-door-cwd",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-commander-315-native/g1b-review-rc3-door-cwd@18a3841447483d15e1a770f1c86eca15039fb3c2",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "commander-315-native/g1b-review",
+    "generated_at": "2026-08-13T13:52:06Z"
+  }
+}

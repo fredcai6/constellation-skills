@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "rc2-cli-cwd",
+  "mechanical": {
+    "run": "commander-315-native/g1b-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "rc2-cli-cwd",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-commander-315-native/g1b-review-rc2-cli-cwd@11a84f84aa900a6352e2818a9b758b66d9b798f7",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "commander-315-native/g1b-review",
+    "generated_at": "2026-08-13T13:52:06Z"
+  }
+}
