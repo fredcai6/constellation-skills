@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "work_id": "commander-315",
+  "root": "/home/tommy/projects/constellation-skills-wt/epic-568-315",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/CHECKLIST_SCHEMA.md",
+      "content_hash": "7556d8a3fb374982e2211e007fcd8fec01b7e5393edf5295bfb00065bf094fb9",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/CHECKLIST_ENGINE_DESIGN.md",
+      "content_hash": "2ecf6ac1d58672e348ce15d7a6619457be9d914c5e4d73ae7999e183e5420a9b",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "70fc98d8194a28f9f8fc2be73e8455ba556e15b81e9b28fdd82eeb11883b6b10",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "no docs/architecture packet map exists in this repo; scripts/checklist_engine.py has no structural map entry, so the blast radius of a check-resolution change is enumerated by command over the template corpus rather than read from map references"
+  ],
+  "escalation": "degraded map reported to the Admiral in the commander-315 return; issue #315 does not include restoring the map",
+  "emitted_at": "2026-08-12T20:27:06.331543+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

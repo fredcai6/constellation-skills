@@ -1,0 +1,200 @@
+{
+  "work_id": "commander-315",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md + global-everyone.md, docs/agents/CREW_CONTEXT.md + GLOSSARY.md, the g1-implementer-handoff, MISSION_FRAME, COMMANDER_RESULT, and the full diff (tests/ + map/INDEX.md; scripts/ and skills/ empty).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The branch did NOT deliver the filed fix, and that is the correct outcome, not a shortfall. The g1 handoff listed 'you conclude the resolution target is wrong' as an explicit stop condition; the run hit it and escalated with authority=admiral. Spine confirms: init/context/understand complete, plan BLOCKED with the measured reason, execute onward never started, 6 triage candidates. OBSERVATION (minor): .agent-work/commander-315/crew-handoffs/g1-implementer-handoff.md is committed carrying 'Resolution target -- already decided, do not re-litigate' for the very target this run falsified, with no supersession marker (grep for supersede/obsolete finds nothing). It is the only file in crew-handoffs/ and would be the first thing a resuming implementer reads.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No scope drift. 'git diff main...epic-568/c1-check-cwd -- scripts/ skills/' is EMPTY (verified). 'git log main..HEAD -- scripts/hooks/spine_rail.py scripts/agent_work_root.py' returns no commits, so both forbidden files are untouched. No shipped template under skills/*/templates/ or .agent-work/templates/ changed. Diff is confined to tests/test_worktree_precondition_wiring.py (+107), map/INDEX.md (mechanical, +/-3 lines of entity counts), notes-1.md, and the .agent-work/commander-315/ run record. 'git status --porcelain scripts/' is clean at review end.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All seven close criteria independently reproduced. (1) CENTRAL CLAIM TRUE: verify_worktree_isolation.py current_toplevel() (line 122-123) runs 'git rev-parse --show-toplevel' with NO cwd=, so it reads the ambient cwd, and main() --here compares that to EXPECTED via check_here -- cwd is the SUBJECT. s1_production.sh reproduces the disarming verbatim: engine_before REFUSES ['c0'], engine_after (naive cwd fix) prints 'init -> in-progress'. (2) GUARD IS REAL: 7 passed unpatched; under my OWN independently-written naive patch applied to a shadow copy of the engine, test_gate_refuses_launcher_standing_in_the_main_checkout FAILS ('c0' not found in 'init -> in-progress') -> 1 failed, 6 passed. The 5 pre-existing tests all stayed GREEN, independently confirming the result doc's claim that the old alarm would not have sounded. (4) Suite: 2934 passed, 5 skipped, 1121 subtests in 120.56s. (5) repro_315.py exits 1 and shows BOTH fail-open (gA advanced on a decoy in the launcher cwd) and false-red (gB refused on a file that really exists in the project). (6) Enumeration exact: source 22 total / R1 6 / R2 11 -> 17 cwd-dependent, 5 clean; mirror 21 / 5 / 10 -> 15 cwd-dependent, 6 clean. Zero discrepancies against the result doc's table.",
+      "evidence": [
+        {
+          "id": "e-r3-evidence-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_doc": ".agent-work/commander-315/crew-handoffs/g1-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Meets the inherited rules. CREW_CONTEXT:88-92 'A check that cannot fail is indistinguishable from one that passed... demonstrate it can reach a failing state' is satisfied twice over -- the guard was shown red against the naive fix by the Commander and again, independently, by me. CREW_CONTEXT:93-97 'assert against behaviour, never against text' is honoured: the guard asserts the engine's refusal AND the persisted spine status stays 'pending', not merely a message string. 'Report a measured negative as a complete result' (Evidence You Owe Back) is what section 3's deliberately-not-produced AFTER is. Fixtures are temp-only: 'git worktree list' shows only the two real worktrees, so the test's git worktree add left no registration behind. Two minor notes carried to the result: the guard hard-requires git+git-worktree on the runner, and the new class's docstring states a conclusion slightly stronger than the guard can support.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No divergence Commander must reconcile. The architecture map is DEGRADED-UNPARSEABLE (no docs/architecture/, map/ids.jsonl empty), discharged at the context step with three hash-pinned substitutes and a receipt; the blast radius was therefore enumerated by command, which I re-ran and matched exactly. map/INDEX.md is the mechanical code-map index, not the architecture map, and its regeneration is genuinely covered -- tests/test_code_map.py et al, 47 passed. The real architectural finding (command checks come in two kinds -- path-relative and environment-observing -- and the engine has no contract distinguishing them) is correctly routed OUT as triage candidate 1 plus section 11's Admiral decision, not silently absorbed. Prior art is consistent, not contradicted: docs/CHECKLIST_SCHEMA.md:39-41 and init_work_area.py:129-134 still describe the no-cwd behaviour as present fact, which remains true because production is unchanged.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/commander-315/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/commander-315/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from commander-315 alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/commander-315/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded at .agent-work/commander-315/FOWLER_PASS.json; verify_fowler_pass.py exits 0 (smells=12, flagged=[], overridden=['duplicated-code','comments-as-deodorant']). Ten smells absent. Two overridden with logged standards: duplicated-code (the new fixture duplicates EngineDeliberateBreakage's git/spine setup by ~30 lines, but the two are deliberately independent along the base_dir axis the guard measures -- coupling them would recreate the exact blind spot the class exists to close, per CREW_CONTEXT:88-92) and comments-as-deodorant (20-line docstring sanctioned by the handoff constraint that this module's docstrings carry rationale). Nothing flagged: there is no production code in this diff to smell-test, since scripts/ and skills/ diffs are empty.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/commander-315/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. All seven close criteria independently reproduced, zero discrepancies. Central claim TRUE: verify_worktree_isolation.py --here reads ambient cwd as the check's SUBJECT (current_toplevel runs git rev-parse --show-toplevel with no cwd=), and s1_production.sh reproduces the disarming verbatim (before REFUSES c0, after advances). Guard is non-vacuous: under my own independently written naive patch applied to a shadow copy, the new refusal test FAILS 1/7 while all 5 pre-existing tests stay green, confirming the old alarm would not have sounded. Production untouched (scripts/ and skills/ diffs empty, forbidden files uncommitted, git status scripts/ clean). Suite 2934 passed / 5 skipped / 1121 subtests. Repro exits 1 showing both fail-open and false-red. Enumeration exact: 22/6/11/17/5 source, 21/5/10/15/6 mirror, source total independently re-derived as 22. Result document does not overclaim. Guard-without-fix is the RIGHT call: no in-scope fix exists, since preserving init.c0's signal requires a second input to the isolation script (out of allowed scope) or a template edit (excluded); I tested the postconditions-only hack and it fails because 2 cwd-dependent checks are preconditions. Three minor non-blocking findings: (1) the committed g1-implementer-handoff still says the falsified resolution target is 'already decided, do not re-litigate' with no supersession marker; (2) the guard docstring's 'the test is right and the change is wrong' overclaims, since the recommended option-1 fix could also turn it red for a stale-fixture reason; (3) the new class hard-requires git worktree with no skipIf."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r1-handoff",
+      "statement": "Mark .agent-work/commander-315/crew-handoffs/g1-implementer-handoff.md SUPERSEDED. It is committed, is the only file in crew-handoffs/, and instructs 'Resolution target -- already decided, do not re-litigate: cwd resolves to the repo root' -- the very target this run measured to be unsafe. A resuming implementer reading it would build the disarming fix. One header line pointing at COMMANDER_RESULT.md section 4 closes it."
+    },
+    {
+      "id": "tc2",
+      "from": "r4-quality",
+      "statement": "The new guard's docstring says 'if you are here because this test went red while making command checks cwd-independent, the test is right and the change is wrong.' That is stronger than the guard supports: under the result doc's own RECOMMENDED option 1 (engine exports SPINE_LAUNCH_CWD, verify_worktree_isolation.py gains --from), this test's fixture spine still writes the bare '--here EXPECTED' form, so it could go red for a stale-fixture reason while the change is right. Soften to name the two cases, or default --from to the env var so the bare form keeps working."
+    },
+    {
+      "id": "tc3",
+      "from": "r4-quality",
+      "statement": "IsolationGateSurvivesThroughTheCLI hard-requires git AND 'git worktree add' on the test runner, with no skipIf. The rest of the file already shells to git, so this is not new, but the worktree dependency is. If any CI lane runs without git, this errors rather than skips."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "g1-reviewer-01476478",
+    "status": "released",
+    "claimed_at": "2026-08-12T20:57:58.995928+00:00",
+    "last_heartbeat": "2026-08-12T21:07:20.427673+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-12T21:07:27.045793+00:00"
+  }
+}

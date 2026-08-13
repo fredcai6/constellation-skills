@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "understand",
+  "mechanical": {
+    "run": "commander-315",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 2,
+    "spine-step": "understand",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-commander-315-understand@cd93f624d2cd1cdaaca4a7eae256581a0654c5c1",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "commander-315",
+    "generated_at": "2026-08-12T20:30:54Z"
+  }
+}

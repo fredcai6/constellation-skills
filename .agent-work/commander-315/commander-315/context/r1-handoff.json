@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r1-handoff",
+  "files": [],
+  "repo_rev": {
+    "commit": "69c503d6158f5499cf961bb22527a270a0967c09"
+  },
+  "run": {
+    "work_id": "commander-315",
+    "generated_at": "2026-08-12T21:03:00Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/epic-568-315",
+      "repo": "/home/tommy/projects/constellation-skills-wt/epic-568-315",
+      "durable": "/home/tommy/projects/constellation-skills-wt/epic-568-315"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/epic-568-315"
+    }
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "work_id": "commander-315",
+  "diff_ref": "git diff main...epic-568/c1-check-cwd -- tests/ map/ — substantively the new IsolationGateSurvivesThroughTheCLI class in tests/test_worktree_precondition_wiring.py (+107 lines). scripts/ and skills/ diffs are empty, so there is no production code in this diff to smell-test.",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md (esp. lines 88-105 'A check that cannot fail is indistinguishable from one that passed', 'Assert against behaviour, never against text'), docs/agents/GLOSSARY.md, references/global-crew.md, and the g1 handoff constraint 'this module's docstrings carry rationale, not restatement'",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "Longest new method is _write_spine at ~26 lines, and its bulk is one JSON literal, not branching. setUp is 15 lines of linear fixture construction. Both test bodies are under 15 lines with a single scenario each.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "IsolationGateSurvivesThroughTheCLI is ~110 lines: 2 tests, 4 helpers, one docstring. Smaller than EngineDeliberateBreakage (~85 lines of body) and CoverageScriptDeliberateBreakage already in the same file. One coherent responsibility: the gate as driven through main().",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "Real and measurable: _git(), the git-init-plus-commit fixture, and the init-gate spine dict duplicate EngineDeliberateBreakage._git / setUp / _gated_checklist about 30 lines up the same file. A shared builder is the obvious extraction.",
+      "override": {
+        "repo_standard": "docs/agents/CREW_CONTEXT.md:88-92 — 'A check that cannot fail is indistinguishable from one that passed. Before you offer a check as evidence, demonstrate it can reach a failing state.'",
+        "reason": "The two fixtures are deliberately non-identical along the exact axis the new guard exists to measure: the old one calls E.start() in-process after os.chdir (base_dir is None), the new one shells out to main() --file so the engine computes base_dir = path.parent, and the new one needs a main-checkout-plus-linked-worktree topology the old one has no use for. Extracting a shared builder would couple them, and a later edit to that shared builder that threaded base_dir would move BOTH together — recreating precisely the blind spot this class was written to close (the result doc's section 4 shows the old test staying green while production is disarmed, which I reproduced: under the naive fix 1 failed, 6 passed, with the pre-existing test among the 6 green). Deliberate fixture independence is what makes the guard falsifiable, so the standard subordinates the DRY smell here."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "Helpers operate on the class's own fixture state (self.main_checkout, self.worktree, self.spine_path). No method reaches predominantly into another object's data.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "main_checkout / worktree / spine_path travel together conceptually but are held as instance attributes on a single test fixture and never passed around as a repeated argument group. No clump crosses a signature.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "Paths are Path objects throughout; conversion to str/as_posix happens only at the subprocess and JSON boundaries, which genuinely require strings. The one raw string is the shell command text, which is inherently a string.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "Widest new signature is _write_spine(self, here_expected: str) and _start_from(self, cwd: Path) — one argument each. _git uses *args, matching the existing helper in the same file.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "The diff touches one test file plus a mechanically regenerated map/INDEX.md. Nothing in the change requires a coordinated edit anywhere else — verified: git diff for scripts/ and skills/ is empty.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "tests/test_worktree_precondition_wiring.py continues to change for exactly one reason — the worktree-isolation precondition. The new class is another facet of that same reason (#329/#422 wiring, now #315 cwd), not a second unrelated axis of change.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "json.loads(self.spine_path.read_text(...))['tasks']['init']['status'] is dict subscripting of a parsed JSON document, not a chain of objects asking objects for objects. Reading persisted state is the point of the assertion.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "No unused hooks, parameters or abstraction layers. Both helpers have a caller inside the class; the pass-side test exists specifically to prove the refusal-side test is not a gate that never opens, which is required by CREW_CONTEXT:88-92 rather than speculative.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "The class carries a 20-line docstring plus inline comments — a large comment-to-code ratio that would normally read as compensating for unclear code.",
+      "override": {
+        "repo_standard": "The g1 handoff's Constraints: 'Match the module's existing style: type hints, a real docstring explaining WHY (this module's docstrings carry rationale, not restatement)', consistent with the file's existing class docstrings and with CREW_CONTEXT's requirement that a guard's falsifiability be demonstrable.",
+        "reason": "The docstring is not restating what the code does; it records why this test must stay SEPARATE from the one 30 lines above it and what a future agent should conclude if it goes red. That rationale is the guard's entire payload — a trap-marker whose message is unreadable is a trap that gets deleted. The repo standard explicitly asks for why-carrying docstrings, so the ratio is sanctioned. Noted separately as a review finding (not a smell): one sentence of that docstring — 'the test is right and the change is wrong' — is stated more absolutely than the guard can support, since the recommended option-1 fix could also turn it red for a stale-fixture reason."
+      }
+    }
+  ],
+  "rail_exception": null
+}
