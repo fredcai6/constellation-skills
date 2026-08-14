@@ -613,7 +613,8 @@
             "kind": "command",
             "command": "python scripts/verify_episode_captured.py commander-315-native --store-root episodes --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-1"
         },
         {
           "id": "c2",
@@ -628,7 +629,8 @@
             "kind": "command",
             "command": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills-wt/epic-568-315-native rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-2"
         },
         {
           "id": "c3",
@@ -669,22 +671,63 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-3"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
       "status": "in-progress",
-      "status_detail": {},
+      "status_detail": {
+        "blocker": "The archive requires pushing epic-568/c2-native-isolation to update PR #577. Admiral launch-order authority was confirmed, but the harness external-action approval layer rejected the exact git push and requires direct user approval. Local archive commit 6f7bbf56 is clean and two commits ahead; c1, c2b, and c4 pass.",
+        "authority_needed": "human",
+        "next_action": "User explicitly approves pushing branch epic-568/c2-native-isolation to origin; then resume archive, push, attest c2, advance, and release via MCP.",
+        "resume_reason": "The human explicitly approved pushing branch epic-568/c2-native-isolation to origin to update existing PR #577; merge remains forbidden.",
+        "resume_note": "Resuming the same archived spine and session after the sole external-action blocker cleared."
+      },
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py commander-315-native --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills-wt/epic-568-315-native rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-3",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -752,12 +795,12 @@
     }
   ],
   "blockers": [],
-  "refusals": 3,
+  "refusals": 4,
   "engine_session": {
     "session_id": "commander-315-native",
     "status": "active",
     "claimed_at": "2026-08-13T04:29:29.939177+00:00",
-    "last_heartbeat": "2026-08-13T14:54:43.093085+00:00",
+    "last_heartbeat": "2026-08-14T03:41:09.295772+00:00",
     "claimed_by": "commander-delegated",
     "worktree": "/home/tommy/projects/constellation-skills-wt/epic-568-315-native",
     "previous_session_id": null,
