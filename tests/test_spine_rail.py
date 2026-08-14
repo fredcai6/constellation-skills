@@ -687,6 +687,22 @@ def test_foreign_worktree_true_only_on_positive_mismatch():
     assert sr._foreign_worktree({"cwd": "C:/a/same"}, {"worktree": "C:/a/same"}) is False
 
 
+def test_worktree_from_spine_accepts_only_absolute_agent_work_json_layout(tmp_path):
+    worktree = tmp_path / "worktree"
+    spine = worktree / ".agent-work" / "run1" / "checklist.json"
+    assert sr._worktree_from_spine(str(spine)) == str(worktree)
+
+    malformed = (
+        None,
+        ".agent-work/run1/checklist.json",
+        str(worktree / ".agent-work" / "run1" / "checklist.txt"),
+        str(worktree / ".agent-work" / "checklist.json"),
+        str(worktree / "other" / "run1" / "checklist.json"),
+    )
+    for path in malformed:
+        assert sr._worktree_from_spine(path) is None
+
+
 # --- decide_stop -------------------------------------------------------------
 
 def test_stop_no_binding_allows(proj):
@@ -1844,6 +1860,83 @@ def test_git_worktree_roots_lists_a_real_worktree_and_excludes_the_main_tree(tmp
     # the main tree is filtered out: rung 5 owns that answer, so a
     # `git_worktree` path_source unambiguously means ANOTHER tree.
     assert not any(sr._same_path(r, str(main_tree)) for r in roots)
+
+
+def test_binding_worktree_comes_from_resolved_spine_in_real_linked_worktree(tmp_path):
+    """A stale launch cwd cannot attribute a child to the main checkout.
+
+    The claim and SessionStart writers both receive the deliberately wrong main
+    cwd. Their only trustworthy ownership source is the resolved absolute spine
+    path. The parent and child share a harness session but have distinct agent
+    identities, as real dispatched children do.
+    """
+    main_tree, child_tree = _make_repo_with_worktree(tmp_path)
+    parent_spine = write_spine(
+        main_tree, make_spine([("parent", "in-progress")]), work="parent-run"
+    )
+    child_spine = write_spine(
+        child_tree, make_spine([("child", "in-progress")]), work="child-run"
+    )
+    shared_sid = "shared-harness-session"
+
+    parent_claim = (
+        'python scripts/checklist_engine.py --file "%s" claim '
+        '--session-id parent-engine' % parent_spine
+    )
+    child_claim = (
+        'python scripts/checklist_engine.py --file .agent-work/child-run/spine.json '
+        'claim --session-id child-engine'
+    )
+    sr.handle_post_tool_use(
+        {
+            "session_id": shared_sid,
+            "agent_id": "parent-agent",
+            "cwd": str(main_tree),
+            "tool_input": {"command": parent_claim},
+        },
+        main_tree,
+    )
+    # The only way the child claim can find its spine is the real `git worktree
+    # list` rung. The child path is absent from the command and hook payload.
+    assert str(child_tree) not in child_claim
+    assert "cd " not in child_claim and "--worktree" not in child_claim
+    sr.handle_post_tool_use(
+        {
+            "session_id": shared_sid,
+            "agent_id": "child-agent",
+            "cwd": str(main_tree),  # deliberately stale launch checkout
+            "tool_input": {"command": child_claim},
+        },
+        main_tree,
+    )
+
+    child_entry = sr.load_binding(main_tree)[shared_sid + "#child-agent"][child_spine]
+    assert child_entry["worktree"] == str(child_tree)
+    assert sr.decide_stop({"session_id": shared_sid, "cwd": str(main_tree)}, main_tree)["decision"] == "block"
+
+    parent_release = (
+        'python scripts/checklist_engine.py --file "%s" release '
+        '--session-id parent-engine' % parent_spine
+    )
+    sr.handle_post_tool_use(
+        {
+            "session_id": shared_sid,
+            "agent_id": "parent-agent",
+            "cwd": str(main_tree),
+            "tool_input": {"command": parent_release},
+        },
+        main_tree,
+    )
+    assert sr.decide_stop({"session_id": shared_sid, "cwd": str(main_tree)}, main_tree) == {}
+
+    # A child SessionStart is also handed the stale main cwd; its unambiguous
+    # scan still records the child worktree from the discovered absolute spine.
+    session_start = sr.decide_session_start(
+        {"session_id": shared_sid, "cwd": str(main_tree), "source": "resume"}, child_tree
+    )
+    assert session_start["hookSpecificOutput"]["hookEventName"] == "SessionStart"
+    resumed_entry = sr.load_binding(child_tree)[shared_sid][child_spine]
+    assert resumed_entry["worktree"] == str(child_tree)
 
 
 def test_git_worktree_roots_never_raises_and_is_bounded(tmp_path, monkeypatch):
