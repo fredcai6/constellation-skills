@@ -4,7 +4,7 @@
 evals: 12 modules, 54 entities
 scripts: 58 modules, 1171 entities
 skills: 1 modules, 18 entities
-tests: 78 modules, 4500 entities
+tests: 80 modules, 4543 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -102,7 +102,7 @@ tests: 78 modules, 4500 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (78 modules, 4500 entities)
+## tests (80 modules, 4543 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -122,6 +122,7 @@ tests: 78 modules, 4500 entities
 - [tests.test_context_manifest](tests.test_context_manifest/INDEX.md) (97 entities, 85 holes): Tests for `scripts/context_manifest.py` — the deterministic projection substrate.
 - [tests.test_crew_delivery_addressing](tests.test_crew_delivery_addressing/INDEX.md) (11 entities, 7 holes): Relaunch acceptance test for #507 / #370 / #413 (crew delivery addressing).
 - [tests.test_crew_launcher](tests.test_crew_launcher/INDEX.md) (226 entities, 176 holes): HOLE: no docstring
+- [tests.test_crew_worktree_cwd](tests.test_crew_worktree_cwd/INDEX.md) (19 entities, 13 holes): A dispatched crew runs in ITS OWN worktree (issue #568, the g1b delta).
 - [tests.test_curate_corpus](tests.test_curate_corpus/INDEX.md) (40 entities, 23 holes): Golden-fixture suite for scripts/curate_corpus.py.
 - [tests.test_declared_dispatch](tests.test_declared_dispatch/INDEX.md) (14 entities, 14 holes): Tests for scripts/verify_declared_dispatch.py -- the oracle the generator's injected `[[gate.dispatch]]` postcondition (LIFECYCLE_CONTRACT.md section 5) shells 
 - [tests.test_diagnose](tests.test_diagnose/INDEX.md) (32 entities, 27 holes): Tests for the constellation-diagnose skill's rail (scripts/verify_diagnosis.py).
@@ -152,6 +153,7 @@ tests: 78 modules, 4500 entities
 - [tests.test_map_contract_wiring](tests.test_map_contract_wiring/INDEX.md) (27 entities, 11 holes): The map-first contract as it is actually SERVED to a Commander run.
 - [tests.test_map_orient](tests.test_map_orient/INDEX.md) (125 entities, 91 holes): The falsification floor for scripts/map_orient.py.
 - [tests.test_mcp_adoption](tests.test_mcp_adoption/INDEX.md) (72 entities, 36 holes): Adoption gate for the MCP door (issue #542 criterion 1, epic-418-followon g4a).
+- [tests.test_mcp_door_engine_cwd](tests.test_mcp_door_engine_cwd/INDEX.md) (24 entities, 15 holes): The door stands in the bound spine's own worktree for an engine call (issue #568, the g1b delta).
 - [tests.test_mcp_friction_capture](tests.test_mcp_friction_capture/INDEX.md) (23 entities, 12 holes): Tests for the MCP door's own rejection capture (issue #541, epic-418-followon wave 2, gate g2).
 - [tests.test_mcp_identity](tests.test_mcp_identity/INDEX.md) (65 entities, 23 holes): DC2 (separation) and DC3 (inheritance fails closed) acceptance tests for the MCP front door (issue #424, workstream F, gate g3).
 - [tests.test_mcp_imperative_equivalence](tests.test_mcp_imperative_equivalence/INDEX.md) (23 entities, 12 holes): DC4 acceptance test for the MCP front door (issue #424, workstream F, gate g2): the CLI projection and the MCP tool result carry the SAME imperative text for EV
