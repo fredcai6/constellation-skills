@@ -880,6 +880,7 @@ def build_entry(
     pid: int | None,
     dispatch: str | None = None,
     model: str | None = None,
+    reasoning_effort: str | None = None,
     spine: str | None = None,
     parent: str | None = None,
 ) -> dict:
@@ -900,6 +901,8 @@ def build_entry(
                      alone look like evidence the cli path never received
                      `--model`, rather than what it was -- the same field,
                      recorded on one path and lost on the other.
+      * `reasoning_effort` — optional launcher metadata, recorded for recovery
+                             and inspection only; it is never emitted as a CLI flag.
       * `handoff`  — nullable (issue #559): recorded as `None` for a spine-only
                      crew, the same "recorded null, not omitted" shape `spine`
                      already uses below.
@@ -943,6 +946,8 @@ def build_entry(
         entry["dispatch"] = dispatch
     if model:
         entry["model"] = model
+    if reasoning_effort:
+        entry["reasoning_effort"] = reasoning_effort
     return entry
 
 
@@ -1066,6 +1071,7 @@ class CrewSpec:
     spine: str | None = None
     parent: str | None = None
     model: str | None = None
+    reasoning_effort: str | None = None
     launcher: str = DEFAULT_LAUNCHER
 
     def __post_init__(self) -> None:
@@ -1164,6 +1170,7 @@ class CliBackend(CrewBackend):
             worktree=spec.worktree, handoff=spec.handoff, result=spec.result, root=root,
             started=started, backend=self.name, pid=os.getpid(), spine=spec.spine,
             parent=spec.parent, model=spec.model,
+            reasoning_effort=spec.reasoning_effort,
         )
         # Durable record BEFORE the crew starts (so a parent loss leaves a durable
         # `running` record).
@@ -1292,6 +1299,7 @@ class ExternalBackend(CrewBackend):
             worktree=spec.worktree, handoff=spec.handoff, result=spec.result, root=root,
             started=started, backend=self.name, pid=None,
             dispatch=DISPATCH_EXTERNAL, model=spec.model, spine=spec.spine,
+            reasoning_effort=spec.reasoning_effort,
             parent=spec.parent,
         )
         # Durable record — the crew is dispatched by the caller out-of-band, so
@@ -1356,6 +1364,7 @@ def launch_crew(
     result: str,
     worktree: str,
     model: str | None,
+    reasoning_effort: str | None = None,
     launcher: str,
     attempt: int,
     root: Path,
@@ -1374,7 +1383,7 @@ def launch_crew(
     spec = CrewSpec(
         work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
         worktree=worktree, attempt=attempt, model=model, launcher=launcher, spine=spine,
-        parent=parent,
+        parent=parent, reasoning_effort=reasoning_effort,
     )
     return CliBackend().dispatch(spec, root=root, entries=entries, launch=launch)
 
@@ -1414,6 +1423,7 @@ def record_external_attempt(
     result: str,
     worktree: str,
     model: str | None,
+    reasoning_effort: str | None = None,
     attempt: int,
     root: Path,
     entries: list[dict],
@@ -1439,6 +1449,7 @@ def record_external_attempt(
     spec = CrewSpec(
         work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
         worktree=worktree, attempt=attempt, model=model, spine=spine, parent=parent,
+        reasoning_effort=reasoning_effort,
     )
     _, entry = ExternalBackend().dispatch(spec, root=root, entries=entries)
     return entry
@@ -1486,6 +1497,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--gate")
     p.add_argument("--role")
     p.add_argument("--model")
+    p.add_argument("--reasoning-effort", dest="reasoning_effort")
     p.add_argument("--worktree", default=".")
     p.add_argument(
         "--handoff",
@@ -1665,7 +1677,9 @@ def main(argv: list[str] | None = None) -> int:
             attempt = next_attempt(entries, work_id, gate, role, worktree)
             spec = CrewSpec(
                 work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
-                worktree=worktree, attempt=attempt, model=args.model, launcher=args.command,
+                worktree=worktree, attempt=attempt, model=args.model,
+                reasoning_effort=args.reasoning_effort or abandoned.get("reasoning_effort"),
+                launcher=args.command,
                 spine=spine, parent=parent,
             )
             exit_code, entry = backend.dispatch(spec, root=root, entries=entries)
@@ -1689,6 +1703,7 @@ def main(argv: list[str] | None = None) -> int:
             work_id=args.work_id, gate=args.gate, role=args.role, handoff=args.handoff,
             result=args.result, worktree=args.worktree, attempt=attempt,
             model=args.model, launcher=args.command, spine=args.spine, parent=args.parent,
+            reasoning_effort=args.reasoning_effort,
         )
         exit_code, entry = backend.dispatch(spec, root=root, entries=entries)
         if backend.name == BACKEND_EXTERNAL:

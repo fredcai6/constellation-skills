@@ -821,6 +821,57 @@ class ParentCliTests(unittest.TestCase):
                 by_name["constellation/issue-1/g1/reviewer/attempt-2"]["parent"],
             )
 
+    def test_abandon_relaunch_inherits_stored_reasoning_effort_when_not_reasserted(self):
+        """Recovery keeps metadata even though it never becomes a Claude flag."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "reviewer")
+            result = result_rel("issue-1", "g1", "reviewer")
+            entries = [{
+                "session_name": "constellation/issue-1/g1/reviewer/attempt-1",
+                "crew_id": "constellation/issue-1/g1/reviewer/attempt-1",
+                "work_id": "issue-1", "gate": "g1", "role": "reviewer", "attempt": 1,
+                "worktree": ".", "status": "running", "abandoned": False,
+                "handoff": handoff, "result": result, "reasoning_effort": "high",
+            }]
+            RC.save_registry(RC.registry_path("issue-1", root), entries)
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root),
+                        "--abandon", "constellation/issue-1/g1/reviewer/attempt-1",
+                        "--relaunch", "--handoff", handoff, "--result", result,
+                    ])
+            self.assertEqual(0, code)
+            relaunched = RC.load_registry(RC.registry_path("issue-1", root))[1]
+            self.assertEqual("high", relaunched["reasoning_effort"])
+            self.assertNotIn("--reasoning-effort", calls[0]["argv"])
+
+    def test_abandon_relaunch_legacy_registry_without_reasoning_effort_stays_compatible(self):
+        """The optional field is read on relaunch, so an older record may omit it."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "reviewer")
+            result = result_rel("issue-1", "g1", "reviewer")
+            entries = [{
+                "session_name": "constellation/issue-1/g1/reviewer/attempt-1",
+                "crew_id": "constellation/issue-1/g1/reviewer/attempt-1",
+                "work_id": "issue-1", "gate": "g1", "role": "reviewer", "attempt": 1,
+                "worktree": ".", "status": "running", "abandoned": False,
+                "handoff": handoff, "result": result,
+            }]
+            RC.save_registry(RC.registry_path("issue-1", root), entries)
+            with fake_launch(RC, 0, write_result_at=root / result):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root),
+                        "--abandon", "constellation/issue-1/g1/reviewer/attempt-1",
+                        "--relaunch", "--handoff", handoff, "--result", result,
+                    ])
+            self.assertEqual(0, code)
+            relaunched = RC.load_registry(RC.registry_path("issue-1", root))[1]
+            self.assertNotIn("reasoning_effort", relaunched)
+
 
 class CrewEnvSpineBindingTests(unittest.TestCase):
     """CONTROL A, made green: `crew_env()` must bind SPINE_FILE/SPINE_SESSION to
@@ -1810,6 +1861,27 @@ class ExternalDispatchTests(unittest.TestCase):
                 "constellation/issue-1/g1/implementer/attempt-1", reg[0]["session_name"]
             )
 
+    def test_cli_parser_persists_model_and_reasoning_effort_to_external_registry(self):
+        """The CLI path, not a reconstructed CrewSpec, owns external metadata."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            with fake_launch(RC, 0) as calls:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--handoff", handoff, "--result", result,
+                        "--backend", "external", "--model", "gpt-5.6",
+                        "--reasoning-effort", "xhigh",
+                    ])
+            self.assertEqual(0, code)
+            self.assertEqual([], calls)
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("external", entry["backend"])
+            self.assertEqual("gpt-5.6", entry["model"])
+            self.assertEqual("xhigh", entry["reasoning_effort"])
+
     def test_external_dispatch_refuses_spine(self):
         # CONTROL: `--spine` on the external backend binds nothing (`ExternalBackend`
         # spawns no process and builds no environment), so accepting it silently is
@@ -2311,6 +2383,56 @@ class BackendEquivalenceTests(unittest.TestCase):
                 code, entry = RC.CliBackend().dispatch(spec, root=root, entries=entries)
             self.assertEqual(0, code)
             self.assertEqual("sonnet", entry["model"])
+
+    def test_reasoning_effort_is_metadata_only_and_recorded(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "reviewer")
+            result = result_rel("issue-1", "g1", "reviewer")
+            spec = RC.CrewSpec(
+                work_id="issue-1", gate="g1", role="reviewer", handoff=handoff,
+                result=result, worktree=".", attempt=1, model="sonnet",
+                launcher="claude", reasoning_effort="high",
+            )
+            entries: list[dict] = []
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                code, entry = RC.CliBackend().dispatch(spec, root=root, entries=entries)
+            self.assertEqual(0, code)
+            self.assertEqual("high", entry["reasoning_effort"])
+            self.assertNotIn("--reasoning-effort", calls[0]["argv"])
+
+    def test_cli_resume_reads_reasoning_effort_from_registry(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "reviewer")
+            result = result_rel("issue-1", "g1", "reviewer")
+            entries: list[dict] = []
+            with fake_launch(RC, 1) as calls:
+                _, entry = RC.CliBackend().dispatch(
+                    RC.CrewSpec(
+                        work_id="issue-1", gate="g1", role="reviewer", handoff=handoff,
+                        result=result, worktree=".", attempt=1, launcher="claude",
+                        reasoning_effort="low",
+                    ), root=root, entries=entries,
+                )
+            with fake_launch(RC, 1) as resume_calls:
+                RC.CliBackend().resume(entry["session_name"], root=root, entries=entries)
+            self.assertNotIn("--reasoning-effort", resume_calls[0]["argv"])
+
+    def test_legacy_resume_without_reasoning_effort_does_not_crash(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "reviewer")
+            result = result_rel("issue-1", "g1", "reviewer")
+            entry = RC.build_entry(
+                work_id="issue-1", gate="g1", role="reviewer", attempt=1,
+                worktree=".", handoff=handoff, result=result, root=root,
+                started=RC._now(), backend="cli", pid=1,
+            )
+            entries = [entry]
+            with fake_launch(RC, 1) as calls:
+                RC.CliBackend().resume(entry["session_name"], root=root, entries=entries)
+            self.assertNotIn("--reasoning-effort", calls[0]["argv"])
 
     def test_cli_dispatch_missing_handoff_refuses_with_launch_wording(self):
         with tempfile.TemporaryDirectory() as tmp:
