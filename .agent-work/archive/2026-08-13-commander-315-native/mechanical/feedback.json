@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "feedback",
+  "mechanical": {
+    "run": "commander-315-native",
+    "project": "constellation-skills",
+    "role": "commander-delegated",
+    "refusals": 3,
+    "spine-step": "feedback",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-commander-315-native-feedback@d8c77960b00f6528d52e44fcdbd3847a47eed088",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "commander-315-native",
+    "generated_at": "2026-08-13T14:52:51Z"
+  }
+}

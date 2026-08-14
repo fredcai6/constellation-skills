@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "implementer-315-native-g1",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-implementer-315-native-g1-m0-context@e5b2271adbb8f74a76ee4c6e7ef5a48b7a527eef",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "implementer-315-native-g1",
+    "generated_at": "2026-08-13T05:28:00Z"
+  }
+}

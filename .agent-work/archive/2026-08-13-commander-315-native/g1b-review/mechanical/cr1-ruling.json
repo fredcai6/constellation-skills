@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "cr1-ruling",
+  "mechanical": {
+    "run": "commander-315-native/g1b-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "cr1-ruling",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-commander-315-native/g1b-review-cr1-ruling@57ecd388781a1ce2dba8c942f409b99f183f72df",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "commander-315-native/g1b-review",
+    "generated_at": "2026-08-13T13:52:47Z"
+  }
+}

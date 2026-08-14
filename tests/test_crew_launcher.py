@@ -60,13 +60,18 @@ def result_rel(work_id: str, gate: str, role: str) -> str:
 def fake_launch(RC_mod, exit_code: int, *, write_result_at: Path | None = None):
     """Replace the single subprocess seam with a fake that records the argv,
     simulates an exit code, and optionally writes the result artifact — so no
-    real agent CLI is ever spawned."""
+    real agent CLI is ever spawned.
+
+    `cwd` is declared (defaulted, never asserted on here) because the dispatch
+    paths now pass the crew's own worktree to the seam (issue #568); the double
+    must accept what production sends it. What is actually passed is asserted in
+    `tests/test_crew_worktree_cwd.py`, which owns that behaviour."""
     calls: list[dict] = []
     original = RC_mod.launch_process
 
-    def fake(argv, *, stdin, env, stdout_path, stderr_path):
+    def fake(argv, *, stdin, env, stdout_path, stderr_path, cwd=None):
         calls.append(
-            {"argv": argv, "stdin": stdin, "env": env,
+            {"argv": argv, "stdin": stdin, "env": env, "cwd": cwd,
              "stdout_path": stdout_path, "stderr_path": stderr_path}
         )
         Path(stdout_path).parent.mkdir(parents=True, exist_ok=True)

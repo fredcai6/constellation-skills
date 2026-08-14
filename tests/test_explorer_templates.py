@@ -354,16 +354,23 @@ class ExplorerSpineCrossCheck(unittest.TestCase):
             self.assertTrue((ROOT / "scripts" / "verify_spec_confirmed.py").is_file())
 
             # The engine can claim the lease and start the first gate.
+            # Run from `root`: the engine enforces worktree isolation natively
+            # against the `origin.worktree` stamped at instantiation (#315/#568),
+            # and a real explorer drives this spine from the tree it was
+            # instantiated into. Without `cwd`, the engine would read the test
+            # runner's cwd and correctly refuse. This test is about the template
+            # being instantiable and drivable, so give it the honest cwd rather
+            # than exempting it from the guard.
             claim = subprocess.run(
                 [sys.executable, str(ENGINE), "--file", str(out), "claim",
                  "--session-id", "explore-topic", "--claimed-by", "explorer", "--worktree", "."],
-                capture_output=True, text=True,
+                capture_output=True, text=True, cwd=str(root),
             )
             self.assertEqual(claim.returncode, 0, claim.stderr)
             start = subprocess.run(
                 [sys.executable, str(ENGINE), "--file", str(out), "start", "init",
                  "--session-id", "explore-topic"],
-                capture_output=True, text=True,
+                capture_output=True, text=True, cwd=str(root),
             )
             self.assertEqual(start.returncode, 0, start.stderr)
             self.assertIn("init -> in-progress", start.stdout)

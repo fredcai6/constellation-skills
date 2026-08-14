@@ -1,0 +1,213 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic 568 wave 1 recut - engine-native isolation against a stored spine origin",
+      "spec_path": ".agent-work/epic-568/LAUNCH_ORDER-wave1-recut.md",
+      "intent_and_why": "Engine state must carry who it belongs to. This issue is the same defect one layer over: state that does not know where it lives. A spine carries its own repo reference from creation and the engine enforces worktree isolation natively against it, instead of delegating that judgment to a subprocess check wired into one template."
+    },
+    "definition_of_done": [
+      "A spine stamped with origin at creation.",
+      "The engine refuses guarded verbs driven from outside that origin, natively, without forwarding a cwd.",
+      "The superseded template check and its coverage apparatus are gone.",
+      "A test exercises a spine that actually carries origin, on both the match and the mismatch side."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Every new check demonstrated failing in the defective world and passing in the healthy one.",
+      "sufficient_evidence": "Full suite with no new failures against main's baseline, plus an arming repro decided on state facts rather than refusal prose.",
+      "appetite": "One Commander, serialized lane, no concurrent dispatch on the engine-core files."
+    },
+    "hard_constraints": [
+      "Engine-native comparison; never forward a cwd to a subprocess check.",
+      "The stamp and the native check land as ONE change; the read side alone is inert.",
+      "The resolved root is a parameter distinct from base_dir.",
+      "scripts/hooks/spine_rail.py and scripts/agent_work_root.py must not be edited.",
+      "scripts/spine_lifecycle.py gets zero changes.",
+      "Do not enter or reuse /home/tommy/projects/constellation-skills-wt/epic-568-315."
+    ],
+    "fixed_decisions": [
+      "decision:engine-native-not-forwarded-cwd",
+      "decision:both-halves-one-change",
+      "decision:delete-not-repair-init-c0",
+      "decision:door-not-a-prerequisite",
+      "decision:root-distinct-from-base-dir"
+    ],
+    "current_wave": {
+      "objective": "Land the stored spine origin and the engine-native isolation guard as one change, with coverage that can actually fail.",
+      "exit_criteria": [
+        "Full suite passes with no new failures against main's Linux baseline of 2934 passed, 5 skipped, 0 failed.",
+        "The before/after repro arms the gate on state facts.",
+        "tests/test_spine_origin_isolation.py covers a spine carrying origin on both sides.",
+        "init.c0 and verify_worktree_precondition_coverage.py are gone.",
+        "An independent reviewer returns APPROVE."
+      ],
+      "issues": [
+        {
+          "id": "commander-315-native",
+          "title": "Stored spine origin plus engine-native worktree isolation",
+          "desired_outcome": "The engine enforces worktree isolation for every spine on every guarded verb, against a value the spine cannot edit.",
+          "useful_now": "It is the substrate the rest of the epic 568 tranche reads from.",
+          "appetite": "One gate, three halves plus docs.",
+          "acceptance_or_falsification_evidence": "The native refusal fires in the case init.c0 used to catch, and leaves no lease on the spine.",
+          "implementation_latitude": "How the root is threaded, where the comparison sits, which verbs are guarded, whether the live origin-less spines are backfilled.",
+          "hard_constraints_no_gos": [
+            "No forwarded cwd.",
+            "No write on the refusal path.",
+            "No edit to spine_rail.py or agent_work_root.py."
+          ],
+          "local_unknowns": [
+            "Whether the guard breaks the in-process MCP caller at scripts/mcp_spine_server.py:361."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "scripts/init_work_area.py",
+            "skills/commander/templates/COMMANDER_SPINE.template.json"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Extend the origin stamp to the other spine instantiation paths, so child checklists carry it too.",
+        "why_likely": "The stamp lands only in init_work_area and spine_lifecycle; child checklists such as review.json and IMPLEMENTER_PLAN.json are created elsewhere and stay unguarded.",
+        "entry_conditions": [
+          "This change is merged."
+        ]
+      },
+      {
+        "outcome": "Close the claim --force gap for a spine whose worktree was removed at closeout.",
+        "why_likely": "release is exempt so lease clearing survives, but claim --force against a removed worktree is refused with no hatch.",
+        "entry_conditions": [
+          "A run actually hits it."
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether guarding claim and heartbeat breaks a real cross-tree workflow.",
+        "affects": "Verb scope.",
+        "settle_by": "The full suite plus the in-process MCP shape test.",
+        "current_evidence": "current stays exempt, which is the read path the MCP door is most used for.",
+        "next_probe": "Watch for refusals in live runs after merge."
+      }
+    ],
+    "parked_possibilities": [
+      "Guarding current as well, which both plan candidates rejected because it would break the cross-tree REFRESH REQUESTED read."
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "commander-315-native",
+      "outcome": "Stored spine origin and engine-native worktree isolation landed with both human-ruled caller repairs: CLI crews run from an absolute assigned worktree and the in-process MCP door stands in its bound spine worktree for each engine call.",
+      "evidence": "Fresh independent re-review APPROVE; native repro GATE ARMED; engine-owned integration suite passed 2981 tests with 6 skipped after the Admiral-ratified clean-child check correction; execute.json terminal."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The native refusal fires where init.c0 used to catch, and takes no lease.",
+      "expected": "origin spine driven from the main checkout is REFUSED and writes nothing.",
+      "observed": "REFUSED; spine byte-identical and mtime-identical; no journal sidecar. Decided on the state fact, not on the refusal prose.",
+      "source": "repro_native.py plus the reviewer independent probe"
+    },
+    {
+      "claim": "Every new check has a failing side.",
+      "expected": "Reverting each half reds the new tests.",
+      "observed": "Stamp reverted reds the origin-carrying tests; main() call site reverted reds the mismatch tests. Reproduced by the reviewer with its own edits.",
+      "source": "tests"
+    },
+    {
+      "claim": "The origin-less fallback is untouched.",
+      "expected": "Eleven unusable origin shapes take the pre-change path and none raises.",
+      "observed": "All eleven pass; test_worktree_precondition_wiring.py green and unweakened.",
+      "source": "tests"
+    },
+    {
+      "claim": "A dispatched crew runs in its spine worktree.",
+      "expected": "run_crew.launch_process sets cwd to the worktree.",
+      "observed": "Initially FALSE and wave-blocking. Human ruled option 1; run_crew now resolves every non-legacy crew cwd absolute and threads it through dispatch and resume. Default-dot red/green coverage and real subprocess evidence pass.",
+      "source": "g1b/g1c implementer results plus fresh g1c independent review"
+    },
+    {
+      "claim": "The in-process MCP door can drive an origin-stamped spine opened in another worktree without bypassing the engine guard.",
+      "expected": "The door stands in the bound spine worktree only for the engine call, restores ambient cwd, and the full open-drive-close lifecycle passes untouched.",
+      "observed": "Human-ruled option 2 implemented; chdir success/failure/SystemExit restoration, synchronous-loop pin, and untouched test_mcp_lifecycle all pass.",
+      "source": "tests/test_mcp_door_engine_cwd.py, tests/test_mcp_lifecycle.py, g1c reviewer"
+    },
+    {
+      "claim": "The engine-owned full-suite postcondition tests the same clean caller world as a normal suite invocation.",
+      "expected": "All tests pass under the integration gate.",
+      "observed": "The first frozen check inherited the MCP server's SPINE_FILE/SPINE_ENGINE/SPINE_SESSION and deterministically failed DC3InheritanceMechanismTests. Admiral ratified MCP retext-check clearing only those bindings for the pytest child; engine advance then passed without waiver.",
+      "source": "exact bound-env reproduction, Admiral ruling, execute.json amendment and terminal advance"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "spine_open then claim in one session is impossible through the MCP door: spine_open creates a new worktree and stamps origin.worktree to it, and the in-process caller at mcp_spine_server.py:361 never chdirs, so it cannot already stand inside a directory that did not exist a moment earlier.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "The merge gate; the no-bypass ruling on the in-process caller.",
+      "evidence": "tests/test_mcp_lifecycle.py FullStdioRoundTripTests fails and is the only failure. Reproduced by the Commander and the reviewer. Verb scope cannot fix it; the door supplying SPINE.parent toplevel measures equal to origin.worktree by construction.",
+      "reason": "Every honest fix changed who sets cwd. Floated to the Admiral; the human ruled options 1 + 2 and both landed. Retained as wave-boundary evidence because it materially expanded the decomposition."
+    },
+    {
+      "id": "D1",
+      "signal": "The Commander launch-order reason that a crew cwd is its spine worktree is false.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "The premise the no-bypass ruling rested on.",
+      "evidence": "scripts/run_crew.py:676 passes no cwd=.",
+      "reason": "The ruling was settled on an unverified empirical claim and was reopened. Human-ruled option 1 now makes the premise true by construction."
+    },
+    {
+      "id": "D2",
+      "signal": "The origin stamp does not reach child checklists (review.json, IMPLEMENTER_PLAN.json), which is where crew subagents work.",
+      "classification": "later_only",
+      "affects": "Coverage of the guard.",
+      "evidence": "The stamp lands only in init_work_area and spine_lifecycle.",
+      "reason": "A scoped limit, not a defect in this change. Filed as tc8."
+    },
+    {
+      "id": "D3",
+      "signal": "instantiate_spine now writes escaped and reflowed JSON rather than the resolved text verbatim.",
+      "classification": "evidence_only",
+      "affects": "The bytes of every instantiated spine.",
+      "evidence": "34 non-ASCII chars in COMMANDER_SPINE become escapes; condition dicts reflow. Parsed content, key order and rendered text unchanged; no consumer reads a spine as raw text.",
+      "reason": "A recorded behaviour change, not a defect. Left unpatched so the merged change is the reviewed change. Filed as tc12."
+    },
+    {
+      "id": "D4",
+      "signal": "tests/test_gauge_chain_writer_to_trip containment test failed once.",
+      "classification": "drop",
+      "affects": "Nothing in this change.",
+      "evidence": "Passed on re-run and three times in isolation; it snapshots the live .agent-work tree and a crew launcher was writing into it concurrently.",
+      "reason": "Environmental, falsified as a finding against this change. Filed as tc11."
+    },
+    {
+      "id": "D5",
+      "signal": "The first caller repair promised an absolute crew cwd but default CLI root/worktree values of '.' remained relative; the original nine tests only supplied an already-absolute temporary root and could not see it.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "Human-ruled option 1 and the g1 independent-review exit.",
+      "evidence": "Fresh Codex review BLOCK at rc8-absolute-cwd; direct crew_cwd('.', Path('.')) was relative. Bounded TDD rework added default-dot dispatch/resume coverage; fresh re-review APPROVE and 2981-test suite close it.",
+      "reason": "A test-boundary hole, repaired within settled option 1 without a new policy choice."
+    },
+    {
+      "id": "D6",
+      "signal": "The frozen full-suite command was correct in a clean shell but false-red through MCP because engine command children inherit the door's SPINE_FILE/SPINE_ENGINE/SPINE_SESSION bindings, exactly what test_mcp_identity's clean-caller check refuses.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "The execute integration check mechanism under the epic's MCP-first engine path.",
+      "evidence": "Clean shell: 2981 passed, 6 skipped. Exact MCP-bound environment: 1 failed, 2980 passed at DC3InheritanceMechanismTests. Admiral-ratified MCP retext-check clears only the three bindings for pytest; engine-owned advance passes without waiver.",
+      "reason": "MCP adoption changed the environment contract of engine-owned command checks; the gate needed an authority-recorded check correction, not product rework or a waiver."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/init_work_area.py"
+    ],
+    "map_status": "DEGRADED-UNPARSEABLE, anchor count 0 - map_orient.py cannot orient the repo, so file paths are used instead of map anchors."
+  }
+}

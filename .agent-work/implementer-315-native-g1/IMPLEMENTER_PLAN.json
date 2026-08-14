@@ -1,0 +1,482 @@
+{
+  "work_id": "implementer-315-native-g1",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-stamp",
+    "m2-refusal",
+    "m3-wire",
+    "m4-delete",
+    "m5-docs",
+    "m6-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, then the handoff at .agent-work/commander-315-native/crew-handoffs/g1-implementer-handoff.md and the source it names (scripts/checklist_engine.py main(), scripts/init_work_area.py, scripts/spine_lifecycle.py build_origin, tests/test_worktree_precondition_wiring.py, .agent-work/commander-315-native/repro_native.py). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + named source loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-stamp": {
+      "id": "m1-stamp",
+      "title": "Write side: instantiate_spine stamps a top-level origin block",
+      "imperative": "TDD. First write tests/test_spine_origin_isolation.py covering the stamp: instantiate_spine writes a top-level origin with exactly {work_id, worktree, opened_by}, worktree == Path(root).resolve().as_posix(), opened_by == 'init_work_area', the written spine still parses, an existing origin in a template is preserved (setdefault posture), and the resolver/placeholder guards still run against the resolved text. Observe those tests RED. Then stamp origin in scripts/init_work_area.py:instantiate_spine, reusing the resolved-root and parsed-dict values already in hand. Attest c1 (red observed), then advance on c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the stamp tests were written first and observed failing against the unstamped tree",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the stamp tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_spine_origin_isolation.py -q -p no:randomly -k Stamp"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-stamp-1"
+        }
+      ],
+      "constraints": [
+        "stamp exactly {work_id, worktree, opened_by}; never guess branch/base/parent",
+        "key-compatible subset of spine_lifecycle.build_origin",
+        "zero changes to spine_lifecycle.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-stamp-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_spine_origin_isolation.py -q -p no:randomly -k Stamp",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-refusal": {
+      "id": "m2-refusal",
+      "title": "Read side: the pure origin_worktree_refusal predicate",
+      "imperative": "TDD. First write the predicate tests in tests/test_spine_origin_isolation.py: guarded-verb set asserted as data derived from MUTATING_VERBS (membership AND non-membership: current and release exempt, claim/heartbeat guarded), containment (root passes, subdirectory passes, prefix-sharing sibling refuses), and the exhaustive fallback table (origin absent, null, a string, a list, {}, worktree absent, worktree empty, worktree not a string) each returning None and never raising. Observe RED. Then add origin_worktree_refusal(spine, *, cwd, verb) -> str | None to scripts/checklist_engine.py: pure, no filesystem/clock/subprocess/Path.cwd(), normcase-folded on both sides, Path.is_relative_to for containment.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-stamp complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: predicate tests written first and observed failing (function absent)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the predicate tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_spine_origin_isolation.py -q -p no:randomly -k 'Predicate or Fallback or VerbScope'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-refusal-1"
+        }
+      ],
+      "constraints": [
+        "pure: refusal-or-None, matching spine_lifecycle.closeout_refusal precedent",
+        "containment via Path.is_relative_to, never equality",
+        "no shape may raise"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-refusal-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_spine_origin_isolation.py -q -p no:randomly -k 'Predicate or Fallback or VerbScope'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-wire": {
+      "id": "m3-wire",
+      "title": "Wire the refusal into main() at exactly one site, without persisting",
+      "imperative": "TDD. First write the end-to-end tests: a guarded verb driven from a foreign cwd against an origin-carrying spine returns non-zero and leaves the spine byte-identical (hash before/after); current returns 0 from that same foreign cwd; the in-process MCP shape (os.chdir to a foreign dir, then checklist_engine.main([...]) in-process, cwd restored in finally) refuses a guarded verb and permits current. Observe RED. Then call origin_worktree_refusal from exactly one site in main(), immediately after cl = load(path) and before dispatch(...), passing cwd=str(Path.cwd().resolve()); print the check-failure rail + 'REFUSED: <reason>' to stderr and return 1 without calling save(). Do not raise EngineError.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2-refusal complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the end-to-end and MCP-shape tests were written first and observed failing (no call site)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the whole new test file passes and the Commander's repro_native.py reports GATE ARMED",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_spine_origin_isolation.py -q -p no:randomly && python .agent-work/commander-315-native/repro_native.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-wire-1"
+        }
+      ],
+      "constraints": [
+        "exactly one call site in main()",
+        "no save() on the refusal path",
+        "engine reads its OWN Path.cwd(); never forward cwd= to a subprocess check",
+        "the resolved root is carried in a name distinct from base_dir"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-wire-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_spine_origin_isolation.py -q -p no:randomly && python .agent-work/commander-315-native/repro_native.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-delete": {
+      "id": "m4-delete",
+      "title": "Delete the superseded template check and its coverage apparatus",
+      "imperative": "Delete COMMANDER_SPINE.template.json's init precondition c0 (leaving preconditions []), delete scripts/verify_worktree_precondition_coverage.py, and delete the enumeration tests in tests/test_worktree_precondition_wiring.py that exercise it, plus the COVERAGE_SCRIPT constant and any import they alone use. Keep every other test in that file unweakened. Run the file and record which tests survive and which were removed, by name.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3-wire complete: enforcement is engine-native before the template check is removed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "init.c0 and the coverage script are gone and the surviving wiring tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import sys,os,json; d=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json')); pre=d['tasks']['init'].get('preconditions') or []; sys.exit(0 if not [c for c in pre if c['id']=='c0'] and not os.path.exists('scripts/verify_worktree_precondition_coverage.py') else 1)\" && python -m pytest tests/test_worktree_precondition_wiring.py -q -p no:randomly"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-delete-1"
+        }
+      ],
+      "constraints": [
+        "delete the init PREcondition c0 only; init's postconditions c1/c2 stay",
+        "do not weaken any surviving assertion in the wiring file"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-delete-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import sys,os,json; d=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json')); pre=d['tasks']['init'].get('preconditions') or []; sys.exit(0 if not [c for c in pre if c['id']=='c0'] and not os.path.exists('scripts/verify_worktree_precondition_coverage.py') else 1)\" && python -m pytest tests/test_worktree_precondition_wiring.py -q -p no:randomly",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-docs": {
+      "id": "m5-docs",
+      "title": "Document origin and reconcile the pre-authorized explorer-template breakage",
+      "imperative": "Document origin as a top-level key in docs/CHECKLIST_SCHEMA.md. Reconcile tests/test_explorer_templates.py's instantiate-then-drive test by making it honest (run the engine with cwd set to the instantiated root, or assert the refusal is the expected outcome), never by weakening the guard; record which was chosen and why. Check whether a map-consistency test requires removing the map/INDEX.md line for the deleted script; if none does, leave the map alone and report it as map impact.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4-delete complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "docs/CHECKLIST_SCHEMA.md documents origin as a top-level key",
+          "check": {
+            "kind": "command",
+            "command": "grep -q '\"origin\"' docs/CHECKLIST_SCHEMA.md && grep -q 'origin.worktree' docs/CHECKLIST_SCHEMA.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-docs-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the explorer-template and map tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_explorer_templates.py tests/test_code_map.py tests/test_map_orient.py -q -p no:randomly"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-docs-2"
+        }
+      ],
+      "constraints": [
+        "reconcile the explorer test by making it honest, never by weakening the guard"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-docs-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q '\"origin\"' docs/CHECKLIST_SCHEMA.md && grep -q 'origin.worktree' docs/CHECKLIST_SCHEMA.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-docs-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_explorer_templates.py tests/test_code_map.py tests/test_map_orient.py -q -p no:randomly",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-evidence": {
+      "id": "m6-evidence",
+      "title": "Arm evidence, wiring grep, and the full suite",
+      "imperative": "Produce the handoff's load-bearing evidence: (1) revert each half in turn (the stamp, then the main() call site) and paste the RED run, restore and paste the GREEN run; (2) hash the spine before and after a refused guarded verb and show the hashes equal; (3) the full suite via python -m pytest tests/ -q -p no:randomly plus the mechanical failure distribution, stated against main's 2934 passed / 5 skipped / 0 failed Linux baseline; (4) the in-process MCP shape refusing a guarded verb and permitting current. Run the wiring grep and state the call-site count (zero is a stop condition). Then write the full IMPLEMENTER_RESULT to .agent-work/commander-315-native/crew-handoffs/g1-implementer-result.md.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m5-docs complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m5-docs advanced to complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both arm reverts observed RED and restored GREEN; both runs pasted into the result",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Arm (a) stamp removed -> 2 failed (StampsOriginAtInstantiation x2), repro GATE ARMED: False. Arm (b) main() call site removed -> 7 failed (RefusesAGuardedVerbFromAForeignTree x4, TheInProcessMcpDoorShape x1, TheGuardIsReachedFromExactlyOneSite x2), repro B PASS instead of REFUSED, GATE ARMED: False. Both restored -> 30 passed, 1 skipped, 10 subtests. Both RED and GREEN runs pasted into the result artifact."
+        },
+        {
+          "id": "c2",
+          "statement": "the full suite is green and the wiring grep finds at least one external call site",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/ -q -p no:randomly && test $(grep -rn 'origin_worktree_refusal' --include=*.py . | grep -v 'def origin_worktree_refusal' | grep -v '.agent-work/archive' | wc -l) -ge 1"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the result artifact exists at .agent-work/commander-315-native/crew-handoffs/g1-implementer-result.md",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/commander-315-native/crew-handoffs/g1-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-evidence-2"
+        }
+      ],
+      "constraints": [
+        "a test that passes in both worlds is not a test",
+        "never claim non-forwardability or immunity to a child process's cwd"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "Suite not green: tests/test_mcp_lifecycle.py::FullStdioRoundTripTests::test_open_drive_close_round_trip_names_branch_commit_and_ready_to_pr fails. This is a stop condition from the g1-implement handoff (a failure outside the pre-authorized test_explorer_templates.py root cause) AND it contradicts a settled ruling. The handoff's no-bypass ruling on the MCP in-process caller rests on reason #1, 'the door's process inherits the dispatcher's cwd, which is the worktree the spine lives in'. Measured false: run_crew.launch_process (scripts/run_crew.py:676), the ONE place a crew subprocess is spawned, passes no cwd=, so a crew inherits the dispatcher's cwd; and mcp_spine_server.py is deliberately cwd-independent, deriving every path from SPINE's location with an explicit cwd= parameter. Structural break: spine_open creates a NEW worktree and stamps origin.worktree to it, so the immediately-following claim cannot pass -- the calling process cannot already be cwd'd inside a directory that did not exist a moment earlier. Making the test pass would require asserting a cwd production does not set, which is the weaken-the-guard path the handoff forbids.",
+        "authority_needed": "commander-315-native",
+        "next_action": "Rule on the collision. Options, all outside my allowed scope: (1) run_crew.launch_process passes cwd=<spine's worktree>, making reason #1 true rather than assumed -- fixes dispatch but not spine_open->claim; (2) the door chdirs to SPINE's toplevel around the in-process main() call -- fixes both, costs mcp_spine_server.py its cwd-independence invariant; (3) derive the read side's cwd from the door's binding at that one call site -- preserves both invariants, needs an unauthorized seam; (4) accept the break and reconcile the test, only if spine_open->claim in one session is genuinely unsupported, which I could not establish. Also ratify or revert the one out-of-scope edit: tests/test_shipped_check_commands_resolve.py EXPECTED_COMMAND_CHECK_COUNT 13->12, a mechanical census of the authorized init.c0 deletion. Everything else in the handoff is complete and armed; full result at .agent-work/commander-315-native/crew-handoffs/g1-implementer-result.md.",
+        "prior_status": "in-progress"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -q -p no:randomly && test $(grep -rn 'origin_worktree_refusal' --include=*.py . | grep -v 'def origin_worktree_refusal' | grep -v '.agent-work/archive' | wc -l) -ge 1",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-evidence-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/commander-315-native/crew-handoffs/g1-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [
+    {
+      "item": "m6-evidence",
+      "blocker": "Suite not green: tests/test_mcp_lifecycle.py::FullStdioRoundTripTests::test_open_drive_close_round_trip_names_branch_commit_and_ready_to_pr fails. This is a stop condition from the g1-implement handoff (a failure outside the pre-authorized test_explorer_templates.py root cause) AND it contradicts a settled ruling. The handoff's no-bypass ruling on the MCP in-process caller rests on reason #1, 'the door's process inherits the dispatcher's cwd, which is the worktree the spine lives in'. Measured false: run_crew.launch_process (scripts/run_crew.py:676), the ONE place a crew subprocess is spawned, passes no cwd=, so a crew inherits the dispatcher's cwd; and mcp_spine_server.py is deliberately cwd-independent, deriving every path from SPINE's location with an explicit cwd= parameter. Structural break: spine_open creates a NEW worktree and stamps origin.worktree to it, so the immediately-following claim cannot pass -- the calling process cannot already be cwd'd inside a directory that did not exist a moment earlier. Making the test pass would require asserting a cwd production does not set, which is the weaken-the-guard path the handoff forbids.",
+      "authority_needed": "commander-315-native",
+      "next_action": "Rule on the collision. Options, all outside my allowed scope: (1) run_crew.launch_process passes cwd=<spine's worktree>, making reason #1 true rather than assumed -- fixes dispatch but not spine_open->claim; (2) the door chdirs to SPINE's toplevel around the in-process main() call -- fixes both, costs mcp_spine_server.py its cwd-independence invariant; (3) derive the read side's cwd from the door's binding at that one call site -- preserves both invariants, needs an unauthorized seam; (4) accept the break and reconcile the test, only if spine_open->claim in one session is genuinely unsupported, which I could not establish. Also ratify or revert the one out-of-scope edit: tests/test_shipped_check_commands_resolve.py EXPECTED_COMMAND_CHECK_COUNT 13->12, a mechanical census of the authorized init.c0 deletion. Everything else in the handoff is complete and armed; full result at .agent-work/commander-315-native/crew-handoffs/g1-implementer-result.md."
+    }
+  ],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "implementer-315-native-g1",
+    "status": "active",
+    "claimed_at": "2026-08-13T05:27:52.137867+00:00",
+    "last_heartbeat": "2026-08-13T05:53:41.380704+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff is complete on all seven required fields; doctrine, crew context, glossary and every named source file read. Four-part change understood: stamp origin on write, pure refusal predicate, one main() call site, delete the superseded template check plus its coverage apparatus.",
+      "mechanical": false,
+      "ts": "2026-08-13T05:28:00.928336+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-stamp",
+      "why": "instantiate_spine now stamps origin={work_id,worktree,opened_by} via setdefault after the JSON and placeholder guards, re-serializing the parsed dict; the stamp tests were red before it and are green after, and test_init_work_area.py is unaffected.",
+      "mechanical": false,
+      "ts": "2026-08-13T05:30:35.246203+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-refusal",
+      "why": "origin_worktree_refusal added beside MUTATING_VERBS: pure, guarded = MUTATING_VERBS|{claim,heartbeat} with current/release exempt, containment via Path.is_relative_to over normcase-folded values, and every malformed shape returning None. 21 red before, 12 passed 1 skipped after.",
+      "mechanical": false,
+      "ts": "2026-08-13T05:32:23.569866+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-wire",
+      "why": "One call site in main() after load and before dispatch, reading the engine's own resolved cwd into engine_cwd and returning 1 on the rail+REFUSED path without save(). 7 red before, whole file green after, and repro_native.py reports GATE ARMED with B refused and no lease written.",
+      "mechanical": false,
+      "ts": "2026-08-13T05:33:22.877002+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-delete",
+      "why": "init precondition c0 deleted (preconditions now []), scripts/verify_worktree_precondition_coverage.py git-rm'd, and the three Enumeration* classes (4 test methods) plus COVERAGE_SCRIPT/_run_coverage_script removed from the wiring file; its 3 surviving tests pass unweakened.",
+      "mechanical": false,
+      "ts": "2026-08-13T05:34:33.852803+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-docs",
+      "why": "Docs: docs/CHECKLIST_SCHEMA.md now carries origin in the storage-model block plus an 'origin - the worktree this file belongs to' section (fields, the two producers and how each normalizes worktree, the guarded/exempt verb sets, containment-not-equality, what supersedes init.c0, and the explicit non-claim that it is unforgeable). Explorer test reconciled by giving both subprocess.run calls cwd=str(root): that test is about the template being instantiable and drivable, and a real explorer drives the spine from the tree it was instantiated into, so the honest cwd keeps the test about its own subject and exercises the guard's pass side rather than exempting it. Map: test_code_map MapTreeFreshnessTests DOES require the update, so map/INDEX.md was regenerated from a fresh build (git add -N on the new test file first, since code_map enumerates via git ls-files); the diff is exactly the deleted coverage module, the new test module, and the entity-count deltas - no unrelated drift.",
+      "mechanical": false,
+      "ts": "2026-08-13T05:49:08.011247+00:00"
+    }
+  ]
+}

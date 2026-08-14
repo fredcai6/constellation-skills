@@ -76,6 +76,7 @@ Reject HTN's offline stance (expand the whole network to primitives before execu
   "why_trail": [],                  // optional, append-only: the running-understanding trail (see Why-capture)
   "trip_ledger": [],                // optional, append-only: BEGINs judged at/over the hard line (see Trip ledger)
   "refusals": 0,                    // optional: checklist-scoped refusal tally, ARMED by `claim` (see below)
+  "origin": null,                   // optional: the worktree this file was created in (see below)
   "engine_session": null            // optional: actor-authority lease over this checklist's STATE (see below)
 }
 ```
@@ -94,6 +95,35 @@ Three properties are load-bearing, and each exists because the field feeds `docs
 Fully backward compatible: no existing field changes meaning, and every reader works unchanged on a checklist that lacks the key.
 
 `triage_candidates` and `blockers` are honest, separate bubble-up channels (no vague "signals"). Both surface to the **parent agent** first; the parent escalates to the human only if it cannot resolve them. Triage drains `triage_candidates` in clean-up. `amendments` is a separate append-only audit log: each `amend` verb (gated, plus a survey's `retext-check`) appends one entry `{ts, reason, authority, ops:[...]}` recording an intentional mid-run re-plan (see *Amend delta — intentional mid-run re-planning*). The field is created lazily on the first amendment. `why_trail` is a separate append-only trail of running-understanding records, one appended per non-exempt `advance` (see *Why-capture — the running-understanding trail*); it too is created lazily on the first write.
+
+### `origin` — the worktree this file belongs to
+
+An optional top-level block naming where this checklist was created. Two producers write it, and the engine reads one field of it:
+
+```json
+"origin": {
+  "work_id": "issue-204-execute",
+  "worktree": "/home/dev/wt/issue-204",   // the ONLY field the engine reads
+  "opened_by": "init_work_area"
+}
+```
+
+| field | written by | meaning |
+|---|---|---|
+| `work_id` | both | the checklist's own work-id, repeated here |
+| `worktree` | both | the tree the file was created in; `spine_lifecycle.build_origin` stores `str(Path(worktree))` (native separators), `init_work_area.instantiate_spine` stores `Path(root).resolve().as_posix()` |
+| `opened_by` | both | `spine_open` or `init_work_area` |
+| `branch` / `base` / `opened_at` / `parent` | `spine_lifecycle.build_origin` only | the rest of `LIFECYCLE_CONTRACT.md` section 3. `init_work_area` does not know them and **omits** them rather than emitting a plausible wrong value |
+
+`instantiate_spine` stamps the block with `setdefault`, so a template that already carries an `origin` keeps its own.
+
+**What the engine does with it (#315/#568).** On every **guarded** verb, `origin_worktree_refusal` compares `origin.worktree` against the engine's own `Path.cwd()`; when cwd is neither that directory nor inside it, the engine prints `REFUSED:` to stderr and exits `1` **without writing the file**. The guarded set is `MUTATING_VERBS | {claim, heartbeat}` — `heartbeat` because it writes — and the exempt set is `{current, release}`: `current` is the only genuinely read-only verb and is read cross-tree by an invoker checking a subordinate's `REFRESH REQUESTED` line, and `release` is the single recovery escape hatch, so a lease on a spine whose worktree was removed at closeout stays clearable.
+
+Containment, not equality: `<worktree>/scripts` and `<worktree>/.agent-work/<id>` pass, and the comparison is segment-wise, so a sibling sharing a name prefix (`/w/repo-2` against `/w/repo`) does not.
+
+This supersedes the per-template `command` check that used to assert the same thing (`verify_worktree_isolation.py --here` on the Commander spine's `init` precondition `c0`). Three things change: enforcement now covers every verb on **every** spine rather than the templates someone remembered to wire; a spine's own text can no longer switch it off, because the check is no longer in the spine; and the expected value comes from a creation-time stamp rather than from a literal a spine author can edit. It does **not** make the comparison unforgeable — the engine reads its ambient cwd, and a check authored as `cd <origin.worktree> && …` still satisfies it.
+
+**Fully optional, fail-open on every other shape.** `origin` absent, `null`, a string, a list, or `{}`; `worktree` absent, empty, or not a string — each falls back to the pre-change behaviour and none raises. A checklist without the block behaves exactly as it did before.
 
 ## Engine session — actor authority over the state
 

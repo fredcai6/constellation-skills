@@ -83,6 +83,84 @@ MUTATING_VERBS = {
 TRIP_HARD_GUARDED_VERBS = {"start", "reopen"}
 
 
+# Engine-native worktree isolation (#315/#568): which verbs may not be driven
+# against a spine from outside the worktree that spine was created in.
+#
+# GUARDED is derived from MUTATING_VERBS, so a verb added to that set is guarded
+# automatically, plus the two lease verbs that are not in it: `claim` takes the
+# lease, and `heartbeat` is guarded because it WRITES.
+#
+# EXEMPT is deliberate and short. `current` is the only genuinely read-only verb,
+# and inherited doctrine has an invoker read a subordinate's `current` cross-tree
+# to see a REFRESH REQUESTED line. `release` is the single recovery escape hatch:
+# a lease on a spine whose worktree was removed at closeout must stay clearable,
+# and a non-owner `release` already demands `--force --reason` on the record.
+ORIGIN_EXEMPT_VERBS = {"current", "release"}
+ORIGIN_GUARDED_VERBS = MUTATING_VERBS | {"claim", "heartbeat"}
+
+
+def origin_worktree_refusal(spine: dict, *, cwd: str, verb: str) -> str | None:
+    """`None` when `verb` may be driven against `spine` from `cwd`, else the
+    refusal message naming both sides -- the refusal-or-`None` shape this repo
+    already uses for `spine_lifecycle.closeout_refusal`.
+
+    An agent must not drive a spine's state from a tree that is not the spine's
+    own. This is the read side of that rule; the expected value is the
+    `origin.worktree` stamped into the spine when `init_work_area` (or
+    `spine_lifecycle.open_work`) created it.
+
+    Pure -- no filesystem, no clock, no subprocess, no ambient cwd read. The
+    impure half is the single call site in `main()`, which passes the engine's
+    OWN resolved cwd. Symlink resolution stays outside on both sides: the stored
+    value was resolved when the spine was written, the cwd value by that caller.
+
+    What this delivers, exactly:
+
+    - Coverage -- it applies to every guarded verb on every spine carrying
+      `origin`, not only where a command check was wired into a template.
+    - Unbypassability from the spine -- a spine's own text cannot switch it off,
+      because the check is no longer in the spine.
+    - An independent expected side -- stamped at creation, not a literal inside
+      a check a spine author can edit.
+
+    It does NOT make the comparison unforgeable. The engine reads its ambient
+    cwd, so a check command authored as `cd <origin.worktree> && ...` still
+    satisfies it. That claim was withdrawn deliberately; do not restate it.
+
+    Containment, not equality: the superseded check ran
+    `verify_worktree_isolation.py --here`, which compares
+    `git rev-parse --show-toplevel` and therefore succeeds from any
+    subdirectory. `is_relative_to` is segment-wise, so a sibling sharing a name
+    prefix (`/w/repo-2` against `/w/repo`) is correctly NOT inside.
+
+    Every other shape falls back to the pre-change behaviour and none raises:
+    `origin` absent, null, a string, a list, or empty; `worktree` absent, empty,
+    or not a string. `scripts/validate_spine.py` guards none of them, so the
+    fallback is the engine's own job.
+    """
+    if verb not in ORIGIN_GUARDED_VERBS:
+        return None
+    origin = spine.get("origin")
+    if not isinstance(origin, dict):
+        return None
+    stored = origin.get("worktree")
+    if not isinstance(stored, str) or not stored:
+        return None
+    # `normcase` folds case and separators on Windows, where the two producers
+    # disagree for the same directory: `spine_lifecycle` stores
+    # `str(Path(worktree))` (native separators), `init_work_area` stores
+    # `as_posix()`. It is the identity function on POSIX.
+    root = Path(os.path.normcase(stored))
+    here = Path(os.path.normcase(cwd))
+    if here.is_relative_to(root):
+        return None
+    return (
+        f"{verb} refused: this spine belongs to the worktree {stored}, but the "
+        f"engine is running in {cwd}. Run the verb from that worktree, or from a "
+        f"directory inside it."
+    )
+
+
 # --------------------------------------------------------------------------- #
 # gauge reader binding (#181) — loaded by file path so the engine drives whether
 # it is run as a script or imported by a test via spec_from_file_location (both
@@ -3267,6 +3345,26 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     path = Path(args.file)
     cl = load(path)
+    # Engine-native worktree isolation (#315/#568). The ONE call site of the pure
+    # predicate above, and the only impure half of it: the engine reads its OWN
+    # cwd here. It must never forward a cwd into a subprocess check -- feeding the
+    # stored root to `verify_worktree_isolation.py --here` makes the comparison
+    # X == X, because both sides then derive from the same resolved root.
+    #
+    # It sits BEFORE dispatch() and returns without save(), deliberately. main()
+    # persists state on the EngineError path for every verb except `current`, so a
+    # refusal raised INSIDE dispatch() would write into the very tree the guard
+    # protects, and would clobber a concurrent legitimate writer holding a spine
+    # loaded before the refusal. Presentation still matches that path: the
+    # check-failure rail first, the operative REFUSED line last, exit 1.
+    #
+    # `engine_cwd`, never `base_dir`: base_dir is the gauge path base and the
+    # --from-child base, and overloading it breaks both.
+    engine_cwd = str(Path.cwd().resolve())
+    origin_refusal = origin_worktree_refusal(cl, cwd=engine_cwd, verb=args.verb)
+    if origin_refusal is not None:
+        print(f"{_rail_prefix('check-failure', cl)}REFUSED: {origin_refusal}", file=sys.stderr)
+        return 1
     # #427: arm `refusals` here, on LOAD, but ONLY for the verb that can
     # itself be the very-first-ever attempt to claim (no `engine_session` at
     # all, ever -- release() leaves the record in place with status

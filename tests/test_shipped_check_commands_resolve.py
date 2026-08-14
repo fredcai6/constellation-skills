@@ -90,7 +90,11 @@ ALLOWED_SURVIVOR_SITES = {
 # today. A silent extraction break -- a key rename, a shape change in
 # command_checks() -- would make the sweep below examine zero and find zero
 # offenders, which reads as a clean pass. Asserting the count catches that.
-EXPECTED_COMMAND_CHECK_COUNT = 13
+# 13 -> 12 (#315/#568): the Commander spine's `init` precondition `c0` ran
+# `verify_worktree_isolation.py --here` and was deleted when worktree isolation
+# became engine-native (`checklist_engine.origin_worktree_refusal`). One fewer
+# command check to examine; the tripwire is unchanged in strength.
+EXPECTED_COMMAND_CHECK_COUNT = 12
 
 
 def unresolved_offenders(template_name, resolved_commands):

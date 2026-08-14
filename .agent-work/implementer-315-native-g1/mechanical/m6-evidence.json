@@ -1,0 +1,23 @@
+{
+  "contract": 1,
+  "step": "m6-evidence",
+  "mechanical": {
+    "run": "implementer-315-native-g1",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m6-evidence",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-implementer-315-native-g1-m6-evidence@5c070b9cbbf5f7cae7e300a653dd68692d13b630",
+    "artifact-ref": [
+      "scripts/verify_worktree_precondition_coverage.py"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "implementer-315-native-g1",
+    "generated_at": "2026-08-13T05:49:20Z"
+  }
+}

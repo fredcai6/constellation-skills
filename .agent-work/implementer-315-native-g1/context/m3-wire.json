@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m3-wire",
+  "files": [],
+  "repo_rev": {
+    "commit": "79fa44e5481624aa611bd5956afd8d162616a648"
+  },
+  "run": {
+    "work_id": "implementer-315-native-g1",
+    "generated_at": "2026-08-13T05:32:27Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/epic-568-315-native",
+      "repo": "/home/tommy/projects/constellation-skills-wt/epic-568-315-native",
+      "durable": "/home/tommy/projects/constellation-skills-wt/epic-568-315-native"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/epic-568-315-native"
+    }
+  }
+}

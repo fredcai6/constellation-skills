@@ -158,6 +158,12 @@ def instantiate_spine(
 ) -> Path | None:
     """Write .agent-work/<work-id>/spine.json from ``template`` with placeholders resolved.
 
+    The written spine carries its own repo reference: a top-level ``origin``
+    block stamped here, at creation (#315/#568). ``checklist_engine`` compares
+    ``origin.worktree`` against its own cwd on every guarded verb, so the
+    expected side of that comparison comes from this stamp rather than from a
+    literal inside a check a spine's own text could edit or omit.
+
     Returns the written path, or ``None`` when an existing spine.json is left
     intact because ``force`` was not passed.
     """
@@ -168,12 +174,23 @@ def instantiate_spine(
         return None
     resolved = resolve_spine(template.read_text(encoding="utf-8"), work_id, skill_dir, root)
     # Fail visibly if resolution produced invalid JSON rather than writing a broken spine.
-    json.loads(resolved)
+    spine = json.loads(resolved)
     # Fail visibly if any resolver-owned placeholder survived resolution (#114/#154),
     # rather than writing a spine that will strand the engine on a literal placeholder
-    # many steps into a run.
+    # many steps into a run. Still run against the RESOLVED TEXT, and still before
+    # the write, so the stamp cannot let a broken spine through.
     _assert_no_resolver_placeholders(resolved)
-    dest.write_text(resolved, encoding="utf-8")
+    # Only the three fields this script actually knows. Branch, base, parent and
+    # the dispatching session are `spine_lifecycle.build_origin`'s to fill; a
+    # plausible wrong value here would be worse than an absent one, so they are
+    # omitted rather than guessed. The keys are a strict subset of that block's.
+    # `setdefault`: a template that already carries an origin keeps its own.
+    spine.setdefault("origin", {
+        "work_id": work_id,
+        "worktree": Path(root).resolve().as_posix(),
+        "opened_by": "init_work_area",
+    })
+    dest.write_text(json.dumps(spine, indent=2) + "\n", encoding="utf-8")
     return dest
 
 

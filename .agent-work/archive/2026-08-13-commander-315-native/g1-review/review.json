@@ -1,0 +1,197 @@
+{
+  "work_id": "commander-315-native",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-everyone.md, global-crew.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the reviewer handoff, the implementer handoff and result, and the production diff (checklist_engine.py, init_work_area.py, COMMANDER_SPINE.template.json, docs/CHECKLIST_SCHEMA.md). Full suite launched.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All four parts land as specified, reproduced independently. THE TRAP: the only cwd= in the diff is the keyword arg of the pure Python predicate (checklist_engine.py:3364); no subprocess is added and none receives cwd=. Stored side comes from spine['origin']['worktree'], measured side from Path.cwd().resolve() at checklist_engine.py:3363 -- independent sources. THE ARM, done by my own edits not the implementer's transcript: (a) deleting the setdefault('origin',...) block in init_work_area.py:186 turns 2 StampsOriginAtInstantiation tests red and de-arms repro_native.py (GATE ARMED: False); (b) deleting the 5-line call site in main() turns 7 tests red across RefusesAGuardedVerbFromAForeignTree, TheInProcessMcpDoorShape and TheGuardIsReachedFromExactlyOneSite, and again de-arms the repro. Both restored, tree clean, 33 passed 1 skipped after restore. Refusal fires for real: my own /tmp probe (fresh spine, engine as subprocess) got rc=1 with both trees named.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Every specific exclusion holds: git diff --stat 9bb8c1b6 lists neither scripts/spine_lifecycle.py, scripts/hooks/spine_rail.py, scripts/agent_work_root.py, scripts/mcp_spine_server.py nor scripts/run_crew.py. checklist_engine.py is purely additive (0 removed lines), so base_dir is untouched; the root is carried as engine_cwd. init.preconditions == [] and scripts/verify_worktree_precondition_coverage.py is gone from disk and from git ls-files. The wiring test's surviving assertions are unweakened -- its whole diff is the docstring rewrite, the COVERAGE_SCRIPT constant, the _run_coverage_script helper and the three enumeration classes; no hunk touches EngineDeliberateBreakage or IsolationGateSurvivesThroughTheCLI. FAIL on one point: tests/test_shipped_check_commands_resolve.py:97 (EXPECTED_COMMAND_CHECK_COUNT 13 -> 12) is outside the implementer handoff's Allowed Scope list. The implementer disclosed it and asked for ratification. I verified the edit is mechanically forced and has exactly one correct value: mutating the constant to 13 or to 11 both go red, 12 is green, so the tripwire is not weakened. This needs Commander ratification, not rework.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every required command re-run by me. python -m pytest tests/ -q -p no:randomly -> 1 failed, 2959 passed, 6 skipped, 1130 subtests passed in 118.74s. Mechanical distribution via the handoff's grep|sed|sort|uniq -c -> '1 FAILED tests/test_mcp_lifecycle.py', a single file. Against main's baseline of 2934 passed / 5 skipped / 0 failed that is +25 passed, +1 skipped (the skipUnless(nt) case-folding test), +1 failed; the failure-set difference against main is exactly {tests/test_mcp_lifecycle.py}, as the handoff predicted. repro_native.py exits 0 with GATE ARMED: True and A/C/D PASS, B REFUSED. git diff --stat lists no production file (working tree clean against HEAD); against base 9bb8c1b6 it lists the ten expected files and none of the excluded ones. Passed/skipped/failed counts match the implementer's exactly; my subtest count is 1130 vs their 1128. I did NOT establish the cause of that 2-subtest delta -- some tests enumerate the live .agent-work tree (tests/test_episode_capture.py resolve_roots, tests/test_code_map.py) and my own survey artifacts landed there, which is a plausible but unconfirmed explanation. It changes no pass/fail verdict.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "JOB 3 FALLBACK: my own /tmp probe drove real claim through the engine as a subprocess against eleven hand-built shapes (origin absent, null, string, list, {}; worktree absent, empty, null, int, list, dict). All eleven returned rc=0 with no Traceback -- the string and list cases, where .get raises AttributeError, included. JOB 5 OVERCLAIM: swept code, comments, docstrings, test names, docs and the implementer result for cannot-be-lied / non-forwardable / unforgeable / unfakeable / immune / tamper-proof. Every hit is a NEGATION (checklist_engine.py:126 'It does NOT make the comparison unforgeable'; CHECKLIST_SCHEMA.md:124 the same; implementer result line 45) or sanctioned claim 2 ('unbypassability from the spine'). Two 'immune' hits at checklist_engine.py:902-903 are pre-existing colour-handling text, not in the diff (0 removed lines, hunk starts at 83). The three permitted claims are all stated and none is exceeded. JOB 6 COVERAGE: tests/test_spine_origin_isolation.py drives a spine that really carries origin on both sides (RefusesAGuardedVerbFromAForeignTree covers refuse-from-foreign and succeed-from-worktree/subdirectory). Containment is pinned at both levels: predicate tests for root/subdir/sibling-prefix, plus my own end-to-end probe (repo passes, repo/scripts passes, repo-2 refuses). Verb scope is asserted as data both ways and derived from MUTATING_VERBS, and a second test partitions the live argparse verb list against GUARDED|EXEMPT so a new verb must be classified. Case folding is skipUnless(os.name=='nt'). Nothing cites the wiring test's greenness as proof -- both that file's docstring and the new file's say the opposite, and I measured it: under arm (b) the wiring file still reports 3 passed, so it is genuinely blind to the new behaviour. JOB 7 IN-PROCESS CALLER: TheInProcessMcpDoorShape chdirs to a foreign dir and calls checklist_engine.main in-process (not a subprocess), asserting rc=1 and a byte-identical spine for start, rc=0 for current and release. No env var, no flag, no bypass exists: the diff adds no os.environ/getenv/add_argument, and the predicate's only inputs are the spine dict, cwd and verb. ADDITIONAL CHECKS: is_relative_to is used, startswith does not appear. The guard sits at checklist_engine.py:3363-3367, before the #427 refusals arming and before dispatch, so a refusal neither increments nor persists that counter -- and my probe confirms the spine file is byte- and mtime-identical after a refused claim with no .journal sidecar.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "THE ENSURE_ASCII QUESTION, measured. Three shipped SPINE templates carry non-ASCII: COMMANDER_SPINE (34 chars), EXPLORER_SPINE (13), ADMIRAL_SPINE (12) -- em dashes and middle dots. json.dumps defaults ensure_ascii=True, so the written spine now escapes every one of them: the instantiated Commander spine holds 0 non-ASCII characters and 34 backslash-u escapes where the old verbatim write held 34 literal characters. What does NOT change: parsed content is identical, key order is preserved with origin appended last, exactly one trailing newline as before, and rendered text round-trips to the same characters -- so what the engine prints and what an agent reads is unchanged. What does change: the file bytes. The written spine is also REFORMATTED, which is the larger effect (30801 -> 34660 bytes for the Commander spine; the escapes account for only ~170 of that). Templates hand-format condition dicts on one line; json.dumps(indent=2) expands each onto multiple lines. I found no consumer that reads a written spine as raw text -- no script and no shipped check command greps spine.json -- and the suite is green, so nothing observable breaks today. It is a real behaviour change to record: any future raw-text grep or byte-diff over an instantiated spine sees escaped, reflowed JSON. MAP IMPACT verified against the diff: map/INDEX.md drops scripts.verify_worktree_precondition_coverage, adds tests.test_spine_origin_isolation, and adjusts entity counts; nothing unrelated. The implementer's Map Impact notes match what the diff does. COLLISION AUDIT (audited, not fixed): the failure reproduces and is the only one. Reason #1 of the no-bypass ruling is FALSE as stated -- run_crew.launch_process at scripts/run_crew.py:676 calls subprocess.run(argv, input=, stdout=, stderr=, env=) with no cwd=, and cwd appears nowhere else in that module, so a crew inherits the dispatcher's cwd. Verb scope cannot resolve it: door B drives claim, start, attach, advance; start/attach/advance are all in MUTATING_VERBS, so dropping claim only moves the failure one call down. Option 3 (door supplies SPINE.parent's toplevel as the measured side) is not a real fix: I measured it -- for a spine that init_work_area created at <root>/.agent-work/<id>/spine.json, git rev-parse --show-toplevel from SPINE.parent returns exactly the stamped origin.worktree, equal by construction, because both derive from the same creation act. It is not literally the falsified X == X, since one side is stored text and the other a filesystem fact, but it can only ever fire if the spine FILE is later moved between trees, and it stops measuring where the ACTOR is -- which is the protected intent. I found no honest fix inside the implementer's allowed scope: every real fix changes who sets cwd (run_crew passing cwd=, or the door chdir-ing around the in-process call), and both files are excluded.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/commander-315-native/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/commander-315-native/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from commander-315-native alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/commander-315-native/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All twelve baseline smells visited; verify_fowler_pass.py exits 0 (flagged=[duplicated-code, divergent-change, speculative-generality], overridden=[large-class, primitive-obsession, comments-as-deodorant], each override logging the standard that wins and why). All three flags are non-blocking observations: the three-claims prose is hand-copied into three files with nothing checking the copies against each other; checklist_engine.py accretes another independent reason-to-change; and ORIGIN_EXEMPT_VERBS has no production consumer (proven off the predicate's code object -- co_names carries only ORIGIN_GUARDED_VERBS). Record at .agent-work/commander-315-native/FOWLER_PASS.json.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/commander-315-native/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [
+      "r2-scope: Every specific exclusion holds: git diff --stat 9bb8c1b6 lists neither scripts/spine_lifecycle.py, scripts/hooks/spine_rail.py, scripts/agent_work_root.py, scripts/mcp_spine_server.py nor scripts/run_crew.py. checklist_engine.py is purely additive (0 removed lines), so base_dir is untouched; the root is carried as engine_cwd. init.preconditions == [] and scripts/verify_worktree_precondition_coverage.py is gone from disk and from git ls-files. The wiring test's surviving assertions are unweakened -- its whole diff is the docstring rewrite, the COVERAGE_SCRIPT constant, the _run_coverage_script helper and the three enumeration classes; no hunk touches EngineDeliberateBreakage or IsolationGateSurvivesThroughTheCLI. FAIL on one point: tests/test_shipped_check_commands_resolve.py:97 (EXPECTED_COMMAND_CHECK_COUNT 13 -> 12) is outside the implementer handoff's Allowed Scope list. The implementer disclosed it and asked for ratification. I verified the edit is mechanically forced and has exactly one correct value: mutating the constant to 13 or to 11 both go red, 12 is green, so the tripwire is not weakened. This needs Commander ratification, not rework."
+    ],
+    "summary": "APPROVE on jobs 1-7 and the additional checks, judged excluding the floated tests/test_mcp_lifecycle.py collision. The trap is not reproduced (no forwarded cwd, no new subprocess, independent stored/measured sides), both halves arm red under my own reverts, all eleven malformed-origin shapes fall back without raising, every no-go holds, the withdrawn non-forwardability claim appears nowhere except as an explicit negation, the new coverage exercises a real origin-carrying spine on both sides with containment and a data-derived verb set, and the in-process MCP shape is tested with no env or flag bypass. MERGE READINESS: NOT READY -- the failure-set difference against main's 0-failed baseline is exactly {tests/test_mcp_lifecycle.py}, reproduced twice, and the launch order's merge gate is an empty difference.",
+    "override_reason": "r2-scope is recorded fail for one disclosed out-of-scope edit: tests/test_shipped_check_commands_resolve.py:97, EXPECTED_COMMAND_CHECK_COUNT 13 -> 12. It does not bar this change. The edit is mechanically forced by the Admiral-authorized init.c0 deletion, the implementer disclosed it and asked for ratification rather than hiding it, and I proved 12 is the only correct value by mutating it to 13 and to 11 and watching both go red. It needs Commander ratification, not rework, and it is outside jobs 1-7 on which the verdict is scoped."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r2-scope",
+      "statement": "run_crew.launch_process (scripts/run_crew.py:676) spawns every crew with no cwd=, so a crew inherits the dispatcher's cwd rather than its own spine's worktree -- latent beyond this change, confirmed by reading the function."
+    },
+    {
+      "id": "tc2",
+      "from": "r2-scope",
+      "statement": "tests/test_shipped_check_commands_resolve.py's EXPECTED_COMMAND_CHECK_COUNT is a hand-maintained census that no template edit updates automatically; a deletion elsewhere breaks it silently until the suite runs."
+    },
+    {
+      "id": "tc3",
+      "from": "r2-scope",
+      "statement": "scripts/mcp_spine_server.py is architected to be cwd-independent (every path derivation takes an explicit cwd= anchored on SPINE's location); an engine that reads ambient cwd is in standing tension with that invariant and the tension will recur for any future cwd-sensitive engine behaviour."
+    },
+    {
+      "id": "tc4",
+      "from": "r6-fowler",
+      "statement": "checklist_engine.py (~3450 lines) now changes for gauge, lease, rail, journal, trip AND worktree-identity reasons; the reason-to-change count is worth a Cartographer look, though extracting a one-caller predicate today would mint a single-adapter seam."
+    }
+  ],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "g1-review-reviewer-attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-13T05:59:04.185198+00:00",
+    "last_heartbeat": "2026-08-13T06:09:41.839651+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-13T06:12:03.622576+00:00"
+  }
+}
