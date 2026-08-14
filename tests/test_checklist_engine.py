@@ -6498,8 +6498,14 @@ class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
                 f"(`advance {gate} --why \"<understanding>\"`) and stop. A fresh agent "
                 f"picks up from your DIGEST; do not begin work at another gate.")
 
-    # (No in-progress no-request helper: every scenario in this class that reaches the
-    # HARD band with no refresh-request pending leaves the active gate PENDING.)
+    def _expected_hard(self, gate, wid):
+        return (f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed. "
+                f"You have taken this as far as this context can carry it — now close THIS "
+                f"gate carrying your handoff (`advance {gate} --why \"<understanding>\"`), "
+                f"request a refresh, and stop. A fresh agent picks up from your DIGEST; do "
+                f"not begin work at another gate. Request the refresh with: attach {gate} "
+                f"--type refresh-request --field seam={gate} --field why_ref={wid}")
+
     def _expected_hard_already_requested(self, gate):
         return (f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed, "
                 f"and the refresh for {gate} is already requested. Close THIS gate carrying "
@@ -6622,10 +6628,22 @@ class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
         E.start(cl, "g2")
         E.advance(cl, "g2", why="u2 — the offender's own close, the gate its own HARD advisory told it to close")
         self.assertEqual(len(cl["trip_ledger"]), 1)  # retained, not deleted
-        self.assertEqual(cl["tasks"]["g3"]["status"], "pending")  # the new active gate
+        # UNDER ADJUDICATION — this assertion is LEFT AS IT WAS ON PURPOSE, and it FAILS.
+        # The active gate here is g3: not the gate this agent is trapped in, but the next
+        # one, reached by the agent's OWN close. #510's new pending branch therefore tells
+        # it "begin THIS guarded gate (`start g3`)" and, in the same sentence, "do not begin
+        # work at another gate" — while `_trip_hard_gate` refuses that very `start` with
+        # "this is not the moment to BEGIN work here ... so a FRESH agent starts this one".
+        # Following the advisory literally releases the begin and stamps the agent as an
+        # over-the-line offender in the trip ledger for obeying the engine's own advice.
+        # The pre-change wording below is ALSO wrong here (`advance` on a pending gate is
+        # refused), so no expectation in this file is correct until the wording for the
+        # after-my-own-close case is decided. That decision is agent-visible behavior and is
+        # not this lane's to make (launch order pre-ruling 2), so the expectation is not
+        # re-pinned to either wording. Floated to the Admiral; see FINDINGS-wave2-repair.md.
         self.assertEqual(
             self._advisory(cl),
-            self._expected_hard_pending("g3", "w-2")
+            self._expected_hard("g3", "w-2")
             + self._expected_historical_note(1, "start", "g2", "begin-refused"))
 
     def test_compliance_line_reaches_the_agent_through_current_at_the_cli_boundary(self):
