@@ -3809,21 +3809,36 @@ class TripHardGuardsBeginNotClose(unittest.TestCase):
 
     def test_handoff_hard_advisory_reads_as_a_changed_instruction(self):
         """#431 is an instruction-conformance defect, so the fix is verified on what
-        the agent is TOLD. At HARD the advisory must read as a changed instruction —
-        close this gate carrying your handoff, request a refresh, stop — and never as
-        an alarm about being unsafe or blocked."""
+        the agent is TOLD. At HARD on a pending gate the advisory must state the
+        legal sequence — request refresh, begin the guarded gate, then advance with
+        a handoff — and never read as an alarm about being unsafe or blocked."""
         cl = self._g2_pending_after_g1()  # g2 active/pending, live why-record w-1
         out = self._hard_advisory(cl, self.over_hard)
         self.assertEqual(out, (
             f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed. "
-            f"You have taken this as far as this context can carry it — now close THIS "
-            f"gate carrying your handoff (`advance g2 --why \"<understanding>\"`), "
-            f"request a refresh, and stop. A fresh agent picks up from your DIGEST; do "
-            f"not begin work at another gate. Request the refresh with: attach g2 "
-            f"--type refresh-request --field seam=g2 --field why_ref=w-1"
+            f"First request a refresh with: attach g2 --type refresh-request --field "
+            f"seam=g2 --field why_ref=w-1; then begin THIS guarded gate (`start g2`); "
+            f"then close it carrying your handoff (`advance g2 --why \"<understanding>\"`) "
+            f"and stop. A fresh agent picks up from your DIGEST; do not begin work at "
+            f"another gate."
         ))
         for alarm in ("BLOCKED", "unsafe", "runaway", "lost"):
             self.assertNotIn(alarm, out)
+
+    def test_handoff_pending_hard_refresh_start_advance_preserves_digest_on_successor_current(self):
+        """The pending-HARD remedy is executable in the stated order, and its
+        handoff remains visible to the successor through `current`."""
+        cl = self._g2_pending_after_g1()
+        handoff = "g2: completed under the fresh refresh request"
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            self.assertTrue(E.dispatch(cl, _start_ns("g2"), base_dir=Path(".")).endswith(
+                "g2 -> in-progress"))
+            self.assertTrue(E.dispatch(cl, _advance_ns("g2", why=handoff), base_dir=Path(".")).endswith(
+                "g2 -> complete"))
+        self.assertEqual(cl["tasks"]["g3"]["status"], "pending")
+        self.assertEqual(E._digest(cl), handoff)
+        self.assertIn(f"DIGEST: {handoff}", E.current(cl))
 
     def test_handoff_hard_advisory_with_refresh_already_requested_reads_as_an_instruction(self):
         cl = self._g2_pending_after_g1()
@@ -3831,9 +3846,10 @@ class TripHardGuardsBeginNotClose(unittest.TestCase):
         out = self._hard_advisory(cl, self.over_hard)
         self.assertEqual(out, (
             f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed, "
-            f"and the refresh for g2 is already requested. Close THIS gate carrying "
-            f"your handoff (`advance g2 --why \"<understanding>\"`) and stop. A fresh "
-            f"agent picks up from your DIGEST; do not begin work at another gate."
+            f"and the refresh for g2 is already requested. Now begin THIS guarded gate "
+            f"(`start g2`), then close it carrying your handoff (`advance g2 --why "
+            f"\"<understanding>\"`) and stop. A fresh agent picks up from your DIGEST; "
+            f"do not begin work at another gate."
         ))
         for alarm in ("BLOCKED", "unsafe", "runaway", "lost"):
             self.assertNotIn(alarm, out)

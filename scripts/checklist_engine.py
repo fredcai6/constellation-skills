@@ -1724,14 +1724,29 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
         # wording ("`advance` is BLOCKED", "lost to a runaway") read as an alarm about
         # a mechanism failing, and an agent that reads an alarm looks for a way past it
         # instead of doing the one thing it is being asked to do. So the HARD band
-        # states a CHANGED INSTRUCTION: close the gate you are in, request a refresh,
-        # stop. It also no longer claims `advance` is blocked, because it is not.
+        # states a CHANGED INSTRUCTION. For pending gates: request refresh, begin the
+        # guarded gate, then close it with a handoff. For in-progress gates: close it
+        # with a handoff and stop. It also no longer claims `advance` is blocked,
+        # because it is not.
+        pending = cl["tasks"][gate].get("status") == "pending"
         if has_pending_refresh_request(cl, gate, why_ref=wid):
+            if pending:
+                return (f"\nCONTEXT {fill:.0%} (>= hard): your instruction has changed, and "
+                        f"the refresh for {gate} is already requested. Now begin THIS guarded "
+                        f"gate (`start {gate}`), then close it carrying your handoff "
+                        f"(`advance {gate} --why \"<understanding>\"`) and stop. A fresh agent "
+                        f"picks up from your DIGEST; do not begin work at another gate.") + live_note + historical_note
             return (f"\nCONTEXT {fill:.0%} (>= hard): your instruction has changed, and "
                     f"the refresh for {gate} is already requested. Close THIS gate "
                     f"carrying your handoff (`advance {gate} --why \"<understanding>\"`) "
                     f"and stop. A fresh agent picks up from your DIGEST; do not begin "
                     f"work at another gate.") + live_note + historical_note
+        if pending:
+            return (f"\nCONTEXT {fill:.0%} (>= hard): your instruction has changed. "
+                    f"First request a refresh with: {_refresh_attach_hint(gate, wid)}; then "
+                    f"begin THIS guarded gate (`start {gate}`); then close it carrying your "
+                    f"handoff (`advance {gate} --why \"<understanding>\"`) and stop. A fresh "
+                    f"agent picks up from your DIGEST; do not begin work at another gate.") + live_note + historical_note
         return (f"\nCONTEXT {fill:.0%} (>= hard): your instruction has changed. You have "
                 f"taken this as far as this context can carry it — now close THIS gate "
                 f"carrying your handoff (`advance {gate} --why \"<understanding>\"`), "
