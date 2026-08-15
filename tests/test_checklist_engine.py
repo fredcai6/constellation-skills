@@ -3809,21 +3809,36 @@ class TripHardGuardsBeginNotClose(unittest.TestCase):
 
     def test_handoff_hard_advisory_reads_as_a_changed_instruction(self):
         """#431 is an instruction-conformance defect, so the fix is verified on what
-        the agent is TOLD. At HARD the advisory must read as a changed instruction —
-        close this gate carrying your handoff, request a refresh, stop — and never as
-        an alarm about being unsafe or blocked."""
+        the agent is TOLD. At HARD on a pending gate the advisory must state the
+        legal sequence — request refresh, begin the guarded gate, then advance with
+        a handoff — and never read as an alarm about being unsafe or blocked."""
         cl = self._g2_pending_after_g1()  # g2 active/pending, live why-record w-1
         out = self._hard_advisory(cl, self.over_hard)
         self.assertEqual(out, (
             f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed. "
-            f"You have taken this as far as this context can carry it — now close THIS "
-            f"gate carrying your handoff (`advance g2 --why \"<understanding>\"`), "
-            f"request a refresh, and stop. A fresh agent picks up from your DIGEST; do "
-            f"not begin work at another gate. Request the refresh with: attach g2 "
-            f"--type refresh-request --field seam=g2 --field why_ref=w-1"
+            f"First request a refresh with: attach g2 --type refresh-request --field "
+            f"seam=g2 --field why_ref=w-1; then begin THIS guarded gate (`start g2`); "
+            f"then close it carrying your handoff (`advance g2 --why \"<understanding>\"`) "
+            f"and stop. A fresh agent picks up from your DIGEST; do not begin work at "
+            f"another gate."
         ))
         for alarm in ("BLOCKED", "unsafe", "runaway", "lost"):
             self.assertNotIn(alarm, out)
+
+    def test_handoff_pending_hard_refresh_start_advance_preserves_digest_on_successor_current(self):
+        """The pending-HARD remedy is executable in the stated order, and its
+        handoff remains visible to the successor through `current`."""
+        cl = self._g2_pending_after_g1()
+        handoff = "g2: completed under the fresh refresh request"
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            self.assertTrue(E.dispatch(cl, _start_ns("g2"), base_dir=Path(".")).endswith(
+                "g2 -> in-progress"))
+            self.assertTrue(E.dispatch(cl, _advance_ns("g2", why=handoff), base_dir=Path(".")).endswith(
+                "g2 -> complete"))
+        self.assertEqual(cl["tasks"]["g3"]["status"], "pending")
+        self.assertEqual(E._digest(cl), handoff)
+        self.assertIn(f"DIGEST: {handoff}", E.current(cl))
 
     def test_handoff_hard_advisory_with_refresh_already_requested_reads_as_an_instruction(self):
         cl = self._g2_pending_after_g1()
@@ -3831,9 +3846,10 @@ class TripHardGuardsBeginNotClose(unittest.TestCase):
         out = self._hard_advisory(cl, self.over_hard)
         self.assertEqual(out, (
             f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed, "
-            f"and the refresh for g2 is already requested. Close THIS gate carrying "
-            f"your handoff (`advance g2 --why \"<understanding>\"`) and stop. A fresh "
-            f"agent picks up from your DIGEST; do not begin work at another gate."
+            f"and the refresh for g2 is already requested. Now begin THIS guarded gate "
+            f"(`start g2`), then close it carrying your handoff (`advance g2 --why "
+            f"\"<understanding>\"`) and stop. A fresh agent picks up from your DIGEST; "
+            f"do not begin work at another gate."
         ))
         for alarm in ("BLOCKED", "unsafe", "runaway", "lost"):
             self.assertNotIn(alarm, out)
@@ -6054,16 +6070,23 @@ class TripLedgerRecordsBeginsOverTheLine(unittest.TestCase):
     # --- shape 2: an over-the-line BEGIN that was RELEASED ------------------- #
     def test_ledger_begin_released_is_recorded_when_the_same_verb_runs_over_the_line(self):
         """Both worlds run the IDENTICAL command on the IDENTICAL spine and both
-        succeed — g2 goes `in-progress` either way. The ONLY difference is which
-        side of the hard line the gauge reads. Differing field: `trip_ledger`
-        (absent below the line vs one `begin-released` entry over it)."""
+        succeed — g1 goes back to `in-progress` either way. The ONLY difference is
+        which side of the hard line the gauge reads. Differing field: `trip_ledger`
+        (absent below the line vs one `begin-released` entry over it).
+
+        #510: the begin exercised here is a `reopen`, which the HARD advisory never
+        instructs — it drives a COMPLETE gate back to in-progress and cascades
+        downstream, so it is a genuine begin-work-you-cannot-finish move. This test
+        used to run `start g2`, which is now the ONE begin the advisory itself
+        mandates at a pending gate and is therefore recorded as `begin-instructed`
+        (see `TripInstructedBeginIsNotAnOffence`). The released-begin guarantee this
+        test exists for is unchanged; only the verb that still earns it is."""
         def _run(fill):
             cl = self._g2_pending_after_g1()
-            E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+            E.attach(cl, "g1", "refresh-request", {"seam": "g1", "why_ref": "w-1"})
             with mock.patch.object(E, "_read_gauge", return_value=_reading(fill)):
-                msg = E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
-            self.assertTrue(msg.endswith("g2 -> in-progress"), msg)
-            self.assertEqual(cl["tasks"]["g2"]["status"], "in-progress")
+                E.dispatch(cl, _reopen_ns("g1", reason="rework"), base_dir=Path("."))
+            self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
             return cl
 
         healthy = _run(self.under_hard)
@@ -6074,8 +6097,8 @@ class TripLedgerRecordsBeginsOverTheLine(unittest.TestCase):
         self.assertIsInstance(led, list)
         self.assertEqual(len(led), 1)
         self.assertEqual(led[0]["outcome"], "begin-released")
-        self.assertEqual(led[0]["gate"], "g2")
-        self.assertEqual(led[0]["verb"], "start")
+        self.assertEqual(led[0]["gate"], "g1")
+        self.assertEqual(led[0]["verb"], "reopen")
 
     # --- the entry's own shape ---------------------------------------------- #
     def test_ledger_entry_carries_every_field_including_the_live_why_ref(self):
@@ -6125,8 +6148,13 @@ class TripLedgerRecordsBeginsOverTheLine(unittest.TestCase):
         self.assertEqual(len(led), 3)  # the count this guard looped over
         self.assertEqual([e["id"] for e in led], ["tl-1", "tl-2", "tl-3"])
         self.assertEqual([e["verb"] for e in led], ["start", "reopen", "start"])
+        # #510: the third begin is the `start` of the pending ACTIVE gate with a
+        # matching request on file — the one the HARD advisory itself instructs — so
+        # it is recorded under its own outcome rather than as an over-the-line
+        # begin. Append-only is the property under test and it holds across all
+        # three kinds; the released case is pinned by the two tests above.
         self.assertEqual([e["outcome"] for e in led],
-                         ["begin-refused", "begin-refused", "begin-released"])
+                         ["begin-refused", "begin-refused", "begin-instructed"])
         self.assertEqual(led[0], first)  # the earliest entry was never mutated
 
     # --- end to end through the CLI ------------------------------------------ #
@@ -6181,21 +6209,26 @@ class TripLedgerRecordsBeginsOverTheLine(unittest.TestCase):
             self.assertEqual(defective["tasks"]["g2"]["status"], "pending")
 
     def test_ledger_begin_released_is_recorded_through_the_cli(self):
+        """#510: `reopen`, not `start` — same reason as the in-process released-begin
+        test above. A `start` of the pending active gate with a request on file is
+        the begin the advisory itself instructs and is recorded as
+        `begin-instructed`; every other released begin still lands here."""
         with tempfile.TemporaryDirectory() as d:
             f = self._cli_spine(d)
             self._write_gauge(d, min(self.hard + 0.05, 1.0),
                               datetime.now(timezone.utc).isoformat())
             self.assertEqual(
-                E.main(["--file", str(f), "attach", "g2", "--type", "refresh-request",
-                        "--field", "seam=g2", "--field", "why_ref=w-1"]), 0)
-            self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 0)
+                E.main(["--file", str(f), "attach", "g1", "--type", "refresh-request",
+                        "--field", "seam=g1", "--field", "why_ref=w-1"]), 0)
+            self.assertEqual(
+                E.main(["--file", str(f), "reopen", "g1", "--reason", "rework"]), 0)
             cl = E.load(f)
-            self.assertEqual(cl["tasks"]["g2"]["status"], "in-progress")
+            self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
             led = cl.get("trip_ledger")
             self.assertIsInstance(led, list)
             self.assertEqual(len(led), 1)
             self.assertEqual(led[0]["outcome"], "begin-released")
-            self.assertEqual(led[0]["gate"], "g2")
+            self.assertEqual(led[0]["gate"], "g1")
 
 
 class TripLedgerComplianceSignal(unittest.TestCase):
@@ -6459,6 +6492,29 @@ class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
             return E._trip_advisory(cl, Path("."))
 
     # --- the exact strings, so both worlds are pinned ----------------------- #
+    # #510: the HARD band states a different instruction for a PENDING guarded gate
+    # than for an in-progress one, because `advance` on a pending gate is refused
+    # ("must be in-progress to advance") — so the in-progress wording, shown at a
+    # pending gate, named a command the engine would reject. These tests are #467
+    # tests: their differing field is the TRIP LEDGER / TRIP HISTORY line, and the
+    # base advisory is only a pinned prefix keeping each assertion a whole-string
+    # equality. Each helper below is that same prefix for the status its scenario
+    # actually leaves the active gate in.
+    def _expected_hard_pending(self, gate, wid):
+        return (f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed. "
+                f"First request a refresh with: attach {gate} --type refresh-request "
+                f"--field seam={gate} --field why_ref={wid}; then "
+                f"begin THIS guarded gate (`start {gate}`); then close it carrying your "
+                f"handoff (`advance {gate} --why \"<understanding>\"`) and stop. A fresh "
+                f"agent picks up from your DIGEST; do not begin work at another gate.")
+
+    def _expected_hard_already_requested_pending(self, gate):
+        return (f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed, and "
+                f"the refresh for {gate} is already requested. Now begin THIS guarded "
+                f"gate (`start {gate}`), then close it carrying your handoff "
+                f"(`advance {gate} --why \"<understanding>\"`) and stop. A fresh agent "
+                f"picks up from your DIGEST; do not begin work at another gate.")
+
     def _expected_hard(self, gate, wid):
         return (f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed. "
                 f"You have taken this as far as this context can carry it — now close THIS "
@@ -6494,14 +6550,15 @@ class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
 
     # --- shape 4: the rendered signal ---------------------------------------- #
     def test_compliance_line_appears_on_the_hard_advisory_only_in_the_defective_world(self):
+        # g2 is PENDING in both worlds: the refused begin does not start it.
         healthy = self._g2_pending_after_g1()
-        self.assertEqual(self._advisory(healthy), self._expected_hard("g2", "w-1"))
+        self.assertEqual(self._advisory(healthy), self._expected_hard_pending("g2", "w-1"))
 
         defective = self._g2_pending_after_g1()
         self._refuse_start(defective)
         self.assertEqual(
             self._advisory(defective),
-            self._expected_hard("g2", "w-1")
+            self._expected_hard_pending("g2", "w-1")
             + self._expected_note(1, "start", "g2", "begin-refused"))
 
     def test_compliance_line_also_rides_the_already_requested_hard_advisory(self):
@@ -6510,18 +6567,29 @@ class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
         one, where work actually proceeded over the line — silent."""
         healthy = self._g2_pending_after_g1()
         E.attach(healthy, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
-        self.assertEqual(self._advisory(healthy),
-                         self._expected_hard_already_requested("g2"))
+        self.assertEqual(self._advisory(healthy),  # g2 still PENDING: nothing began it
+                         self._expected_hard_already_requested_pending("g2"))
 
+        # In the defective world the agent files a request at g3 as well and aims a
+        # begin THERE — at a gate its advisory never named. That begin is released
+        # by its own request and is a genuine over-the-line begin. It then takes the
+        # instructed `start g2`, so g2 is in-progress and the advisory is the
+        # in-progress instruction. (#510: `start g2` alone no longer serves here —
+        # it is the begin the advisory itself mandates, recorded as
+        # `begin-instructed`, which is exactly what must NOT ride this line.)
         defective = self._g2_pending_after_g1()
         E.attach(defective, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        E.attach(defective, "g3", "refresh-request", {"seam": "g3", "why_ref": "w-1"})
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
-            E.dispatch(defective, _start_ns("g2"), base_dir=Path("."))  # released
-        self.assertEqual(defective["trip_ledger"][0]["outcome"], "begin-released")
+            with self.assertRaises(E.EngineError):  # `start` rejects a non-active gate
+                E.dispatch(defective, _start_ns("g3"), base_dir=Path("."))
+            E.dispatch(defective, _start_ns("g2"), base_dir=Path("."))  # instructed
+        self.assertEqual([e["outcome"] for e in defective["trip_ledger"]],
+                         ["begin-released", "begin-instructed"])
         self.assertEqual(
             self._advisory(defective),
             self._expected_hard_already_requested("g2")
-            + self._expected_note(1, "start", "g2", "begin-released"))
+            + self._expected_note(1, "start", "g3", "begin-released"))
 
     def test_compliance_line_names_the_count_and_the_latest_begin(self):
         """The count is real, not a hardcoded 1, and the named begin is the LATEST
@@ -6533,12 +6601,18 @@ class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
             E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
         self.assertEqual(len(cl["trip_ledger"]), 3)  # the count this guard looped over
+        # #510: three entries are on the ledger but only TWO are over-the-line
+        # begins — the third is the advisory's own instructed `start`. So the
+        # rendered count is the count of COUNTED entries, and the named begin is the
+        # latest COUNTED one, not simply the last row of the ledger. That is a
+        # sharper version of what this test has always asserted.
         out = self._advisory(cl)
         self.assertEqual(
             out,
             self._expected_hard_already_requested("g2")
-            + self._expected_note(3, "start", "g2", "begin-released"))
+            + self._expected_note(2, "start", "g2", "begin-refused"))
         self.assertNotIn("1 begin(s)", out)
+        self.assertNotIn("3 begin(s)", out)
 
     # --- #467 B1 rework: the HISTORICAL line, additive and rendered separately - #
 
@@ -6586,9 +6660,20 @@ class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
         E.start(cl, "g2")
         E.advance(cl, "g2", why="u2 — the offender's own close, the gate its own HARD advisory told it to close")
         self.assertEqual(len(cl["trip_ledger"]), 1)  # retained, not deleted
+        # ADJUDICATED (#510, wave 2). The active gate here is g3 — not the gate this
+        # agent is trapped in, but the next one, reached by the agent's OWN close — and
+        # g3 is PENDING, so the pending wording is the correct one: `advance` on a
+        # pending gate is refused, so `start g3` then `advance g3 --why` really is the
+        # only way this agent can leave its handoff at g3. The human ruled that the
+        # ENGINE yields, not the prose: obeying that instruction is now recorded as
+        # `begin-instructed` and is not counted as an over-the-line begin, so the
+        # advisory no longer tells the agent to do something its own compliance signal
+        # then punishes. The historical line below still names the g2 begin, which WAS
+        # a real offence (a start with no refresh requested). See
+        # TripInstructedBeginIsNotAnOffence for the engine-behaviour regression.
         self.assertEqual(
             self._advisory(cl),
-            self._expected_hard("g3", "w-2")
+            self._expected_hard_pending("g3", "w-2")
             + self._expected_historical_note(1, "start", "g2", "begin-refused"))
 
     def test_compliance_line_reaches_the_agent_through_current_at_the_cli_boundary(self):
@@ -6617,6 +6702,156 @@ class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
             with self.subTest(fill=fill):
                 with mock.patch.object(E, "_read_gauge", return_value=_reading(fill)):
                     self.assertNotIn("TRIP LEDGER", E._trip_advisory(cl, Path(".")))
+
+
+class TripInstructedBeginIsNotAnOffence(unittest.TestCase):
+    """#510 (the engine half) — the HARD advisory at a PENDING gate INSTRUCTS a
+    `start`, and the engine must not brand the agent that obeys it.
+
+    `advance` is refused on a pending gate ("must be in-progress to advance"), so
+    the ONLY way an over-the-line agent can leave its handoff AT a pending gate is
+    the sequence the advisory names: request the refresh, `start` the gate, then
+    `advance --why`. That start does not begin work the agent cannot finish — it is
+    the handoff mechanism itself. #467 predates that instruction and recorded it as
+    `begin-released`, so the compliance signal reported an offence for obedience.
+
+    The engine now records that ONE configuration as `begin-instructed`: still an
+    append-only ledger entry (nothing is hidden), but not one of the two outcomes
+    the compliance selectors count. Everything else #467 guards is untouched, which
+    the positive controls below pin.
+
+    Differing field throughout: what `begin_over_line_records` /
+    `begin_over_line_records_historical` hold after the agent obeys."""
+
+    MODEL = "claude-opus-4-8"
+
+    def setUp(self):
+        _, self.hard = E._gauge_reader.thresholds_for(self.MODEL)
+        self.over_hard = min(self.hard + 0.05, 1.0)
+
+    def _three_gates(self):
+        return gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=False),
+            g3=gate("g3", "pending", command=PASS_COMMAND, why_exempt=False),
+        )
+
+    def _pending_gate_reached_by_my_own_close(self):
+        """g2 is pending and active because THIS agent legally closed g1 with a
+        handoff — the exact seam the floated contradiction was measured at."""
+        cl = self._three_gates()
+        E.advance(cl, "g1", why="u1")
+        return cl
+
+    def _obey_the_advisory(self, cl, gate_id):
+        """Do literally what the HARD pending advisory says, in its stated order."""
+        rec = E._latest_why_record(cl)
+        wid = rec["id"] if rec else None
+        E.attach(cl, gate_id, "refresh-request", {"seam": gate_id, "why_ref": wid})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            return E.dispatch(cl, _start_ns(gate_id), base_dir=Path("."))
+
+    def _advisory(self, cl):
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            return E._trip_advisory(cl, Path("."))
+
+    def test_the_advisory_really_does_instruct_this_start(self):
+        """Positive control on the premise: if the advisory ever stops naming
+        `start <gate>` here, the exemption below is exempting something the engine
+        no longer asks for, and this test says so before the others mislead."""
+        cl = self._pending_gate_reached_by_my_own_close()
+        self.assertEqual(cl["tasks"]["g2"]["status"], "pending")
+        self.assertEqual(E.active_id(cl), "g2")
+        self.assertIn("begin THIS guarded gate (`start g2`)", self._advisory(cl))
+
+    def test_obeying_the_instructed_start_records_no_over_the_line_begin(self):
+        """THE REGRESSION. The agent does exactly what the engine told it to do;
+        neither compliance selector may hold anything afterwards."""
+        cl = self._pending_gate_reached_by_my_own_close()
+        msg = self._obey_the_advisory(cl, "g2")
+
+        # the start is permitted and really opened the gate
+        self.assertTrue(msg.endswith("g2 -> in-progress"), msg)
+        self.assertEqual(cl["tasks"]["g2"]["status"], "in-progress")
+
+        # <-- the differing field: obedience carries no over-the-line begin
+        self.assertEqual(E.begin_over_line_records(cl), [])
+        self.assertEqual(E.begin_over_line_records_historical(cl), [])
+
+    def test_the_instructed_begin_is_still_recorded_never_hidden(self):
+        """De-branding is not deletion: the event stays on the append-only ledger
+        with its own outcome, so an auditor still sees that a begin happened over
+        the line and why it was allowed."""
+        cl = self._pending_gate_reached_by_my_own_close()
+        self._obey_the_advisory(cl, "g2")
+        led = cl["trip_ledger"]
+        self.assertEqual(len(led), 1)
+        self.assertEqual(led[0]["outcome"], "begin-instructed")
+        self.assertEqual(led[0]["gate"], "g2")
+        self.assertEqual(led[0]["verb"], "start")
+        self.assertEqual(led[0]["why_ref"], "w-1")
+        self.assertEqual(set(led[0]), {"id", "gate", "verb", "outcome", "fill",
+                                       "hard", "model", "why_ref", "ts"})
+
+    def test_the_obedient_agent_is_not_named_on_its_next_current(self):
+        """The symptom the float measured, at the render: after obeying, neither
+        compliance line appears. Reported through the same read-only surface the
+        agent actually sees."""
+        cl = self._pending_gate_reached_by_my_own_close()
+        self._obey_the_advisory(cl, "g2")
+        out = self._advisory(cl)
+        self.assertNotIn("TRIP LEDGER:", out)
+        self.assertNotIn("TRIP HISTORY", out)
+
+    # --- the exemption is NARROW: everything else is still an offence -------- #
+
+    def test_a_start_without_the_instructed_refresh_is_still_refused_and_branded(self):
+        """The advisory says request the refresh FIRST. A start that skips it is
+        not the instructed one and is refused exactly as before."""
+        cl = self._pending_gate_reached_by_my_own_close()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertEqual(cl["trip_ledger"][0]["outcome"], "begin-refused")
+        self.assertEqual(len(E.begin_over_line_records(cl)), 1)  # still branded
+
+    def test_a_reopen_over_the_line_is_still_released_and_branded(self):
+        """`reopen` drives a COMPLETE gate back to in-progress and cascades
+        downstream — work the agent cannot finish, and never something the advisory
+        instructs. A pending request still releases it, and it stays an offence."""
+        cl = self._pending_gate_reached_by_my_own_close()
+        E.attach(cl, "g1", "refresh-request", {"seam": "g1", "why_ref": "w-1"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            E.dispatch(cl, _reopen_ns("g1", reason="rework"), base_dir=Path("."))
+        self.assertEqual(cl["trip_ledger"][0]["outcome"], "begin-released")
+        # the LIVE selector is silent here for a reason that predates this change:
+        # `reopen` appends a reopen-marker why-record, which supersedes w-1 (its
+        # documented keying). The unkeyed historical line is the one that must
+        # still name this begin.
+        self.assertEqual(len(E.begin_over_line_records_historical(cl)), 1)  # still branded
+
+    def test_a_start_aimed_at_a_gate_the_advisory_did_not_name_is_still_branded(self):
+        """The exemption is keyed to the ACTIVE gate the advisory names. A start
+        aimed elsewhere is the agent's own choice, so it is recorded as a released
+        begin even though a matching request is on file."""
+        cl = self._pending_gate_reached_by_my_own_close()
+        E.attach(cl, "g3", "refresh-request", {"seam": "g3", "why_ref": "w-1"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            with self.assertRaises(E.EngineError):   # `start` itself rejects a non-active gate
+                E.dispatch(cl, _start_ns("g3"), base_dir=Path("."))
+        self.assertEqual(cl["trip_ledger"][0]["outcome"], "begin-released")
+        self.assertEqual(cl["trip_ledger"][0]["gate"], "g3")
+        self.assertEqual(len(E.begin_over_line_records(cl)), 1)  # still branded
+
+    def test_below_the_line_nothing_is_recorded_at_all(self):
+        """Fail-safe control: the new branch is inside the HARD band and cannot
+        create a ledger on a healthy run."""
+        cl = self._pending_gate_reached_by_my_own_close()
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        with mock.patch.object(E, "_read_gauge",
+                               return_value=_reading(max(self.hard - 0.05, 0.0))):
+            E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertNotIn("trip_ledger", cl)
 
 
 class TripLedgerFailSafeAndEngineOnly(unittest.TestCase):

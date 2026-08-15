@@ -445,20 +445,42 @@ that is, inside `_trip_hard_gate`, which guards `start` and `reopen`.
 | `id` | positional, `tl-<n>`, assigned at append |
 | `gate` | the gate whose BEGIN was judged |
 | `verb` | the begin verb that was run (`start` or `reopen`) |
-| `outcome` | `begin-refused` or `begin-released` — see below |
+| `outcome` | `begin-refused`, `begin-released`, or `begin-instructed` — see below |
 | `fill` | the gauge's fill fraction at the moment of the trip |
 | `hard` | the hard line the agent was judged against, **after** that gate's own `context_headroom_tokens` reserve — so the recorded pair is the same pair the agent was shown |
 | `model` | the model the reading was taken on |
 | `why_ref` | the live why-record id at the moment of the trip; this is what keys the entry to an understanding |
 | `ts` | engine timestamp |
 
-Exactly two outcomes, because both are **begin** outcomes:
+Three outcomes, because all three are **begin** outcomes:
 
 - **`begin-refused`** — no keyed `refresh-request` was pending, so the verb **raised**. The entry
   still survives: `main()` persists state on the `EngineError` path for any verb that is not
   `current` and not `--dry-run`.
 - **`begin-released`** — a keyed `refresh-request` **was** pending, so the guard released and the
-  verb **proceeded while still over the line**. This is the worse of the two: work actually began.
+  verb **proceeded while still over the line**. This is the worst of the three: work actually began.
+- **`begin-instructed`** — a keyed request was pending *and* the begin is the one the HARD advisory
+  itself instructs (#510). Recorded like any other entry, but **not counted** as an over-the-line
+  begin.
+
+**Why `begin-instructed` exists, and why it is not a loophole.** `advance` is refused on a pending
+gate, so an over-the-line agent standing at one cannot leave its handoff without first entering the
+gate. The HARD advisory therefore names an exact sequence — request the refresh, `start` this gate,
+then `advance --why`. That `start` **is** the handoff mechanism; it begins no work it cannot finish.
+Recording it as an over-the-line begin made the compliance signal report an offence for obeying the
+engine, so obedience and evasion produced the same ledger.
+
+Nothing is hidden by the split. The entry is appended exactly as before, same fields, same
+append-only guarantee, so an auditor still sees that a begin happened over the line and why it was
+allowed. What changes is only which outcomes the compliance selectors count — see
+`begin_over_line_records`, which counts `begin-refused` and `begin-released` and ignores anything
+outside that pair.
+
+The exemption is as narrow as the instruction that earns it, and is keyed to the state the advisory
+is rendered from rather than to a verb name. **All three** of these must hold: the verb is `start`,
+the gate is the **active** one, and its status is `pending`. `reopen` (which cascades downstream and
+is never instructed), a `start` with no keyed request pending (the advisory says request *first*),
+and a `start` aimed at any other gate all remain exactly as they were.
 
 **Scoped honesty about `begin-released`.** The entry records the decision **at the guard**, which is
 where the band is evaluated — before the verb runs. If the verb then raises for an unrelated reason

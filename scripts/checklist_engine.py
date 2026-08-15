@@ -1724,14 +1724,29 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
         # wording ("`advance` is BLOCKED", "lost to a runaway") read as an alarm about
         # a mechanism failing, and an agent that reads an alarm looks for a way past it
         # instead of doing the one thing it is being asked to do. So the HARD band
-        # states a CHANGED INSTRUCTION: close the gate you are in, request a refresh,
-        # stop. It also no longer claims `advance` is blocked, because it is not.
+        # states a CHANGED INSTRUCTION. For pending gates: request refresh, begin the
+        # guarded gate, then close it with a handoff. For in-progress gates: close it
+        # with a handoff and stop. It also no longer claims `advance` is blocked,
+        # because it is not.
+        pending = cl["tasks"][gate].get("status") == "pending"
         if has_pending_refresh_request(cl, gate, why_ref=wid):
+            if pending:
+                return (f"\nCONTEXT {fill:.0%} (>= hard): your instruction has changed, and "
+                        f"the refresh for {gate} is already requested. Now begin THIS guarded "
+                        f"gate (`start {gate}`), then close it carrying your handoff "
+                        f"(`advance {gate} --why \"<understanding>\"`) and stop. A fresh agent "
+                        f"picks up from your DIGEST; do not begin work at another gate.") + live_note + historical_note
             return (f"\nCONTEXT {fill:.0%} (>= hard): your instruction has changed, and "
                     f"the refresh for {gate} is already requested. Close THIS gate "
                     f"carrying your handoff (`advance {gate} --why \"<understanding>\"`) "
                     f"and stop. A fresh agent picks up from your DIGEST; do not begin "
                     f"work at another gate.") + live_note + historical_note
+        if pending:
+            return (f"\nCONTEXT {fill:.0%} (>= hard): your instruction has changed. "
+                    f"First request a refresh with: {_refresh_attach_hint(gate, wid)}; then "
+                    f"begin THIS guarded gate (`start {gate}`); then close it carrying your "
+                    f"handoff (`advance {gate} --why \"<understanding>\"`) and stop. A fresh "
+                    f"agent picks up from your DIGEST; do not begin work at another gate.") + live_note + historical_note
         return (f"\nCONTEXT {fill:.0%} (>= hard): your instruction has changed. You have "
                 f"taken this as far as this context can carry it — now close THIS gate "
                 f"carrying your handoff (`advance {gate} --why \"<understanding>\"`), "
@@ -1806,8 +1821,10 @@ def _append_trip_entry(cl: dict, gate: str, verb: str | None, outcome: str,
 
 def begin_over_line_records(cl: dict) -> list[dict]:
     """PURE selector over stored state: every `trip_ledger` entry recording a BEGIN
-    at/over the hard line **under the live understanding**. Its emptiness IS the
-    compliance predicate — an empty list means the engine holds no record of anyone
+    at/over the hard line **under the live understanding**. A `begin-instructed`
+    entry is deliberately NOT one of them (#510): that begin is the one the HARD
+    advisory itself instructs, so counting it would report an offence for obedience.
+    Its emptiness IS the compliance predicate — an empty list means the engine holds no record of anyone
     beginning work over the line under the understanding now in force; a non-empty
     list IS the non-compliance signal.
 
@@ -1889,11 +1906,14 @@ def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None,
 
     #467 (the trip ledger): this is the ONLY mutating chokepoint at which the HARD
     band is evaluated for a BEGIN, so it is the only place an over-the-line begin
-    can be recorded. Both outcomes are recorded here — `begin-refused` (no keyed
+    can be recorded. Three outcomes are recorded here — `begin-refused` (no keyed
     request pending, so the verb raises; `main()` persists on the EngineError path,
-    which is what makes the entry durable) and `begin-released` (a keyed request was
-    pending, so the verb proceeds while still over the line). The entry is the ONE
-    state change a refusal now makes; the gate's own status is still untouched."""
+    which is what makes the entry durable), `begin-released` (a keyed request was
+    pending, so the verb proceeds while still over the line), and `begin-instructed`
+    (#510: the released begin is the `start` the HARD pending advisory itself
+    instructs, so it is recorded but is not counted as an over-the-line begin — see
+    the branch below). The entry is the ONE state change a refusal now makes; the
+    gate's own status is still untouched."""
     if not iid:
         return
     # #467: judged against the reserve declared by the gate being BEGUN — an
@@ -1915,10 +1935,39 @@ def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None,
     rec = _latest_why_record(cl)
     wid = rec["id"] if rec else None
     if has_pending_refresh_request(cl, iid, why_ref=wid):
-        # The backstop is satisfied and the verb proceeds — but it proceeds WHILE
-        # STILL OVER THE LINE, which is exactly the event #467 exists to make
-        # observable. Recorded, then released.
-        _append_trip_entry(cl, iid, verb, "begin-released", reading, hard, wid)
+        # #510: ONE of these releases is the engine's OWN instruction, not the
+        # agent's choice. `advance` is refused on a pending gate, so the only way an
+        # over-the-line agent can leave its handoff AT a pending gate is the exact
+        # sequence `_trip_advisory`'s HARD pending branch names: request the refresh,
+        # `start` this gate, then `advance --why`. That start begins no work it
+        # cannot finish — it IS the handoff mechanism. Recording it as an
+        # over-the-line begin made the compliance signal brand an agent for obeying
+        # the engine, which is the contradiction #510 was ruled on.
+        #
+        # So it is recorded under its OWN outcome. Nothing is hidden: the entry is
+        # appended exactly as before, with the same fields and the same append-only
+        # guarantee, so an auditor still sees a begin happened over the line and why
+        # it was allowed. What changes is that `begin-instructed` is not one of the
+        # two outcomes the compliance selectors count, so obedience stops reading as
+        # non-compliance. The selectors need no change — they already ignore any
+        # outcome outside their pair.
+        #
+        # The exemption is deliberately as narrow as the instruction that earns it,
+        # and is keyed to the state the advisory is rendered from, not to a verb
+        # name alone. `reopen` (which cascades downstream and is never instructed),
+        # a start with no keyed request (the advisory says request FIRST), and a
+        # start aimed at any gate other than the pending ACTIVE one all stay
+        # exactly as #467 left them.
+        instructed = (
+            verb == "start"
+            and iid == active_id(cl)
+            and cl.get("tasks", {}).get(iid, {}).get("status") == "pending"
+        )
+        outcome = "begin-instructed" if instructed else "begin-released"
+        # The backstop is satisfied and the verb proceeds — but a `begin-released`
+        # proceeds WHILE STILL OVER THE LINE, which is exactly the event #467 exists
+        # to make observable. Recorded, then released.
+        _append_trip_entry(cl, iid, verb, outcome, reading, hard, wid)
         return
     _append_trip_entry(cl, iid, verb, "begin-refused", reading, hard, wid)
     raise EngineError(
