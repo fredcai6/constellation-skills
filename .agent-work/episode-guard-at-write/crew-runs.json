@@ -1,0 +1,26 @@
+[
+  {
+    "crew_id": "constellation/episode-guard-at-write/execute/commander/attempt-1",
+    "work_id": "episode-guard-at-write",
+    "gate": "execute",
+    "role": "commander",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/episode-guard-at-write/execute/commander/attempt-1",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 4144214,
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write",
+    "handoff": ".agent-work/episode-guard-at-write/LAUNCH_ORDER.md",
+    "result": null,
+    "spine": ".agent-work/episode-guard-at-write/spine.json",
+    "parent": "admiral-post-568",
+    "stdout": ".agent-work/episode-guard-at-write/crew-runs/execute-commander-attempt-1.stdout.txt",
+    "stderr": ".agent-work/episode-guard-at-write/crew-runs/execute-commander-attempt-1.stderr.txt",
+    "started_at": "2026-08-15T22:09:18.606838+00:00",
+    "last_heartbeat": "2026-08-15T22:09:18.606838+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "model": "sonnet"
+  }
+]

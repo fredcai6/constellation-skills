@@ -2,7 +2,7 @@
 
 ## packages
 evals: 12 modules, 54 entities
-scripts: 58 modules, 1191 entities
+scripts: 58 modules, 1194 entities
 skills: 1 modules, 18 entities
 tests: 80 modules, 4620 entities
 
@@ -29,7 +29,7 @@ tests: 80 modules, 4620 entities
 - [evals.euler-5-smallest-multiple.checks.spine_completed](evals.euler-5-smallest-multiple.checks.spine_completed/INDEX.md) (9 entities, 2 holes): PROCESS check (gating): a constellation ENGINE spine reached a terminal state WITH engine-written provenance -- not merely agent-written JSON (issue #127).
 - [evals.euler-5-smallest-multiple.checks.tests_green](evals.euler-5-smallest-multiple.checks.tests_green/INDEX.md) (3 entities, 3 holes): PROCESS check (gating): tests were WRITTEN and PASS in the workspace.
 
-## scripts (58 modules, 1191 entities)
+## scripts (58 modules, 1194 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -48,7 +48,7 @@ tests: 80 modules, 4620 entities
 - [scripts.hooks.spine_rail](scripts.hooks.spine_rail/INDEX.md) (56 entities, 19 holes): spine_rail.py -- Claude Code hook suite for the Constellation spine rail.
 
 - [scripts.agent_work_root](scripts.agent_work_root/INDEX.md) (6 entities, 1 holes): Resolve the DURABLE `.agent-work` root that survives `git worktree remove`.
-- [scripts.apply_episode_delta](scripts.apply_episode_delta/INDEX.md) (54 entities, 25 holes): Deterministically apply structured episode-delta operations to the episode store.
+- [scripts.apply_episode_delta](scripts.apply_episode_delta/INDEX.md) (57 entities, 25 holes): Deterministically apply structured episode-delta operations to the episode store.
 - [scripts.build_architecture_map](scripts.build_architecture_map/INDEX.md) (16 entities, 15 holes): HOLE: no docstring
 - [scripts.check_corpus_freshness](scripts.check_corpus_freshness/INDEX.md) (11 entities, 7 holes): Report whether an installed constellation corpus is current with upstream main.
 - [scripts.check_skill_freshness](scripts.check_skill_freshness/INDEX.md) (10 entities, 5 holes): Report template drift for a project against its installed-skill baseline.

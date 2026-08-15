@@ -1,0 +1,85 @@
+{
+  "work_id": "episode-guard-at-write-execute",
+  "type": "gated",
+  "items": ["g1-implement"],
+  "tasks": {
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Validate at write time: reject an instruction-shaped episode statement in apply_episode_delta.py",
+      "imperative": "Import scripts/verify_episode_observations.py's triggers_for()/EXCEPTIONS into scripts/apply_episode_delta.py; reject a create/restate-assertion op whose statement trips the guard, scoped to the real store only (_is_real_store), with grandfathered assertions exempt on restate. Do not modify verify_episode_observations.py or tests/test_episode_observations.py. Ship scripts/install_constellation.py's SCRIPT_RUNTIME_COMPANIONS update so the guard travels with the writer into installed skill copies. Produce RED-before/GREEN-after evidence driving the real script, a control, a message that names the offender, and a clean full suite.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "MISSION_FRAME.md confirmed; LAUNCH_ORDER.md hazards (purity, grandfathered exceptions, kind-scoping) read",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "purity hazard established, not assumed: triggers_for()/EXCEPTIONS are pure (regex over given strings); the guard call sits in the apply phase (_apply_create, _apply_restate_assertion), not inside validate_delta, so validate_delta stays exactly as pure as before",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "grandfathered-record hazard resolved: a restate-assertion against an EXCEPTIONS-listed (episode_id, assertion_id) is exempt from the check entirely",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c3",
+          "statement": "RED-before/GREEN-after, control, and offender-naming evidence exist and pass, driving the real script",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write && python -m pytest -q tests/test_episode_observation_guard_at_write.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "9 passed"
+        },
+        {
+          "id": "c4",
+          "statement": "no regression in the not-mine test files whose fixtures write instruction-shaped content through this writer (test_episode_observations.py, test_episode_store.py)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write && python -m pytest -q tests/test_episode_observations.py tests/test_episode_store.py tests/test_episode_fields.py tests/test_episode_negative_control.py tests/test_install_constellation.py tests/test_retirement_guard.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "532 passed"
+        },
+        {
+          "id": "c5",
+          "statement": "clean-env cache-clean full suite: 0 failed",
+          "check": null,
+          "satisfied": false,
+          "satisfied_by": null
+        },
+        {
+          "id": "c6",
+          "statement": "map regenerated (python -m scripts.code_map build --root .); committed if it moved",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "Do not modify scripts/verify_episode_observations.py, tests/test_episode_observations.py, scripts/checklist_engine.py, scripts/run_crew.py, .mcp.json, .claude/settings.json, scripts/hooks/spine_rail.py, existing episodes/ records, or .worktrees/stop-hook-door-binding/.",
+        "Do not change the guard's rules or its exception list.",
+        "Do not reorder the closeout/integrate gate sequence.",
+        "Do not retro-fix existing episodes/ records."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  }
+}
