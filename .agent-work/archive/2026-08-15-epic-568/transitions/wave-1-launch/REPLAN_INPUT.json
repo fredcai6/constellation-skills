@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic 568: engine state has an owner - leases, rails, gauge, dispatch",
+      "spec_path": ".agent-work/epic-568/LATITUDE_CONTRACT.md",
+      "intent_and_why": "Every piece of engine state carries who it belongs to and dies when its owner does. This run builds the ownership substrate (WP1 lease lifecycle, WP2 binding store, WP5 postcondition cwd) that the deferred consumer packages read from. The outcome that must not be violated: the engine stays drivable throughout, because this epic edits the machinery every Commander in it is driving."
+    },
+    "definition_of_done": [
+      "Each in-scope issue closes on a live repro that fails before the fix and passes after.",
+      "A stated honest null closes an issue as a complete deliverable.",
+      "The engine remains drivable by the fleet at every wave boundary."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Repro before and after, plus targeted automated tests and the relevant broader suite per docs/agents/ORCHESTRATOR_CONTEXT.md.",
+      "sufficient_evidence": "A demonstrated repro plus a green suite measured on merged main.",
+      "appetite": "One tranche: WP1 + WP2 + WP5 + issues 530 and 510. Consumer packages WP3, WP4, WP6, WP7 deferred."
+    },
+    "hard_constraints": [
+      "Engine-core files scripts/checklist_engine.py, scripts/hooks/spine_rail.py and scripts/agent_work_root.py are edited by ONE Commander at a time; concurrent edits to them are refused.",
+      "Planning makes no direct gh or network mutation.",
+      "Merge only on a green check exit code plus an independent reviewer APPROVE, gating on the exit code and never chaining a merge onto a watch command."
+    ],
+    "fixed_decisions": [
+      "Wave 1 is issue 315 alone, ahead of all other engine-core work.",
+      "Launched identities remain stable across a transition.",
+      "The contract expires at wave 1 merge; nothing past wave 1 is a launch queue."
+    ],
+    "current_wave": {
+      "objective": "Remove the fail-open in command-kind postcondition checks and repair the corpus-wide blast radius that removing it exposes.",
+      "exit_criteria": [
+        "A repro shows a decoy file in the launcher's directory satisfying a gate before the fix, and failing to satisfy it after.",
+        "Every shipped template carrying a relative command check is enumerated BY COMMAND with a stated count, and each is repaired or explicitly ruled correct under the new resolution.",
+        "The relevant broader suite is green on merged main."
+      ],
+      "issues": [
+        {
+          "id": "315",
+          "title": "engine: command-kind checks inherit the launcher's cwd (no cwd= at all) - five shipped relative checks are silently fragile",
+          "desired_outcome": "A command-kind postcondition check runs where the spine lives, not where the launcher happened to stand, and every relative check in the shipped corpus resolves correctly under that change.",
+          "useful_now": "Every gate verified before this fix lands was verified under a check that cannot fail, so every later fix in this epic would inherit unfalsifiable evidence.",
+          "appetite": "One Commander, serialized engine-core lane, Opus tier.",
+          "acceptance_or_falsification_evidence": "A live repro that fails before and passes after, plus a by-command enumeration of every shipped template carrying a relative command check with its count stated.",
+          "implementation_latitude": "Choose how cwd is threaded and where it is resolved from; preserve the existing POSIX-shell routing and the no-posix-shell visible-failure behavior at checklist_engine.py:775-799.",
+          "hard_constraints_no_gos": [
+            "No concurrent Commander may edit scripts/checklist_engine.py during this wave.",
+            "Do not silently reword the frozen four transcribed clauses in references/global-everyone.md."
+          ],
+          "local_unknowns": [
+            "How many shipped templates carry a relative command check - the issue title says five, which is a claim to re-measure, not to inherit."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            ".agent-work/templates"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Lease lifecycle: release-on-terminal, closeout refusal extended to child plans, backfill of the stale actives, reaper for died-mid-flight runs.",
+        "why_likely": "Issues 552, 383, 357, 369, 318, 330 and 208 are the epic's stated substrate and all sit in the serialized engine-core lane behind wave 1.",
+        "entry_conditions": [
+          "Wave 1 merged and the contract refreshed.",
+          "The 552 denominator settled."
+        ]
+      },
+      {
+        "outcome": "Binding store durability: file lock, unique tmp names, reaper, path validation, one id rule.",
+        "why_likely": "Issue 441's four gaps are confirmed live in scripts/hooks/spine_rail.py:83-103 and its own docstring files two of them as known and unchased.",
+        "entry_conditions": [
+          "Wave 1 merged.",
+          "No concurrent Commander editing spine_rail.py."
+        ]
+      },
+      {
+        "outcome": "The two near-mechanical wins that need no substrate: 530 resolved worktree, 510 HARD-trip advisory text.",
+        "why_likely": "Both are bounded and independent of the lease and binding work, so they can ride the parallel lane.",
+        "entry_conditions": [
+          "Wave 1 merged."
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "How many shipped templates carry a relative command check, and whether the count is the five the issue title claims.",
+        "affects": "Wave 1 appetite and whether wave 1 splits.",
+        "settle_by": "Wave 1 execution.",
+        "current_evidence": "The issue title asserts five. Nothing in this run has re-measured it.",
+        "next_probe": "Enumerate by command across the shipped template corpus and state the count."
+      },
+      {
+        "unknown": "Which spine set the 552 backfill must clear - on-disk or tracked.",
+        "affects": "Wave 2 decomposition and the backfill's own correctness.",
+        "settle_by": "Wave 2 planning.",
+        "current_evidence": "The issue says 43 active on disk. A scan of git ls-files for spine.json finds 91 carrying a session and 24 still active, matching the post-418 handoff W7.",
+        "next_probe": "Scan both sets once and state each count with its denominator."
+      },
+      {
+        "unknown": "Whether a stale active lease on an archived spine blocks anything or is inert.",
+        "affects": "How urgent the 552 backfill is and what the reaper must do.",
+        "settle_by": "Wave 2.",
+        "current_evidence": "The post-418 handoff W7 explicitly did not chase this. _active_lease in checklist_engine.py documents that a released lease does not gate mutation and says nothing about the reverse.",
+        "next_probe": "Drive a mutating verb against an archived spine holding an active lease from a different session."
+      }
+    ],
+    "parked_possibilities": [
+      "WP3 stop-rail attribution beyond 530",
+      "WP4 gauge and governor beyond 510",
+      "WP6 crew dispatch and liveness",
+      "WP7 latitude pre-clearance vs the harness classifier, and CLI arg-injection hardening"
+    ]
+  },
+  "completed_outcomes": [],
+  "wave_evidence": [
+    {
+      "claim": "The command-kind check fail-open filed as 315 is real and present in current main.",
+      "expected": "subprocess.run receives a cwd= argument naming the spine's root.",
+      "observed": "scripts/checklist_engine.py:787 calls subprocess.run([shell, '-c', command], capture_output=True, text=True) with no cwd= argument at all.",
+      "source": "direct read of scripts/checklist_engine.py:775-799 during the latitude interrogation"
+    },
+    {
+      "claim": "Nothing has partially landed against the epic's 31 member issues.",
+      "expected": "Some members closed or partly fixed by PR 564.",
+      "observed": "All 31 member issues are OPEN.",
+      "source": "gh issue view over all 31 member numbers"
+    },
+    {
+      "claim": "The 441 binding-store gaps are present as filed.",
+      "expected": "A lock and a unique tmp name, or an open gap.",
+      "observed": "scripts/hooks/spine_rail.py:83-103 files the lock gap in its own docstring as KNOWN, NOT CHASED, and line 98 builds a shared tmp name from path.name plus .tmp.",
+      "source": "direct read of scripts/hooks/spine_rail.py"
+    },
+    {
+      "claim": "The stale-lease population is smaller than the issue states, under a different denominator.",
+      "expected": "43 active leases, matching issue 552.",
+      "observed": "91 tracked spines carry an engine_session; 24 are still status active.",
+      "source": "scan over git ls-files for spine.json"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "Issue 315 is filed and scoped as a one-line fix, but adding cwd= changes what every relative check in every shipped spine template resolves against.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth",
+      "evidence": "checklist_engine.py:787 has no cwd= at all, and the shipped templates author their command checks as relative paths.",
+      "reason": "The decomposition changes: 315 becomes a wave of its own with a corpus-wide blast radius, not a cheap rider on another wave."
+    },
+    {
+      "id": "D1",
+      "signal": "Issue 552's stale-lease count does not reconcile with what is measurable today.",
+      "classification": "later_only",
+      "affects": "Current planning truth",
+      "evidence": "Issue says 43 active on disk; a scan of tracked spines finds 24 active out of 91 carrying a session.",
+      "reason": "It changes wave 2's backfill scope, not wave 1's exit, so a forecast and uncertainty amendment is sufficient."
+    },
+    {
+      "id": "D2",
+      "signal": "The spine MCP door in this Admiral's session is bound to an unrelated wave-1 scratch demo spine in the f-424 worktree, and the spine-epic door is dead.",
+      "classification": "evidence_only",
+      "affects": "Current planning truth",
+      "evidence": "spine_status returned a gate from constellation-skills-wt/f-424 interactive-demo; spine-epic returned MCP error -32000 connection closed.",
+      "reason": "The CLI fallback is sanctioned and in use with an explicit session id, so nothing is blocked; the observation is worth recording because it is the epic's own defect landing on the epic's Admiral."
+    },
+    {
+      "id": "D3",
+      "signal": "git worktree add was deliberately left out of the pre-cleared allowlist, so provisioning wave 1's isolated worktree will hit the harness permission classifier.",
+      "classification": "evidence_only",
+      "affects": "Current planning truth",
+      "evidence": "The human approved merge-path entries only and deferred branch and worktree management to the closeout checkpoint.",
+      "reason": "The contract's recorded fallback covers it - one live approval, remainder batched - so it is friction to expect, not a blocker to plan around."
+    }
+  ],
+  "open_current_wave_issue_ids": ["315"],
+  "unlaunched_items": [
+    {"id": "U-552", "kind": "issue"},
+    {"id": "U-441", "kind": "issue"},
+    {"id": "U-530", "kind": "issue"},
+    {"id": "U-510", "kind": "issue"},
+    {"id": "U-lease-lifecycle", "kind": "forecast"},
+    {"id": "U-binding-store", "kind": "forecast"},
+    {"id": "U-template-count", "kind": "uncertainty"},
+    {"id": "U-552-denominator", "kind": "uncertainty"},
+    {"id": "U-stale-lease-inert", "kind": "uncertainty"},
+    {"id": "U-wp3-attribution", "kind": "parked"},
+    {"id": "U-wp4-gauge", "kind": "parked"},
+    {"id": "U-wp6-dispatch", "kind": "parked"},
+    {"id": "U-wp7-preclearance", "kind": "parked"}
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/hooks/spine_rail.py",
+      "scripts/agent_work_root.py",
+      ".agent-work/templates"
+    ],
+    "map_status": "Degraded. The post-418 handoff W3 records map_orient.py returning DEGRADED-UNPARSEABLE with anchor count 0; docs/architecture/ is absent and map/INDEX.md carries no citable anchor id. Anchors above are file paths, not map ids."
+  }
+}

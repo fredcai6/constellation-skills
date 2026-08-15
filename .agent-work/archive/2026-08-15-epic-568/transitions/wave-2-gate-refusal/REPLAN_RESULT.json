@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "decision": "replan",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Exit criteria remain measurable and are held verbatim, as are all five launched issue identities. Three launched lanes simply have not met them: each fails its own full Linux suite while main is green, and each failure sits in code the lane already owns. The decision is replan rather than repair only because the forecast genuinely moved -- #441 is fenced by an external Codex quota until 2026-08-20 -- and repair requires the forecast to hold exactly.",
+    "epic_done": "The epic is not complete. Wave 1 substrate is merged; wave 2 has landed nothing.",
+    "good_enough": "The mandatory quality boundary is preserved and is precisely what refused these merges. No standard is being relaxed to let them through."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "D-gate-local-red",
+      "action": "repair_current_wave",
+      "reason": "Locally reproduced against a re-measured baseline; blocks merge by the wave-2 gate",
+      "issue_created": false
+    },
+    {
+      "id": "D-510-own-area",
+      "action": "repair_current_wave",
+      "reason": "Bounded fix inside the lane's own diff; no new scope",
+      "issue_created": false
+    },
+    {
+      "id": "D-530-episode-guard",
+      "action": "repair_current_wave",
+      "reason": "Mechanical; reword the record or add a justified exception",
+      "issue_created": false
+    },
+    {
+      "id": "D-stale-map",
+      "action": "repair_current_wave",
+      "reason": "Mechanical regeneration per the established closeout pattern",
+      "issue_created": false
+    },
+    {
+      "id": "D-pycache-contamination",
+      "action": "revise_plan",
+      "reason": "Silently corrupts measurement in any relocated worktree; needs a guard, not folklore",
+      "issue_created": true
+    },
+    {
+      "id": "D-review-depth",
+      "action": "revise_plan",
+      "reason": "The gate's local half becomes an explicit stated reviewer obligation in every launch order",
+      "issue_created": false
+    },
+    {
+      "id": "D-441-quota",
+      "action": "amend_forecast_or_parked",
+      "reason": "External quota until 2026-08-20; not repairable inside this wave",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Land #530, #510, and Codex tier routing on evidence, after the wave-2 gate refused all three on locally reproduced Linux failures.",
+    "exit_criteria": [
+      "Every item closes on red/green proof or honest measured null.",
+      "Each lane's full Linux suite passes in a cache-clean worktree before publication.",
+      "Independent review approves every positive change and states which suite it actually ran.",
+      "Linux and non-Windows CI are green; Windows-only failures recorded but allowed."
+    ],
+    "issues": [
+      {
+        "id": "lease-lifecycle",
+        "title": "Lease lifecycle cluster",
+        "desired_outcome": "Finished ownership terminates and dead ownership is distinguishable.",
+        "useful_now": "Central ownership substrate.",
+        "appetite": "Measure first; one Sol/Opus Commander if bounded.",
+        "acceptance_or_falsification_evidence": "Dual-denominator scan and live lifecycle proof.",
+        "implementation_latitude": "Bounded internals; migration/backfill floats.",
+        "hard_constraints_no_gos": [
+          "No concurrent engine-core implementation."
+        ],
+        "local_unknowns": [
+          "Boundedness after measurement."
+        ],
+        "anchors": [
+          "scripts/checklist_engine.py",
+          "scripts/spine_lifecycle.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "441",
+        "title": "Binding-store durability",
+        "desired_outcome": "Lossless concurrent claims and one durable identity store.",
+        "useful_now": "Parallel MCP dispatch increases pressure.",
+        "appetite": "One serialized implementation.",
+        "acceptance_or_falsification_evidence": "Real concurrency red/green test.",
+        "implementation_latitude": "Choose mechanics; aging policy floats.",
+        "hard_constraints_no_gos": [
+          "No concurrent spine_rail implementation."
+        ],
+        "local_unknowns": [
+          "Reaper policy."
+        ],
+        "anchors": [
+          "scripts/hooks/spine_rail.py"
+        ],
+        "type": "AFK",
+        "blocks": [
+          "lease-lifecycle"
+        ]
+      },
+      {
+        "id": "530",
+        "title": "Resolved worktree binding",
+        "desired_outcome": "Parents are not blocked on child spines.",
+        "useful_now": "Concurrency amplifies the defect.",
+        "appetite": "Bounded serialized change.",
+        "acceptance_or_falsification_evidence": "Real-worktree red/green guard repro.",
+        "implementation_latitude": "Choose authoritative path source.",
+        "hard_constraints_no_gos": [
+          "No concurrent spine_rail implementation."
+        ],
+        "local_unknowns": [],
+        "anchors": [
+          "scripts/hooks/spine_rail.py"
+        ],
+        "type": "AFK",
+        "blocks": [
+          "lease-lifecycle"
+        ]
+      },
+      {
+        "id": "510",
+        "title": "Pending-gate HARD handoff",
+        "desired_outcome": "Successor reads a boundary-trip DIGEST from current alone.",
+        "useful_now": "Repeated live confusion.",
+        "appetite": "Bounded serialized change.",
+        "acceptance_or_falsification_evidence": "Pending-gate HARD advisory mutation test.",
+        "implementation_latitude": "Smallest compatible mechanism.",
+        "hard_constraints_no_gos": [
+          "No concurrent checklist_engine implementation."
+        ],
+        "local_unknowns": [],
+        "anchors": [
+          "scripts/checklist_engine.py"
+        ],
+        "type": "AFK",
+        "blocks": [
+          "lease-lifecycle"
+        ]
+      },
+      {
+        "id": "codex-model-tier-routing",
+        "title": "Codex tier/worktree routing",
+        "desired_outcome": "Codex dispatch applies model/effort and receives a writable MCP worktree.",
+        "useful_now": "This wave uses tiered Codex agents.",
+        "appetite": "Bounded parallel harness change.",
+        "acceptance_or_falsification_evidence": "Dropped-setting and unwritable-worktree reds become green.",
+        "implementation_latitude": "Preserve Claude defaults.",
+        "hard_constraints_no_gos": [
+          "No engine-core edits."
+        ],
+        "local_unknowns": [],
+        "anchors": [
+          "scripts/run_crew.py",
+          "scripts/mcp_spine_server.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "#441 binding-store durability resumes on its existing spine and lease",
+      "why_likely": "Work is measured and staged; only external Codex quota blocks it",
+      "entry_conditions": [
+        "After 2026-08-20T06:19Z",
+        "After #530 lands, preserving the serialized spine_rail lane"
+      ]
+    },
+    {
+      "outcome": "Lease lifecycle implementation package",
+      "why_likely": "Ruled and scoped by the human; high-risk parts already deferred",
+      "entry_conditions": [
+        "Wave-2 bounded items dispositioned",
+        "Serialized engine-core lane free"
+      ]
+    },
+    {
+      "outcome": "Consumer packages beyond the authorized five",
+      "why_likely": "Downstream of the substrate",
+      "entry_conditions": [
+        "A fresh latitude contract; none is authorized today"
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether #510's shipped advisory wording or its three stale assertions are correct",
+      "affects": "#510 exit and possibly user-visible advisory behavior",
+      "settle_by": "The repair lane's first measurement",
+      "current_evidence": "Three tests assert the pre-change wording; the diff changed it and updated only some",
+      "next_probe": "Diff the intended advisory contract against all asserting tests before editing either side"
+    },
+    {
+      "unknown": "How many past gate results were measured in a contaminated worktree",
+      "affects": "Confidence in any wave-1 or wave-2 evidence taken in a relocated worktree",
+      "settle_by": "The pycache guard issue",
+      "current_evidence": "One confirmed phantom failure; the relocation touched every lane",
+      "next_probe": "Re-measure any gate whose evidence predates the cache clear"
+    }
+  ],
+  "revised_parked": [
+    "Portfolio optimization",
+    "Actor identity, PID-less liveness, durable-root policy"
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "U-consumers",
+      "action": "keep",
+      "reason": "Still forecast-only and unauthorized"
+    },
+    {
+      "id": "U-high-risk",
+      "action": "keep",
+      "reason": "Deferred by the human's lifecycle ruling"
+    },
+    {
+      "id": "U-pycache-guard",
+      "action": "keep",
+      "reason": "Filed from D-pycache-contamination; the suite should refuse a bytecode cache whose embedded root is not the current root, rather than failing as an unrelated assertion"
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "current_wave_outcome",
+      "before": "Three lanes finished with independent reviewer APPROVE and were treated as publishable.",
+      "after": "Publication refused for all three; the wave lands nothing until each passes its own full Linux suite.",
+      "reason": "Re-measuring the baseline at gate time showed main green at 2980/0, so every lane failure is introduced by that lane, and a local Linux failure blocks merge outright."
+    },
+    {
+      "surface": "publication_authority_routing",
+      "before": "The three archive blockers were read as needing a human decision.",
+      "after": "Publication is exercised as the Admiral's delegated merge-to-main class; Commanders never publish.",
+      "reason": "The decision-classes table reads 'Merge to main | delegated' with git push and gh pr create pre-cleared before wave 1. Correcting my own mis-routing."
+    },
+    {
+      "surface": "gate_measurement_procedure",
+      "before": "Suites were run in worktrees as found.",
+      "after": "Bytecode caches are cleared before any gate measurement, and any gate measured in a relocated worktree before 2026-08-14 is re-measured.",
+      "reason": "A .pyc carrying the pre-relocation path constellation-skills-wt/ made inspect.getsource fail, fabricating a failure in a file byte-identical to main. Four falsifications were needed to attribute it."
+    },
+    {
+      "surface": "launch_order_review_criteria",
+      "before": "Review criteria did not state which suite the reviewer must run.",
+      "after": "Every launch order states that the reviewer runs the lane's full Linux suite in a cache-clean worktree and reports the counts.",
+      "reason": "All three reviewers APPROVEd on targeted tests alone, which is how three red lanes reached the merge gate believing they were done. The evidence standard itself is unchanged; the launch order simply failed to state it."
+    },
+    {
+      "surface": "wave_forecast",
+      "before": "#441 follows #530 in the serialized spine_rail lane this wave.",
+      "after": "#441 leaves the active wave and holds its own spine and lease until 2026-08-20T06:19Z.",
+      "reason": "An external Codex approval/usage limit stopped its required red/green execution; nothing inside the wave can lift it."
+    }
+  ],
+  "wave_review_comment": "## Wave review \u2014 wave 2, gate refusal\n\nThree Commanders finished, each with an independent reviewer APPROVE, and each parked correctly at `archive` because their launch orders fence them from publishing. Publication is the Admiral's delegated class, not the human's, and clearing that was mine to do.\n\nIt is as well that they parked. Re-measuring the baseline at gate time rather than reusing it, `main`'s Linux suite is green at 2980 passed / 0 failed \u2014 so every failure below belongs to the lane that produced it.\n\n| Lane | Result | Nature |\n|---|---|---|\n| Codex tier | 1 failed | Stale generated map; change itself clean under 2,985 passing tests |\n| #510 | 4 failed | Three inside the advisory text its own diff rewrote, plus the map |\n| #530 | 3 failed | Its own episode record trips the episode-observation guard, plus the map |\n\nThe wave-2 gate makes any local Linux failure block merge outright, so none of this reaches the CI set-difference step. Nothing is published.\n\nTwo findings outlive the repair. First, a phantom: the Codex lane failed a test whose file is byte-identical to `main`, and it took four falsifications to attribute \u2014 reverting the lane's code, deleting its episodes, and moving `.agent-work` aside all left it red. The `.pyc` embedded `constellation-skills-wt/epic-568-codex-tier-routing`, the path the worktrees occupied before wave 1 relocated them, so `inspect.getsource` resolved to a dead file. Any gate measured in a relocated worktree before today is suspect. Second, and more costly: all three reviewers APPROVEd on targeted tests alone. Review depth, not implementation quality, is what let three red lanes reach the merge gate believing they were done.",
+  "revised_epic_body": "## Current planning truth \u2014 epic #568\n\nWave 1 is merged: spine origin and worktree isolation are on `main` at `0448275e`.\n\nWave 2 has landed nothing. #530, #510, and Codex tier routing are implemented, reviewed, and APPROVEd, but each fails its own full Linux suite in a cache-clean worktree while `main` is green, so the gate refuses all three. Each failure is bounded and sits in code the lane already owns: #510's three stale advisory assertions, #530's episode-guard violation, and a stale generated map in all three. The wave is in repair, not advance; launched identities and fixed intent are unchanged.\n\n#441 leaves the active wave until 2026-08-20T06:19Z, fenced by an external Codex quota, holding its own spine and lease.\n\nTwo process changes carry forward. Bytecode caches are cleared before any gate measurement, because stale `.pyc` files from the wave-1 worktree relocation can fabricate failures that look like defects. And a launch order's review criteria must state that the reviewer runs the lane's full Linux suite \u2014 APPROVE on targeted tests alone is what let three red lanes believe they were finished.\n\nNonbinding forecast: #441 resumes after the quota lifts, then the ruled lease-lifecycle package. No consumer package beyond the authorized items is in scope.",
+  "escalation": null
+}

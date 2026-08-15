@@ -1,0 +1,308 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic #568 \u2014 spine ownership and lifecycle",
+      "spec_path": ".agent-work/epic-568/LATITUDE_CONTRACT.md",
+      "intent_and_why": "Make engine state carry location and ownership, remain correct under concurrency, and die when its owner does."
+    },
+    "definition_of_done": [
+      "Every authorized issue is evidence-dispositioned.",
+      "Every positive fix has a pre-fix failure and post-fix proof.",
+      "Linux and non-Windows CI are green; Windows-only failures are recorded but allowed."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Serialized engine-core implementation and independent review.",
+      "sufficient_evidence": "Live repro, focused and broader tests, exact CI evidence, verified merge.",
+      "appetite": "Five authorized items, with lifecycle required to float if materially complex."
+    },
+    "hard_constraints": [
+      "Spine interaction is MCP-only.",
+      "Only one implementation Commander at a time edits checklist_engine.py, spine_rail.py, or agent_work_root.py.",
+      "Lower-tier agents do not adjudicate architecture or final engine-core review."
+    ],
+    "fixed_decisions": [
+      "Wave 1 origin/worktree substrate remains intact.",
+      "Windows-only failures are non-blocking; non-Windows failures block.",
+      "Merges require exact-head pinning and independent APPROVE."
+    ],
+    "current_wave": {
+      "objective": "Land #530, #510, and Codex tier routing on evidence, after the wave-2 gate refused all three on locally reproduced Linux failures.",
+      "exit_criteria": [
+        "Every item closes on red/green proof or honest measured null.",
+        "Each lane's full Linux suite passes in a cache-clean worktree before publication.",
+        "Independent review approves every positive change and states which suite it actually ran.",
+        "Linux and non-Windows CI are green; Windows-only failures recorded but allowed."
+      ],
+      "issues": [
+        {
+          "id": "lease-lifecycle",
+          "title": "Lease lifecycle cluster",
+          "desired_outcome": "Finished ownership terminates and dead ownership is distinguishable.",
+          "useful_now": "Central ownership substrate.",
+          "appetite": "Measure first; one Sol/Opus Commander if bounded.",
+          "acceptance_or_falsification_evidence": "Dual-denominator scan and live lifecycle proof.",
+          "implementation_latitude": "Bounded internals; migration/backfill floats.",
+          "hard_constraints_no_gos": [
+            "No concurrent engine-core implementation."
+          ],
+          "local_unknowns": [
+            "Boundedness after measurement."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "scripts/spine_lifecycle.py"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "441",
+          "title": "Binding-store durability",
+          "desired_outcome": "Lossless concurrent claims and one durable identity store.",
+          "useful_now": "Parallel MCP dispatch increases pressure.",
+          "appetite": "One serialized implementation.",
+          "acceptance_or_falsification_evidence": "Real concurrency red/green test.",
+          "implementation_latitude": "Choose mechanics; aging policy floats.",
+          "hard_constraints_no_gos": [
+            "No concurrent spine_rail implementation."
+          ],
+          "local_unknowns": [
+            "Reaper policy."
+          ],
+          "anchors": [
+            "scripts/hooks/spine_rail.py"
+          ],
+          "type": "AFK",
+          "blocks": [
+            "lease-lifecycle"
+          ]
+        },
+        {
+          "id": "530",
+          "title": "Resolved worktree binding",
+          "desired_outcome": "Parents are not blocked on child spines.",
+          "useful_now": "Concurrency amplifies the defect.",
+          "appetite": "Bounded serialized change.",
+          "acceptance_or_falsification_evidence": "Real-worktree red/green guard repro.",
+          "implementation_latitude": "Choose authoritative path source.",
+          "hard_constraints_no_gos": [
+            "No concurrent spine_rail implementation."
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/hooks/spine_rail.py"
+          ],
+          "type": "AFK",
+          "blocks": [
+            "lease-lifecycle"
+          ]
+        },
+        {
+          "id": "510",
+          "title": "Pending-gate HARD handoff",
+          "desired_outcome": "Successor reads a boundary-trip DIGEST from current alone.",
+          "useful_now": "Repeated live confusion.",
+          "appetite": "Bounded serialized change.",
+          "acceptance_or_falsification_evidence": "Pending-gate HARD advisory mutation test.",
+          "implementation_latitude": "Smallest compatible mechanism.",
+          "hard_constraints_no_gos": [
+            "No concurrent checklist_engine implementation."
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/checklist_engine.py"
+          ],
+          "type": "AFK",
+          "blocks": [
+            "lease-lifecycle"
+          ]
+        },
+        {
+          "id": "codex-model-tier-routing",
+          "title": "Codex tier/worktree routing",
+          "desired_outcome": "Codex dispatch applies model/effort and receives a writable MCP worktree.",
+          "useful_now": "This wave uses tiered Codex agents.",
+          "appetite": "Bounded parallel harness change.",
+          "acceptance_or_falsification_evidence": "Dropped-setting and unwritable-worktree reds become green.",
+          "implementation_latitude": "Preserve Claude defaults.",
+          "hard_constraints_no_gos": [
+            "No engine-core edits."
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/run_crew.py",
+            "scripts/mcp_spine_server.py"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Lifecycle preventive guard and ownership migration.",
+        "why_likely": "The float proved these need separate ruled waves.",
+        "entry_conditions": [
+          "Bounded wave complete.",
+          "New checkpoint."
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Lifecycle semantics and decomposition.",
+        "affects": "Remaining substrate.",
+        "settle_by": "Human float ruling.",
+        "current_evidence": "25 tracked active named spines are archived; 20 are nonterminal.",
+        "next_probe": "Obtain explicit rulings."
+      }
+    ],
+    "parked_possibilities": [
+      "Actor/PID-less liveness",
+      "Durable-root policy",
+      "Harvest completeness",
+      "Consumer packages"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "lease-lifecycle",
+      "outcome": "Dispositioned by float rather than implementation. Measurement showed a materially larger migration than one bounded wave, so it floated to the human per the contract, and the human ruled the package: explicit release stays mandatory and becomes idempotent and journaled, no historical bulk backfill, child references become contained relative paths with legacy compatibility, and archive refuses a resolvable nonterminal child. Actor identity, PID-less liveness, and durable-root policy are deferred to later high-risk waves.",
+      "evidence": "Dual-denominator scan across 26 sessions / 25 tracked active named spines, of which 20 are nonterminal and archived; recorded as a RULING in ADMIRAL_LOG.md and as the wave-2-lifecycle-ruling replan transition."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "main's Linux suite is a usable merge baseline",
+      "expected": "A stable baseline to diff each lane against",
+      "observed": "2980 passed, 7 skipped, 1130 subtests, 0 failed at 0448275e",
+      "source": "python -m pytest -q in the primary worktree, 2026-08-14T19:56Z"
+    },
+    {
+      "claim": "#530 is complete and publishable",
+      "expected": "Full Linux suite green in its worktree",
+      "observed": "3 failed: test_episode_observations::RealStoreTests x2 (its own episode record epic-568-530-001 a5 carries the imperative 'Use' and is not excepted) plus a stale code map",
+      "source": "python -m pytest -q in .worktrees/epic-568-530 after clearing __pycache__"
+    },
+    {
+      "claim": "#510 is complete and publishable",
+      "expected": "Full Linux suite green in its worktree",
+      "observed": "4 failed: TripLedgerComplianceOnTheHardAdvisory x3 inside the advisory text its own diff rewrote, plus a stale code map",
+      "source": "python -m pytest -q in .worktrees/epic-568-510 after clearing __pycache__"
+    },
+    {
+      "claim": "Codex tier routing is complete and publishable",
+      "expected": "Full Linux suite green in its worktree",
+      "observed": "1 failed: stale code map root index (4544 vs 4543 entities). The change itself is clean under 2985 passing tests and two independent APPROVEs",
+      "source": "python -m pytest -q in .worktrees/epic-568-codex-tier-routing after clearing __pycache__"
+    },
+    {
+      "claim": "A Codex-lane failure was a defect in the change",
+      "expected": "The lane's diff explains the failure",
+      "observed": "Falsified. Reverting run_crew.py to main, removing the lane's episodes, and moving .agent-work aside all left it failing; the .pyc embedded the pre-relocation path constellation-skills-wt/epic-568-codex-tier-routing, so inspect.getsource raised OSError. Clearing __pycache__ passes",
+      "source": "four-way falsification in .worktrees/epic-568-codex-tier-routing, 2026-08-14T20:10Z"
+    },
+    {
+      "claim": "Independent reviewer APPROVE covers the merge gate's local half",
+      "expected": "APPROVE implies the suite was run",
+      "observed": "All three lanes APPROVEd on targeted tests only; the Codex reviewer ran 166 launcher tests. None ran the suite that caught these failures",
+      "source": "crew-handoffs and REVIEWER_RESULT.md across the three lanes"
+    },
+    {
+      "claim": "#441 could proceed this wave",
+      "expected": "Serialized spine_rail lane after #530",
+      "observed": "Blocked at execute: the global Codex approval/usage limit stopped required red/green execution. Its own next_action defers resumption to after 2026-08-20 06:19",
+      "source": ".worktrees/epic-568-441 spine blocker"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D-gate-local-red",
+      "signal": "All three finished lanes fail their own full Linux suite while main is green",
+      "classification": "blocks_current_wave_exit",
+      "affects": "Current planning truth",
+      "evidence": "Per-lane suite runs diffed against a re-measured main baseline",
+      "reason": "The wave-2 gate makes any local Linux failure block merge outright"
+    },
+    {
+      "id": "D-510-own-area",
+      "signal": "#510's failures sit inside the advisory text its own diff rewrote",
+      "classification": "blocks_current_wave_exit",
+      "affects": "#510 exit",
+      "evidence": "TripLedgerComplianceOnTheHardAdvisory x3 expected-vs-actual advisory mismatch",
+      "reason": "Repair is bounded and evidence-led; the lane updated some asserting tests but not these"
+    },
+    {
+      "id": "D-530-episode-guard",
+      "signal": "#530's own episode record violates the episode-observation guard",
+      "classification": "blocks_current_wave_exit",
+      "affects": "#530 exit",
+      "evidence": "OFFENDER epic-568-530-001 a5 (workaround) imperative: 'Use'",
+      "reason": "Mechanical rewording or a justified exception entry; no design question"
+    },
+    {
+      "id": "D-stale-map",
+      "signal": "Every lane leaves the generated code map stale",
+      "classification": "blocks_current_wave_exit",
+      "affects": "All three lane exits",
+      "evidence": "test_code_map root index mismatch in all three worktrees",
+      "reason": "Mechanical regeneration, already the established closeout pattern (#578)"
+    },
+    {
+      "id": "D-pycache-contamination",
+      "signal": "Stale bytecode from the pre-relocation worktree path produced a phantom failure",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Trust in any gate measured in a relocated worktree",
+      "evidence": "Four-way falsification; .pyc embeds constellation-skills-wt/...",
+      "reason": "Wave-1 relocation fallout that silently corrupts measurement, so it needs a guard rather than folklore"
+    },
+    {
+      "id": "D-review-depth",
+      "signal": "Reviewer APPROVE did not imply the suite was run",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Launch-order review criteria",
+      "evidence": "Three APPROVEs on targeted tests only; three lanes still red",
+      "reason": "The gate's local half must be an explicit, stated reviewer obligation"
+    },
+    {
+      "id": "D-441-quota",
+      "signal": "#441 is fenced by an external Codex quota until 2026-08-20 06:19",
+      "classification": "later_only",
+      "affects": "Wave sequencing",
+      "evidence": "Its execute blocker and stated next_action",
+      "reason": "Not repairable inside this wave; it holds its lease and resumes on its own terms"
+    }
+  ],
+  "open_current_wave_issue_ids": [
+    "530",
+    "510",
+    "codex-model-tier-routing",
+    "441"
+  ],
+  "unlaunched_items": [
+    {
+      "id": "U-consumers",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-high-risk",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-pycache-guard",
+      "kind": "issue"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/hooks/spine_rail.py",
+      "scripts/run_crew.py",
+      "tests/test_code_map.py",
+      "tests/test_episode_observations.py"
+    ],
+    "map_status": "Fresh on main at 0448275e; stale in all three lane worktrees."
+  }
+}

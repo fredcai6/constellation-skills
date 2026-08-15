@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "decision": "stop",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Met after bounded post-promotion repair. PR #577 landed the native isolation change; PR #578 refreshed the generated map; exact merged Linux verification is 2980 passed, 7 skipped, 1130 subtests.",
+    "epic_done": "The epic is not complete. Wave 1 is complete, while lease lifecycle, binding-store durability, #530, #510, and parked consumer work remain unlaunched.",
+    "good_enough": "Preserved. The Linux post-promotion red was not hidden under the Windows exception; it was repaired in a one-file follow-up and reverified before the wave closed."
+  },
+  "discrepancy_dispositions": [
+    {"id": "D1", "action": "repair_current_wave", "reason": "Regenerated only map/INDEX.md, passed the focused freshness gate and the full Linux suite, then merged PR #578.", "issue_created": false},
+    {"id": "D2", "action": "revise_plan", "reason": "Stop at the declared contract boundary and require human refresh before any later launch.", "issue_created": false},
+    {"id": "D3", "action": "record_evidence_only", "reason": "MCP operation is proven; host hot-loading ergonomics can be improved separately and does not alter wave disposition.", "issue_created": false}
+  ],
+  "current_wave": null,
+  "revised_forecast": [
+    {"outcome": "Lease lifecycle and stale-active cleanup.", "why_likely": "Remaining ownership issues consume wave 1's location substrate.", "entry_conditions": ["Human-ratified contract refresh."]},
+    {"outcome": "Binding-store durability and validation.", "why_likely": "Issue #441 remains confirmed and independent after the substrate.", "entry_conditions": ["Human-ratified contract refresh.", "Serialized spine_rail.py ownership."]},
+    {"outcome": "Near-mechanical #530 and #510 work.", "why_likely": "Both remain bounded parallel candidates.", "entry_conditions": ["Human-ratified contract refresh."]}
+  ],
+  "revised_uncertainty": [
+    {"unknown": "Which remaining tranche to authorize next and whether Codex/Claude harness compatibility belongs in that tranche.", "affects": "Next-wave scope, concurrency, and latitude.", "settle_by": "Human contract-refresh checkpoint.", "current_evidence": "Wave 1 proved stdio MCP works for Codex; Claude reviewer launch was blocked by account quota, not by the spine harness.", "next_probe": "Human chooses the next tranche and grants its latitude."}
+  ],
+  "revised_parked": ["WP3 beyond #530", "WP4 beyond #510", "WP6 crew dispatch and liveness", "WP7 latitude pre-clearance and CLI hardening"],
+  "unlaunched_dispositions": [
+    {"id": "U-552", "action": "keep", "reason": "Still supported; held behind contract refresh."},
+    {"id": "U-441", "action": "keep", "reason": "Still supported; held behind contract refresh."},
+    {"id": "U-530", "action": "keep", "reason": "Still supported as a bounded candidate."},
+    {"id": "U-510", "action": "keep", "reason": "Still supported as a bounded candidate."}
+  ],
+  "material_changes": [
+    {"surface": "current_wave", "before": "Wave 1 active with #315-native as its serialized issue.", "after": "Wave 1 complete; no current wave is authorized.", "reason": "PRs #577 and #578 are merged and post-promotion Linux verification is green."},
+    {"surface": "merge_evidence", "before": "Windows failures were measured against pre-merge main.", "after": "The final follow-up was measured against exact post-#577 main and removed one failure with none added.", "reason": "The baseline moved when #577 merged, so the comparative gate was re-run rather than reused."},
+    {"surface": "harness_evidence", "before": "Codex MCP use was an adoption goal.", "after": "The exact Admiral and Commander spines were driven through bound stdio MCP sessions; no engine CLI was needed.", "reason": "Observed during this wave."}
+  ],
+  "escalation": null,
+  "wave_review_comment": "## Wave 1 review — merged\n\nWave 1 shipped the location substrate: new spines record `origin.worktree`, the engine enforces its own cwd against that origin, and crew/MCP callers normalize their working directory. The command check that could not fail was deleted and replaced with behavior tests.\n\nThe Commander completed through the MCP door, including bounded review rework, a fresh APPROVE, and archive 6/6. The first post-promotion Linux run then caught a stale generated map. That red was outside the Windows exception, so it was repaired in a six-line follow-up and reverified: 2,980 passed, 7 skipped, 1,130 subtests.\n\nWindows remains red by explicit human acceptance for this wave. The final comparative gate improved from 85 failures on main to 84 on the follow-up, with zero new nodes.\n\nThe contract expires here. No forecast item is a launch queue; the next tranche requires human ratification.",
+  "revised_epic_body": "## Current planning truth — after wave 1\n\n**Landed:** the regression guard at `9bb8c1b6`, engine-native worktree isolation at `0dd6a6eb`, and the post-promotion map refresh at `0448275e`. Merged Linux main is green at 2,980 passed / 7 skipped / 1,130 subtests.\n\n**Harness result:** Codex successfully drove the exact Admiral and Commander spines through the stdio MCP server. The current host did not hot-load the newly configured door into this already-running session, but direct MCP transport worked; no checklist-engine CLI interaction was used. Claude review was limited by account quota rather than the harness.\n\n**Not done:** lease lifecycle, binding-store durability, #530, #510, and the parked consumer work remain.\n\n**Authority boundary:** the latitude contract expired at the wave-1 merge. No next wave is authorized until the human selects a tranche and refreshes scope, concurrency, and latitude."
+}

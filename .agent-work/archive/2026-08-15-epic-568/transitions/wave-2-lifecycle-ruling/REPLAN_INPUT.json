@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic #568 — spine ownership and lifecycle",
+      "spec_path": ".agent-work/epic-568/LATITUDE_CONTRACT.md",
+      "intent_and_why": "Make engine state carry location and ownership, remain correct under concurrency, and die when its owner does."
+    },
+    "definition_of_done": [
+      "Every authorized issue is evidence-dispositioned.",
+      "Every positive fix has a pre-fix failure and post-fix proof.",
+      "Linux and non-Windows CI are green; Windows-only failures are recorded but allowed."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Serialized engine-core implementation and independent review.",
+      "sufficient_evidence": "Live repro, focused and broader tests, exact CI evidence, verified merge.",
+      "appetite": "Five authorized items, with lifecycle required to float if materially complex."
+    },
+    "hard_constraints": [
+      "Spine interaction is MCP-only.",
+      "Only one implementation Commander at a time edits checklist_engine.py, spine_rail.py, or agent_work_root.py.",
+      "Lower-tier agents do not adjudicate architecture or final engine-core review."
+    ],
+    "fixed_decisions": [
+      "Wave 1 origin/worktree substrate remains intact.",
+      "Windows-only failures are non-blocking; non-Windows failures block.",
+      "Merges require exact-head pinning and independent APPROVE."
+    ],
+    "current_wave": {
+      "objective": "Prove and land lease lifecycle, binding durability, #530, #510, and Codex tier routing with serialized engine-core implementation.",
+      "exit_criteria": [
+        "Every item closes on red/green proof or honest measured null.",
+        "Lifecycle floats before implementation if materially complex.",
+        "Independent review approves every positive change.",
+        "Linux and non-Windows CI are green."
+      ],
+      "issues": [
+        {"id": "lease-lifecycle", "title": "Lease lifecycle cluster", "desired_outcome": "Finished ownership terminates and dead ownership is distinguishable.", "useful_now": "Central ownership substrate.", "appetite": "Measure first; one Sol/Opus Commander if bounded.", "acceptance_or_falsification_evidence": "Dual-denominator scan and live lifecycle proof.", "implementation_latitude": "Bounded internals; migration/backfill floats.", "hard_constraints_no_gos": ["No concurrent engine-core implementation."], "local_unknowns": ["Boundedness after measurement."], "anchors": ["scripts/checklist_engine.py", "scripts/spine_lifecycle.py"], "type": "AFK", "blocks": []},
+        {"id": "441", "title": "Binding-store durability", "desired_outcome": "Lossless concurrent claims and one durable identity store.", "useful_now": "Parallel MCP dispatch increases pressure.", "appetite": "One serialized implementation.", "acceptance_or_falsification_evidence": "Real concurrency red/green test.", "implementation_latitude": "Choose mechanics; aging policy floats.", "hard_constraints_no_gos": ["No concurrent spine_rail implementation."], "local_unknowns": ["Reaper policy."], "anchors": ["scripts/hooks/spine_rail.py"], "type": "AFK", "blocks": ["lease-lifecycle"]},
+        {"id": "530", "title": "Resolved worktree binding", "desired_outcome": "Parents are not blocked on child spines.", "useful_now": "Concurrency amplifies the defect.", "appetite": "Bounded serialized change.", "acceptance_or_falsification_evidence": "Real-worktree red/green guard repro.", "implementation_latitude": "Choose authoritative path source.", "hard_constraints_no_gos": ["No concurrent spine_rail implementation."], "local_unknowns": [], "anchors": ["scripts/hooks/spine_rail.py"], "type": "AFK", "blocks": ["lease-lifecycle"]},
+        {"id": "510", "title": "Pending-gate HARD handoff", "desired_outcome": "Successor reads a boundary-trip DIGEST from current alone.", "useful_now": "Repeated live confusion.", "appetite": "Bounded serialized change.", "acceptance_or_falsification_evidence": "Pending-gate HARD advisory mutation test.", "implementation_latitude": "Smallest compatible mechanism.", "hard_constraints_no_gos": ["No concurrent checklist_engine implementation."], "local_unknowns": [], "anchors": ["scripts/checklist_engine.py"], "type": "AFK", "blocks": ["lease-lifecycle"]},
+        {"id": "codex-model-tier-routing", "title": "Codex tier/worktree routing", "desired_outcome": "Codex dispatch applies model/effort and receives a writable MCP worktree.", "useful_now": "This wave uses tiered Codex agents.", "appetite": "Bounded parallel harness change.", "acceptance_or_falsification_evidence": "Dropped-setting and unwritable-worktree reds become green.", "implementation_latitude": "Preserve Claude defaults.", "hard_constraints_no_gos": ["No engine-core edits."], "local_unknowns": [], "anchors": ["scripts/run_crew.py", "scripts/mcp_spine_server.py"], "type": "AFK", "blocks": []}
+      ]
+    },
+    "wave_forecast": [
+      {"outcome": "Lifecycle preventive guard and ownership migration.", "why_likely": "The float proved these need separate ruled waves.", "entry_conditions": ["Bounded wave complete.", "New checkpoint."]}
+    ],
+    "uncertainty_register": [
+      {"unknown": "Lifecycle semantics and decomposition.", "affects": "Remaining substrate.", "settle_by": "Human float ruling.", "current_evidence": "25 tracked active named spines are archived; 20 are nonterminal.", "next_probe": "Obtain explicit rulings."}
+    ],
+    "parked_possibilities": ["Actor/PID-less liveness", "Durable-root policy", "Harvest completeness", "Consumer packages"]
+  },
+  "completed_outcomes": [],
+  "wave_evidence": [
+    {"claim": "Lifecycle is not one bounded implementation.", "expected": "A single forward fix and safe backfill.", "observed": "All four float triggers fired; 20 archived active named spines are nonterminal.", "source": "Sol lifecycle census and source trace."},
+    {"claim": "The human ruled the decomposition.", "expected": "Explicit lifecycle and immediate-wave authority.", "observed": "Recommended package approved in full.", "source": "Human message 2026-08-14."}
+  ],
+  "discrepancies": [
+    {"id": "F1", "signal": "Lifecycle requires multiple semantic and migration decisions.", "classification": "invalidates_forecast_or_decomposition", "affects": "Lifecycle, #441 reaper, and current wave.", "evidence": "Exact census and eight semantic conflicts.", "reason": "Split lifecycle from bounded immediate work."},
+    {"id": "F2", "signal": "Codex cannot write the sibling worktree created by spine_open.", "classification": "blocks_current_wave_exit", "affects": "Codex tier harness implementation.", "evidence": "Terra could claim/read but patch was refused outside its writable root.", "reason": "Add optional repo-local worktree placement to the same bounded harness item."},
+    {"id": "F3", "signal": "#510 runtime path already works and only advisory text is stale.", "classification": "evidence_only", "affects": "#510 scope.", "evidence": "attach refresh, released start, and advance --why are already implemented.", "reason": "Narrow to status-aware advisory and mutation test."}
+  ],
+  "open_current_wave_issue_ids": ["lease-lifecycle", "441", "530", "510", "codex-model-tier-routing"],
+  "unlaunched_items": [
+    {"id": "U-consumers", "kind": "forecast"},
+    {"id": "U-high-risk", "kind": "forecast"}
+  ],
+  "repo_state": {
+    "anchors": ["scripts/checklist_engine.py", "scripts/spine_lifecycle.py", "scripts/hooks/spine_rail.py", "scripts/run_crew.py", "scripts/mcp_spine_server.py"],
+    "map_status": "Fresh on main at 0448275e."
+  }
+}

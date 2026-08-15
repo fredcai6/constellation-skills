@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "execute",
+  "mechanical": {
+    "run": "epic-568",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "refusals": 1,
+    "spine-step": "execute",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-568-execute@9724e375d785b16f29c0257ef8ccf1b38dd20420",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-568",
+    "generated_at": "2026-08-12T17:25:19Z"
+  }
+}

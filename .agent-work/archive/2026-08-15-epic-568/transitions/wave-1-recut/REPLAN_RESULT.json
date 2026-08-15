@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "decision": "replan",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "The wave is re-cut so its exit criteria are reachable. The falsified target is replaced by one the evidence supports, and the merge gate that made any close impossible has been amended by the human.",
+    "epic_done": "The epic is not complete. One guard has merged (9bb8c1b6); no member issue is closed.",
+    "good_enough": "Preserved. The standard that caught the original fix -- a repro that fails before and passes after -- is what falsified the naive re-cut too, via a demonstration the Admiral re-ran rather than accepted."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "R0",
+      "action": "revise_plan",
+      "reason": "The isolation check goes engine-native and is deleted, rather than the engine forwarding a cwd to it; this changes the wave's shape.",
+      "issue_created": false
+    },
+    {
+      "id": "R1",
+      "action": "revise_plan",
+      "reason": "The write and read sides are cut as one change because the read side is inert without the stamp.",
+      "issue_created": false
+    },
+    {
+      "id": "R2",
+      "action": "record_evidence_only",
+      "reason": "The human amended the gate and it is recorded in the latitude contract; it needs no separate work item.",
+      "issue_created": false
+    },
+    {
+      "id": "R3",
+      "action": "drop",
+      "reason": "Measurement falsified the door as a prerequisite; it is worth fixing on its own merits, which is a triage candidate rather than a plan item.",
+      "issue_created": false
+    },
+    {
+      "id": "R4",
+      "action": "record_evidence_only",
+      "reason": "The guard has merged; it protects the re-cut from a half-build and implies no further work.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Make a spine carry its own repo reference from creation, and have the engine enforce worktree isolation natively against it rather than delegating that judgment to a subprocess it would have to mislead.",
+    "exit_criteria": [
+      "init_work_area.py stamps an origin block carrying worktree when it instantiates a spine, using the resolved root it already computes and currently discards.",
+      "checklist_engine.py reads origin.worktree, compares it against its OWN Path.cwd() at verb entry, and falls back to inherited cwd for a spine that carries no origin.",
+      "COMMANDER_SPINE's init.c0 command check is DELETED, not repaired, and the native comparison refuses in the case it used to catch.",
+      "tests/test_worktree_precondition_wiring.py, now on main at 9bb8c1b6, stays green -- it goes red against the half-built shape, so a passing run is evidence both halves landed.",
+      "A repro shows the fail-open that opened this wave failing before and passing after, and no new test failures appear against the main CI baseline."
+    ],
+    "issues": [
+      {
+        "id": "315-native",
+        "title": "engine-native worktree isolation against a stored spine origin (supersedes the falsified target of #315; closes the same tracker issue)",
+        "desired_outcome": "The engine stops guessing where a spine lives and stops asking a subprocess where it is standing: the spine records its root at creation, and the engine compares its own cwd to it.",
+        "useful_now": "It removes a fail-open gate and a check-that-cannot-fail in one change, and it is the substrate the rest of the epic's ownership work reads from.",
+        "appetite": "One Commander, serialized engine-core lane, Opus tier, about 40 lines across two modules.",
+        "acceptance_or_falsification_evidence": "A before/after repro, a deleted init.c0 command check with the native refusal proven in its place, the merged guard still green, and no new failures against the main baseline.",
+        "implementation_latitude": "Choose how the root is threaded inside checklist_engine and where the native comparison sits; the Commander noted the root must be a parameter DISTINCT from base_dir, which is also the gauge path and the from-child base.",
+        "hard_constraints_no_gos": [
+          "No concurrent Commander may edit scripts/checklist_engine.py during this wave.",
+          "Do not edit scripts/hooks/spine_rail.py or scripts/agent_work_root.py.",
+          "Do not cut the write side and the read side into separate changes: the read side is inert alone and would report green while doing nothing.",
+          "Do not route the direction through open_work or make the dead spine_open door a prerequisite."
+        ],
+        "local_unknowns": [
+          "Whether the 2 live origin-less spines are backfilled or left to the fallback.",
+          "Whether the native comparison belongs at verb entry for every verb or only for mutating verbs."
+        ],
+        "anchors": [
+          "scripts/checklist_engine.py",
+          "/home/tommy/.claude/skills/constellation-admiral/scripts/init_work_area.py",
+          "tests/test_worktree_precondition_wiring.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "Lease lifecycle: release-on-terminal, closeout refusal extended to child plans, backfill of the stale actives, reaper for died-mid-flight runs.",
+      "why_likely": "Issues 552, 383, 357, 369, 318, 330 and 208 remain the epic's stated substrate, and they read from the ownership facts this wave establishes.",
+      "entry_conditions": [
+        "Wave 1 merged and the contract refreshed at its expiry.",
+        "The 552 denominator settled."
+      ]
+    },
+    {
+      "outcome": "Binding store durability: file lock, unique tmp names, reaper, path validation, one id rule.",
+      "why_likely": "Issue 441's four gaps are confirmed live in spine_rail.py:83-103, two of them documented in the module's own docstring.",
+      "entry_conditions": [
+        "Wave 1 merged.",
+        "No concurrent Commander editing spine_rail.py."
+      ]
+    },
+    {
+      "outcome": "The two near-mechanical wins that need no substrate: 530 resolved worktree, 510 HARD-trip advisory text.",
+      "why_likely": "Both are bounded and independent, so they can ride the parallel lane.",
+      "entry_conditions": [
+        "Wave 1 merged."
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether the 2 live origin-less spines are backfilled or left to the inherited-cwd fallback.",
+      "affects": "Whether this wave carries a migration step.",
+      "settle_by": "Wave 1 execution.",
+      "current_evidence": "108 spines carry no origin on the branch, 107 on main; 106 are archived dead runs, so the live population is 2.",
+      "next_probe": "Decide during implementation and state which; both are defensible at n=2."
+    },
+    {
+      "unknown": "Whether the native cwd comparison belongs on every verb or only mutating ones.",
+      "affects": "Whether read-only calls from a foreign cwd are refused.",
+      "settle_by": "Wave 1 execution.",
+      "current_evidence": "The Commander proposes verb entry; nothing has measured the cost on read-only verbs.",
+      "next_probe": "Try every verb, and narrow only if a read-only call is legitimately made from elsewhere."
+    },
+    {
+      "unknown": "Which spine set the 552 backfill must clear.",
+      "affects": "A later wave's decomposition.",
+      "settle_by": "Later wave planning.",
+      "current_evidence": "Filed as 43 on disk; measured as 24 active of 91 tracked.",
+      "next_probe": "Scan both sets once and state each count with its denominator."
+    },
+    {
+      "unknown": "When main's CI returns to green and the amended merge gate lapses.",
+      "affects": "Every merge in this epic.",
+      "settle_by": "Outside this epic; #555's fix exists unmerged on fix/mcp-door-launchable.",
+      "current_evidence": "main and PR failure sets are identical at 76; the breakage is Windows path and git-identity, not this work.",
+      "next_probe": "Re-check main's run at each wave boundary."
+    }
+  ],
+  "revised_parked": [
+    "WP3 stop-rail attribution beyond 530",
+    "WP4 gauge and governor beyond 510",
+    "WP6 crew dispatch and liveness",
+    "WP7 latitude pre-clearance vs the harness classifier, and CLI arg-injection hardening"
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "U-552",
+      "action": "keep",
+      "reason": "In scope for this tranche; held behind wave 1 by the serialized engine-core lane."
+    },
+    {
+      "id": "U-441",
+      "action": "keep",
+      "reason": "In scope; its four gaps are confirmed present in current source."
+    },
+    {
+      "id": "U-530",
+      "action": "keep",
+      "reason": "In scope as a near-mechanical win that needs no substrate."
+    },
+    {
+      "id": "U-510",
+      "action": "keep",
+      "reason": "In scope as a near-mechanical win that needs no substrate."
+    },
+    {
+      "id": "U-lease-lifecycle",
+      "action": "keep",
+      "reason": "Still the epic's stated substrate; nothing observed contradicts it."
+    },
+    {
+      "id": "U-binding-store",
+      "action": "keep",
+      "reason": "Still supported; the gaps are documented in the module's own docstring."
+    },
+    {
+      "id": "U-template-count",
+      "action": "keep",
+      "reason": "Wave 1 settles it directly."
+    },
+    {
+      "id": "U-552-denominator",
+      "action": "keep",
+      "reason": "Newly raised by this transition's own measurement; carried with a named probe."
+    },
+    {
+      "id": "U-stale-lease-inert",
+      "action": "keep",
+      "reason": "Inherited unresolved from the post-418 handoff; it governs how urgent the backfill is."
+    },
+    {
+      "id": "U-wp3-attribution",
+      "action": "keep",
+      "reason": "Parked by the human's scope ruling; reads from the substrate this tranche builds."
+    },
+    {
+      "id": "U-wp4-gauge",
+      "action": "keep",
+      "reason": "Parked by the human's scope ruling."
+    },
+    {
+      "id": "U-wp6-dispatch",
+      "action": "keep",
+      "reason": "Parked by the human's scope ruling."
+    },
+    {
+      "id": "U-wp7-preclearance",
+      "action": "keep",
+      "reason": "Parked, though 408 is already being exercised live by this Admiral's own permission pre-clearance."
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "current_wave",
+      "before": "Wave 1 was held under a repair: cost the direction where a spine carries its own repo reference.",
+      "after": "Wave 1 is re-cut to implement it, with the isolation check going ENGINE-NATIVE and init.c0's command check deleted rather than the engine forwarding a stored cwd to a subprocess check.",
+      "reason": "The costing demonstrated that forwarding the stored root reproduces the original defect byte for byte -- origin.worktree and the check's EXPECTED are the same value -- so the direction only works if the engine makes the comparison itself."
+    },
+    {
+      "surface": "uncertainty_register",
+      "before": "Three blocking uncertainties: the costing, the dead door, the merge gate.",
+      "after": "All three are settled -- the costing landed, the door is falsified as a prerequisite, the human amended the gate -- and two narrower implementation questions replace them.",
+      "reason": "Each was settled by evidence or by a human ruling during the repair, which is what the repair was held open for."
+    }
+  ],
+  "wave_review_comment": "## Wave review - boundary wave-1-recut\n\n**Exit: replan.** The repair's blocking evidence is settled, so the held wave is re-cut and a launch is authorized.\n\n**The costing caught a trap in the direction itself.** Cut the obvious way -- store the repo root, pass it to the check as `cwd` -- the new direction *is* the falsified fix. `origin.worktree` and the EXPECTED value inside the isolation check are **byte-identical**, both deriving from the same resolved root at creation. Re-run by the Admiral rather than accepted: with the launcher in the wrong worktree, `cwd=launcher's own` REFUSES and `cwd=origin.worktree` PASSES.\n\n**What works instead is stronger than anything proposed.** With the root stored, the engine compares its **own** `Path.cwd()` against it at verb entry. The isolation check stops being a subprocess command, `init.c0`'s command check is **deleted** rather than repaired, and the result is undisarmable by a child process and runs on every verb. No schema flag, no env var, no `--from`.\n\n**Cost:** ~40 lines. `checklist_engine.py` ~32 across 3 sites, `init_work_area.py` ~8, `spine_lifecycle.py` zero -- `build_origin` and `open_work` were already right. **Zero edits to the 17** cwd-dependent template checks. Backfill population is **2**, because 106 of the 108 origin-less spines are archived dead runs.\n\n**One constraint is now a no-go, not a preference:** the write and read sides land together. The engine must fall back to inherited cwd for origin-less spines, so the read side alone is inert -- a change that reports green while doing nothing. The guard merged at `9bb8c1b6` goes red on exactly that shape.\n\n**Dropped:** the dead `spine_open` door as a prerequisite. `open_work` needs a compiled spec and only 2 exist against 12 role templates; `init_work_area.py` reaches all 12 without it.\n\n**Contract amended by the human:** the merge gate is now no-new-failures against the `main` baseline, because `main` is independently red and the original green-exit-code gate was unsatisfiable by any PR here.\n",
+  "revised_epic_body": "## Current planning truth - epic 568, boundary wave-1-recut\n\n**Intent.** Every piece of engine state carries who it belongs to and dies when its owner does. Wave 1 sharpened it: state that does not know **where it lives** fails the same way as state that does not know **whose it is**, and a check that asks a subprocess where it is standing can be told anything.\n\n**Current wave.** A spine records its own repo reference at creation, and the engine enforces isolation natively against it. `init_work_area.py` stamps `origin.worktree` from the root it already computes and discards; `checklist_engine.py` compares its own `Path.cwd()` to that value at verb entry and falls back to inherited cwd when a spine has none; `init.c0`'s command check is deleted. One change, both halves, about 40 lines.\n\n**Why not the obvious version.** Passing the stored root to the check as `cwd` reproduces the defect exactly -- the stored value and the check's expected value are the same string. That is demonstrated, not argued.\n\n**Landed.** The regression guard, `main` at `9bb8c1b6`. It goes red against the half-built shape, so it is the wave's own tripwire.\n\n**In scope this tranche.** WP1 lease lifecycle (552, 383, 357, 369, 318, 330, 208), WP2 binding store (441), WP5 (315, as re-cut), plus 530 and 510. Deferred: WP3 beyond 530, WP4 beyond 510, WP6, WP7.\n\n**Execution shape.** Engine-core files edited one Commander at a time; everything else 3-4 wide.\n\n**Merge gate, amended.** No new failures against the `main` baseline, plus an independent reviewer APPROVE, for as long as `main` is red. It lapses when `main` goes green.\n\n**Forecast, nonbinding.** Lease lifecycle, then binding-store durability, with 530 and 510 on the parallel lane. Not a launch queue: the contract is refreshed when wave 1 merges.\n",
+  "escalation": null
+}
