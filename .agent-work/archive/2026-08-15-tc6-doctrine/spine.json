@@ -575,13 +575,15 @@
             "kind": "command",
             "command": "python scripts/verify_episode_captured.py tc6-doctrine --store-root episodes --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-1"
         },
         {
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Committed f2bcbe80 (docs+episodes) and f6ee349a (archive move); pushed to origin/docs/tc6-doctrine."
         },
         {
           "id": "c2b",
@@ -590,13 +592,15 @@
             "kind": "command",
             "command": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills/.worktrees/tc6-doctrine rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-2"
         },
         {
           "id": "c3",
           "statement": "engine session lease released",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "will attest immediately before the final release, per the sequencing rail"
         },
         {
           "id": "c4",
@@ -631,22 +635,57 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-3"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py tc6-doctrine --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills/.worktrees/tc6-doctrine rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-3",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 2
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -658,16 +697,17 @@
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/tc6-doctrine",
     "opened_by": "init_work_area"
   },
-  "refusals": 3,
+  "refusals": 4,
   "engine_session": {
     "session_id": "constellation/tc6-doctrine/execute/commander",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-15T20:27:04.796739+00:00",
-    "last_heartbeat": "2026-08-15T20:47:44.829508+00:00",
+    "last_heartbeat": "2026-08-15T20:49:45.684998+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-15T20:49:48.269120+00:00"
   },
   "why_trail": [
     {
@@ -732,6 +772,13 @@
       "why": "Reflection: followed the skill closely -- the checklist_engine CLI cleanly handled the child execute.json checklist, and delegated-mode user-decision citations worked as documented at every checkpoint. Two genuine improvisations: (1) authored two self-caught postcondition bugs during plan authoring/execute (validate_spine.py's falsifiable-all-null lint on e0-context/g3, fixed before freezing; a markdown-bold-vs-literal-grep mismatch on g1.c4, fixed via amend --delta retext-check mid-execute) -- both are recorded as episodes, not treated as ambiguity in the skill itself. (2) No crew dispatch this run -- all four execute.json gates were reasoning gates (doc-only deliverables in context already held), per PLAN_ALTERNATIVES.md's Candidate A and the launch order's own 'Do not dispatch a crew' framing for this lane -- so there is no gN-integrate Workflow Feedback to harvest: none -- confirmed after review, no crew was ever dispatched. Nothing was ambiguous or contradictory in the commander-core doctrine itself. Recorded 3 episodes (tc6-doctrine-001..003) via apply_episode_delta.py --store-root episodes, verified 0 offenders under verify_episode_observations.py --strict before writing, and confirmed capture via verify_episode_captured.py.",
       "mechanical": false,
       "ts": "2026-08-15T20:47:29.345757+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "Committed docs+episodes (f2bcbe80) and the archive move (f6ee349a), pushed to origin/docs/tc6-doctrine, opened PR #590 (OPEN). Episode capture verified at archive phase (3 episodes tracked by git). Staged diff carries no suspicious artifacts. Spine run complete: init through archive, all gates driven through the engine, no hand-editing.",
+      "mechanical": false,
+      "ts": "2026-08-15T20:49:45.684982+00:00"
     }
   ]
 }
