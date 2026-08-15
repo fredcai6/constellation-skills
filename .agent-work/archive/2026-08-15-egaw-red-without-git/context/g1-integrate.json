@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g1-integrate",
+  "files": [],
+  "repo_rev": {
+    "commit": "561c059c054de8150a40e2f5cf092d7901f89cee"
+  },
+  "run": {
+    "work_id": "egaw-red-without-git",
+    "generated_at": "2026-08-15T23:18:06Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write"
+    }
+  }
+}

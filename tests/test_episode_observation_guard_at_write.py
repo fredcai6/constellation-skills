@@ -24,13 +24,19 @@ patching apply_episode_delta.store_root() to a throwaway directory and never ove
 it with an explicit --store-root -- the writer then treats that throwaway directory
 exactly as it would treat the genuine tracked one, without ever touching the genuine
 tracked one.
+
+RED/GREEN mechanism: rather than resurrecting a historical revision of the writer via
+git (fragile under shallow clones and hardcoded-SHA drift), the RED half of the pair
+below runs the CURRENT writer with its _reject_instruction_shaped() call neutralized to
+a no-op, then restores it. This proves the rejection the GREEN half exercises is caused
+by that guard call specifically -- not merely by being on some other code path -- while
+never touching git.
 """
 
 import contextlib
 import importlib.util
 import io
 import json
-import subprocess
 import sys
 import tempfile
 import unittest
@@ -39,36 +45,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WRITER_SCRIPT = ROOT / "scripts" / "apply_episode_delta.py"
 
-# main at the branch point named in LAUNCH_ORDER.md — scripts/apply_episode_delta.py at
-# this revision has no write-time guard at all, which is what makes it the RED half of
-# the RED-before/GREEN-after pair below.
-PRE_CHANGE_REV = "2c46cab8"
-
-
-def _git_show(rev: str, path: str) -> str:
-    return subprocess.run(
-        ["git", "show", f"{rev}:{path}"],
-        cwd=ROOT, capture_output=True, text=True, check=True,
-    ).stdout
-
 
 def load_current():
     spec = importlib.util.spec_from_file_location("apply_episode_delta_egaw_current", WRITER_SCRIPT)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
-    return module
-
-
-def load_pre_change():
-    """The writer's source AS OF the pre-change revision, executed under the CURRENT
-    file's own path (so any relative-to-__file__ resolution inside it, e.g.
-    store_root()'s default, still means what it meant at that revision)."""
-    source = _git_show(PRE_CHANGE_REV, "scripts/apply_episode_delta.py")
-    spec = importlib.util.spec_from_file_location("apply_episode_delta_egaw_pre_change", WRITER_SCRIPT)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    exec(compile(source, str(WRITER_SCRIPT), "exec"), module.__dict__)
     return module
 
 
@@ -137,10 +119,15 @@ class RedBeforeGreenAfterTests(_RealStoreCase):
     entry point, before and after this lane's change."""
 
     def test_bare_verb_workaround_was_accepted_before_this_change(self):
-        """RED (before): the pre-change writer had no opinion about statement content
-        at all — the delta this suite now refuses used to write cleanly."""
-        pre = load_pre_change()
-        rc, out, root = self._run(pre, create_op(workaround=BARE_VERB_WORKAROUND))
+        """RED (before): with the guard call neutralized, the writer has no opinion about
+        statement content at all -- the delta this suite now refuses used to write cleanly."""
+        cur = load_current()
+        original = cur._reject_instruction_shaped
+        cur._reject_instruction_shaped = lambda kind, statement, where: None
+        try:
+            rc, out, root = self._run(cur, create_op(workaround=BARE_VERB_WORKAROUND))
+        finally:
+            cur._reject_instruction_shaped = original
         self.assertEqual(0, rc, out)
         self.assertTrue((root / "active" / "egaw-guard-001.md").is_file())
 

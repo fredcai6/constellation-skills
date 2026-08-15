@@ -1,0 +1,360 @@
+{
+  "work_id": "egaw-red-without-git",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope (MISSION_FRAME.md, LAUNCH_ORDER.md), then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "MISSION_FRAME.md and LAUNCH_ORDER.md confirm scope: rewrite one test method to remove its git dependency, approach (a)"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "g1: rewrite the RED test without a git dependency",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: rewrite tests/test_episode_observation_guard_at_write.py::RedBeforeGreenAfterTests::test_bare_verb_workaround_was_accepted_before_this_change (and remove load_pre_change/_git_show/PRE_CHANGE_REV) using approach (a) -- monkeypatch the guard seam _reject_instruction_shaped to a no-op on the current writer module, assert the delta writes cleanly; restore it, assert the identical delta is rejected. Dispatch via python scripts/run_crew.py (or, when the CLI backend is unavailable in this environment, an Agent-tool subagent recorded with --backend external and verified with --verify-result) invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT: attach g1-implement --type implementer-result --field status=<value>.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "plan confirmed at parent spine's plan gate"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-2"
+        }
+      ],
+      "constraints": [
+        "Do not delete the RED -- a GREEN with no RED proves the test passes, not that the change did anything.",
+        "Do not pytest.skip on Windows or shallow clones -- verify_skip_guard.py fails the build on any undocumented skip.",
+        "No hardcoded commit SHA anywhere in the test file after this change.",
+        "Only tests/test_episode_observation_guard_at_write.py and this work area may be touched.",
+        "A verbatim single-quoted quotation containing an apostrophe can trip the episode-writer's own guard when this run's episodes are authored -- use double quotes for quoted machine output in this run's own closeout episodes."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:apply_episode_delta._reject_instruction_shaped \u2014 scripts/apply_episode_delta.py:996-1010, function",
+          "struct:test_episode_observation_guard_at_write.RedBeforeGreenAfterTests \u2014 tests/test_episode_observation_guard_at_write.py:135-163, class"
+        ],
+        "capability": [
+          "capability:episode-guard-at-write \u2014 write-time rejection of instruction-shaped episode statements"
+        ],
+        "constraint": [
+          "constraint:file-ownership \u2014 LAUNCH_ORDER.md File Ownership: only the test file and this work area"
+        ],
+        "decision": [
+          "decision:approach-a-monkeypatch-seam \u2014 monkeypatch _reject_instruction_shaped on load_current(), not git resurrection @grade: settled/human \u00b7 leans g1-implement \u00b7 settle: n/a \u2014 ratified by LAUNCH_ORDER.md"
+        ],
+        "evidence": [
+          "claim:attribution \u2014 the rejection is caused by this change's guard call, not merely present",
+          "claim:no-git \u2014 grep for git/subprocess/2c46cab8 in the test file returns nothing"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-implement",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "g1: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff (uncommitted working tree), task statement, close criteria (no git dependency, RED/GREEN pair preserved, attribution proof holds, no hardcoded SHA), allowed scope, specific exclusions, constraints, the inbound map anchors, and IMPLEMENTER_RESULT evidence. Dispatch via python scripts/run_crew.py (or an Agent-tool subagent recorded the same way as g1-implement) invoking constellation-reviewer. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT attached to g1-implement, status complete, verified independently"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors \u2014 review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-review",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "g1: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the full clean-env cache-clean suite yourself (per LAUNCH_ORDER.md's nohup/backgrounding recipe), confirm 0 failed, then advance this gate -- the command-kind postcondition is satisfied by advance re-running the check, not by attest. BLOCK: send the implementer back for rework or raise a blocker. Log any out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT verdict APPROVE attached to g1-review"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green: 0 failed",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write && find . -name __pycache__ -type d -not -path './.git/*' -prune -exec rm -rf {} + && python -m pytest -q 2>&1 | tail -5 | grep -qE '^[0-9]+ passed' "
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-3"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2",
+          "attested": {
+            "evidence": "e-g1-review-2",
+            "note": "review-result verdict APPROVE, attached at g1-review"
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-integrate",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write && find . -name __pycache__ -type d -not -path './.git/*' -prune -exec rm -rf {} + && python -m pytest -q 2>&1 | tail -5 | grep -qE '^[0-9]+ passed' ",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write && find . -name __pycache__ -type d -not -path './.git/*' -prune -exec rm -rf {} + && python -m pytest -q 2>&1 | tail -5 | grep -qE '^[0-9]+ passed' ",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "commander-egaw-execute",
+    "status": "released",
+    "claimed_at": "2026-08-15T23:08:46.266024+00:00",
+    "last_heartbeat": "2026-08-15T23:27:35.576558+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-15T23:27:41.236922+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-15T23:08:49.986688+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Implementer rewrote RedBeforeGreenAfterTests.test_bare_verb_workaround_was_accepted_before_this_change to neutralize _reject_instruction_shaped (monkeypatch to no-op, restore in finally) on load_current() instead of git-showing a historical revision. Deleted PRE_CHANGE_REV/_git_show/load_pre_change and the now-unused subprocess import. Independently verified: pytest -q on the file gives 9 passed; grep for 2c46cab8/subprocess/git show/_git_show/load_pre_change/PRE_CHANGE_REV returns nothing; git status shows only this one test file touched in the source tree. Attribution proof intact: same test still proves the guard call causes the rejection, now via neutralize/restore on the same live module rather than a historical git revision.",
+      "mechanical": false,
+      "ts": "2026-08-15T23:14:42.831914+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Independent reviewer reproduced all four checks: git status scoped to the one file, no git/subprocess/2c46cab8/pytest.skip in the file, traced _reject_instruction_shaped to its 3 real call sites confirming the monkeypatch genuinely intercepts them (not a vacuous no-op the pair would pass under regardless), pytest -v gives 9 passed 0 skipped 0 failed, and none of the excluded files were touched. Verdict APPROVE, no blockers.",
+      "mechanical": false,
+      "ts": "2026-08-15T23:17:54.449911+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Full clean-env cache-clean suite: 3040 passed, 6 skipped, 1146 subtests, 0 failed -- matches the pre-change baseline exactly. Reviewer verdict APPROVE integrated via e-g1-review-2.",
+      "mechanical": false,
+      "ts": "2026-08-15T23:27:35.576539+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "g1-implement",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1788,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-15T23:09:42.828269+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "g1-implement",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2035,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-15T23:12:53.600411+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2187,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-15T23:14:55.665439+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "g1-integrate",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2294,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-15T23:18:06.308342+00:00"
+    }
+  ]
+}
