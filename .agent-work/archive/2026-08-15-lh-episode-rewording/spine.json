@@ -596,13 +596,15 @@
             "kind": "command",
             "command": "python scripts/verify_episode_captured.py lh-episode-rewording --store-root episodes --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-1"
         },
         {
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Committed 718f42fa on fix/launcher-hygiene and pushed to origin (fe0af3da..718f42fa)."
         },
         {
           "id": "c2b",
@@ -611,13 +613,15 @@
             "kind": "command",
             "command": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills/.worktrees/launcher-hygiene rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-2"
         },
         {
           "id": "c3",
           "statement": "engine session lease released",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Will release the engine session lease as the very last action, immediately after this gate's final advance."
         },
         {
           "id": "c4",
@@ -652,22 +656,57 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-3"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py lh-episode-rewording --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills/.worktrees/launcher-hygiene rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-3",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -679,16 +718,17 @@
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/launcher-hygiene",
     "opened_by": "init_work_area"
   },
-  "refusals": 9,
+  "refusals": 11,
   "engine_session": {
     "session_id": "constellation/lh-episode-rewording/execute/commander",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-15T21:21:52.844703+00:00",
-    "last_heartbeat": "2026-08-15T21:43:00.077532+00:00",
+    "last_heartbeat": "2026-08-15T21:44:27.921456+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-15T21:44:31.241591+00:00"
   },
   "why_trail": [
     {
@@ -753,6 +793,13 @@
       "why": "Two episodes recorded (lh-episode-rewording-001: the canon-store staging discrepancy; lh-episode-rewording-002: the 002.a3 (a)/(b) investigation and root cause) via apply_episode_delta.py --store-root episodes, verified against the guard (0 unlisted offenders) and against verify_episode_captured.py --phase feedback (2 episodes recorded for this work id).",
       "mechanical": false,
       "ts": "2026-08-15T21:42:35.016160+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "Work committed (718f42fa) and pushed to fix/launcher-hygiene; PR #591 is OPEN (reachable); work area moved to .agent-work/archive/2026-08-15-lh-episode-rewording/ with both episodes captured and git-tracked; staged diff carries no suspicious artifacts.",
+      "mechanical": false,
+      "ts": "2026-08-15T21:44:27.921435+00:00"
     }
   ]
 }
