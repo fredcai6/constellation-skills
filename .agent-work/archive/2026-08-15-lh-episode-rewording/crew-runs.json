@@ -1,0 +1,26 @@
+[
+  {
+    "crew_id": "constellation/lh-episode-rewording/execute/commander/attempt-1",
+    "work_id": "lh-episode-rewording",
+    "gate": "execute",
+    "role": "commander",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/lh-episode-rewording/execute/commander/attempt-1",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 3898357,
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/launcher-hygiene",
+    "handoff": ".agent-work/archive/2026-08-15-lh-episode-rewording/LAUNCH_ORDER.md",
+    "result": null,
+    "spine": ".agent-work/archive/2026-08-15-lh-episode-rewording/spine.json",
+    "parent": "admiral-post-568",
+    "stdout": ".agent-work/archive/2026-08-15-lh-episode-rewording/crew-runs/execute-commander-attempt-1.stdout.txt",
+    "stderr": ".agent-work/archive/2026-08-15-lh-episode-rewording/crew-runs/execute-commander-attempt-1.stderr.txt",
+    "started_at": "2026-08-15T21:20:59.715077+00:00",
+    "last_heartbeat": "2026-08-15T21:20:59.715077+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "model": "sonnet"
+  }
+]

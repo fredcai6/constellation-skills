@@ -1,0 +1,338 @@
+{
+  "work_id": "launcher-hygiene",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-test-isolation",
+    "g2-archive-relocation",
+    "g3-doc-idiom",
+    "g4-stop-hook-decision",
+    "g5-suite-and-map"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope from MISSION_FRAME.md and LAUNCH_ORDER.md are still active in this context (they are -- same conversation, no compaction since authoring). No crew dispatch this run (LAUNCH_ORDER: 'Do not park -- this applies to you... Do not dispatch a crew'), so every gate below is a reasoning gate driven directly, never gN-implement/gN-review. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan artifacts on disk: MISSION_FRAME.md and this execute.json both exist",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/launcher-hygiene/MISSION_FRAME.md && test -s .agent-work/launcher-hygiene/execute.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-e0-context-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-e0-context-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/launcher-hygiene/MISSION_FRAME.md && test -s .agent-work/launcher-hygiene/execute.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-test-isolation": {
+      "id": "g1-test-isolation",
+      "title": "Task 1: isolate DC3 environ test from the calling shell's ambient SPINE_* vars",
+      "imperative": "Reasoning gate, crew-waived: a single self-contained test-file fix with no independent-review surface beyond the pytest run itself, and LAUNCH_ORDER forbids crew dispatch this run. In DC3InheritanceMechanismTests (tests/test_mcp_identity.py), save and strip SPINE_ENV_KEYS from os.environ in setUp BEFORE self._env_before is captured, and restore them in tearDown -- isolating the measurement from whatever the calling shell's own dispatch already bound, without changing what the test verifies (that launching the parent subprocess does not mutate the CALLING process's own os.environ). Capture the RED first (already measured live in this session's own bound shell), apply the fix, capture GREEN.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED captured before the fix: the named test fails inside this session's own SPINE_FILE/SPINE_SESSION/SPINE_PARENT-bound shell",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED captured before fix: python -m pytest -q tests/test_mcp_identity.py::DC3InheritanceMechanismTests::test_launching_the_parent_never_touches_the_calling_processs_own_environ inside this session's own SPINE_FILE/SPINE_SESSION/SPINE_PARENT-bound shell -> AssertionError: 'SPINE_FILE' unexpectedly found in environ(...)."
+        },
+        {
+          "id": "c2",
+          "statement": "GREEN: the named test and its two siblings in DC3InheritanceMechanismTests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_mcp_identity.py::DC3InheritanceMechanismTests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-test-isolation-1"
+        }
+      ],
+      "constraints": [
+        "tests/test_mcp_identity.py only",
+        "preserve the test's verified intent (no change to what it asserts about launch behavior)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-test-isolation-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_mcp_identity.py::DC3InheritanceMechanismTests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-archive-relocation": {
+      "id": "g2-archive-relocation",
+      "title": "Task 2: spine_terminal resolves through the archive relocation",
+      "imperative": "Reasoning gate, crew-waived (LAUNCH_ORDER forbids crew dispatch this run). In scripts/run_crew.py, make spine_terminal resolve a missing spine path through the archive gate's relocation: derive work_id from the spine's own parent-dir name relative to .agent-work, glob .agent-work/archive/*-<work_id>/<spine-basename> for an exact work_id match (never substring), and judge terminality against that file when found; a genuinely-never-archived, non-terminal spine must still read False (no rubber stamp). Add tests in tests/test_spine_lifecycle.py driving the REAL composition: a real spine_lifecycle.close_work() relocation followed by run_crew.spine_terminal() on the original recorded path -- not a mock of either. Capture RED (current behavior: relocated-but-terminal spine reads not-terminal) before the fix, GREEN after, plus a companion test proving a non-terminal/never-archived spine still reads not-terminal.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED captured before the fix: a real close_work relocation followed by spine_terminal on the original path reads False",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED: TestSpineTerminalThroughArchiveRelocation::test_terminal_spine_relocated_by_a_real_close_work_still_reads_terminal failed before the fix (spine_terminal returned False for a genuinely terminal spine relocated by a REAL spine_lifecycle.close_work() call); its two guard siblings already passed, isolating the exact defect."
+        },
+        {
+          "id": "c2",
+          "statement": "GREEN: relocated-terminal spine now resolves True; never-archived non-terminal spine still resolves False; full run_crew + spine_lifecycle test files pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_crew_launcher.py tests/test_spine_lifecycle.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-archive-relocation-1"
+        }
+      ],
+      "constraints": [
+        "scripts/run_crew.py + its tests only",
+        "never touch scripts/checklist_engine.py",
+        "never touch spine_blocked_id (no relocation exposure -- archiving requires no blocked gate)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-archive-relocation-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_crew_launcher.py tests/test_spine_lifecycle.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-doc-idiom": {
+      "id": "g3-doc-idiom",
+      "title": "Task 3a: document the no-park idiom in crew-dispatch.md",
+      "imperative": "Reasoning gate, crew-waived (documentation-only, no independently-verifiable behavior beyond a grep-checkable presence, and LAUNCH_ORDER forbids crew dispatch this run). Add a section to skills/commander/references/crew-dispatch.md stating plainly: the Commander's own process ends with its turn; the agent harness can auto-background a long-running foreground Bash call (e.g. the full suite, ~2 minutes); a harness-backgrounded command is therefore not awaitable, and 'wait for the notification' is never a valid way to end a turn. Give the working idiom by name, concretely for the full-suite check (nohup + until-grep poll + tail), and name the fallback: spine_halt block with the crew id recorded, so a parent resumes deliberately (E1 fail-up).",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew-dispatch.md names the auto-backgrounding hazard, the poll-until idiom concretely for the full-suite check, and the spine_halt block fallback",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'until grep' skills/commander/references/crew-dispatch.md && grep -q 'spine_halt block' skills/commander/references/crew-dispatch.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-doc-idiom-1"
+        }
+      ],
+      "constraints": [
+        "skills/commander/references/crew-dispatch.md only",
+        "no change to dispatch mechanics, doc addition only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-doc-idiom-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'until grep' skills/commander/references/crew-dispatch.md && grep -q 'spine_halt block' skills/commander/references/crew-dispatch.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-stop-hook-decision": {
+      "id": "g4-stop-hook-decision",
+      "title": "Task 3b (optional): attempt or decline the Stop-hook mechanical check",
+      "imperative": "Reasoning gate. Evaluate feasibility of a Stop-hook condition refusing turn-end while the bound spine has an in-progress gate and a running crew whose pid is not live, per LAUNCH_ORDER's explicit proof requirement: attempt ONLY if both a red (fires on the parked shape) and a control (does not fire on a legitimate turn end) are producible; otherwise decline with reasons -- a fully acceptable outcome. Read scripts/hooks/spine_rail.py's Stop handler and its fail-open posture first. If declining, record the specific reason (the feasibility finding from context/understand: handle_post_tool_use only establishes a session->spine binding for a Bash checklist_engine.py claim, never for the MCP door spine_lease tool that is this repo's own documented default -- so decide_stop's existing mid-flight block, which any new pid-liveness clause would extend, is already inert for MCP-door sessions; extending it would ship a check that cannot fire for the dominant current dispatch path, and closing that root gap is a second subsystem outside this run's budget) and flag it as a triage candidate for the triage step.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "3b shipped with a proven red+control pair, OR declined with the specific reason recorded and flagged to triage",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-stop-hook-decision-1"
+        }
+      ],
+      "constraints": [
+        "only under decision to attempt: scripts/hooks/spine_rail.py's Stop handler + its tests",
+        "fail-open posture (Pre-Ruling 4) must be preserved if attempted"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-stop-hook-decision-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Task 3 3b",
+            "decision": "declined",
+            "reason": "handle_post_tool_use (scripts/hooks/spine_rail.py) only establishes a session->spine binding when a session claims via a Bash 'checklist_engine.py claim' command (matcher: Bash on the PostToolUse hook). This very session claimed its own lease via the MCP door (spine_lease tool, this repo's own documented default per spine.json's init imperative), and no binding was ever recorded for it -- verified directly: ran 'python3 scripts/hooks/spine_rail.py Stop' by hand against this session_id and got an empty {} (allow), and no session/spine binding file exists in this worktree at all. decide_stop's EXISTING mid-flight block already refuses ANY turn-end while a bound spine has a non-terminal, non-blocked gate under an active lease -- it does not need a new pid-liveness clause to catch the auto-backgrounded-crew-park shape, since that shape IS mid-flight. The gap is not decide_stop's logic; it is that the binding precondition it depends on is never established for MCP-door sessions. Building the pid-liveness clause LAUNCH_ORDER proposes on top of that would ship a check indistinguishable, in the dominant current dispatch path, from not shipping it at all -- a check whose output is identical in the healthy and defective world for most real dispatches is worse than an honest decline (global-orchestrator.md, 'a check that cannot fail'). Wiring the MCP door's claim/release into spine_rail's binding store (or widening PostToolUse's matcher to MCP tool calls) is a second, distinct subsystem outside this run's budget and outside the Yours file-ownership fence (touches scripts/mcp_spine_server.py and/or .claude/settings.json's hook matcher, neither listed). Declining 3b; flagging the binding gap as a triage candidate."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-suite-and-map": {
+      "id": "g5-suite-and-map",
+      "title": "Full clean-env suite (before/after) and map regeneration",
+      "imperative": "Reasoning/evidence gate. Clear caches (find . -name __pycache__ -type d -not -path './.git/*' -prune -exec rm -rf {} +), then run env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q using the poll-until idiom from g3 (this suite takes ~2 minutes, itself the harness-auto-backgrounding trigger -- do not end this turn waiting on it). Compare counts against LAUNCH_ORDER's stated baseline (3028 passed / 6 skipped from inside this worktree). Regenerate the map (python -m scripts.code_map build --root .) and note whether the tracked map/INDEX.md or map/ids.jsonl moved.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1-g4 gates closed (or g4 explicitly declined)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-g4 all closed complete (g4 explicitly declined with recorded reason)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "clean-env cache-clean full suite passes at or above the stated baseline, exit code 0",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-suite-and-map-1"
+        },
+        {
+          "id": "c2",
+          "statement": "map regenerated; tracked map/INDEX.md and map/ids.jsonl diff (if any) reviewed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "map regenerated via python -m scripts.code_map build --root .; map/INDEX.md diff reviewed (tracked-name churn from new test entities in tests/test_mcp_identity.py and tests/test_spine_lifecycle.py); map/ids.jsonl untracked/unaffected."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-suite-and-map-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-15T20:41:24.233916+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-test-isolation",
+      "why": "Isolated SPINE_ENV_KEYS from the ambient os.environ in setUp/tearDown of DC3InheritanceMechanismTests. RED reproduced live in this bound shell before the fix; GREEN after: all 3 tests in the class pass (python -m pytest -q tests/test_mcp_identity.py::DC3InheritanceMechanismTests -> 3 passed).",
+      "mechanical": false,
+      "ts": "2026-08-15T20:41:53.488933+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g2-archive-relocation",
+      "why": "Added _relocated_by_archive() to run_crew.py: when spine_terminal's direct path read misses (file absent, not malformed), it derives work_id from the spine's own parent dir and looks up .agent-work/archive/<date>-<work_id>/<basename>, exact work_id match only (never substring/prefix -- covered by the w10-vs-w1 guard test). PR #587's rescue path (result is not None branch) calls the same spine_terminal, so it is fixed too, transitively, for the case where the spine itself (not just --result) was relocated. GREEN: python -m pytest -q tests/test_crew_launcher.py tests/test_spine_lifecycle.py -> 229 passed. No-rubber-stamp guard (non-terminal, never-archived spine stays False) and cross-work-id guard both pass.",
+      "mechanical": false,
+      "ts": "2026-08-15T20:43:36.153994+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g3-doc-idiom",
+      "why": "Added 'A harness-backgrounded command is never awaitable -- do not park' section to skills/commander/references/crew-dispatch.md: states the lifetime fact (process ends with turn), names the trigger (harness auto-backgrounding a long Bash call, the ~2min full suite), gives the nohup+until-grep+tail idiom by name concretely for the full-suite check, and names the spine_halt block fallback (E1 fail-up). Postcondition grep check passes.",
+      "mechanical": false,
+      "ts": "2026-08-15T20:44:24.428058+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g4-stop-hook-decision",
+      "why": "Declined Task 3b: read spine_rail.py's Stop handler/decide_stop and its fail-open posture in full. Discovered decide_stop already refuses ANY mid-flight turn-end (no pid-check needed for the parked shape specifically), but its binding precondition (handle_post_tool_use, Bash-matcher only) never engages for MCP-door spine_lease claims -- verified live against this session (empty {} from the Stop hook, no binding file). Building LAUNCH_ORDER's proposed pid-liveness clause on an inert binding layer would ship a check indistinguishable from not shipping it, for the dominant current dispatch path -- worse than an honest decline. Recorded as user-decision evidence on this gate and flagged as triage candidate tc1 on the bound spine.",
+      "mechanical": false,
+      "ts": "2026-08-15T20:44:49.437456+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g5-suite-and-map",
+      "why": "Clean-env cache-clean full suite (env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q, via the poll-until idiom, no direct backgrounding) passed: 3031 passed, 6 skipped, 0 failed, 1136 subtests passed in 125.51s -- at/above LAUNCH_ORDER's stated baseline of 3028 passed / 6 skipped (the +3 is this run's own new tests: DC3 isolation + spine_lifecycle archive-relocation coverage; worktree-location-gated skip count matches the order's note). Map regenerated via python -m scripts.code_map build --root .; map/INDEX.md moved (6 lines changed -- entity-count churn from the new test classes/methods), map/ids.jsonl untracked so no diff to review.",
+      "mechanical": false,
+      "ts": "2026-08-15T20:55:53.417993+00:00"
+    }
+  ]
+}

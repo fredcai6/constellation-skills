@@ -1,0 +1,83 @@
+{
+  "work_id": "lh-episode-rewording",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "lh-episode-rewording",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/lh-episode-rewording/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": [
+          ".agent-work/lh-episode-rewording/execute.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Reword launcher-hygiene-001.a5, launcher-hygiene-002.a3, and launcher-hygiene-003.a5 so the episode-observation guard RealStoreTests passes, without shortening substance, touching the guard, or adding to its exception list."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Restating the three statements via apply_episode_delta.py restate-assertion op and re-running the full clean-env suite was expected to reach 0 failed directly."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "After the three restatements, the targeted guard test passed immediately, but the first full clean-env suite run failed test_canon_episode_store_untouched (previously passing) because the freshly restated episode files were tracked-but-unstaged; the test own docstring names the required order as write -> git add -> suite -> commit, which had not yet been followed."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One extra roughly two-minute suite run, backgrounded past the harness 120s foreground timeout and polled with TaskOutput block=true rather than ending the turn, after staging the three files with git add."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Staged episodes/active/launcher-hygiene-00{1,2,3}.md with git add before rerunning the full suite, matching test_canon_episode_store_untouched's documented write -> git add -> suite -> commit order; the suite then passed at 3031 passed / 6 skipped / 0 failed."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "lh-episode-rewording",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "understand",
+        "context-manifest-ref": ".agent-work/lh-episode-rewording/LAUNCH_ORDER.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "episodes/active/launcher-hygiene-002.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Determine, per the launch order own instruction, whether launcher-hygiene-002.a3 second-person flag is case (a), a quotation the guard existing carve-out should already exempt, or case (b), a genuine guard gap, before touching the record."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The carve-out test test_second_person_inside_a_quotation_is_not_flagged was expected to already exempt a verbatim quotation of the Stop hook own refusal text."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Direct calls to the guard own second_person_hits()/triggers_for() on the original statement showed only the first single-quoted excerpt (the Stop hook refusal) paired correctly; the second excerpt (the spine_status advisory, quoting \"hand off here... decline with a reason if you are nearly done\") failed to pair because its own verbatim word \"you are\" -- written \"you're\" -- contains an apostrophe adjacent to letters on both sides, which defeats the quote regex letter-boundary guard at that internal position, leaving the excerpt own \"you\" unstripped."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "About fifteen minutes reading scripts/verify_episode_observations.py regex and the carve-out test directly, plus several direct interpreter calls against triggers_for(), rather than guessing at a rewrite."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Determined this to be case (a) rather than (b): switched both verbatim excerpts in launcher-hygiene-002.a3 from single to double quotes, changing no word, which the guard own double-quote regex arm pairs correctly and which restored the exemption -- verified with triggers_for() returning [] before applying the delta."
+        }
+      }
+    }
+  ]
+}

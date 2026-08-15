@@ -1,0 +1,116 @@
+{
+  "work_id": "launcher-hygiene",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "launcher-hygiene",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/launcher-hygiene/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [".agent-work/launcher-hygiene/execute.json"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Close execute.json's g5-suite-and-map gate, whose postcondition c1 is the command `env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q`, re-verified live by checklist_engine.py's own advance call rather than trusted from an earlier manual run."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "Having already run the full suite once via the mandated poll-until idiom (nohup + until-grep, foreground-blocking) and captured its green result, the engine's own re-verification of the same command was expected to either reuse that evidence or complete quickly."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "checklist_engine.py advance re-ran the full suite command itself as part of postcondition verification, took longer than the harness's foreground command timeout, and was moved to background by the harness at 120s -- the exact auto-backgrounding trigger LAUNCH_ORDER-2.md's own text named and the prior five occurrences all failed at."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Cost one extra ~2-minute wait, polled actively via TaskOutput(block=true) inside this same turn rather than ending the turn to wait, so no dispatch was lost -- but it demonstrates the trigger fires even when the agent has already internalized and used the idiom once earlier in the same turn: the engine's own mechanical re-verification is an independent source of the same hazard, not something a single successful poll-until run upstream neutralizes."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Called TaskOutput with block=true and a generous timeout on the backgrounded task id the harness returned, read its completed output (exit 0, gate closed) inside the same turn, and continued driving the spine rather than ending the turn on the pending job."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "launcher-hygiene",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "reconcile",
+        "context-manifest-ref": ".agent-work/launcher-hygiene/STATE_NOTE.md",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": []
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "With context headroom reported low (8-9% remaining, at or above the engine's own soft threshold) and five spine steps plus a git commit/push/PR still ahead, decided to end the turn at the just-closed `execute` step boundary with STATE_NOTE.md rewritten for a fresh Commander to resume, judging that a clean gate-boundary handoff was distinct from the mid-command parking the launch order's own history warns against."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "Ending the turn at a closed spine step with a current STATE_NOTE.md and an accurate final report was expected to be an accepted resumption boundary, since the SessionStart hook text itself describes resuming an active spine run after a restart or compaction as a supported path."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The Stop hook refused the turn-end outright: 'SPINE MID-FLIGHT: gate reconcile is still open -- you are in the MIDDLE of the spine, not at its end, so ending your turn now abandons an active run. Keep working the gate.' The context-percentage advisory text on spine_status ('hand off here... advisory -- decline with a reason if you're nearly done') and the Stop hook's own mechanical refusal are two different mechanisms with different authorities, and only the Stop hook is actually enforced; the advisory alone is not license to end the turn."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One rejected turn-end, a written but ultimately premature natural-language handoff message, and one extra round trip before resuming the reconcile gate -- inexpensive here because the Stop hook caught it before the process actually exited, but the near-miss is a direct instance of the exact class of failure (a Commander choosing to end its turn mid-run because waiting, or in this case handing off, felt like the careful choice) this whole launch order exists to close."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Treated the Stop hook's refusal as authoritative over the softer context-percentage advisory, resumed driving reconcile -> triage -> review -> feedback in the same turn via mcp__spine__spine_start / spine_evidence / spine_advance, and deferred any actual handoff decision to whatever mechanism -- context compaction or a genuine terminal state -- the harness enforces on its own rather than choosing one unilaterally mid-spine."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "launcher-hygiene",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/launcher-hygiene/REPLAN_INPUT.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [".agent-work/launcher-hygiene/REPLAN_INPUT.json"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Author .agent-work/launcher-hygiene/REPLAN_INPUT.json to satisfy execute's c2 postcondition, which requires it to pass `verify_iterative_role_artifacts.py commander --work-id launcher-hygiene` (a G2 check)."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The bundled REPLAN_INPUT.template.json in .agent-work/templates/ was expected to be sufficient on its own to know the required shape."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The template alone under-specified several structural constraints the actual verifier enforces (e.g. open_current_wave_issue_ids and completed_outcomes must exactly partition current_wave.issues' ids with no overlap; discrepancy classifications are drawn from a fixed enum; current_plan re-validates against the full G1 manifest shape via a reused verify_manifest_shape import) -- these only became visible by reading skills/replan/scripts/verify_replan.py and the installed constellation-to-initial-issues verify_issue_set.py directly, since verify_iterative_role_artifacts.py resolves its verifier module from the installed skills root (~/.claude/skills), not from this repo's own skills/ source tree."
+        },
+        "impact-cost": {
+          "strength": "weak",
+          "statement": "Two extra file reads (both verifier scripts) before authoring the JSON, avoiding a guess-fail-reread cycle against the actual G2 check; the authored file passed verify_iterative_role_artifacts.py on the first run after that reading."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Read skills/replan/scripts/verify_replan.py's verify_replan_input and the installed constellation-to-initial-issues verify_issue_set.py's verify_manifest_shape directly before authoring REPLAN_INPUT.json, then filled every field with this run's real completed_outcomes, wave_evidence, and discrepancies (the Stop-hook MCP-door binding gap and the six-occurrence auto-backgrounding pattern) rather than adapting the template's placeholder prose."
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "lh-episode-rewording",
+      "spec_path": ".agent-work/lh-episode-rewording/LAUNCH_ORDER.md",
+      "intent_and_why": "The episode-observation guard reds the suite on three offenders in launcher-hygiene-001/002/003; reword to green without shortening substance, without touching the guard, and without adding to its exception list."
+    },
+    "definition_of_done": [
+      "python -m pytest -q tests/test_episode_observations.py is green",
+      "full clean-env suite shows 0 failed (other than the two named pre-existing Windows-only failures, N/A on this Linux worktree)",
+      "each statement's before/after text and the 002 (a)/(b) determination are recorded",
+      "changes committed and pushed to fix/launcher-hygiene"
+    ],
+    "good_enough": {
+      "mandatory_quality": "Every word of substance in the three assertions survives; the store is only ever written through scripts/apply_episode_delta.py",
+      "sufficient_evidence": "Targeted guard test green plus full clean-env suite green",
+      "appetite": "One gate, no crew"
+    },
+    "hard_constraints": [
+      "No addition to scripts/verify_episode_observations.py EXCEPTIONS",
+      "No record deletion",
+      "The guard itself and its test file are not in scope",
+      "episodes/ written only through scripts/apply_episode_delta.py"
+    ],
+    "fixed_decisions": [
+      "Work happens on the existing fix/launcher-hygiene branch, no second PR",
+      "Commander is fenced from merging"
+    ],
+    "current_wave": {
+      "objective": "Reword launcher-hygiene-001.a5, launcher-hygiene-002.a3, launcher-hygiene-003.a5 so the episode-observation guard passes, preserving substance.",
+      "exit_criteria": [
+        "tests/test_episode_observations.py green",
+        "full clean-env suite 0 failed",
+        "commit pushed to fix/launcher-hygiene"
+      ],
+      "issues": [
+        {
+          "id": "g1-reword",
+          "title": "Restate the three offending assertions via apply_episode_delta.py",
+          "desired_outcome": "The episode-observation guard passes on episodes/active/launcher-hygiene-00{1,2,3}.md with no substance lost.",
+          "useful_now": "It is the only thing blocking PR #591, whose code is otherwise finished, correct, and verified.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "python -m pytest -q tests/test_episode_observations.py and the full clean-env suite both pass",
+          "implementation_latitude": "Choose the minimal reword per statement; 002.a3's (a)/(b) determination is this run's own call, made against the guard's own regex, not guessed",
+          "hard_constraints_no_gos": [
+            "No exception-list addition",
+            "No record deletion",
+            "No edit to scripts/verify_episode_observations.py or tests/test_episode_observations.py"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "episodes/active/launcher-hygiene-001.md",
+            "episodes/active/launcher-hygiene-002.md",
+            "episodes/active/launcher-hygiene-003.md",
+            "scripts/apply_episode_delta.py",
+            "scripts/verify_episode_observations.py"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [],
+    "uncertainty_register": [],
+    "parked_possibilities": []
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "g1-reword",
+      "outcome": "Restated launcher-hygiene-001.a5 and launcher-hygiene-003.a5 by adding an explicit subject before the clause-opening bare imperative ('read'/'Read'); restated launcher-hygiene-002.a3 by switching both verbatim excerpts from single to double quotes only, with no word changed, per the (a) determination that the guard's existing quoted-machine-output carve-out already covers this shape but its single-quote pairing regex breaks internally on the excerpt's own verbatim 'you're'.",
+      "evidence": "python scripts/apply_episode_delta.py --delta .agent-work/lh-episode-rewording/reword-delta.json applied cleanly (dry-run verified first); python -m pytest -q tests/test_episode_observations.py green; full clean-env suite green."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The episode-observation guard reds RealStoreTests on exactly launcher-hygiene-001.a5, -002.a3, -003.a5 before this run.",
+      "expected": "2 failed, matching LAUNCH_ORDER's report",
+      "observed": "python -m pytest -q tests/test_episode_observations.py showed 2 failed before the reword, 0 failed after",
+      "source": "tests/test_episode_observations.py::RealStoreTests"
+    },
+    {
+      "claim": "002.a3's flagged second-person 'you' originates inside a verbatim-quoted excerpt, not the record addressing a reader.",
+      "expected": "The existing carve-out (test_second_person_inside_a_quotation_is_not_flagged) should exempt it",
+      "observed": "Direct call to the guard's own second_person_hits()/triggers_for() showed the single-quote pairing regex fails to strip the second excerpt because its own verbatim 'you're' breaks the delimiter's letter-boundary guard; switching to double quotes (no word changed) restores the exemption, verified with triggers_for() returning []",
+      "source": "scripts/verify_episode_observations.py (direct interactive verification against its regex, this run)"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D1",
+      "signal": "scripts/apply_episode_delta.py's restate-assertion op fully expressed all three restatements; no hand-edit of episode markdown was needed.",
+      "classification": "evidence_only",
+      "affects": "LAUNCH_ORDER's conditional instruction to hand-edit only if the delta tool could not express the restatement",
+      "evidence": "python scripts/apply_episode_delta.py --delta .agent-work/lh-episode-rewording/reword-delta.json (dry-run and real run both succeeded for all three ops)",
+      "reason": "Recorded so the launch order's own contingency is known to be moot for this run; no issue warranted."
+    },
+    {
+      "id": "D2",
+      "signal": "scripts/verify_episode_observations.py's single-quote span regex ((?<![A-Za-z])'[^']*'(?![A-Za-z])) fails to pair a legitimately quoted excerpt when the excerpt's own verbatim text contains a letter-adjacent apostrophe (e.g. \"you're\"), because the pairing search treats that internal apostrophe as a candidate delimiter and fails the lookahead/lookbehind guard on both sides.",
+      "classification": "later_only",
+      "affects": "Future episode records that verbatim-quote machine text containing a contraction or possessive, using single quotes",
+      "evidence": "Reproduced directly: g.second_person_hits() on the pre-reword launcher-hygiene-002.a3 statement returns ['you'] sourced from the second (unpaired) quoted span, not the first; reworking the excerpt to double quotes makes triggers_for() return [] with zero wording change.",
+      "reason": "The guard and its test file are explicitly out of scope for this run (LAUNCH_ORDER File Ownership); recorded as a finding for Triage rather than fixed here. Double-quoting is a viable house convention going forward for any verbatim excerpt containing an apostrophe, but that is a decision for the guard's owner, not this run."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "episodes/active/launcher-hygiene-001.md",
+      "episodes/active/launcher-hygiene-002.md",
+      "episodes/active/launcher-hygiene-003.md",
+      "scripts/apply_episode_delta.py",
+      "scripts/verify_episode_observations.py"
+    ],
+    "map_status": "No docs/architecture map in this repo (skill-source repo); map_orient.py returned DEGRADED-UNPARSEABLE at context, README.md substituted and hash-pinned in .agent-work/lh-episode-rewording/map-orientation.json."
+  }
+}

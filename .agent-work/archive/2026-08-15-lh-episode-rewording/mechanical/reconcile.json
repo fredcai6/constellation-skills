@@ -1,0 +1,25 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "mechanical": {
+    "run": "lh-episode-rewording",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 6,
+    "spine-step": "reconcile",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-lh-episode-rewording-reconcile@f6fb79287fbc59c73b678ff8d38f903bac4986ec",
+    "artifact-ref": [
+      "episodes/active/launcher-hygiene-001.md",
+      "episodes/active/launcher-hygiene-002.md",
+      "episodes/active/launcher-hygiene-003.md"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "lh-episode-rewording",
+    "generated_at": "2026-08-15T21:39:59Z"
+  }
+}

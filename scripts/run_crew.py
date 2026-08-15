@@ -314,6 +314,43 @@ def result_fresh(result: str | os.PathLike[str], root: Path, since: str) -> bool
     return path.stat().st_mtime >= floor.timestamp()
 
 
+def _relocated_by_archive(path: Path, root: Path) -> Path | None:
+    """Where the `archive` gate's `close_work` would have moved `path` if it
+    was genuinely archived: `.agent-work/archive/<date>-<work_id>/<basename>`
+    (`spine_lifecycle.archive_name_for`'s own naming, not imported here --
+    `spine_lifecycle` imports THIS module, so importing it back would be
+    circular; the convention is small enough to re-derive from its one fixed
+    shape, `f"{today}-{work_id.replace('/', '-')}"`, `today` always `YYYY-MM-DD`).
+
+    `work_id` is derived from `path`'s own parent directory name relative to
+    `.agent-work` -- never trusted from elsewhere -- so a spine already living
+    UNDER `.agent-work/archive/...` (already archived) is never re-resolved.
+    The date segment is matched positionally (10 chars + `-`), and the
+    remainder compared for EXACT equality against the derived work_id, never
+    a substring/prefix match -- archiving `w10` must never satisfy a lookup
+    for `w1`. Returns the first matching archived spine file that actually
+    exists, or `None` if `path` was never relocated there."""
+    agent_work = (root / ".agent-work").resolve()
+    try:
+        work_id = path.resolve().parent.relative_to(agent_work).as_posix()
+    except ValueError:
+        return None
+    if work_id == "archive" or work_id.startswith("archive/"):
+        return None
+    archive_work_id = work_id.replace("/", "-")
+    archive_root = agent_work / "archive"
+    if not archive_root.is_dir():
+        return None
+    for entry in sorted(archive_root.iterdir()):
+        name = entry.name
+        if not entry.is_dir() or len(name) <= 11 or name[10] != "-" or name[11:] != archive_work_id:
+            continue
+        candidate = entry / path.name
+        if candidate.is_file():
+            return candidate
+    return None
+
+
 def spine_terminal(spine: str | os.PathLike[str], root: Path) -> bool:
     """Whether the bound spine at `spine` reached a terminal state: every item
     `complete`/`skipped` (`checklist_engine.active_id(...) is None`) AND, for
@@ -341,10 +378,26 @@ def spine_terminal(spine: str | os.PathLike[str], root: Path) -> bool:
     yet. `checklist_engine.py` is out of scope for this fix, so the
     type-aware check lives here rather than there -- the cleaner shape is a
     type-aware `is_terminal` owned by the engine itself, noted as a seam for
-    whoever picks that up."""
+    whoever picks that up.
+
+    A `path` that is simply ABSENT is tried once more through
+    `_relocated_by_archive` before giving up (launcher-hygiene Task 2): the
+    `archive` gate legitimately relocates the ENTIRE work area, spine
+    included, so a genuinely terminal spine-only dispatch reading its
+    originally-recorded path after a successful archive would otherwise see
+    a plain file-not-found and be judged never-terminal -- inverting a
+    successful run into `failed`. A path that EXISTS but is malformed/
+    unparseable is never retried through the archive -- it was not relocated,
+    it is just broken there -- so a genuinely incomplete run still reads
+    `False` with no archive dir to rescue it (no rubber stamp)."""
     path = Path(spine)
     if not path.is_absolute():
         path = root / path
+    if not path.is_file():
+        relocated = _relocated_by_archive(path, Path(root))
+        if relocated is None:
+            return False
+        path = relocated
     try:
         checklist = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):

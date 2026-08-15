@@ -563,6 +563,20 @@ class DC3InheritanceMechanismTests(unittest.TestCase):
     exercised here."""
 
     def setUp(self):
+        # Isolate the identity-seam keys from the CALLING test process's own
+        # environment before measuring anything: a Commander/crew dispatched
+        # via `run_crew.py --backend cli --spine ...` already has SPINE_FILE/
+        # SPINE_SESSION bound into its real shell before this test ever runs
+        # (the doctrine-recommended workflow -- verify your door, then work).
+        # Left in place, that ambient state fails the environ-isolation test
+        # below for a reason unrelated to what it verifies: this class asks
+        # whether LAUNCHING the parent subprocess mutates THIS process's
+        # os.environ, not whether the shell that invoked the suite happened
+        # to carry these vars from ITS OWN dispatch. Saved/stripped here,
+        # not inside the test, because `_env_before` below must reflect the
+        # isolated baseline the assertions actually compare against.
+        self._ambient_spine_env = {k: os.environ.pop(k) for k in SPINE_ENV_KEYS if k in os.environ}
+
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
 
@@ -588,6 +602,7 @@ class DC3InheritanceMechanismTests(unittest.TestCase):
     def tearDown(self):
         self.parent.close()
         self.tmp.cleanup()
+        os.environ.update(self._ambient_spine_env)
 
     def test_launching_the_parent_never_touches_the_calling_processs_own_environ(self):
         """The repo's actual delivery mechanism (an explicit `env=` block

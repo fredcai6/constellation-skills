@@ -1,0 +1,234 @@
+{
+  "work_id": "lh-episode-rewording",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-reword"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope (LAUNCH_ORDER.md, MISSION_FRAME.md) still hold, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "LAUNCH_ORDER.md and MISSION_FRAME.md intent/scope confirmed still hold; no drift since plan."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-reword": {
+      "id": "g1-reword",
+      "title": "Reword the three offending assertion statements via apply_episode_delta.py",
+      "imperative": "REASONING GATE, no crew dispatch (LAUNCH_ORDER: 'Do not dispatch a crew'; deliverable is a wording-only episode-store restatement, context already held from the understand step's direct verification against scripts/verify_episode_observations.py's own regex). Apply .agent-work/lh-episode-rewording/reword-delta.json via `python scripts/apply_episode_delta.py --delta .agent-work/lh-episode-rewording/reword-delta.json` (already dry-run verified) using restate-assertion for launcher-hygiene-001.a5, launcher-hygiene-003.a5 (each: add an explicit subject before the clause-opening bare imperative, no shortening, 003's installed-vs-repo skills-root detail preserved verbatim) and launcher-hygiene-002.a3 (switch both verbatim excerpts from single to double quotes only, per the (a) determination recorded at understand -- no word of either quoted excerpt changes). Then run the targeted guard test and the full clean-env suite; satisfy c1/c2 by advance (command postconditions, never attest). Record before/after text for all three statements as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "reword-delta.json authored and dry-run validated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "reword-delta.json authored at .agent-work/lh-episode-rewording/reword-delta.json and dry-run validated (all three restate-assertion ops accepted)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "targeted guard test green: python -m pytest -q tests/test_episode_observations.py",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_episode_observations.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-reword-7"
+        },
+        {
+          "id": "c2",
+          "statement": "full clean-env suite: 0 failed (episode-guard failures gone; only the two named pre-existing Windows-only failures may remain, N/A on this Linux worktree so expect 0 failed)",
+          "check": {
+            "kind": "command",
+            "command": "rm -f /tmp/lher-suite.log && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q > /tmp/lher-suite.log 2>&1; tail -5 /tmp/lher-suite.log; grep -qE '^[0-9]+ failed' /tmp/lher-suite.log && exit 1 || exit 0"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-reword-8"
+        },
+        {
+          "id": "c3",
+          "statement": "before/after text for all three statements, and the 002 (a)/(b) finding, recorded as evidence",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-reword-5"
+        }
+      ],
+      "constraints": [
+        "episodes/ only through apply_episode_delta.py -- never hand-edited",
+        "no addition to EXCEPTIONS in scripts/verify_episode_observations.py",
+        "no record deletion",
+        "tests/test_episode_observations.py and its exception list not ours to touch"
+      ],
+      "anchors": {
+        "structural": [
+          "episodes/active/launcher-hygiene-001.md \u2014 a5",
+          "episodes/active/launcher-hygiene-002.md \u2014 a3",
+          "episodes/active/launcher-hygiene-003.md \u2014 a5"
+        ],
+        "capability": [
+          "episode store restate-assertion op (scripts/apply_episode_delta.py) \u2014 rewrite one statement, append verbatim-original history line"
+        ],
+        "constraint": [
+          "LAUNCH_ORDER: preserve substance completely, do not shorten",
+          "LAUNCH_ORDER: escape hatch not permitted (no exception-list add, no deletion, no guard edit)"
+        ],
+        "decision": [
+          "002.a3 is case (a): carve-out exists, quoting form not recognized due to internal apostrophe breaking single-quote pairing @grade: settled/measured \u00b7 leans g1-reword \u00b7 settle: already run -- triggers_for() on the double-quoted restatement returns []"
+        ],
+        "evidence": [
+          "tests/test_episode_observations.py::RealStoreTests green",
+          "full clean-env suite 0 failed"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-reword-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_episode_observations.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-reword-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "rm -f /tmp/lher-suite.log && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q > /tmp/lher-suite.log 2>&1; tail -5 /tmp/lher-suite.log; grep -qE '^[0-9]+ failed' /tmp/lher-suite.log && exit 1 || exit 0",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-reword-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_episode_observations.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-reword-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "rm -f /tmp/lher-suite.log && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q > /tmp/lher-suite.log 2>&1; tail -5 /tmp/lher-suite.log; grep -qE '^[0-9]+ failed' /tmp/lher-suite.log && exit 1 || exit 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-reword-5",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Evidence required",
+            "before_001_a5": "Called TaskOutput with block=true and a generous timeout on the backgrounded task id the harness returned, read its completed output (exit 0, gate closed) inside the same turn, and continued driving the spine rather than ending the turn on the pending job.",
+            "after_001_a5": "Called TaskOutput with block=true and a generous timeout on the backgrounded task id the harness returned; this run then read its completed output (exit 0, gate closed) inside the same turn, and continued driving the spine rather than ending the turn on the pending job.",
+            "before_003_a5": "Read skills/replan/scripts/verify_replan.py's verify_replan_input and the installed constellation-to-initial-issues verify_issue_set.py's verify_manifest_shape directly before authoring REPLAN_INPUT.json, then filled every field with this run's real completed_outcomes, wave_evidence, and discrepancies (the Stop-hook MCP-door binding gap and the six-occurrence auto-backgrounding pattern) rather than adapting the template's placeholder prose.",
+            "after_003_a5": "This run read skills/replan/scripts/verify_replan.py's verify_replan_input and the installed constellation-to-initial-issues verify_issue_set.py's verify_manifest_shape directly before authoring REPLAN_INPUT.json, then filled every field with this run's real completed_outcomes, wave_evidence, and discrepancies (the Stop-hook MCP-door binding gap and the six-occurrence auto-backgrounding pattern) rather than adapting the template's placeholder prose."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-reword-6",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Evidence required (002.a3 + a/b finding)",
+            "before_002_a3": "The Stop hook refused the turn-end outright: 'SPINE MID-FLIGHT: gate reconcile is still open -- you are in the MIDDLE of the spine, not at its end, so ending your turn now abandons an active run. Keep working the gate.' The context-percentage advisory text on spine_status ('hand off here... advisory -- decline with a reason if you're nearly done') and the Stop hook's own mechanical refusal are two different mechanisms with different authorities, and only the Stop hook is actually enforced; the advisory alone is not license to end the turn.",
+            "after_002_a3": "The Stop hook refused the turn-end outright: \"SPINE MID-FLIGHT: gate reconcile is still open -- you are in the MIDDLE of the spine, not at its end, so ending your turn now abandons an active run. Keep working the gate.\" The context-percentage advisory text on spine_status (\"hand off here... advisory -- decline with a reason if you're nearly done\") and the Stop hook's own mechanical refusal are two different mechanisms with different authorities, and only the Stop hook is actually enforced; the advisory alone is not license to end the turn.",
+            "a_b_finding": "(a): the carve-out (test_second_person_inside_a_quotation_is_not_flagged) exists and covers exactly this shape, but the single-quote pairing regex in scripts/verify_episode_observations.py requires a non-letter on both sides of each delimiter; the advisory excerpt's own verbatim word you're has a letter-adjacent apostrophe, which breaks the closing-delimiter lookahead and leaves that quoted span unpaired, so its you was read as unquoted prose. Switching both excerpts from single to double quotes (zero words changed) restores pairing -- verified with triggers_for() returning [] on the reworded statement."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-reword-7",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_episode_observations.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-reword-8",
+          "type": "command-output",
+          "payload": {
+            "cmd": "rm -f /tmp/lher-suite.log && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q > /tmp/lher-suite.log 2>&1; tail -5 /tmp/lher-suite.log; grep -qE '^[0-9]+ failed' /tmp/lher-suite.log && exit 1 || exit 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-reword",
+      "statement": "scripts/verify_episode_observations.py's single-quote span regex fails to pair a legitimately quoted excerpt when the excerpt's own verbatim text contains a letter-adjacent apostrophe (e.g. a contraction like \"you're\" or a possessive), because the pairing search treats that internal apostrophe as a candidate delimiter and the lookahead/lookbehind guard then fails on both sides. Observed live on launcher-hygiene-002.a3 (LAUNCH_ORDER:lh-episode-rewording). Not fixed here -- the guard and its test file are explicitly out of scope for this run. Recommend: either a house convention of double-quoting any verbatim excerpt containing an apostrophe, or a small regex fix so an internal apostrophe cannot break pairing -- decision belongs to the guard's owner."
+    }
+  ],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-15T21:30:15.663835+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-reword",
+      "why": "All three postconditions satisfied: targeted guard green, full clean-env suite green, before/after text plus the 002 (a)/(b) finding attached as evidence.",
+      "mechanical": false,
+      "ts": "2026-08-15T21:39:42.450540+00:00"
+    }
+  ]
+}

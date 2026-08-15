@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "work_id": "launcher-hygiene",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/launcher-hygiene",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "map/INDEX.md",
+      "content_hash": "d1e99c5dd93bc640173c67b826158914c3acb8b6e3b6b20b7e99ee72f8a5b1c5",
+      "source": "agent-declared"
+    },
+    {
+      "path": "map/scripts.run_crew/INDEX.md",
+      "content_hash": "5e6024405db077343359346537c60d72576cd3e069d7f27f0048b270e302b546",
+      "source": "agent-declared"
+    },
+    {
+      "path": "map/scripts.hooks.spine_rail/INDEX.md",
+      "content_hash": "747030859e15d8572e13f0ca9911708c1df865747c72eca621319db6094c1f0f",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "no docs/architecture packet map exists in this repo; the repo's actual current map is the code_map-derived map/INDEX.md"
+  ],
+  "escalation": "Reporting to admiral-post-568: map_orient.py's expected packet-map format is absent; using code_map's map/INDEX.md instead, regenerated via python -m scripts.code_map build --root .",
+  "emitted_at": "2026-08-15T20:28:35.864223+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

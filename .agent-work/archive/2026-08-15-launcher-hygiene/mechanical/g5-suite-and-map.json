@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g5-suite-and-map",
+  "mechanical": {
+    "run": "launcher-hygiene",
+    "project": "constellation-skills",
+    "spine-step": "g5-suite-and-map",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-launcher-hygiene-g5-suite-and-map@bc0950de45b0c9b3a51ddf20e73de495ee2a8372",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "launcher-hygiene",
+    "generated_at": "2026-08-15T20:44:53Z"
+  }
+}
