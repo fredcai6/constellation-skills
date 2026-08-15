@@ -132,6 +132,12 @@ class TestWorktreePathFor:
             assert banned not in src
 
 
+class TestDefaultWtRoot:
+    def test_resolves_to_dot_worktrees_under_root(self):
+        root = Path("/x")
+        assert sl._default_wt_root(root) == str(root / ".worktrees")
+
+
 @requires_git
 class TestWorktreePathForRealWorktree:
     def test_reproduces_this_runs_real_worktree(self):

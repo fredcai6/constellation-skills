@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "archive",
+  "files": [],
+  "repo_rev": {
+    "commit": "247ffa1faa7238df55ed67ea2b8c76aeb384a2f4"
+  },
+  "run": {
+    "work_id": "epic-568-codex-tier-local",
+    "generated_at": "2026-08-14T17:39:45Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-codex-tier-routing",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-codex-tier-routing",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-codex-tier-routing"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-codex-tier-routing"
+    }
+  }
+}

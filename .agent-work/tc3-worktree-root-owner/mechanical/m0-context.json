@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "tc3-worktree-root-owner",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-tc3-worktree-root-owner-m0-context@e5b03468d7a1f2a6d67aee38e8a60ece804c64eb",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "tc3-worktree-root-owner",
+    "generated_at": "2026-08-15T05:48:30Z"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "work_id": "epic-568-530",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-568-530",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": ".agent-work/epic-568-530/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": [
+          ".agent-work/epic-568-530/INCIDENTS.md",
+          ".agent-work/epic-568-530/RUN_SUMMARY.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Drive the bounded worktree-attribution correction through MCP, real red/green proof, independent review, and full Commander closeout."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The normal apply_patch tool would update tracked and work-area artifacts inside the repo-local writable worktree."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The normal patch helper failed with a bwrap loopback RTM_NEWADDR permission error even for writable worktree paths, while the escalated TTY apply_patch executable completed the same patches."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Plan repair and implementation dispatch paused until the failure was reported and a supported patch route was confirmed."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Use the approved escalated TTY apply_patch executable with patch text on stdin and EOF, and retain the incident in the work artifacts."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "weak",
+          "statement": "The failure appears to be sandbox-helper network namespace setup rather than repository path permissions."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "contract": 1,
+  "step": "context",
+  "files": [
+    {
+      "root": "skill",
+      "path": "references/global-orchestrator.md",
+      "rev": null
+    },
+    {
+      "root": "skill",
+      "path": "references/global-everyone.md",
+      "rev": null
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "rev": "10c0027e40163ceebbaf0eaa5c9560c60df641c9"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/GLOSSARY.md",
+      "rev": "6594c7c8ec53d1c2f450ea24f6e634d4fe1e2629"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/engine-config.json",
+      "rev": null
+    }
+  ],
+  "repo_rev": {
+    "commit": "0448275ef08993967674cca0807457de15e8c299"
+  },
+  "run": {
+    "work_id": "epic-568-510",
+    "generated_at": "2026-08-14T16:10:45Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-510",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-510",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-510"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-510"
+    }
+  }
+}

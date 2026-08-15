@@ -152,10 +152,10 @@ def _now_iso() -> str:
 
 
 def _default_wt_root(root: Path) -> str:
-    """A sibling of the main checkout named `<repo-dir>-wt` -- measured against
+    """Nested under the main checkout at `<root>/.worktrees` -- measured against
     the live tree: `/home/tommy/projects/constellation-skills` pairs with
-    `/home/tommy/projects/constellation-skills-wt`."""
-    return str(root.parent / f"{root.name}-wt")
+    `/home/tommy/projects/constellation-skills/.worktrees`."""
+    return str(root / ".worktrees")
 
 
 def _active_engine_session_spine(root: Path, work_id: str) -> Path | None:

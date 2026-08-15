@@ -1,0 +1,44 @@
+{
+  "work_id": "epic-568-codex-tier-local",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["e0-context", "g1-implement", "g1-review", "g1-integrate"],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context", "title": "Confirm bounded context",
+      "imperative": "Confirm the frozen launch order and mission frame before changing the launcher.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "bounded metadata-only intent confirmed", "check": null, "satisfied": false}],
+      "constraints": ["LAUNCH_ORDER:File ownership"], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement", "title": "Persist Codex reasoning effort metadata",
+      "imperative": "Add optional reasoning effort parser, CrewSpec, registry, dispatch, relaunch, and resume threading with focused red-green tests. Do not alter Claude argv.",
+      "preconditions": [{"id": "p1", "statement": "execution context confirmed", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "implementation and focused tests completed", "check": null, "satisfied": false}],
+      "constraints": ["metadata-only", "legacy entries use optional lookup", "no Claude reasoning flag"],
+      "anchors": {"structural": ["scripts/run_crew.py"], "capability": ["external record-only registry"], "constraint": ["LAUNCH_ORDER:Pre-rulings"], "decision": ["decision:metadata-only @grade: settled/human · leans g1-implement"], "evidence": ["tests/test_crew_launcher.py"], "confidence_flags": ["degraded map recorded in map-orientation.json"]},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review", "title": "Review metadata routing",
+      "imperative": "Independently inspect the diff and focused test evidence for scope and backward compatibility.",
+      "preconditions": [{"id": "p1", "statement": "implementation evidence exists", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "review recorded", "check": null, "satisfied": false}],
+      "constraints": ["independent review required"], "anchors": {"inherits": "g1-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate", "title": "Verify Codex metadata routing",
+      "imperative": "Run the focused launcher suite and verify unchanged Claude argv coverage.",
+      "preconditions": [{"id": "p1", "statement": "review recorded", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "focused launcher suite passes", "check": {"kind": "command", "command": "python -m pytest tests/test_crew_launcher.py -q"}, "satisfied": false}],
+      "constraints": ["Linux failures block"], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null, "triage_candidates": [], "blockers": []
+}

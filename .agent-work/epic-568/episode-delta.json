@@ -1,0 +1,544 @@
+{
+  "work_id": "epic-568",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-568",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-568/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-568/STATE_NOTE.md",
+          ".agent-work/epic-568/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Resume an epic whose Admiral session had died mid-wave and adjudicate whatever its Commanders returned."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A dead Admiral would leave either an unlaunched wave or an adjudicated one."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The prior Admiral died at heartbeat 16:03Z, after dispatching three wave-2 Commanders but before any of them reported. All three finished, parked at their archive gate, and waited about three hours with no adjudicator. The epic lease was still held and stamped active by the dead session."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Roughly three hours of finished work sat unadjudicated, and the run's own lease showed as live ownership belonging to a process that no longer existed."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The resuming session rebuilt ground truth from spine files and worktree state rather than from the stale state note, and refreshed the inherited lease heartbeat once it confirmed the contract authorized it."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "The state note described the wave as still needing launch, so it described the world as of the moment before the dispatch that killed the session."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-568",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-568/STATE_NOTE.md",
+        "refusals": 3,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-568/LATITUDE_CONTRACT.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Clear the archive gate that three Commanders were parked at."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The blockers named authority_needed: Admiral, so the Admiral was expected to hold that authority."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The resuming Admiral first read the blockers as a human escalation and presented them to the human as their decision. The contract's decision-classes table already recorded merge-to-main as delegated, with git push and gh pr create pre-cleared before wave 1."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One full turn was spent asking the human to decide something already delegated, and the correction had to be made in front of them."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The contract was re-read before the second attempt, and publication proceeded under the delegated class with the misrouting recorded rather than quietly fixed."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "Commanders are fenced from publishing by design, so their blockers name the Admiral rather than escalating; reading authority_needed as escalation inverted that."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-568",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-568/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 4,
+        "artifact-ref": [
+          ".agent-work/epic-568/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Measure a lane's gate in a worktree that wave 1 had relocated."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A test file byte-identical to main would behave the same as on main."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "tests/test_episode_negative_control.py failed in the relocated worktree and passed on main with the file unchanged. The bytecode cache embedded the pre-relocation path constellation-skills-wt/, so inspect.getsource resolved to a file that no longer existed and raised OSError."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Four separate falsifications were needed to attribute it: reverting the lane's source, deleting its episodes, and moving its work area aside all left the failure standing."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The measurement was repeated after clearing __pycache__, and cache clearing became part of every later gate measurement in the run."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "The failure surfaced about four thousand lines from its cause, in an assertion about oracle independence that has nothing to do with bytecode."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-568",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-568/STATE_NOTE.md",
+        "refusals": 3,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-568/transitions/wave-2-gate-refusal/REPLAN_RESULT.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Publish three lanes that had each returned an independent reviewer APPROVE."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "An independent APPROVE would imply the change had been measured against the suite it affects."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "All three lanes failed their own full Linux suite while main was green at 2980 passed and 0 failed. Every reviewer had verified targeted tests only; the Codex lane's reviewer ran 166 launcher tests. None ran the suite that caught the failures."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The whole wave went to repair instead of publication, and three lanes believed they were finished when they were not."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The gate was measured by the Admiral at each lane's exact head against a freshly re-measured baseline, rather than reusing any Commander's reported numbers."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "Review depth rather than implementation quality was what let three red lanes reach the merge gate."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-568",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-568/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-568/evidence/main-baseline-31812026263-failures.txt"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Apply the wave-2 merge gate's carve-out for Windows-only CI failures."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The carve-out would exempt a subset of CI while other jobs still blocked merges."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The repository's CI defines exactly one job, running on windows-latest. There is no Linux or other CI job, so the clause making non-Windows CI failures blocking describes a job that cannot exist."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The gate's only remaining blocking signals were the locally-run Linux suite and the failure-set difference; CI carried no independent blocking weight."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The observation was recorded and raised with the human rather than resolved by the Admiral, since the merge gate sits inside a fixed boundary."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-568",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-568/STATE_NOTE.md",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-568/evidence/pr579-31841505188-failures.txt"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Decide the merge for a lane whose CI added five failing tests against the main baseline."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Added failures would indicate the change broke something."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "All five added failures raised the identical pre-existing InstallError already producing 201 occurrences in the baseline run, and 68 of main's 84 baseline failures sat in the same two files. Sibling tests in the same class already failed on main. The lane had added tests traversing an already-broken Windows path."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The merge was refused under the letter of the gate while the evidence showed the change was clean, and the conflict had to go to the human."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The human amended the gate to compare by error signature rather than by test name, and the merge proceeded on that basis."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "Read literally the rule froze test growth near the broken path until the underlying defect was fixed."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-568",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-568/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-568/triage-candidates/crew-dispatch-must-bind-the-spine-door.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Require dispatched Commanders to interact with their spines only through the MCP door."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Each dispatched Commander's door would resolve to the spine it was dispatched to drive."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The door binds at module import from SPINE_FILE, which .mcp.json defaults to the interactive demo, and a running server cannot be rebound. Three separate sessions received doors pointed at a demo spine, one of them still carrying the pre-relocation path. The constraint written into their orders was impossible to satisfy from the sessions it was issued into."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Three agents produced three different responses to one cause: one obeyed and could not take its lease, one used the engine CLI and disclosed it, and one refused to act at all."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Later dispatches went through the cli backend with --spine, which binds the door before the child's MCP servers start, and the blanket MCP-only wording was withdrawn from subsequent orders."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "An unsatisfiable constraint did not stop the work; it silently varied how each agent handled it, and only the disclosing agent left a trace."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-568",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-568/STATE_NOTE.md",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".worktrees/epic-568-codex-tier-routing/.agent-work/epic-568-codex-tier-local/ARCHIVE_RESULT.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Complete the archive gate on a lane whose publication had been cleared."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A Commander with a live door would claim its lease and advance."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The Commander found its door bound to the interactive-demo spine and declined to call spine_lease claim or spine_advance, because either would have mutated the demo spine while appearing to succeed. It also declined to edit the shared .mcp.json, which would have corrupted two concurrent Commanders' bindings, and declined an engine CLI fallback its order forbade."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The archive did not complete on that attempt, and the lane needed a relaunch with the door bound."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The crew was relaunched through the registry's own abandon-and-relaunch path with the spine bound, and completed the archive and released its lease within minutes."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "The failure mode was not an unusable door but a usable door pointed at someone else's spine."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-568",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-568/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 1,
+        "failed-commands": 2,
+        "artifact-ref": [
+          ".agent-work/epic-568/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Establish whether a lane was publishable while its Commander was still working."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A worktree reporting a clean git status would be at rest and safe to measure."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The full suite returned two failures and the Admiral reported the lane as not publishable. The Commander was mid-write on three episode files; a targeted rerun minutes later passed, and git status then showed those files modified. The earlier clean status had been a momentary gap between the Commander's own operations."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "A false red was stated to the human and had to be retracted, and the lane's real gate remained unmeasured until its report arrived."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Later measurements were taken only after a Commander had formally returned, and spine state and status snapshots were treated as progress signals rather than as evidence of rest."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "Another Commander had already reported this same hazard earlier in the run, and it had been recorded in the log before it was repeated."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-568",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-568/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".worktrees/epic-568-510/.agent-work/archive/2026-08-15-epic-568-510/ENGINE_RESULT.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Implement a human ruling to change the engine so it permits the start its HARD advisory instructs."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The engine refused that start, so permitting it would resolve the contradiction."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Measurement before any code change showed the start was already permitted for an agent who obeys: the advisory names an order, request the refresh then begin, and attaching the request first sends the guard down its release path. The earlier refusal observation came from starting before attaching. What fired on obedience was the compliance ledger recording the instructed begin as an offence."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Implementing the ruling literally would have been a no-op, and the lane would have reported success while the symptom survived."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The Commander reported the premise correction to the Admiral, which carried it to the human, and the engine recorded the instructed start under its own outcome so the compliance selectors no longer count it."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "An independent falsifier swept 1152 states and found none differing in raise, entry count or gate status, with exactly three relabelled."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-568",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-568/STATE_NOTE.md",
+        "refusals": 2,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-568/triage-candidates/launcher-reports-failed-for-successful-archive.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Judge whether a dispatched archive Commander had completed its gate."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The launcher's verdict would reflect whether the archive succeeded."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The launcher reported the crew as failed while the archived spine showed archive complete, zero blockers and the lease released. It judges completion by the result artifact existing, and the archive gate moves the whole work area, result document included, into .agent-work/archive/. The check reads a path the gate has just emptied."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Every successful archive reports failure, so the signal is inverted rather than merely noisy, and a duplicate dispatch onto archived work would not be stopped by the duplicate-guard."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The Admiral judged both archive lanes on spine state rather than launcher verdicts, and the second Commander was warned in its order that the verdict would be wrong."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "It reproduced on both archive lanes, the second time after being predicted in advance."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-568",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-568/STATE_NOTE.md",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".worktrees/epic-568-441/.agent-work/epic-568-441/spine.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Run the binding-store durability issue in the serialized spine_rail lane."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The lane would proceed once its predecessor cleared the serialized file."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The lane blocked at execute because a global Codex approval and usage limit stopped the red/green execution its issue closes on. Its own recorded next action defers resumption to after 2026-08-20T06:19Z."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One of the five authorized wave-2 items could not be dispositioned within the wave, holding its spine and lease across the boundary."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The item was moved out of the active wave into the forecast with its identity and lease preserved, rather than being repaired or dropped."
+        }
+      }
+    }
+  ]
+}

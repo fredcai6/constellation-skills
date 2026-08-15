@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-mcp-dedup",
+  "mechanical": {
+    "run": "tc3-worktree-root-owner",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 4,
+    "spine-step": "m3-mcp-dedup",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-tc3-worktree-root-owner-m3-mcp-dedup@f32174a10cc851917496fdc76cf1b5eba0266884",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "tc3-worktree-root-owner",
+    "generated_at": "2026-08-15T05:55:26Z"
+  }
+}

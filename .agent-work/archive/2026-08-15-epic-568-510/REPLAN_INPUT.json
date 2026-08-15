@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "#510 HARD refresh advisory",
+      "spec_path": "LAUNCH_ORDER.md",
+      "intent_and_why": "Correct only misleading pending-HARD recovery advice while preserving the existing legal runtime path."
+    },
+    "definition_of_done": [
+      "Pending-HARD advice names the legal ordered recovery path.",
+      "Direct regression proves digest continuity."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Focused red/green regression and independent approval",
+      "sufficient_evidence": "Focused engine test plus diff inspection",
+      "appetite": "One bounded advisory/test correction"
+    },
+    "hard_constraints": [
+      "No runtime guard, default, verb, state, or schema change.",
+      "No network publication from this run."
+    ],
+    "fixed_decisions": [
+      "Advice orders attach refresh-request, start, then advance with why.",
+      "Only scripts/checklist_engine.py and tests/test_checklist_engine.py change."
+    ],
+    "current_wave": {
+      "objective": "Correct the pending-HARD advisory and prove the existing legal recovery sequence.",
+      "exit_criteria": [
+        "Focused test passes.",
+        "Independent review approves."
+      ],
+      "issues": [
+        {
+          "id": "510",
+          "title": "HARD refresh advisory",
+          "desired_outcome": "Pending-HARD advice accurately states the legal recovery sequence.",
+          "useful_now": "It removes misleading guidance without widening runtime behavior.",
+          "appetite": "One focused change and regression test",
+          "acceptance_or_falsification_evidence": "Focused pytest red/green proof and independent review.",
+          "implementation_latitude": "Choose concise wording and direct test placement; preserve runtime semantics.",
+          "hard_constraints_no_gos": [
+            "No runtime expansion."
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/checklist_engine.py:_trip_advisory",
+            "tests/test_checklist_engine.py:TripHardGuardsBeginNotClose"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [],
+    "uncertainty_register": [],
+    "parked_possibilities": []
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "510",
+      "outcome": "Committed advisory-only correction and direct regression that proves attach -> start -> advance-with-why and digest continuity. Wave-2 repair then made the lane green on its own cache-clean full Linux suite without weakening what it proved: three stale #467 TripLedgerComplianceOnTheHardAdvisory expectations were realigned to the pending-gate wording and map/INDEX.md was regenerated. No test was deleted or weakened, and the shipped advisory wording was measured and found correct. WAVE-2 ENGINE: Wave-2 engine ruling executed: the human ruled the ENGINE must permit the start its HARD advisory instructs rather than the advisory being narrowed. _trip_hard_gate now records the one begin the advisory itself mandates (verb=start, target IS the active gate, gate is pending, keyed refresh-request on file) as `begin-instructed` instead of `begin-released`. The entry is still appended with the same nine fields, so nothing is hidden; it is simply not one of the two outcomes the compliance selectors count, so obeying the engine no longer renders as non-compliance. _trip_advisory's wording is byte-for-byte untouched. The compliance selectors needed no change. Five #467 tests were re-aimed onto genuinely self-chosen begins (reopen, and a start aimed at a gate the advisory never named) where their guarantee is untouched; none deleted, skipped or loosened. The deliberately-failing marker expectation is re-pinned to the pending wording the engine now makes true.",
+      "evidence": "7426ffb1 (implementation): red 1 failed/21 passed, green 22 passed/420 deselected; independent APPROVE. d5ed7154 (repair): cache-clean full suite before 4 failed/2977 passed/7 skipped, after 2981 passed/7 skipped/0 failed; main baseline 2980 passed at 0448275e. WAVE-2 ENGINE: 902dc940 (engine change). Red/green over engine behavior: new class TripInstructedBeginIsNotAnOffence fails 4/8 before and passes 8/8 after; falsifier independently reverted only checklist_engine.py and reproduced 3 failed/5 passed on the new class and 6 failed/444 passed on the whole engine file. Cache-clean full Linux suite 1 failed/2988 passed -> 0 failed/2997 passed, 7 skipped, 1129 subtests. Independent falsifier APPROVE with a 1152-state differential sweep: zero states differ in raise/entry-count/gate-status; exactly 3 states relabel."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The existing runtime path is legal and only its pending-HARD advice was misleading.",
+      "expected": "A focused advisory/test correction can prove the legal sequence without runtime changes.",
+      "observed": "22 focused tests passed after a red assertion; reviewer found no runtime guard/default/verb/state/schema change.",
+      "source": "implementer attempt 2 and independent reviewer artifacts"
+    },
+    {
+      "claim": "The three failing #467 expectations were stale, not a sign the shipped pending-HARD wording is wrong.",
+      "expected": "If the tests predate the pending/in-progress distinction, their scenarios leave the active gate PENDING and the old prefix is simply the wrong branch's text.",
+      "observed": "All three scenarios leave the active gate pending, and the engine refuses `advance` on a pending gate (\"g2 is 'pending', must be in-progress to advance\"). The pre-change wording therefore named a command the engine rejects, which is the #510 defect itself. Realigning the prefixes turned the full suite green with the whole-string equality property intact.",
+      "source": "wave-2 repair commander, direct engine measurement plus cache-clean full-suite runs"
+    },
+    {
+      "claim": "The engine REFUSES the start its advisory instructs, so permitting it is the fix.",
+      "expected": "Obeying the advisory literally at a pending gate reached by the agent's own close is refused by _trip_hard_gate.",
+      "observed": "FALSIFIED. Measured before changing anything: the advisory names an ORDER ('First request a refresh ...; then begin THIS guarded gate'). An agent following that order attaches the request first, which sends _trip_hard_gate down its RELEASE path — the start is PERMITTED and the gate opens. The predecessor's ('g3','begin-refused') came from starting BEFORE attaching, out of the advisory's stated order. The defect that fires on perfect obedience is the BRANDING, not a refusal.",
+      "source": "commander pre-change repro at the dispatch chokepoint, wave-2 engine"
+    },
+    {
+      "claim": "The refusal/ledger semantics are load-bearing, so the ruled fix may be structurally blocked (honest-null clause).",
+      "expected": "If #467's compliance semantics depend on the branded outcome, permitting/de-branding breaks work others depend on.",
+      "observed": "NOT a null, but the collision was real and confined. #467's central demonstration case WAS the engine-instructed case: four of its tests demonstrate `begin-released` using start at a pending active gate with a request on file — exactly what #510's advisory later began instructing. Resolution keeps #467's stated purpose ('what an agent over the line must not do is BEGIN work it cannot finish') and re-aims those tests onto begins that are genuinely the agent's own choice. A 1152-state differential sweep found the change relabels 3 states and widens nothing.",
+      "source": "pre-ruling 3 enumeration (whole-worktree sweep) + independent falsifier sweeps"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D-transport",
+      "signal": "First implementer attempt could not access source because bwrap RTM_NEWADDR failed.",
+      "classification": "evidence_only",
+      "affects": "Harness delivery, not #510 behavior or scope.",
+      "evidence": "Attempt-1 durable blocked result; attempt-2 interactive TTY apply_patch succeeded.",
+      "reason": "Record the harness incident; no tracker issue is auto-filed."
+    },
+    {
+      "id": "D-focused-evidence-missed-full-suite",
+      "signal": "Implementation reached an independent APPROVE and a merge-ready verdict on targeted tests only; the lane's own full Linux suite was red on four tests the targeted selector never ran.",
+      "classification": "evidence_only",
+      "affects": "Wave evidence sufficiency for advisory-string changes, not #510's behavior or scope.",
+      "evidence": "Gate measurement 4 failed/2977 passed vs main 2980 passed at 0448275e; the three engine failures were whole-string equality tests in a DIFFERENT class (#467) than the issue's own anchor class (TripHardGuardsBeginNotClose).",
+      "reason": "A change to a shared rendered string is measured by every test that pins that string byte-for-byte, not only by the issue's anchor class. Record the evidence-sufficiency signal; no tracker issue is auto-filed."
+    },
+    {
+      "id": "D-schema-doc-stale-outside-ownership",
+      "signal": "The engine now writes a third trip-ledger outcome (`begin-instructed`) but docs/CHECKLIST_SCHEMA.md closes the outcome vocabulary at two values (L448, elaborated 457-465), so a reader of the contract would classify a real entry as malformed.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "docs/CHECKLIST_SCHEMA.md — the document agents drive this engine from.",
+      "evidence": "Confirmed by the independent falsifier: repo-wide grep finds the doc's 21 references, and NO test asserts on its trip content (the only test parsing that file reads its ## Task field table), so nothing is red. Spine triage candidate tc3.",
+      "reason": "docs/ is outside this lane's File Ownership; wave-2 order Stop Condition 4 requires reporting rather than reaching. Needs Admiral authority to amend. Not auto-filed."
+    },
+    {
+      "id": "D-instructed-predicate-duplicated",
+      "signal": "_trip_hard_gate's instructed check and _trip_advisory's pending branch test the same state condition twice, ~200 lines apart, in two functions with no call relationship. Nothing enforces the invariant.",
+      "classification": "later_only",
+      "affects": "scripts/checklist_engine.py ~1731-1738 and ~1961-1966.",
+      "evidence": "Falsifier's Fowler pass, its one flagged smell. They agree today: a 1152-state implication sweep found zero counterexamples, and test_the_advisory_really_does_instruct_this_start pins one fixture. Spine triage candidate tc4.",
+      "reason": "Extracting the shared predicate exceeds pre-ruling 2's 'smallest engine behavior' bound. Recorded, not filed."
+    },
+    {
+      "id": "D-467-ledger-row-for-nonexistent-gate",
+      "signal": "PRE-EXISTING in both old and new engine: over the hard line, a `start` aimed at a gate id that does not exist writes a trip_ledger row for that nonexistent gate and raises the trip refusal, shadowing the engine's own 'no such item' error.",
+      "classification": "later_only",
+      "affects": "#467 (the trip ledger), not #510.",
+      "evidence": "Found by the independent falsifier while probing the exemption's narrowness. Spine triage candidate tc5.",
+      "reason": "Out of this lane's scope and predates it. Recorded as evidence; not auto-filed."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "7426ffb1",
+      "d5ed7154",
+      "scripts/checklist_engine.py:_trip_advisory",
+      "tests/test_checklist_engine.py:TripHardGuardsBeginNotClose",
+      "tests/test_checklist_engine.py:TripLedgerComplianceOnTheHardAdvisory"
+    ],
+    "map_status": "FRESH; map/INDEX.md regenerated with `python -m scripts.code_map build --root .` and committed at d5ed7154; the map-tree freshness test passes."
+  }
+}

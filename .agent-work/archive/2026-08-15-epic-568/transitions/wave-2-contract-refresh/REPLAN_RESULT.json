@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "decision": "advance",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Wave 2 has measurable exit criteria for each authorized item and a mandatory lifecycle float boundary.",
+    "epic_done": "The epic is not complete; wave 1 is landed and wave 2 is now authorized.",
+    "good_enough": "Preserved through red/green proof, serialized engine-core implementation, independent review, Linux/non-Windows green, and recorded Windows-only exceptions."
+  },
+  "discrepancy_dispositions": [
+    {"id": "R1", "action": "repair_current_wave", "reason": "The human explicitly refreshed the expired contract.", "issue_created": false},
+    {"id": "R2", "action": "revise_plan", "reason": "Fan out measurement but serialize all engine-core implementation.", "issue_created": false},
+    {"id": "R3", "action": "amend_forecast_or_parked", "reason": "Add the bounded model-tier harness lane now, as explicitly requested.", "issue_created": false}
+  ],
+  "current_wave": {
+    "objective": "Prove and land lease lifecycle, binding durability, #530, #510, and Codex tier routing with serialized engine-core implementation.",
+    "exit_criteria": [
+      "Every item closes on red/green proof or honest measured null.",
+      "Lifecycle floats before implementation if its measured shape is materially complex.",
+      "Independent review approves every positive change.",
+      "Linux and non-Windows CI are green; Windows-only failures are recorded and allowed."
+    ],
+    "issues": [
+      {"id": "lease-lifecycle", "title": "Lease lifecycle cluster", "desired_outcome": "Finished ownership terminates and dead ownership is distinguishable.", "useful_now": "Central ownership substrate.", "appetite": "Measure first; one Sol/Opus Commander if bounded.", "acceptance_or_falsification_evidence": "Dual-denominator scan and live red/green lifecycle proof.", "implementation_latitude": "Bounded internals; migration/destructive backfill floats.", "hard_constraints_no_gos": ["No concurrent engine-core implementation."], "local_unknowns": ["Boundedness after current measurement."], "anchors": ["scripts/checklist_engine.py", "scripts/spine_lifecycle.py"], "type": "AFK", "blocks": []},
+      {"id": "441", "title": "Binding-store durability", "desired_outcome": "Lossless concurrent claims and one validated durable identity store.", "useful_now": "Parallel MCP dispatch increases pressure.", "appetite": "One serialized implementation.", "acceptance_or_falsification_evidence": "Real concurrency red/green test.", "implementation_latitude": "Choose mechanics; aging policy floats.", "hard_constraints_no_gos": ["No concurrent spine_rail implementation."], "local_unknowns": ["Portable lock/reaper policy."], "anchors": ["scripts/hooks/spine_rail.py"], "type": "AFK", "blocks": ["lease-lifecycle"]},
+      {"id": "530", "title": "Resolved worktree binding", "desired_outcome": "Parents are not blocked on child spines.", "useful_now": "Concurrency amplifies the defect.", "appetite": "Bounded serialized change.", "acceptance_or_falsification_evidence": "Real-worktree red/green guard repro.", "implementation_latitude": "Choose authoritative path source.", "hard_constraints_no_gos": ["No concurrent spine_rail implementation."], "local_unknowns": [], "anchors": ["scripts/hooks/spine_rail.py"], "type": "AFK", "blocks": ["lease-lifecycle"]},
+      {"id": "510", "title": "Pending-gate HARD handoff", "desired_outcome": "Successor reads the tripped agent's DIGEST from current alone.", "useful_now": "Repeated live failure.", "appetite": "Bounded serialized change.", "acceptance_or_falsification_evidence": "Pending-gate HARD mutation test.", "implementation_latitude": "Smallest compatible mechanism; new verbs/defaults float.", "hard_constraints_no_gos": ["No concurrent checklist_engine implementation."], "local_unknowns": ["Whether payload rendering suffices."], "anchors": ["scripts/checklist_engine.py"], "type": "AFK", "blocks": ["lease-lifecycle"]},
+      {"id": "codex-model-tier-routing", "title": "Codex model-tier routing", "desired_outcome": "Crew dispatch applies and persists Codex model/effort settings.", "useful_now": "This wave uses tiered Codex agents.", "appetite": "Small parallel change.", "acceptance_or_falsification_evidence": "Pre-fix dropped-setting test and post-fix dispatch/resume proof.", "implementation_latitude": "Preserve Claude behavior and defaults.", "hard_constraints_no_gos": ["No engine-core edits."], "local_unknowns": ["External-backend seam."], "anchors": ["scripts/run_crew.py", "tests/test_crew_launcher.py"], "type": "AFK", "blocks": []}
+    ]
+  },
+  "revised_forecast": [
+    {"outcome": "Consumer packages adopt the completed ownership substrate.", "why_likely": "They were deferred specifically for this substrate.", "entry_conditions": ["Wave 2 dispositioned.", "Human clears the next checkpoint."]}
+  ],
+  "revised_uncertainty": [
+    {"unknown": "Whether lifecycle remains bounded.", "affects": "Implementation authorization.", "settle_by": "First measurement return.", "current_evidence": "Historical on-disk and tracked denominators disagree.", "next_probe": "Re-scan both sets and trace terminal/archive paths."}
+  ],
+  "revised_parked": ["WP3 beyond #530", "WP4 beyond #510", "WP6 crew liveness", "WP7 pre-clearance and CLI hardening"],
+  "unlaunched_dispositions": [
+    {"id": "U-lease-lifecycle", "action": "keep", "reason": "Launched into the measured serialized lane."},
+    {"id": "U-441", "action": "keep", "reason": "Authorized for measurement and later serialized implementation."},
+    {"id": "U-530", "action": "keep", "reason": "Authorized for measurement and later serialized implementation."},
+    {"id": "U-510", "action": "keep", "reason": "Authorized for measurement and later serialized implementation."},
+    {"id": "U-codex-model-tier-routing", "action": "keep", "reason": "Authorized as the parallel harness lane."},
+    {"id": "U-consumers", "action": "keep", "reason": "Still deferred behind ownership substrate."},
+    {"id": "U-parked", "action": "keep", "reason": "Human did not expand into consumer packages."}
+  ],
+  "material_changes": [
+    {"surface": "current_wave", "before": "No wave authorized after wave 1.", "after": "Five wave-2 items authorized with fan-out measurement and serialized engine-core implementation.", "reason": "Human contract refresh."},
+    {"surface": "model_routing", "before": "Claude-only Opus/Sonnet terms.", "after": "Sol/Terra/Luna Codex routing added with explicit reasoning tiers.", "reason": "Human requested durable Codex tier support."},
+    {"surface": "ci_gate", "before": "Exact no-new-failure comparison while main red.", "after": "All Windows failures are non-blocking for wave 2 but remain measured; any Linux/non-Windows failure blocks.", "reason": "Human explicitly allowed Windows to keep failing."}
+  ],
+  "wave_review_comment": "## Wave 2 contract refresh\n\nThe human cleared every retained lane and added one bounded harness item. Measurement may fan out immediately; implementation in the three engine-core files remains strictly one-at-a-time. Lifecycle goes first and must float if current evidence reveals migration, release semantics, destructive backfill, or decomposition too large for a bounded wave.\n\nProof remains the governing standard: live red before, green after, independent APPROVE, Linux and non-Windows CI green. Windows may remain red, but its node set is still recorded.\n\nCodex agents are tiered deliberately: Sol for high-risk engine work/review, Terra for bounded implementation, Luna for mechanical measurement and verification.",
+  "revised_epic_body": "## Current planning truth — wave 2 authorized\n\nWave 1's location substrate is on main. Wave 2 now covers lease lifecycle, binding-store durability, #530, #510, and durable Codex model-tier routing. Planning and evidence gathering fan out; engine-core implementation is serialized. Lifecycle complexity is a mandatory human float.\n\nSuccess means provable behavior, not patches: red/green repros or honest nulls, independent review, Linux/non-Windows green, exact merged state. Windows-only failures are allowed and recorded. Consumer packages remain deferred.",
+  "escalation": null
+}

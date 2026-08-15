@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-windows-budget",
+  "mechanical": {
+    "run": "tc3-worktree-root-owner",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m1-windows-budget",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-tc3-worktree-root-owner-m1-windows-budget@9f8c7221e2407bd83e28b9dda595716516bab404",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "tc3-worktree-root-owner",
+    "generated_at": "2026-08-15T05:48:42Z"
+  }
+}

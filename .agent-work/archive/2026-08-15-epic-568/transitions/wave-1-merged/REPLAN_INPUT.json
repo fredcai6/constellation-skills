@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic #568 — spine ownership and lifecycle",
+      "spec_path": ".agent-work/epic-568/LATITUDE_CONTRACT.md",
+      "intent_and_why": "Make engine state know where it belongs and who owns it, then make lifecycle and consumers rely on that substrate."
+    },
+    "definition_of_done": [
+      "Every epic issue is dispositioned with evidence.",
+      "Ownership and location facts are enforced by the engine rather than advisory subprocess checks.",
+      "Each wave is reviewed and replanned from observed evidence."
+    ],
+    "good_enough": {
+      "mandatory_quality": "No check that cannot register its own failure; no silent waiver; independent review before promotion.",
+      "sufficient_evidence": "A failing pre-fix repro, passing focused and full Linux suites, exact forge state, and comparative Windows evidence while main remains red.",
+      "appetite": "One serialized engine-core issue in wave 1; later work requires a refreshed contract."
+    },
+    "hard_constraints": [
+      "Agents interact with spines through MCP, not the engine CLI.",
+      "Engine-core edits are serialized one Commander at a time.",
+      "The contract expires at the wave-1 merge."
+    ],
+    "fixed_decisions": [
+      "A spine stores origin.worktree at creation.",
+      "The engine compares its own cwd to the stored origin and falls back for origin-less legacy spines.",
+      "Windows-only failures are accepted for this wave by explicit human ruling; Linux failures are not waived."
+    ],
+    "current_wave": {
+      "objective": "Land engine-native worktree isolation against a stored spine origin and remove the command check that could not fail.",
+      "exit_criteria": [
+        "Creation stamps origin.worktree.",
+        "The engine enforces its own cwd against that origin.",
+        "The obsolete init.c0 command check is deleted and behavior tests replace coverage-script tests.",
+        "Independent review approves and post-promotion Linux verification is green."
+      ],
+      "issues": [
+        {
+          "id": "315-native",
+          "title": "Engine-native worktree isolation against stored spine origin",
+          "desired_outcome": "Isolation is an engine invariant and cannot be bypassed by telling a subprocess where to stand.",
+          "useful_now": "It is the location substrate consumed by the remainder of epic #568.",
+          "appetite": "One serialized Commander with bounded rework.",
+          "acceptance_or_falsification_evidence": "Red-first repro, independent APPROVE, focused tests, full suite, and verified merged SHA.",
+          "implementation_latitude": "Choose internal threading while preserving the stored-origin and engine-owned comparison decisions.",
+          "hard_constraints_no_gos": ["Do not edit spine_rail.py or agent_work_root.py.", "Do not split the write and read sides."],
+          "local_unknowns": [],
+          "anchors": ["scripts/checklist_engine.py", "scripts/init_work_area.py", "scripts/mcp_spine_server.py", "scripts/run_crew.py"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {"outcome": "Lease lifecycle and stale-active cleanup.", "why_likely": "The remaining ownership issues consume the substrate wave 1 landed.", "entry_conditions": ["Human refreshes the expired contract."]},
+      {"outcome": "Binding-store durability and validation.", "why_likely": "Issue #441's gaps remain confirmed.", "entry_conditions": ["Human refreshes the expired contract.", "No concurrent spine_rail.py editor."]},
+      {"outcome": "Near-mechanical issues #530 and #510.", "why_likely": "They remain bounded and independent.", "entry_conditions": ["Human refreshes the expired contract."]}
+    ],
+    "uncertainty_register": [
+      {"unknown": "Which remaining tranche the human wants next and with what latitude.", "affects": "Every launch after wave 1.", "settle_by": "This checkpoint.", "current_evidence": "The existing contract says it expires at the wave-1 merge.", "next_probe": "Ask the human to ratify a refreshed contract before launch."}
+    ],
+    "parked_possibilities": ["WP3 beyond #530", "WP4 beyond #510", "WP6 crew dispatch and liveness", "WP7 latitude pre-clearance and CLI hardening"]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "315-native",
+      "outcome": "Engine-native worktree isolation and its regression guard are merged, with the post-promotion generated map current.",
+      "evidence": "PR #576 at 9bb8c1b6, PR #577 at 0dd6a6eb, PR #578 at 0448275e; merged Linux suite 2980 passed, 7 skipped, 1130 subtests."
+    }
+  ],
+  "wave_evidence": [
+    {"claim": "Wave 1 behavior is green on merged Linux main.", "expected": "Full suite exit 0 after promotion.", "observed": "2980 passed, 7 skipped, 1130 subtests passed.", "source": "post-promotion pytest on 0448275e"},
+    {"claim": "The Windows exception did not hide a new follow-up regression.", "expected": "No added failing node IDs against current main.", "observed": "85 baseline, 84 PR #578, zero added, stale-map failure removed.", "source": "Actions runs 31810185629 and 31811105651"},
+    {"claim": "Codex can drive the spine through the MCP server.", "expected": "Status and lifecycle tools operate on the exact bound spine/session without engine CLI use.", "observed": "stdio MCP initialized and spine_status returned epic-568 execute with session admiral-epic-568.", "source": "live bound MCP session"}
+  ],
+  "discrepancies": [
+    {"id": "D1", "signal": "The first post-promotion Linux run found map/INDEX.md stale.", "classification": "blocks_current_wave_exit", "affects": "Wave-1 promotion quality.", "evidence": "1 failed, 2979 passed; fresh map 80/4543 versus committed 78/4500.", "reason": "A real Linux failure cannot be covered by the Windows exception."},
+    {"id": "D2", "signal": "The latitude contract expires exactly at this merge.", "classification": "invalidates_forecast_or_decomposition", "affects": "Every possible next launch.", "evidence": "The verified contract digest and state note both name wave-1 merge as the expiry.", "reason": "The forecast is not launch authority."},
+    {"id": "D3", "signal": "The Codex host did not hot-load the configured MCP tool but the project stdio MCP transport worked directly.", "classification": "evidence_only", "affects": "Harness ergonomics, not wave correctness.", "evidence": "Configured .codex MCP binding recognized; stdio initialize and spine_status succeeded.", "reason": "Record the adoption seam without turning it into wave scope."}
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {"id": "U-552", "kind": "issue"},
+    {"id": "U-441", "kind": "issue"},
+    {"id": "U-530", "kind": "issue"},
+    {"id": "U-510", "kind": "issue"}
+  ],
+  "repo_state": {
+    "anchors": ["scripts/checklist_engine.py", "scripts/init_work_area.py", "scripts/mcp_spine_server.py", "scripts/run_crew.py", "map/INDEX.md"],
+    "map_status": "Fresh on merged main at 0448275e; MapTreeFreshnessTests pass 2/2."
+  }
+}

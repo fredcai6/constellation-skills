@@ -1,0 +1,47 @@
+{
+ "work_id": "epic-568-510",
+ "ops": [
+  {
+   "op": "restate-assertion",
+   "id": "epic-568-510-004",
+   "assertion": "a5",
+   "statement": "I re-aimed the five colliding #467 tests onto begins that are still genuinely the agent's own choice -- reopen, and a start aimed at a gate the advisory never named -- rather than loosening their assertions; every whole-string equality stayed a whole-string equality.",
+   "history": "Restated from an imperative rule into a record of what this run actually did, per the episode-store guard that episodes are records and not rules for future agents."
+  },
+  {
+   "op": "restate-assertion",
+   "id": "epic-568-510-005",
+   "assertion": "a5",
+   "statement": "I ran the enumeration first and used its predicted failure set as the acceptance criterion: after the engine change the engine test file failed on exactly the six tests it had named, and nothing else.",
+   "history": "Restated from an imperative rule into a record of what this run actually did, per the episode-store guard that episodes are records and not rules for future agents."
+  },
+  {
+   "op": "restate-assertion",
+   "id": "epic-568-510-006",
+   "assertion": "a5",
+   "statement": "I gave the falsifier the seven claims rather than my conclusion, and named the schema-doc staleness as the one I was least sure of; it then routed that float durably itself when it could not reproduce my claim at its source.",
+   "history": "Restated from an imperative rule into a record of what this run actually did, per the episode-store guard that episodes are records and not rules for future agents."
+  },
+  {
+   "op": "restate-assertion",
+   "id": "epic-568-510-007",
+   "assertion": "a5",
+   "statement": "I folded the findings into ENGINE_RESULT.md, which the same environment permitted, and reported the collision instead of writing the blocked path through a shell.",
+   "history": "Restated from an imperative rule into a record of what this run actually did, per the episode-store guard that episodes are records and not rules for future agents."
+  },
+  {
+   "op": "restate-assertion",
+   "id": "epic-568-510-008",
+   "assertion": "a5",
+   "statement": "I recorded the reason inside each refresh-request's own note field at the moment of attaching it, and disclosed the whole pattern in the result document so the records cannot be misread as genuine handoff intent.",
+   "history": "Restated from an imperative rule into a record of what this run actually did, per the episode-store guard that episodes are records and not rules for future agents."
+  },
+  {
+   "op": "restate-assertion",
+   "id": "epic-568-510-010",
+   "assertion": "a5",
+   "statement": "I used the engine CLI with an explicit --session-id for every spine mutation and said so plainly in the result; no spine state was hand-edited.",
+   "history": "Restated from an imperative rule into a record of what this run actually did, per the episode-store guard that episodes are records and not rules for future agents."
+  }
+ ]
+}

@@ -1,0 +1,19 @@
+{
+  "work_id": "epic-568-510",
+  "ops": [
+    {
+      "op": "restate-assertion",
+      "assertion": "a5",
+      "statement": "The evidence that would have caught this was one cache-clean full-suite run before the review verdict; the tests that pin a shared helper's output live outside the issue's anchor class, so a targeted selector never ran them.",
+      "history": "restated from an instruction into an observation of what the run measured",
+      "id": "epic-568-510-002"
+    },
+    {
+      "op": "restate-assertion",
+      "assertion": "d2",
+      "statement": "Two of the three sites were stale expectations at the gate the agent is trapped in, and re-pointing them at the helper matching their own gate status held the whole-string equality property; the third site, at a gate reached by the agent's own close, could not be resolved without a wording decision that sits outside this lane.",
+      "history": "restated from an instruction into an observation, and corrected: the third site proved not to be a stale expectation",
+      "id": "epic-568-510-002"
+    }
+  ]
+}

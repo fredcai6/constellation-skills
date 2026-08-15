@@ -1,0 +1,63 @@
+{
+  "work_id": "epic-568-510",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-568-510",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": ".agent-work/epic-568-510/REPLAN_INPUT.json",
+        "refusals": 0,
+        "reopens": 1,
+        "rework-count": 1,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "d5ed7154",
+          ".agent-work/epic-568-510/FINDINGS-wave2-repair.md",
+          ".agent-work/epic-568-510/REPAIR_RESULT.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Make the lane green on its own full Linux suite without weakening what the approved change proved."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A change confined to one branch of one advisory string, approved by an independent reviewer on the issue's own anchor test class, leaves the rest of the suite green."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Three tests in a DIFFERENT class failed, because that class deliberately pins the whole advisory string byte-for-byte to detect exactly this kind of silent drift. The targeted selector the reviewer ran could not see them."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "An approved, merge-ready lane could not merge, and a whole repair wave was needed to close four failures that a single full-suite run at review time would have surfaced."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "When a change edits a string rendered through a shared helper, take the acceptance evidence from every test that pins that helper's output rather than from the issue's anchor class alone; the cheapest reliable form is one cache-clean full-suite run before the review verdict."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "The three expectations were stale, not the shipped wording: all three scenarios leave the active gate PENDING, and the engine refuses `advance` on a pending gate, so the pre-change wording named a command the engine rejects -- which is the defect the issue set out to fix."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "strong",
+          "statement": "Realign each call site to the expectation helper matching the gate status its own scenario produces, preserving the class's whole-string equality property; delete no test."
+        },
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "A stale .pyc carrying the pre-relocation path `constellation-skills-wt/` had already fabricated a phantom failure in this wave, so every suite count here was taken after clearing __pycache__; the four failures reproduced exactly, confirming they were real."
+        }
+      ]
+    }
+  ]
+}

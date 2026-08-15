@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "understand",
+  "mechanical": {
+    "run": "epic-568-510",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 0,
+    "spine-step": "understand",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-568-510-understand@ff75086eb05f014baf452b23d2a63f227665560c",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-568-510",
+    "generated_at": "2026-08-14T16:11:33Z"
+  }
+}
