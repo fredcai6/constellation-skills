@@ -345,6 +345,29 @@ def _foreign_worktree(data: dict, b: dict) -> bool:
         return False
 
 
+def _worktree_from_spine(abs_spine):
+    """The owning worktree for one absolute `.agent-work/<id>/<name>.json`.
+
+    This is deliberately lexical: an absolute claim path remains useful even
+    after its checklist is archived, while payload cwd is a launch-time value
+    that can belong to a different linked worktree. Anything outside the exact
+    checklist layout is unowned rather than falling back to cwd.
+    """
+    try:
+        if not isinstance(abs_spine, str):
+            return None
+        spine = Path(abs_spine)
+        if not spine.is_absolute() or not spine.name.endswith(".json"):
+            return None
+        work_id = spine.parent
+        agent_work = work_id.parent
+        if spine.name == ".json" or not work_id.name or agent_work.name != ".agent-work":
+            return None
+        return str(agent_work.parent)
+    except Exception:
+        return None
+
+
 # --- PostToolUse: command-token parsing --------------------------------------
 
 def _tokenize(command: str) -> list:
@@ -738,7 +761,6 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
         if key is None:
             return {}  # unresolved identity -> bind nothing (fail closed)
         file_val = _extract_opt(tokens, "--file")
-        cwd = data.get("cwd") or str(project_dir)
         binding = load_binding(project_dir)
         abs_spine = None
         path_source = None
@@ -757,11 +779,14 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
                 # agent's work area.
                 return {}
             engine_session = _extract_opt(tokens, "--session-id")
+            worktree = _worktree_from_spine(abs_spine)
+            if not worktree:
+                return {}
             key_bindings = dict(binding.get(key) or {})
             key_bindings[abs_spine] = {
                 "spine": abs_spine,
                 "engine_session": engine_session,
-                "worktree": cwd,
+                "worktree": worktree,
                 "claimed_at": _now_iso(),
                 # Provenance (#440): WHICH rung resolved the path. Additive
                 # VALUE field only -- the binding KEY shape (#419) is untouched.
@@ -979,6 +1004,9 @@ def decide_session_start(data: dict, project_dir: Path) -> dict:
                 # silently resolve.
                 own_spine, own_spine_path = matches[0]
                 lease_for_bind = own_spine.get("engine_session") or {}
+                worktree = _worktree_from_spine(own_spine_path)
+                if not worktree:
+                    return {}
                 # Bare `sid`, NOT binding_key(data) (#419): SessionStart never
                 # carries an agent_id, so a resumed session is by definition
                 # top-level. Only the READ above changed.
@@ -986,7 +1014,7 @@ def decide_session_start(data: dict, project_dir: Path) -> dict:
                 sid_bindings2[own_spine_path] = {
                     "spine": own_spine_path,
                     "engine_session": lease_for_bind.get("session_id"),
-                    "worktree": data.get("cwd") or str(project_dir),
+                    "worktree": worktree,
                     "claimed_at": _now_iso(),
                 }
                 binding[sid] = sid_bindings2
