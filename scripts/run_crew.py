@@ -917,7 +917,21 @@ def build_entry(
                      omitted, when no `--parent` was given -- a resume reads
                      this back so the SPINE_PARENT binding and prompt clause
                      stay stable across attempts instead of re-deriving from
-                     whatever the RESUMING process's own environment carries)."""
+                     whatever the RESUMING process's own environment carries).
+      * `door_bound` — `True` only for `backend == "cli"` (the one path that
+                     actually spawns a child and binds `SPINE_FILE`/
+                     `SPINE_SESSION` into its environment via `_crew_door_env`),
+                     `False` for every other backend, including `external`
+                     (which spawns no process and builds no environment, so
+                     nothing binds those variables and its MCP door silently
+                     resolves to `.mcp.json`'s demo default). Written as an
+                     equality against `"cli"`, never an inequality against
+                     `"external"`, so a future third backend defaults to the
+                     safer `False` instead of silently inheriting a bound
+                     door it never earned. This makes the hazard readable
+                     straight out of `crew-runs.json` -- a resumed/relaunched
+                     Commander or a human debugging a crew's behavior does not
+                     have to already know which backends bind a door."""
     name = session_name(work_id, gate, role, attempt)
     stdout_path, stderr_path = run_log_paths(work_id, gate, role, attempt, root)
     entry = {
@@ -929,6 +943,7 @@ def build_entry(
         "status": "running",
         "session_name": name,
         "backend": backend,
+        "door_bound": backend == BACKEND_CLI,
         "pid": pid,
         "worktree": worktree,
         "handoff": _relativize(handoff, root) if handoff is not None else None,
@@ -1332,6 +1347,20 @@ class ExternalBackend(CrewBackend):
         # finalize here (the caller verifies later with `verify`).
         entries.append(entry)
         save_registry(registry_path(spec.work_id, root), entries)
+        # UNCONDITIONAL visibility banner (issue: unbound-door hazard) — binding
+        # the door out-of-band is impossible by construction (module-import-time
+        # env read in mcp_spine_server.py, pinned by test_mcp_identity.py), so
+        # this gate's job is to make the unbound state loud, not to bind it. The
+        # out-of-band caller (a Commander) reads this at the exact moment it is
+        # building the out-of-band prompt for the crew it is about to dispatch.
+        print(
+            f"WARNING: external-backend crew {entry['session_name']!r} has an "
+            f"UNBOUND MCP door -- ExternalBackend spawns no process and builds "
+            f"no environment, so nothing binds SPINE_FILE/SPINE_SESSION. Its MCP "
+            f"door resolves to .mcp.json's demo default, not this crew's own "
+            f"spine. Verify spine_status before any mutating verb.",
+            file=sys.stderr,
+        )
         return None, entry
 
     def resume(self, session: str, *, root: Path, entries: list[dict], launch=None) -> tuple[int, dict]:
