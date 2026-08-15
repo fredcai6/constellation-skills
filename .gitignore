@@ -9,6 +9,7 @@
 .agent-work/**/gauge.json
 .agent-work/**/gauge-skip.json
 .agent-work/.spine-rail-binding.json
+.agent-work/.spine-rail-binding.json.lock
 .agent-work/.spine-rail-nudges.json
 # Captured eval workspaces embed a full copy of another checkout's skills tree.
 # They are a copied checkout, not run history, and their nesting exceeds the

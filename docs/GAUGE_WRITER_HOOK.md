@@ -487,11 +487,14 @@ entry is written anywhere. The key does **not** fall back to the bare
 `session_id`, because that would file the subagent's entry under the parent's
 key, push the parent to two candidates and silence the parent's own gauge —
 manufacturing the blindness this keying exists to remove. Failing closed costs
-that one subagent its binding and affects nobody else. An `agent_id` counts as unusable if it is not a non-empty
-string, or if it contains `#`, `/`, `\` or `..`; the gauge writer applies a
-stricter test still before it will use one — the id must match
-`[A-Za-z0-9_-]{1,64}`, because this hook interpolates it into a real file path
-(`agent-<agent_id>.jsonl`) rather than only using it as a dictionary key.
+that one subagent its binding and affects nobody else. **As of #441**,
+`spine_rail.is_usable_agent_id` is the SOLE identity predicate — a 1-64
+character ASCII alnum/`_`/`-` allowlist — and this hook's own
+`_is_usable_agent_id` is a thin delegation to it, so there is exactly one
+definition to satisfy, not two that could drift apart. (Before #441, rail
+used a hand-maintained denylist of `#`, `/`, `\` and `..` that still admitted
+punctuation this hook's stricter allowlist rejected before interpolating the
+id into a real file path, `agent-<agent_id>.jsonl` — the two are unified now.)
 
 `SessionStart` binds under the bare `session_id` always: that event carries no
 `agent_id`, so a resumed session is by definition top-level. Readers that must
@@ -580,20 +583,48 @@ per-agent keying, but two of them get *wider* under it, so they belong beside it
   adds a candidate to its key and so pushes that key toward the ambiguity guard
   above. Same family as #440 — a binding naming the wrong path — but a different
   mechanism, and out of #440's scope.
-- **Nothing reaps an abandoned key.** A successful `release` is the only removal
-  path, so an agent that dies, is cancelled, or is killed mid-run leaves its key
-  behind forever. Per-agent keying multiplies the key count by every wave's
-  fan-out. #419's one-time sweeper was deleted after its single run, as that
-  issue required, so the next cleanup needs a fresh one.
-- **The load-modify-save takes no lock.** `_save_json_map` is atomic per write,
-  but the read-modify-write around it is not, so two agents claiming at the same
-  instant can lose one of the two claims. The symptom is silence, which is
-  indistinguishable from an idle governor — and a lost write reintroduces exactly
-  the blindness per-agent keying removes.
-- **The recorded path is not validated.** `--file` is taken as given, so a
-  malformed or shell-mangled engine command can enter the store as if its
-  fragment were a spine path. The 2026-08-05 sweep found entries keyed by
-  literal `$E` and `x`.
+- **Nothing reaps an abandoned key — PARTIALLY NARROWED in #441.** A
+  successful `release` is still the only removal path for a *readable, still-
+  active-looking* entry: the frozen retention rule is that a readable active
+  lease is never age-reaped, by design (a crashed agent's spine still reads as
+  active, and treating that as "abandoned" risks removing a genuinely live
+  run). What #441 *did* add is a conservative, transaction-internal reap that
+  now runs before every write: a malformed/empty record or a readable
+  *released* lease is dropped immediately, and a *missing/unreadable* target
+  is dropped once its `claimed_at` is a parseable aware timestamp at least 24
+  hours old. So a key whose spine was later archived, deleted, or explicitly
+  released now self-heals on the next writer transaction; a key whose spine
+  merely crashed mid-run (and still reads as active) does not. Per-agent
+  keying still multiplies the key count by every wave's fan-out for that
+  remaining case.
+- **~~The load-modify-save takes no lock~~ — FIXED in #441.** `_save_json_map`
+  used to be atomic per write only; the read-modify-write around it was not,
+  so two agents claiming at the same instant could lose one of the two claims
+  — measured live under a real spawned 16-writer production topology as an
+  outright **torn write** (two concatenated JSON documents), stronger than the
+  lost-update symptom this note originally described. **The shipped fix**
+  (`spine_rail._binding_transaction`) puts one stable sibling advisory lock
+  (`.spine-rail-binding.json.lock`, POSIX `fcntl.flock` / Windows
+  `msvcrt.locking`, never the registry file itself) around load → safe reap →
+  mutation → unique-temp atomic replace, and routes all three writers (claim,
+  release, SessionStart bind-on-resume) through it. Verified live: 16 spawned
+  production claim writers, and separately a mixed claim+SessionStart race,
+  both retain every expected entry; five named tests prove contention,
+  timeout, lock-API failure, and replace failure all fail open (no mutation,
+  no raise) rather than silently losing a write.
+- **~~The recorded path is not validated~~ — FIXED for CLAIM in #441.**
+  `--file` used to be taken as given for an absolute/told-truth candidate
+  (deliberately, at the time, so `release` could still name an archived
+  spine) — so a malformed or shell-mangled engine command, or a symlink at
+  the exact expected shape pointing outside the checklist tree, could enter
+  the store unchecked. **The shipped fix** (`spine_rail._is_valid_claim_target`)
+  requires every CLAIM target — absolute or relative — to resolve-contain as
+  `<worktree>/.agent-work/<work-id>/<name>.json`, be a currently readable JSON
+  checklist, and still satisfy that same containment after `Path.resolve()`
+  (closing the symlink-escape gap a lexical-only check would miss); it is
+  re-checked again inside the locked mutator. `release` deliberately keeps its
+  pre-#441 unvalidated resolution — a release must still be able to name a
+  spine that has since been archived, moved, or deleted.
 
 ## What was NOT done here (HITL boundary, per the launch order)
 

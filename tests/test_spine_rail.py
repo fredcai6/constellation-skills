@@ -9,9 +9,11 @@ genuinely engine-claimed spine, specifically so the bind-on-resume write path
 is proven against production machinery, not a hand-built fixture.
 """
 
+import errno
 import hashlib
 import importlib.util
 import json
+import multiprocessing
 import os
 import subprocess
 import sys
@@ -26,6 +28,32 @@ _MODULE_PATH = Path(__file__).resolve().parents[1] / "scripts" / "hooks" / "spin
 _spec = importlib.util.spec_from_file_location("spine_rail", _MODULE_PATH)
 sr = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(sr)
+
+
+def _spawn_claim_writer(project_dir, spine_path, writer_index, barrier):
+    """Picklable production-topology worker for #441's lost-update proof."""
+    barrier.wait(timeout=30)
+    command = (
+        'python scripts/checklist_engine.py --file "%s" claim '
+        '--session-id engine-%d --claimed-by implementer'
+        % (spine_path, writer_index)
+    )
+    sr.handle_post_tool_use(
+        {
+            "session_id": "spawn-shared",
+            "agent_id": "writer-%d" % writer_index,
+            "cwd": str(project_dir),
+            "tool_input": {"command": command},
+        },
+        Path(project_dir),
+    )
+
+
+def _spawn_session_start_writer(project_dir, session_id, barrier):
+    """Picklable production-topology worker for #441 m3's SessionStart-versus-
+    claim mixed-writer race proof."""
+    barrier.wait(timeout=30)
+    sr.decide_session_start({"session_id": session_id, "cwd": str(project_dir)}, Path(project_dir))
 
 
 # --- fixtures ----------------------------------------------------------------
@@ -526,8 +554,12 @@ def test_stop_blocks_on_mid_flight_spine_held_only_under_a_composite_key(proj):
     write_spine(proj, make_spine([("g1", "complete")], lease_status="released"), work="run-parent")
     write_spine(proj, make_spine([("g9", "in-progress")], imperatives={"g9": "COMPOSITE-MARKER keep going"}),
                 work="run-sub", journal_lines=1)
-    sr.handle_post_tool_use(_real_post_tool_use(parent, _claim_cmd("run-parent", "eng-p"), proj), proj)
+    # Sub claims FIRST (#441): each writer transaction safe-reaps released
+    # entries already on disk BEFORE its own mutation, so claiming the
+    # released run-parent binding second (fresh, past that reap) is what
+    # keeps it present for this test's own read below.
     sr.handle_post_tool_use(_real_post_tool_use(sub, _claim_cmd("run-sub", "eng-s"), proj), proj)
+    sr.handle_post_tool_use(_real_post_tool_use(parent, _claim_cmd("run-parent", "eng-p"), proj), proj)
 
     binding = sr.load_binding(proj)
     assert len(binding) == 2
@@ -864,6 +896,31 @@ def test_stop_does_not_block_when_all_entries_foreign_or_non_mid_flight(proj):
     assert "shared" not in sr.load_nudges(proj)  # no mid-flight entry -> nudges untouched
 
 
+def test_stop_old_active_binding_blocks_only_its_own_identity(proj):
+    """#441: age alone never makes an active binding stop blocking Stop --
+    reap only ever drops entries for a RELEASED or long-missing target, never
+    a readable ACTIVE one, regardless of how old `claimed_at` is (see
+    test_reap_binding_entries_matrix's `active_sp` case). The block also
+    stays scoped to the OWNING identity: a foreign session holding no binding
+    into this spine is never blocked by someone else's mid-flight run."""
+    sp = write_spine(proj, make_spine([("g1", "in-progress")]), work="old-active-run")
+    binding = {
+        "owner-sid": {
+            sp: {
+                "spine": sp, "engine_session": "eng-1", "worktree": str(proj),
+                "claimed_at": "2020-01-01T00:00:00+00:00",
+            }
+        }
+    }
+    sr.save_binding(proj, binding)
+
+    out = sr.decide_stop({"session_id": "owner-sid", "cwd": str(proj)}, proj)
+    assert out["decision"] == "block"
+
+    out_foreign = sr.decide_stop({"session_id": "someone-else", "cwd": str(proj)}, proj)
+    assert out_foreign == {}
+
+
 # --- decide_session_start ----------------------------------------------------
 
 def test_session_start_active_binding_injects_resume(proj):
@@ -1058,8 +1115,12 @@ def test_session_start_unambiguous_scan_merges_onto_existing_sibling_binding(pro
     never run at all -- foreign is the one shape that reaches this branch
     with a pre-existing sibling still in place."""
     sub = proj / "subwt"
+    # lease_status left at its "active" default (#441): a released sibling is
+    # reaped by the resume-bind's own transaction before this test can prove
+    # what it is actually about, which is unrelated -- that the merge leaves
+    # a pre-existing, still-live sibling entry alone.
     other_sp = write_spine(
-        sub, make_spine([("gx", "in-progress")], lease_status="released"), work="other-run"
+        sub, make_spine([("gx", "in-progress")]), work="other-run"
     )
     bind(proj, "resuming-sid", other_sp, worktree=str(sub))  # foreign relative to cwd=proj
 
@@ -1210,7 +1271,10 @@ def test_post_claim_writes_binding(proj):
 def test_post_claim_absolute_file_preserved(proj):
     # Reconciled for #202's nested shape: keyed by the resolved abs_spine
     # path itself, so the entry now lives under binding["s1"][abspath].
-    abspath = str(proj / ".agent-work" / "run1" / "spine.json")
+    # #441: an absolute --file claim target is now validated (rung 0 is
+    # ground truth about WHERE, never about whether it is a real checklist),
+    # so the target must actually exist.
+    abspath = put_checklist(proj, "run1")
     cmd = 'py C:/x/checklist_engine.py --file "%s" claim --session-id eng-2' % abspath
     sr.handle_post_tool_use(_bash(cmd, cwd=str(proj)), proj)
     assert sr.load_binding(proj)["s1"][abspath]["spine"] == abspath
@@ -1257,6 +1321,325 @@ def test_post_claim_two_different_spines_same_worktree_no_clobber(proj):
     assert set(sid_bindings.keys()) == {abs_a, abs_b}
     assert sid_bindings[abs_a]["engine_session"] == "eng-a"
     assert sid_bindings[abs_b]["engine_session"] == "eng-b"
+
+
+def test_spawn_binding_transaction_red_green(proj):
+    """Real spawned PostToolUse claim writers retain every serial update.
+
+    The start barrier releases distinct processes into the production claim
+    handler together.  Before #441 every process independently loaded the
+    registry and replaced it after changing only its own snapshot, so the
+    final valid JSON reliably contained only a subset of these entries.
+    """
+    ctx = multiprocessing.get_context("spawn")
+    writer_count = 16
+    barrier = ctx.Barrier(writer_count + 1)
+    spines = [put_checklist(proj, "spawn-%02d" % i) for i in range(writer_count)]
+    processes = [
+        ctx.Process(
+            target=_spawn_claim_writer,
+            args=(str(proj), spines[i], i, barrier),
+        )
+        for i in range(writer_count)
+    ]
+    for process in processes:
+        process.start()
+    barrier.wait(timeout=30)
+    for process in processes:
+        process.join(timeout=30)
+    assert [process.exitcode for process in processes] == [0] * writer_count
+
+    binding_text = sr.binding_path(proj).read_text(encoding="utf-8")
+    binding = json.loads(binding_text)
+    expected = {"spawn-shared#writer-%d" % i for i in range(writer_count)}
+    actual = set(binding)
+    print("\nspawned binding final JSON keys (%d/%d): %s" %
+          (len(actual), len(expected), sorted(actual)))
+    assert actual == expected, "lost-update: missing %s" % sorted(expected - actual)
+
+
+def test_spawn_binding_sessionstart_claim_mixed_writer_race(proj):
+    """#441 m3: real spawned PostToolUse claim writers AND real spawned
+    SessionStart bind-on-resume writers, contending on the SAME registry file
+    at the same instant, retain every serial update from BOTH writer kinds --
+    proving the transaction seam serializes across the mixed-writer topology,
+    not just within one writer's own code path.
+
+    Claim targets have every item already `complete` so `active_id` is None
+    and `_scan_active_spine` skips them -- keeping the scan unambiguous onto
+    the single genuinely-active `resume_spine` every SessionStart worker
+    races to bind.
+    """
+    ctx = multiprocessing.get_context("spawn")
+    claim_count = 8
+    resume_count = 8
+    barrier = ctx.Barrier(claim_count + resume_count + 1)
+
+    resume_spine = write_spine(
+        proj, make_spine([("g1", "in-progress")], session_id="orig-eng"), work="resume-target"
+    )
+    claim_spines = [
+        write_spine(proj, make_spine([("g1", "complete")]), work="mixed-claim-%02d" % i)
+        for i in range(claim_count)
+    ]
+
+    processes = [
+        ctx.Process(target=_spawn_claim_writer, args=(str(proj), claim_spines[i], i, barrier))
+        for i in range(claim_count)
+    ] + [
+        ctx.Process(target=_spawn_session_start_writer,
+                    args=(str(proj), "resume-%02d" % i, barrier))
+        for i in range(resume_count)
+    ]
+    for process in processes:
+        process.start()
+    barrier.wait(timeout=30)
+    for process in processes:
+        process.join(timeout=30)
+    assert [process.exitcode for process in processes] == [0] * len(processes)
+
+    binding = json.loads(sr.binding_path(proj).read_text(encoding="utf-8"))
+    expected_claim_keys = {"spawn-shared#writer-%d" % i for i in range(claim_count)}
+    expected_resume_keys = {"resume-%02d" % i for i in range(resume_count)}
+    actual = set(binding)
+    print("\nmixed-writer race final keys (%d/%d): %s"
+          % (len(actual), claim_count + resume_count, sorted(actual)))
+    assert actual == expected_claim_keys | expected_resume_keys, (
+        "lost-update: missing %s" % sorted((expected_claim_keys | expected_resume_keys) - actual)
+    )
+    for i, spine in enumerate(claim_spines):
+        assert set(binding["spawn-shared#writer-%d" % i]) == {spine}
+    for i in range(resume_count):
+        assert set(binding["resume-%02d" % i]) == {resume_spine}
+
+
+# --- #441 m1: named lock/replace/Windows-adapter failure contracts -----------
+#
+# All four fail-open tests below monkeypatch the module's lock/replace SEAMS
+# (`_try_lock`, `LOCK_RETRY_ATTEMPTS`, `LOCK_ACQUIRE_TIMEOUT_SECONDS`,
+# `os.replace`) rather than racing real processes or sleeping on wall-clock
+# time -- deterministic, and each one isolates exactly ONE named bound.
+
+def test_binding_lock_contention_fails_open(proj, monkeypatch):
+    """Sustained contention (every attempt fails, plenty of time left) exhausts
+    the ATTEMPTS bound, not the timeout bound: the handler still fails open,
+    the registry is never created, and the retry loop tried exactly
+    LOCK_RETRY_ATTEMPTS times."""
+    put_checklist(proj, "run1")
+    calls = []
+
+    def _always_busy(fileobj):
+        calls.append(1)
+        return False
+
+    monkeypatch.setattr(sr, "_try_lock", _always_busy)
+    monkeypatch.setattr(sr, "LOCK_RETRY_ATTEMPTS", 5)
+    monkeypatch.setattr(sr, "LOCK_RETRY_INTERVAL_SECONDS", 0.0)
+    monkeypatch.setattr(sr, "LOCK_ACQUIRE_TIMEOUT_SECONDS", 1000.0)
+
+    out = sr.handle_post_tool_use(_bash(_claim("run1"), cwd=str(proj)), proj)
+    assert out == {}
+    assert not sr.binding_path(proj).exists()
+    assert len(calls) == 5
+
+
+def test_binding_lock_timeout_fails_open(proj, monkeypatch):
+    """A zero-second deadline fails open on the very first contended attempt,
+    long before LOCK_RETRY_ATTEMPTS could ever be exhausted -- proving the
+    TIMEOUT bound independently of the attempts bound."""
+    put_checklist(proj, "run1")
+    calls = []
+
+    def _always_busy(fileobj):
+        calls.append(1)
+        return False
+
+    monkeypatch.setattr(sr, "_try_lock", _always_busy)
+    monkeypatch.setattr(sr, "LOCK_RETRY_ATTEMPTS", 1_000_000)
+    monkeypatch.setattr(sr, "LOCK_RETRY_INTERVAL_SECONDS", 0.0)
+    monkeypatch.setattr(sr, "LOCK_ACQUIRE_TIMEOUT_SECONDS", 0.0)
+
+    out = sr.handle_post_tool_use(_bash(_claim("run1"), cwd=str(proj)), proj)
+    assert out == {}
+    assert not sr.binding_path(proj).exists()
+    assert len(calls) < 1_000_000  # the deadline stopped it, not the attempt budget
+
+
+def test_binding_lock_api_failure_fails_open(proj, monkeypatch):
+    """A genuine lock-API failure (not mere contention) is caught, not
+    propagated, and the loop does not retry past it -- one failing call is
+    enough to fail the transaction open."""
+    put_checklist(proj, "run1")
+    calls = []
+
+    def _raises(fileobj):
+        calls.append(1)
+        raise OSError(errno.ENOLCK, "no locks available")
+
+    monkeypatch.setattr(sr, "_try_lock", _raises)
+
+    out = sr.handle_post_tool_use(_bash(_claim("run1"), cwd=str(proj)), proj)
+    assert out == {}
+    assert not sr.binding_path(proj).exists()
+    assert len(calls) == 1  # fails open immediately, no retry after an API error
+
+
+def test_binding_replace_failure_fails_open(proj, monkeypatch):
+    """A replace failure (disk full, permission error, ...) is caught after a
+    REAL lock was actually acquired: the handler still fails open, the
+    registry is left exactly as it was, and the unique temp file is cleaned
+    up rather than left behind."""
+    put_checklist(proj, "run1")
+
+    real_replace = os.replace
+
+    def _boom(src, dst):
+        raise OSError(errno.ENOSPC, "no space left on device")
+
+    monkeypatch.setattr(sr.os, "replace", _boom)
+    try:
+        out = sr.handle_post_tool_use(_bash(_claim("run1"), cwd=str(proj)), proj)
+    finally:
+        monkeypatch.setattr(sr.os, "replace", real_replace)
+    assert out == {}
+    assert not sr.binding_path(proj).exists()
+    leftover_tmp = list((proj / ".agent-work").glob("*.tmp"))
+    assert leftover_tmp == [], "temp file not cleaned up: %s" % leftover_tmp
+
+
+class _FakeMsvcrt:
+    """A minimal stand-in for the `msvcrt` module's locking surface, so the
+    Windows byte-range adapter's contract is unit-tested on every platform
+    (#441), not only a real Windows host."""
+
+    LK_NBLCK = 1
+    LK_UNLCK = 2
+
+    def __init__(self, fail=False):
+        self.calls = []
+        self.fail = fail
+
+    def locking(self, fd, mode, nbytes):
+        self.calls.append((fd, mode, nbytes))
+        if self.fail:
+            raise OSError(errno.EACCES, "locking violation")
+
+
+def test_windows_lock_adapter_contract(tmp_path):
+    """The Windows adapter's full contract: `_open_lock_file` initializes one
+    byte so there is always something to lock; `_windows_try_lock` seeks to
+    the start of the file and locks exactly its first byte via
+    `LK_NBLCK`, returning True on success; `_windows_unlock` seeks back and
+    unlocks the same byte via `LK_UNLCK`; and a lock failure (contention or
+    any other locking-API error) returns False rather than raising."""
+    lock_file = sr._open_lock_file(tmp_path)
+    try:
+        assert sr._lock_path(tmp_path).exists()
+        assert sr._lock_path(tmp_path).stat().st_size >= 1
+
+        lock_file.seek(5)  # move off zero -- the adapter must seek back itself
+        fake = _FakeMsvcrt()
+        assert sr._windows_try_lock(lock_file, fake) is True
+        assert fake.calls == [(lock_file.fileno(), _FakeMsvcrt.LK_NBLCK, 1)]
+
+        lock_file.seek(5)
+        sr._windows_unlock(lock_file, fake)
+        assert fake.calls[-1] == (lock_file.fileno(), _FakeMsvcrt.LK_UNLCK, 1)
+    finally:
+        lock_file.close()
+
+    lock_file2 = sr._open_lock_file(tmp_path)
+    try:
+        failing = _FakeMsvcrt(fail=True)
+        assert sr._windows_try_lock(lock_file2, failing) is False  # fails open, no raise
+        sr._windows_unlock(lock_file2, failing)  # never raises even after a failed lock
+    finally:
+        lock_file2.close()
+
+
+# --- #441 m2: the transaction-internal safe reaper's full matrix ------------
+
+def test_reap_binding_entries_matrix(proj):
+    """`_reap_binding_entries` driven directly with an injected `now` -- no
+    wall-clock sleeps -- over every named branch: malformed entry, malformed
+    per-key value, readable released (goes immediately), readable non-released
+    (stays regardless of age), missing target just past the 24h grace (goes),
+    missing target just inside it (stays), missing target with untrustworthy
+    age -- naive or absent `claimed_at` (stays either way), an empty per-key
+    map after reaping (the key itself goes), and an old-shape per-key value
+    (passed through untouched, never migrated)."""
+    now = "2026-08-15T12:00:00+00:00"
+
+    active_sp = write_spine(
+        proj, make_spine([("g1", "in-progress")], lease_status="active"), work="active-run"
+    )
+    released_sp = write_spine(
+        proj, make_spine([("g1", "complete")], lease_status="released"), work="released-run"
+    )
+    missing_old = str(proj / ".agent-work" / "gone-old" / "spine.json")
+    missing_fresh = str(proj / ".agent-work" / "gone-fresh" / "spine.json")
+    missing_naive_ts = str(proj / ".agent-work" / "gone-naive" / "spine.json")
+    missing_no_ts = str(proj / ".agent-work" / "gone-no-ts" / "spine.json")
+
+    def _entry(spine_path, claimed_at):
+        e = {"spine": spine_path, "engine_session": "eng-x", "worktree": str(proj)}
+        if claimed_at is not None:
+            e["claimed_at"] = claimed_at
+        return e
+
+    binding = {
+        "s1": {
+            active_sp: _entry(active_sp, "2020-01-01T00:00:00+00:00"),  # old, active -> stays
+            released_sp: _entry(released_sp, now),  # readable + released -> goes
+            missing_old: _entry(missing_old, "2026-08-14T11:59:59+00:00"),  # 24h+1s -> goes
+            missing_fresh: _entry(missing_fresh, "2026-08-14T12:00:01+00:00"),  # 24h-1s -> stays
+            missing_naive_ts: _entry(missing_naive_ts, "2026-08-14T00:00:00"),  # naive -> stays
+            missing_no_ts: _entry(missing_no_ts, None),  # absent -> stays
+            "malformed-entry": "not-a-dict",  # malformed entry -> goes
+        },
+        "empty-after-reap": {
+            "gone": _entry(str(proj / ".agent-work" / "reaps-to-empty" / "spine.json"),
+                            "2020-01-01T00:00:00+00:00"),  # the only entry reaps away
+        },
+        "malformed-outer-value": "not-a-dict-either",  # goes
+        "old-shape-key": {"spine": "somewhere", "engine_session": "eng-y", "worktree": "elsewhere"},
+    }
+
+    reaped = sr._reap_binding_entries(binding, now)
+
+    assert set(reaped.get("s1", {})) == {active_sp, missing_fresh, missing_naive_ts, missing_no_ts}
+    assert "empty-after-reap" not in reaped  # emptied entirely -> key dropped
+    assert "malformed-outer-value" not in reaped
+    assert reaped["old-shape-key"] == binding["old-shape-key"]  # untouched, not migrated
+
+
+def test_reap_binding_entries_never_raises_and_keeps_data_on_error(proj, monkeypatch):
+    """A defect inside the reaper must fail TOWARD keeping data, not toward
+    silently discarding the registry."""
+    monkeypatch.setattr(sr, "load_spine", lambda *_: (_ for _ in ()).throw(RuntimeError("boom")))
+    binding = {"s1": {"/x/spine.json": {"spine": "/x/spine.json", "claimed_at": "2020-01-01T00:00:00+00:00"}}}
+    assert sr._reap_binding_entries(binding, "2026-08-15T12:00:00+00:00") == binding
+
+
+def test_post_claim_symlink_escape_target_binds_nothing(proj):
+    """#441: a symlink AT the exact lexical `.agent-work/<work>/spine.json`
+    shape, pointing to a real checklist OUTSIDE that containment, must not
+    validate -- the lexical shape check alone would be fooled, so the
+    validator re-checks the fully resolved path."""
+    outside = proj.parent / "outside-checklist"
+    outside.mkdir(exist_ok=True)
+    real_target = outside / "spine.json"
+    real_target.write_text(_checklist_json(), encoding="utf-8")
+
+    link_dir = proj / ".agent-work" / "escape-run"
+    link_dir.mkdir(parents=True, exist_ok=True)
+    link_path = link_dir / "spine.json"
+    link_path.symlink_to(real_target)
+
+    cmd = 'python scripts/checklist_engine.py --file "%s" claim --session-id eng-2' % str(link_path)
+    out = sr.handle_post_tool_use(_bash(cmd, cwd=str(proj)), proj)
+    assert out == {}
+    assert sr.load_binding(proj) == {}
 
 
 def test_post_claim_two_different_spines_different_worktrees_no_clobber(proj):
@@ -1620,16 +2003,30 @@ def test_post_claim_falls_through_to_project_dir_when_cwd_does_not_validate(proj
     assert entry["path_source"] == "project_dir"
 
 
-def test_post_claim_absolute_file_is_rung_zero_and_is_not_validated(proj):
-    """Rung 0: an absolute --file is ground truth, taken as-is WITHOUT a
-    validity test -- deliberately, so a `release` whose spine has already been
-    archived or deleted can still name its own entry."""
-    abspath = str(proj / ".agent-work" / "gone" / "spine.json")
+def test_post_claim_absolute_file_is_rung_zero_and_skips_the_ladder(proj):
+    """Rung 0: an absolute --file is ground truth about WHERE the caller
+    means, so resolution returns it directly without walking the guessed
+    candidate ladder -- but (#441) the resolved target must still be a real,
+    contained checklist before a CLAIM records it; only the ladder-walk is
+    skipped, not claim-target validation."""
+    abspath = put_checklist(proj, "gone")
     cmd = 'python C:/x/checklist_engine.py --file "%s" claim --session-id eng-2' % abspath
     sr.handle_post_tool_use(_bash(cmd, cwd=str(proj)), proj)
     abs_spine, entry = _only_entry(proj)
     assert abs_spine == abspath
     assert entry["path_source"] == "absolute"
+
+
+def test_post_claim_absolute_file_naming_a_nonexistent_target_binds_nothing(proj):
+    """#441: claim-target validation applies even at rung 0. An absolute
+    --file naming a target that is not (or no longer) a real checklist binds
+    nothing -- a confident wrong record is worse than silence, the same
+    posture `resolve_spine_candidate`'s guessed rungs already take."""
+    abspath = str(proj / ".agent-work" / "gone" / "spine.json")
+    cmd = 'python C:/x/checklist_engine.py --file "%s" claim --session-id eng-2' % abspath
+    out = sr.handle_post_tool_use(_bash(cmd, cwd=str(proj)), proj)
+    assert out == {}
+    assert sr.load_binding(proj) == {}
 
 
 def test_post_claim_path_source_is_additive_and_key_shape_untouched(proj):

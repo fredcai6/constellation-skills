@@ -1,0 +1,102 @@
+{
+  "work_id": "epic-568-441",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["e0-context", "g1-implement", "g1-review", "g1-integrate"],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read the inherited crew doctrine, project crew context and glossary, then LAUNCH_ORDER.md, PROBLEM_STATEMENT.md, MISSION_FRAME.md, and PLAN_CONVERGENCE.md. Confirm the frozen one-gate intent and four-file scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "crew context, launch order, problem statement, mission frame, and converged plan loaded; intent and scope confirmed", "check": null, "satisfied": false}],
+      "constraints": ["Drive this plan only through an MCP server bound to this execute.json; do not use checklist-engine CLI or hand-edit engine state."],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Transactional binding store: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF.md from this frozen gate and dispatch one implementer. Require test-led red/green with a real multiprocessing spawn test through production handle_post_tool_use and the real registry path, deterministic unlocked mutation control, identity parity, contained checklist claim validation, recorded release compatibility, safe-reap policy, all three transactional writers, and bounded fail-open advisory locking. Wait for the durable IMPLEMENTER_RESULT and attach implementer-result status=complete.",
+      "preconditions": [{"id": "p1", "statement": "execution context loaded and frozen gate confirmed", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result", "match": {"status": "complete"}}, "satisfied": false}],
+      "constraints": [
+        "Allowed production files: scripts/hooks/spine_rail.py and scripts/hooks/gauge_writer_hook.py.",
+        "Allowed test files: tests/test_spine_rail.py and tests/test_gauge_writer.py.",
+        "Never reap a readable active lease by age; no lifecycle, journal, child, actor/PID, durable-root, or historical-backfill changes.",
+        "Use stdlib-only portable advisory locks with crash release, bounded acquisition, and unique same-directory temp replacement.",
+        "If the production spawn topology cannot show an unlocked lost update, return an honest scoped null; do not manufacture proof."
+      ],
+      "anchors": {
+        "structural": ["rail binding-store helpers and claim/release/SessionStart writers", "gauge identity consumer", "focused rail and gauge tests"],
+        "capability": ["serializable binding discovery", "consistent acting-agent identity", "safe stale-record cleanup"],
+        "constraint": ["fail-open bounded hook execution", "explicit engine lease lifecycle unchanged", "Linux green required; Windows failure record allowed"],
+        "decision": [
+          "transaction boundary covers locked load, safe reap, mutation, unique-temp replace @grade: settled/human · leans g1-implement,g1-review,g1-integrate",
+          "readable active leases are never age-reaped @grade: settled/human · leans g1-implement,g1-review,g1-integrate",
+          "rail owns the 1-64 ASCII alnum underscore hyphen identity allowlist @grade: settled/measured · leans g1-implement,g1-review,g1-integrate",
+          "claims require contained readable JSON checklists; releases resolve recorded targets first @grade: settled/human · leans g1-implement,g1-review,g1-integrate",
+          "24-hour missing-target grace and short named lock budget @grade: settled/inherited · leans g1-implement,g1-review,g1-integrate"
+        ],
+        "evidence": ["spawned production-handler red/green", "deterministic unlocked mutation control", "final JSON parses and retains every expected entry", "focused identity/path/reaper/writer matrices"],
+        "confidence_flags": ["architecture map is degraded; source confirmation is explicit and reconcile receives the map gap"]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Transactional binding store: review",
+      "imperative": "Fill REVIEWER_HANDOFF.md from the frozen gate and fresh implementer evidence. Dispatch an independent reviewer with no authoring context to verify intent, diff, real spawn discrimination, mutation control, portable lock behavior, exact safe-reap semantics, identity parity, claim/release compatibility, four-file scope, and non-Windows tests. Wait for and attach the durable review-result.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": ["Reviewer must be independent of implementation and must not mutate production or engine state."],
+      "anchors": {"inherits": "g1-implement anchors"},
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Transactional binding store: integrate",
+      "imperative": "Accept only REVIEW_RESULT verdict APPROVE. Re-run focused and full non-Windows verification yourself, enumerate the exact four-file blast radius, and confirm red/green plus mutation-control artifacts are fresh. Record Windows-specific risk separately. Flag out-of-scope findings for triage and advance only when every condition passes.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received and adjudicated", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "focused rail and gauge suites pass", "check": {"kind": "command", "command": "pytest -q tests/test_spine_rail.py tests/test_gauge_writer.py"}, "override_policy": {"allowed": false}, "satisfied": false},
+        {"id": "c2", "statement": "full non-Windows suite passes", "check": {"kind": "command", "command": "pytest -q"}, "override_policy": {"allowed": false}, "satisfied": false},
+        {"id": "c3", "statement": "independent reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false},
+        {"id": "c4", "statement": "fresh production spawn red/green and mutation-control evidence verified; exact blast radius enumerated", "check": null, "satisfied": false}
+      ],
+      "constraints": ["No Windows-only failure can mask a non-Windows regression."],
+      "anchors": {"inherits": "g1-implement anchors"},
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

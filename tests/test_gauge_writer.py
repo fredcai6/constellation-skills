@@ -881,18 +881,25 @@ def test_spine_rail_missing_writes_nothing_and_does_not_raise(proj, monkeypatch)
 # --- #419: agent_id is interpolated into a PATH, so validate it here ---------
 
 
-def test_local_allowlist_is_stricter_than_spine_rails_denylist(proj):
-    """g1's rejection is a hand-maintained DENYLIST (`#`, `/`, `\\`, `..`) and
-    it still admits `:`, `*` and `?` -- every one of which reaches this
-    module's `agent-{agent_id}.jsonl` interpolation on a Windows filesystem.
-    So this module validates at its OWN boundary, with an ALLOWLIST (the real
-    ids observed are hex-ish tokens plus `-` and `_`) rather than by extending
-    someone else's denylist.
-
-    Each id below is one spine_rail ADMITS and this module must not."""
-    for admitted in ("a:b", "a*b", "a?b", "a<b", "a>b", 'a"b', "a|b", "a b", "a.b", "a" * 65):
-        assert sr.binding_key({"session_id": "s1", "agent_id": admitted}) is not None, admitted
-        assert gw._binding_key({"session_id": "s1", "agent_id": admitted}) is None, admitted
+def test_rail_and_gauge_agree_on_every_id_in_the_shared_table(proj):
+    """#441: `spine_rail.is_usable_agent_id` is now the SOLE identity
+    predicate -- gauge delegates to it rather than carrying its own stricter
+    allowlist, so the two call paths can no longer disagree. One shared table
+    driven through BOTH public call paths (`sr.binding_key` and
+    `gw._binding_key`), accepted and rejected together."""
+    accepted = ("a", "a" * 64, "a8f0a946eaaa2fe6c", "a-b_C9")
+    rejected = (
+        "a:b", "a*b", "a?b", "a<b", "a>b", 'a"b', "a|b", "a b", "a.b",
+        "a" * 65, "", None, "sess#agent", "..", "a/b", "a\\b", 17,
+    )
+    for good in accepted:
+        rail_key = sr.binding_key({"session_id": "s1", "agent_id": good})
+        gauge_key = gw._binding_key({"session_id": "s1", "agent_id": good})
+        assert rail_key == "s1#" + good, good
+        assert gauge_key == "s1#" + good, good
+    for bad in rejected:
+        assert sr.binding_key({"session_id": "s1", "agent_id": bad}) is None, bad
+        assert gw._binding_key({"session_id": "s1", "agent_id": bad}) is None, bad
 
 
 def test_local_allowlist_admits_the_real_observed_id_shape(proj):

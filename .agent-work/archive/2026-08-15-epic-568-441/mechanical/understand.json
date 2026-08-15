@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "understand",
+  "mechanical": {
+    "run": "epic-568-441",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 0,
+    "spine-step": "understand",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-568-441-understand@491e815442f1ae52bdb4a285f8cc062b5dd39a9f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-568-441",
+    "generated_at": "2026-08-14T17:45:58Z"
+  }
+}

@@ -30,14 +30,24 @@ UTF-8 writes, native paths, no /tmp literals. The ONE subprocess is a bounded
 the engine (see the `git_worktree_roots` docstring).
 """
 
+import errno
 import json
 import os
 import re
 import shlex
 import subprocess
 import sys
+import tempfile
+import time
 from datetime import datetime, timezone
 from pathlib import Path
+
+try:
+    import msvcrt as _msvcrt
+except ImportError:
+    _msvcrt = None
+
+_IS_WINDOWS = os.name == "nt"
 
 # The engine's terminal statuses, re-encoded here on purpose (see docstring).
 TERMINAL = {"complete", "skipped"}
@@ -140,15 +150,311 @@ def save_binding(project_dir: Path, data: dict) -> None:
     _save_json_map(binding_path(project_dir), data)
 
 
+# --- the binding-store transaction (#441) -------------------------------------
+#
+# `_save_json_map`'s docstring above names the KNOWN, NOT CHASED defect this
+# section fixes: load-modify-save is atomic on the WRITE but not across the
+# whole read-modify-write interval, so concurrent writers can lose one
+# another's update, or -- measured live under 16 spawned production writers,
+# see tests/test_spine_rail.py::test_spawn_binding_transaction_red_green --
+# tear the file into two concatenated JSON documents outright. Every binding
+# WRITE now goes through `_binding_transaction`: one stable sibling advisory
+# lock covers load -> safe reap -> one mutation callback -> unique-temp
+# atomic replace. Readers (`load_binding`) stay outside the lock and keep
+# their existing fail-open behavior -- only writers serialize.
+
+# Named, bounded, and directly tested (#441) -- never widen these without a
+# human float (best-seam-plan risk: "Lock timeout must be short enough for
+# hooks yet long enough for the tested critical section").
+LOCK_RETRY_ATTEMPTS = 200
+LOCK_RETRY_INTERVAL_SECONDS = 0.01
+LOCK_ACQUIRE_TIMEOUT_SECONDS = 2.0  # mirrors GIT_PROBE_TIMEOUT_SECONDS's bound
+
+# A genuinely missing/unreadable claim target is retained until its recorded
+# `claimed_at` is a parseable AWARE timestamp at least this old (#441 m2).
+# Untrustworthy age (absent/naive/unparseable) is NEVER evidence of
+# staleness -- the entry is retained, not reaped, in that case.
+REAP_MISSING_TARGET_GRACE_SECONDS = 24 * 60 * 60
+
+
+def _lock_path(project_dir: Path) -> Path:
+    b = binding_path(project_dir)
+    return b.with_name(b.name + ".lock")
+
+
+def _posix_try_lock(fileobj) -> bool:
+    """One nonblocking POSIX advisory-lock attempt via `fcntl.flock`. True on
+    success, False on contention (the only outcome that means 'try again'),
+    and any other OSError propagates -- the caller treats that as a lock-API
+    failure and fails the transaction open without retrying."""
+    import fcntl
+    try:
+        fcntl.flock(fileobj.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return True
+    except OSError as exc:
+        if exc.errno in (errno.EACCES, errno.EAGAIN):
+            return False
+        raise
+
+
+def _posix_unlock(fileobj) -> None:
+    import fcntl
+    try:
+        fcntl.flock(fileobj.fileno(), fcntl.LOCK_UN)
+    except Exception:
+        pass
+
+
+def _windows_try_lock(fileobj, msvcrt_mod) -> bool:
+    """One nonblocking Windows byte-range lock attempt: seek to the start of
+    the stable lock file and lock exactly its first byte via
+    `msvcrt.locking(..., LK_NBLCK, 1)`. `msvcrt_mod` is an INJECTED parameter,
+    never the bare module import, so this adapter's contract is directly
+    unit-testable on every platform (#441's `test_windows_lock_adapter_
+    contract`), not only on a real Windows host. True on success, False on
+    contention, any other OSError propagates (same contract as the POSIX
+    adapter)."""
+    try:
+        fileobj.seek(0)
+        msvcrt_mod.locking(fileobj.fileno(), msvcrt_mod.LK_NBLCK, 1)
+        return True
+    except OSError as exc:
+        if getattr(exc, "errno", None) in (errno.EACCES, errno.EDEADLOCK):
+            return False
+        raise
+
+
+def _windows_unlock(fileobj, msvcrt_mod) -> None:
+    try:
+        fileobj.seek(0)
+        msvcrt_mod.locking(fileobj.fileno(), msvcrt_mod.LK_UNLCK, 1)
+    except Exception:
+        pass
+
+
+def _try_lock(fileobj) -> bool:
+    if _IS_WINDOWS and _msvcrt is not None:
+        return _windows_try_lock(fileobj, _msvcrt)
+    return _posix_try_lock(fileobj)
+
+
+def _unlock(fileobj) -> None:
+    if _IS_WINDOWS and _msvcrt is not None:
+        _windows_unlock(fileobj, _msvcrt)
+    else:
+        _posix_unlock(fileobj)
+
+
+def _open_lock_file(project_dir: Path):
+    """Open (creating if absent) the stable sibling lock file -- NEVER the
+    registry itself, and NEVER replaced -- initializing one byte so the
+    Windows byte-range adapter always has a byte to lock. Returns None (never
+    raises) on any open/mkdir failure; the caller treats that as a fail-open
+    transaction abort."""
+    try:
+        path = _lock_path(project_dir)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        f = open(path, "a+b")
+        f.seek(0, os.SEEK_END)
+        if f.tell() == 0:
+            f.write(b"\0")
+            f.flush()
+        return f
+    except Exception:
+        return None
+
+
+def _acquire_lock(fileobj, *, sleep=time.sleep, clock=time.monotonic) -> bool:
+    """Try `_try_lock` until it succeeds, until LOCK_RETRY_ATTEMPTS is
+    exhausted, or until LOCK_ACQUIRE_TIMEOUT_SECONDS has elapsed -- whichever
+    comes first. Both bounds are read from the module globals on EVERY call
+    (not captured as function-default values), so a test can monkeypatch
+    either constant and see it take effect. Any lock-API error (not mere
+    contention) is caught here too and treated as an immediate fail-open --
+    it is a documented failure path, not something the transaction
+    propagates. NEVER raises."""
+    start = clock()
+    for _ in range(LOCK_RETRY_ATTEMPTS):
+        try:
+            if _try_lock(fileobj):
+                return True
+        except Exception:
+            return False
+        if clock() - start >= LOCK_ACQUIRE_TIMEOUT_SECONDS:
+            return False
+        sleep(LOCK_RETRY_INTERVAL_SECONDS)
+    return False
+
+
+def _parse_aware_iso(text):
+    """A timezone-AWARE datetime parsed from `text`, or None for anything
+    absent, non-string, naive, or unparseable. Untrustworthy age must never
+    be treated as evidence of staleness (#441 m2)."""
+    try:
+        if not isinstance(text, str):
+            return None
+        dt = datetime.fromisoformat(text)
+        if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
+            return None
+        return dt
+    except Exception:
+        return None
+
+
+def _reap_binding_entries(binding: dict, now: str) -> dict:
+    """The transaction-internal safe reaper (#441 m2), called only from
+    inside `_binding_transaction` under the held lock.
+
+    Deletes:
+    - a malformed outer-key value (not a dict) or a malformed per-agent
+      entry (not a dict, or its `spine` field is not a string);
+    - an entry whose target IS readable and whose `engine_session.status`
+      is exactly `"released"`;
+    - an entry whose target is missing/unreadable AND whose `claimed_at`
+      parses as an aware timestamp at least REAP_MISSING_TARGET_GRACE_SECONDS
+      old.
+
+    Retains everything else, in particular: every readable target whose
+    lease is NOT released (active or otherwise) regardless of age, and a
+    missing/unreadable target whose age is untrustworthy (absent, naive, or
+    unparseable `claimed_at`). An old-shape (pre-#202) per-key value is
+    passed through UNTOUCHED -- this reaper prunes the established nested-map
+    shape, it does not migrate schema (mirrors `load_binding`'s read-time
+    treatment of the same old shape).
+
+    Does not scan globally, infer liveness, consult the journal, or touch
+    anything outside the one binding-store file. NEVER raises -- returns the
+    input unchanged on any unexpected error so a defect here fails toward
+    keeping data, not discarding it."""
+    try:
+        now_dt = _parse_aware_iso(now)
+        reaped = {}
+        for key, entries in (binding or {}).items():
+            if not isinstance(entries, dict):
+                continue
+            if _is_old_shape_binding_entry(entries):
+                reaped[key] = entries
+                continue
+            kept = {}
+            for abs_spine, entry in entries.items():
+                if not isinstance(entry, dict) or not isinstance(entry.get("spine"), str):
+                    continue
+                spine = load_spine(entry.get("spine"))
+                if spine is not None:
+                    lease = spine.get("engine_session") or {}
+                    if lease.get("status") == "released":
+                        continue
+                    kept[abs_spine] = entry
+                    continue
+                claimed_dt = _parse_aware_iso(entry.get("claimed_at"))
+                if claimed_dt is not None and now_dt is not None:
+                    age = (now_dt - claimed_dt).total_seconds()
+                    if age >= REAP_MISSING_TARGET_GRACE_SECONDS:
+                        continue
+                kept[abs_spine] = entry
+            if kept:
+                reaped[key] = kept
+        return reaped
+    except Exception:
+        return dict(binding or {})
+
+
+def _replace_binding_atomically(project_dir: Path, data: dict) -> bool:
+    """Write `data` to the registry through a UNIQUE same-directory temp name
+    (never the fixed `.tmp` name `_save_json_map` uses) and `os.replace`.
+    Best-effort cleanup of the temp file on any failure. Returns False (never
+    raises) on any open/write/replace error -- the caller treats that as a
+    fail-open transaction abort with the registry left exactly as it was."""
+    path = binding_path(project_dir)
+    tmp_name = None
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp_name = tempfile.mkstemp(
+            prefix=path.name + ".", suffix=".tmp", dir=str(path.parent)
+        )
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_name, path)
+        return True
+    except Exception:
+        if tmp_name:
+            try:
+                os.unlink(tmp_name)
+            except OSError:
+                pass
+        return False
+
+
+def _binding_transaction(project_dir: Path, mutate, *, now=None):
+    """Run one binding-store writer transaction: acquire the stable sibling
+    lock, load the raw registry, safe-reap it, hand the reaped nested map to
+    `mutate`, and -- only if the result differs from what was loaded --
+    persist it through a unique-temp atomic replace before releasing the
+    lock.
+
+    `mutate(reaped: dict) -> dict | None` receives the LOCKED, REAPED map and
+    returns the new map to persist (even if it decides there is nothing to
+    change -- equality with the loaded map is what skips the write), or None
+    to abandon the transaction outright (used when the write is invalid even
+    under the fresh locked snapshot, e.g. a claim target that no longer
+    validates).
+
+    Fails open -- returns None, registry left byte-unchanged -- on lock-file
+    open failure, lock contention, lock timeout, any lock-API error, or a
+    replace failure. NEVER raises."""
+    lock_file = _open_lock_file(project_dir)
+    if lock_file is None:
+        return None
+    try:
+        if not _acquire_lock(lock_file):
+            return None
+        try:
+            raw = _load_json_map(binding_path(project_dir))
+            now_str = now() if callable(now) else (now or _now_iso())
+            reaped = _reap_binding_entries(raw, now_str)
+            new_map = mutate(reaped)
+            if new_map is None:
+                return None
+            if new_map != raw:
+                if not _replace_binding_atomically(project_dir, new_map):
+                    return None
+            return new_map
+        finally:
+            _unlock(lock_file)
+    except Exception:
+        return None
+    finally:
+        try:
+            lock_file.close()
+        except Exception:
+            pass
+
+
 # --- per-agent binding identity (#419) ---------------------------------------
 
 BINDING_KEY_SEP = "#"
 
-# Tokens that make an `agent_id` unusable as part of a key. `agent_id` is a
-# harness field this repo does not own, and the gauge writer interpolates it
-# into a filesystem path (`agent-{agent_id}.jsonl`), so a path separator, a
-# parent-traversal token, or our own key separator must never reach it.
-_AGENT_ID_REJECT = (BINDING_KEY_SEP, "/", "\\", "..")
+# The SOLE acting-agent-id predicate (#441): an ALLOWLIST, not a denylist.
+# `agent_id` is a harness field this repo does not own, and the gauge writer
+# interpolates it into a filesystem path (`agent-{agent_id}.jsonl`), so the
+# admitted alphabet must be exactly what both consumers can safely use --
+# never a hand-maintained reject list that can admit a character (`:`, `*`,
+# `?`, space, `.`) neither consumer actually wants. binding_key() below and
+# gauge_writer_hook._is_usable_agent_id both drive off this ONE definition so
+# the two hooks cannot drift out of step with each other again.
+_AGENT_ID_ALLOWED = re.compile(r"\A[A-Za-z0-9_-]{1,64}\Z")
+
+
+def is_usable_agent_id(agent_id) -> bool:
+    """True only for a 1-64 character ASCII alnum/`_`/`-` string. NEVER
+    raises. This is the authoritative predicate (#441) -- callers must not
+    reimplement or widen it."""
+    try:
+        return isinstance(agent_id, str) and _AGENT_ID_ALLOWED.match(agent_id) is not None
+    except Exception:
+        return False
 
 
 def binding_key(payload: dict):
@@ -192,9 +498,7 @@ def binding_key(payload: dict):
         if "agent_id" not in data:
             return sid  # top-level agent -- behavior unchanged
         agent_id = data.get("agent_id")
-        if not agent_id or not isinstance(agent_id, str):
-            return None
-        if any(tok in agent_id for tok in _AGENT_ID_REJECT):
+        if not is_usable_agent_id(agent_id):
             return None
         return "{sid}{sep}{aid}".format(sid=sid, sep=BINDING_KEY_SEP, aid=agent_id)
     except Exception:
@@ -728,6 +1032,37 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _is_valid_claim_target(abs_spine) -> bool:
+    """The rail-owned claim-target validator (#441): a resolved absolute
+    target must be lexically/resolve-CONTAINED as
+    `<worktree>/.agent-work/<work-id>/<name>.json` AND a currently readable
+    JSON object carrying an `items` list. `_worktree_from_spine` already
+    enforces exactly that containment shape (it returns None for anything
+    outside it), so this composes it with `looks_like_checklist` rather than
+    re-deriving the shape test. Applied to BOTH absolute and relative claim
+    resolution -- rung 0 (an absolute `--file`) is ground truth about WHERE
+    the caller means, never about whether that target is a real, current
+    checklist. Re-checked inside the locked mutator so a target that vanishes
+    between resolution and lock acquisition cannot bind.
+
+    Symlink-escape guard: the LEXICAL path can satisfy the containment shape
+    while a symlink -- the leaf file itself, or an ancestor directory -- walks
+    the REAL file somewhere else entirely. `Path.resolve()` follows every
+    symlink in the chain, so re-running the identical containment check
+    against the resolved path catches an escape the lexical check alone would
+    miss; a target with no symlinks resolves to itself and this is a no-op.
+    NEVER raises."""
+    try:
+        if not _worktree_from_spine(abs_spine):
+            return False
+        if not looks_like_checklist(abs_spine):
+            return False
+        resolved = str(Path(abs_spine).resolve())
+        return bool(_worktree_from_spine(resolved))
+    except Exception:
+        return False
+
+
 def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
     """Maintain the session->spine binding from engine claim/release commands.
 
@@ -743,6 +1078,11 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
     every crew claim under one key and left the gauge writer with no way to
     tell whose reading it held. `binding_key` returning None means the acting
     identity is unresolved -- bind NOTHING, write no entry at all.
+
+    Both mutations now go through `_binding_transaction` (#441): one stable
+    sibling lock covers load -> safe reap -> this mutation -> unique-temp
+    atomic replace, closing the lost-update/torn-write window that an
+    unlocked load-modify-save left open under concurrent writers.
 
     PostToolUse NEVER blocks -- always returns {}.
     """
@@ -761,65 +1101,83 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
         if key is None:
             return {}  # unresolved identity -> bind nothing (fail closed)
         file_val = _extract_opt(tokens, "--file")
-        binding = load_binding(project_dir)
-        abs_spine = None
-        path_source = None
-        if verb == "release":
-            # Recorded binding FIRST (#440) -- see resolve_recorded_release_target.
-            abs_spine = resolve_recorded_release_target(file_val, binding.get(key))
-        if not abs_spine:
+        if verb == "claim":
             abs_spine, path_source = resolve_spine_candidate(
                 file_val, data, project_dir, tokens, command
             )
-        if verb == "claim":
-            if not abs_spine:
-                # No candidate root yields a real checklist -- BIND NOTHING
-                # (#440). A missing binding is recoverable; a confident wrong one
-                # silently misattributes one agent's context reading to another
-                # agent's work area.
+            if not abs_spine or not _is_valid_claim_target(abs_spine):
+                # No candidate root yields a real, contained checklist
+                # (#440/#441) -- BIND NOTHING. A missing binding is
+                # recoverable; a confident wrong one silently misattributes
+                # one agent's context reading to another agent's work area.
                 return {}
             engine_session = _extract_opt(tokens, "--session-id")
             worktree = _worktree_from_spine(abs_spine)
             if not worktree:
                 return {}
-            key_bindings = dict(binding.get(key) or {})
-            key_bindings[abs_spine] = {
-                "spine": abs_spine,
-                "engine_session": engine_session,
-                "worktree": worktree,
-                "claimed_at": _now_iso(),
-                # Provenance (#440): WHICH rung resolved the path. Additive
-                # VALUE field only -- the binding KEY shape (#419) is untouched.
-                "path_source": path_source,
-            }
-            binding[key] = key_bindings
-            save_binding(project_dir, binding)
+
+            def _claim_mutate(reaped, _abs_spine=abs_spine, _key=key,
+                               _engine_session=engine_session, _worktree=worktree,
+                               _path_source=path_source):
+                # Re-check under the lock (#441): the target may have moved
+                # or vanished between resolution above and lock acquisition.
+                if not _is_valid_claim_target(_abs_spine):
+                    return None
+                new_map = dict(reaped)
+                key_bindings = dict(new_map.get(_key) or {})
+                key_bindings[_abs_spine] = {
+                    "spine": _abs_spine,
+                    "engine_session": _engine_session,
+                    "worktree": _worktree,
+                    "claimed_at": _now_iso(),
+                    # Provenance (#440): WHICH rung resolved the path.
+                    # Additive VALUE field only -- the binding KEY shape
+                    # (#419) is untouched.
+                    "path_source": _path_source,
+                }
+                new_map[_key] = key_bindings
+                return new_map
+
+            _binding_transaction(project_dir, _claim_mutate)
         else:  # release
             # KNOWN, NOT CHASED (#419, filed as a triage candidate): a
             # successful release is the ONLY path that removes a key. An agent
             # that dies, is cancelled, or is killed mid-run leaves its key
             # behind forever, and per-agent keying multiplies the key count by
-            # every wave's fan-out. Nothing reaps them -- #419's one-time
-            # sweeper was deleted after its single run, as that issue required.
-            key_bindings = binding.get(key)
-            if abs_spine and key_bindings and abs_spine in key_bindings:
-                key_bindings = dict(key_bindings)
-                del key_bindings[abs_spine]
-                if key_bindings:
-                    binding[key] = key_bindings
-                else:
-                    # Delete THIS key's now-empty entry set -- `key`, never
-                    # `sid`. Under a composite key those are different keys,
-                    # and deleting the bare one here would wipe a live
-                    # parent's entire binding.
-                    del binding[key]
-                save_binding(project_dir, binding)
+            # every wave's fan-out. The transaction's own safe reap (#441 m2)
+            # is the bounded, conservative mitigation -- there is still no
+            # unbounded global sweep.
+
+            def _release_mutate(reaped, _key=key, _file_val=file_val):
+                new_map = dict(reaped)
+                key_bindings = dict(new_map.get(_key) or {})
+                # Recorded binding FIRST (#440), against the LOCKED, REAPED
+                # snapshot -- see resolve_recorded_release_target. Only when
+                # that finds nothing does the filesystem ladder run.
+                target = resolve_recorded_release_target(_file_val, key_bindings)
+                if not target:
+                    target, _ = resolve_spine_candidate(
+                        _file_val, data, project_dir, tokens, command
+                    )
+                if target and key_bindings and target in key_bindings:
+                    key_bindings = dict(key_bindings)
+                    del key_bindings[target]
+                    if key_bindings:
+                        new_map[_key] = key_bindings
+                    else:
+                        # Delete THIS key's now-empty entry set -- `key`,
+                        # never `sid`. Under a composite key those are
+                        # different keys, and deleting the bare one here
+                        # would wipe a live parent's entire binding.
+                        new_map.pop(_key, None)
+                return new_map
+
+            _binding_transaction(project_dir, _release_mutate)
             # The nudge / three-strike escape-hatch ledger is documented and
             # written (decide_stop) under the BARE session_id, and it stays
             # that way: splitting strikes per-agent would fragment the count
-            # and weaken the hatch. So this delete keeps `sid` while the
-            # binding writes above use `key` -- that asymmetry is intended,
-            # not a missed substitution (#419).
+            # and weaken the hatch. It lives outside the binding-store
+            # transaction -- it is not a binding-store writer.
             # It also fires only for a TOP-LEVEL release (`key == sid`). The
             # strikes belong to the session whose turn-ends get nudged, so a
             # subagent releasing its own spine must not reset its parent's
@@ -1007,18 +1365,27 @@ def decide_session_start(data: dict, project_dir: Path) -> dict:
                 worktree = _worktree_from_spine(own_spine_path)
                 if not worktree:
                     return {}
+
                 # Bare `sid`, NOT binding_key(data) (#419): SessionStart never
                 # carries an agent_id, so a resumed session is by definition
-                # top-level. Only the READ above changed.
-                sid_bindings2 = dict(binding.get(sid) or {})
-                sid_bindings2[own_spine_path] = {
-                    "spine": own_spine_path,
-                    "engine_session": lease_for_bind.get("session_id"),
-                    "worktree": worktree,
-                    "claimed_at": _now_iso(),
-                }
-                binding[sid] = sid_bindings2
-                save_binding(project_dir, binding)
+                # top-level. Only the READ above changed. Routed through the
+                # transaction (#441) so a concurrent claim/release for this
+                # same sid cannot be silently overwritten by this merge.
+                def _resume_mutate(reaped, _sid=sid, _own_spine_path=own_spine_path,
+                                    _engine_session=lease_for_bind.get("session_id"),
+                                    _worktree=worktree):
+                    new_map = dict(reaped)
+                    sid_bindings2 = dict(new_map.get(_sid) or {})
+                    sid_bindings2[_own_spine_path] = {
+                        "spine": _own_spine_path,
+                        "engine_session": _engine_session,
+                        "worktree": _worktree,
+                        "claimed_at": _now_iso(),
+                    }
+                    new_map[_sid] = sid_bindings2
+                    return new_map
+
+                _binding_transaction(project_dir, _resume_mutate)
         if spine is None:
             return {}
         lease = spine.get("engine_session") or {}

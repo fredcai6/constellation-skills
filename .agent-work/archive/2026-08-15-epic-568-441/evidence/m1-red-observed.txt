@@ -1,0 +1,62 @@
+F
+=================================== FAILURES ===================================
+___________________ test_spawn_binding_transaction_red_green ___________________
+
+proj = PosixPath('/tmp/pytest-of-tommy/pytest-668/test_spawn_binding_transaction0')
+
+    def test_spawn_binding_transaction_red_green(proj):
+        """Real spawned PostToolUse claim writers retain every serial update.
+    
+        The start barrier releases distinct processes into the production claim
+        handler together.  Before #441 every process independently loaded the
+        registry and replaced it after changing only its own snapshot, so the
+        final valid JSON reliably contained only a subset of these entries.
+        """
+        ctx = multiprocessing.get_context("spawn")
+        writer_count = 16
+        barrier = ctx.Barrier(writer_count + 1)
+        spines = [put_checklist(proj, "spawn-%02d" % i) for i in range(writer_count)]
+        processes = [
+            ctx.Process(
+                target=_spawn_claim_writer,
+                args=(str(proj), spines[i], i, barrier),
+            )
+            for i in range(writer_count)
+        ]
+        for process in processes:
+            process.start()
+        barrier.wait(timeout=30)
+        for process in processes:
+            process.join(timeout=30)
+        assert [process.exitcode for process in processes] == [0] * writer_count
+    
+        binding_text = sr.binding_path(proj).read_text(encoding="utf-8")
+>       binding = json.loads(binding_text)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_spine_rail.py:1309: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.decoder.JSONDecoder object at 0x784764eecc20>
+s = '{\n  "spawn-shared#writer-15": {\n    "/tmp/pytest-of-tommy/pytest-668/test_spawn_binding_transaction0/.agent-work/sp...ransaction0",\n      "claimed_at": "2026-08-15T16:41:45.818969+00:00",\n      "path_source": "absolute"\n    }\n  }\n}'
+_w = <built-in method match of re.Pattern object at 0x7847647e29b0>
+
+    def decode(self, s, _w=WHITESPACE.match):
+        """Return the Python representation of ``s`` (a ``str`` instance
+        containing a JSON document).
+    
+        """
+        obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+        end = _w(s, end).end()
+        if end != len(s):
+>           raise JSONDecodeError("Extra data", s, end)
+E           json.decoder.JSONDecodeError: Extra data: line 11 column 2 (char 472)
+
+/usr/lib/python3.12/json/decoder.py:340: JSONDecodeError
+=========================== short test summary info ============================
+FAILED tests/test_spine_rail.py::test_spawn_binding_transaction_red_green - j...
+1 failed in 0.23s

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-validation-reap",
+  "mechanical": {
+    "run": "epic-568-441-g1-attempt-1",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 4,
+    "spine-step": "m2-validation-reap",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-568-441-g1-attempt-1-m2-validation-reap@133f2992becdfdee9f4b394af37b114255d7f9f3",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-568-441-g1-attempt-1",
+    "generated_at": "2026-08-15T17:26:51Z"
+  }
+}

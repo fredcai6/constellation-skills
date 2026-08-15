@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-writers-routing",
+  "mechanical": {
+    "run": "epic-568-441-g1-attempt-1",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 5,
+    "spine-step": "m3-writers-routing",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-568-441-g1-attempt-1-m3-writers-routing@66b49ace6062a3c26a23d166f7e0599cb6b5648b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-568-441-g1-attempt-1",
+    "generated_at": "2026-08-15T17:27:10Z"
+  }
+}
