@@ -1,0 +1,126 @@
+{
+ "work_id": "tc1-windows-path-form",
+ "ops": [
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "tc1-windows-path-form",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "feedback",
+    "context-manifest-ref": ".agent-work/tc1-windows-path-form/REPLAN_INPUT.json",
+    "refusals": 1,
+    "reopens": 0,
+    "rework-count": 0,
+    "failed-commands": 1,
+    "artifact-ref": [
+     ".agent-work/tc1-windows-path-form/LAUNCH_ORDER-3.md",
+     ".agent-work/tc1-windows-path-form/execute.json",
+     ".agent-work/tc1-windows-path-form/REPLAN_INPUT.json"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Resolve the g1-integrate blocker per the human's LAUNCH_ORDER-3 ruling: correct the check's measurement (retext-check the env prefix) rather than waive a failure."
+    },
+    "expected-behavior": {
+     "strength": "strong",
+     "statement": "Resume the blocked outer execute step and the blocked gate, retext-check g1-integrate.c1 to prepend env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT, then re-run and advance."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "The mechanics worked exactly as the order specified: resume needed a --reason on the spine.json and execute.json checklists separately since they are two distinct engine files sharing no state; amend --delta with a single retext-check op was accepted; the re-run of the amended command reproduced the ordered baseline exactly (3010 passed, 6 skipped, 0 failed, 1136 subtests), matching the clean-env reproduction the order already cited."
+    },
+    "impact-cost": {
+     "strength": "medium",
+     "statement": "None beyond the suite's own runtime -- the order's diagnosis was complete enough that no further investigation was needed before acting."
+    },
+    "workaround": {
+     "strength": "medium",
+     "statement": "None needed; following the order's Mechanics section verbatim, in the stated sequence (resume both files, then retext-check, then re-run, then advance), cleared the block on the first attempt."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "tc1-windows-path-form",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "feedback",
+    "context-manifest-ref": ".agent-work/tc1-windows-path-form/REPLAN_INPUT.json",
+    "refusals": 1,
+    "reopens": 0,
+    "rework-count": 0,
+    "failed-commands": 1,
+    "artifact-ref": [
+     ".agent-work/tc1-windows-path-form/REPLAN_INPUT.json",
+     "skills/replan/scripts/verify_replan.py",
+     "scripts/verify_issue_set.py"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Satisfy execute.json's directive that REPLAN_INPUT.json pass verify_iterative_role_artifacts.py commander before execute can complete."
+    },
+    "expected-behavior": {
+     "strength": "medium",
+     "statement": "Expected a lightweight artifact scoped to this run's actual size: one gate, one line of code, one discrepancy."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "The G2 schema (verify_replan_input, which itself calls verify_manifest_shape) requires a full G1-shaped current_plan nested inside -- epic, definition_of_done, good_enough, hard_constraints, fixed_decisions, a current_wave of typed AFK/HITL issues with dependency-edge validation, wave_forecast, uncertainty_register, and parked_possibilities -- none of which pre-existed for this one-line, single-gate fix. Neither the bundled template nor the directive block named the required shape; it had to be reverse-engineered by reading verify_replan.py and verify_issue_set.py directly."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "Authoring a schema-valid REPLAN_INPUT.json took materially more turns than the underlying code change itself, and the resulting artifact is far larger than the diff it documents."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "Read the verifier source (not just the template) to get the exact required/optional field split, then keep the template's structural shape and substitute real run content -- rather than guessing at which template fields could be dropped."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "tc1-windows-path-form",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "feedback",
+    "context-manifest-ref": ".agent-work/tc1-windows-path-form/REPLAN_INPUT.json",
+    "refusals": 1,
+    "reopens": 0,
+    "rework-count": 0,
+    "failed-commands": 1,
+    "artifact-ref": [
+     ".agent-work/tc1-windows-path-form/execute.json"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Advance g1-integrate once its postconditions -- the amended check re-run and the already-integrated reviewer APPROVE -- were both satisfied."
+    },
+    "expected-behavior": {
+     "strength": "medium",
+     "statement": "advance <task> would succeed once the underlying postconditions were met, the same way the immediately prior amend and retext-check calls had."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "REFUSED: 'advancing a non-exempt gate requires a running understanding -- pass --why \"<understanding>\" ... or --mechanical'. This requirement was not visible in execute.json's own ACTIVE-line output at the time; it only became apparent from the failure message itself (and, in hindsight, from spine.json's separately-rendered next: line for its own execute step, which did show the --why form)."
+    },
+    "impact-cost": {
+     "strength": "medium",
+     "statement": "One avoidable failed command, plus a second ~124s background wait for the engine's own re-run of the full-suite check inside the successful advance, on top of the confirmation run already performed manually before attempting it."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "Always pass --why with a genuine one-line understanding statement on every advance call for a non-exempt gate, rather than waiting for the refusal to name it."
+    }
+   }
+  }
+ ]
+}

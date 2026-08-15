@@ -1,0 +1,116 @@
+{
+  "work_id": "crew-verdict-and-door",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "crew-verdict-and-door",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "plan",
+        "context-manifest-ref": ".agent-work/crew-verdict-and-door/MISSION_FRAME.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [".agent-work/crew-verdict-and-door/execute.json"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Author a gate plan for Task 2 (external-backend door hardening) whose imperative said to state the hazard 'in the external-backend crew prompt AND its run_crew.py registry entry.'"
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The gate plan's own anchors and imperative would name real, editable code inside the file-ownership fence (scripts/run_crew.py) for both halves of the ask."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "A cold plan critic (a fresh subagent given only the mission frame and execute.json, no authoring context) read ExternalBackend.dispatch directly and reported that it builds no prompt at all -- its own docstring says the out-of-band caller does that, outside scripts/run_crew.py. Half the g2 deliverable as originally planned targeted a file the plan itself fenced off from the implementer."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Caught before any implementer dispatch: the plan's g2 anchors, imperative, and postconditions were corrected (to the registry-entry field plus ExternalBackend.dispatch's own stderr banner, both genuinely inside the fence) in a few minutes of editing, versus what would otherwise have been an implementer either violating scope to edit an out-of-fence file, silently dropping half the ask, or returning blocked on a real-looking but wrong contradiction."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Re-read the flagged function directly before editing the plan, confirmed the critic's claim against the actual source rather than trusting it on report alone, then rewrote the affected gate's anchors/imperative/postconditions in execute.json before any crew was dispatched."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "crew-verdict-and-door",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/crew-verdict-and-door/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 2,
+        "artifact-ref": []
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Run the full cache-clean test suite as g1-integrate's closeout postcondition and compare against the launch order's stated 453f8492 baseline (3002 passed, 7 skipped, 0 failed, 1130 subtests)."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A cache-clean suite run with only the diff's own additive changes applied would show 0 failed, matching the baseline's failure count exactly."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The suite reported 2 failed: the expected map-staleness test (fixable by regenerating the map, already anticipated) and tests/test_mcp_identity.py::DC3InheritanceMechanismTests::test_launching_the_parent_never_touches_the_calling_processs_own_environ, which asserts SPINE_FILE/SPINE_SESSION are absent from os.environ -- an assertion that is false inside THIS commander's own shell, because this dispatch was itself launched via run_crew.py's cli backend with --spine, which legitimately binds those vars into the shell before pytest ever starts. Running the same single test with the three SPINE_* vars unset passed cleanly."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Cost one extra full-suite run (~2 minutes) plus a targeted single-test reproduction to distinguish a genuine regression from an artifact of the commander's own door-binding, before concluding the second failure was unrelated to this run's diff."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Used the engine's own retext-check amend op (authority=commander, reason recorded on the checklist) to change g1-integrate's and g2-integrate's suite-check commands to run pytest with SPINE_FILE/SPINE_SESSION/SPINE_PARENT explicitly unset, reproducing the environment the baseline was almost certainly measured in rather than one contaminated by this run's own bound door."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "crew-verdict-and-door",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "context",
+        "context-manifest-ref": ".agent-work/crew-verdict-and-door/map-orientation.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [".agent-work/crew-verdict-and-door/map-orientation.json"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Resolve map orientation before reading any source, per the context step's map-first imperative, for a repo (constellation-skills) that maintains its own derived code map under map/."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A repo that runs `python -m scripts.code_map build` as part of its own test suite would have a populated map/ids.jsonl, since the tool exists specifically to produce citable structure."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "map/ids.jsonl was empty (0 entries), and a fresh `python -m scripts.code_map build --root .` still reported \"ids\": 0 in its own summary -- this is a repo-wide, structural characteristic, not staleness fixable by rebuilding, and every map_orient.py orientation in this repo currently reads DEGRADED-UNPARSEABLE as a result."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Discharged the DEGRADED verdict via declared substitutes (README.md, docs/CHECKLIST_ENGINE_DESIGN.md, docs/agents/CREW_CONTEXT.md) and a recorded escalation, costing one extra orient/verify-orientation round-trip; the mission frame then had to avoid all anchor-shaped tokens (word:id syntax) entirely, since any such token in a DEGRADED-mode frame is treated as an unresolvable citation attempt and fails c6, which was not obvious on first pass and cost one failed verify-frame plus a rewrite."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Rewrote the mission frame's constraint/decision/claim sections to avoid the `word:id` anchor pattern entirely (e.g. \"Ruling task-1-is-the-lane\" instead of \"decision:task-1-is-the-lane\"), keeping only the declared substitute file paths as literal citations, which made verify-frame pass (FRAME-OK, 0 problems)."
+        }
+      }
+    }
+  ]
+}

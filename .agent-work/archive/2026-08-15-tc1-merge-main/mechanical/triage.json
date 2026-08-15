@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "triage",
+  "mechanical": {
+    "run": "tc1-merge-main",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 6,
+    "spine-step": "triage",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-tc1-merge-main-triage@e50e22244f3fbc035ecc8252c95333dd859d6ce3",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "tc1-merge-main",
+    "generated_at": "2026-08-15T19:29:18Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-tests",
+  "mechanical": {
+    "run": "tc1-worktree-identity-g1-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m3-tests",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-tc1-worktree-identity-g1-implementer-m3-tests@f9300747114109e4122887de895c19b748acc8f9",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "tc1-worktree-identity-g1-implementer",
+    "generated_at": "2026-08-15T16:59:12Z"
+  }
+}

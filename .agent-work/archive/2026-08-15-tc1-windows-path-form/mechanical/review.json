@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "review",
+  "mechanical": {
+    "run": "tc1-windows-path-form",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 5,
+    "spine-step": "review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-tc1-windows-path-form-review@0c6f1b477cf8dfe4b3cbd2e9a3eb523a6e1d30b9",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "tc1-windows-path-form",
+    "generated_at": "2026-08-15T18:41:34Z"
+  }
+}

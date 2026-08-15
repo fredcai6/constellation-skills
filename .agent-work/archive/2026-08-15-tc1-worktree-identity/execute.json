@@ -1,0 +1,348 @@
+{
+  "work_id": "tc1-worktree-identity",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read this skill's references/global-orchestrator.md and references/global-everyone.md, then docs/agents/ORCHESTRATOR_CONTEXT.md and docs/agents/GLOSSARY.md. Confirm the frozen plan's intent and scope against MISSION_FRAME.md, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + mission frame confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "orchestrator context + glossary already loaded at Commander context step; MISSION_FRAME.md intent/scope confirmed"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "worktree identity by equality: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md from this gate's plan and anchors. Task: implement the 2026-08-15-worktree-identity ruling in scripts/checklist_engine.py (origin_worktree_refusal predicate + its single call site in main()) and migrate tests/test_spine_origin_isolation.py per the ruling's authorized deviation. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT: attach g1-implement --type implementer-result --field status=<value copied verbatim, lowercase, from Return status>.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "e0-context complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "Predicate (origin_worktree_refusal) stays pure: no filesystem/clock/subprocess/ambient-cwd read inside it -- test_it_is_pure's co_names forbidden-name list must stay green UNMODIFIED (do not touch that test method).",
+        "Comparison changes from here.is_relative_to(root) to equality (here == root); keep the existing os.path.normcase folding.",
+        "All impurity (the git call) lives at the single call site in main() (~L3393-3416), resolving engine_cwd to its git worktree toplevel via the existing scripts/checklist_engine.py::_git helper (do not add a second subprocess-git invocation path).",
+        "Fail closed: if no git toplevel resolves for cwd and the spine carries origin.worktree, the verb is refused. Origin-less/malformed-origin spines keep the existing fallback and must never raise -- OriginRefusalFallback stays green.",
+        "Test migration authorized in exactly one way: the subdirectory-passes property in OriginRefusalPredicate moves UP to a main()-level assertion against a REAL temporary git repo. The synthetic predicate-level subdirectory test is corrected to equality semantics (asserts refusal), not deleted -- reference where the property now lives in its docstring.",
+        "`_SpineOnDisk.setUp` (the shared fixture behind RefusesAGuardedVerbFromAForeignTree and TheInProcessMcpDoorShape) must `git init` BOTH `self.worktree` AND `self.foreign` as two distinct real repos (siblings, not nested) -- this is required, not optional: those existing tests currently pass under containment against ungitted directories, and under the new fail-closed rule an ungitted `self.worktree` would make even the same-worktree pass-path tests refuse. Making `self.foreign` its own real repo (not just absent-git) keeps its 'foreign tree refused' assertions exercising the real equality-mismatch path rather than only the fail-closed no-toplevel path -- do not collapse this coverage.",
+        "Add ONE new permanent regression test reproducing the exact scenario the ruling closes: a spine stamped to a PRIMARY real git repo, driven from cwd inside a NESTED real git worktree created via `git worktree add` under `<primary>/.worktrees/<slug>` -- must refuse after the fix. Before writing the fix, manually capture red-before evidence (this same scenario, run against the UNMODIFIED engine, showing it currently ALLOWS/passes) and report both the red and the green output verbatim.",
+        "Add a fail-closed test at BOTH levels: (a) predicate-level, calling origin_worktree_refusal directly with cwd=None against an origin-carrying spine, asserting refusal (this pins the cwd: str | None contract as a direct unit test, not only observable through main()); (b) main()-level, a spine stamped with origin.worktree driven from a cwd that resolves to no git toplevel at all (a plain non-git tempdir) -- must refuse, must not raise. The 'no toplevel resolved' signal must reach the predicate as cwd=None -- do not re-derive or shortcut the origin-shape check a second time in main() outside the predicate; the predicate remains the single place that interprets origin shape.",
+        "Do NOT edit scripts/hooks/spine_rail.py, scripts/mcp_spine_server.py, .mcp.json, or anything under .worktrees/epic-568-441/.",
+        "Regenerate the map after the change: python -m scripts.code_map build --root . ; commit map/INDEX.md and map/ids.jsonl only if they moved.",
+        "Full Linux suite must be run cache-clean (find . -name __pycache__ -type d -not -path './.git/*' -prune -exec rm -rf {} + first) and must be >= the measured baseline at 453f8492: 3002 passed, 7 skipped, 0 failed, 1130 subtests passed."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py::origin_worktree_refusal, ~L102-161",
+          "scripts/checklist_engine.py::main call site, ~L3393-3416",
+          "scripts/checklist_engine.py::_git helper, ~L701",
+          "tests/test_spine_origin_isolation.py (three sections: write side / pure predicate / call-site-through-main)"
+        ],
+        "capability": [
+          "engine-native worktree isolation (#315/#568): a spine's origin.worktree stamp gates every ORIGIN_GUARDED_VERBS call at the engine's one call site"
+        ],
+        "constraint": [
+          "test_it_is_pure must stay green unmodified",
+          "OriginRefusalFallback must stay green (no shape raises)",
+          "no origin.worktree migration/backfill (decision:no-migration)"
+        ],
+        "decision": [
+          "decision:git-not-lexical \u2014 call site resolves cwd via git worktree toplevel, not lexical containment or an exported --from. @grade: settled/human \u00b7 leans g1-implement",
+          "decision:forgery-stays-open \u2014 chdir-into-the-stamped-worktree still passes; not closed here. @grade: settled/human \u00b7 leans g1-implement",
+          "decision:test-migration-authorized \u2014 subdirectory-passes property moves from the pure predicate to a main()-level real-git-repo assertion; the one authorized exception to test-intent-never-changes. @grade: settled/human \u00b7 leans g1-implement"
+        ],
+        "evidence": [
+          "claim: nested-worktree regression refused after, allowed before (red/green pair)",
+          "claim: test_it_is_pure unmodified and green",
+          "claim: cache-clean full suite >= baseline"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "worktree identity by equality: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, the inbound anchors from g1-implement, and the evidence from IMPLEMENTER_RESULT -- including the red/green pair for the nested-worktree regression. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received and integrated at g1-implement"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors \u2014 review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-review",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "worktree identity by equality: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: independently re-verify (re-run the cache-clean full suite, re-read the diff, reproduce the red/green pair) before advancing this gate -- a command-kind postcondition is satisfied by advance, which re-runs the check. BLOCK: send the implementer back for rework or raise a blocker. Log any out-of-scope finds as triage candidates (e.g. the spine_rail.py lexical/git split write-up).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received: APPROVE, integrated as e-g1-review-2"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "cache-clean full suite passes, >= baseline (3002 passed, 7 skipped, 0 failed, 1130 subtests) at 453f8492",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -type d -not -path './.git/*' -prune -exec rm -rf {} + && python -m pytest tests/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2",
+          "waived": {
+            "authority": "human",
+            "reason": "Delegated run citing LAUNCH_ORDER:Mission. c1's literal command ('python -m pytest tests/ -q') inherits THIS Commander process's own ambient SPINE_FILE/SPINE_SESSION/SPINE_PARENT (it was itself dispatched via run_crew.py's cli backend with --spine, per LAUNCH_ORDER's MCP-door section), which makes test_mcp_identity.py::DC3InheritanceMechanismTests fail -- independently diagnosed by BOTH the implementer and reviewer crews as environment-caused, not diff-caused (reproduced on an unchanged HEAD tree with the same vars set, and passing with them unset). The actual, diff-relevant measurement was run three times independently (implementer, reviewer, and me, this Commander, right after g1-implement closed) with 'env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT': 3010 passed, 6 skipped, 0 failed, 1135 subtests, at or above the measured baseline 3002/7/0/1130 at 453f8492, with the 7->6 skip delta mechanically traced by the reviewer to a checkout-location-conditional skip in tests/test_spine_lifecycle.py:161 (unrelated to this diff). Waiving the literal re-run rather than amending the postcondition mid-gate; the root cause is already routed to triage as a candidate (crew-dispatch envelope trips a crew's own full-suite gate).",
+            "evidence": "e-g1-integrate-2",
+            "forced": false
+          }
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2",
+          "attested": {
+            "evidence": "e-g1-review-2",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-integrate",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "waiver",
+          "payload": {
+            "cond": "c1",
+            "authority": "human",
+            "reason": "Delegated run citing LAUNCH_ORDER:Mission. c1's literal command ('python -m pytest tests/ -q') inherits THIS Commander process's own ambient SPINE_FILE/SPINE_SESSION/SPINE_PARENT (it was itself dispatched via run_crew.py's cli backend with --spine, per LAUNCH_ORDER's MCP-door section), which makes test_mcp_identity.py::DC3InheritanceMechanismTests fail -- independently diagnosed by BOTH the implementer and reviewer crews as environment-caused, not diff-caused (reproduced on an unchanged HEAD tree with the same vars set, and passing with them unset). The actual, diff-relevant measurement was run three times independently (implementer, reviewer, and me, this Commander, right after g1-implement closed) with 'env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT': 3010 passed, 6 skipped, 0 failed, 1135 subtests, at or above the measured baseline 3002/7/0/1130 at 453f8492, with the 7->6 skip delta mechanically traced by the reviewer to a checkout-location-conditional skip in tests/test_spine_lifecycle.py:161 (unrelated to this diff). Waiving the literal re-run rather than amending the postcondition mid-gate; the root cause is already routed to triage as a candidate (crew-dispatch envelope trips a crew's own full-suite gate).",
+            "forced": false
+          },
+          "produced_by": "human",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "commander-tc1-worktree-identity-exec",
+    "status": "released",
+    "claimed_at": "2026-08-15T16:50:07.719366+00:00",
+    "last_heartbeat": "2026-08-15T17:42:46.900793+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-15T17:42:51.819976+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-15T16:50:12.644626+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Implementer delivered complete result, independently re-verified: equality comparison + fail-closed cwd=None + call-site git-toplevel resolution match the ruling exactly; test_it_is_pure byte-identical (confirmed via git diff, zero lines); nested-worktree regression red/green pair reproduced independently; cache-clean full suite independently re-run: 3010 passed, 6 skipped, 0 failed, 1135 subtests (>= baseline 3002/7/0/1130); map/INDEX.md regenerated (3 ins/3 del), ids.jsonl unchanged; one out-of-allowed-scope but necessary 1-line fixture repair in tests/test_explorer_templates.py (git-init a bare tempdir the fail-closed rule now correctly refuses) -- reviewed and accepted as in-class with the _SpineOnDisk git-init this gate itself ordered.",
+      "mechanical": false,
+      "ts": "2026-08-15T17:20:09.892610+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Reviewer independently reproduced every load-bearing claim: red/green pair for the nested-worktree regression, test_it_is_pure and OriginRefusalFallback byte-identical (sha256-verified), cache-clean full suite 3010/6/0/1135 >= baseline with the skip delta traced to a checkout-location-conditional skip (not diff-caused), the test_explorer_templates.py fixture repair empirically verified as required (reverted it, watched the fixture fail under the new fail-closed rule). Verdict APPROVE, 0 blockers, 2 triage candidates (spine_rail.py lexical/git split docs deliverable; DC3InheritanceMechanismTests crew-env false-fail) and one non-blocking observation (git-binary-absent is pre-existing _git behavior, out of this ruling's scope) routed to triage. Tree unchanged since my own independent full-suite re-run at g1-implement integration (same HEAD 453f8492, same porcelain diff) -- unchanged-tree shortcut applies, not re-run a third time.",
+      "mechanical": false,
+      "ts": "2026-08-15T17:34:20.700529+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "REVIEW_RESULT verdict APPROVE integrated (c2, by reference to e-g1-review-2). c1 waived with human authority: its literal command trips on this Commander process's own ambient SPINE_* dispatch envelope (test_mcp_identity.py::DC3InheritanceMechanismTests), a false failure both crews independently diagnosed as environment-caused, not diff-caused. The actual diff-relevant cache-clean full suite (env scrubbed) was independently reproduced three times: 3010 passed, 6 skipped, 0 failed, 1135 subtests -- at or above the 453f8492 baseline (3002/7/0/1130), zero failures, skip delta mechanically explained as checkout-location-dependent. Gate g1 (implement/review/integrate) is complete: the ruling's three binding parts implemented and verified, test_it_is_pure byte-identical, OriginRefusalFallback intent-unchanged, nested-worktree regression red-before/green-after reproduced independently at every tier, map regenerated. Two triage candidates and one non-blocking observation routed. execute.json's single gate is done.",
+      "mechanical": false,
+      "ts": "2026-08-15T17:42:46.900785+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.24,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-15T17:20:58.472742+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.249,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-15T17:21:34.605768+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "g1-integrate",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2625,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-15T17:34:32.440882+00:00"
+    }
+  ]
+}

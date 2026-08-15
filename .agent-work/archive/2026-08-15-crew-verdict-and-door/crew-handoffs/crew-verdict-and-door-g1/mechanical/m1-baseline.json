@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-baseline",
+  "mechanical": {
+    "run": "crew-verdict-and-door-g1",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m1-baseline",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-crew-verdict-and-door-g1-m1-baseline@1afb7ea8353115c0ff337d1c6a043e7b4e94756b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "crew-verdict-and-door-g1",
+    "generated_at": "2026-08-15T16:55:58Z"
+  }
+}

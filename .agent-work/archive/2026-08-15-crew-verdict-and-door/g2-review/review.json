@@ -1,0 +1,179 @@
+{
+  "work_id": "crew-verdict-and-door",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded references/global-crew.md, references/global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g2-reviewer-handoff.md, the g2-implementer-result.md, and both git diffs (scripts/run_crew.py, tests/test_crew_launcher.py) before beginning checks.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Both close-criteria pieces present and verified directly against the diff: (1) build_entry sets entry['door_bound'] = (backend == BACKEND_CLI) at scripts/run_crew.py:946, i.e. equality against the literal 'cli' constant, not inequality against 'external' -- confirmed by reading BACKEND_CLI='cli' (line 64) and BACKEND_EXTERNAL='external' (line 65); a hypothetical future third backend value defaults to False (safe), not True. (2) ExternalBackend.dispatch (scripts/run_crew.py:1318-1362) prints an unconditional stderr banner via print(..., file=sys.stderr) immediately before its single return statement, naming the door as unbound, naming .mcp.json's demo default, and instructing spine_status verification before any mutating verb -- confirmed present in all four required phrases (unbound / .mcp.json / demo default / spine_status), independently reproduced via the new test's captured-stderr assertions (all 4 substrings found). CliBackend is unaffected: CliBackend.dispatch (line 1197) calls the same shared build_entry(..., backend=self.name=...) with self.name=BACKEND_CLI, so door_bound=True flows through the one shared constructor -- grep for '\"backend\":' in run_crew.py shows exactly one dict-literal site (inside build_entry itself), confirming no duplicated/separate entry-construction path exists for either backend.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status --porcelain shows only scripts/run_crew.py and tests/test_crew_launcher.py modified (plus untracked .agent-work/ scratch, which is workbench state, not deliverable). git diff --stat confirms 2 files changed, 66 insertions, 1 deletion. Specific-exclusion files (scripts/checklist_engine.py, scripts/hooks/spine_rail.py, .mcp.json, scripts/mcp_spine_server.py) each show zero diff via git diff --stat -- <file>. Diff hunks in run_crew.py are confined to build_entry's docstring+dict-literal (lines 917-946) and ExternalBackend.dispatch's tail before its return (lines 1350-1362); grep -c 'finalize_from_exit_code' on the diff returns 0, confirming g1's already-committed change is untouched. Test-file diff is purely additive: 2 new methods in BuildEntryTests, 1 new method in BackendEquivalenceTests; no existing test line changed (diff hunks only add lines, no '-' lines except context).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently re-ran (not just re-read) all claimed evidence: full tests/test_crew_launcher.py = 172 passed (matches implementer's claim exactly). Targeted -k filter on the 3 new test names = 3 passed, 3012 deselected (matches). Reproduced red-before-green myself via 'git stash push -- scripts/run_crew.py' (leaving the new tests in place against the unfixed run_crew.py): 3 failed with identical failure modes -- KeyError: 'door_bound' on both BuildEntryTests, AssertionError \"'unbound' not found in ''\" on the banner test -- output matches the implementer's pasted RED evidence. git stash pop restored the fix; re-ran both the targeted 3 and the full 172-test suite, both green again, confirming the stash round-trip did not corrupt state. git check-ignore scripts/run_crew.py tests/test_crew_launcher.py independently re-run: exit 1 (both tracked, matches claim). Wiring grep for door_bound independently re-run: identical 6-line output to the implementer's paste (2 in run_crew.py -- docstring + the one write site inside build_entry -- 4 in tests). Evidence genuinely demonstrates the claimed behavior; nothing in the claimed evidence failed to reproduce.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Checked against global-crew.md implementation discipline + CREW_CONTEXT.md verification discipline: (1) Minimal change -- one new dict key (door_bound) plus its docstring paragraph, and one unconditional print call; no new helper functions, no signature changes, no speculative abstraction. (2) Test-led: TDD red-then-green independently reproduced (see r3-evidence) satisfying 'a check that cannot fail is indistinguishable from one that passed' -- both failure modes were genuine (KeyError, empty-string assertion), not trivially-always-passing. (3) Assert against behavior, not text describing it: door_bound tests assert the actual dict key's value (assertIs on True/False); the banner test asserts substrings of the actual captured stderr bytes the code emits (the real runtime behavior), not a docstring or description= field -- this is the same category the g1 reviewer accepted for an analogous stderr-content assertion. (4) No hidden fallback -- the banner is unconditional (fires on every ExternalBackend.dispatch call, verified: nothing guards the print() with an if/flag, it sits directly before the single return None, entry statement). (5) Naming matches surrounding conventions: door_bound is snake_case like backend, pid, worktree, session_name -- same dict-literal style as its neighboring keys. (6) No hidden state/side-effect: stderr print has no return-value or control-flow effect; registry entry's other fields unchanged (grep for '\"backend\":' shows door_bound is purely additive alongside it).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map is DEGRADED-UNPARSEABLE repo-wide per handoff -- no map citation expected/required. Independently grepped for exact-key-set validators or schema allowlists over registry entries (set(entry.keys()), REQUIRED_KEYS, ENTRY_KEYS, expected_keys patterns) -- none found in scripts/ or tests/, so a new always-present door_bound key cannot silently break an existing consumer that enumerates entry's exact key set. Only other door_bound-adjacent reference is entry.get('backend') at line 1069 (entry_backend helper) -- unrelated, reads the pre-existing backend key, does not touch door_bound. Implementer's Map Impact notes (structural anchors at build_entry/ExternalBackend.dispatch, capability = new observability field + new stderr warning, no event impact, Protected Intent backed by two independent signals now, no new decision candidates, door_bound flagged as a new unconsumed claim surface, triage candidate to surface door_bound in recover_crews.py) match the diff -- no overstatement or omission found; the 'no external readers yet' claim was independently confirmed via the wiring grep in r3-evidence.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged standard + reason. Record the pass to .agent-work/crew-verdict-and-door/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/crew-verdict-and-door/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/crew-verdict-and-door/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline catalog (12 smells) rendered against the diff: 11/12 absent, 1 flagged (duplicated-code, non-blocking) -- the new stderr banner in ExternalBackend.dispatch repeats the clause 'spawns no process and builds no environment, so nothing binds' verbatim from the pre-existing --spine refusal message a few lines above it in the same class. Deliberate per the implementer's own Assumptions note (reused existing phrasing for hazard-message consistency); this is repeated human-readable string-literal phrasing, not duplicated control-flow/logic, so it does not rise to a blocker -- flagged as a minor observation (hoist the shared clause into one constant to prevent future drift between the two messages) rather than overridden (no repo standard sanctions it; it is just low-severity). No other smell present: build_entry/ExternalBackend.dispatch stayed a manageable size (dispatch is 46 lines including its docstring and a 7-line rationale comment), no new class, no feature envy/data clumps/primitive obsession, signature unchanged (no long parameter list), single-file single-reason change (no shotgun surgery/divergent change), no message chains, no speculative generality (only the two named pieces were added, both consumed by the new tests), and the new comment block explains design rationale (why not bind out-of-band) rather than compensating for disorganized code (not comments-as-deodorant). scripts/verify_fowler_pass.py .agent-work/crew-verdict-and-door/FOWLER_PASS.json exits 0 (smells=12, flagged=['duplicated-code'], overridden=[]).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/crew-verdict-and-door/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "External backend's unbound-door hazard is now visible by construction: build_entry sets entry['door_bound'] = (backend == BACKEND_CLI) -- equality against 'cli', confirmed correct direction so a future third backend defaults safe -- and ExternalBackend.dispatch prints an unconditional stderr banner naming the unbound door, .mcp.json's demo default, and the spine_status verification instruction, on every dispatch with no conditional guard. CliBackend is unaffected and gets door_bound=True through the same shared build_entry constructor -- no duplicated entry-construction path. Independently re-reproduced all claimed evidence myself: full tests/test_crew_launcher.py (172 passed), targeted 3-test run, and a from-scratch red-before-green reproduction via git stash on scripts/run_crew.py alone (3 failed with identical failure modes to the implementer's pasted evidence, then green again after stash pop). Scope respected: only scripts/run_crew.py (build_entry, ExternalBackend.dispatch) and tests/test_crew_launcher.py (3 new additive tests) touched; all four specific-exclusion files show zero diff; g1's finalize_from_exit_code untouched. Fowler pass: 11/12 absent, 1 non-blocking flagged (a repeated hazard-message clause across two adjacent f-strings, deliberate per the implementer, worth a future constant-hoist but not a defect). One non-blocking triage candidate flagged: surface door_bound in recover_crews.py's human-facing report."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "Surface door_bound:false in recover_crews.py's human-facing report so a human debugging a stuck/abandoned crew sees the unbound-door hazard without having to already know which backends bind a door. Confirmed by implementer (Out-of-scope observations) and independently re-verified by the reviewer: neither verify_external_result nor recover_crews.py's classifier reads door_bound today (grep confirmed). Non-blocking, out of this gate's Allowed Scope (build_entry, ExternalBackend.dispatch, CliBackend's entry construction, tests/)."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "crew-verdict-and-door-g2-reviewer-attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-15T17:26:01.040322+00:00",
+    "last_heartbeat": "2026-08-15T17:28:27.502170+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-15T17:29:00.041145+00:00"
+  }
+}

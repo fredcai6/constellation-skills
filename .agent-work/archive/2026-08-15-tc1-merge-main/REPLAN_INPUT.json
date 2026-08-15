@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "tc1-merge-main",
+      "spec_path": ".agent-work/tc1-merge-main/LAUNCH_ORDER.md",
+      "intent_and_why": "PR #588 is CONFLICTING with main on the generated map/INDEX.md only, so GitHub never runs pull_request CI on it. Merge main and resolve the conflict by regenerating the map so CI can run."
+    },
+    "definition_of_done": [
+      "origin/main merged into tc1/worktree-identity with only map/INDEX.md conflicting",
+      "map/INDEX.md resolved by regeneration (python -m scripts.code_map build --root .), never hand-edited",
+      "full clean-env Linux suite green (0 failed)",
+      "branch pushed and PR #588 mergeable status no longer CONFLICTING"
+    ],
+    "good_enough": {
+      "mandatory_quality": "Merge resolved by regeneration only; no other file touched; #588's reviewed content unchanged",
+      "sufficient_evidence": "Clean-env full pytest suite, tests/test_code_map.py green, gh pr view 588 --json mergeable",
+      "appetite": "One merge, one gate"
+    },
+    "hard_constraints": [
+      "Do not hand-edit map/INDEX.md",
+      "Do not edit scripts/checklist_engine.py, tests/test_spine_origin_isolation.py, tests/test_explorer_templates.py, any episodes/ file, scripts/hooks/spine_rail.py, scripts/run_crew.py, .mcp.json",
+      "Do not merge PR #588 (Admiral merges)",
+      "Do not dispatch a crew for this run"
+    ],
+    "fixed_decisions": [
+      "decision:merge-main-now settled/human",
+      "decision:regenerate-dont-handmerge settled/human",
+      "decision:content-is-final settled/human"
+    ],
+    "current_wave": {
+      "objective": "Unblock PR #588's CI by merging main and regenerating the one conflicted generated file",
+      "exit_criteria": [
+        "git merge origin/main completes with only map/INDEX.md conflicted",
+        "map regenerated via scripts.code_map, not hand-edited",
+        "clean-env full suite passes with 0 failed",
+        "gh pr view 588 --json mergeable no longer reports CONFLICTING"
+      ],
+      "issues": [
+        {
+          "id": "A",
+          "title": "Merge origin/main into tc1/worktree-identity and regenerate map/INDEX.md",
+          "desired_outcome": "PR #588 is mergeable and its pull_request CI can run.",
+          "useful_now": "It is the last thing blocking #588, per LAUNCH_ORDER admiral-post-568.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "Clean merge with the single expected conflict, map regenerated, full suite green, PR mergeable != CONFLICTING.",
+          "implementation_latitude": "Choose exact regeneration/verification command sequence; preserve the fixed constraints above.",
+          "hard_constraints_no_gos": [
+            "Do not hand-edit map/INDEX.md",
+            "Do not touch fenced files",
+            "Do not merge PR #588"
+          ],
+          "local_unknowns": [],
+          "anchors": [".agent-work/tc1-merge-main/LAUNCH_ORDER.md"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [],
+    "uncertainty_register": [],
+    "parked_possibilities": []
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "A",
+      "outcome": "origin/main merged into tc1/worktree-identity; the single map/INDEX.md conflict resolved by regenerating the map (never hand-edited); full clean-env suite green; branch pushed; PR #588 no longer CONFLICTING.",
+      "evidence": "git merge/log output, python -m scripts.code_map build output, clean-env pytest -q summary line, git push output, gh pr view 588 --json mergeable output -- all captured in this run's execute-gate evidence."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "map/INDEX.md is the only file that conflicts on merging origin/main",
+      "expected": "git merge origin/main reports exactly one conflicted file: map/INDEX.md",
+      "observed": "Confirmed live by this run's own git merge (see execute gate evidence).",
+      "source": "git merge output"
+    },
+    {
+      "claim": "A correct map regeneration is verifiable by the suite, not by judgment",
+      "expected": "tests/test_code_map.py passes only when the map is fresh",
+      "observed": "tests/test_code_map.py passed in the clean-env full suite run.",
+      "source": "pytest"
+    },
+    {
+      "claim": "The merge and regeneration unblock PR #588's CI",
+      "expected": "gh pr view 588 --json mergeable no longer reports CONFLICTING after push",
+      "observed": "Confirmed live after pushing this run's merge commit.",
+      "source": "gh pr view"
+    }
+  ],
+  "discrepancies": [],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [".agent-work/tc1-merge-main/LAUNCH_ORDER.md"],
+    "map_status": "DEGRADED-UNPARSEABLE at run start (map/INDEX.md and map/ids.jsonl are this run's own regeneration target); regenerated by this run's own gate."
+  }
+}

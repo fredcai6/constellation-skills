@@ -1,0 +1,79 @@
+{
+  "work_id": "tc1-merge-main",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "tc1-merge-main",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/tc1-merge-main/execute.json",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": [".agent-work/tc1-merge-main/execute.json"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Close g1-verify (a gate inside the child checklist execute.json, distinct from the top-level spine.json) after the clean-env suite passed, using the MCP door tools available in this session."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Calling mcp__spine__spine_advance with task_id 'g1-verify' would close that gate, since spine_status's ACTIVE line and the launch order both referred to gate-level work without distinguishing which checklist file backed it."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "mcp__spine__spine_advance refused with 'REFUSED: no such item g1-verify' -- the running MCP door was bound (via SPINE_FILE/SPINE_SESSION at server start) to the top-level spine.json, whose only items are steps like context/plan/execute/reconcile/triage/review, not execute.json's own gates (e0-context, g1-merge, g1-verify, g1-push). The child checklist had to be driven with the CLI directly: python scripts/checklist_engine.py --file .agent-work/tc1-merge-main/execute.json advance g1-verify."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One refused tool call plus a re-read of skills/workbench/references/checklist-engine.md's 'One agent, one plan' section to confirm the door does not follow child_checklist references -- a few minutes, no rework, no wasted execution."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Switched to `python scripts/checklist_engine.py --file .agent-work/tc1-merge-main/execute.json <verb>` for every execute.json gate (g1-verify, g1-push), and kept using the mcp__spine__* door tools only for the top-level spine.json steps (execute, reconcile, triage, review) that the running door was actually bound to."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "tc1-merge-main",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/tc1-merge-main/LAUNCH_ORDER-2.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": ["/tmp/tc1-suite.log"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Follow LAUNCH_ORDER-2.md's mandated blocking-loop shape (`nohup ... & ; until grep ...; done`) to run the ~2-minute clean-env pytest suite without the harness auto-backgrounding it and ending the turn unattended, per the order's account of five prior Commanders failing this exact way."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The until-loop would block the foreground Bash call until pytest's summary line appeared in /tmp/tc1-suite.log, keeping the whole run inside one turn."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "It worked exactly as specified: the single Bash tool call returned only after the suite finished (123.37s), with the summary line '3016 passed, 6 skipped, 1136 subtests passed' already present in the tool output -- no separate wait or resume was needed."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "None -- this is a confirmation, not a correction: the prescribed shape avoided the failure mode the order was warning about."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "None needed; used LAUNCH_ORDER-2.md's exact command shape verbatim."
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,218 @@
+{
+  "work_id": "tc1-worktree-identity",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a-purity",
+    "r4b-signal"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md, the g1-review handoff, and the Admiral ruling 2026-08-15-worktree-identity.md in full.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All three binding parts implemented exactly: (1) main() resolves engine_cwd via _git(['rev-parse','--show-toplevel'], base_dir=Path.cwd()), None on non-zero returncode or empty stdout \u2014 sole rev-parse invocation confirmed by grep (L3439 only); (2) predicate compares here == root with the same os.path.normcase folding, signature cwd: str|None, stays pure (test_it_is_pure byte-identical to HEAD: 875 bytes, sha 93b1d7f5 both sides); (3) fail-closed branch ordered AFTER the shape fallbacks \u2014 origin-carrying + cwd=None refuses, origin-less/malformed still fall back and never raise (OriginRefusalFailClosed covers both, incl. all guarded verbs and exempt verbs). Authorized migration done as ruled: synthetic subdirectory case now asserts refusal with a docstring pointing to RefusesAGuardedVerbFromAForeignTree::test_the_same_verb_from_a_subdirectory_of_the_worktree_succeeds, which asserts the real property through main() against a real git repo. Red/green independently reproduced: stashed engine change -> 2 NestedWorktreeRegression tests FAIL (old engine advances g1 from inside nested worktree, exit 0); popped -> 2 PASS.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Diff is exactly the 4 expected files (map/INDEX.md +6-, checklist_engine.py +50-, test_explorer_templates.py +5, test_spine_origin_isolation.py +210-). Specific exclusions verified untouched via git status scoped to spine_rail.py, mcp_spine_server.py, .mcp.json (clean); .worktrees/epic-568-441 modifications are that worktree's own live #441 branch state, not this diff. No origin.worktree migration/backfill (no spine JSON in diff). THE JUDGMENT CALL, empirically verified: reverted the test_explorer_templates.py hunk and re-ran ExplorerSpineCrossCheck::test_instantiates_and_engine_can_claim_and_start against the new engine \u2014 it FAILS with 'claim refused: ... no git worktree toplevel could be resolved' (fail-closed working as ruled on a bare-tempdir fixture whose instantiated spine carries an origin stamp). The 1-line git-init is the honest-fixture repair, same class as the _SpineOnDisk git-init this gate's plan itself ordered, disclosed by the implementer, and strictly smaller than a BLOCK-and-rescope round-trip would produce. Verdict: right minimal repair, accepted.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every claimed side-effect independently reproduced. (1) Red/green: stashed engine change only -> both NestedWorktreeRegression tests FAIL (old engine ADVANCES from inside a nested worktree, 'g1 -> in-progress', exit 0 \u2014 the ruling's measured bug); popped -> both PASS. (2) Targeted file: 37 passed/1 skipped/16 subtests, matching claim. (3) Cache-clean full suite (pycache purged, env -u SPINE_FILE/SPINE_SESSION/SPINE_PARENT): 3010 passed/6 skipped/0 failed/1135 subtests \u2014 >= baseline 3002/7/0/1130, 0 failures. (4) env -u justification confirmed independently: test_mcp_identity DC3InheritanceMechanismTests fails WITH ambient SPINE vars and passes without, on this tree AND on an unchanged HEAD tree in a throwaway worktree \u2014 environment-caused, not diff-caused. (5) Skip delta 7->6 mechanically explained: the 7th skip is test_spine_lifecycle.py:161, conditional on the checkout NOT being directly under .worktrees/ \u2014 HEAD tree at /tmp yields 7 skips (incl. it), this tc1 worktree yields 6 (it runs); checkout-location-dependent, not diff-dependent, confirming the implementer's claim. (6) Wiring grep: exactly one rev-parse --show-toplevel call site, in main() L3439. (7) Map regen idempotent: python -m scripts.code_map build --root . reproduces the diffed map/INDEX.md exactly (entity counts 4574->4588), map/ids.jsonl unchanged. (8) Door tests (forgery-stays-open anchor): test_mcp_door_engine_cwd + test_mcp_lifecycle + test_mcp_adoption = 202 passed/2 skipped.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Both handoff constraints hold \u2014 see r4a-purity and r4b-signal. Change also complies with CREW_CONTEXT verification discipline: the guards were demonstrated able to fail (red run reproduced), assertions are against behavior (exit codes, spine digest unchanged, refusal emitted) with the message-substring checks only supplementary.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No unreconciled divergence. Map Impact notes match the diff exactly (anchors, capability, constraints, decision anchors all verified independently in r1/r3/r4). The predicate and call-site docstrings were updated in the same diff, so recorded in-code architecture matches the new equality semantics. map/ids.jsonl is empty repo-wide (pre-existing DEGRADED state, discharged at plan context) \u2014 nothing to update there. Two implementer triage candidates are real and correctly routed out rather than fixed in-scope; flagged below.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/tc1-worktree-identity/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/tc1-worktree-identity/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from tc1-worktree-identity alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/tc1-worktree-identity/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Full 12-smell baseline walked over the 4-file diff, recorded at .agent-work/tc1-worktree-identity/FOWLER_PASS.json; verify_fowler_pass.py exits 0. Zero flagged. One override, logged: primitive-obsession (cwd as str|None with None sentinel) is subordinated by the ruling's own binding close criterion pinning that exact signature plus the repo's documented refusal-or-None convention \u2014 a wrapper type would add interface without behavior and fight test_it_is_pure. Everything else absent: change is maximally local (one predicate + one call site, grep-confirmed), the two refusal strings state different causes, the new test fixture classes are topology-distinct rather than duplicated, and the added prose is decision-bearing documentation in the module's established style.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/tc1-worktree-identity/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a-purity": {
+      "id": "r4a-purity",
+      "title": "Impurity confined to the one call site",
+      "imperative": "Verify the predicate calls no filesystem/clock/subprocess/ambient-cwd function per test_it_is_pure's own unmodified forbidden-name list, and the git call lives only at the main() call site.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "AST walk of origin_worktree_refusal: only ORIGIN_GUARDED_VERBS, Path, isinstance, os.path.normcase, dict .get reads and comparisons \u2014 no filesystem/clock/subprocess/ambient-cwd reference. test_it_is_pure (unmodified, byte-identical to HEAD) reads co_names off the compiled code object and its forbidden list (getcwd, subprocess, run, open, exists, resolve, read_text, write_text, datetime, time, _now, save, load, cwd-as-global) is satisfied; it passed in the full suite. The sole git call is main() L3439.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b-signal": {
+      "id": "r4b-signal",
+      "title": "cwd=None is the only no-toplevel signal",
+      "imperative": "Verify main() passes None on unresolvable toplevel and does not re-derive or shortcut origin-shape interpretation outside the predicate (no new origin.get / .get('worktree') outside origin_worktree_refusal).",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "main() computes engine_cwd = toplevel.stdout.strip() or None when returncode==0 else None \u2014 None is the only no-toplevel signal and it goes straight into the predicate call. Repo-wide grep: spine.get('origin') appears only at L151 inside the predicate; origin.get('worktree') only at L154 inside it; no second interpretation or shortcut of origin shape anywhere in main() (L788 'origin/main' is the unrelated git remote default; L3437 is a comment).",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. All three binding ruling parts implemented exactly (git-toplevel resolution at the single impure call site, pure equality predicate with cwd: str|None, fail-closed ordered after the shape fallbacks); test_it_is_pure and OriginRefusalFallback byte-identical to HEAD; authorized test migration executed as scoped with the subdirectory property re-asserted through main() against a real git repo; nested-worktree red/green independently reproduced (old engine advances, new engine refuses); cache-clean full suite 3010/6/0/1135 >= baseline with the 7->6 skip delta mechanically traced to a checkout-location-conditional skip; exclusions untouched; single out-of-scope file (test_explorer_templates.py 1-line git-init) judged the right minimal repair \u2014 empirically required by the new fail-closed rule, same class as the plan-ordered fixture git-init, honestly disclosed. Zero Fowler smells flagged, one logged override. Two triage candidates flagged (lexical-vs-git doc deliverable; DC3 test vs crew dispatch envelope)."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "Lexical-vs-git worktree-derivation split (spine_rail.py::_worktree_from_spine lexical vs mcp_spine_server.py::_worktree_root_for_lifecycle git) is ruled deliberate but written down nowhere durable; ruling names it a documentation deliverable, deferred while #441 owns spine_rail.py."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "test_mcp_identity.py::DC3InheritanceMechanismTests fails inside any run_crew.py-dispatched crew because of the ambient SPINE_FILE/SPINE_SESSION/SPINE_PARENT dispatch envelope (reproduced on unchanged HEAD tree); consider an explicit skip-or-scrub so a crew's full-suite gate doesn't trip on its own envelope."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/tc1-worktree-identity/g1-review/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-15T17:23:07.283786+00:00",
+    "last_heartbeat": "2026-08-15T17:31:32.971250+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-15T17:32:29.654261+00:00"
+  }
+}

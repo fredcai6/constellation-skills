@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "work_id": "crew-verdict-and-door",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/crew-verdict-and-door",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "README.md",
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb",
+      "source": "known-fallback"
+    },
+    {
+      "path": "docs/CHECKLIST_ENGINE_DESIGN.md",
+      "content_hash": "2ecf6ac1d58672e348ce15d7a6619457be9d914c5e4d73ae7999e183e5420a9b",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/CREW_CONTEXT.md",
+      "content_hash": "ae350e5230538440ba7f0f832dd479d4a3dcfa79ac75c9c21574d670fe5bbec5",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "scripts/run_crew.py's verdict-computation logic (have_result/fresh/spine_terminal composition) and scripts/checklist_engine.py's archive-gate relocation behavior carry no architecture-packet anchors; this repo has no docs/architecture/ overlay, and the derived code map (map/ids.jsonl) is structurally empty repo-wide -- a fresh 'python -m scripts.code_map build --root .' still reports ids:0"
+  ],
+  "escalation": "Flagging to admiral-post-568 / triage: map/ids.jsonl anchor population appears broken repo-wide (ids:0 even after a fresh build), not specific to this ask -- every run in this repo currently orients DEGRADED-UNPARSEABLE. Proceeding on substitutes per Task-1-is-the-lane latitude; not blocking this dispatch on it.",
+  "emitted_at": "2026-08-15T16:40:06.527922+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

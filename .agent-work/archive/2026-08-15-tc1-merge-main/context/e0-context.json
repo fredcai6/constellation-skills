@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "e0-context",
+  "files": [],
+  "repo_rev": {
+    "commit": "5992b936668190296e6aa772135a12aa1a68b0eb"
+  },
+  "run": {
+    "work_id": "tc1-merge-main",
+    "generated_at": "2026-08-15T19:19:50Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-commander",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/tc1-worktree-identity",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/tc1-worktree-identity"
+    }
+  }
+}

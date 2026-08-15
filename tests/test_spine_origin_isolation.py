@@ -5,12 +5,16 @@ Three things are asserted here, each with a failing side as well as a passing on
   1. `init_work_area.instantiate_spine` stamps a top-level `origin` block when
      it writes a spine, so a spine carries its own repo reference from creation.
   2. `checklist_engine.origin_worktree_refusal` is a pure refusal-or-`None`
-     predicate over that stamp: guarded verbs refuse from a cwd that is neither
-     the stored worktree nor inside it, every other shape falls back to the
-     pre-change behaviour, and no shape raises.
+     predicate over that stamp: guarded verbs refuse unless the cwd -- resolved
+     by the call site to its git worktree toplevel -- EQUALS the stored
+     worktree (2026-08-15 worktree-identity ruling), an unresolvable cwd
+     (`None`) fails closed, every other shape falls back to the pre-change
+     behaviour, and no shape raises.
   3. `main()` reaches the predicate for real -- a guarded verb driven from a
      foreign cwd returns non-zero and leaves the spine byte-identical, while
-     `current` still works from anywhere.
+     `current` still works from anywhere. The call-site fixtures are real git
+     repos, so the git-toplevel resolution is exercised, not simulated: a
+     subdirectory of the right worktree resolves to that worktree and passes.
 
 These tests exist because `tests/test_worktree_precondition_wiring.py` cannot
 carry this: every fixture in that file builds an `origin`-LESS spine by hand,
@@ -33,6 +37,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -217,8 +222,10 @@ class GuardedVerbScope(unittest.TestCase):
 
 
 class OriginRefusalPredicate(unittest.TestCase):
-    """`origin_worktree_refusal` refuses a guarded verb whose cwd is neither the
-    stored worktree nor inside it -- and stays silent everywhere else."""
+    """`origin_worktree_refusal` refuses a guarded verb whose cwd is not the
+    stored worktree itself -- equality, not containment -- and stays silent
+    everywhere else. The cwd it sees is a git worktree toplevel, resolved by
+    the one call site in `main()`."""
 
     def setUp(self):
         self.E = _load_engine()
@@ -227,13 +234,20 @@ class OriginRefusalPredicate(unittest.TestCase):
         spine = _spine_with_origin("/w/repo")
         self.assertIsNone(self.E.origin_worktree_refusal(spine, cwd="/w/repo", verb="claim"))
 
-    def test_a_subdirectory_of_the_worktree_passes(self):
-        """Containment, not equality: the superseded check compared
-        `git rev-parse --show-toplevel`, which succeeds from any subdirectory,
-        so demanding equality would be a regression."""
+    def test_a_subdirectory_of_the_worktree_is_refused_at_the_predicate(self):
+        """Equality, not containment (2026-08-15 worktree-identity ruling):
+        containment let a primary-stamped spine pass from a worktree nested
+        under the primary (`NestedWorktreeRegression`). The predicate never
+        sees a raw subdirectory -- `main()` resolves the cwd to its git
+        worktree toplevel first -- so a subdirectory path reaching it IS a
+        foreign tree. The real property "a subdirectory of my own worktree is
+        allowed" lives at the call-site level now:
+        `RefusesAGuardedVerbFromAForeignTree.
+        test_the_same_verb_from_a_subdirectory_of_the_worktree_succeeds`,
+        against a real git repo."""
         spine = _spine_with_origin("/w/repo")
         for sub in ("/w/repo/scripts", "/w/repo/.agent-work/w1", "/w/repo/a/b/c"):
-            self.assertIsNone(
+            self.assertIsNotNone(
                 self.E.origin_worktree_refusal(spine, cwd=sub, verb="start"), sub
             )
 
@@ -245,8 +259,9 @@ class OriginRefusalPredicate(unittest.TestCase):
         self.assertIn("/w/other", reason)
 
     def test_a_sibling_sharing_a_name_prefix_is_not_inside(self):
-        """`/w/repo-2` is not inside `/w/repo`. A `startswith` comparison would
-        say it is; `is_relative_to` is segment-wise and says it is not."""
+        """`/w/repo-2` is not `/w/repo`. A `startswith` comparison would say it
+        is inside; path equality trivially says it is not -- kept as the pin
+        against ever regressing to a string-prefix comparison."""
         spine = _spine_with_origin("/w/repo")
         self.assertIsNotNone(self.E.origin_worktree_refusal(spine, cwd="/w/repo-2", verb="start"))
         self.assertIsNotNone(
@@ -292,11 +307,59 @@ class OriginRefusalPredicate(unittest.TestCase):
     def test_case_and_separator_folding_on_windows(self):
         """The two producers normalize differently: `spine_lifecycle` stores
         `str(Path(worktree))` (native separators) and `init_work_area` stores
-        `as_posix()`. `os.path.normcase` folds both."""
+        `as_posix()`. `os.path.normcase` folds both. The cwd is the root
+        itself (equality semantics) -- folding is the property, not
+        containment."""
         spine = _spine_with_origin("C:/w/repo")
         self.assertIsNone(
-            self.E.origin_worktree_refusal(spine, cwd="C:\\W\\REPO\\scripts", verb="start")
+            self.E.origin_worktree_refusal(spine, cwd="C:\\W\\REPO", verb="start")
         )
+
+
+class OriginRefusalFailClosed(unittest.TestCase):
+    """`cwd=None` means the call site could not resolve any git worktree
+    toplevel for the engine's cwd. For a spine carrying a valid stamp that
+    fails CLOSED by intent (ruling part 3) -- under containment an
+    unresolvable cwd failed closed only by accident. The shape fallbacks stay
+    senior to it: an origin-less or malformed spine is still drivable, and
+    nothing raises."""
+
+    def setUp(self):
+        self.E = _load_engine()
+
+    def test_an_origin_carrying_spine_refuses_when_no_toplevel_resolved(self):
+        spine = _spine_with_origin("/w/repo")
+        reason = self.E.origin_worktree_refusal(spine, cwd=None, verb="start")
+        self.assertIsInstance(reason, str)
+        self.assertIn("/w/repo", reason)
+
+    def test_every_guarded_verb_fails_closed(self):
+        spine = _spine_with_origin("/w/repo")
+        for verb in sorted(self.E.ORIGIN_GUARDED_VERBS):
+            self.assertIsNotNone(
+                self.E.origin_worktree_refusal(spine, cwd=None, verb=verb), verb
+            )
+
+    def test_an_exempt_verb_still_passes_with_no_toplevel(self):
+        spine = _spine_with_origin("/w/repo")
+        for verb in sorted(self.E.ORIGIN_EXEMPT_VERBS):
+            self.assertIsNone(
+                self.E.origin_worktree_refusal(spine, cwd=None, verb=verb), verb
+            )
+
+    def test_malformed_origins_still_fall_back_open_with_no_toplevel(self):
+        """The fallback branches sit ABOVE the fail-closed branch: a spine the
+        stamp never reached (or reached malformed) keeps the pre-change
+        drivable-from-anywhere behaviour even when the cwd resolves to
+        nothing, and none of the shapes raises."""
+        base = {"work_id": "w1", "type": "gated", "items": [], "tasks": {}}
+        shapes = ({}, {"origin": None}, {"origin": "/w/repo"}, {"origin": {}},
+                  {"origin": {"worktree": ""}}, {"origin": {"worktree": None}})
+        for extra in shapes:
+            with self.subTest(shape=extra):
+                self.assertIsNone(
+                    self.E.origin_worktree_refusal({**base, **extra}, cwd=None, verb="start")
+                )
 
 
 class OriginRefusalFallback(unittest.TestCase):
@@ -345,8 +408,23 @@ class OriginRefusalFallback(unittest.TestCase):
 # --------------------------------------------------------------------------- #
 
 
+def _git_in(cwd: Path, *args: str) -> None:
+    """Run git in a test fixture repo, loudly: identity pinned so `commit`
+    works on a bare CI account, output captured so `check=True` failures
+    carry the message."""
+    subprocess.run(
+        ["git", "-c", "user.email=t@example.invalid", "-c", "user.name=t", *args],
+        cwd=str(cwd), check=True, capture_output=True, text=True,
+    )
+
+
 class _SpineOnDisk(unittest.TestCase):
-    """A real spine carrying `origin`, plus a foreign directory to stand in."""
+    """A real spine carrying `origin`, plus a foreign tree to stand in. BOTH
+    are real, distinct git repos (siblings), so the pass-path assertions
+    (same worktree, same subdirectory) and the foreign-tree refusals exercise
+    `main()`'s real git-toplevel resolution rather than silently falling into
+    the fail-closed no-toplevel path. `nogit` is the one deliberately
+    unresolvable stand-in, for the fail-closed test."""
 
     def setUp(self):
         self.E = _load_engine()
@@ -354,8 +432,12 @@ class _SpineOnDisk(unittest.TestCase):
         base = Path(self.tmp.name).resolve()
         self.worktree = base / "wt"
         self.foreign = base / "elsewhere"
+        self.nogit = base / "nogit"
         (self.worktree / ".agent-work" / "w1").mkdir(parents=True)
         self.foreign.mkdir()
+        self.nogit.mkdir()
+        _git_in(self.worktree, "init", "-q")
+        _git_in(self.foreign, "init", "-q")
         self.spine_path = self.worktree / ".agent-work" / "w1" / "spine.json"
         self._write_spine(self.worktree.as_posix())
         self._cwd = os.getcwd()
@@ -432,7 +514,7 @@ class RefusesAGuardedVerbFromAForeignTree(_SpineOnDisk):
         message = err.getvalue()
         self.assertIn("REFUSED:", message)
         self.assertIn(self.worktree.as_posix(), message)
-        self.assertIn(str(self.foreign), message)
+        self.assertIn(self.foreign.as_posix(), message)
 
     def test_the_same_verb_from_the_worktree_itself_succeeds(self):
         """The pass side, so the refusal above is a signal and not a gate that
@@ -444,9 +526,31 @@ class RefusesAGuardedVerbFromAForeignTree(_SpineOnDisk):
         self.assertEqual(session["status"], "active")
 
     def test_the_same_verb_from_a_subdirectory_of_the_worktree_succeeds(self):
+        """THE home of the subdirectory-is-allowed property (2026-08-15
+        worktree-identity ruling: it moved up from the pure predicate, where
+        it was a containment assertion over synthetic paths). Against a real
+        git repo, `main()` resolves the subdirectory to its worktree toplevel,
+        and equality holds -- git buys what containment used to."""
         self.assertEqual(self._main_from(self.spine_path.parent, [
             "claim", "--session-id", "s1", "--claimed-by", "commander", "--worktree", ".",
         ]), 0)
+
+    def test_fail_closed_a_cwd_with_no_git_toplevel_is_refused_without_raising(self):
+        """An origin-carrying spine driven from a cwd where git resolves no
+        worktree toplevel at all (a plain non-git tempdir): refused, exit 1,
+        nothing written, no exception (ruling part 3 -- fail closed by intent,
+        not by containment accident)."""
+        import contextlib
+        import io
+
+        before = self._digest()
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            code = self._main_from(self.nogit, ["start", "g1"])
+        self.assertEqual(code, 1)
+        self.assertEqual(self._digest(), before)
+        self.assertIn("REFUSED:", err.getvalue())
+        self.assertIn("no git worktree toplevel", err.getvalue())
 
     def test_an_origin_less_spine_is_still_drivable_from_anywhere(self):
         """The fallback, end to end: every spine created before the stamp
@@ -491,6 +595,80 @@ class TheInProcessMcpDoorShape(_SpineOnDisk):
         self.assertEqual(
             self._main_from(self.foreign, ["release", "--session-id", "s1"]), 0
         )
+
+
+class NestedWorktreeRegression(unittest.TestCase):
+    """A spine stamped to a PRIMARY checkout is NOT drivable from inside a
+    worktree nested under it (`<primary>/.worktrees/<slug>` -- the default
+    layout since #585). Containment said the nested tree was "inside" the
+    primary and allowed it; worktree identity is what git says it is, and git
+    says a linked worktree is its own toplevel (2026-08-15 worktree-identity
+    ruling). Real repos, real `git worktree add` -- the ruling's measured
+    scenario, kept permanently."""
+
+    def setUp(self):
+        self.E = _load_engine()
+        self.tmp = tempfile.TemporaryDirectory()
+        base = Path(self.tmp.name).resolve()
+        self.primary = base / "primary"
+        self.primary.mkdir()
+        _git_in(self.primary, "init", "-q")
+        # `worktree add` needs a commit to branch from.
+        _git_in(self.primary, "commit", "--allow-empty", "-q", "-m", "seed")
+        self.nested = self.primary / ".worktrees" / "slug"
+        _git_in(self.primary, "worktree", "add", "-q", "-b", "slug", str(self.nested))
+        (self.primary / ".agent-work" / "w1").mkdir(parents=True)
+        self.spine_path = self.primary / ".agent-work" / "w1" / "spine.json"
+        self.spine_path.write_text(json.dumps({
+            "work_id": "w1", "type": "gated", "items": ["g1"],
+            "origin": {"work_id": "w1", "worktree": self.primary.as_posix(),
+                       "opened_by": "init_work_area"},
+            "tasks": {"g1": {
+                "id": "g1", "title": "g1", "imperative": "do g1",
+                "preconditions": [], "postconditions": [],
+                "constraints": [], "directives": None, "child_checklist": None,
+                "status": "pending", "status_detail": {}, "result": None,
+                "finding": None, "evidence": [], "rework_count": 0,
+            }},
+            "consolidation": None, "triage_candidates": [], "blockers": [],
+        }, indent=2), encoding="utf-8")
+        self._cwd = os.getcwd()
+
+    def tearDown(self):
+        os.chdir(self._cwd)
+        self.tmp.cleanup()
+
+    def _digest(self) -> str:
+        import hashlib
+
+        return hashlib.sha256(self.spine_path.read_bytes()).hexdigest()
+
+    def test_a_guarded_verb_from_inside_a_nested_worktree_is_refused(self):
+        import contextlib
+        import io
+
+        before = self._digest()
+        err = io.StringIO()
+        os.chdir(self.nested)
+        try:
+            with contextlib.redirect_stderr(err):
+                code = self.E.main(["--file", str(self.spine_path), "start", "g1"])
+        finally:
+            os.chdir(self._cwd)
+        self.assertEqual(code, 1)
+        self.assertEqual(self._digest(), before)
+        self.assertIn("REFUSED:", err.getvalue())
+        self.assertIn(self.primary.as_posix(), err.getvalue())
+
+    def test_a_subdirectory_of_the_nested_worktree_is_also_refused(self):
+        sub = self.nested / ".agent-work"
+        sub.mkdir()
+        os.chdir(sub)
+        try:
+            code = self.E.main(["--file", str(self.spine_path), "start", "g1"])
+        finally:
+            os.chdir(self._cwd)
+        self.assertEqual(code, 1)
 
 
 class TheGuardIsReachedFromExactlyOneSite(unittest.TestCase):

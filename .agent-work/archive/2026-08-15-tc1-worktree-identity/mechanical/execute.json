@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "execute",
+  "mechanical": {
+    "run": "tc1-worktree-identity",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 4,
+    "spine-step": "execute",
+    "rework-count": 0,
+    "failed-commands": 1,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-tc1-worktree-identity-execute@75e5ff212deafa6d4f8894b03b30e07df524b4c6",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "tc1-worktree-identity",
+    "generated_at": "2026-08-15T16:48:42Z"
+  }
+}

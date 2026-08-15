@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "execute",
+  "mechanical": {
+    "run": "tc1-episode-rewording",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 3,
+    "spine-step": "execute",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-tc1-episode-rewording-execute@8d93272610d19124f13689817f8437a11360ab98",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "tc1-episode-rewording",
+    "generated_at": "2026-08-15T18:54:46Z"
+  }
+}

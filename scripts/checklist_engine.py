@@ -99,7 +99,7 @@ ORIGIN_EXEMPT_VERBS = {"current", "release"}
 ORIGIN_GUARDED_VERBS = MUTATING_VERBS | {"claim", "heartbeat"}
 
 
-def origin_worktree_refusal(spine: dict, *, cwd: str, verb: str) -> str | None:
+def origin_worktree_refusal(spine: dict, *, cwd: str | None, verb: str) -> str | None:
     """`None` when `verb` may be driven against `spine` from `cwd`, else the
     refusal message naming both sides -- the refusal-or-`None` shape this repo
     already uses for `spine_lifecycle.closeout_refusal`.
@@ -110,9 +110,13 @@ def origin_worktree_refusal(spine: dict, *, cwd: str, verb: str) -> str | None:
     `spine_lifecycle.open_work`) created it.
 
     Pure -- no filesystem, no clock, no subprocess, no ambient cwd read. The
-    impure half is the single call site in `main()`, which passes the engine's
-    OWN resolved cwd. Symlink resolution stays outside on both sides: the stored
-    value was resolved when the spine was written, the cwd value by that caller.
+    impure half is the single call site in `main()`, which resolves the engine's
+    OWN cwd to its git worktree toplevel (`git rev-parse --show-toplevel`) and
+    passes that -- or `None` when no toplevel resolves, which this predicate
+    treats as fail-closed for an origin-carrying spine (2026-08-15
+    worktree-identity ruling, part 3). Symlink resolution stays outside on both
+    sides: the stored value was resolved when the spine was written, the cwd
+    value by git at that caller.
 
     What this delivers, exactly:
 
@@ -127,11 +131,15 @@ def origin_worktree_refusal(spine: dict, *, cwd: str, verb: str) -> str | None:
     cwd, so a check command authored as `cd <origin.worktree> && ...` still
     satisfies it. That claim was withdrawn deliberately; do not restate it.
 
-    Containment, not equality: the superseded check ran
-    `verify_worktree_isolation.py --here`, which compares
-    `git rev-parse --show-toplevel` and therefore succeeds from any
-    subdirectory. `is_relative_to` is segment-wise, so a sibling sharing a name
-    prefix (`/w/repo-2` against `/w/repo`) is correctly NOT inside.
+    Equality, not containment: worktree identity is what git says it is
+    (2026-08-15 worktree-identity ruling). Containment (`is_relative_to`) broke
+    when #585 nested worktrees at `<root>/.worktrees/<slug>` -- every worktree
+    became literally inside the primary checkout path, so a primary-stamped
+    spine passed from inside any of them. The call site's git-toplevel
+    resolution is what keeps subdirectory work working: toplevel resolved from
+    `<worktree>/scripts` IS `<worktree>`, so equality holds without any
+    containment logic here. A sibling sharing a name prefix (`/w/repo-2`
+    against `/w/repo`) is unequal, as before.
 
     Every other shape falls back to the pre-change behaviour and none raises:
     `origin` absent, null, a string, a list, or empty; `worktree` absent, empty,
@@ -146,13 +154,23 @@ def origin_worktree_refusal(spine: dict, *, cwd: str, verb: str) -> str | None:
     stored = origin.get("worktree")
     if not isinstance(stored, str) or not stored:
         return None
+    # Fail closed: a spine that carries a valid stamp is only drivable from a
+    # cwd git recognizes as a worktree. Ordered AFTER the shape fallbacks above
+    # so an origin-less/malformed spine stays drivable from anywhere, exactly
+    # as before.
+    if cwd is None:
+        return (
+            f"{verb} refused: this spine belongs to the worktree {stored}, but "
+            f"no git worktree toplevel could be resolved for the engine's "
+            f"current directory. Run the verb from inside that worktree."
+        )
     # `normcase` folds case and separators on Windows, where the two producers
     # disagree for the same directory: `spine_lifecycle` stores
     # `str(Path(worktree))` (native separators), `init_work_area` stores
     # `as_posix()`. It is the identity function on POSIX.
     root = Path(os.path.normcase(stored))
     here = Path(os.path.normcase(cwd))
-    if here.is_relative_to(root):
+    if here == root:
         return None
     return (
         f"{verb} refused: this spine belongs to the worktree {stored}, but the "
@@ -3409,7 +3427,17 @@ def main(argv: list[str] | None = None) -> int:
     #
     # `engine_cwd`, never `base_dir`: base_dir is the gauge path base and the
     # --from-child base, and overloading it breaks both.
-    engine_cwd = str(Path.cwd().resolve())
+    #
+    # The cwd is resolved to its git worktree TOPLEVEL before the predicate
+    # sees it (2026-08-15 worktree-identity ruling): git reports a linked
+    # worktree as its own toplevel, never the primary checkout it nests under,
+    # which is what makes the predicate's equality comparison correct -- and
+    # what keeps subdirectory work working, since a subdirectory resolves to
+    # its own worktree's root. No toplevel (non-git cwd, or git itself failing)
+    # resolves to None, which the predicate fails closed for origin-carrying
+    # spines and ignores for the rest.
+    toplevel = _git(["rev-parse", "--show-toplevel"], base_dir=Path.cwd())
+    engine_cwd = (toplevel.stdout.strip() or None) if toplevel.returncode == 0 else None
     origin_refusal = origin_worktree_refusal(cl, cwd=engine_cwd, verb=args.verb)
     if origin_refusal is not None:
         print(f"{_rail_prefix('check-failure', cl)}REFUSED: {origin_refusal}", file=sys.stderr)
