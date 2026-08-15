@@ -966,9 +966,16 @@ def finalize_from_exit_code(
     completed/failed rule.
 
     `result` given (not None): judged exactly as before -- exists AND fresh
-    since dispatch (`result_fresh`). A child that exits 0 but leaves only a
-    STALE prior-attempt result at the path (mtime predates dispatch) is
-    `failed`, not `completed`.
+    since dispatch (`result_fresh`) -- UNLESS the result is missing/stale AND
+    a `spine` is also given AND that spine is terminal, in which case the
+    terminal spine RESCUES the verdict into `completed` (issue #559
+    follow-on: the `archive` gate legitimately relocates the result artifact
+    out from under a dispatch given both `--spine` and `--result`, and a
+    genuinely terminal spine must not be read as `failed` just because the
+    file it once pointed at moved). A child that exits 0 but leaves only a
+    STALE prior-attempt result at the path (mtime predates dispatch), with no
+    terminal spine to rescue it, is still `failed`, not `completed` -- this
+    must never become a rubber stamp for a crew that is not actually done.
 
     `result` is `None` (issue #559 job 2): the crew was never given a result
     artifact to write, so it is judged on its BOUND spine instead -- completed
@@ -989,19 +996,35 @@ def finalize_from_exit_code(
     the DURABLE registry status, not the process exit code, to find it.
 
     Sets `completed_at`/`last_heartbeat` (now), `status` (`completed` |
-    `blocked` | `failed`), `exit_code`, `result_present`, and `result_fresh`
+    `blocked` | `failed`), `exit_code`, `result_present`, `result_fresh`
     (blocked/no-spine cases leave the latter two at their `result`-based or
     `False` default, computed before the blocked check so they still reflect
-    reality), plus `blocked_gate` when blocked. Returns the process-level exit
-    code to report."""
+    reality), `blocked_gate` when blocked, and `verdict_source` -- ALWAYS one
+    of `"blocked_gate"` | `"result"` | `"spine_terminal"` | `"none"`, naming
+    which path actually decided the verdict: `"blocked_gate"` when a blocked
+    gate won outright (regardless of what the other two paths would have
+    said); `"result"` when the result-artifact path decided it, whether fresh
+    (`completed`) or stale/missing with no spine rescue (`failed`);
+    `"spine_terminal"` when a `spine` was given and consulted -- either it
+    rescued a missing/stale result into `completed`, or (when `result` is
+    `None`) it is the sole basis for the verdict either way; `"none"` only
+    when neither `result` nor `spine` was given at all. Returns the
+    process-level exit code to report."""
     if result is not None:
         have_result = result_exists(result, root)
         fresh = result_fresh(result, root, since)
-        done = fresh
+        if fresh:
+            done = True
+            verdict_source = "result"
+        else:
+            rescued = spine is not None and spine_terminal(spine, root)
+            done = rescued
+            verdict_source = "spine_terminal" if rescued else "result"
     else:
         have_result = False
         fresh = False
         done = spine is not None and spine_terminal(spine, root)
+        verdict_source = "spine_terminal" if spine is not None else "none"
     blocked_gate = spine_blocked_id(spine, root) if spine is not None else None
     now = _now()
     entry["completed_at"] = now
@@ -1009,6 +1032,7 @@ def finalize_from_exit_code(
     if blocked_gate is not None:
         entry["status"] = "blocked"
         entry["blocked_gate"] = blocked_gate
+        verdict_source = "blocked_gate"
         final = 0
     elif exit_code == 0 and done:
         entry["status"] = "completed"
@@ -1019,6 +1043,7 @@ def finalize_from_exit_code(
     entry["exit_code"] = exit_code
     entry["result_present"] = have_result
     entry["result_fresh"] = fresh
+    entry["verdict_source"] = verdict_source
     return final
 
 

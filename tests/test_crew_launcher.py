@@ -2324,6 +2324,62 @@ class FinalizeFromExitCodeTests(unittest.TestCase):
             self.assertEqual("completed", entry["status"])
             self.assertNotIn("blocked_gate", entry)
 
+    def test_finalize_terminal_spine_rescues_missing_result(self):
+        # Both --spine and --result given (the archive gate's shape): the
+        # result artifact is missing, but the bound spine IS terminal --
+        # the terminal spine must rescue the verdict into `completed`
+        # rather than inverting it to `failed`.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = "spine.json"
+            _write_spine(root / spine_rel, done=True)
+            entry = {}
+            final = RC.finalize_from_exit_code(
+                entry, exit_code=0, result="r.md", root=root, since=iso(self.BASE),
+                spine=spine_rel,
+            )
+            self.assertEqual(0, final)
+            self.assertEqual("completed", entry["status"])
+            self.assertEqual("spine_terminal", entry["verdict_source"])
+
+    def test_finalize_still_fails_when_spine_not_terminal(self):
+        # Same both-flags shape, but the spine is NOT terminal and there is
+        # still no result -- this must NOT become a rubber stamp: a
+        # genuinely failed crew must keep reading `failed`.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = "spine.json"
+            _write_spine(root / spine_rel, done=False)
+            entry = {}
+            final = RC.finalize_from_exit_code(
+                entry, exit_code=0, result="r.md", root=root, since=iso(self.BASE),
+                spine=spine_rel,
+            )
+            self.assertEqual("failed", entry["status"])
+            self.assertNotEqual("spine_terminal", entry["verdict_source"])
+
+    def test_finalize_blocked_wins_regardless_of_result_or_spine(self):
+        # A FRESH result AND a spine whose single item is `blocked` (never
+        # simultaneously terminal in this engine's vocabulary -- blocked is
+        # not `complete`/`skipped`, so spine_terminal reads False here).
+        # blocked_gate must still win over both other paths.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_result_with_mtime(root / "r.md", self.BASE + 60)
+            spine_rel = "spine.json"
+            _write_blocked_spine(root / spine_rel, blocked_id="w1")
+            self.assertEqual("w1", RC.spine_blocked_id(spine_rel, root))
+            self.assertFalse(RC.spine_terminal(spine_rel, root))
+            entry = {}
+            final = RC.finalize_from_exit_code(
+                entry, exit_code=0, result="r.md", root=root, since=iso(self.BASE),
+                spine=spine_rel,
+            )
+            self.assertEqual(0, final)
+            self.assertEqual("blocked", entry["status"])
+            self.assertEqual("w1", entry["blocked_gate"])
+            self.assertEqual("blocked_gate", entry["verdict_source"])
+
 
 class EntryBackendTests(unittest.TestCase):
     """Legacy entries without a `backend` field are inferred; explicit wins."""
