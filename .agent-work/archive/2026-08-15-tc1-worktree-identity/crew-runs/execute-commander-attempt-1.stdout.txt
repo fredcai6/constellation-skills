@@ -1,0 +1,19 @@
+The run is complete. Working tree is clean, spine terminal, PR open and unmerged.
+
+## Report
+
+**`spine_status` resolved to:** `tc1-worktree-identity` (confirmed at start via the MCP door, per LAUNCH_ORDER's MCP-door check — no demo spine, no wrong binding).
+
+**What changed:** `checklist_engine.origin_worktree_refusal` now compares worktree identity by **equality** (`here == root`) instead of containment (`is_relative_to`), and fails **closed** when `cwd=None` (no git worktree toplevel resolvable) for an origin-carrying spine. The single impure call site in `main()` resolves `engine_cwd` to its git worktree toplevel via the existing `_git` helper before the predicate ever sees it. `tests/test_spine_origin_isolation.py` migrated per the one authorized exception: the subdirectory-passes property moved from a synthetic predicate-level assertion to a `main()`-level assertion against a real git repo. One necessary, disclosed, independently-verified 1-line repair landed in `tests/test_explorer_templates.py` (a bare-tempdir fixture the new fail-closed rule correctly began refusing).
+
+**Red/green proof for the nested-worktree case:** real primary git repo + real `git worktree add` nested worktree, primary-stamped spine, driven from inside the nested worktree — **red** (unmodified engine): 2 failed, guard advanced the verb (exit 0, spine mutated). **Green** (fixed engine): 2 passed, guard refused (exit 1). Reproduced independently by implementer, reviewer, and me.
+
+**Subdirectory property:** now lives at `RefusesAGuardedVerbFromAForeignTree::test_the_same_verb_from_a_subdirectory_of_the_worktree_succeeds`, asserted through `main()` against a real git repo (moved, not deleted).
+
+**Cache-clean suite:** baseline at `453f8492` was 3002 passed/7 skipped/0 failed/1130 subtests. After: **3010 passed/6 skipped/0 failed/1135 subtests** — reproduced independently three times (implementer, reviewer, me). The skip delta is checkout-location-dependent (mechanically traced), not diff-caused.
+
+**Map:** regenerated and committed (`map/INDEX.md` moved, `map/ids.jsonl` unchanged).
+
+**Floated/recorded in findings:** two triage candidates routed recommend-and-defer (spine_rail.py lexical/git-split docs deliverable; a pre-existing `DC3InheritanceMechanismTests` false-fail inside any crew-dispatched process). Four episodes recorded, including the context-governor's repeated HARD trip pattern and the g1-integrate full-suite check tripping on this Commander's own ambient dispatch env (waived with substituted, independently-reproduced evidence).
+
+**PR #588 is open and unmerged** — the Admiral merges.

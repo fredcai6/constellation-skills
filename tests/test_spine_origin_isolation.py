@@ -514,7 +514,7 @@ class RefusesAGuardedVerbFromAForeignTree(_SpineOnDisk):
         message = err.getvalue()
         self.assertIn("REFUSED:", message)
         self.assertIn(self.worktree.as_posix(), message)
-        self.assertIn(str(self.foreign), message)
+        self.assertIn(self.foreign.as_posix(), message)
 
     def test_the_same_verb_from_the_worktree_itself_succeeds(self):
         """The pass side, so the refusal above is a signal and not a gate that
