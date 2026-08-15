@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Windows-path-form fix for tests/test_spine_origin_isolation.py",
+      "spec_path": ".agent-work/tc1-windows-path-form/LAUNCH_ORDER-3.md",
+      "intent_and_why": "The worktree-identity refusal test's cwd-side assertion compared a foreign path with str() instead of as_posix(), which would false-fail on Windows where the refusal message is built from git's always-posix toplevel output but the test-side path renders with native separators. Fix the one assertion so PR #588's Windows CI comparison stays clean."
+    },
+    "definition_of_done": [
+      "tests/test_spine_origin_isolation.py:517's cwd-side assertion uses self.foreign.as_posix(), matching the stored-side pattern already used at line 516",
+      "cache-clean full Linux suite passes at the ordered baseline (3010 passed, 6 skipped, 0 failed, 1136 subtests) from this worktree"
+    ],
+    "good_enough": {
+      "mandatory_quality": "One assertion only, budget-capped per LAUNCH_ORDER; scripts/checklist_engine.py::origin_worktree_refusal and test_it_is_pure stay untouched",
+      "sufficient_evidence": "Cache-clean full Linux suite at the ordered baseline, measured in a clean environment, plus an independent reviewer APPROVE",
+      "appetite": "One gate (g1: implement, review, integrate)"
+    },
+    "hard_constraints": [
+      "File ownership fence: only tests/test_spine_origin_isolation.py is writable this run",
+      "test_it_is_pure must remain green and byte-unmodified",
+      "Do not touch scripts/hooks/spine_rail.py, scripts/run_crew.py, or .mcp.json (owned by other open PRs)"
+    ],
+    "fixed_decisions": [
+      "Option (a) chosen over (b): update the test's cwd-side assertion to posix form rather than adding native-separator rendering to the refusal message (ratified by LAUNCH_ORDER)",
+      "Not fixing tests/test_mcp_identity.py's env-contamination sensitivity in this lane -- #588 stays minimal; the defect is filed for a doctrine lane",
+      "Not merging main's PR #587 (run_crew.py) into this worktree -- keeps #588's diff minimal for a clean Windows CI comparison"
+    ],
+    "current_wave": {
+      "objective": "Fix the Windows-only cwd-side assertion and land it behind a green cache-clean full-suite check",
+      "exit_criteria": [
+        "cache-clean full Linux suite matches the ordered baseline exactly: 3010 passed, 6 skipped, 0 failed, 1136 subtests",
+        "reviewer verdict is APPROVE"
+      ],
+      "issues": [
+        {
+          "id": "g1",
+          "title": "Fix Windows cwd-side assertion in test_the_refusal_names_both_trees_on_stderr",
+          "desired_outcome": "tests/test_spine_origin_isolation.py:517 asserts self.foreign.as_posix() in message, so the refusal-message comparison holds on both Windows and POSIX by construction.",
+          "useful_now": "Unblocks PR #588 (worktree-identity ruling) for a clean Windows CI comparison.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "git diff shows exactly one line changed; test_it_is_pure stays green and unmodified; cache-clean full suite matches the ordered baseline.",
+          "implementation_latitude": "Change only the named assertion; everything else in the file and in checklist_engine.py's origin_worktree_refusal is out of scope.",
+          "hard_constraints_no_gos": [
+            "Do not touch scripts/checklist_engine.py::origin_worktree_refusal or its main() call site",
+            "test_it_is_pure must stay green and byte-unmodified"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "tests/test_spine_origin_isolation.py, class RefusesAGuardedVerbFromAForeignTree, method test_the_refusal_names_both_trees_on_stderr (~line 507-517)"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "A doctrine lane fixes the underlying defect: the full Linux suite false-fails when run inside a spine-bound shell, because tests/test_mcp_identity.py::DC3InheritanceMechanismTests::test_launching_the_parent_never_touches_the_calling_processs_own_environ asserts SPINE_FILE/SPINE_SESSION/SPINE_PARENT are absent from os.environ, and a commander's own active lease exports exactly those vars.",
+        "why_likely": "This is the third sighting of the same false-fail today (crew-verdict-and-door lane and two prior tc1-windows-path-form attempts); the pattern is established and filed as a medium-priority triage candidate.",
+        "entry_conditions": ["A lane is opened to touch tests/test_mcp_identity.py or the spine-lease env-export mechanism"]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether the env-contamination false-fail affects other cache-clean suite checks across the repo's other in-flight lanes",
+        "affects": "How urgently the filed triage candidate should be picked up",
+        "settle_by": "Doctrine lane triage review",
+        "current_evidence": "Three sightings today (crew-verdict-and-door, tc1-windows-path-form attempt 2 and 3), each reproduced identically via env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT",
+        "next_probe": "Grep other active work-ids' execute.json cache-clean checks for the same unstripped-env pattern"
+      }
+    ],
+    "parked_possibilities": [
+      "Native-separator rendering in the refusal message itself (option (b)) -- rejected in favor of the test-side posix fix",
+      "Properly fixing tests/test_mcp_identity.py's env-sensitivity -- belongs to a doctrine lane, not this worktree-identity ruling"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "g1",
+      "outcome": "tests/test_spine_origin_isolation.py:517 now asserts self.foreign.as_posix() in message (was str(self.foreign)); one line changed, reviewed (APPROVE), integrated behind a cache-clean full-suite check.",
+      "evidence": "git diff --stat shows exactly one file, one line; cache-clean full suite (measured env-clean per the human's LAUNCH_ORDER-3 ruling) read 3010 passed, 6 skipped, 0 failed, 1136 subtests, matching the ordered baseline exactly."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The g1 fix does not regress the full suite",
+      "expected": "3010 passed, 6 skipped, 0 failed, 1136 subtests (LAUNCH_ORDER baseline)",
+      "observed": "3010 passed, 6 skipped, 0 failed, 1136 subtests -- exact match, measured with env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT to strip the commander's own spine-lease vars",
+      "source": "python -m pytest tests/ -q, run cache-clean from this worktree at g1-integrate"
+    },
+    {
+      "claim": "The first g1-integrate measurement (3009 passed, 1 failed) was environment contamination, not a real regression",
+      "expected": "A diff-independent, environment-caused failure would disappear both when the fix is stashed and when SPINE_* vars are stripped",
+      "observed": "Stashing the fix reproduced the identical single failure (diff-independent); stripping SPINE_FILE/SPINE_SESSION/SPINE_PARENT reproduced the ordered baseline exactly (environment-caused). Root cause: tests/test_mcp_identity.py::DC3InheritanceMechanismTests::test_launching_the_parent_never_touches_the_calling_processs_own_environ asserts those vars are absent from os.environ, and the commander's own active spine lease exports them into the shell running the check.",
+      "source": "Commander diagnosis at g1-integrate attempt 2, ratified by human ruling in LAUNCH_ORDER-3 (admiral-post-568)"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "g1-integrate's cache-clean full-suite check read 3009 passed / 1 failed against an ordered baseline of 3010 passed / 0 failed, blocking gate exit",
+      "classification": "blocks_current_wave_exit",
+      "affects": "g1-integrate's c1 postcondition (cache-clean full-suite check)",
+      "evidence": "Diff-independent (stash reproduces the identical failure) and environment-caused (env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT reproduces the ordered baseline exactly) per the wave_evidence above",
+      "reason": "Human-ruled in LAUNCH_ORDER-3: the measurement was contaminated by the commander's own spine lease, not a real failure. Repaired by retexting g1-integrate.c1's check to prepend the env-clean prefix (authority: human), then re-running -- not by waiving."
+    },
+    {
+      "id": "D1",
+      "signal": "The same spine-lease-contaminates-cache-clean-suite pattern was hit a third time today (crew-verdict-and-door lane, then two tc1-windows-path-form attempts)",
+      "classification": "later_only",
+      "affects": "Whether other in-flight lanes' cache-clean checks carry the same latent false-fail",
+      "evidence": "Filed as a triage recommendation per LAUNCH_ORDER-3: 'full-suite false-fails when run inside a spine-bound shell', priority medium",
+      "reason": "A recurring pattern across lanes belongs to a doctrine-level fix (e.g. exporting no SPINE_* vars into check subshells, or making test_mcp_identity.py's assertion env-fixture-aware), not a per-lane retext -- amend the forecast to carry it forward rather than opening a new current-wave issue in this one-line lane."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "tests/test_spine_origin_isolation.py",
+      "scripts/checklist_engine.py",
+      "tests/test_mcp_identity.py"
+    ],
+    "map_status": "No architecture map consulted -- LAUNCH_ORDER-3 scoped this to a single named assertion and a single named check amendment; DEGRADED-context citations verified via map_orient verify-frame (FRAME-OK) at plan step"
+  }
+}

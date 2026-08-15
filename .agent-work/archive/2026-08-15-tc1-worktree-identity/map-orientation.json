@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "work_id": "tc1-worktree-identity",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/tc1-worktree-identity",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "map/INDEX.md",
+      "content_hash": "c678e6b8ebbde9eabc8b735fc344a2941c7e07ee499fdf2e4e964ebd69232630",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "no docs/architecture packet map exists in this skill-source repo; map/INDEX.md is the code_map-derived module index (regenerated via python -m scripts.code_map build), which lists scripts.checklist_engine and tests.test_spine_origin_isolation as the relevant modules but has no packet-style decision anchors (ids.jsonl is legitimately empty -- 0 decision anchors recorded repo-wide)"
+  ],
+  "escalation": "none needed -- LAUNCH_ORDER already names the exact call site and test file; map/INDEX.md confirms no other module references origin_worktree_refusal outside these two",
+  "emitted_at": "2026-08-15T16:38:45.201745+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

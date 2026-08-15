@@ -336,6 +336,11 @@ class ExplorerSpineCrossCheck(unittest.TestCase):
     def test_instantiates_and_engine_can_claim_and_start(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
+            # A real explorer's tree is a git worktree, and the engine resolves
+            # its cwd to a git toplevel and fails closed when nothing resolves
+            # (2026-08-15 worktree-identity ruling), so the honest fixture is a
+            # real repo, not a bare tempdir.
+            subprocess.run(["git", "init", "-q"], cwd=str(root), check=True)
             # Resolve script paths against the REAL repo so the command
             # postconditions reference scripts that actually exist. Use POSIX
             # form so the substituted path stays valid JSON on Windows.

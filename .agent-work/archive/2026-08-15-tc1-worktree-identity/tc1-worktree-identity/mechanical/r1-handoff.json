@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r1-handoff",
+  "mechanical": {
+    "run": "tc1-worktree-identity",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 1,
+    "spine-step": "r1-handoff",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-tc1-worktree-identity-r1-handoff@0c5b32b8a3648914f289be6e3d9f352b1fecbbcb",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "tc1-worktree-identity",
+    "generated_at": "2026-08-15T17:23:55Z"
+  }
+}

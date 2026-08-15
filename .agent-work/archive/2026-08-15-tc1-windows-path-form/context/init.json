@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "init",
+  "files": [],
+  "repo_rev": {
+    "commit": "0e32bf6c0e11dae02c38bdc51c31dcfec5c36cbc"
+  },
+  "run": {
+    "work_id": "tc1-windows-path-form",
+    "generated_at": "2026-08-15T18:04:14Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/tc1-worktree-identity",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/tc1-worktree-identity",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/tc1-worktree-identity"
+    }
+  }
+}

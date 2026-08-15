@@ -1,0 +1,306 @@
+{
+  "work_id": "tc1-windows-path-form",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas if present: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and the relevant map packet(s) for the bounded problem. Confirm the frozen plan's intent and scope (LAUNCH_ORDER admiral-post-568, tc1-windows-path-form: fix the Windows-only cwd-side assertion in tests/test_spine_origin_isolation.py to posix form), then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + relevant packet loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Global doctrine, project deltas, and the tests.test_spine_origin_isolation map packet were loaded at the parent spine's context step; plan intent/scope confirmed against LAUNCH_ORDER at plan step."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Fix Windows cwd-side assertion in test_the_refusal_names_both_trees_on_stderr: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, and the inbound map anchors from this gate's anchors block. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence: `attach g1-implement --type implementer-result --field status=<value>`, where `status` is the exact field this gate's c1 postcondition matches and `<value>` is copied verbatim from the returned IMPLEMENTER_RESULT's own Return status field, lowercase (`complete`, never `COMPLETE`/`Complete`).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan approved and execute.json frozen",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Plan approved at the parent spine's plan step; execute.json frozen with this single gate."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "One assertion only (LAUNCH_ORDER Budget): change tests/test_spine_origin_isolation.py:517's cwd-side assertion from `self.assertIn(str(self.foreign), message)` to `self.assertIn(self.foreign.as_posix(), message)`, matching the stored-side pattern already used at line 516 (`self.worktree.as_posix()`).",
+        "Do NOT touch scripts/checklist_engine.py::origin_worktree_refusal's comparison logic or purity (LAUNCH_ORDER Pre-Ruling 1, File Ownership).",
+        "test_it_is_pure must stay green and byte-unmodified.",
+        "Do NOT touch scripts/hooks/spine_rail.py, scripts/run_crew.py, or .mcp.json (owned by other open PRs per LAUNCH_ORDER File Ownership).",
+        "If growing past a handful of lines, stop and report rather than pushing through (LAUNCH_ORDER Budget)."
+      ],
+      "anchors": {
+        "structural": [
+          "tests/test_spine_origin_isolation.py, class RefusesAGuardedVerbFromAForeignTree, method test_the_refusal_names_both_trees_on_stderr (~line 507-517) -- the file this gate owns",
+          "scripts/checklist_engine.py, function origin_worktree_refusal (~line 102-178) and its call site in main() (~line 3439-3441) -- read-only reference, confirmed correct, not touched"
+        ],
+        "capability": [
+          "worktree-identity refusal message construction in tests/test_spine_origin_isolation.py -- only the test-side assertion changes"
+        ],
+        "constraint": [
+          "File ownership fence per LAUNCH_ORDER: only tests/test_spine_origin_isolation.py is writable this run",
+          "test_it_is_pure must remain green and unmodified"
+        ],
+        "decision": [
+          "Option (a) chosen over (b) per LAUNCH_ORDER 'The judgment call': update the test's cwd-side assertion to posix form rather than adding native-separator rendering to the refusal message. @grade: settled/human \u00b7 leans g1-implement \u00b7 settle: n/a \u2014 ratified by LAUNCH_ORDER"
+        ],
+        "evidence": [
+          "The fixed assertion holds on both Windows and POSIX by construction: engine_cwd is always git's toplevel stdout (posix-form on every platform), so self.foreign.as_posix() matches on Windows, and as_posix() == str() already on POSIX (no separator difference there)."
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "source": "commander-direct-per-LAUNCH_ORDER-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Fix Windows cwd-side assertion: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, the inbound map anchors from this gate's anchors block, and the evidence from IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT (e-g1-implement-1, status=complete) received and integrated at g1-implement."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "source": "commander-direct-per-LAUNCH_ORDER-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Fix Windows cwd-side assertion: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's side-effects against the world yourself (diff matches claim, test file re-inspected, targeted test passes conceptually on POSIX-equivalent reasoning since Windows cannot run here), then advance this gate -- the cache-clean full-suite command postcondition is satisfied by `advance`, which re-runs the check. BLOCK: send the implementer back for rework or raise a blocker if the gate is unresolvable. Log any out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT e-g1-review-1 (verdict=APPROVE) received at g1-review."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "cache-clean full Linux test suite passes (matches or exceeds LAUNCH_ORDER baseline: 3010 passed, 6 skipped, 0 failed, 1136 subtests from this worktree)",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -type d -not -path './.git/*' -prune -exec rm -rf {} + && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest tests/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-4"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "blocker": "c1 (cache-clean full suite command check) genuinely fails in this commander's live ambient environment: raw run is 3009 passed/1 failed/6 skipped/1136 subtests. Root cause diagnosed and reproduced: test_mcp_identity.py::DC3InheritanceMechanismTests::test_launching_the_parent_never_touches_the_calling_processs_own_environ asserts SPINE_FILE/SPINE_SESSION/SPINE_PARENT are absent from os.environ of the calling process; this commander's own active spine lease sets exactly those three vars in its shell, so they leak into the check's own pytest invocation. Confirmed diff-independent (identical failure with the fix stashed out) and confirmed environment-caused (env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest tests/ -q reproduces the LAUNCH_ORDER baseline exactly: 3010 passed, 6 skipped, 0 failed, 1136 subtests). This gate's c1 override_policy requires authority=human to waive; the commander cannot self-grant that.",
+        "authority_needed": "human (per c1 override_policy)",
+        "next_action": "A human/Admiral reviews the substituted-clean-env reproduction above and either (a) grants the waiver via checklist_engine.py waive g1-integrate --cond c1 --which postconditions --authority human --reason \"<...>\" so the commander can commit+push, or (b) directs a different resolution (e.g. re-run the check from a session with no active spine lease).",
+        "resume_reason": "Human ruled (LAUNCH_ORDER-3): cache-clean measurement was contaminated by the commander's own active spine lease exporting SPINE_FILE/SPINE_SESSION/SPINE_PARENT, which test_mcp_identity.py asserts are absent from os.environ. Clean-env reproduction (env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q) already matched the LAUNCH_ORDER baseline exactly: 3010 passed, 6 skipped, 0 failed, 1136 subtests. Amending c1's check to measure in a clean environment, not waiving a real failure."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -not -path './.git/*' -prune -exec rm -rf {} + && python -m pytest tests/ -q",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "source": "commander-direct-per-LAUNCH_ORDER-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -not -path './.git/*' -prune -exec rm -rf {} + && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -not -path './.git/*' -prune -exec rm -rf {} + && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-15T18:10:17.162738+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Verified directly (no crew dispatched -- LAUNCH_ORDER-2, admiral-post-568, explicitly forbids it for this attempt: the fix was already uncommitted in the tree). Diff inspected: exactly tests/test_spine_origin_isolation.py line 517, self.assertIn(str(self.foreign), message) -> self.assertIn(self.foreign.as_posix(), message), matching the stored-side pattern already at line 516. (a) chosen over (b) per LAUNCH_ORDER's judgment call: fixing the test's cwd-side assertion is correct because engine_cwd is always git's toplevel stdout, which git emits in posix form on every platform (including Windows) -- the message construction under test never needed changing, only the test's platform-naive assertion did. Two-platform argument: on POSIX, Path.as_posix() and str(Path) are byte-identical (no backslash to normalize), so Linux behavior is unchanged by construction; on Windows, self.foreign is a Path built from a Windows-style path, str() would render backslashes while the refusal message embeds the posix-form git toplevel string, so only as_posix() can match -- verified by reasoning, not by running Windows, which is unavailable here.",
+      "mechanical": false,
+      "ts": "2026-08-15T18:23:49.610511+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Independently reviewed by the commander (no reviewer crew dispatched -- LAUNCH_ORDER-2 forbids dispatch this attempt). Scope check: git diff shows exactly one line changed in tests/test_spine_origin_isolation.py; scripts/checklist_engine.py::origin_worktree_refusal and its main() call site untouched; test_it_is_pure unmodified. Constraint compliance confirmed against all five g1-implement constraints. APPROVE.",
+      "mechanical": false,
+      "ts": "2026-08-15T18:24:04.578861+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "c1's check was retexted to strip the commander's own SPINE_FILE/SPINE_SESSION/SPINE_PARENT lease vars before running the cache-clean suite, per the human's LAUNCH_ORDER-3 ruling that the prior 3009/1-failed reading was a contaminated measurement, not a real failure; re-running the amended check now confirms the ordered baseline exactly (3010 passed, 6 skipped, 0 failed, 1136 subtests), and c2's reviewer APPROVE evidence was already integrated",
+      "mechanical": false,
+      "ts": "2026-08-15T18:38:43.893967+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-15T18:32:11.084521+00:00",
+      "reason": "Corrects a contaminated measurement, not the standard. The commander's own active spine lease exports SPINE_FILE/SPINE_SESSION/SPINE_PARENT into the check's shell, and tests/test_mcp_identity.py::DC3InheritanceMechanismTests::test_launching_the_parent_never_touches_the_calling_processs_own_environ asserts those vars are absent from os.environ -- so the contaminated run reads 3009 passed / 1 failed instead of the ordered baseline. env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q reproduced the ordered baseline exactly: 3010 passed, 6 skipped, 0 failed, 1136 subtests. Only the environment prefix changes; the expected counts, selection, and assertion are unchanged. Precedent: the crew-verdict-and-door lane hit this identical problem today and resolved it the identical way via retext-check, then filed the underlying defect as a triage recommendation (full-suite false-fails when run inside a spine-bound shell, priority medium). Ruled by the human via LAUNCH_ORDER-3 (admiral-post-568).",
+      "authority": "human",
+      "ops": [
+        "retext-check g1-integrate.c1"
+      ]
+    }
+  ]
+}

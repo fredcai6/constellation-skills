@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "e0-context",
+  "mechanical": {
+    "run": "tc1-windows-path-form",
+    "project": "constellation-skills",
+    "spine-step": "e0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-tc1-windows-path-form-e0-context@1693f63b9c81a329352f9d28d496b6a0c26f7acc",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "tc1-windows-path-form",
+    "generated_at": "2026-08-15T18:10:12Z"
+  }
+}

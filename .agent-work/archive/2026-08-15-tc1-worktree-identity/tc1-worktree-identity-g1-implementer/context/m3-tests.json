@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m3-tests",
+  "files": [],
+  "repo_rev": {
+    "commit": "453f84920601ffd2df79671fb0acaceab30880a6"
+  },
+  "run": {
+    "work_id": "tc1-worktree-identity-g1-implementer",
+    "generated_at": "2026-08-15T16:59:12Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/tc1-worktree-identity",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/tc1-worktree-identity",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/tc1-worktree-identity"
+    }
+  }
+}

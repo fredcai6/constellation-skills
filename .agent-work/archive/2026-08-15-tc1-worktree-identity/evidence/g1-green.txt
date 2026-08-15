@@ -1,0 +1,10 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /home/tommy/.local/share/pyfix-venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/tommy/projects/constellation-skills/.worktrees/tc1-worktree-identity
+collecting ... collected 2 items
+
+tests/test_spine_origin_isolation.py::NestedWorktreeRegression::test_a_guarded_verb_from_inside_a_nested_worktree_is_refused PASSED [ 50%]
+tests/test_spine_origin_isolation.py::NestedWorktreeRegression::test_a_subdirectory_of_the_nested_worktree_is_also_refused PASSED [100%]
+
+============================== 2 passed in 0.03s ===============================

@@ -4,7 +4,7 @@
 evals: 12 modules, 54 entities
 scripts: 58 modules, 1172 entities
 skills: 1 modules, 18 entities
-tests: 80 modules, 4580 entities
+tests: 80 modules, 4594 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -102,7 +102,7 @@ tests: 80 modules, 4580 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (80 modules, 4580 entities)
+## tests (80 modules, 4594 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -171,7 +171,7 @@ tests: 80 modules, 4580 entities
 - [tests.test_shipped_check_commands_resolve](tests.test_shipped_check_commands_resolve/INDEX.md) (14 entities, 10 holes): Every shipped command check must actually run after instantiation (epic-559/b-instructions-to-checks, rework r3).
 - [tests.test_shipped_template_gates_satisfiable](tests.test_shipped_template_gates_satisfiable/INDEX.md) (8 entities, 7 holes): Prove the shipped EXECUTE_PLAN.template.json's g1-implement gate is actually satisfiable by a real drive of the real engine (epic-559/b-instructions-to-checks, 
 - [tests.test_spine_lifecycle](tests.test_spine_lifecycle/INDEX.md) (105 entities, 98 holes): Tests for scripts/spine_lifecycle.py -- open and close Constellation work in one call each.
-- [tests.test_spine_origin_isolation](tests.test_spine_origin_isolation/INDEX.md) (55 entities, 35 holes): Engine-native worktree isolation: the `origin` stamp and the refusal it feeds (#315/#568).
+- [tests.test_spine_origin_isolation](tests.test_spine_origin_isolation/INDEX.md) (69 entities, 43 holes): Engine-native worktree isolation: the `origin` stamp and the refusal it feeds (#315/#568).
 - [tests.test_spine_provenance_check](tests.test_spine_provenance_check/INDEX.md) (34 entities, 32 holes): Provenance hardening for the eval `spine_completed` process check (issue #127).
 - [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (137 entities, 71 holes): Unit tests for scripts/hooks/spine_rail.py.
 - [tests.test_state_note](tests.test_state_note/INDEX.md) (15 entities, 15 holes): HOLE: no docstring

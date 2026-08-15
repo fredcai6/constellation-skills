@@ -1,0 +1,93 @@
+{
+  "work_id": "tc1-worktree-identity",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "tc1-worktree-identity",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": "tc1-worktree-identity-spine@453f8492",
+        "refusals": 3,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": ["scripts/checklist_engine.py"]
+      },
+      "agent_supplied": {
+        "task-intent": {"strength": "strong", "statement": "Drive the commander spine from execute through archive in one continuous session after two subagent crews (implementer, reviewer) had already consumed meaningful context."},
+        "expected-behavior": {"strength": "medium", "statement": "The engine would let a single continuous session close each remaining gate (execute, reconcile, triage, review) without interruption once the crews' results were integrated."},
+        "observed-behavior": {"strength": "strong", "statement": "The context governor's HARD trip fired at the start of g1-review, and again at the start of every subsequent gate (g1-integrate, reconcile, triage, review, feedback) -- each time refusing `start <gate>` until a refresh-request was attached, then permitting exactly that one gate to be started and closed before requiring another refresh-request at the next gate boundary. No gate's actual work was blocked; only the pattern of file-refresh-request-first was imposed at every boundary."},
+        "impact-cost": {"strength": "medium", "statement": "One extra CLI round-trip per gate boundary (attach refresh-request, then start/advance) across five gate boundaries -- a handful of extra tool calls, no rework, no lost evidence, no incorrect output."},
+        "workaround": {"strength": "strong", "statement": "Filed the refresh-request exactly as the rail instructed at each boundary, then started and closed that one gate in the same turn per the rail's own updated instruction ('begin THIS guarded gate, then close it ... and stop'), never beginning a second gate under one refresh-request."}
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "tc1-worktree-identity",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": "tc1-worktree-identity-execute-g1-integrate@453f8492",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": ["scripts/checklist_engine.py", "tests/test_spine_origin_isolation.py"]
+      },
+      "agent_supplied": {
+        "task-intent": {"strength": "strong", "statement": "Close g1-integrate's cache-clean-full-suite command postcondition, whose literal check text is `python -m pytest tests/ -q` with no environment scrubbing."},
+        "expected-behavior": {"strength": "medium", "statement": "The command postcondition, re-run verbatim by `advance`, would report the same zero-failure result the implementer and reviewer had each already independently measured (3010 passed, 6 skipped, 0 failed, 1135 subtests)."},
+        "observed-behavior": {"strength": "strong", "statement": "The literal re-run failed one test -- test_mcp_identity.py::DC3InheritanceMechanismTests -- because THIS Commander process's own ambient SPINE_FILE/SPINE_SESSION/SPINE_PARENT (bound into it at dispatch, per the launch order's MCP-door section) are exactly what that test asserts must be absent from the calling process's environment. The implementer and reviewer had each run their own verification with those three variables scrubbed (`env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT`), so their green numbers never hit this; the postcondition's stored command text does not scrub them, and the engine executes that stored command in whatever environment the Commander's own process already carries."},
+        "impact-cost": {"strength": "medium", "statement": "One postcondition waive with a written, evidence-backed reason, rather than a silent pass or an incorrectly-blocked gate. No rework; the underlying diff was never at fault."},
+        "workaround": {"strength": "strong", "statement": "Waived g1-integrate.c1 with human authority (the postcondition's override_policy allowed it), citing the three independently-reproduced env-scrubbed measurements as the substantiating evidence, and routed the root cause (a crew-dispatched process's full-suite gate tripping on its own dispatch envelope) to triage as recommend-and-defer rather than fixing it inside this ruling's scope."}
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "tc1-worktree-identity",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "plan",
+        "context-manifest-ref": "tc1-worktree-identity-plan@453f8492",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [".agent-work/tc1-worktree-identity/execute.json"]
+      },
+      "agent_supplied": {
+        "task-intent": {"strength": "strong", "statement": "Run a cold plan critic (a subagent with no authoring context, given only the ruling and the draft execute.json/MISSION_FRAME.md) before freezing the gate plan, per the design-it-twice/critical-spec-review standard."},
+        "expected-behavior": {"strength": "medium", "statement": "Given the ruling specifies the implementation in unusual detail (exact comparison operator, exact call-site line, an explicitly authorized test migration), the draft plan's constraints already looked complete, so the critic pass was expected to mostly confirm rather than surface new gaps."},
+        "observed-behavior": {"strength": "strong", "statement": "The critic found a genuine, load-bearing contradiction the draft plan had missed: the existing test fixtures in _SpineOnDisk (used by RefusesAGuardedVerbFromAForeignTree and TheInProcessMcpDoorShape) build plain non-git tempdirs, and the draft plan's constraint list would have left them ungitted while also requiring their same-worktree pass-path assertions to keep passing under the new fail-closed rule -- a contradiction that would have surfaced only as implementer confusion or a broken test, not as a plan defect visible on read. The critic also flagged that leaving `self.foreign` non-git would silently narrow coverage to the fail-closed path only, masking the equality-mismatch path the ruling actually cares about."},
+        "impact-cost": {"strength": "medium", "statement": "Roughly 3 minutes of critic-agent time before any implementer dispatch, versus what would likely have been a rework round-trip (implementer hits the contradiction mid-task, returns confused or under-scoped, Commander re-plans) had the plan gone out as originally drafted."},
+        "workaround": {"strength": "strong", "statement": "Folded both findings directly into execute.json's g1-implement constraints before dispatch: required _SpineOnDisk to git-init BOTH self.worktree and self.foreign as distinct real repos, and required a direct predicate-level cwd=None test alongside the main()-level one."}
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "tc1-worktree-identity",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "context",
+        "context-manifest-ref": "tc1-worktree-identity-context@453f8492",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": ["map/INDEX.md", "map/ids.jsonl"]
+      },
+      "agent_supplied": {
+        "task-intent": {"strength": "strong", "statement": "Resolve the map-first orientation input at the context step via `scripts/map_orient.py orient`, before reading any source file."},
+        "expected-behavior": {"strength": "weak", "statement": "map_orient.py would either resolve a docs/architecture packet map, or clearly report none exists so a substitute could be declared."},
+        "observed-behavior": {"strength": "strong", "statement": "map_orient.py reported DEGRADED-UNPARSEABLE against this repo's own map/INDEX.md, even though that file is a real, current, useful module index (regenerated via `python -m scripts.code_map build`, listing the exact two modules this run touched). The tool's probe order treats map/INDEX.md as a candidate but rejects its content as carrying 'no citable anchor id' -- it is built for a docs/architecture packet-map's anchor-id format, which this skill-source repo's own code_map output does not use. map/ids.jsonl is also legitimately empty repo-wide (0 decision anchors exist anywhere in this repo yet), which is a separate, correct fact rather than a defect."},
+        "impact-cost": {"strength": "medium", "statement": "One extra command-line round-trip (re-running orient with --substitute/--unmapped/--escalation) to discharge the degraded read before any source read, plus the same declaration repeated at the plan step's c6 gate (waived) -- no wrong output, just process overhead for a gap that will recur on every future run in this repo until it has either a packet map or a map_orient probe that recognizes code_map's own format."},
+        "workaround": {"strength": "strong", "statement": "Declared map/INDEX.md as the substitute with a content hash, stated the unmapped gap (no packet-map anchor format), and stated no escalation was needed since the LAUNCH_ORDER already named the exact files in scope."}
+      }
+    }
+  ]
+}

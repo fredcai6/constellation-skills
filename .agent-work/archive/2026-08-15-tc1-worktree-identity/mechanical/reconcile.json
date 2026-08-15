@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "mechanical": {
+    "run": "tc1-worktree-identity",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 4,
+    "spine-step": "reconcile",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-tc1-worktree-identity-reconcile@15407f6194579745cd09b7d678c72e4cde5ce304",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "tc1-worktree-identity",
+    "generated_at": "2026-08-15T17:45:01Z"
+  }
+}

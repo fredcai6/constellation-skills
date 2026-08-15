@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-red",
+  "mechanical": {
+    "run": "tc1-worktree-identity-g1-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m1-red",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-tc1-worktree-identity-g1-implementer-m1-red@00c00ddd438be77c571e3582da4346cccc8876da",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "tc1-worktree-identity-g1-implementer",
+    "generated_at": "2026-08-15T16:56:14Z"
+  }
+}

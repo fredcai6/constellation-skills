@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g1-push",
+  "mechanical": {
+    "run": "tc1-merge-main",
+    "project": "constellation-skills",
+    "spine-step": "g1-push",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-tc1-merge-main-g1-push@d769740bac055493910d6cb3c59e4acfdc0dfcb1",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "tc1-merge-main",
+    "generated_at": "2026-08-15T19:28:22Z"
+  }
+}
