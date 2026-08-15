@@ -258,7 +258,8 @@
             "kind": "command",
             "command": "test -f .agent-work/fix-work-area-escape/FINDINGS.md && git log -1 --format=%H > /dev/null"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m5-findings-commit-1"
         }
       ],
       "constraints": [
@@ -266,11 +267,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m5-findings-commit-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/fix-work-area-escape/FINDINGS.md && git log -1 --format=%H > /dev/null",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -280,13 +293,14 @@
   "refusals": 2,
   "engine_session": {
     "session_id": "impl-fix-work-area-escape-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-15T14:54:42.508873+00:00",
-    "last_heartbeat": "2026-08-15T15:03:05.214793+00:00",
+    "last_heartbeat": "2026-08-15T15:03:58.963642+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-15T15:04:02.068312+00:00"
   },
   "why_trail": [
     {
@@ -323,6 +337,13 @@
       "why": "map/INDEX.md was already regenerated and committed ahead of the m3 full-suite gate (needed for that gate's freshness check to pass); re-running the build here is idempotent, git diff is clean, nothing further to commit.",
       "mechanical": false,
       "ts": "2026-08-15T15:03:01.503166+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-findings-commit",
+      "why": "FINDINGS.md written (what was not fixed, and the open lead on the probe/s/t invoker -- traced as far as the evidence allows: the source worktree no longer exists and the manifest schema records no pid/argv/session id, so the caller cannot be identified further). Two local commits made: 0488de86 (the fix) and the work-area/plan commit that follows it. Fenced from push/PR/merge -- neither attempted.",
+      "mechanical": false,
+      "ts": "2026-08-15T15:03:58.963628+00:00"
     }
   ]
 }
