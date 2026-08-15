@@ -23,6 +23,10 @@
 # under .agent-work/dispatch-126-127/, which are already tracked history and sit
 # under the limit. Exclude the copied checkout, never the run that captured it.
 .agent-work/**/.agent-work/
+# Linked worktrees now default to nesting under the repo root
+# (scripts/spine_lifecycle.py's `_default_wt_root`), not living as an
+# untracked sibling checkout beside it -- so the tree itself needs excluding.
+.worktrees/
 # Per-machine hook wiring (#539). `install_constellation.py --wire-hooks
 # --hooks-from source` writes this file: it carries THIS checkout's absolute
 # paths and the interpreter name probed on THIS host, so it is wrong for every

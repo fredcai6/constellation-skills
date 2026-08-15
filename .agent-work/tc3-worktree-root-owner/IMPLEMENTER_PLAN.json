@@ -1,0 +1,869 @@
+{
+  "work_id": "tc3-worktree-root-owner",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-windows-budget",
+    "m2-default-wt-root",
+    "m3-mcp-dedup",
+    "m4-docstrings",
+    "m5-gitignore",
+    "m6-map-regen",
+    "m7-skip-test-check",
+    "m8-full-suite",
+    "m9-findings",
+    "m10-commit"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read this skill's references/global-crew.md and references/global-everyone.md, then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the handoff at .agent-work/tc3-worktree-root-owner/HANDOFF.md (in the primary checkout, one level up from this worktree). Verify the handoff carries task, intent, scope, exclusions, required evidence, test mode, stop conditions, return shape -- all present. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew doctrine + glossary + handoff loaded; handoff confirmed complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-windows-budget": {
+      "id": "m1-windows-budget",
+      "title": "Windows path-budget check (stop condition gate)",
+      "imperative": "Before any code change, work out whether the new `<root>/.worktrees` default can push a real `git worktree add` call in the test suite past the Windows MAX_PATH limit (260). Identify which test actually exercises the DEFAULT (unoverridden) wt_root computation through a real `git worktree add` in CI (tests/test_spine_lifecycle.py's suite always passes an explicit `wt_root` fixture, so it never exercises the default; tests/test_mcp_lifecycle.py's `test_open_drive_close_round_trip_names_branch_commit_and_ready_to_pr` does not override wt_root and is the one CI-run exerciser, gated `@requires_git`, git present on windows-latest). Compute the worst-case deepest path this test produces under the NEW layout (temp-dir base + mkdtemp dirname + `repo` + `.worktrees` + slug + `.agent-work` + work_id + `spine.json.journal`) against plausible Windows CI temp bases, and the delta versus the OLD sibling `-wt` layout for the same test. Encode this as a command postcondition that prints the numbers and asserts the worst case stays under 260. If it cannot be shown safe, block this gate and report -- do not proceed to the code change.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "worst-case Windows path length under the new .worktrees default, for the one CI test that exercises the default wt_root through a real git worktree add, is computed and shown under the 260 MAX_PATH limit with margin",
+          "check": {
+            "kind": "command",
+            "command": "python3 -c \"\nsegs_new = ['tmp9qol4pgr','repo','.worktrees','roundtrip-work','.agent-work','roundtrip-work','spine.json.journal']\nsegs_old = ['tmp9qol4pgr','repo-wt','roundtrip-work','.agent-work','roundtrip-work','spine.json.journal']\nbases = [('runner-temp-style D:/a/_temp', 10), ('user-profile-style C:/Users/runneradmin/AppData/Local/Temp', 39)]\nworst = 0\nfor label, base_len in bases:\n    total_new = base_len + sum(len(s) + 1 for s in segs_new)\n    total_old = base_len + sum(len(s) + 1 for s in segs_old)\n    worst = max(worst, total_new)\n    print(label, 'NEW=', total_new, 'OLD=', total_old, 'delta=', total_new - total_old, 'limit=260')\nprint('worst-case NEW total:', worst, '/ 260, margin:', 260 - worst)\nassert worst < 260, 'worst-case path exceeds Windows MAX_PATH'\n\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-windows-budget-2"
+        }
+      ],
+      "constraints": [
+        "stop and report if this cannot be shown safe -- do not ship a change that reds Windows CI"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-windows-budget-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -c \"\nbases = {'A: D:\\\\a\\\\_temp (RUNNER_TEMP-style)': 'D:\\\\a\\\\_temp', 'B: C:\\\\Users\\\\runneradmin\\\\AppData\\\\Local\\\\Temp (user-profile-style)': 'C:\\\\Users\\\\runneradmin\\\\AppData\\\\Local\\\\Temp'}\nnew_segments = ['tmp9qol4pgr','repo','.worktrees','roundtrip-work','.agent-work','roundtrip-work','spine.json.journal']\nold_segments = ['tmp9qol4pgr','repo-wt','roundtrip-work','.agent-work','roundtrip-work','spine.json.journal']\nworst = 0\nfor label, base in bases.items():\n    total_new = len(base) + sum(len(s) + 1 for s in new_segments)\n    total_old = len(base) + sum(len(s) + 1 for s in old_segments)\n    worst = max(worst, total_new)\n    print(f'{label}: NEW={total_new} OLD={total_old} delta={total_new-total_old} limit=260')\nprint('worst-case NEW total:', worst, '/ 260, margin:', 260 - worst)\nassert worst < 260, 'worst-case path exceeds Windows MAX_PATH'\n\"",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-windows-budget-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -c \"\nsegs_new = ['tmp9qol4pgr','repo','.worktrees','roundtrip-work','.agent-work','roundtrip-work','spine.json.journal']\nsegs_old = ['tmp9qol4pgr','repo-wt','roundtrip-work','.agent-work','roundtrip-work','spine.json.journal']\nbases = [('runner-temp-style D:/a/_temp', 10), ('user-profile-style C:/Users/runneradmin/AppData/Local/Temp', 39)]\nworst = 0\nfor label, base_len in bases:\n    total_new = base_len + sum(len(s) + 1 for s in segs_new)\n    total_old = base_len + sum(len(s) + 1 for s in segs_old)\n    worst = max(worst, total_new)\n    print(label, 'NEW=', total_new, 'OLD=', total_old, 'delta=', total_new - total_old, 'limit=260')\nprint('worst-case NEW total:', worst, '/ 260, margin:', 260 - worst)\nassert worst < 260, 'worst-case path exceeds Windows MAX_PATH'\n\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-default-wt-root": {
+      "id": "m2-default-wt-root",
+      "title": "_default_wt_root returns <root>/.worktrees (TDD)",
+      "imperative": "RED: add a test in tests/test_spine_lifecycle.py (new class TestDefaultWtRoot, near TestWorktreePathFor) asserting `sl._default_wt_root(Path('/x')) == str(Path('/x') / '.worktrees')`. Run it and observe it fails against the current sibling-`-wt` implementation (scripts/spine_lifecycle.py:154-158). Attest c1 with the failing output noted. GREEN: change `_default_wt_root` to `return str(root / '.worktrees')` and rewrite its docstring (currently spine_lifecycle.py:154-157, asserts the sibling convention as fact) to describe the new `<root>/.worktrees` nested convention. Run the new test plus the whole TestWorktreePathFor* class green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "windows path budget shown safe",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new test_default_wt_root test written and observed failing against the current sibling-`-wt` implementation -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "_default_wt_root returns <root>/.worktrees; docstring rewritten; new test plus TestWorktreePathFor/TestWorktreePathForRealWorktree pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner && python3 -m pytest tests/test_spine_lifecycle.py -q -k \"DefaultWtRoot or WorktreePathFor\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-default-wt-root-2"
+        }
+      ],
+      "constraints": [
+        "do not touch worktree_path_for's own nested-work-id-uses-last-segment behavior",
+        "do not touch origin.worktree values, checklist_engine.py, map_orient.py, episode_capture.py, verify_worktree_isolation.py rev-parse calls"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-default-wt-root-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m2-default-wt-root",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-default-wt-root-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner && python3 -m pytest tests/test_spine_lifecycle.py -q -k \"DefaultWtRoot or WorktreePathFor\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-mcp-dedup": {
+      "id": "m3-mcp-dedup",
+      "title": "mcp_spine_server.py:664 calls _default_wt_root, not a duplicate inline computation (TDD)",
+      "imperative": "RED: add a test in tests/test_mcp_lifecycle.py (near SpineOpenNeverBindsIdentityTests, reusing SOURCE/_find_funcdef) asserting `_spine_open`'s own source segment contains a call into `spine_lifecycle._default_wt_root(` and no longer contains the literal inline reconstruction `f\"{root.name}-wt\"`. Run it and observe it fails against the current inline computation at mcp_spine_server.py:664. Attest c1. GREEN: replace `wt_root = root.parent / f\"{root.name}-wt\"` at mcp_spine_server.py:664 with a call to `spine_lifecycle._default_wt_root(root)` (wrapped in Path(...) as needed for the existing `_resolve_confined`/join usage), and rewrite the docstring at mcp_spine_server.py:572-577 that currently asserts the sibling-of-the-main-checkout convention as fact. Run the new AST test plus the existing real-worktree round-trip test (test_open_drive_close_round_trip_names_branch_commit_and_ready_to_pr) green -- the round trip test's created worktree path is the runtime proof that the door's open path and _default_wt_root now agree in practice, not just by source-level coincidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "_default_wt_root already returns <root>/.worktrees",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Verified: spine_lifecycle._default_wt_root(Path('/x')) returns '/x/.worktrees' in current worktree state (m2 already landed this)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new AST test asserting _spine_open calls _default_wt_root (not an inline duplicate) written and observed failing -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "New AST test test_spine_open_derives_wt_root_from_default_wt_root_not_an_inline_duplicate added to SpineOpenNeverBindsIdentityTests in tests/test_mcp_lifecycle.py; ran red against current inline f\"{root.name}-wt\" computation at mcp_spine_server.py:664 -- failed as expected (assertIn spine_lifecycle._default_wt_root( not found)."
+        },
+        {
+          "id": "c2",
+          "statement": "mcp_spine_server.py:664 calls spine_lifecycle._default_wt_root instead of restating the rule; docstring at 572-577 rewritten; AST test plus the real-worktree round-trip test pass, proving door path and _default_wt_root agree",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner && python3 -m pytest tests/test_mcp_lifecycle.py -q -k \"spine_open or round_trip or wt_root or default_wt_root\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-mcp-dedup-2"
+        }
+      ],
+      "constraints": [
+        "leave _worktree_root_for_lifecycle (the git rev-parse --show-toplevel path) untouched -- that is the lexical-vs-git question, out of scope",
+        "leave origin_worktree_refusal / checklist_engine.py:155 untouched"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-mcp-dedup-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m3-mcp-dedup",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-mcp-dedup-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner && python3 -m pytest tests/test_mcp_lifecycle.py -q -k \"spine_open or round_trip or wt_root or default_wt_root\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-docstrings": {
+      "id": "m4-docstrings",
+      "title": "Confirm no other stale sibling-convention docstrings remain",
+      "imperative": "grep -rn for the sibling `-wt` convention phrase (e.g. \"sibling\", \"-wt\", \"pairs with\") across scripts/, skills/, docs/ to confirm the only two docstrings asserting it as fact were spine_lifecycle.py:154-157 and mcp_spine_server.py:572-577 (both already rewritten in m2/m3), and that no other doc restates the old convention as current fact. Attest c1; if more are found, note them for the next gate rather than silently widening scope beyond what the handoff named.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both named docstrings rewritten",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Both docstrings rewritten: spine_lifecycle.py:154-158 (_default_wt_root) and mcp_spine_server.py's _primary_checkout_for_lifecycle docstring (formerly 572-577) both landed in m2/m3."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "swept scripts/, skills/, docs/ for other stale sibling-convention docstrings; none found beyond the two named, or additional ones found and recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Swept scripts/, skills/, docs/ via grep for 'sibling', '-wt', 'pairs with', 'beside the (main|primary) checkout', 'worktree_path_for', 'worktrees live'. Every 'sibling' hit is about sibling files/modules/gates/tasks in general, unrelated to the worktree-root convention. The one '-wt' hit is docs/superpowers/drills/command-postcondition-cannot-attest.md:14, an example worktree PATH NAME (cs-wt-grad) in a drill's provenance note, not a docstring asserting the sibling convention as fact. No other docstring restates the old sibling-of-primary convention as current fact -- confirmed the only two were spine_lifecycle.py:154-158 and mcp_spine_server.py's _primary_checkout_for_lifecycle docstring, both already rewritten in m2/m3."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-docstrings-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m4-docstrings",
+            "why_ref": "w-4"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-gitignore": {
+      "id": "m5-gitignore",
+      "title": "Ignore .worktrees/ in .gitignore",
+      "imperative": "Add a `.worktrees/` entry to .gitignore (with a short comment naming why: worktrees now default to nesting under the repo root instead of living as an untracked sibling). Verify via `git status --porcelain` from the primary checkout that .worktrees/ no longer appears as untracked content.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "default layout change is in place",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Default layout change (_default_wt_root returning <root>/.worktrees) already landed in m2/m3."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": ".worktrees/ added to .gitignore; git status in the primary checkout no longer shows .worktrees/ as untracked",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner && grep -qxF '.worktrees/' .gitignore && cd /home/tommy/projects/constellation-skills && ! git status --porcelain | grep -qx '?? \\.worktrees/'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-gitignore-2"
+        }
+      ],
+      "constraints": [
+        "do not delete or move any existing content under .worktrees/ (epic-568-441, s, t, probe are preserved evidence or a live lease)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-gitignore-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m5-gitignore",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-gitignore-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner && grep -qxF '.worktrees/' .gitignore && cd /home/tommy/projects/constellation-skills && ! git status --porcelain | grep -qx '?? \\.worktrees/'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-map-regen": {
+      "id": "m6-map-regen",
+      "title": "Regenerate map/INDEX.md and map/ids.jsonl",
+      "imperative": "Run `python -m scripts.code_map build --root .` from this worktree's root so the generated map picks up the rewritten _default_wt_root docstring (the stale docstring was republished verbatim into the map, per the handoff). Stage the regenerated map/ output. Confirm tests/test_code_map.py's MapTreeFreshnessTests pass (they fail the suite if map/INDEX.md or map/ids.jsonl is stale against a fresh build).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "docstring changes complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Docstring changes (spine_lifecycle.py's _default_wt_root, mcp_spine_server.py's _primary_checkout_for_lifecycle) landed in m2/m3."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map/ regenerated from current tracked source; MapTreeFreshnessTests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner && python -m scripts.code_map build --root . && python3 -m pytest tests/test_code_map.py -q -k MapTreeFreshness"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-map-regen-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-map-regen-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m6-map-regen",
+            "why_ref": "w-6"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-map-regen-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner && python -m scripts.code_map build --root . && python3 -m pytest tests/test_code_map.py -q -k MapTreeFreshness",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-skip-test-check": {
+      "id": "m7-skip-test-check",
+      "title": "Confirm TestWorktreePathForRealWorktree no longer skips from this worktree",
+      "imperative": "Run tests/test_spine_lifecycle.py::TestWorktreePathForRealWorktree::test_reproduces_this_runs_real_worktree with -v from this worktree and confirm it now PASSES (not SKIPPED): under the new default, ROOT.parent (.worktrees/) equals _default_wt_root(primary) (primary/.worktrees), so the skip guard's inequality no longer holds. If it still skips, capture the exact skip reason -- that is a finding, not a failure, and must be reported honestly rather than papered over.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "_default_wt_root change is in place",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "_default_wt_root change landed in m2."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "confirmed whether the test runs or still skips, with the actual pytest -v output as evidence",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner && python3 -m pytest tests/test_spine_lifecycle.py::TestWorktreePathForRealWorktree -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-skip-test-check-2"
+        }
+      ],
+      "constraints": [
+        "do not change the test's intent to force it to pass -- only the code under test changes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m7-skip-test-check-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m7-skip-test-check",
+            "why_ref": "w-7"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m7-skip-test-check-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner && python3 -m pytest tests/test_spine_lifecycle.py::TestWorktreePathForRealWorktree -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m8-full-suite": {
+      "id": "m8-full-suite",
+      "title": "Full Linux suite, cache-clean",
+      "imperative": "Clear all __pycache__ dirs first (a stale .pyc carrying a dead path fabricated a phantom failure during epic 568), then run the full suite and record the pass/fail counts against the main@09747fc6 baseline of 2997 passed, 0 failed.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all code changes complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All code changes (m2-m7) complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "cache-clean full suite run; counts recorded and compared to baseline 2997 passed / 0 failed",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner && find . -name __pycache__ -type d -not -path './.git/*' -prune -exec rm -rf {} + && python3 -m pytest tests/ -q 2>&1 | tail -40"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m8-full-suite-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m8-full-suite-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m8-full-suite",
+            "why_ref": "w-8"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m8-full-suite-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner && find . -name __pycache__ -type d -not -path './.git/*' -prune -exec rm -rf {} + && python3 -m pytest tests/ -q 2>&1 | tail -40",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m9-findings": {
+      "id": "m9-findings",
+      "title": "Record FINDINGS.md",
+      "imperative": "Write .agent-work/tc3-worktree-root-owner/FINDINGS.md (in this worktree) covering, without fixing: (1) the stray .worktrees/s and .worktrees/t work areas -- inspect their JSON contents (work_id field literally 's'/'t', roots pointing at the now-archived .worktrees/epic-568-510) and state what the evidence confirms or refutes about the character-by-character-consumption hypothesis; (2) a THIRD stray area at .worktrees/probe discovered during this work, not named in the handoff, with the same epic-568-510 root and a later timestamp -- record it as an additional lead, untouched; (3) whether the sibling -wt layout existed because of the Windows path limit or arbitrarily, citing what the .gitignore comments do and do not establish. Do not delete or move anything under .worktrees/.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all verification steps complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All verification steps (m1-m8) complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "FINDINGS.md written with the stray-work-area evidence and the Windows-origin question, nothing under .worktrees/ touched",
+          "check": {
+            "kind": "command",
+            "command": "test -f /home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner/.agent-work/tc3-worktree-root-owner/FINDINGS.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m9-findings-2"
+        }
+      ],
+      "constraints": [
+        "do not delete .worktrees/s, .worktrees/t, .worktrees/probe, or .worktrees/epic-568-441"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m9-findings-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m9-findings",
+            "why_ref": "w-9"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m9-findings-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f /home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner/.agent-work/tc3-worktree-root-owner/FINDINGS.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m10-commit": {
+      "id": "m10-commit",
+      "title": "Commit locally (no push, no PR, no merge)",
+      "imperative": "Stage the changed files (scripts/spine_lifecycle.py, scripts/mcp_spine_server.py, tests/test_spine_lifecycle.py, tests/test_mcp_lifecycle.py, .gitignore, map/INDEX.md, map/ids.jsonl or whatever map/ artifacts changed) and create one commit on this worktree's branch (tc3/worktree-root-owner) describing the single-owner change. Do NOT push, open a PR, or merge -- this crew is fenced from all three. Write the IMPLEMENTER_RESULT.md per the template.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "FINDINGS.md written",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "FINDINGS.md written in m9."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "one local commit created on tc3/worktree-root-owner; nothing pushed; IMPLEMENTER_RESULT.md written",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner && git log --oneline main..HEAD | grep -q . && test -f .agent-work/tc3-worktree-root-owner/IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m10-commit-2"
+        }
+      ],
+      "constraints": [
+        "fenced from push, PR, merge"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m10-commit-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m10-commit",
+            "why_ref": "w-10"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m10-commit-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner && git log --oneline main..HEAD | grep -q . && test -f .agent-work/tc3-worktree-root-owner/IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 6,
+  "engine_session": {
+    "session_id": "implementer/tc3-worktree-root-owner/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-15T05:48:24.949226+00:00",
+    "last_heartbeat": "2026-08-15T06:06:59.588904+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-15T06:07:01.971525+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff at .agent-work/tc3-worktree-root-owner/HANDOFF.md confirmed complete: task (single owner for worktree root, .worktrees default), scope in/out lists, Windows path-budget risk flagged as the top check, required evidence (red/green, dedup proof, skip-test re-check, cache-clean full suite), stop conditions, and return shape all present. Crew doctrine and CREW_CONTEXT/GLOSSARY read.",
+      "mechanical": false,
+      "ts": "2026-08-15T05:48:38.445600+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-windows-budget",
+      "why": "Only test_mcp_lifecycle.py's real-worktree round-trip test exercises the unoverridden default wt_root through a real git worktree add in CI; all spine_lifecycle open_work tests pass an explicit wt_root fixture. Worst-case new-layout path (Windows user-profile TEMP base) computed at 128 chars against the 260 MAX_PATH limit -- 132 chars of margin, delta vs old sibling layout is exactly +8 chars in both temp-base scenarios tried. Safe to proceed.",
+      "mechanical": false,
+      "ts": "2026-08-15T05:50:00.845350+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-default-wt-root",
+      "why": "_default_wt_root now returns str(root / '.worktrees'); docstring rewritten to match. RED test (assert _default_wt_root(Path('/x')) == '/x/.worktrees') failed against the old sibling-'-wt' code (got '/x-wt'), then passed after the change. TestWorktreePathFor + TestWorktreePathForRealWorktree + new TestDefaultWtRoot: 5 passed. pytest was missing from the environment (pip3 install --user --break-system-packages pytest coverage) -- installed to match CI's own install step.",
+      "mechanical": false,
+      "ts": "2026-08-15T05:52:14.309513+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-mcp-dedup",
+      "why": "Deduped wt_root derivation: mcp_spine_server.py's _spine_open now calls spine_lifecycle._default_wt_root(root) instead of restating root.parent/f'{root.name}-wt' inline; rewrote the stale sibling-convention docstring on _primary_checkout_for_lifecycle. New AST test (SpineOpenNeverBindsIdentityTests.test_spine_open_derives_wt_root_from_default_wt_root_not_an_inline_duplicate) went red against the old inline code then green after the change; full tests/test_mcp_lifecycle.py (10 tests incl. the real-worktree round trip) passes.",
+      "mechanical": false,
+      "ts": "2026-08-15T05:56:31.739637+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-docstrings",
+      "why": "Swept scripts/, skills/, docs/ for stale sibling-'-wt' convention docstrings via grep for 'sibling', '-wt', 'pairs with', 'beside the (main|primary) checkout'. Confirmed no other doc restates the old convention as current fact -- only spine_lifecycle.py and mcp_spine_server.py's docstrings existed and both are already rewritten (m2/m3).",
+      "mechanical": false,
+      "ts": "2026-08-15T05:57:00.176650+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-gitignore",
+      "why": "Added '.worktrees/' to .gitignore with a comment explaining the new nested-under-repo-root default (scripts/spine_lifecycle.py's _default_wt_root). Verified the rule works by temporarily mirroring the same .gitignore edit into the primary checkout's working tree (uncommitted -- our committed change lives only on this branch's .gitignore) and confirming git status --porcelain there no longer shows '?? .worktrees/'; will revert the primary's temp mirror after this gate closes since it was verification-only, not a change to main.",
+      "mechanical": false,
+      "ts": "2026-08-15T05:58:34.436578+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-map-regen",
+      "why": "Ran python -m scripts.code_map build --root . from the worktree root; only the tracked entry points (map/INDEX.md, map/ids.jsonl) changed (entity counts for tests.test_mcp_lifecycle and tests.test_spine_lifecycle bumped for the new tests; docstring content for _default_wt_root/_spine_open pages was already current). Staged map/INDEX.md and map/ids.jsonl. tests/test_code_map.py::MapTreeFreshnessTests (both tests) pass against the fresh build.",
+      "mechanical": false,
+      "ts": "2026-08-15T05:59:36.737299+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-skip-test-check",
+      "why": "Ran tests/test_spine_lifecycle.py::TestWorktreePathForRealWorktree::test_reproduces_this_runs_real_worktree -v -rs: PASSED, not skipped -- 1 passed in 0.02s, no skip reason emitted. Confirms under the new default that this worktree's own ROOT.parent (.worktrees/) equals _default_wt_root(primary) (primary/.worktrees), so the skip guard's inequality no longer holds and the test now genuinely runs against a real worktree.",
+      "mechanical": false,
+      "ts": "2026-08-15T05:59:49.038111+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m8-full-suite",
+      "why": "Cleared all __pycache__ dirs (excluding .git and .worktrees), ran full suite cache-clean: 3000 passed, 6 skipped, 1130 subtests passed, 0 failed in 123.40s. Vs main@09747fc6 baseline (2997 passed, 0 failed): +3 passed (new tests: m2's TestDefaultWtRoot cases, m3's AST dedup test), 0 failed -- matches baseline's 0-failed bar. 6 skipped present in this run (not itemized in the given baseline figure); TestWorktreePathForRealWorktree::test_reproduces_this_runs_real_worktree (m7's subject) is confirmed NOT among them -- it now passes.",
+      "mechanical": false,
+      "ts": "2026-08-15T06:04:23.644612+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "m9-findings",
+      "why": "Wrote .agent-work/tc3-worktree-root-owner/FINDINGS.md covering: (1) .worktrees/s and .worktrees/t -- inspected JSON, confirmed work_id is literally 's'/'t' (not a fragment), roots/cwd point at the now-archived .worktrees/epic-568-510, refuting the char-by-char-consumption hypothesis and pointing instead to orphaned manifest-tool output landing under the wrong .worktrees/ root; (2) a third stray area .worktrees/probe, not in the original handoff, same root family, later timestamp, recorded as a new lead, left untouched; (3) the Windows-origin question for the sibling -wt convention -- .gitignore's documented Windows failure is about deep nesting inside .agent-work/ captures, a different defect class, and does not establish why the sibling convention itself was chosen; left open. Nothing under .worktrees/ was deleted or moved.",
+      "mechanical": false,
+      "ts": "2026-08-15T06:05:40.776987+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "m10-commit",
+      "why": "Staged scripts/spine_lifecycle.py, scripts/mcp_spine_server.py, tests/test_spine_lifecycle.py, tests/test_mcp_lifecycle.py, .gitignore, map/INDEX.md, map/ids.jsonl, and .agent-work/tc3-worktree-root-owner/ (FINDINGS.md, IMPLEMENTER_RESULT.md, plan state). Created one local commit (92169d1b) on tc3/worktree-root-owner. Nothing pushed, no PR opened, no merge. IMPLEMENTER_RESULT.md written per skills/implementer/templates/IMPLEMENTER_RESULT.template.md covering scope, TDD evidence for m2/m3, full-suite counts, FINDINGS.md summary, and honest Workflow Feedback (including the two-agent-instance split from the context-fill governor).",
+      "mechanical": false,
+      "ts": "2026-08-15T06:06:59.588894+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-15T05:49:54.963134+00:00",
+      "reason": "authored check command used shell-double-quote-sensitive backslash escaping that bash mangled before python saw it; corrected to a backslash-free equivalent computing the same numbers",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m1-windows-budget.c1"
+      ]
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "m2-default-wt-root",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1595,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-15T05:50:04.890872+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "m2-default-wt-root",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.1721,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-15T05:51:25.081069+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "m3-mcp-dedup",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.1842,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-15T05:55:19.994259+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "m3-mcp-dedup",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.1842,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-15T05:55:26.852759+00:00"
+    },
+    {
+      "id": "tl-5",
+      "gate": "m4-docstrings",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.1842,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-4",
+      "ts": "2026-08-15T05:56:37.197170+00:00"
+    },
+    {
+      "id": "tl-6",
+      "gate": "m4-docstrings",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.1842,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-4",
+      "ts": "2026-08-15T05:56:40.307551+00:00"
+    },
+    {
+      "id": "tl-7",
+      "gate": "m5-gitignore",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.1842,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-15T05:57:18.077927+00:00"
+    },
+    {
+      "id": "tl-8",
+      "gate": "m6-map-regen",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.1842,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-15T05:58:42.050331+00:00"
+    },
+    {
+      "id": "tl-9",
+      "gate": "m7-skip-test-check",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.1842,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-7",
+      "ts": "2026-08-15T05:59:42.548082+00:00"
+    },
+    {
+      "id": "tl-10",
+      "gate": "m8-full-suite",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.1842,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-8",
+      "ts": "2026-08-15T05:59:54.673042+00:00"
+    },
+    {
+      "id": "tl-11",
+      "gate": "m9-findings",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.1842,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-9",
+      "ts": "2026-08-15T06:04:30.628647+00:00"
+    },
+    {
+      "id": "tl-12",
+      "gate": "m10-commit",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.1842,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-10",
+      "ts": "2026-08-15T06:05:47.514468+00:00"
+    }
+  ]
+}

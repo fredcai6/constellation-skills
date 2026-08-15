@@ -570,11 +570,11 @@ def _primary_checkout_for_lifecycle() -> Path:
     server-launch-time state), never off the module-level `SPINE` global, so
     `_spine_open`'s own source never contains the identifier `SPINE` (checked
     by `tests/test_mcp_lifecycle.py`). This is `open_work`'s own `root`:
-    `worktree_path_for`'s sibling-of-the-main-checkout convention
-    (`scripts/spine_lifecycle.py`'s `_default_wt_root`) means a NEW worktree
-    must always sit beside the primary checkout, never beside whatever
-    (possibly already-linked) worktree this door's own bound spine happens to
-    live in.
+    `scripts/spine_lifecycle.py`'s `_default_wt_root` is the ONE place that
+    answers "where do worktrees live" -- `<root>/.worktrees`, nested under the
+    primary checkout -- so a NEW worktree must always nest under the primary
+    checkout, never under whatever (possibly already-linked) worktree this
+    door's own bound spine happens to live in.
 
     `git rev-parse --git-common-dir` resolves to the PRIMARY checkout's `.git`
     from ANY worktree, linked or not -- `verify_worktree_isolation.
@@ -661,7 +661,7 @@ def _spine_open(args: dict) -> dict:
             tool="spine_open", rejection_class="root-resolution-failed",
         )
 
-    wt_root = root.parent / f"{root.name}-wt"
+    wt_root = Path(spine_lifecycle._default_wt_root(root))
     candidate, escapes = _resolve_confined(
         spine_lifecycle.worktree_path_for(work_id, wt_root=str(wt_root)),
         join_relative_to=None, bound_dir=wt_root,

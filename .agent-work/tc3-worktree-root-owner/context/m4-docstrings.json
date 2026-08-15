@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m4-docstrings",
+  "files": [],
+  "repo_rev": {
+    "commit": "09747fc65954ec11f7083a759c757239f5b89a8c"
+  },
+  "run": {
+    "work_id": "tc3-worktree-root-owner",
+    "generated_at": "2026-08-15T05:56:40Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner"
+    }
+  }
+}
