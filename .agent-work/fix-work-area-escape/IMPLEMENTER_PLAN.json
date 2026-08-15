@@ -1,0 +1,328 @@
+{
+  "work_id": "fix-work-area-escape",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-fix-escape",
+    "m2-docstring",
+    "m3-full-suite",
+    "m4-map-regen",
+    "m5-findings-commit"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read HANDOFF.md fully. Verify it names task, intent, scope, exclusions, required evidence, test mode, and stop conditions. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff read and confirmed complete (task, intent, scope, exclusions, evidence, test mode, stop conditions all present)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-fix-escape": {
+      "id": "m1-fix-escape",
+      "title": "Task 1 \u2014 stop episode_capture.manifest_root escaping the work area",
+      "imperative": "Add a regression test reproducing the exact escape (worktree root, no .agent-work ancestor, work-ids probe/s/t) using the real manifest_root and emit_step_manifest functions, no mocking; observe it fail against unmodified main. Add a positive control proving the legitimate scratch-spine (base_dir under .agent-work but not ending in its own work-id) fallback is untouched. Then fix manifest_root: keep the nested work-id strip exactly as-is, and change ONLY the fallback branch so it raises ValueError when base_dir has no .agent-work ancestor to anchor a parent-of guess to, instead of silently returning base.parent. Update the docstring to explain the new refusal without weakening the existing nested-strip explanation. Run the new tests plus the existing nested work-id + fail-soft suites and confirm green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED observed: with the fix reverted, the new escape-reproduction test fails by actually writing the stray sibling path (e.g. .worktrees/probe/context/g1.json); manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "GREEN: manifest_root refuses the no-.agent-work-ancestor fallback, the nested work-id strip (epic-418-followon/commander-424) still resolves without doubling, and the scratch-spine positive control is unchanged",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_work_id_nesting.py tests/test_episode_capture.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-fix-escape-1"
+        }
+      ],
+      "constraints": [
+        "layout <root>/.worktrees/<slug>/.agent-work/<work-id>/ stays exactly as-is",
+        "do not touch the four existing stray directories (.worktrees/s, /t, /probe, constellation-skills-wt pair)",
+        "do not touch durable_root's redirect semantics or the active-epic-lease exception",
+        "do not touch origin_worktree_refusal or the lexical-vs-git spine ownership question"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-fix-escape-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_work_id_nesting.py tests/test_episode_capture.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-docstring": {
+      "id": "m2-docstring",
+      "title": "Task 2 \u2014 correct agent_work_root.py:7's false docstring claim",
+      "imperative": "scripts/agent_work_root.py's module docstring calls each worktree's .agent-work/ '(gitignored, disposable)'. Both halves are false (verify with git check-ignore). Correct it to describe the directory as tracked on the worktree's own branch, not gitignored, holding transportable work in progress rather than disposable scratch \u2014 matching the model in HANDOFF.md. Keep the rest of the docstring's substance (durable-root redirect, active-epic-lease exception) unchanged.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the false '(gitignored, disposable)' phrase is gone and git check-ignore confirms .agent-work/ is genuinely not gitignored from inside this worktree",
+          "check": {
+            "kind": "command",
+            "command": "! grep -q 'gitignored, disposable' scripts/agent_work_root.py && ! git check-ignore -q .agent-work/fix-work-area-escape"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-docstring-1"
+        }
+      ],
+      "constraints": [
+        "keep the durable-root redirect and active-epic-lease exception substance unchanged"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-docstring-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -q 'gitignored, disposable' scripts/agent_work_root.py && ! git check-ignore -q .agent-work/fix-work-area-escape",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-full-suite": {
+      "id": "m3-full-suite",
+      "title": "Cache-clean full Linux suite",
+      "imperative": "Clear __pycache__ caches, then run the full suite. Compare passed/skipped/failed counts against the main@bbbf41f6 baseline (3000 passed, 6 skipped, 0 failed) and record the delta (expect baseline + the new tests added in m1, 0 failed).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "cache-clean full suite is green (0 failed)",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -type d -not -path './.git/*' -prune -exec rm -rf {} + ; python -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-full-suite-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-full-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -not -path './.git/*' -prune -exec rm -rf {} + ; python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-map-regen": {
+      "id": "m4-map-regen",
+      "title": "Regenerate map/INDEX.md",
+      "imperative": "Run python -m scripts.code_map build --root . and check whether map/INDEX.md moved (git diff). If it moved, stage and note it for the local commit in m5; if not, say so.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map build ran cleanly",
+          "check": {
+            "kind": "command",
+            "command": "python -m scripts.code_map build --root ."
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-map-regen-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-map-regen-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m scripts.code_map build --root .",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-findings-commit": {
+      "id": "m5-findings-commit",
+      "title": "Write FINDINGS.md and commit locally",
+      "imperative": "Write .agent-work/fix-work-area-escape/FINDINGS.md recording what was NOT fixed, including the open lead on what invoked the manifest tooling with placeholder work-ids s/t/probe. Commit all changes locally (no push, no PR, per the fence). Do not touch the OUT-of-scope items.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "FINDINGS.md exists and a local commit was created carrying the fix, tests, docstring, and (if moved) map/INDEX.md",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/fix-work-area-escape/FINDINGS.md && git log -1 --format=%H > /dev/null"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "fenced from push, PR, and merge \u2014 commit locally only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "impl-fix-work-area-escape-1",
+    "status": "active",
+    "claimed_at": "2026-08-15T14:54:42.508873+00:00",
+    "last_heartbeat": "2026-08-15T15:03:05.214793+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "HANDOFF.md read in full: task is the manifest_root escape (Task 1) and the false agent_work_root.py docstring (Task 2), scope/exclusions/evidence/test-mode/stop-conditions all present and complete.",
+      "mechanical": false,
+      "ts": "2026-08-15T14:54:50.085694+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-fix-escape",
+      "why": "manifest_root fix applied: fallback now raises ValueError when base_dir has no .agent-work ancestor (was: silent base.parent, the documented .worktrees/s,/t,/probe escape); nested work-id strip and scratch-spine fallback left byte-for-byte unchanged. RED confirmed by stashing the fix and observing the new tests actually write the stray sibling path; GREEN confirmed below.",
+      "mechanical": false,
+      "ts": "2026-08-15T14:55:07.620911+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-docstring",
+      "why": "agent_work_root.py:7 docstring corrected: dropped the false '(gitignored, disposable)' claim, now describes .agent-work/ as tracked on the worktree's own branch and holding transportable work in progress; durable-root redirect and active-epic-lease exception text left unchanged.",
+      "mechanical": false,
+      "ts": "2026-08-15T14:55:11.862734+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-full-suite",
+      "why": "cache-clean full suite post-commit: 3003 passed, 6 skipped, 0 failed vs main@bbbf41f6 baseline of 3000 passed, 6 skipped, 0 failed -- the +3 delta is exactly the new tests added in m1 (2 in test_work_id_nesting.py, 1 in test_episode_capture.py). Both prior failures (stale map/INDEX.md, checkout-skew against uncommitted agent_work_root.py) are gone now that the map was regenerated and the change committed.",
+      "mechanical": false,
+      "ts": "2026-08-15T15:02:52.797737+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-map-regen",
+      "why": "map/INDEX.md was already regenerated and committed ahead of the m3 full-suite gate (needed for that gate's freshness check to pass); re-running the build here is idempotent, git diff is clean, nothing further to commit.",
+      "mechanical": false,
+      "ts": "2026-08-15T15:03:01.503166+00:00"
+    }
+  ]
+}
