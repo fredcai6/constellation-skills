@@ -586,13 +586,15 @@
             "kind": "command",
             "command": "python scripts/verify_episode_captured.py crew-verdict-and-door --store-root episodes --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-1"
         },
         {
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Branch fix/crew-verdict-and-door committed (f06d314e, 35f6c663, and this archive commit) and pushed to origin."
         },
         {
           "id": "c2b",
@@ -601,13 +603,15 @@
             "kind": "command",
             "command": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills/.worktrees/crew-verdict-and-door rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-2"
         },
         {
           "id": "c3",
           "statement": "engine session lease released",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Will release as the very last action immediately after this advance succeeds, per the imperative's required ordering."
         },
         {
           "id": "c4",
@@ -642,22 +646,57 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-3"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py crew-verdict-and-door --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills/.worktrees/crew-verdict-and-door rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-3",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -669,16 +708,17 @@
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/crew-verdict-and-door",
     "opened_by": "init_work_area"
   },
-  "refusals": 8,
+  "refusals": 10,
   "engine_session": {
     "session_id": "constellation/crew-verdict-and-door/execute/commander",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-15T16:38:13.251000+00:00",
-    "last_heartbeat": "2026-08-15T17:41:19.742305+00:00",
+    "last_heartbeat": "2026-08-15T17:43:13.966008+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-15T17:43:16.668341+00:00"
   },
   "why_trail": [
     {
@@ -743,6 +783,13 @@
       "why": "Workflow feedback reflected honestly, not a bare 'none': followed the commander-delegated doctrine closely (spine + child execute.json, both crew gates dispatched through run_crew.py's external backend, cold plan critic run, discrepancies routed through REPLAN_INPUT.json). Three genuine improvisations recorded as episodes rather than as rules: (1) the cold plan critic caught a real anchor defect in the g2 plan before dispatch; (2) the full suite false-failed on one test purely because this commander's own process is spine-bound, worked around via an engine retext-check amendment rather than a doctrine change; (3) this repo's map orientation is DEGRADED-UNPARSEABLE structurally (ids:0 even after a fresh build), and the mission frame had to avoid all word:id-shaped tokens to pass verify-frame in degraded mode -- not obvious on first attempt. Harvested implementer/reviewer Workflow Feedback sections into these episodes and into triage recommendations (FOWLER_PASS path collision, spine_terminal freshness gap) rather than dropping them. 3 episodes captured and verified (crew-verdict-and-door-001/002/003).",
       "mechanical": false,
       "ts": "2026-08-15T17:40:58.933621+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "Episodes captured and git-tracked (archive-phase gate confirms). Branch pushed, PR #587 opened (OPEN, confirmed via gh pr view). Work area moved to .agent-work/archive/2026-08-15-crew-verdict-and-door/ -- this is what broke the MCP door's SPINE_FILE binding mid-archive (a live specimen of exactly the class of self-referential relocation hazard this run exists to fix), so this final advance runs via the CLI fallback against the moved file with the real session id. Staged diff is JSON/MD/txt run artifacts plus the source fix, no oversized/binary/disallowed files. This commander is fenced from merging; PR is open and unmerged.",
+      "mechanical": false,
+      "ts": "2026-08-15T17:43:13.965993+00:00"
     }
   ]
 }
