@@ -46,7 +46,8 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
-- statement: Read the verifier source (not just the template) to get the exact required/optional field split, then keep the template's structural shape and substitute real run content -- rather than guessing at which template fields could be dropped.
+- statement: The run read the verifier source (verify_replan.py and verify_issue_set.py), not just the bundled template, and that read is what exposed the exact required/optional field split -- neither the template nor the directive block had named it. Keeping the template's structural shape and substituting real run content produced a schema-valid REPLAN_INPUT.json, where an earlier attempt at guessing which template fields could be dropped had not.
+- history: restated — restated from advice to a future reader into an observation of what this run did and found (tc1-episode-rewording, per LAUNCH_ORDER admiral-post-568) — original statement was: Read the verifier source (not just the template) to get the exact required/optional field split, then keep the template's structural shape and substitute real run content -- rather than guessing at which template fields could be dropped.
 
 ## Retirement
 - status: active

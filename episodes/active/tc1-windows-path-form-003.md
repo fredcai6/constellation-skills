@@ -44,7 +44,8 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
-- statement: Always pass --why with a genuine one-line understanding statement on every advance call for a non-exempt gate, rather than waiting for the refusal to name it.
+- statement: The advance call on this non-exempt gate refused until it carried a --why with a genuine one-line understanding statement; supplying that statement up front on the retry avoided a second refusal round-trip and the extra background wait for the engine's own full-suite re-run inside the successful advance.
+- history: restated — restated from advice to a future reader into an observation of what this run did and found (tc1-episode-rewording, per LAUNCH_ORDER admiral-post-568) — original statement was: Always pass --why with a genuine one-line understanding statement on every advance call for a non-exempt gate, rather than waiting for the refusal to name it.
 
 ## Retirement
 - status: active
