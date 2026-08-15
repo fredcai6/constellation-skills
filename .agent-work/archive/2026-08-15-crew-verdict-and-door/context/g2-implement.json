@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g2-implement",
+  "files": [],
+  "repo_rev": {
+    "commit": "f06d314e54d0f03a6ff519d89bec78ddfde0ac97"
+  },
+  "run": {
+    "work_id": "crew-verdict-and-door",
+    "generated_at": "2026-08-15T17:17:21Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/crew-verdict-and-door",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/crew-verdict-and-door",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/crew-verdict-and-door"
+    }
+  }
+}

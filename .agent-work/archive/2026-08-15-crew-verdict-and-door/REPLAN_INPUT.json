@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "crew-verdict-and-door",
+      "spec_path": ".agent-work/crew-verdict-and-door/LAUNCH_ORDER.md",
+      "intent_and_why": "Stop scripts/run_crew.py from reporting failed for a crew whose successful archive relocated the result artifact it was told to watch, while never letting a genuinely failed crew read as completed; secondarily, harden the external backend's already-known unbound-MCP-door hazard."
+    },
+    "definition_of_done": [
+      "A dispatch given both --spine and --result, whose result is missing/stale and whose bound spine is terminal, reads completed (was failed).",
+      "A dispatch with a non-terminal spine and no result still reads failed.",
+      "blocked_gate still wins ahead of both other paths, unchanged.",
+      "external-backend dispatch states plainly, in the registry entry and at dispatch time, that its door is unbound."
+    ],
+    "good_enough": {
+      "mandatory_quality": "TDD red-before-green on the real finalize_from_exit_code, cache-clean full suite green",
+      "sufficient_evidence": "Independent reviewer re-reproduces every claimed test result rather than trusting pasted output",
+      "appetite": "One bounded fix plus one bounded hardening, both in scripts/run_crew.py"
+    },
+    "hard_constraints": [
+      "Yours: scripts/run_crew.py and its tests only",
+      "NOT yours: scripts/checklist_engine.py, scripts/hooks/spine_rail.py, .mcp.json, .worktrees/epic-568-441/, .worktrees/tc1-worktree-identity/",
+      "Must not make a genuinely failed crew read as completed",
+      "Do not attempt to bind the external backend's door out-of-band -- impossible by construction"
+    ],
+    "fixed_decisions": [
+      "task-1-is-the-lane: ship Task 1 even if Task 2 is deferred",
+      "no-admiral-side-workarounds: the fix lives in the launcher, not in doctrine handed to every Admiral",
+      "clear-caches-before-measuring: cache-clean suite runs only"
+    ],
+    "current_wave": {
+      "objective": "Fix the inverted archive verdict and harden the unbound external-door hazard, both in scripts/run_crew.py",
+      "exit_criteria": [
+        "g1 (verdict fix) closes with reviewer APPROVE and a cache-clean green suite",
+        "g2 (door hardening) closes with reviewer APPROVE and a cache-clean green suite, or is deferred with a named reason if it needs a design decision"
+      ],
+      "issues": [
+        {
+          "id": "g1",
+          "title": "Stop the inverted archive verdict",
+          "desired_outcome": "finalize_from_exit_code falls back to spine_terminal when the result artifact is missing/stale, following the blocked_gate-checked-first precedent.",
+          "useful_now": "Every successful archive currently reports failed, which risks an Admiral relaunching a Commander onto already-archived work with the duplicate-guard disarmed.",
+          "appetite": "One function, three new tests",
+          "acceptance_or_falsification_evidence": "test_finalize_terminal_spine_rescues_missing_result (red before, green after), test_finalize_still_fails_when_spine_not_terminal, test_finalize_blocked_wins_regardless_of_result_or_spine, all calling finalize_from_exit_code directly.",
+          "implementation_latitude": "Choose the exact verdict_source field's internal branching; the fix's shape (spine_terminal fallback, blocked_gate-first precedent) is pinned by the launch order.",
+          "hard_constraints_no_gos": [
+            "Must not touch result_exists, result_fresh, spine_terminal, or spine_blocked_id",
+            "Must not weaken blocked_gate precedence"
+          ],
+          "local_unknowns": [
+            "Whether any gate other than archive relocates artifacts the launcher watches",
+            "Whether a failed verdict should ever be recordable while the bound spine is terminal"
+          ],
+          "anchors": ["scripts/run_crew.py:954-1046"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "g2",
+          "title": "Harden the unbound external-backend door",
+          "desired_outcome": "Every external-backend registry entry and every external dispatch states plainly that its MCP door is unbound.",
+          "useful_now": "A claim through a demo-bound door mutates the wrong spine while reporting success -- this already happened during epic 568.",
+          "appetite": "One field, one stderr banner",
+          "acceptance_or_falsification_evidence": "test_build_entry_cli_door_bound_true, test_build_entry_external_door_bound_false, test_external_dispatch_prints_unbound_door_banner.",
+          "implementation_latitude": "Choose the exact banner wording; the two-piece scope (registry field + stderr banner) is pinned by the corrected handoff.",
+          "hard_constraints_no_gos": [
+            "Do not attempt to bind the door out-of-band",
+            "Do not touch scripts/mcp_spine_server.py"
+          ],
+          "local_unknowns": [],
+          "anchors": ["scripts/run_crew.py:868-,1278-1310"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "recover_crews.py surfaces door_bound in its human-facing report",
+        "why_likely": "The reviewer flagged it as a natural next step now that the field exists on every entry",
+        "entry_conditions": ["a triage candidate is filed and picked up"]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether this repo's derived code map (map/ids.jsonl) is meant to carry populated ids at all, or whether the DEGRADED-UNPARSEABLE orientation is a structural, accepted characteristic",
+        "affects": "Every future run's map-first orientation in this repo",
+        "settle_by": "A human or Cartographer ruling on whether map/ids.jsonl population is a live gap or an intentional non-goal",
+        "current_evidence": "A fresh `python -m scripts.code_map build --root .` still reports ids:0 repo-wide",
+        "next_probe": "Read scripts/code_map's own design doc/tests for whether ids.jsonl population was ever implemented"
+      }
+    ],
+    "parked_possibilities": [
+      "A dispatch-time-aware spine_terminal (or a caller-side staleness guard mirroring result_fresh), so a leftover terminal spine from an earlier attempt cannot rescue a later attempt's stale result"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "g1",
+      "outcome": "finalize_from_exit_code rescues a missing/stale result into completed when the bound spine is terminal; a genuine failure still reads failed; blocked_gate still wins first.",
+      "evidence": "Reviewer APPROVE (e-g1-review-1); cache-clean, env-clean full suite 3009 passed/6 skipped/0 failed/1130 subtests after both gates; red-before-green independently reproduced by the Commander via git stash on the unfixed function."
+    },
+    {
+      "issue_id": "g2",
+      "outcome": "build_entry records entry[\"door_bound\"] on every registry entry (True only for the cli backend); ExternalBackend.dispatch prints an unconditional stderr banner naming the unbound door -- independently observed firing live on this run's own g2-reviewer dispatch.",
+      "evidence": "Reviewer APPROVE (e-g2-review-1); same cache-clean green suite; Fowler pass 11/12 absent, one non-blocking string-level duplication noted."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "Every successful archive was reported failed before this fix, not sometimes",
+      "expected": "finalize_from_exit_code reads failed whenever result is not None and stale/missing, regardless of a terminal spine",
+      "observed": "Confirmed by direct read of the unfixed function and by test_finalize_terminal_spine_rescues_missing_result failing (AssertionError: 0 != 1) before the fix",
+      "source": "tests/test_crew_launcher.py::FinalizeFromExitCodeTests, run by the Commander via git stash on scripts/run_crew.py"
+    },
+    {
+      "claim": "The fix does not turn the verdict into a rubber stamp",
+      "expected": "A spine that is not terminal, with no result, still reads failed after the fix",
+      "observed": "test_finalize_still_fails_when_spine_not_terminal passes after the fix; assertion is on entry[\"status\"] == \"failed\"",
+      "source": "tests/test_crew_launcher.py::FinalizeFromExitCodeTests, reproduced independently by both the Commander and the g1 reviewer"
+    },
+    {
+      "claim": "blocked_gate still wins ahead of both other paths",
+      "expected": "A fresh result AND a terminal-looking spine that is actually blocked still reads blocked",
+      "observed": "test_finalize_blocked_wins_regardless_of_result_or_spine passes; entry[\"verdict_source\"] == \"blocked_gate\"",
+      "source": "tests/test_crew_launcher.py::FinalizeFromExitCodeTests"
+    },
+    {
+      "claim": "The external backend's unbound door is now impossible to miss from the registry alone",
+      "expected": "Every external-backend entry carries door_bound=False; every cli-backend entry carries door_bound=True",
+      "observed": "test_build_entry_external_door_bound_false and test_build_entry_cli_door_bound_true both pass; independently confirmed by the g2 reviewer reading the equality condition directly",
+      "source": "tests/test_crew_launcher.py::BuildEntryTests"
+    },
+    {
+      "claim": "The hardening banner actually fires in practice, not just in a test",
+      "expected": "An external-backend dispatch prints the hazard banner to stderr",
+      "observed": "The banner printed live on this Commander's own console when dispatching the g2 reviewer via `python scripts/run_crew.py --backend external ...`",
+      "source": "This run's own terminal output, g2-review dispatch"
+    },
+    {
+      "claim": "Cache-clean full suite is green after both gates",
+      "expected": "0 failed, matching the 453f8492 baseline shape (3002 passed/7 skipped/0 failed/1130 subtests)",
+      "observed": "3009 passed, 6 skipped, 0 failed, 1130 subtests -- passed count moved by exactly the 6 new tests added across g1+g2; the 1-test skip-count drift (7->6) is unexplained and recorded as a discrepancy, not silently absorbed",
+      "source": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q, run by the Commander after cache-clean"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D-g2-anchor-defect",
+      "signal": "The authored g2 gate plan originally anchored its structural/imperative text to 'the external-backend crew prompt', but ExternalBackend.dispatch (scripts/run_crew.py:1278-1310) builds no prompt at all -- the out-of-band caller does, outside this file. A cold plan critic caught this before dispatch.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "g2's authored scope in execute.json",
+      "evidence": "Cold plan critic finding (HIGH severity), verified by direct re-read of ExternalBackend.dispatch's own docstring/comments before the plan was frozen",
+      "reason": "Repair is evidence-led: the plan's anchors and imperative were corrected (to the registry-entry field + stderr banner, both genuinely inside scripts/run_crew.py) before g2 was dispatched, not after a failed attempt."
+    },
+    {
+      "id": "D-map-ids-zero",
+      "signal": "map/ids.jsonl is structurally empty (ids:0) repo-wide, even immediately after a fresh `python -m scripts.code_map build --root .` -- not specific to this work's area. Every map_orient.py orientation in this repo currently reads DEGRADED-UNPARSEABLE.",
+      "classification": "evidence_only",
+      "affects": "Every future run's map-first orientation step in this repo, not just this one",
+      "evidence": "map_orient.py orient output; a fresh code_map build's own JSON summary reporting \"ids\": 0",
+      "reason": "No issue is warranted from this run's own latitude; recorded as evidence for whoever owns the code_map/map_orient contract to decide whether ids.jsonl population is a live gap."
+    },
+    {
+      "id": "D-spine-bound-shell-false-failure",
+      "signal": "tests/test_mcp_identity.py::DC3InheritanceMechanismTests::test_launching_the_parent_never_touches_the_calling_processs_own_environ fails when the full suite is run inside THIS Commander's own shell, because this dispatch's own bound door (per --spine on the cli backend) has already set SPINE_FILE/SPINE_SESSION/SPINE_PARENT in the shell's real os.environ before pytest even starts -- unrelated to anything scripts/run_crew.py does inside the test.",
+      "classification": "evidence_only",
+      "affects": "How this Commander (and any future spine-bound Commander) must run the full suite for a clean baseline",
+      "evidence": "The test passes when run with `env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT`; fails identically, with the same assertion, when run in this shell as-is",
+      "reason": "No issue is warranted; the execute.json suite-check commands were amended (via the engine's retext-check verb, authority=commander) to strip those three vars, which is a run-local mechanical fix, not a doctrine change."
+    },
+    {
+      "id": "D-skip-count-drift",
+      "signal": "The full suite's skipped count moved from the 453f8492 baseline's 7 to 6 after this run's changes, unexplained by anything in this diff (which only adds tests and one docstring/print statement).",
+      "classification": "evidence_only",
+      "affects": "The precision of the before/after suite-count comparison in this run's own evidence",
+      "evidence": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q output, run twice (after g1, after g2), both showing 6 skipped",
+      "reason": "No issue is warranted from this run's latitude; likely a pre-existing conditional skip unrelated to this diff, recorded rather than silently absorbed into the pass-count comparison."
+    },
+    {
+      "id": "D-launch-order-anchor-imprecision",
+      "signal": "The launch order attributes the archive gate's relocation behavior to 'checklist_engine.py'; a direct grep found zero relocation code (shutil.move/rename/os.replace) in that file -- the actual mover is scripts/spine_lifecycle.py::close_work, invoked once at closeout, not per-gate.",
+      "classification": "evidence_only",
+      "affects": "Precision of future launch orders that describe this mechanism",
+      "evidence": "grep -n 'shutil.move|shutil.copy|.rename(|os.replace' scripts/spine_lifecycle.py scripts/checklist_engine.py -- three hits, all in spine_lifecycle.py",
+      "reason": "No issue is warranted; this run's fix target (scripts/run_crew.py) was correct regardless of the imprecision, so it did not affect the outcome -- recorded for the record, per the launch order's own instruction to verify the mechanism rather than trust it."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": ["scripts/run_crew.py"],
+    "map_status": "DEGRADED-UNPARSEABLE repo-wide (map/ids.jsonl empty even after a fresh code_map build) -- see D-map-ids-zero; context step discharged via declared substitutes (README.md, docs/CHECKLIST_ENGINE_DESIGN.md, docs/agents/CREW_CONTEXT.md)"
+  }
+}

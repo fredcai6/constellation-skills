@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-fix",
+  "mechanical": {
+    "run": "crew-verdict-and-door-g2",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 3,
+    "spine-step": "m2-fix",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-crew-verdict-and-door-g2-m2-fix@019e42a0e573128ebdf9a8ee9a03c2ef593c2427",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "crew-verdict-and-door-g2",
+    "generated_at": "2026-08-15T17:21:03Z"
+  }
+}
