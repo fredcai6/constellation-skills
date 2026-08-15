@@ -18,9 +18,10 @@ Design contract (frozen DESIGN_SPEC #138 channel B, D3):
   TERMINAL statuses (a second place that knows "what is terminal") in exchange
   for robustness in headless/subagent contexts and clean unit-testability.
 - Discovery is the PostToolUse hook's ONLY job: it watches Bash commands for the
-  engine's claim/release verbs and maintains a session->spine binding. It is NOT
-  a second source of mid-flight truth -- Stop always reads the spine file the
-  binding points at.
+  engine's claim/release verbs, AND the MCP spine door's own `spine_lease`
+  claim/release tool (#door-binding), and maintains a session->spine binding
+  from either source. It is NOT a second source of mid-flight truth -- Stop
+  always reads the spine file the binding points at.
 - Three registrations only (Stop, SessionStart, PostToolUse). No PreCompact.
 - 3-strike escape hatch so a genuinely stuck agent is never trapped.
 
@@ -51,6 +52,12 @@ _IS_WINDOWS = os.name == "nt"
 
 # The engine's terminal statuses, re-encoded here on purpose (see docstring).
 TERMINAL = {"complete", "skipped"}
+
+# The one MCP door tool capable of a claim/release (#door-binding). Narrow on
+# purpose: this repo's .mcp.json registers exactly one MCP server, "spine" --
+# widening to the whole mcp__spine__* namespace or to mcp__spine-epic__ (a
+# distinct, unregistered-in-this-repo tool name) is explicitly out of scope.
+DOOR_LEASE_TOOL_NAME = "mcp__spine__spine_lease"
 
 # --- stable marker substrings (asserted by tests; hook contract) -------------
 
@@ -736,6 +743,7 @@ PATH_SOURCE_CD_TARGET = "cd_target"
 PATH_SOURCE_PAYLOAD_CWD = "payload_cwd"
 PATH_SOURCE_GIT_WORKTREE = "git_worktree"
 PATH_SOURCE_PROJECT_DIR = "project_dir"
+PATH_SOURCE_DOOR_ENV = "door_env"
 
 # TOLD TRUTH vs GUESS (#440 g1b). The first three sources are the CALLER's own
 # statement of where it is -- an absolute --file, an absolute --worktree, a `cd`
@@ -1063,6 +1071,97 @@ def _is_valid_claim_target(abs_spine) -> bool:
         return False
 
 
+def _handle_door_lease(data: dict, project_dir: Path) -> dict:
+    """Maintain the session->spine binding from a DOOR-issued spine_lease
+    claim/release (`DOOR_LEASE_TOOL_NAME`) -- the second, additive binding-
+    writing source alongside the Bash `checklist_engine.py` path below.
+
+    The door call carries NO `--file`: `SPINE_FILE`/`SPINE_SESSION` are THIS
+    hook process's OWN environment, per `scripts/mcp_spine_server.py`'s
+    existing contract (`SPINE = Path(os.environ["SPINE_FILE"]).resolve()`),
+    so the claimed spine's absolute path is resolved from this process's own
+    environment -- never guessed from a candidate-root ladder the way the
+    Bash `--file` path is (decision:door-binding-source-of-truth). Reuses
+    `_is_valid_claim_target` UNCHANGED (#441's containment/readability
+    validator) -- no second validator.
+
+    Fail-open, always: a missing/non-dict `tool_input`, an unrecognized
+    `action`, an unresolved acting identity, or an unresolvable/out-of-tree
+    `SPINE_FILE` records no binding and raises nothing -- returns {}
+    unconditionally, same contract as `handle_post_tool_use`.
+    """
+    try:
+        tool_input = data.get("tool_input")
+        if not isinstance(tool_input, dict):
+            return {}
+        action = tool_input.get("action")
+        if action not in ("claim", "release"):
+            return {}
+        sid = data.get("session_id")
+        key = binding_key(data)
+        if key is None:
+            return {}  # unresolved identity -> bind nothing (fail closed)
+        file_val = os.environ.get("SPINE_FILE")
+        if not file_val:
+            return {}
+        try:
+            abs_spine = str(Path(file_val).resolve())
+        except Exception:
+            return {}
+
+        if action == "claim":
+            if not _is_valid_claim_target(abs_spine):
+                return {}
+            engine_session = os.environ.get("SPINE_SESSION")
+            worktree = _worktree_from_spine(abs_spine)
+            if not worktree:
+                return {}
+
+            def _door_claim_mutate(reaped, _abs_spine=abs_spine, _key=key,
+                                    _engine_session=engine_session, _worktree=worktree):
+                # Re-check under the lock (#441): the target may have moved
+                # or vanished between resolution above and lock acquisition.
+                if not _is_valid_claim_target(_abs_spine):
+                    return None
+                new_map = dict(reaped)
+                key_bindings = dict(new_map.get(_key) or {})
+                key_bindings[_abs_spine] = {
+                    "spine": _abs_spine,
+                    "engine_session": _engine_session,
+                    "worktree": _worktree,
+                    "claimed_at": _now_iso(),
+                    "path_source": PATH_SOURCE_DOOR_ENV,
+                }
+                new_map[_key] = key_bindings
+                return new_map
+
+            _binding_transaction(project_dir, _door_claim_mutate)
+        else:  # release -- SPINE_FILE is authoritative, no ladder needed
+            def _door_release_mutate(reaped, _key=key, _abs_spine=abs_spine):
+                new_map = dict(reaped)
+                key_bindings = dict(new_map.get(_key) or {})
+                if key_bindings and _abs_spine in key_bindings:
+                    key_bindings = dict(key_bindings)
+                    del key_bindings[_abs_spine]
+                    if key_bindings:
+                        new_map[_key] = key_bindings
+                    else:
+                        new_map.pop(_key, None)
+                return new_map
+
+            _binding_transaction(project_dir, _door_release_mutate)
+            # Same nudge-reset symmetry as the Bash release path: only for a
+            # TOP-LEVEL release (key == sid), never fragmented per-entry.
+            if key == sid:
+                nudges = load_nudges(project_dir)
+                if sid in nudges:
+                    del nudges[sid]
+                    save_nudges(project_dir, nudges)
+        return {}
+    except Exception:
+        return {}
+
+
 def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
     """Maintain the session->spine binding from engine claim/release commands.
 
@@ -1084,9 +1183,16 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
     atomic replace, closing the lost-update/torn-write window that an
     unlocked load-modify-save left open under concurrent writers.
 
+    A second, additive source now feeds the same store: a door-issued
+    `DOOR_LEASE_TOOL_NAME` claim/release (dispatched to `_handle_door_lease`
+    below, before any Bash command parsing) -- the Bash path below this
+    dispatch is otherwise untouched and unreached for a door payload.
+
     PostToolUse NEVER blocks -- always returns {}.
     """
     try:
+        if data.get("tool_name") == DOOR_LEASE_TOOL_NAME:
+            return _handle_door_lease(data, project_dir)
         command = ((data.get("tool_input") or {}).get("command")) or ""
         if not command:
             return {}
