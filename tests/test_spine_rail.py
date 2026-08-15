@@ -2690,3 +2690,213 @@ def test_post_tool_use_never_raises_on_junk(proj):
         assert sr.handle_post_tool_use(row, proj) == {}, row
     print("fuzz rows returning {} without raising: %d" % len(rows))
     assert len(rows) >= 12
+
+
+# --- door path: mcp__spine__spine_lease claim/release (#door-binding) -------
+#
+# The MCP door carries no --file: it reads SPINE_FILE/SPINE_SESSION from its
+# OWN environment (scripts/mcp_spine_server.py: SPINE = Path(os.environ
+# ["SPINE_FILE"]).resolve()), and this hook process shares that environment.
+# So the door path resolves the claimed spine from THIS process's own
+# SPINE_FILE, never from tool_input or a candidate-root ladder.
+
+DOOR_TOOL = "mcp__spine__spine_lease"
+
+
+def _door(action, session_id="s1", cwd=None, tool_input="__default__"):
+    data = {"session_id": session_id, "tool_name": DOOR_TOOL}
+    data["tool_input"] = {"action": action} if tool_input == "__default__" else tool_input
+    if cwd:
+        data["cwd"] = cwd
+    return data
+
+
+def test_stop_door_claimed_mid_flight_blocks(proj, monkeypatch):
+    """RED/GREEN: a door-issued claim (mcp__spine__spine_lease, action=claim)
+    must record a binding just like the Bash checklist_engine.py claim path,
+    so a mid-flight spine claimed through the door is refused at Stop -- same
+    assertion shape as test_stop_mid_flight_blocks_with_substrings."""
+    spine = make_spine([("g1", "in-progress")], imperatives={"g1": "finish the door work"})
+    sp = write_spine(proj, spine, journal_lines=2)
+    monkeypatch.setenv("SPINE_FILE", sp)
+    monkeypatch.setenv("SPINE_SESSION", "eng-9")
+    out = sr.handle_post_tool_use(_door("claim", cwd=str(proj)), proj)
+    assert out == {}
+    result = sr.decide_stop({"session_id": "s1"}, proj)
+    assert result.get("decision") == "block"
+    reason = result.get("reason", "")
+    assert "SPINE MID-FLIGHT" in reason
+    assert "g1" in reason
+
+
+def test_post_door_claim_writes_binding(proj, monkeypatch):
+    """GREEN: the door claim writes a binding entry equivalent in shape to the
+    Bash-path entry (spine, engine_session, worktree, claimed_at, path_source)."""
+    abs_spine = put_checklist(proj, "run1")
+    monkeypatch.setenv("SPINE_FILE", abs_spine)
+    monkeypatch.setenv("SPINE_SESSION", "eng-42")
+    out = sr.handle_post_tool_use(_door("claim", cwd=str(proj)), proj)
+    assert out == {}
+    got_path, entry = _only_entry(proj)
+    assert got_path == abs_spine
+    assert entry["spine"] == abs_spine
+    assert entry["engine_session"] == "eng-42"
+    assert entry["worktree"] == str(proj)
+    assert entry["claimed_at"]
+    assert entry["path_source"] == sr.PATH_SOURCE_DOOR_ENV
+
+
+def test_post_door_claim_records_absent_spine_session_as_is(proj, monkeypatch):
+    """SPINE_SESSION may be empty/absent -- record whatever is actually
+    present, never fabricate a value."""
+    abs_spine = put_checklist(proj, "run1")
+    monkeypatch.setenv("SPINE_FILE", abs_spine)
+    monkeypatch.delenv("SPINE_SESSION", raising=False)
+    sr.handle_post_tool_use(_door("claim", cwd=str(proj)), proj)
+    _, entry = _only_entry(proj)
+    assert entry["engine_session"] is None
+
+
+def test_post_door_release_removes_binding_and_nudge(proj, monkeypatch):
+    """GREEN: a door release removes the exact abs_spine entry it claimed,
+    mirroring test_post_release_deletes_binding_and_nudge."""
+    abs_spine = put_checklist(proj, "run1")
+    monkeypatch.setenv("SPINE_FILE", abs_spine)
+    monkeypatch.setenv("SPINE_SESSION", "eng-9")
+    sr.save_nudges(proj, {"s1": {"count": 2, "journal_seq": 1, "active_id": "g1"}})
+    sr.handle_post_tool_use(_door("claim", cwd=str(proj)), proj)
+    out = sr.handle_post_tool_use(_door("release", cwd=str(proj)), proj)
+    assert out == {}
+    assert "s1" not in sr.load_binding(proj)
+    assert "s1" not in sr.load_nudges(proj)
+
+
+# --- CONTROL: legitimate door-claimed turn-ends must NOT be refused ---------
+
+def test_stop_door_claimed_terminal_released_lease_allows(proj, monkeypatch):
+    spine = make_spine([("g1", "complete")], lease_status="released")
+    sp = write_spine(proj, spine)
+    monkeypatch.setenv("SPINE_FILE", sp)
+    monkeypatch.setenv("SPINE_SESSION", "eng-9")
+    sr.handle_post_tool_use(_door("claim", cwd=str(proj)), proj)
+    assert _only_entry(proj)[0] == sp
+    assert sr.decide_stop({"session_id": "s1"}, proj) == {}
+
+
+def test_stop_door_claimed_foreign_worktree_not_blocked(proj, monkeypatch):
+    sub = proj / "subwt"
+    subspine = write_spine(sub, make_spine([("g1", "in-progress")]), journal_lines=1)
+    monkeypatch.setenv("SPINE_FILE", subspine)
+    monkeypatch.setenv("SPINE_SESSION", "eng-9")
+    sr.handle_post_tool_use(_door("claim", session_id="shared", cwd=str(sub)), proj)
+    sid_bindings = sr.load_binding(proj)["shared"]
+    assert len(sid_bindings) == 1
+    entry = next(iter(sid_bindings.values()))
+    assert entry["worktree"] == str(sub)
+    # PARENT stops from the PARENT worktree -> foreign -> NOT blocked.
+    out = sr.decide_stop({"session_id": "shared", "cwd": str(proj)}, proj)
+    assert out == {}
+
+
+def test_stop_door_claimed_unreadable_spine_allows(proj, monkeypatch):
+    spine = make_spine([("g1", "in-progress")])
+    sp = write_spine(proj, spine, journal_lines=1)
+    monkeypatch.setenv("SPINE_FILE", sp)
+    monkeypatch.setenv("SPINE_SESSION", "eng-9")
+    sr.handle_post_tool_use(_door("claim", cwd=str(proj)), proj)
+    assert _only_entry(proj)[0] == sp  # bound while readable
+    os.remove(sp)  # then the spine vanishes
+    assert sr.decide_stop({"session_id": "s1"}, proj) == {}
+
+
+def test_stop_door_claimed_blocked_status_honest_stop_allows(proj, monkeypatch):
+    spine = make_spine([("g1", "blocked")])
+    sp = write_spine(proj, spine)
+    monkeypatch.setenv("SPINE_FILE", sp)
+    monkeypatch.setenv("SPINE_SESSION", "eng-9")
+    sr.handle_post_tool_use(_door("claim", cwd=str(proj)), proj)
+    assert _only_entry(proj)[0] == sp
+    assert sr.decide_stop({"session_id": "s1"}, proj) == {}
+
+
+# --- fail-open: a malformed door payload records nothing and never raises ---
+
+def test_post_door_claim_missing_tool_input_records_nothing(proj, monkeypatch):
+    abs_spine = put_checklist(proj, "run1")
+    monkeypatch.setenv("SPINE_FILE", abs_spine)
+    data = {"session_id": "s1", "tool_name": DOOR_TOOL}
+    out = sr.handle_post_tool_use(data, proj)
+    assert out == {}
+    assert sr.load_binding(proj) == {}
+
+
+def test_post_door_claim_non_dict_tool_input_records_nothing(proj, monkeypatch):
+    abs_spine = put_checklist(proj, "run1")
+    monkeypatch.setenv("SPINE_FILE", abs_spine)
+    out = sr.handle_post_tool_use(_door("claim", tool_input="not-a-dict"), proj)
+    assert out == {}
+    assert sr.load_binding(proj) == {}
+
+
+def test_post_door_claim_missing_action_records_nothing(proj, monkeypatch):
+    abs_spine = put_checklist(proj, "run1")
+    monkeypatch.setenv("SPINE_FILE", abs_spine)
+    out = sr.handle_post_tool_use(_door("claim", tool_input={}), proj)
+    assert out == {}
+    assert sr.load_binding(proj) == {}
+
+
+def test_post_door_claim_unrecognized_action_records_nothing(proj, monkeypatch):
+    abs_spine = put_checklist(proj, "run1")
+    monkeypatch.setenv("SPINE_FILE", abs_spine)
+    out = sr.handle_post_tool_use(_door("heartbeat"), proj)
+    assert out == {}
+    assert sr.load_binding(proj) == {}
+
+
+def test_post_door_claim_missing_spine_file_records_nothing(proj, monkeypatch):
+    monkeypatch.delenv("SPINE_FILE", raising=False)
+    out = sr.handle_post_tool_use(_door("claim"), proj)
+    assert out == {}
+    assert sr.load_binding(proj) == {}
+
+
+def test_post_door_claim_non_checklist_spine_file_records_nothing(proj, monkeypatch):
+    junk = proj / ".agent-work" / "run1" / "gauge.json"
+    junk.parent.mkdir(parents=True, exist_ok=True)
+    junk.write_text(json.dumps({"not": "a checklist"}), encoding="utf-8")
+    monkeypatch.setenv("SPINE_FILE", str(junk))
+    out = sr.handle_post_tool_use(_door("claim"), proj)
+    assert out == {}
+    assert sr.load_binding(proj) == {}
+
+
+def test_post_door_claim_spine_file_outside_agent_work_records_nothing(proj, monkeypatch):
+    outside = proj / "elsewhere.json"
+    outside.write_text(_checklist_json(), encoding="utf-8")
+    monkeypatch.setenv("SPINE_FILE", str(outside))
+    out = sr.handle_post_tool_use(_door("claim"), proj)
+    assert out == {}
+    assert sr.load_binding(proj) == {}
+
+
+def test_post_door_never_raises_on_junk(proj, monkeypatch):
+    """Fuzz sibling to test_post_tool_use_never_raises_on_junk for the door
+    shape specifically."""
+    abs_spine = put_checklist(proj, "run1")
+    rows = [
+        {"session_id": "s1", "tool_name": DOOR_TOOL},
+        {"session_id": "s1", "tool_name": DOOR_TOOL, "tool_input": None},
+        {"session_id": "s1", "tool_name": DOOR_TOOL, "tool_input": []},
+        {"session_id": "s1", "tool_name": DOOR_TOOL, "tool_input": {"action": None}},
+        {"session_id": "s1", "tool_name": DOOR_TOOL, "tool_input": {"action": "claim"}},
+        {"tool_name": DOOR_TOOL, "tool_input": {"action": "claim"}},
+        {"session_id": None, "tool_name": DOOR_TOOL, "tool_input": {"action": "claim"}},
+    ]
+    assert len(rows) >= 7
+    for row in rows:
+        monkeypatch.delenv("SPINE_FILE", raising=False)
+        assert sr.handle_post_tool_use(row, proj) == {}, row
+    monkeypatch.setenv("SPINE_FILE", abs_spine)
+    for row in rows:
+        assert sr.handle_post_tool_use(row, proj) == {}, row

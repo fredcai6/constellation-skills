@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-control-failopen",
+  "mechanical": {
+    "run": "stop-hook-door-binding-g1",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m3-control-failopen",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-stop-hook-door-binding-g1-m3-control-failopen@8e408073ebd4b8c0421fe1450d5e2426f5459252",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "stop-hook-door-binding-g1",
+    "generated_at": "2026-08-15T22:37:49Z"
+  }
+}

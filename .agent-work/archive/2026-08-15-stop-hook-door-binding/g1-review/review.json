@@ -1,0 +1,182 @@
+{
+  "work_id": "stop-hook-door-binding",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md excerpt, handoff, and full diff (3 files: settings.json, spine_rail.py, test_spine_rail.py).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Handoff task fully satisfied: _handle_door_lease dispatched before Bash parsing on tool_name==mcp__spine__spine_lease; resolves SPINE_FILE/SPINE_SESSION from this process's own env (not tool_input); reuses _is_valid_claim_target unchanged (byte-identical, confirmed by hash diff). RED genuinely reproduced independently (git stash push spine_rail.py -> test_stop_door_claimed_mid_flight_blocks fails with 'assert None == block' i.e. decide_stop returns {} pre-fix; 8/16 door tests fail pre-fix; stash pop -> 139 passed/1 skipped GREEN). Claim writes binding shape-equivalent to Bash path (spine/engine_session/worktree/claimed_at/path_source=door_env). Release removes exactly that entry + resets nudge ledger on top-level release (key==sid), mirrored Bash symmetry.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status --porcelain shows exactly 3 modified files (settings.json, spine_rail.py, test_spine_rail.py) + my own untracked .agent-work scratch dir; git diff --stat against all 6 excluded files is empty. .claude/settings.json: Stop/SessionStart/gauge_writer_hook entries verified byte-for-byte equal (dict equality) between HEAD and working tree; exactly one new PostToolUse entry added with matcher 'mcp__spine__spine_lease' (not namespace, not '*'), identical command/shell/timeout shape to the Bash entry. .mcp.json confirmed to register exactly one MCP server ('spine'), so the narrow matcher (not mcp__spine-epic__) is correct per the handoff's settle condition.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Full suite: 139 passed, 1 skipped (matches IMPLEMENTER_RESULT claim exactly, independently re-run). RED: git stash push spine_rail.py -> pytest -k door -> 8/16 fail including the core test_stop_door_claimed_mid_flight_blocks (assert None==block, i.e. decide_stop returns {} pre-fix) -> stash pop -> 139 passed/1 skipped GREEN restored. CONTROL: all 4 named cases present as passing tests (terminal+released lease, foreign worktree, unreadable/malformed spine, blocked-status honest stop) -- verified via pytest -k door -v, 16/16 passed. Fail-open: 7 distinct malformed-shape tests (missing tool_input, non-dict tool_input, missing action, unrecognized action, missing SPINE_FILE, non-checklist SPINE_FILE, SPINE_FILE outside .agent-work) plus one combined fuzz test (test_post_door_never_raises_on_junk, 7 rows x 2 SPINE_FILE states). Bash-path-unchanged: git diff --numstat shows spine_rail.py +105/-0 and test_spine_rail.py +209/-0 (zero deletions, additive-only); decide_stop/_mid_flight_reason/decide_session_start hashed byte-identical between HEAD and working tree; new dispatch only triggers on tool_name=='mcp__spine__spine_lease', and Bash payloads carry tool_name=='Bash' so the Bash path is structurally unreachable from the new branch.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fail-open: every early-return path in _handle_door_lease returns {}, and the whole body is wrapped in try/except Exception: return {} -- matches handle_post_tool_use's own outer contract. No new subprocess (grep for 'subprocess' in the diff: no hits). No new imports (grep for '^+import|^+from' in the diff: no hits) -- stdlib-only preserved. Naming/doc conventions match surroundings: DOOR_LEASE_TOOL_NAME sits with the module's other top-level constants, PATH_SOURCE_DOOR_ENV extends the existing PATH_SOURCE_* enum-by-convention in place, docstring density/style matches _is_valid_claim_target/binding_key's existing rationale-heavy style. CREW_CONTEXT verification-discipline rules: RED demonstrated (not just claimed) via independent stash/pop; assertions are behavior-based (out=={}, load_binding()=={}, decision/reason fields) not text-of-description based. Minor non-blocking observation: test_post_door_never_raises_on_junk's fuzz loop has no len(rows) assertion the way the existing sibling test_post_tool_use_never_raises_on_junk does (assert len(rows) >= 12) -- low risk since rows is a 7-item literal, not a derived/filtered collection that could silently go empty; noting as out-of-scope observation, not a blocker.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No packet-level structural map exists for this area (map/INDEX.md DEGRADED-UNPARSEABLE per the handoff, already a recorded triage candidate -- not this review's job to fix). The change is purely additive to the session->spine binding capability (a second, additive feed alongside the existing Bash checklist_engine.py path) and does not alter decide_stop/_mid_flight_reason/decide_session_start's decision surface, so no reconciliation with recorded architecture is needed. The one 'guess'-graded decision anchor in the handoff (matcher scope: mcp__spine__spine_lease vs a hypothetical mcp__spine-epic__) has its settle condition already verified true this session (.mcp.json registers exactly one server, 'spine') -- no authority escalation required, the guess resolves cleanly to the shipped matcher. No decision candidates surfaced needing Commander authority.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged standard + reason. Record the pass to .agent-work/stop-hook-door-binding/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/stop-hook-door-binding/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/stop-hook-door-binding/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded to .agent-work/stop-hook-door-binding/FOWLER_PASS.json; verify_fowler_pass.py exits 0 (smells=12, flagged=[], overridden=['duplicated-code']). All 12 baseline smells given a verdict. Only real finding: duplicated-code between the new door-path claim/release mutator closures and the existing Bash-path _claim_mutate/_release_mutate (shared 5-key binding-entry shape, shared nudge-reset block) -- overridden with a logged standard+reason: global-crew.md's minimal-change/no-speculative-abstraction rule plus the handoff's explicit non-negotiable that the Bash path stay behavior-unchanged; extracting a shared helper would restructure already-shipped, tested Bash code for a small line-count win the handoff scoped out. All other smells absent.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "fowler-pass",
+          "payload": {
+            "path": ".agent-work/stop-hook-door-binding/FOWLER_PASS.json"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/stop-hook-door-binding/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "All 7 checks pass. RED independently reproduced (mid-flight door-claim not refused pre-fix), GREEN restored (139 passed/1 skipped). CONTROL (4 cases), fail-open (7 malformed shapes + fuzz), and Bash-path-unchanged all diff/hash-verified. Scope exact (3 files), exclusions clean, settings.json diff exactly the one specified matcher entry. Fowler pass: duplicated-code overridden with logged reason (minimal-change doctrine + Bash-path-frozen constraint); all other smells absent. One non-blocking observation: fuzz test lacks a len(rows) assertion."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/stop-hook-door-binding/g1-review/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-15T22:45:16.692467+00:00",
+    "last_heartbeat": "2026-08-15T22:49:57.449458+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-15T22:49:59.997680+00:00"
+  }
+}

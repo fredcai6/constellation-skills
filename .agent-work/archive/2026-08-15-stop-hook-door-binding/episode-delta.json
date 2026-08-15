@@ -1,0 +1,169 @@
+{
+  "work_id": "stop-hook-door-binding",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "stop-hook-door-binding",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": ".agent-work/stop-hook-door-binding/MISSION_FRAME.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "scripts/hooks/spine_rail.py",
+          "tests/test_spine_rail.py",
+          ".claude/settings.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Closed the Stop hook's mid-flight refusal gap for a spine claimed through the MCP door instead of a Bash checklist_engine.py command."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "decide_stop and _mid_flight_reason needed no change; only a second binding-recording source was expected to be missing from handle_post_tool_use."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "handle_post_tool_use recognized only a Bash checklist_engine.py claim/release command; a door-issued spine_lease claim recorded no binding, so decide_stop allowed a mid-flight turn-end silently. A second dispatch path (tool_name == \"mcp__spine__spine_lease\", resolving the claimed spine from this process's own SPINE_FILE/SPINE_SESSION environment) closed the gap without touching decide_stop or _mid_flight_reason, matching the diagnosis exactly. RED was reproduced independently twice -- once by this Commander and once by the dispatched reviewer, each via git stash push/pop isolating scripts/hooks/spine_rail.py alone -- and both reproductions failed genuinely against the pre-fix code."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The gap this run closed was cited, in the launch order's own evidence, as the mechanism behind six lost Commander dispatches earlier the same day, each costing a full dispatch."
+        },
+        "workaround": {
+          "strength": "weak",
+          "statement": "No workaround was needed for the core fix -- it landed cleanly on the first implementer attempt, with both RED reproductions and all CONTROL/fail-open cases passing on that same attempt."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "stop-hook-door-binding",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": ".agent-work/stop-hook-door-binding/spine.json",
+        "refusals": 3,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/stop-hook-door-binding/execute.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Drove one continuous session through both the parent spine (init through archive) and the child execute.json (e0-context through g1-integrate) without ending the turn mid-spine."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A gauge HARD trip (fill fraction over the model's hard-cap threshold) was expected to resolve by filing a refresh-request and continuing to work the already-open gate, per the engine's own printed recovery recipe."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The HARD-trip advisory repeatedly instructed filing a refresh-request, starting the guarded gate, closing it with a handoff, and then stopping the turn entirely so a fresh agent could pick up from the DIGEST -- first at a fill fraction of 0.218 against sonnet-5's hard cap of 0.15 with the gate's own context-headroom reserve applied, then again at each later gate start. This session's own registry entry recorded a real OS PID under the \"cli\" backend, and no addressable relaunching agent was found (a live-agent listing showed no reachable admiral-post-568) -- the same headless, turn-exits-the-process shape this run's own launch order named as unrecoverable."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The engine's trip mechanism and this run's own do-not-park mandate pointed in opposite directions at three separate gate boundaries; neither doctrine named the other, so the choice between them was made in-session rather than by a rule either doctrine stated."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The chosen path filed a refresh-request at each HARD-trip refusal, started the guarded gate under the released trip, and continued the same turn rather than ending it, on the reasoning that this session's own dispatch shape made stopping strictly worse than continuing -- a judgment call, not a rule this episode is asserting for a future run."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "stop-hook-door-binding",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": ".agent-work/stop-hook-door-binding/crew-handoffs/g1-review-reviewer-result.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 2,
+        "artifact-ref": [
+          "scripts/install_constellation.py",
+          "tests/test_install_constellation.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Ran the full clean-env suite after the door-binding fix landed, per the launch order's evidence bar."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The three named files (spine_rail.py, test_spine_rail.py, the PostToolUse block of settings.json) were expected to be sufficient for a 0-failed suite."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Adding a second PostToolUse entry for spine_rail.py -- a new matcher, an identical command string to the existing Bash-matcher entry -- broke two things outside the named file-ownership fence. install_constellation.HOOK_SPECS, a hand-maintained table a drift-detector test holds byte-identical to .claude/settings.json, had no entry for the new matcher. add_hook_entry's dedup-on-write, scoped to command-string-alone across an entire event, silently dropped the second registration during --wire-hooks, because both entries built the identical command string. Two further tests carried hardcoded literal counts that the fifth spec broke."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Five tests failed on the first full-suite run after the door-binding fix landed clean at the targeted-suite level; a second full-suite run after the cascading fix confirmed 0 failed, at exactly baseline plus the sixteen new door-path tests."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The fix added the missing HookSpec entry, rescoped add_hook_entry's dedup key from command-alone to the (matcher, command) pair, and updated the two hardcoded counts to the dynamic len(installer.HOOK_SPECS) pattern the same file already used elsewhere -- mechanical and minimal, and floated explicitly at this run's review step rather than left implicit in the diff."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "A settings.json hook table and its installer-side mirror were held together by a test that compares full entries, while the installer's own write path deduplicated by a narrower key (command text alone) that happened to be sufficient for every spec that existed before this run added a second spec sharing a script and event."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "stop-hook-door-binding",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": ".agent-work/stop-hook-door-binding/crew-handoffs/g1-review-handoff.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": []
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "medium",
+          "statement": "Dispatched an independent reviewer crew for g1 via run_crew.py with --handoff/--result only, no --spine."
+        },
+        "expected-behavior": {
+          "strength": "weak",
+          "statement": "The reviewer was expected to get either no spine binding at all, or a binding scoped to its own review."
+        },
+        "observed-behavior": {
+          "strength": "medium",
+          "statement": "The reviewer's process environment carried this Commander's own SPINE_FILE/SPINE_SESSION -- the parent's execute-step bound spine -- because a run_crew.py dispatch without --spine does not rebind the door for the child. The reviewer declined to drive the MCP door against that inherited binding, since doing so would have mutated the Commander's own execute gate, and fell back to its own CLI-driven survey file at the path the handoff named, per the reviewer skill's documented fallback."
+        },
+        "impact-cost": {
+          "strength": "weak",
+          "statement": "No incorrect state resulted this run; the reviewer's own returned result named the mismatch and the fallback path it took, unprompted."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The reviewer's own fallback resolved it without commander intervention; this run recorded the gap as a recommend-and-defer triage candidate rather than editing crew-dispatch.md, which sits outside this run's file-ownership fence."
+        }
+      }
+    }
+  ]
+}

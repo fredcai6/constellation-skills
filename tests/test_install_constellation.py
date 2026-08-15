@@ -2851,7 +2851,9 @@ class AllFourHookWiringTests(_MultiHookFixture):
         with tempfile.TemporaryDirectory() as tmp:
             self._run(tmp, "--wire-hooks", "--hooks", "all")
             written = self._all_commands(self._settings_json(tmp))
-            self.assertEqual(4, len(written), "nothing was wired, so nothing was run")
+            self.assertEqual(
+                len(installer.HOOK_SPECS), len(written), "nothing was wired, so nothing was run"
+            )
 
             # A real project dir carrying a MID-FLIGHT spine (an in-progress
             # gate under an active lease) plus a binding for it under
@@ -3033,13 +3035,16 @@ class SourceTreeHookWiringTests(_MultiHookFixture):
             self.assertEqual(before, shared.read_bytes())
 
     def test_the_source_wired_commands_actually_execute(self):
+        installer = load_installer()
         with tempfile.TemporaryDirectory() as tmp:
             self._run(tmp, "--wire-hooks", "--hooks", "all", "--hooks-from", "source")
             commands = [
                 c for c, _ in
                 self._all_commands(self._settings_json(tmp, "settings.local.json")).values()
             ]
-            self.assertEqual(4, len(commands), "nothing was wired, so nothing was run")
+            self.assertEqual(
+                len(installer.HOOK_SPECS), len(commands), "nothing was wired, so nothing was run"
+            )
             for command in commands:
                 result = subprocess.run(
                     command, shell=True, input="{}", capture_output=True, text=True,

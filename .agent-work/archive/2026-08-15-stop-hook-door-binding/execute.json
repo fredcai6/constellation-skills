@@ -1,0 +1,398 @@
+{
+  "work_id": "stop-hook-door-binding",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md (docs/agents/engine-config.json does not exist in this repo -- already substituted at the spine's context step). Confirm the frozen plan's intent and scope (MISSION_FRAME.md), then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + mission frame intent/scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Global doctrine, project overlays, and MISSION_FRAME.md intent/scope already read/confirmed at the parent spine's context/plan steps this run."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-e0-context-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "e0-context"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "door binding: record MCP door claim/release, narrow PostToolUse matcher, RED+CONTROL+fail-open tests",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, and the inbound map anchors from this gate's anchors block. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence: attach g1-implement --type implementer-result --field status=<value>, where status is the exact field this gate's c1 postcondition matches and <value> is copied verbatim from the returned IMPLEMENTER_RESULT's own Return status field, lowercase.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan approved; mission frame produced",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "plan approved (user-decision e-plan-1 on parent spine); MISSION_FRAME.md produced (FRAME-OK)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-2"
+        }
+      ],
+      "constraints": [
+        "Fail-open, always: a malformed or unrecognized door payload records no binding and raises nothing.",
+        "No new subprocesses on the PostToolUse path.",
+        "_mid_flight_reason and decide_stop are NOT edited -- if the plan requires editing them, stop and report; the diagnosis was wrong.",
+        "The Bash checklist_engine.py claim/release path is entirely unchanged in behavior -- every existing tests/test_spine_rail.py Bash-path assertion must still pass unmodified.",
+        "File ownership: only scripts/hooks/spine_rail.py, tests/test_spine_rail.py, and the PostToolUse block of .claude/settings.json. Do not touch scripts/checklist_engine.py, scripts/run_crew.py, scripts/apply_episode_delta.py, scripts/verify_episode_observations.py, scripts/hooks/gauge_writer_hook.py, .mcp.json, or .worktrees/episode-guard-at-write/.",
+        "Do not reorder, retime, or otherwise touch the Stop, SessionStart, or gauge_writer_hook entries of .claude/settings.json -- only add to the PostToolUse block.",
+        "Prefer a narrow matcher over '*': register only the door tool name(s) actually capable of a claim/release (mcp__spine__spine_lease), not the whole mcp__spine__* namespace."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/hooks/spine_rail.py -- handle_post_tool_use (binding writer, ~line 1066), decide_stop/_mid_flight_reason (Stop refusal, ~line 1197, untouched), _is_valid_claim_target (claim-target validator, reuse unchanged)",
+          ".claude/settings.json -- PostToolUse block",
+          "tests/test_spine_rail.py -- existing Bash-path binding tests, must not move"
+        ],
+        "capability": [
+          "session->spine binding store (handle_post_tool_use / decide_stop) -- gains a second, additive recording source"
+        ],
+        "constraint": [
+          "fail-open contract (spine_rail.py module docstring, lines 9-19)",
+          "no new subprocess on the PostToolUse path (spine_rail.py:809)"
+        ],
+        "decision": [
+          "door-binding source of truth: resolve the claimed spine path from this process's own SPINE_FILE/SPINE_SESSION environment (the door takes no --file argument), reusing _is_valid_claim_target unchanged. @grade: settled/measured \u00b7 leans g1-implement \u00b7 settle: confirmed against scripts/mcp_spine_server.py's own SPINE_FILE read and this hook's existing CLAUDE_PROJECT_DIR-from-os.environ precedent",
+          "matcher scope: mcp__spine__spine_lease only -- this repo's .mcp.json registers exactly one MCP server (spine); no mcp__spine-epic__ tool is reachable from this repo's own configuration. @grade: guess \u00b7 leans g1-implement,g2-review \u00b7 settle: if a later run finds mcp__spine-epic__ reachable from this repo's own configuration, add its tool name to the matcher then"
+        ],
+        "evidence": [
+          "RED: a door-claimed spine with an open gate, at turn end, is refused by decide_stop, and demonstrably was not refused before this change",
+          "CONTROL: a legitimate turn end (terminal spine + released lease; foreign spine; unreadable/malformed spine; honestly-blocked gate) is not refused",
+          "fail-open proof: a door payload the handler cannot parse leaves the turn unblocked and raises nothing",
+          "Bash path unchanged: existing tests/test_spine_rail.py Bash-path tests pass unmodified"
+        ],
+        "confidence_flags": [
+          "map/INDEX.md is DEGRADED-UNPARSEABLE for this area -- no packet map exists; proceed on direct source read, flagged as a triage candidate at this run's triage step, not silently trusted"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-implement",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "door binding: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, the inbound map anchors from this gate's anchors block, and the evidence from IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received and independently verified this turn."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors, with particular attention to the RED/CONTROL/fail-open evidence bar and the Bash-path-unchanged constraint"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-review",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "door binding: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's side-effects against the world yourself -- re-run the targeted test command, confirm RED/CONTROL/fail-open tests exist and pass, confirm the Bash-path tests are unmodified in assertions, then advance this gate (a command-kind postcondition is satisfied by advance re-running the check, not by attest). BLOCK: send the implementer back for rework or raise a blocker if the gate is unresolvable. Log any out-of-scope finds as triage candidates (e.g. the DEGRADED map, the mcp__spine-epic__ open question).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received (APPROVE), integrated."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "targeted spine_rail test module passes (RED+CONTROL+fail-open+Bash-path-unchanged all present)",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_spine_rail.py"
+          },
+          "override_policy": {
+            "allowed": false
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-3"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2",
+          "attested": {
+            "evidence": "e-g1-review-2",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-integrate",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_spine_rail.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_spine_rail.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "noop",
+    "status": "active",
+    "claimed_at": "2026-08-15T22:59:22.470133+00:00",
+    "last_heartbeat": "2026-08-15T22:59:22.470133+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "e0-context",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.218,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-15T22:20:57.723993+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "e0-context",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2386,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-15T22:23:11.356545+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "g1-implement",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2412,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-1",
+      "ts": "2026-08-15T22:25:29.561607+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.3032,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-15T22:42:08.232583+00:00"
+    },
+    {
+      "id": "tl-5",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3032,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-15T22:42:12.557619+00:00"
+    },
+    {
+      "id": "tl-6",
+      "gate": "g1-integrate",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3195,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-15T22:57:27.794764+00:00"
+    }
+  ],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "RESUME BRIEF for stop-hook-door-binding. Parent spine.json: at execute step (in-progress), claimed via MCP door lease constellation/stop-hook-door-binding/execute/commander -- use the mcp__spine__ tools (no session-id arg, door reads SPINE_FILE/SPINE_SESSION from env) to drive it. execute.json (this child checklist) is driven via CLI: python scripts/checklist_engine.py --file .agent-work/stop-hook-door-binding/execute.json <verb> --session-id commander-stop-hook-door-binding-execute. e0-context closing now (mechanical, no new understanding). NEXT: g1-implement -- run python scripts/recover_crews.py stop-hook-door-binding first, then fill templates/IMPLEMENTER_HANDOFF.template.md from g1-implement anchors/constraints already authored in execute.json (door-binding recognition in scripts/hooks/spine_rail.py handle_post_tool_use via tool_name==mcp__spine__spine_lease + action claim/release, resolving abs_spine from os.environ SPINE_FILE/engine_session from SPINE_SESSION since the door carries no --file, reusing _is_valid_claim_target unchanged; narrow PostToolUse matcher mcp__spine__spine_lease added to .claude/settings.json alongside the existing Bash entry, Stop/SessionStart/gauge_writer untouched; RED+CONTROL+fail-open+Bash-path-unchanged tests in tests/test_spine_rail.py), dispatch via scripts/run_crew.py (foreground/blocking, never hand-launch), wait actively (poll, never end-turn-to-wait), integrate IMPLEMENTER_RESULT. Then g1-review (dispatch reviewer), g1-integrate (re-verify targeted pytest -q tests/test_spine_rail.py myself, confirm RED/CONTROL/fail-open present and passing, confirm Bash-path tests unmodified in assertions, advance). Design decisions already settled, do not re-litigate: door path resolves spine via SPINE_FILE/SPINE_SESSION env (mcp_spine_server.py precedent); matcher scoped to mcp__spine__spine_lease only, NOT mcp__spine-epic__ (this repos .mcp.json registers only one MCP server \"spine\" -- confirmed, not guessed). Pre-change baseline suite already captured via the LAUNCH_ORDER blocking nohup+until idiom (worked, no backgrounding): 3031 passed, 6 skipped, 1136 subtests, matches main@2c46cab8 exactly -- re-run this same full suite after g1-integrate closes, before archive, as the required run-level evidence. After g1-integrate: parent spine reconcile (dispatch Cartographer or reasoned no-op since no packet map -- fold into nothing, record reasoned no-op) -> triage (drain: DEGRADED map/INDEX.md stale per-module pages as filed/recommend-and-defer; the archived .agent-work/archive/2026-08-15-launcher-hygiene/triage-candidates/stop-hook-binding-gap-for-mcp-door-sessions.md is RESOLVED by this run, note it; mcp__spine-epic__ open question as recommend-and-defer) -> review (summarize, cite LAUNCH_ORDER) -> feedback (episodes via scripts/apply_episode_delta.py --store-root episodes, verify via verify_episode_captured.py, commit; this repos own guard: past tense, no bare-verb clause openers in workaround/proposed-remedy kinds, double-quote any verbatim apostrophe-bearing quote) -> archive (regenerate map: python -m scripts.code_map build --root . , commit if it moves; execute steps own REPLAN_INPUT.json at .agent-work/stop-hook-door-binding/REPLAN_INPUT.json still needs writing per ../constellation-replan/templates/REPLAN_INPUT.template.json before the parent execute step closes, verified by scripts/verify_iterative_role_artifacts.py commander --work-id stop-hook-door-binding; write it once g1 closes -- classify any discrepancy, none expected yet; STATE_NOTE.md at .agent-work/stop-hook-door-binding/STATE_NOTE.md must be rewritten before each detached dispatch). File ownership fence: only scripts/hooks/spine_rail.py, tests/test_spine_rail.py, PostToolUse block of .claude/settings.json -- nothing else. Do not edit _mid_flight_reason/decide_stop. Push + open PR at the end; Admiral merges, this run does not.",
+      "mechanical": false,
+      "ts": "2026-08-15T22:23:45.989785+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "IMPLEMENTER_RESULT complete, verified against the world: git diff confirms scripts/hooks/spine_rail.py (+105 lines, additive _handle_door_lease dispatched before Bash parsing, decide_stop/_mid_flight_reason untouched), tests/test_spine_rail.py (+209 lines, 16 new tests), .claude/settings.json (1-line PostToolUse array addition, matcher exactly mcp__spine__spine_lease, Stop/SessionStart/gauge_writer untouched). Re-ran python -m pytest -q tests/test_spine_rail.py myself: 139 passed, 1 skipped (matches claimed). Independently reproduced the RED by git-stashing only spine_rail.py and re-running the two new claim-path tests: both genuinely FAIL against pre-fix code (KeyError / AssertionError), confirming the RED is real, not asserted. Restored via git stash pop, GREEN confirmed again after. Fail-open and CONTROL tests read correctly (8 CONTROL + 8 fail-open cases). Matcher scope decision confirmed: mcp__spine-epic__ left out as recorded, not guessed.",
+      "mechanical": false,
+      "ts": "2026-08-15T22:42:03.766552+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "REVIEW_RESULT: APPROVE. Reviewer independently reproduced RED via git-stash (second, adversarial reproduction beyond my own), confirmed all 4 CONTROL cases, 7+1 fail-open cases, confirmed decide_stop/_mid_flight_reason/decide_session_start byte-identical to HEAD, confirmed scope drift none (git status/diff against all 6 excluded files empty), confirmed settings.json diff exactly one narrow-matcher PostToolUse entry, ran Fowler pass (12/12 verdicted, 1 overridden with logged reason: duplicated-code between door/bash claim-mutate closures is deliberate per no-speculative-abstraction + Bash-path-unchanged constraint), full suite re-run 139 passed/1 skipped matching implementer. No blockers. One non-blocking out-of-scope observation (missing len(rows)>=N assertion in the fuzz test, matches a sibling test's convention) -- noting for triage, not fixing (reviewer flagged low-risk, not a blocker). One workflow-feedback item worth carrying to this run's feedback step: a dispatched reviewer inherits the parent Commander's own SPINE_FILE/SPINE_SESSION env rather than getting a fresh reviewer-scoped binding, so it falls back to its own CLI-driven survey -- expected per the reviewer skill's documented fallback, but worth a doctrine-clarity note.",
+      "mechanical": false,
+      "ts": "2026-08-15T22:57:21.004695+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Re-verified myself: python -m pytest -q tests/test_spine_rail.py -> 139 passed, 1 skipped, matches implementer/reviewer claims exactly. RED/CONTROL/fail-open/Bash-path-unchanged all confirmed present (own independent git-stash reproduction earlier, plus reviewer's second independent reproduction). Reviewer verdict APPROVE integrated by reference (e-g1-review-2). Gate closed.",
+      "mechanical": false,
+      "ts": "2026-08-15T22:57:49.278402+00:00"
+    }
+  ]
+}

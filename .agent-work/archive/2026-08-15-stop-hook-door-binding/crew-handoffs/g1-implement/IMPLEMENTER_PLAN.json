@@ -1,0 +1,297 @@
+{
+  "work_id": "stop-hook-door-binding-g1",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-red",
+    "m2-green",
+    "m3-control-failopen",
+    "m4-evidence-and-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the constellation-implementer skill's references/global-crew.md and references/global-everyone.md, then the handoff at .agent-work/stop-hook-door-binding/crew-handoffs/g1-implement-handoff.md, plus the read-only source anchors: scripts/hooks/spine_rail.py handle_post_tool_use (~1066), _is_valid_claim_target (~1035), decide_stop/_mid_flight_reason (~1197/1245, untouched), scripts/mcp_spine_server.py's SPINE_FILE/SPINE_SESSION env contract (~146-147), and tests/test_spine_rail.py's existing test_post_claim_*/test_post_release_*/test_stop_* patterns plus its make_spine/write_spine/bind/_bash/put_checklist fixtures. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Capture a full pre-change baseline: `python -m pytest -q tests/test_spine_rail.py`, paste the summary line. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + source anchors loaded; handoff complete; pre-change baseline captured (123 passed, 1 skipped)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-crew.md/global-everyone.md loaded; handoff read (complete: task, protected intent, test mode, close criteria, allowed scope, exclusions, constraints, map anchors, deliverable checks, required evidence, wiring grep, verification commands, authority, stop conditions, return format all present); source anchors read (handle_post_tool_use ~1066, _is_valid_claim_target ~1035, decide_stop/_mid_flight_reason ~1197/1245, mcp_spine_server.py SPINE/SESSION env contract ~146-147); tests/test_spine_rail.py fixtures read (make_spine, write_spine, bind, _bash, put_checklist). Baseline: python -m pytest -q tests/test_spine_rail.py -> 123 passed, 1 skipped in 1.36s"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-red": {
+      "id": "m1-red",
+      "title": "RED: door-claimed mid-flight spine is NOT refused by decide_stop before the fix",
+      "imperative": "Add ONE new test to tests/test_spine_rail.py, test_stop_door_claimed_mid_flight_blocks(proj, monkeypatch): write a real mid-flight spine (make_spine + write_spine, lease active, an in-progress task), monkeypatch.setenv SPINE_FILE to its absolute path and SPINE_SESSION to an engine session id, call sr.handle_post_tool_use with a door-shaped payload ({\"session_id\": ..., \"tool_name\": \"mcp__spine__spine_lease\", \"tool_input\": {\"action\": \"claim\"}, \"cwd\": str(proj)}), then assert sr.decide_stop(...) returns decision == \"block\" with \"SPINE MID-FLIGHT\" in the reason -- the SAME assertion shape as the existing test_stop_mid_flight_blocks_with_substrings Bash-path test. Do NOT touch scripts/hooks/spine_rail.py in this step. Run `python -m pytest -q -k test_stop_door_claimed_mid_flight_blocks 2>&1 | tail -20` against the UNCHANGED code and paste the real output -- expect FAIL (no door recognition exists yet, so no binding is ever recorded, so decide_stop returns {} and the block assertion fails). This pasted FAIL output IS the genuine RED capture. Attest c1 with the pasted transcript once FAIL is observed -- if it unexpectedly passes, that is new information, stop and reconsider.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff verified complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red confirmed by manual attest: test_stop_door_claimed_mid_flight_blocks written and observed FAILING against the unchanged handle_post_tool_use/decide_stop -- check MUST be null so the engine never runs the by-design-failing test itself",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "test_stop_door_claimed_mid_flight_blocks added to tests/test_spine_rail.py; ran against UNMODIFIED spine_rail.py: 'python -m pytest -q -k test_stop_door_claimed_mid_flight_blocks' -> FAILED, AssertionError: assert None == 'block' where None = decide_stop(...).get('decision'); result was {} (no binding recorded, so no refusal). 1 failed, 3052 deselected. Genuine RED confirmed."
+        }
+      ],
+      "constraints": [
+        "do not edit scripts/hooks/spine_rail.py in this step",
+        "do not edit _mid_flight_reason or decide_stop ever (out of scope for the whole gate)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-green": {
+      "id": "m2-green",
+      "title": "GREEN: recognize a door-issued spine_lease claim/release in handle_post_tool_use; register the narrow PostToolUse matcher",
+      "imperative": "Edit scripts/hooks/spine_rail.py: add a new helper (e.g. _handle_door_lease) dispatched from the top of handle_post_tool_use when data.get(\"tool_name\") == \"mcp__spine__spine_lease\" (a new module-level constant), BEFORE the existing Bash command-extraction logic, which stays byte-for-byte unchanged and unreached for door payloads. The helper: validate tool_input is a dict with action in (\"claim\",\"release\") else return {}; compute key = binding_key(data), return {} if None; resolve abs_spine from os.environ.get(\"SPINE_FILE\") (return {} if absent/unresolvable); on claim, reuse _is_valid_claim_target(abs_spine) UNCHANGED, resolve worktree via _worktree_from_spine, record engine_session = os.environ.get(\"SPINE_SESSION\") (may be None/empty, do not fabricate), write {spine, engine_session, worktree, claimed_at, path_source} via _binding_transaction mirroring the existing _claim_mutate shape (add a new PATH_SOURCE_DOOR_ENV constant, additive, alongside the existing PATH_SOURCE_* constants); on release, remove that exact abs_spine entry from the session's key_bindings via _binding_transaction (no candidate-root ladder needed -- SPINE_FILE is authoritative), and reset the nudge ledger when key == sid, mirroring the existing release's nudge-reset symmetry. No new subprocess, no new imports. Also add exactly one entry to the PostToolUse array in .claude/settings.json: {\"matcher\": \"mcp__spine__spine_lease\", \"hooks\": [{\"type\": \"command\", \"command\": \"\\\"${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py\\\" PostToolUse\", \"shell\": \"bash\", \"timeout\": 10}]} placed after the existing Bash-matcher entry and before the `*` gauge_writer entry -- the Bash entry, the gauge_writer entry, and the Stop/SessionStart blocks stay byte-for-byte identical otherwise. Then run the targeted RED test and the full existing suite; paste both outputs.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "RED confirmed for the door-claimed mid-flight test",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED confirmed in m1-red"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the door-claimed mid-flight test now passes (TDD green)",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q -k test_stop_door_claimed_mid_flight_blocks"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-green-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the full pre-existing suite still passes with no assertion changes (Bash path byte-for-byte unchanged)",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_spine_rail.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-green-2"
+        }
+      ],
+      "constraints": [
+        "scope fence: scripts/hooks/spine_rail.py (handle_post_tool_use + new helpers only), tests/test_spine_rail.py, and only the PostToolUse array of .claude/settings.json",
+        "do not edit _mid_flight_reason, decide_stop, or decide_session_start",
+        "do not widen the matcher beyond exactly mcp__spine__spine_lease",
+        "no new subprocess on the PostToolUse path",
+        "stdlib only, no new imports beyond what the module already has",
+        "reuse _is_valid_claim_target UNCHANGED -- do not write a second validator"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q -k test_stop_door_claimed_mid_flight_blocks",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-green-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_spine_rail.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-control-failopen": {
+      "id": "m3-control-failopen",
+      "title": "CONTROL (four legitimate door-claimed turn-end shapes) + fail-open proof (at least three malformed door payload shapes)",
+      "imperative": "Add CONTROL tests mirroring test_stop_no_binding_allows/test_stop_unreadable_spine_allows/test_stop_released_lease_allows/test_stop_blocked_status_honest_stop_allows but DRIVEN THROUGH a door-shaped claim (handle_post_tool_use with tool_name=mcp__spine__spine_lease writes the binding first, then decide_stop must allow): (1) terminal spine + released lease, (2) foreign worktree (subagent claims in its own worktree via SPINE_FILE, parent stops from a different cwd), (3) spine becomes unreadable after a successful door claim (delete the file, then stop), (4) honestly-blocked gate status. Add at least three fail-open tests asserting handle_post_tool_use returns {} and writes no binding for distinct malformed door payloads: missing tool_input key, non-dict tool_input, tool_input missing action, SPINE_FILE absent from environment, SPINE_FILE pointing at a non-checklist file, and SPINE_FILE pointing outside .agent-work/<work-id>/ -- cover at least three of these six. Run the full suite and paste output.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "GREEN confirmed; door binding recognition implemented",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "GREEN confirmed in m2-green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full tests/test_spine_rail.py suite passes including the new CONTROL and fail-open tests",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_spine_rail.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-control-failopen-1"
+        }
+      ],
+      "constraints": [
+        "CONTROL tests must actually call handle_post_tool_use with a door-shaped payload to write the binding, not sr.bind()",
+        "fail-open tests must assert both out == {} and the binding store is unchanged (no entry written)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-control-failopen-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_spine_rail.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-evidence-and-result": {
+      "id": "m4-evidence-and-result",
+      "title": "Wiring grep, diff stats, settings.json diff, write IMPLEMENTER_RESULT",
+      "imperative": "Run `grep -rn \"mcp__spine__spine_lease\" --include=*.py --include=*.json . | grep -v test_spine_rail.py`, state the count of non-test call sites (expected 1, the new PostToolUse matcher string in .claude/settings.json) and explain the matcher-is-wiring point per the handoff's Wiring Grep section. Run `git diff --stat scripts/hooks/spine_rail.py tests/test_spine_rail.py .claude/settings.json` and `git diff .claude/settings.json`, paste both verbatim -- do not pin a literal line/file count from memory. Run `git check-ignore -v scripts/hooks/spine_rail.py tests/test_spine_rail.py .claude/settings.json; echo exit:$?` and confirm exit 1 (not ignored) for all three. Write IMPLEMENTER_RESULT per templates/IMPLEMENTER_RESULT.template.md to .agent-work/stop-hook-door-binding/crew-handoffs/g1-implement-implementer-result.md with: pasted RED-then-GREEN pytest output (not summarized), the full final suite pass line, the exact new test names mapped to RED/GREEN/CONTROL/fail-open, the git diff --stat and settings.json diff, the wiring grep count/explanation, stop conditions considered, out-of-scope observations (e.g. map/INDEX.md DEGRADED, mcp__spine-epic__ recorded as out of scope this gate), and Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "CONTROL and fail-open tests passing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "CONTROL and fail-open tests passing"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT written to .agent-work/stop-hook-door-binding/crew-handoffs/g1-implement-implementer-result.md",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/stop-hook-door-binding/crew-handoffs/g1-implement-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-evidence-and-result-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-evidence-and-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/stop-hook-door-binding/crew-handoffs/g1-implement-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "g1-implement-implementer-attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-15T22:34:39.039722+00:00",
+    "last_heartbeat": "2026-08-15T22:39:13.824273+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-15T22:39:16.318985+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-15T22:34:59.283822+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-red",
+      "why": "RED captured genuinely against pre-fix code: door claim leaves no binding, decide_stop returns {} for a mid-flight door-claimed spine. This is the gap the gate fixes.",
+      "mechanical": false,
+      "ts": "2026-08-15T22:35:53.745987+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-green",
+      "why": "Implemented _handle_door_lease dispatched from handle_post_tool_use on tool_name==mcp__spine__spine_lease, before the Bash command-extraction (which is untouched and unreached for door payloads). Reuses _is_valid_claim_target/_worktree_from_spine/_binding_transaction/binding_key/_now_iso/load_nudges/save_nudges unchanged. Added PATH_SOURCE_DOOR_ENV and DOOR_LEASE_TOOL_NAME constants only, no new imports, no new subprocess. Added one PostToolUse matcher entry to .claude/settings.json. RED test now passes (GREEN); full suite 139 passed, 1 skipped (baseline was 123 passed, 1 skipped + 16 new door tests = 139, no regressions).",
+      "mechanical": false,
+      "ts": "2026-08-15T22:37:44.702440+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-control-failopen",
+      "why": "4 CONTROL tests (terminal+released lease, foreign worktree, unreadable spine after successful claim, honest blocked status) and 7 fail-open tests (missing tool_input, non-dict tool_input, missing action, unrecognized action, missing SPINE_FILE, non-checklist SPINE_FILE, SPINE_FILE outside .agent-work) all pass. Full suite: 139 passed, 1 skipped.",
+      "mechanical": false,
+      "ts": "2026-08-15T22:38:01.485097+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-evidence-and-result",
+      "why": "Wiring grep: outside test_spine_rail.py, non-test occurrences of mcp__spine__spine_lease are: 1 pre-existing (scripts/run_crew.py:480, an unrelated MCP tool allowlist, not touched by this gate), 1 new source-side constant (scripts/hooks/spine_rail.py:59, DOOR_LEASE_TOOL_NAME), and 1 new wiring site (.claude/settings.json:5, the new PostToolUse matcher -- the harness dispatches by tool_name match, so there is no separate Python call site). All other matches are doc/archive/plan JSON, not code. git diff --stat: .claude/settings.json 2 +-, scripts/hooks/spine_rail.py 105 ++++, tests/test_spine_rail.py 209 ++++ (3 files changed, 315 insertions, 1 deletion) -- re-derived via git diff --stat just now, not pinned from memory. All three files check-ignore exit 1 (not ignored). IMPLEMENTER_RESULT written to .agent-work/stop-hook-door-binding/crew-handoffs/g1-implement-implementer-result.md with pasted RED-then-GREEN transcripts, full suite result, all 16 new test names mapped to RED/GREEN/CONTROL/fail-open, diff stats, settings.json diff, wiring grep, assumptions, stop conditions (none hit), out-of-scope observations, and Workflow Feedback. Return status: complete.",
+      "mechanical": false,
+      "ts": "2026-08-15T22:39:13.824264+00:00"
+    }
+  ]
+}
