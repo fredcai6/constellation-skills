@@ -4,7 +4,9 @@
 The durable run-record artifacts (CONSTELLATION_FEEDBACK.md, plus its sidecar
 ledger) must be shared by
 every linked worktree of a repo, not scattered into each worktree's own
-(gitignored, disposable) `.agent-work/`. `durable_root(start)` returns the MAIN
+`.agent-work/` — which is tracked on that worktree's own branch, not gitignored,
+and holds transportable work in progress, not disposable scratch; pushing a
+worktree mid-run is how a fresh agent resumes it. `durable_root(start)` returns the MAIN
 checkout root when `start` is inside a LINKED git worktree, and otherwise returns
 `start` (or cwd) UNCHANGED — a plain checkout, a non-git directory, or any git
 error all fall back visibly to current behavior. It never raises and never

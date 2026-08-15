@@ -501,6 +501,39 @@ class FailSoft(unittest.TestCase):
             self.assertNotEqual(real["files"], stub["files"])
             self.assertIsNot(real["files"], None)
 
+    def test_a_base_dir_outside_any_work_area_writes_nothing_at_all(self):
+        """The escape (#585), proven end to end through the real seam rather than
+        through `manifest_root` alone: `base_dir` a WORKTREE ROOT with no
+        `.agent-work` in its ancestry, exactly the shape that put `.worktrees/s`,
+        `/t` and `/probe` on disk.
+
+        `manifest_root` now refuses, and that refusal is caught by this function's
+        own broad `except` — the same fail-soft contract every other test in this
+        class exercises. But `_write_failure_stub`'s fallback path calls
+        `manifest_root` again to find somewhere to write the stub, and it refuses a
+        second time for the identical reason: there is no known work area to put
+        even a failure record in. Writing the stub via the OLD unconditional
+        `base.parent` would just be the escape again, one level indirect. So unlike
+        every other FailSoft case in this class, which always leaves a stub
+        (`test_failsoft_an_arbitrary_producer_crash_leaves_a_stub_not_silence`),
+        this one deliberately writes NOTHING — the one case where a stub cannot be
+        written without repeating the defect it would be reporting on. Silence is
+        provably safe here only because it is asserted below: nothing is created
+        anywhere under `tmp`, including the worktree-root sibling the old code
+        used to escape to."""
+        with tempfile.TemporaryDirectory() as tmp:
+            worktrees = Path(tmp) / ".worktrees"
+            worktree_root = worktrees / "epic-568-510"
+            worktree_root.mkdir(parents=True)
+            cl = checklist(work_id="probe")
+
+            written = ec.emit_step_manifest(cl, "g1", worktree_root)
+
+            self.assertIsNone(written)
+            before = {p.relative_to(tmp).as_posix() for p in Path(tmp).rglob("*")}
+            self.assertEqual(before, {".worktrees", ".worktrees/epic-568-510"})
+            self.assertFalse((worktrees / "probe").exists(), "the historical escape")
+
 
 # --------------------------------------------------------------------------- #
 # the seam's own premise

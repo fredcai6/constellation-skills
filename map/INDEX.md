@@ -4,7 +4,7 @@
 evals: 12 modules, 54 entities
 scripts: 58 modules, 1172 entities
 skills: 1 modules, 18 entities
-tests: 80 modules, 4571 entities
+tests: 80 modules, 4574 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -102,7 +102,7 @@ tests: 80 modules, 4571 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (80 modules, 4571 entities)
+## tests (80 modules, 4574 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -129,7 +129,7 @@ tests: 80 modules, 4571 entities
 - [tests.test_docent_freshness](tests.test_docent_freshness/INDEX.md) (18 entities, 17 holes): Unit tests for scripts/docent_freshness.py.
 - [tests.test_engine_survey_retext_and_newlines](tests.test_engine_survey_retext_and_newlines/INDEX.md) (10 entities, 4 holes): Issue #465: the engine must not churn a file's line endings, and `amend`'s `retext-check` op must be usable on a SURVEY checklist.
 - [tests.test_epic_418_demo](tests.test_epic_418_demo/INDEX.md) (6 entities, 6 holes): Focused tests for the frozen, offline Epic #418 demonstration contract.
-- [tests.test_episode_capture](tests.test_episode_capture/INDEX.md) (40 entities, 20 holes): Tests for `scripts/episode_capture.py` — the assembly seam that makes the context manifest a *byproduct* of starting a spine step.
+- [tests.test_episode_capture](tests.test_episode_capture/INDEX.md) (41 entities, 20 holes): Tests for `scripts/episode_capture.py` — the assembly seam that makes the context manifest a *byproduct* of starting a spine step.
 - [tests.test_episode_fields](tests.test_episode_fields/INDEX.md) (90 entities, 56 holes): Tests for the MECHANICAL FIELD COMPOSER — `episode_capture.mechanical_fields()` and the snapshot it emits at the g1 seam (#305 gate g2).
 - [tests.test_episode_negative_control](tests.test_episode_negative_control/INDEX.md) (49 entities, 17 holes): #305 gate g3 — the NEGATIVE CONTROL for `zero agent effort is literal`.
 - [tests.test_episode_observations](tests.test_episode_observations/INDEX.md) (32 entities, 12 holes): Tests for scripts/verify_episode_observations.py — the guard that keeps episode records reading as observations rather than instructions (issue #460).
@@ -184,6 +184,6 @@ tests: 80 modules, 4571 entities
 - [tests.test_verify_spec_confirmed_cli](tests.test_verify_spec_confirmed_cli/INDEX.md) (7 entities, 6 holes): CLI-level regression coverage for verify_spec_confirmed.py's confirm-gate refusal.
 - [tests.test_verify_worktree_isolation](tests.test_verify_worktree_isolation/INDEX.md) (36 entities, 36 holes): HOLE: no docstring
 - [tests.test_wire_mcp_interpreter](tests.test_wire_mcp_interpreter/INDEX.md) (16 entities, 16 holes): Tests for scripts/wire_mcp_interpreter.py (M2 job 2, widened M2 g4-repair).
-- [tests.test_work_id_nesting](tests.test_work_id_nesting/INDEX.md) (41 entities, 16 holes): A work-id may NEST, and four tools used to disagree about that.
+- [tests.test_work_id_nesting](tests.test_work_id_nesting/INDEX.md) (43 entities, 16 holes): A work-id may NEST, and four tools used to disagree about that.
 - [tests.test_worktree_precondition_wiring](tests.test_worktree_precondition_wiring/INDEX.md) (15 entities, 13 holes): Deliberate-breakage tests for a worktree-isolation precondition (#329/#422).
 - [tests.test_write_a_skill](tests.test_write_a_skill/INDEX.md) (20 entities, 17 holes): Tests for constellation-write-a-skill's mint RAIL (scripts/verify_skill_registered.py) and the shared skill-goodness criteria seam.
