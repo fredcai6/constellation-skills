@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "b441-merge-and-verify",
+      "spec_path": ".agent-work/b441-merge-and-verify/LAUNCH_ORDER.md",
+      "intent_and_why": "PR #589 (epic-568/441-binding-store) was green in isolation but measured against a superseded main. Two PRs landed since: #587 (run_crew.py archive-verdict rescue) and #588 (the worktree-identity fail-closed guard in checklist_engine.py). Merge main, re-verify, and determine whether the new guard collides with #441's binding-store tests before treating the green as evidence."
+    },
+    "definition_of_done": [
+      "origin/main merged into epic-568/441-binding-store with only map/INDEX.md conflicting",
+      "map/INDEX.md resolved by regeneration (python -m scripts.code_map build --root .), never hand-edited",
+      "the outcome (1/2/3) of the origin_worktree_refusal-guard-vs-binding-store-tests interaction determined and reported with evidence",
+      "full clean-env suite green (0 failed)",
+      "branch pushed and PR #589 mergeable status no longer CONFLICTING"
+    ],
+    "good_enough": {
+      "mandatory_quality": "Merge resolved by regeneration only; no other file touched; #588's guard untouched; #441's binding-store content untouched",
+      "sufficient_evidence": "Clean-env full pytest suite, tests/test_code_map.py green, gh pr view 589 --json mergeable, direct repro of the guard's behavior with/without an origin stamp",
+      "appetite": "One merge, one diagnosis, one gate"
+    },
+    "hard_constraints": [
+      "Do not hand-edit map/INDEX.md",
+      "Do not edit scripts/checklist_engine.py, scripts/run_crew.py, tests/test_spine_origin_isolation.py, tests/test_explorer_templates.py, tests/test_mcp_identity.py, .mcp.json, any episodes/ file not authored in this lane",
+      "Do not merge PR #589 (Admiral merges)",
+      "Do not dispatch a crew for this run",
+      "A genuine guard/binding-store collision (outcome 3) is reported, not resolved"
+    ],
+    "fixed_decisions": [
+      "decision:guard-is-untouchable settled/human",
+      "decision:regenerate-dont-handmerge settled/human",
+      "decision:content-is-final settled/human",
+      "decision:outcome-3-is-a-finding settled/human"
+    ],
+    "current_wave": {
+      "objective": "Bring PR #589 current against origin/main, regenerate the one conflicted generated file, and determine which of three named outcomes applies to the origin-worktree-refusal guard versus #441's binding-store tests",
+      "exit_criteria": [
+        "git merge origin/main completes with only map/INDEX.md conflicted",
+        "map regenerated via scripts.code_map, not hand-edited",
+        "outcome 1/2/3 determined and recorded with evidence",
+        "clean-env full suite passes with 0 failed",
+        "gh pr view 589 --json mergeable no longer reports CONFLICTING"
+      ],
+      "issues": [
+        {
+          "id": "A",
+          "title": "Merge origin/main into epic-568/441-binding-store and regenerate map/INDEX.md",
+          "desired_outcome": "PR #589 is current against main's merge base.",
+          "useful_now": "It is the precondition for the guard-interaction question to mean anything.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "Clean merge with the single expected conflict, map regenerated, tests/test_code_map.py green.",
+          "implementation_latitude": "Choose exact regeneration/verification command sequence; preserve the fixed constraints above.",
+          "hard_constraints_no_gos": ["Do not hand-edit map/INDEX.md", "Do not touch fenced files"],
+          "local_unknowns": [],
+          "anchors": [".agent-work/b441-merge-and-verify/LAUNCH_ORDER.md"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "B",
+          "title": "Determine outcome 1/2/3 for the origin-worktree-refusal guard vs #441's binding-store tests",
+          "desired_outcome": "A named outcome (nothing breaks / fixture fixed / genuine collision reported) with reproducible evidence.",
+          "useful_now": "It is the actual interaction this lane exists to test, per LAUNCH_ORDER admiral-post-568.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "Direct repro contrasting the guard's behavior with and without an origin stamp on the spine; targeted test run; full-suite confirmation.",
+          "implementation_latitude": "Investigate freely; fix ONLY a dishonest fixture in tests/test_spine_rail.py or tests/test_gauge_writer.py if outcome 2; never edit scripts/checklist_engine.py; stop and report if outcome 3.",
+          "hard_constraints_no_gos": ["Never edit scripts/checklist_engine.py", "Outcome 3 is reported, not resolved"],
+          "local_unknowns": [],
+          "anchors": [".agent-work/b441-merge-and-verify/LAUNCH_ORDER.md"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "C",
+          "title": "Clean-env full suite and push",
+          "desired_outcome": "0 failed clean-env run; PR #589 mergeable != CONFLICTING.",
+          "useful_now": "It is the evidence the whole lane exists to produce.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "pytest -q summary line; gh pr view 589 --json mergeable.",
+          "implementation_latitude": "Foreground blocking until-loop only; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT.",
+          "hard_constraints_no_gos": ["Do not merge PR #589", "Never background-and-end-turn"],
+          "local_unknowns": [],
+          "anchors": [".agent-work/b441-merge-and-verify/LAUNCH_ORDER.md"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [],
+    "uncertainty_register": [],
+    "parked_possibilities": []
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "A",
+      "outcome": "origin/main merged into epic-568/441-binding-store at bcfba265; the single map/INDEX.md conflict resolved by regenerating the map (python -m scripts.code_map build --root .), never hand-edited.",
+      "evidence": "git status showed UU map/INDEX.md as the only unmerged entry; regeneration left no conflict markers; git commit bcfba265; advance g1-merge re-ran tests/test_code_map.py and it passed."
+    },
+    {
+      "issue_id": "B",
+      "outcome": "OUTCOME 1 -- nothing breaks. #441's spawn tests (test_spawn_binding_transaction_red_green, test_spawn_binding_sessionstart_claim_mixed_writer_race in tests/test_spine_rail.py) build their spines via put_checklist()/write_spine(), which write raw JSON with no `origin` key. origin_worktree_refusal() returns None unconditionally when spine.get('origin') is not a dict, before it ever reaches the cwd/git-toplevel check, so the guard never engages for these tests regardless of the pytest tempdir.",
+      "evidence": "grep '\"origin\"' tests/test_spine_rail.py tests/test_gauge_writer.py returned zero hits. Direct repro: subprocessed scripts/checklist_engine.py claim from a bare (non-git) tempdir cwd twice -- with an origin-stamped spine naming a different worktree (REFUSED: 'claim refused: this spine belongs to the worktree ..., but no git worktree toplevel could be resolved'), and with a spine matching put_checklist's shape with no origin field (claimed successfully, exit 0). pytest tests/test_spine_rail.py -k spawn_binding: 2 passed. tests/test_gauge_writer.py has no spawn/multiprocessing pattern and no origin field, so it is not implicated."
+    },
+    {
+      "issue_id": "C",
+      "outcome": "Clean-env (env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT), cache-cleaned, foreground full pytest -q run: 3028 passed, 6 skipped, 1136 subtests passed, 0 failed. Branch pushed (7733d452..bcfba265). gh pr view 589 --json mergeable now reports MERGEABLE (was CONFLICTING).",
+      "evidence": "/tmp/b441-suite.log tail: '3028 passed, 6 skipped, 1136 subtests passed in 124.25s (0:02:04)'; grep -c FAILED == 0; git push output; gh pr view 589 --json mergeable,mergeStateStatus,headRefOid,baseRefName output."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "map/INDEX.md is the only file that conflicts on merging origin/main",
+      "expected": "git merge origin/main reports exactly one conflicted file: map/INDEX.md",
+      "observed": "Confirmed live by this run's own git merge and by git merge-tree --write-tree --name-only origin/main HEAD at the understand step, both showing exactly map/INDEX.md.",
+      "source": "git merge / git merge-tree output"
+    },
+    {
+      "claim": "A correct map regeneration is verifiable by the suite, not by judgment",
+      "expected": "tests/test_code_map.py passes only when the map is fresh",
+      "observed": "tests/test_code_map.py passed as part of the g1-merge advance check and again in the full suite.",
+      "source": "pytest"
+    },
+    {
+      "claim": "origin_worktree_refusal only engages when a spine's origin.worktree is stamped",
+      "expected": "A claim from a bare tempdir cwd is refused ONLY when the spine carries an origin stamp; an unstamped spine (matching #441's test fixtures) claims successfully from the same bare tempdir",
+      "observed": "Confirmed by a direct two-case repro: origin-stamped spine -> REFUSED; unstamped spine (put_checklist shape) -> claimed, exit 0.",
+      "source": "direct subprocess repro of scripts/checklist_engine.py claim"
+    },
+    {
+      "claim": "The merge, guard-outcome finding, and full-suite pass unblock PR #589's CI and mergeability",
+      "expected": "gh pr view 589 --json mergeable no longer reports CONFLICTING after push",
+      "observed": "Confirmed live after pushing this run's merge commit: mergeable=MERGEABLE, mergeStateStatus=UNSTABLE (unrelated to the merge conflict this lane targeted).",
+      "source": "gh pr view"
+    }
+  ],
+  "discrepancies": [],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [".agent-work/b441-merge-and-verify/LAUNCH_ORDER.md"],
+    "map_status": "DEGRADED-UNPARSEABLE at run start and after: map/INDEX.md is a generated code index with no citable anchor ids, not a docs/architecture packet map. Regenerated (content refreshed, format unchanged) by this run's g1-merge gate."
+  }
+}

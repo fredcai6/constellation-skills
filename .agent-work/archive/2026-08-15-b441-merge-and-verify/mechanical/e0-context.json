@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "e0-context",
+  "mechanical": {
+    "run": "b441-merge-and-verify",
+    "project": "constellation-skills",
+    "spine-step": "e0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b441-merge-and-verify-e0-context@e8245c0265fbcb0a3b9d12e88f139e8ae79217f3",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "b441-merge-and-verify",
+    "generated_at": "2026-08-15T19:54:46Z"
+  }
+}

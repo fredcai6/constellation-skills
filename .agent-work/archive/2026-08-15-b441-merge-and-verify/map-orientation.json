@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "work_id": "b441-merge-and-verify",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-441",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "README.md",
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb",
+      "source": "known-fallback"
+    },
+    {
+      "path": "map/INDEX.md",
+      "content_hash": "05b5871fd2582ccb166b688baf1af3845557af4b3e6f98fc6878323a934929b6",
+      "source": "agent-declared"
+    },
+    {
+      "path": "scripts/checklist_engine.py",
+      "content_hash": "7e141b4859d5558c16923251194c8422d6dc8fcd5c0b8c5ffb8b7675a32c887f",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "no docs/architecture packet map or decision-anchor inventory exists in this repo; map/INDEX.md is a plain generated code index (module/entity counts) with no citable anchor ids, and map/ids.jsonl is empty"
+  ],
+  "escalation": "none needed this run -- the launch order (admiral-post-568) already names the exact guard behavior (origin_worktree_refusal in scripts/checklist_engine.py) and the exact files in scope, so the missing packet map does not block understanding the ask",
+  "emitted_at": "2026-08-15T19:49:34.946235+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

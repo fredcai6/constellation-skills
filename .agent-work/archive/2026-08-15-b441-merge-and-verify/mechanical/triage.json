@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "triage",
+  "mechanical": {
+    "run": "b441-merge-and-verify",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 8,
+    "spine-step": "triage",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b441-merge-and-verify-triage@e86ce4d0933f17fc3ed86beef6cbc3222f45e957",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "b441-merge-and-verify",
+    "generated_at": "2026-08-15T20:01:49Z"
+  }
+}

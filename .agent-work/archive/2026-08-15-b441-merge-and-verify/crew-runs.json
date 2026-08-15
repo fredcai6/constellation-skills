@@ -1,0 +1,26 @@
+[
+  {
+    "crew_id": "constellation/b441-merge-and-verify/execute/commander/attempt-1",
+    "work_id": "b441-merge-and-verify",
+    "gate": "execute",
+    "role": "commander",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/b441-merge-and-verify/execute/commander/attempt-1",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 3503176,
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-441",
+    "handoff": ".agent-work/b441-merge-and-verify/LAUNCH_ORDER.md",
+    "result": null,
+    "spine": ".agent-work/b441-merge-and-verify/spine.json",
+    "parent": "admiral-post-568",
+    "stdout": ".agent-work/b441-merge-and-verify/crew-runs/execute-commander-attempt-1.stdout.txt",
+    "stderr": ".agent-work/b441-merge-and-verify/crew-runs/execute-commander-attempt-1.stderr.txt",
+    "started_at": "2026-08-15T19:47:54.203561+00:00",
+    "last_heartbeat": "2026-08-15T19:47:54.203561+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "model": "sonnet"
+  }
+]

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g2-guard-outcome",
+  "mechanical": {
+    "run": "b441-merge-and-verify",
+    "project": "constellation-skills",
+    "spine-step": "g2-guard-outcome",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b441-merge-and-verify-g2-guard-outcome@b798b392f8070f5a93f80aa31ea46fc8faa91385",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "b441-merge-and-verify",
+    "generated_at": "2026-08-15T19:55:46Z"
+  }
+}

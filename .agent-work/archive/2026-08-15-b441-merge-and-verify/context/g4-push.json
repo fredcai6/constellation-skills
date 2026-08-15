@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g4-push",
+  "files": [],
+  "repo_rev": {
+    "commit": "bcfba265f261e4c30de2426fcb21b718f4b365fc"
+  },
+  "run": {
+    "work_id": "b441-merge-and-verify",
+    "generated_at": "2026-08-15T19:59:46Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-441",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-441",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-441"
+    }
+  }
+}
