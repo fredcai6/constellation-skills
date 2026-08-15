@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "feedback",
+  "mechanical": {
+    "run": "epic-568-codex-tier-local",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 6,
+    "spine-step": "feedback",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 1,
+    "context-manifest-ref": "ctx-epic-568-codex-tier-local-feedback@9d72a658b7a65e0c1de6896b8f15fcd5479888c6",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-568-codex-tier-local",
+    "generated_at": "2026-08-14T17:39:08Z"
+  }
+}

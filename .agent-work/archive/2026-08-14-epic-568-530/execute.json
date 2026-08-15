@@ -1,0 +1,287 @@
+{
+  "work_id": "epic-568-530",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the ratified #530 launch order, mission frame, bounded scope, and degraded map escalation before execution.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "launch order, mission frame, and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Launch order, mission frame, bounded helper plan, and degraded map escalation are confirmed; #441 is excluded."
+        }
+      ],
+      "constraints": [
+        "No #441 behavior or lifecycle/store-policy expansion."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Correct resolved-spine worktree attribution",
+      "imperative": "Implement the smallest shared owning-worktree derivation from validated abs_spine in the claim and SessionStart binding writers. The helper accepts only absolute .agent-work/<work-id>/<name>.json paths and returns no attribution for malformed/out-of-layout input, never cwd fallback. Add one discriminating real git main plus linked-worktree regression that uses shared session, distinct agent ids, deliberately wrong payload cwd, and production claim/Stop/release/SessionStart paths, plus negative predicate tests.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context completed under the execution-plan MCP lease."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "implementation result is complete",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "Only scripts/hooks/spine_rail.py, tests/test_spine_rail.py, and worktree-local notes-1.md may be changed.",
+        "Preserve release target resolution.",
+        "Malformed or out-of-layout resolved paths must not fall back to payload cwd.",
+        "Do not implement #441 locking, identity, reaping, schema, or lifecycle policy."
+      ],
+      "anchors": {
+        "structural": [
+          "README.md \u2014 declared degraded-map substitute"
+        ],
+        "capability": [
+          "binding records identify a resolved spine's owning worktree"
+        ],
+        "constraint": [
+          "resolved abs_spine is the ownership source; payload cwd is not"
+        ],
+        "decision": [
+          "decision:resolved-spine-owns-worktree @grade: settled/measured \u00b7 leans g1-implement",
+          "decision:no-441-expansion @grade: settled/human \u00b7 leans g1-implement"
+        ],
+        "evidence": [
+          "real linked-worktree red/green regression",
+          "pytest -q tests/test_spine_rail.py"
+        ],
+        "confidence_flags": [
+          "README.md substitute; rail map coverage is escalated to Admiral"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "artifact": ".agent-work/epic-568-530/crew-handoffs/g1-implement-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Review #530 worktree attribution correction",
+      "imperative": "Independently inspect the minimal rail diff and the real-worktree regression; reject scope expansion or a test that can pass with payload cwd attribution.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "implementation result received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Fresh implementer result was independently read and verified through the external crew registry."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "review result returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [
+        "Review only #530 behavior; do not broaden into #441."
+      ],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/epic-568-530/crew-handoffs/g1-review-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Verify and integrate #530 correction",
+      "imperative": "Re-run the focused rail suite and confirm the reviewer APPROVE verdict before integration.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "review result received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Review result e-g1-review-1 is fresh and APPROVE."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "focused rail suite passes",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_spine_rail.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer approves",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": "Reference the fresh independent APPROVE review result."
+          }
+        }
+      ],
+      "constraints": [
+        "Non-Windows failures block."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_spine_rail.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/epic-568-530-execute",
+    "status": "released",
+    "claimed_at": "2026-08-14T16:21:00.799309+00:00",
+    "last_heartbeat": "2026-08-14T16:36:22.485032+00:00",
+    "claimed_by": "commander",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-530",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-14T16:36:26.754292+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Execution starts from the ratified narrow plan: derive attribution only from validated spine paths and prove parent/child behavior without lifecycle or #441 expansion.",
+      "mechanical": false,
+      "ts": "2026-08-14T16:21:13.917297+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "The implementer committed the narrow two-writer helper and discriminating real linked-worktree regression. Independent replay passed 111 focused tests; no #441 or lifecycle behavior changed.",
+      "mechanical": false,
+      "ts": "2026-08-14T16:31:35.360806+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "A fresh independent reviewer reproduced the focused suite and named regressions, verified the strict lexical helper and both writers, and found no release, schema, lifecycle, or #441 expansion.",
+      "mechanical": false,
+      "ts": "2026-08-14T16:36:09.349124+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Independent review and my own rerun confirm the corrected child attribution, parent Stop/release behavior, SessionStart binding, strict malformed-path handling, and full focused rail suite.",
+      "mechanical": false,
+      "ts": "2026-08-14T16:36:22.485016+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-14T16:31:27.411667+00:00",
+      "reason": "The configured pytest executable is absent on this Linux runner, while python -m pytest reproduces the same focused suite and is the available project test invocation.",
+      "authority": "human",
+      "ops": [
+        "retext-check g1-integrate.c1"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "work_id": "epic-568-codex-tier-local",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-568-codex-tier-local",
+        "project": "constellation-skills",
+        "role": "implementer",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-568-codex-tier-local/context/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": [
+          ".agent-work/epic-568-codex-tier-local/IMPLEMENTER_RESULT.md",
+          ".agent-work/epic-568-codex-tier-local/STATE_NOTE.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Apply the bounded Codex-tier launcher changes inside the repo-local delegated worktree."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The edit path would patch files in the writable repo-local Codex worktree on its first attempt."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The initial worktree edit attempt failed before applying content with bwrap reporting RTM_NEWADDR was not permitted; a fresh TTY attempt later applied the edit successfully in the same worktree."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The implementation needed an extra launch attempt and explicit confirmation that the failed attempt had not partially edited the scoped files."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The run retried the same bounded edit from a fresh TTY and then verified the resulting diff and focused tests."
+        }
+      },
+      "diagnosis": []
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-568-codex-tier-local",
+        "project": "constellation-skills",
+        "role": "reviewer",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-568-codex-tier-local/context/review.json",
+        "refusals": 0,
+        "reopens": 1,
+        "rework-count": 1,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-568-codex-tier-local/REVIEWER_RESULT.md",
+          ".agent-work/epic-568-codex-tier-local/IMPLEMENTER_REWORK_RESULT.md",
+          ".agent-work/epic-568-codex-tier-local/REWORK_REVIEWER_RESULT.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Independently verify that checked-in tests proved every required reasoning-effort persistence and recovery boundary."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "Approval would be supported by direct checked-in coverage of parser-to-external registry persistence, abandon/relaunch inheritance, legacy omission, and unchanged Claude argv."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The initial reviewer approved while explicitly noting that parser-to-external persistence and relaunch inheritance were not directly asserted by checked-in tests; Admiral adjudication reopened execution, and the resulting rework added those tests before a fresh reviewer approved."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The evidence gap required one bounded implementation rework and a second independent review even though the original focused launcher tests were green."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The rework replaced temporary-review evidence with direct RC.main registry and relaunch tests, and the fresh review traced those tests to production paths and reran all 166 launcher tests."
+        }
+      },
+      "diagnosis": []
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-568-codex-tier-local",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-568-codex-tier-local/context/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 2,
+        "artifact-ref": [
+          ".agent-work/epic-568-codex-tier-local/spine.json",
+          ".agent-work/epic-568-codex-tier-local/IMPLEMENTER_REWORK_RESULT.md",
+          ".agent-work/epic-568-codex-tier-local/REWORK_REVIEWER_RESULT.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Verify the bounded launcher change on Linux with both focused coverage and the repository-wide suite."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The focused launcher suite and the full Linux suite would both remain green after the metadata-only change."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The focused launcher suite passed, while the full Linux suite reported two failures in unrelated baseline areas: generated map freshness and an inspect-source assertion."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The two full-suite failures required comparison against the unchanged baseline and scoped diff before execution could be closed without expanding this launcher task."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The run recorded both failures as pre-existing out-of-scope baseline evidence and relied on the green complete launcher module plus direct diff review for the scoped change."
+        }
+      },
+      "diagnosis": []
+    }
+  ]
+}

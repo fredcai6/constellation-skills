@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "init",
+  "files": [],
+  "repo_rev": {
+    "commit": "0448275ef08993967674cca0807457de15e8c299"
+  },
+  "run": {
+    "work_id": "epic-568-530",
+    "generated_at": "2026-08-14T16:08:56Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-530",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-530",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-530"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-530"
+    }
+  }
+}

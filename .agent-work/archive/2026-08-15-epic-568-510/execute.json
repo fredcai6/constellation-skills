@@ -1,0 +1,303 @@
+{
+  "work_id": "epic-568-510",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen launch-order scope, mission frame, and focused test seam before implementation.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "launch order and mission frame loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Frozen launch order and mission frame loaded; implementation is limited to `_trip_advisory` and its focused regression seam."
+        }
+      ],
+      "constraints": [
+        "LAUNCH_ORDER: advisory-only",
+        "LAUNCH_ORDER: no-runtime-expansion"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Correct pending-HARD advisory: implement",
+      "imperative": "Dispatch an implementer for the frozen advisory/test correction and attach its complete IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context is complete in this execute plan."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-2"
+        }
+      ],
+      "constraints": [
+        "Only scripts/checklist_engine.py and tests/test_checklist_engine.py may change.",
+        "Do not alter guard runtime semantics, defaults, verbs, state, or schema."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:_trip_advisory",
+          "tests/test_checklist_engine.py:TripHardGuardsBeginNotClose"
+        ],
+        "capability": [
+          "pending-HARD advisory",
+          "refresh lifecycle"
+        ],
+        "constraint": [
+          "LAUNCH_ORDER: advisory-only",
+          "LAUNCH_ORDER: no-runtime-expansion"
+        ],
+        "decision": [
+          "decision:advisory-only @grade: settled/measured \u00b7 leans g1-implement",
+          "decision:legal-sequence @grade: settled/human \u00b7 leans g1-implement,g1-review",
+          "decision:no-runtime-expansion @grade: settled/human \u00b7 leans g1-implement,g1-review"
+        ],
+        "evidence": [
+          "focused red/green test executes attach \u2192 start \u2192 advance --why and proves digest continuity"
+        ],
+        "confidence_flags": [
+          "degraded map; launch order supplies anchors"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "blocker": "The registered implementer could not edit either allowed file: normal patch and escalated TTY apply_patch both failed before file access with bwrap RTM_NEWADDR. Its registry-verified blocked result is .agent-work/epic-568-510/crew-handoffs/g1-implementer-result.md.",
+        "authority_needed": "Admiral",
+        "next_action": "Repair or authorize a writable implementer environment, then relaunch a fresh implementer from this same execute plan; do not widen source scope or bypass the MCP engine.",
+        "resume_reason": "A fresh registry attempt is available with the root-proven `apply_patch` executable transport: escalated TTY session, prefix rule, and write_stdin EOF."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "blocked",
+            "result_path": ".agent-work/epic-568-510/crew-handoffs/g1-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "result_path": ".agent-work/epic-568-510/crew-handoffs/g1-implementer-result-attempt-2.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Correct pending-HARD advisory: review",
+      "imperative": "Dispatch an independent reviewer to verify scope, behavior, red/green evidence, and no runtime expansion.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Registry-verified implementer attempt 2 result is available for independent review."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [
+        "Independent review is mandatory."
+      ],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_path": ".agent-work/epic-568-510/crew-handoffs/g1-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Correct pending-HARD advisory: integrate",
+      "imperative": "Re-run the focused test and accept only an APPROVE review verdict.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Approved independent review result is attached at g1-review."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Focused regression test passes",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_checklist_engine.py -k TripHardGuardsBeginNotClose -q"
+          },
+          "override_policy": {
+            "allowed": false
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [
+        "Non-Windows failures block."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "result_path": ".agent-work/epic-568-510/crew-handoffs/g1-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_checklist_engine.py -k TripHardGuardsBeginNotClose -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/epic-568-510/g3-engine/commander/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-15T00:40:52.700111+00:00",
+    "last_heartbeat": "2026-08-15T00:40:52.700111+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": "constellation/epic-568-510/execute",
+    "takeover_reason": "wave-2 engine dispatch: appending the g2-engine gate",
+    "released_at": "2026-08-15T00:41:12.974692+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "The exact bounded outcome, protected runtime behavior, and test seam are settled by the launch order and mission frame.",
+      "mechanical": false,
+      "ts": "2026-08-14T16:48:37.314095+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Attempt 2 is registry-verified complete. Its artifact proves the permitted two-file red/green correction and no runtime expansion; attempt 1 remains superseded harness evidence.",
+      "mechanical": false,
+      "ts": "2026-08-14T17:03:40.433145+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "A fresh independent reviewer approved the two-file advisory/test correction after reproducing 22 passing focused tests and a clean diff check.",
+      "mechanical": false,
+      "ts": "2026-08-14T17:06:57.893652+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "The focused command was independently reproduced green and the approved review verifies that only advisory/test behavior changed.",
+      "mechanical": false,
+      "ts": "2026-08-14T17:06:58.348480+00:00"
+    }
+  ]
+}

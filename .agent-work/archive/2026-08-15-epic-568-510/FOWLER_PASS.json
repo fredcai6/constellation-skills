@@ -1,0 +1,80 @@
+{
+  "work_id": "epic-568-510",
+  "diff_ref": "working-tree diff vs 23ed6b70 — scripts/checklist_engine.py (_trip_hard_gate new outcome branch + docstrings in begin_over_line_records/_trip_hard_gate), tests/test_checklist_engine.py (new class TripInstructedBeginIsNotAnOffence + 6 re-aimed tests), map/INDEX.md (derived, mechanical)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, skills' references/global-crew.md + references/global-everyone.md, .agent-work/epic-568/LAUNCH_ORDER-wave2-510-engine.md (frozen, human-ruled)",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "global-crew.md Implementation discipline: 'Match the surrounding code's naming, labeling, and in-file documentation conventions — the project's specific conventions are the local delta.'",
+        "reason": "_trip_hard_gate grew 55 -> 86 lines, but its EXECUTABLE body is ~25 lines and the growth is a 24-line explanatory comment plus docstring. Every neighbouring function in this region (_trip_advisory at 112 lines, _append_trip_entry, begin_over_line_records) carries the same issue-tagged comment density, and the standard above requires matching it rather than departing from it. Extracting the branch into a helper to shorten the function would split the ruling from the code it rules on, which is the opposite of what the surrounding convention does."
+      }
+    },
+    {
+      "smell": "large-class",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "LAUNCH_ORDER-wave2-510-engine.md pre-ruling 2, decision:scope-is-the-contradiction (settled): 'Change the smallest engine behavior that makes the advised start legal ... This is not licence to redesign gate lifecycle'; plus global-crew.md 'Make the minimal change that satisfies the handoff; no speculative abstraction.'",
+        "reason": "scripts/checklist_engine.py is 3499 lines / 102 module-level functions / 1 class, so the module-scale smell is genuinely present — but it is entirely pre-existing and this diff adds 6 executable lines to it. A frozen human ruling explicitly bounds this lane to the contradiction, so decomposing the engine module here would be a scope violation, not an improvement. Recorded as present-and-subordinated rather than absent, so it is not silently written off."
+      }
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The exemption's correctness rests on an invariant that nothing in the code enforces: the guard's `instructed` predicate in _trip_hard_gate (verb == 'start' AND iid == active_id(cl) AND status == 'pending', under an already-checked keyed refresh-request and hard-band reading) must stay co-extensive with the condition _trip_advisory renders its 'Now begin THIS guarded gate (`start <gate>`)' branch from (gate = active_id, has_pending_refresh_request(cl, gate, why_ref=wid), pending = status == 'pending'). The same state test is written out twice, ~200 lines apart, in two functions that do not call each other. They agree today — I verified the implication over 1152 states with zero counterexamples — but a future edit that adds a condition to the advisory's pending branch would silently widen the exemption past what the engine actually instructs, and no test would fail. Partly mitigated by the new positive control test_the_advisory_really_does_instruct_this_start, which pins that the advisory still names `start g2` in one exempted fixture; that is one fixture, not the predicate. Worth raising as an observation, not a blocker: the candidate refactor is to extract the shared 'is this the state the pending-HARD advisory is rendered from' predicate into one function both sites call. Out of scope for this lane (pre-ruling 2 forbids widening past the contradiction), so routed to Commander rather than requested here."
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "global-crew.md 'No hidden fallback; fail visibly' read together with the engine's own documented dispatch order (checklist_engine.py:3231-3232 comment: the trip guard is 'Checked BEFORE the verb runs so a refusal never mutates state').",
+        "reason": "The new branch reads task state with the defensive chain cl.get('tasks', {}).get(iid, {}).get('status') rather than the module's own task(cl, iid) accessor, which looks like envy for another module's data. It is deliberate: _trip_hard_gate runs before _run_verb validates the id, so iid may name no task at all, and task() raises EngineError('no such item'). Using the accessor would make the guard raise the wrong error from the wrong place. I confirmed the ordering empirically — `start nope` over the hard line still surfaces the trip refusal, and the guard never touches the accessor. The same defensive posture already opens the function (`if not iid: return`)."
+      }
+    },
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "docs/CHECKLIST_SCHEMA.md defines the checklist as a JSON document whose vocabularies are documented string values; global-everyone.md 'One canonical path; no speculative abstraction.'",
+        "reason": "'begin-instructed' is a bare string literal, matched by string comparison in two selectors — a textbook primitive-obsession shape. But the whole checklist is a JSON state document read and written by agents and by an MCP door, its outcome vocabulary is a documented schema table, and the two sibling values ('begin-refused', 'begin-released') are already bare strings. Introducing an enum for the third would create a second representation of the same vocabulary and serialise back to the same strings — added interface for no behaviour, which the no-speculative-abstraction rule forbids."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "LAUNCH_ORDER-wave2-510-engine.md pre-ruling 2 (decision:scope-is-the-contradiction, settled) and Stop Conditions ('The fix requires changing advance semantics, gate lifecycle, or production defaults' -> stop and float).",
+        "reason": "_append_trip_entry takes 7 positional parameters (cl, gate, verb, outcome, reading, hard, why_ref), and the diff touches its call site. The signature is pre-existing and unchanged; introducing a parameter object would alter the sole ledger write site's interface, which is the exact surface #467's AST call-graph pin guards and which the frozen ruling bounds this lane away from. Present, subordinated, and left for a lane that owns it."
+      }
+    },
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {
+      "smell": "message-chains",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "Same as feature-envy: the engine's documented pre-validation dispatch order (checklist_engine.py:3224-3232) plus global-crew.md 'fail visibly'.",
+        "reason": "cl.get('tasks', {}).get(iid, {}).get('status') is a three-link chain into another object's internals. It is the same single decision as the feature-envy entry above, recorded separately because the rail asks for a verdict per smell: the chain exists precisely so an unvalidated iid degrades to None instead of raising out of a guard that must not raise. Collapsing it into an accessor would reintroduce the raise."
+      }
+    },
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "global-crew.md 'Match the surrounding code's naming, labeling, and in-file documentation conventions'; global-everyone.md 'Keep Constellation context and architecture docs current when their meaning changes' and 'A recorded decision does not say how fixed it is' (decision provenance is durable context, not chatter).",
+        "reason": "The new branch is 6 executable lines under 24 lines of comment — a 4:1 ratio that would be a deodorant smell in ordinary code. Here the comments do not explain confusing code; they record WHY a human ruled the engine must yield rather than the prose (#510), which is unrecoverable from the six lines and is exactly the provenance the next agent needs before touching them. The adjacent #467 and #190 comment blocks are the same shape, so matching them is the documented standard, and the code the comments sit on is plain (one boolean, one conditional expression, one call)."
+      }
+    }
+  ],
+  "rail_exception": null
+}

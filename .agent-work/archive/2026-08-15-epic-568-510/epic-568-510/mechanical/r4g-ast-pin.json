@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4g-ast-pin",
+  "mechanical": {
+    "run": "epic-568-510",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r4g-ast-pin",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-568-510-r4g-ast-pin@126e88b01dc33fadca8f75183fea1ba3adfab55f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-568-510",
+    "generated_at": "2026-08-15T00:38:09Z"
+  }
+}
