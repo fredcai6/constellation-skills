@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-evidence-and-result",
+  "mechanical": {
+    "run": "crew-verdict-and-door-g2",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 3,
+    "spine-step": "m3-evidence-and-result",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-crew-verdict-and-door-g2-m3-evidence-and-result@a94e8dc69d30408ccacc7ff55f13dd4aa508b269",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "crew-verdict-and-door-g2",
+    "generated_at": "2026-08-15T17:21:53Z"
+  }
+}

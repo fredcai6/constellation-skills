@@ -1,0 +1,20 @@
+{
+  "work_id": "crew-verdict-and-door",
+  "diff_ref": "scripts/run_crew.py build_entry (docstring + door_bound key, ~lines 917-946) and ExternalBackend.dispatch (unconditional stderr banner, ~lines 1350-1362); tests/test_crew_launcher.py (3 new additive test methods), uncommitted working tree on branch fix/crew-verdict-and-door",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "flagged", "finding": "The new stderr banner in ExternalBackend.dispatch repeats the exact clause 'spawns no process and builds no environment, so nothing binds' verbatim from the pre-existing --spine refusal message a few lines above it in the same class (the CrewLaunchError raised when spec.spine is not None). Deliberate per the implementer's own note (reused phrasing for hazard-message consistency), and it is a repeated human-readable clause inside two f-strings, not duplicated control-flow/logic -- non-blocking. Worth a follow-on: hoist the shared clause into one module-level string constant so the two messages cannot drift apart if one is edited later without the other.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

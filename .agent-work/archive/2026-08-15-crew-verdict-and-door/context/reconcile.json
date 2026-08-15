@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "files": [],
+  "repo_rev": {
+    "commit": "35f6c66382d450b9dcc232d7aeebcb14b5556a00"
+  },
+  "run": {
+    "work_id": "crew-verdict-and-door",
+    "generated_at": "2026-08-15T17:36:54Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/crew-verdict-and-door",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/crew-verdict-and-door",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/crew-verdict-and-door"
+    }
+  }
+}

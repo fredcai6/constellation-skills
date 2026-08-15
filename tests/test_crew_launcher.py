@@ -2249,6 +2249,20 @@ class BuildEntryTests(unittest.TestCase):
         self.assertIn("parent", entry)
         self.assertIsNone(entry["parent"])
 
+    def test_build_entry_cli_door_bound_true(self):
+        # The cli backend spawns a real child and binds SPINE_FILE/SPINE_SESSION
+        # into its environment (_crew_door_env) -- its door is genuinely bound.
+        entry = RC.build_entry(backend="cli", pid=1, **self._kwargs())
+        self.assertIs(True, entry["door_bound"])
+
+    def test_build_entry_external_door_bound_false(self):
+        # The external backend spawns no process and builds no environment, so
+        # nothing ever binds SPINE_FILE/SPINE_SESSION for it -- its door
+        # resolves to .mcp.json's demo default. This field must state that
+        # plainly in the registry rather than let it silently read as bound.
+        entry = RC.build_entry(backend="external", pid=None, **self._kwargs())
+        self.assertIs(False, entry["door_bound"])
+
 
 class FinalizeFromExitCodeTests(unittest.TestCase):
     """The ONE finalize tail both CliBackend.dispatch and .resume call — no forked
@@ -2323,6 +2337,62 @@ class FinalizeFromExitCodeTests(unittest.TestCase):
             )
             self.assertEqual("completed", entry["status"])
             self.assertNotIn("blocked_gate", entry)
+
+    def test_finalize_terminal_spine_rescues_missing_result(self):
+        # Both --spine and --result given (the archive gate's shape): the
+        # result artifact is missing, but the bound spine IS terminal --
+        # the terminal spine must rescue the verdict into `completed`
+        # rather than inverting it to `failed`.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = "spine.json"
+            _write_spine(root / spine_rel, done=True)
+            entry = {}
+            final = RC.finalize_from_exit_code(
+                entry, exit_code=0, result="r.md", root=root, since=iso(self.BASE),
+                spine=spine_rel,
+            )
+            self.assertEqual(0, final)
+            self.assertEqual("completed", entry["status"])
+            self.assertEqual("spine_terminal", entry["verdict_source"])
+
+    def test_finalize_still_fails_when_spine_not_terminal(self):
+        # Same both-flags shape, but the spine is NOT terminal and there is
+        # still no result -- this must NOT become a rubber stamp: a
+        # genuinely failed crew must keep reading `failed`.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine_rel = "spine.json"
+            _write_spine(root / spine_rel, done=False)
+            entry = {}
+            final = RC.finalize_from_exit_code(
+                entry, exit_code=0, result="r.md", root=root, since=iso(self.BASE),
+                spine=spine_rel,
+            )
+            self.assertEqual("failed", entry["status"])
+            self.assertNotEqual("spine_terminal", entry["verdict_source"])
+
+    def test_finalize_blocked_wins_regardless_of_result_or_spine(self):
+        # A FRESH result AND a spine whose single item is `blocked` (never
+        # simultaneously terminal in this engine's vocabulary -- blocked is
+        # not `complete`/`skipped`, so spine_terminal reads False here).
+        # blocked_gate must still win over both other paths.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_result_with_mtime(root / "r.md", self.BASE + 60)
+            spine_rel = "spine.json"
+            _write_blocked_spine(root / spine_rel, blocked_id="w1")
+            self.assertEqual("w1", RC.spine_blocked_id(spine_rel, root))
+            self.assertFalse(RC.spine_terminal(spine_rel, root))
+            entry = {}
+            final = RC.finalize_from_exit_code(
+                entry, exit_code=0, result="r.md", root=root, since=iso(self.BASE),
+                spine=spine_rel,
+            )
+            self.assertEqual(0, final)
+            self.assertEqual("blocked", entry["status"])
+            self.assertEqual("w1", entry["blocked_gate"])
+            self.assertEqual("blocked_gate", entry["verdict_source"])
 
 
 class EntryBackendTests(unittest.TestCase):
@@ -2477,6 +2547,28 @@ class BackendEquivalenceTests(unittest.TestCase):
             with self.assertRaises(RC.CrewLaunchError) as ctx:
                 RC.ExternalBackend().dispatch(spec, root=root, entries=[])
             self.assertIn("refusing to record", str(ctx.exception))
+
+    def test_external_dispatch_prints_unbound_door_banner(self):
+        # The external backend spawns no process and builds no environment, so
+        # its MCP door silently resolves to .mcp.json's demo default -- this
+        # banner is the visibility fix (binding out-of-band is impossible by
+        # construction). It must fire on EVERY external dispatch, unconditionally.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            spec = RC.CrewSpec(
+                work_id="issue-1", gate="g1", role="implementer", handoff=handoff,
+                result=result, worktree=".", attempt=1,
+            )
+            captured = io.StringIO()
+            with contextlib.redirect_stderr(captured):
+                RC.ExternalBackend().dispatch(spec, root=root, entries=[])
+            banner = captured.getvalue()
+            self.assertIn("unbound", banner.lower())
+            self.assertIn(".mcp.json", banner)
+            self.assertIn("demo default", banner)
+            self.assertIn("spine_status", banner)
 
     def test_verify_is_uniform_across_backends(self):
         """CrewBackend.verify (used by both backends) finalizes on a fresh result
