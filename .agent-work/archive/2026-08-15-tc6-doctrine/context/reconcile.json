@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "files": [],
+  "repo_rev": {
+    "commit": "0646d61bfc5ac92dc3d23c5a46929555a2648eae"
+  },
+  "run": {
+    "work_id": "tc6-doctrine",
+    "generated_at": "2026-08-15T20:44:08Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/tc6-doctrine",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/tc6-doctrine",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/tc6-doctrine"
+    }
+  }
+}

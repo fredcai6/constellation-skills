@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "work_id": "tc6-doctrine",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/tc6-doctrine",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "70fc98d8194a28f9f8fc2be73e8455ba556e15b81e9b28fdd82eeb11883b6b10",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/GLOSSARY.md",
+      "content_hash": "574e9ef4f494522653ea8d62cb58a1138f5bf385a17e95a75629bccd3c0340ee",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/CHECKLIST_SCHEMA.md",
+      "content_hash": "8124594c3b532b21bc29a4d4c5803f4a44e4ab0fa2ec5b8b9f9e8e61f5de282e",
+      "source": "agent-declared"
+    },
+    {
+      "path": "scripts/checklist_engine.py",
+      "content_hash": "3ea4bbeff24a76ddef9d8bdd518938b119e8439be4eb305d86b50e09f72b00fb",
+      "source": "agent-declared"
+    },
+    {
+      "path": "scripts/mcp_spine_server.py",
+      "content_hash": "729c6b68bf5a1df6491cfaca1a0e48e7f52f7de3f2893f116d89b1d3ebcb3320",
+      "source": "agent-declared"
+    },
+    {
+      "path": "tests/test_spine_origin_isolation.py",
+      "content_hash": "df34695b9bea98d30f298d56913430688bf0b23ba3e1b88befb7656c5d13c360",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "docs/architecture packet map is absent from this repo (map/ids.jsonl builds to 0 ids; map/INDEX.md is a landing-zone stub, not a packet map) -- there is no generated architecture map to orient against for this docs-only doctrine-reconciliation task"
+  ],
+  "escalation": "None needed for this run -- the launch order (admiral-post-568) already names the authoritative source (the ruling doc + code at main 0646d61b) in place of a map; if a future run needs a real packet map for this area, that is a triage candidate for the Admiral/Cartographer, not a blocker here",
+  "emitted_at": "2026-08-15T20:28:13.163401+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

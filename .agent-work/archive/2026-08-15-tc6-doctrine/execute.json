@@ -1,0 +1,489 @@
+{
+  "work_id": "tc6-doctrine",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1",
+    "g2",
+    "g3",
+    "g4"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope (Mission Frame + Candidate A from PLAN_ALTERNATIVES.md, triaged in PLAN_CRITIC.md), then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/tc6-doctrine/MISSION_FRAME.md && test -f .agent-work/tc6-doctrine/PLAN_ALTERNATIVES.md && test -f .agent-work/tc6-doctrine/PLAN_CRITIC.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-e0-context-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-e0-context-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/tc6-doctrine/MISSION_FRAME.md && test -f .agent-work/tc6-doctrine/PLAN_ALTERNATIVES.md && test -f .agent-work/tc6-doctrine/PLAN_CRITIC.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1": {
+      "id": "g1",
+      "title": "Task 1 \u2014 correct docs/CHECKLIST_SCHEMA.md's stale worktree-isolation passage",
+      "imperative": "Reasoning gate, no crew dispatch (a prose/doctrine deliverable in context already held). Rewrite docs/CHECKLIST_SCHEMA.md lines ~120-126 to describe what #588 shipped: the predicate origin_worktree_refusal (scripts/checklist_engine.py:102-179) compares by equality (os.path.normcase, ==), not containment; the ONE impure call site (scripts/checklist_engine.py:3411-3444) resolves the engine's own cwd to its git worktree toplevel via `git rev-parse --show-toplevel` BEFORE the predicate sees it; an origin-carrying spine whose cwd yields no git toplevel is refused (fail-closed, ordered after the shape fallbacks); subdirectory work (`<worktree>/scripts`, `<worktree>/.agent-work/<id>`) still passes, but because toplevel resolved from a subdirectory of a worktree IS that worktree's own toplevel, not because of containment logic. State each rewritten claim with a file:line citation into the current code, and a quoted before/after. Preserve verbatim in substance (light copy-edit only, no content change): the guarded/exempt verb set and its reasoning (current read cross-tree for REFRESH REQUESTED, release as the recovery escape hatch), and the unforgeability withdrawal sentence -- do not upgrade or soften it (Pre-Ruling forgery-stays-named).",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the stale containment/Path.cwd() language is gone from docs/CHECKLIST_SCHEMA.md",
+          "check": {
+            "kind": "command",
+            "command": "! grep -qi 'containment, not equality' docs/CHECKLIST_SCHEMA.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-5"
+        },
+        {
+          "id": "c2",
+          "statement": "the corrected passage names git worktree toplevel resolution and equality comparison",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'git worktree toplevel' docs/CHECKLIST_SCHEMA.md && grep -qi 'equality' docs/CHECKLIST_SCHEMA.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-6"
+        },
+        {
+          "id": "c3",
+          "statement": "the fail-closed behavior for an unresolvable cwd is documented",
+          "check": {
+            "kind": "command",
+            "command": "grep -qi 'fail.closed' docs/CHECKLIST_SCHEMA.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-7"
+        },
+        {
+          "id": "c4",
+          "statement": "the guarded/exempt verb reasoning and the unforgeability withdrawal survive, unchanged in substance",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'REFRESH REQUESTED' docs/CHECKLIST_SCHEMA.md && grep -qi 'recovery escape hatch' docs/CHECKLIST_SCHEMA.md && grep -Piq 'does (\\*\\*)?not(\\*\\*)? make the comparison unforgeable' docs/CHECKLIST_SCHEMA.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-8"
+        }
+      ],
+      "constraints": [
+        "docs-only; no edit to scripts/checklist_engine.py or any test file"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py origin_worktree_refusal ~102-179; main() call site ~3411-3444"
+        ],
+        "constraint": [
+          "Pre-Ruling engine-is-truth: docs follow the engine, never the reverse",
+          "Pre-Ruling forgery-stays-named: unforgeability withdrawal stays exactly as strong as written"
+        ],
+        "evidence": [
+          "2026-08-15 worktree-identity ruling; tests/test_spine_origin_isolation.py::test_it_is_pure"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -qi 'containment, not equality' docs/CHECKLIST_SCHEMA.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'git worktree toplevel' docs/CHECKLIST_SCHEMA.md && grep -qi 'equality' docs/CHECKLIST_SCHEMA.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -qi 'fail.closed' docs/CHECKLIST_SCHEMA.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'REFRESH REQUESTED' docs/CHECKLIST_SCHEMA.md && grep -qi 'recovery escape hatch' docs/CHECKLIST_SCHEMA.md && grep -qi 'does not make the comparison unforgeable' docs/CHECKLIST_SCHEMA.md",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -qi 'containment, not equality' docs/CHECKLIST_SCHEMA.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-6",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'git worktree toplevel' docs/CHECKLIST_SCHEMA.md && grep -qi 'equality' docs/CHECKLIST_SCHEMA.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-7",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -qi 'fail.closed' docs/CHECKLIST_SCHEMA.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-8",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'REFRESH REQUESTED' docs/CHECKLIST_SCHEMA.md && grep -qi 'recovery escape hatch' docs/CHECKLIST_SCHEMA.md && grep -Piq 'does (\\*\\*)?not(\\*\\*)? make the comparison unforgeable' docs/CHECKLIST_SCHEMA.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2": {
+      "id": "g2",
+      "title": "Task 2 \u2014 resolve the launch-order template's redundant-or-distinct contradiction",
+      "imperative": "Reasoning gate, no crew dispatch. Decide and defend, in writing, one of (a) the skills/admiral/templates/LAUNCH_ORDER.template.md:43/:76 verify_worktree_isolation.py --here first-step instruction is genuinely redundant now that the engine refuses every guarded verb natively, so drop or demote it; or (b) it remains valuable as a distinct early, human-readable signal, and state precisely how it differs from the engine guard (e.g. timing -- it runs before any git operation as a Commander-facing sanity check, vs. the engine's per-verb refusal; audience -- human-readable pass/fail vs. an engine REFUSED on the next mutating call; independence -- it exercises a different code path, so it also catches a broken git checkout the engine guard would not distinguish from a legitimate refusal). Whichever is chosen, edit the template so the contradiction with docs/CHECKLIST_SCHEMA.md's 'supersedes' language is gone -- either remove the now-redundant instruction (with a pointer to the engine-native guard) or add one sentence distinguishing the two mechanisms. Verify lines ~46-54 (isolation is git-only; hook code is not fenced by it; CLAUDE_PROJECT_DIR inheritance) are still accurate against the live code and leave them untouched.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1's corrected schema text exists, so g2's cross-reference to it is accurate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 closed; docs/CHECKLIST_SCHEMA.md:120-124 now describes equality/git-toplevel, and the supersedes sentence is precisely scoped to 'the per-template command check ... on the Commander spine's init precondition c0' -- not to this template's line-43 first-step instruction."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "a defended (a) or (b) decision is recorded in the return evidence, with reasoning",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Decision (b), defended: verify_worktree_isolation.py --here differs from the engine guard on timing (runs before any spine exists), independence of expected value (Admiral-declared in the launch order text vs. a same-process spine stamp), and audience (human-readable artifact in the return report vs. an engine REFUSED on a later mutating verb). See skills/admiral/templates/LAUNCH_ORDER.template.md new paragraph after line 43."
+        },
+        {
+          "id": "c2",
+          "statement": "the template no longer contradicts docs/CHECKLIST_SCHEMA.md's supersession language",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Added paragraph explicitly scopes docs/CHECKLIST_SCHEMA.md's 'supersedes' language to the removed per-template init.c0 command check, not to this line-43 instruction -- contradiction resolved by clarification, not deletion."
+        },
+        {
+          "id": "c3",
+          "statement": "lines ~46-54 (isolation is git-only / CLAUDE_PROJECT_DIR) verified accurate and left intact",
+          "check": {
+            "kind": "command",
+            "command": "grep -qi 'isolation is git-only' skills/admiral/templates/LAUNCH_ORDER.template.md && grep -q 'CLAUDE_PROJECT_DIR' skills/admiral/templates/LAUNCH_ORDER.template.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-2"
+        }
+      ],
+      "constraints": [
+        "docs-only; scripts/run_crew.py and skills/commander/references/crew-dispatch.md are owned by the concurrent launcher-hygiene lane -- do not touch"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/admiral/templates/LAUNCH_ORDER.template.md ~43, ~46-54, ~76",
+          "scripts/verify_worktree_isolation.py (read-only reference, not edited)"
+        ],
+        "constraint": [
+          "Pre-Ruling judgment-on-task-2: a defended (a)/(b) call, not a mechanical edit; leaving the contradiction standing is not an option"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -qi 'isolation is git-only' skills/admiral/templates/LAUNCH_ORDER.template.md && grep -q 'CLAUDE_PROJECT_DIR' skills/admiral/templates/LAUNCH_ORDER.template.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -qi 'isolation is git-only' skills/admiral/templates/LAUNCH_ORDER.template.md && grep -q 'CLAUDE_PROJECT_DIR' skills/admiral/templates/LAUNCH_ORDER.template.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3": {
+      "id": "g3",
+      "title": "Task 3 \u2014 measure the third surface, sweep for any other stale claim, fix or record",
+      "imperative": "Reasoning gate, no crew dispatch. Depends on g1 closing first so the sweep never flags g1's own already-corrected passage as a false positive. First, re-measure skills/workbench/references/checklist-engine.md directly: read it and state plainly whether it carries any worktree-isolation claim needing reconciliation, or whether the launch order's third-surface premise is wrong -- an honest null ('the recorded third surface does not exist as described') is a complete, sufficient answer (Pre-Ruling honest-null). Then run exactly this sweep and record its literal output and match count in the return evidence: `grep -rn -E 'is_relative_to|[Cc]ontainment|Path\\.cwd\\(\\)|verify_worktree_isolation\\.py' docs/ skills/ --include=*.md` (POSIX form). Exclude from the sweep's SEARCH ROOTS nothing under docs/ or skills/ -- but for any hit inside a file owned by the concurrent launcher-hygiene lane (scripts/run_crew.py is not under docs/ or skills/workbench and skills/commander/references/crew-dispatch.md IS under skills/ and could match), record it as a finding only and do NOT edit it; .worktrees/launcher-hygiene/ is not under docs/ or skills/ at this worktree's root so the sweep does not reach it. For every other hit that asserts containment/Path.cwd()/verify_worktree_isolation.py as CURRENT engine behavior (not a historical mention, not a reference to the script's continued existence for a different purpose), fix it in the same style as g1; anything found and not fixed is recorded as a finding in the return evidence, per the launch order's 'Anything you find and do not fix, record in findings.'",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 closed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 closed."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "checklist-engine.md carries no containment/Path.cwd() claim as current isolation behavior -- an explicit measurement, not a silent assumption; if this ever finds a hit, fix it in the same gate before it can pass",
+          "check": {
+            "kind": "command",
+            "command": "! grep -qiE 'is_relative_to|Path\\.cwd\\(\\)' skills/workbench/references/checklist-engine.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-3"
+        },
+        {
+          "id": "c2",
+          "statement": "the exact sweep command was run across docs/ and skills/; its literal output and match count are in the return evidence; every hit is fixed or recorded as a finding, with launcher-hygiene-owned hits recorded only, never edited",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Sweep recorded as evidence e-g3-1: exact command, 51-match count, full disposition. See attached sweep-record."
+        }
+      ],
+      "constraints": [
+        "docs-only; a hit inside scripts/run_crew.py or skills/commander/references/crew-dispatch.md is reported, never edited (owned by the concurrent launcher-hygiene lane)"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/workbench/references/checklist-engine.md"
+        ],
+        "constraint": [
+          "Pre-Ruling honest-null: if Task 3's premise is wrong, report that instead of manufacturing work"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-1",
+          "type": "sweep-record",
+          "payload": {
+            "command": "grep -rn -E 'is_relative_to|[Cc]ontainment|Path\\.cwd\\(\\)|verify_worktree_isolation\\.py' docs/ skills/ --include=*.md",
+            "match_count": "51",
+            "disposition": "0 additional stale surfaces; all 51 hits are either the g1/g2-fixed passages themselves, a distinct unrelated containment check (spine_rail._is_valid_claim_target in docs/GAUGE_WRITER_HOOK.md; episode-store directory-membership in docs/EPISODE_STORE.md; Path.cwd() default in an unrelated inbox-path helper), historical 2026-06-24 design/plan docs for verify_worktree_isolation.py's original build (archival, not live doctrine), still-accurate descriptions of verify_worktree_isolation.py's own unchanged Admiral-gate/Commander-self-check role (skills/_shared/windows.md, skills/admiral/references/fleet-doctrine.md), or a false-positive substring match on self-containment (skills/docent, unrelated to worktrees)."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -qiE 'is_relative_to|Path\\.cwd\\(\\)' skills/workbench/references/checklist-engine.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -qiE 'is_relative_to|Path\\.cwd\\(\\)' skills/workbench/references/checklist-engine.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4": {
+      "id": "g4",
+      "title": "Verify: full clean-env suite, this repo's own derived code map, evidence roll-up",
+      "imperative": "Reasoning gate, no crew dispatch. Two distinct artifacts, do not conflate them: (1) the launch order's 'regenerate the map' evidence requirement names THIS repo's own derived code map at map/ids.jsonl and map/INDEX.md, built by `python -m scripts.code_map build --root .` -- NOT the absent docs/architecture packet map, which stays out of scope per the Mission Frame. Run the code-map build; commit map/ids.jsonl and map/INDEX.md only if the build output changed them. (2) Run the full suite exactly per the launch order's 'Do not park' recipe (nohup, env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT, blocking until-loop, cache cleared first) and record the final passed/failed/skipped/subtests counts, comparing against the launch order's stated worktree-checkout baseline (3028 passed, 6 skipped).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1, g2, g3 closed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1, g2, g3 all closed."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "this repo's own derived code map rebuilt from the post-edit tree",
+          "check": {
+            "kind": "command",
+            "command": "python -m scripts.code_map build --root ."
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-1"
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green, cache-clean, clean env (SPINE_FILE/SPINE_SESSION/SPINE_PARENT unset); counts recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Full suite, cache-clean, clean env (SPINE_FILE/SPINE_SESSION/SPINE_PARENT unset, __pycache__ cleared first): 3028 passed, 6 skipped, 1136 subtests passed in 123.83s -- exactly matches the launch order's stated worktree-checkout baseline (3028/6)."
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1/g2/g3 anchors -- verification re-confirms the same structural anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m scripts.code_map build --root .",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-15T20:37:21.624268+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1",
+      "why": "Rewrote docs/CHECKLIST_SCHEMA.md:120-124 to describe #588: equality (not containment) comparison at the pure predicate (checklist_engine.py:102-179), git-toplevel resolution at the one impure call site (checklist_engine.py:3411-3444), and fail-closed for an unresolvable cwd. Guarded/exempt verb reasoning and the unforgeability withdrawal survive unchanged in substance.",
+      "mechanical": false,
+      "ts": "2026-08-15T20:38:25.295824+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g2",
+      "why": "Decision (b): distinct, not redundant. Reasoning and template edit recorded above; c3 command check re-runs to confirm lines 46-54 intact.",
+      "mechanical": false,
+      "ts": "2026-08-15T20:39:27.821792+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g3",
+      "why": "skills/workbench/references/checklist-engine.md measured directly: only worktree mentions are the --worktree lease-claim CLI flag (lines 84, 89) -- no origin/containment/equality isolation claim at all. Honest null: the launch order's recorded third surface does not exist as described. Sweep run per the exact command; 51 hits, all triaged, none requiring a fix beyond g1/g2, none inside launcher-hygiene-owned files.",
+      "mechanical": false,
+      "ts": "2026-08-15T20:40:25.670128+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g4",
+      "why": "Code map rebuilt via python -m scripts.code_map build --root . -- map/ids.jsonl and map/INDEX.md unchanged (docs-only edits do not move this repo's derived code map), so nothing to commit for it. Full suite green cache-clean clean-env: 3028 passed, 6 skipped, 1136 subtests, matching the launch order's worktree-checkout baseline exactly.",
+      "mechanical": false,
+      "ts": "2026-08-15T20:43:02.294806+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-15T20:38:22.087821+00:00",
+      "reason": "c4's original grep pattern 'does not make the comparison unforgeable' cannot match the actual doc text 'does **not** make the comparison unforgeable' -- markdown bold markers break the literal substring. Fixing the check text, not the doc: the unforgeability sentence itself is correct and untouched.",
+      "authority": "commander",
+      "ops": [
+        "retext-check g1.c4"
+      ]
+    }
+  ]
+}

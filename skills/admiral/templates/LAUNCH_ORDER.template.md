@@ -41,6 +41,8 @@ A measured negative on the stated question is a complete, successful deliverable
 ## Workspace
 `<absolute worktree path, provisioned for you via "git worktree add" — branch name, base commit, and the exact add command that created it. Verify main freshness before dispatch. Worktrees lack untracked inputs; see Data Locations.>`
 First step, before any git operation: run `python <admiral-skill-dir>/scripts/verify_worktree_isolation.py --here <absolute worktree path>` — it must exit 0, proving you are in your own worktree and not the shared checkout. Paste its output into your return report.
+
+**Distinct from, not superseded by, the engine-native guard.** `docs/CHECKLIST_SCHEMA.md`'s "supersedes" language is scoped precisely to the per-template `command` check that used to sit on the Commander spine's `init` precondition `c0` — not to this instruction. This check runs before `init_work_area` creates a spine at all, so there is no `origin.worktree` stamp yet for `origin_worktree_refusal` to compare against; its `EXPECTED` value is the worktree path the Admiral wrote into this launch order, an authority external to any spine file, not a value the Commander's own process stamped moments earlier. It earns its place independently: an early, human-readable pass/fail pasted into the return report, catching a misplaced Commander before any spine-mutating verb is even attempted.
 NOTE: PR integration defaults to **server-side merge** (the GitHub merge on the PR itself, not a local merge that would diverge your worktree from main).
 
 **Isolation is git-only — hook code is not fenced by it.** `verify_worktree_isolation.py` proves your git
