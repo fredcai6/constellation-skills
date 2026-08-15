@@ -1,0 +1,181 @@
+{
+  "work_id": "tc1-episode-rewording",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-reword",
+    "g1-verify"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope (LAUNCH_ORDER Mission + Pre-Rulings, MISSION_FRAME.md), then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Plan intent/scope confirmed: reword LAUNCH_ORDER-named a5 statements only, via apply_episode_delta.py restate-assertion."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-reword": {
+      "id": "g1-reword",
+      "title": "Reword the two a5 statements",
+      "imperative": "REASONING GATE, crew-waived: the deliverable is a two-statement prose restatement inside an existing, already-read episode store; the Commander already holds full context from LAUNCH_ORDER (verbatim before-text, exact files/lines, rough-shape guidance) and from reading both episode files in full at understand -- dispatching an implementer/reviewer crew for a 2-line reword would re-derive context already held, not add independent verification the crew-gate shape is for. Author .agent-work/tc1-episode-rewording/episode-delta.json with two restate-assertion ops (assertion a5 in tc1-windows-path-form-002 and tc1-windows-path-form-003), each statement rewritten past-tense as an observation of what that run did and found, substance preserved, each history field stating the restatement reason. Apply via `python3 scripts/apply_episode_delta.py --delta .agent-work/tc1-episode-rewording/episode-delta.json --store-root episodes`. Do not hand-edit the markdown. Do not add either id to the guard's exception list. Do not delete either record. Attest c1 quoting both before/after statements verbatim.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both a5 statements restated via apply_episode_delta.py restate-assertion; before/after quoted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Before/after for tc1-windows-path-form-002.a5: BEFORE: 'Read the verifier source (not just the template) to get the exact required/optional field split, then keep the template'\\''s structural shape and substitute real run content -- rather than guessing at which template fields could be dropped.' AFTER: 'The run read the verifier source (verify_replan.py and verify_issue_set.py), not just the bundled template, and that read is what exposed the exact required/optional field split -- neither the template nor the directive block had named it. Keeping the template'\\''s structural shape and substituting real run content produced a schema-valid REPLAN_INPUT.json, where an earlier attempt at guessing which template fields could be dropped had not.' Before/after for tc1-windows-path-form-003.a5: BEFORE: 'Always pass --why with a genuine one-line understanding statement on every advance call for a non-exempt gate, rather than waiting for the refusal to name it.' AFTER: 'The advance call on this non-exempt gate refused until it carried a --why with a genuine one-line understanding statement; supplying that statement up front on the retry avoided a second refusal round-trip and the extra background wait for the engine'\\''s own full-suite re-run inside the successful advance.' Applied via apply_episode_delta.py restate-assertion, verified dry-run then real run, diff inspected."
+        },
+        {
+          "id": "c2",
+          "statement": "neither record deleted; exception list untouched",
+          "check": {
+            "kind": "command",
+            "command": "test -f episodes/active/tc1-windows-path-form-002.md && test -f episodes/active/tc1-windows-path-form-003.md && ! git diff --name-only -- tests/test_episode_observations.py | grep -q ."
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-reword-2"
+        }
+      ],
+      "constraints": [
+        "LAUNCH_ORDER File Ownership: only the two named episode files are writable"
+      ],
+      "anchors": {
+        "inherits": "MISSION_FRAME.md Governing Constraints / Claims / Evidence Surfaces"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-reword-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f episodes/active/tc1-windows-path-form-002.md && test -f episodes/active/tc1-windows-path-form-003.md && git -C . diff --name-only -- tests/test_episode_observations.py | grep -qv . ",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-reword-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f episodes/active/tc1-windows-path-form-002.md && test -f episodes/active/tc1-windows-path-form-003.md && ! git diff --name-only -- tests/test_episode_observations.py | grep -q .",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-verify": {
+      "id": "g1-verify",
+      "title": "Guard green, full suite clean-env, commit and push",
+      "imperative": "Run `python -m pytest -q tests/test_episode_observations.py` and confirm 0 failed. Clear caches (`find . -name __pycache__ -type d -not -path './.git/*' -prune -exec rm -rf {} +`), then run the full suite with `env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT` and confirm exactly 3010 passed, 6 skipped, 0 failed, 1136 subtests. Commit the two reworded episode files (and this work area) and push to tc1/worktree-identity. Do not merge.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "reword applied",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-reword complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "episode-observation guard green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_episode_observations.py"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "full suite clean-env matches target counts",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "committed and pushed to tc1/worktree-identity",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-15T18:54:55.480949+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-reword",
+      "why": "Both a5 statements restated as past-tense observations via restate-assertion; substance preserved per LAUNCH_ORDER rough shape; no exception-list or deletion used; guard-check text bug fixed via retext-check.",
+      "mechanical": false,
+      "ts": "2026-08-15T18:55:52.727365+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-15T18:55:49.479589+00:00",
+      "reason": "Original c2 check text 'grep -qv .' on empty git-diff stdin returns exit 1 unconditionally (no lines read, so -v matches nothing) -- a check that cannot fail is indistinguishable from one that passed, and this one couldn't pass even when the world was healthy. Fixed to a direct negated non-empty-diff test.",
+      "authority": "commander",
+      "ops": [
+        "retext-check g1-reword.c2"
+      ]
+    }
+  ]
+}

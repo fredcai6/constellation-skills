@@ -1,0 +1,11 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "g1-reword",
+      "which": "postconditions",
+      "cond": "c2",
+      "command": "test -f episodes/active/tc1-windows-path-form-002.md && test -f episodes/active/tc1-windows-path-form-003.md && ! git diff --name-only -- tests/test_episode_observations.py | grep -q ."
+    }
+  ]
+}

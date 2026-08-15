@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Reword two episode a5 assertions flagged by the episode-observations guard",
+      "spec_path": ".agent-work/tc1-episode-rewording/LAUNCH_ORDER-2.md",
+      "intent_and_why": "tc1-windows-path-form-002.a5 and -003.a5 opened with bare-verb advice-to-a-future-reader clauses ('Read', 'keep'/'pass'), which the episode-observations guard flags for workaround/proposed-remedy kinds. Restate both as past-tense observations of what this run did, without touching the exception list, deleting a record, or the guard itself."
+    },
+    "definition_of_done": [
+      "tc1-windows-path-form-002.a5 and -003.a5 read as observations of what the run did, not advice to a reader",
+      "cache-clean full suite (env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT) matches the ordered baseline: 3010 passed, 6 skipped, 0 failed, 1136 subtests",
+      "the two staged episode files are committed to tc1/worktree-identity and pushed so PR #588's CI re-runs"
+    ],
+    "good_enough": {
+      "mandatory_quality": "Only the two named a5 statements change; no other episode file, the exception list, checklist_engine.py, or test_episode_observations.py is touched",
+      "sufficient_evidence": "Cache-clean full-suite measurement at the ordered baseline, plus the reworded text matching the wording confirmed correct in LAUNCH_ORDER-2",
+      "appetite": "One gate (g1-verify: guard green, clean-env suite, commit, push)"
+    },
+    "hard_constraints": [
+      "File ownership fence: only the two tc1-windows-path-form-00{2,3}.md episodes and this work area are writable this run",
+      "Do not add anything to test_episode_observations.py's exception list",
+      "Do not touch scripts/checklist_engine.py, test_spine_origin_isolation.py, scripts/hooks/spine_rail.py, scripts/run_crew.py, or .mcp.json",
+      "Branch tc1/worktree-identity only; no second PR"
+    ],
+    "fixed_decisions": [
+      "Rewording already done and ratified correct by LAUNCH_ORDER-2 (admiral-post-568) -- not redone this turn",
+      "A backgrounded long-running suite command is polled via its output file rather than waiting on a notification, per LAUNCH_ORDER-2's explicit correction of the prior attempt's stop"
+    ],
+    "current_wave": {
+      "objective": "Verify the guard is green with the reworded text, confirm the clean-env full suite matches the ordered baseline, then commit and push",
+      "exit_criteria": [
+        "cache-clean full suite matches 3010 passed, 6 skipped, 0 failed, 1136 subtests exactly",
+        "commit lands on tc1/worktree-identity and is pushed with PR #588 still open"
+      ],
+      "issues": [
+        {
+          "id": "g1-verify",
+          "title": "Guard green, full suite clean-env, commit and push",
+          "desired_outcome": "The two reworded episodes are committed and pushed behind a clean-env full-suite measurement at the ordered baseline.",
+          "useful_now": "Unblocks PR #588's CI re-run for the worktree-identity ruling.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "git diff --stat shows exactly the two episode files; cache-clean suite matches the ordered baseline; push succeeds; PR #588 remains open.",
+          "implementation_latitude": "No code change beyond what LAUNCH_ORDER-2 already ratified; this gate is verify-and-land only.",
+          "hard_constraints_no_gos": [
+            "Do not rewrite the a5 statements again",
+            "Do not touch any other episode file"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "episodes/active/tc1-windows-path-form-002.md",
+            "episodes/active/tc1-windows-path-form-003.md"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [],
+    "uncertainty_register": [],
+    "parked_possibilities": []
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "g1-verify",
+      "outcome": "Cache-clean full suite measured 3010 passed, 6 skipped, 0 failed, 1136 subtests, matching the ordered baseline exactly; the two reworded episode files were committed (2bebedd6) and pushed to tc1/worktree-identity.",
+      "evidence": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q output; git commit 2bebedd6; git push origin tc1/worktree-identity; gh pr view 588 shows state OPEN, mergedAt null."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The clean-env full suite is green at the ordered baseline with the reworded episodes staged",
+      "expected": "3010 passed, 6 skipped, 0 failed, 1136 subtests (LAUNCH_ORDER-2 baseline)",
+      "observed": "3010 passed, 6 skipped, 1136 subtests passed in 122.79s, 0 failed -- exact match, measured with SPINE_FILE/SPINE_SESSION/SPINE_PARENT stripped",
+      "source": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q, run cache-clean from this worktree after clearing __pycache__"
+    }
+  ],
+  "discrepancies": [],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "episodes/active/tc1-windows-path-form-002.md",
+      "episodes/active/tc1-windows-path-form-003.md",
+      "tests/test_episode_observations.py"
+    ],
+    "map_status": "No architecture map consulted -- LAUNCH_ORDER-2 scoped this to two named already-reworded statements plus a verify/commit/push step; the frame is shrunk accordingly."
+  }
+}
