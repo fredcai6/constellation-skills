@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "files": [],
+  "repo_rev": {
+    "commit": "bbbf41f6c65012ac2b7cba3c44a04a61bcbe2556"
+  },
+  "run": {
+    "work_id": "fix-work-area-escape",
+    "generated_at": "2026-08-15T14:54:46Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/fix-work-area-escape",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/fix-work-area-escape",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/fix-work-area-escape"
+    }
+  }
+}

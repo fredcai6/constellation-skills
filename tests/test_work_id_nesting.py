@@ -464,6 +464,34 @@ class ManifestRootNestingTests(unittest.TestCase):
             ".agent-work", "issue-467", "red-repro", "scratch", "face-a")
         self.assertEqual(base.parent, EC.manifest_root(base, "red-repro-431-face-a"))
 
+    def test_a_worktree_root_with_no_agent_work_ancestor_refuses_rather_than_escapes(self):
+        """RED before the fix (#585): the real defect, reproduced with the real
+        function and no mocking. Handed a WORKTREE ROOT -- not a work area, no
+        `.agent-work` anywhere in its ancestry -- the old unconditional
+        `base.parent` climbed OUT of the worktree into `.worktrees/`, a directory
+        shared by every worktree in the repo, and silently composed a sibling of
+        the worktree it was asked about. This is the exact call shape that put
+        `.worktrees/probe`, `/s` and `/t` on disk: `manifest_root(worktree_root,
+        work_id)` for each placeholder work-id. It must now refuse instead of
+        guessing."""
+        worktree_root = Path(os.path.abspath("/repo")).joinpath(
+            ".worktrees", "epic-568-510")
+        for work_id in ("probe", "s", "t"):
+            with self.assertRaises(ValueError):
+                EC.manifest_root(worktree_root, work_id)
+
+    def test_the_refusal_does_not_fire_on_the_legitimate_scratch_spine_case(self):
+        """The positive control beside the refusal above: a base_dir that DOES sit
+        under `.agent-work` -- so it is somewhere inside a real work area, even if
+        not exactly under its own work-id -- keeps working exactly as
+        `test_a_checklist_not_under_its_own_work_id_keeps_the_old_answer` already
+        proves. Restated here, next to the refusal, so the boundary between "refuse"
+        and "keep the old answer" is visible in one place rather than split across
+        the file."""
+        base = Path(os.path.abspath("/repo")).joinpath(
+            ".agent-work", "issue-1", "scratch")
+        self.assertEqual(base.parent, EC.manifest_root(base, "unrelated-work-id"))
+
 
 if __name__ == "__main__":
     unittest.main()

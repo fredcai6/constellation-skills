@@ -199,8 +199,20 @@ def manifest_root(base_dir: Any, work_id: Any = None) -> Path:
     `work_id` is optional and the strip is conditional on the directory actually
     ENDING in it. A checklist that does not sit under its own work-id (scratch
     spines under an evidence directory do not) is a different question than this one,
-    and guessing at it is how the doubled path was written in the first place; those
-    keep the historical parent-of-base_dir answer exactly.
+    and those keep the historical parent-of-base_dir answer — but ONLY when
+    `base_dir` itself sits somewhere under an `.agent-work` tree, the one mechanical
+    signature every real work area shares (see the module docstring's layout).
+    Outside that tree there is no work area to be a parent-of, so guessing one is
+    exactly how a run escapes it: handed a WORKTREE ROOT (no `.agent-work` anywhere
+    in its ancestry — e.g. because a caller composed the manifest tooling by hand
+    instead of going through a checklist), the old unconditional `base.parent`
+    climbed OUT of the worktree into `.worktrees/`, a directory shared by every
+    worktree in the repo, and silently wrote a sibling of the worktree it was asked
+    about. That shape is a real, reproduced defect (four stray directories over six
+    days: `.worktrees/s`, `/t`, `/probe`, and the pair under
+    `constellation-skills-wt/`), not a hypothetical. This function now REFUSES
+    (`ValueError`) instead of guessing in that case — a silent wrong parent is worse
+    than a loud stop.
     """
     base = Path(os.path.abspath(os.fspath(Path(base_dir))))
     segments = [s for s in str(work_id).split("/") if s] if work_id else []
@@ -210,6 +222,12 @@ def manifest_root(base_dir: Any, work_id: Any = None) -> Path:
         node = node.parent
     if segments and list(reversed(tail)) == segments:
         return node
+    if ".agent-work" not in base.parts:
+        raise ValueError(
+            f"manifest_root: refusing to guess a work-area root for {base} "
+            f"(work_id={work_id!r}) — no .agent-work ancestor to anchor the "
+            "fallback to, and a write here would escape the work area"
+        )
     return base.parent
 
 
