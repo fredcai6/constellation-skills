@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "execute",
+  "mechanical": {
+    "run": "lh-episode-rewording",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 4,
+    "spine-step": "execute",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-lh-episode-rewording-execute@a271781bfac346e2d95d6e21bd3ec3a9d3d51bda",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "lh-episode-rewording",
+    "generated_at": "2026-08-15T21:28:47Z"
+  }
+}

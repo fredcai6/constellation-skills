@@ -44,7 +44,8 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
-- statement: Called TaskOutput with block=true and a generous timeout on the backgrounded task id the harness returned, read its completed output (exit 0, gate closed) inside the same turn, and continued driving the spine rather than ending the turn on the pending job.
+- statement: Called TaskOutput with block=true and a generous timeout on the backgrounded task id the harness returned; this run then read its completed output (exit 0, gate closed) inside the same turn, and continued driving the spine rather than ending the turn on the pending job.
+- history: restated — Restated to remove a clause-opening bare imperative ('read') the episode-observation guard flags in workaround kind; substance and detail unchanged, subject added to the second clause. — original statement was: Called TaskOutput with block=true and a generous timeout on the backgrounded task id the harness returned, read its completed output (exit 0, gate closed) inside the same turn, and continued driving the spine rather than ending the turn on the pending job.
 
 ## Retirement
 - status: active

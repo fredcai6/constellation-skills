@@ -44,7 +44,8 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
-- statement: Read skills/replan/scripts/verify_replan.py's verify_replan_input and the installed constellation-to-initial-issues verify_issue_set.py's verify_manifest_shape directly before authoring REPLAN_INPUT.json, then filled every field with this run's real completed_outcomes, wave_evidence, and discrepancies (the Stop-hook MCP-door binding gap and the six-occurrence auto-backgrounding pattern) rather than adapting the template's placeholder prose.
+- statement: This run read skills/replan/scripts/verify_replan.py's verify_replan_input and the installed constellation-to-initial-issues verify_issue_set.py's verify_manifest_shape directly before authoring REPLAN_INPUT.json, then filled every field with this run's real completed_outcomes, wave_evidence, and discrepancies (the Stop-hook MCP-door binding gap and the six-occurrence auto-backgrounding pattern) rather than adapting the template's placeholder prose.
+- history: restated — Restated to remove a clause-opening bare imperative ('Read') the episode-observation guard flags in workaround kind; substance and detail (including the installed-vs-repo skills root finding) unchanged, subject added to the opening clause. — original statement was: Read skills/replan/scripts/verify_replan.py's verify_replan_input and the installed constellation-to-initial-issues verify_issue_set.py's verify_manifest_shape directly before authoring REPLAN_INPUT.json, then filled every field with this run's real completed_outcomes, wave_evidence, and discrepancies (the Stop-hook MCP-door binding gap and the six-occurrence auto-backgrounding pattern) rather than adapting the template's placeholder prose.
 
 ## Retirement
 - status: active

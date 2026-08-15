@@ -1,0 +1,25 @@
+{
+  "contract": 1,
+  "step": "triage",
+  "mechanical": {
+    "run": "lh-episode-rewording",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 7,
+    "spine-step": "triage",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-lh-episode-rewording-triage@18aeae29cadeb29eef5f337c5c3612e191b34397",
+    "artifact-ref": [
+      "episodes/active/launcher-hygiene-001.md",
+      "episodes/active/launcher-hygiene-002.md",
+      "episodes/active/launcher-hygiene-003.md"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "lh-episode-rewording",
+    "generated_at": "2026-08-15T21:40:26Z"
+  }
+}

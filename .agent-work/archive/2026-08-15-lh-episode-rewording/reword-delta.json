@@ -1,0 +1,26 @@
+{
+  "work_id": "lh-episode-rewording",
+  "ops": [
+    {
+      "op": "restate-assertion",
+      "id": "launcher-hygiene-001",
+      "assertion": "a5",
+      "statement": "Called TaskOutput with block=true and a generous timeout on the backgrounded task id the harness returned; this run then read its completed output (exit 0, gate closed) inside the same turn, and continued driving the spine rather than ending the turn on the pending job.",
+      "history": "Restated to remove a clause-opening bare imperative ('read') the episode-observation guard flags in workaround kind; substance and detail unchanged, subject added to the second clause."
+    },
+    {
+      "op": "restate-assertion",
+      "id": "launcher-hygiene-003",
+      "assertion": "a5",
+      "statement": "This run read skills/replan/scripts/verify_replan.py's verify_replan_input and the installed constellation-to-initial-issues verify_issue_set.py's verify_manifest_shape directly before authoring REPLAN_INPUT.json, then filled every field with this run's real completed_outcomes, wave_evidence, and discrepancies (the Stop-hook MCP-door binding gap and the six-occurrence auto-backgrounding pattern) rather than adapting the template's placeholder prose.",
+      "history": "Restated to remove a clause-opening bare imperative ('Read') the episode-observation guard flags in workaround kind; substance and detail (including the installed-vs-repo skills root finding) unchanged, subject added to the opening clause."
+    },
+    {
+      "op": "restate-assertion",
+      "id": "launcher-hygiene-002",
+      "assertion": "a3",
+      "statement": "The Stop hook refused the turn-end outright: \"SPINE MID-FLIGHT: gate reconcile is still open -- you are in the MIDDLE of the spine, not at its end, so ending your turn now abandons an active run. Keep working the gate.\" The context-percentage advisory text on spine_status (\"hand off here... advisory -- decline with a reason if you're nearly done\") and the Stop hook's own mechanical refusal are two different mechanisms with different authorities, and only the Stop hook is actually enforced; the advisory alone is not license to end the turn.",
+      "history": "Restated to switch both verbatim excerpts (the Stop hook refusal and the spine_status advisory) from single to double quotes. The guard's existing quoted-machine-output carve-out (test_second_person_inside_a_quotation_is_not_flagged) already covers exactly this shape, but its single-quote pairing regex requires a word-boundary on both delimiters, and the advisory excerpt's own verbatim 'you're' breaks that pairing internally -- so the second-person 'you' the guard flagged came from inside the (now correctly recognized) quoted advisory text, not from this record addressing a reader. No word of either quoted excerpt changed."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "init",
+  "files": [],
+  "repo_rev": {
+    "commit": "fe0af3dae68d5adba2edc964cc1598af9dc81869"
+  },
+  "run": {
+    "work_id": "lh-episode-rewording",
+    "generated_at": "2026-08-15T21:22:04Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/launcher-hygiene",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/launcher-hygiene",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/launcher-hygiene"
+    }
+  }
+}
