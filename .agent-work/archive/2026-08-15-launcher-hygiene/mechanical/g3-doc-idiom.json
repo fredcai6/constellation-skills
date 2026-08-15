@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g3-doc-idiom",
+  "mechanical": {
+    "run": "launcher-hygiene",
+    "project": "constellation-skills",
+    "spine-step": "g3-doc-idiom",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-launcher-hygiene-g3-doc-idiom@08f51076b4a383022b4cf11d392ff5a80fd0886a",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "launcher-hygiene",
+    "generated_at": "2026-08-15T20:43:39Z"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "init",
+  "mechanical": {
+    "run": "launcher-hygiene",
+    "project": "constellation-skills",
+    "spine-step": "init",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-launcher-hygiene-init@333772eaae253ccc7f3f3cb2944d900a87ef6bd5",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "launcher-hygiene",
+    "generated_at": "2026-08-15T20:27:22Z"
+  }
+}

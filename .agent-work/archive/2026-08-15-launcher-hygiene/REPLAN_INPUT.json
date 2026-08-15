@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "launcher-hygiene",
+      "spec_path": ".agent-work/launcher-hygiene/LAUNCH_ORDER-2.md",
+      "intent_and_why": "Ship three independent false-signal fixes named by LAUNCH_ORDER launcher-hygiene, each with red-before/green-after evidence: isolate the DC3 environ test from ambient SPINE_* vars; make run_crew.py's spine_terminal resolve through the archive gate's relocation instead of reading a stale absence as failed; document the harness-auto-backgrounding hazard and poll-until idiom in crew-dispatch.md."
+    },
+    "definition_of_done": [
+      "tests/test_mcp_identity.py DC3InheritanceMechanismTests pass isolated from the calling shell's ambient SPINE_* vars",
+      "run_crew.py's spine_terminal resolves a genuinely terminal spine through the archive gate's relocation, with no rubber-stamp of a non-terminal spine",
+      "skills/commander/references/crew-dispatch.md documents the auto-backgrounding hazard and poll-until idiom",
+      "clean-env full suite passes at or above the stated baseline; map regenerated"
+    ],
+    "good_enough": {
+      "mandatory_quality": "Red-before/green-after evidence per task; no mock of both close_work and spine_terminal together (compose the real relocation with the real read)",
+      "sufficient_evidence": "Per-task pytest red/green plus a full clean-env suite run",
+      "appetite": "One bounded LAUNCH_ORDER, no crew dispatch"
+    },
+    "hard_constraints": [
+      "Do not dispatch a crew this run",
+      "scripts/checklist_engine.py is not owned by this lane",
+      "docs/CHECKLIST_SCHEMA.md and skills/admiral/templates/LAUNCH_ORDER.template.md belong to sibling lane tc6-doctrine",
+      "Task 3b ships only with both a red and a control, never on documentation alone"
+    ],
+    "fixed_decisions": [
+      "tests/test_spine_lifecycle.py TestSpineTerminalThroughArchiveRelocation stays, composing real close_work with real spine_terminal",
+      "Task 2 derives work_id from the spine path and globs .agent-work/archive/*-<work_id>/<spine-basename>, matched only when the file exists there"
+    ],
+    "current_wave": {
+      "objective": "Land the three false-signal fixes with proof, and settle whether Task 3b (Stop-hook mechanical check) ships or is declined",
+      "exit_criteria": [
+        "0 failed in the clean-env full suite",
+        "map regenerated and reviewed",
+        "PR opened against fix/launcher-hygiene",
+        "spine driven to terminal with lease released"
+      ],
+      "issues": [
+        {
+          "id": "launcher-hygiene",
+          "title": "Fix three false-signal hazards: DC3 env leakage, spine_terminal archive-relocation miss, and undocumented auto-backgrounding",
+          "desired_outcome": "All three tasks land with red/green proof; the full suite is green; the map is current; the PR is open.",
+          "useful_now": "Six prior Commander attempts stalled on the same auto-backgrounding trap; this run proves the poll-until idiom used inside a single turn actually closes it out end to end.",
+          "appetite": "One LAUNCH_ORDER, foreground only, no crew dispatch",
+          "acceptance_or_falsification_evidence": "pytest red/green per task; full clean-env suite at or above baseline; map diff reviewed; PR opened",
+          "implementation_latitude": "Implementation shape for Tasks 1-3a was fixed by LAUNCH_ORDER-2.md as already correct; Task 3b's decision (ship or decline) was left to this run's own feasibility finding",
+          "hard_constraints_no_gos": [
+            "Do not dispatch a crew",
+            "Do not touch scripts/checklist_engine.py",
+            "Do not touch docs/CHECKLIST_SCHEMA.md or skills/admiral/templates/LAUNCH_ORDER.template.md"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/run_crew.py",
+            "tests/test_mcp_identity.py",
+            "tests/test_spine_lifecycle.py",
+            "skills/commander/references/crew-dispatch.md"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Task 3b (Stop-hook mechanical pid-liveness check) ships in a follow-on lane once a real binding path exists for MCP-door sessions",
+        "why_likely": "This run's own decline finding shows the binding precondition never engages for the dominant current dispatch path, so shipping now would be indistinguishable from not shipping it",
+        "entry_conditions": ["handle_post_tool_use gains an MCP-door binding path, or the Stop-hook gains an alternate binding source"]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether a mechanical Stop-hook check is the only remedy left, now that two documentation-shaped remedies (a prose warning, and shipping the idiom in the order itself) have both been tried and both failed to prevent the auto-backgrounding trap",
+        "affects": "Whether Task 3b should be scoped into a near-term follow-on lane",
+        "settle_by": "Admiral triage review of this run's tc1 flag",
+        "current_evidence": "Six Commander attempts hit the same trap; this run's own LAUNCH_ORDER-2.md carried the exact poll-until block and still required the engine to auto-background the g5 suite run, which this run polled through successfully inside one turn",
+        "next_probe": "Design a Stop-hook check bound to the MCP-door claim path, not only the Bash-matcher checklist_engine.py claim path"
+      }
+    ],
+    "parked_possibilities": [
+      "Task 3b: Stop-hook mechanical pid-liveness check, once handle_post_tool_use's MCP-door binding gap is closed"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "launcher-hygiene",
+      "outcome": "All in-scope tasks landed: DC3 env isolation (Task 1), spine_terminal archive-relocation fix with its no-rubber-stamp companion test (Task 2), and the crew-dispatch.md auto-backgrounding/poll-until documentation (Task 3a). Task 3b was declined with a recorded feasibility finding. Clean-env full suite: 3031 passed, 6 skipped, 0 failed. Map regenerated and reviewed.",
+      "evidence": "tests/test_mcp_identity.py::DC3InheritanceMechanismTests green; tests/test_spine_lifecycle.py::TestSpineTerminalThroughArchiveRelocation green; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q -> 3031 passed, 6 skipped, 1136 subtests passed in 125.51s; python -m scripts.code_map build --root . -> map/INDEX.md moved (6 lines)"
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The clean-env full suite is green at or above LAUNCH_ORDER's stated 3028 passed / 6 skipped baseline",
+      "expected": "3028 passed / 6 skipped (worktree location) plus this run's new tests, 0 failed",
+      "observed": "3031 passed, 6 skipped, 1136 subtests passed, 0 failed, in 125.51s",
+      "source": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q, run via the mandated poll-until idiom (nohup + until-grep loop), never backgrounded across a turn boundary"
+    },
+    {
+      "claim": "The engine's own g5 gate re-verification of the same suite command is itself the auto-backgrounding trigger the order warned about, and can be polled through inside one turn rather than ending the turn",
+      "expected": "checklist_engine.py advance g5-suite-and-map re-runs the c1 command check, which takes ~2 minutes and exceeds the harness's own foreground timeout",
+      "observed": "The advance command was moved to background by the harness at 120s; polled TaskOutput (blocking) until it completed with exit 0 and 'g5-suite-and-map -> complete', all inside this same turn",
+      "source": "this run's own execute.json g5-suite-and-map advance, task id beplqh4wc"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "Six Commander attempts across this work-id have now ended a turn waiting on a backgrounded suite run, including one attempt that was itself writing the documentation warning against doing exactly that",
+      "classification": "evidence_only",
+      "affects": "Whether a documentation-shaped remedy (prose warning, or shipping the idiom in the order) can ever be sufficient on its own",
+      "evidence": "LAUNCH_ORDER-2.md's own account of attempt 1 of tc1-merge-main and this run's immediate predecessor attempt; this run's own g5 gate re-verification triggered the identical harness auto-backgrounding and was polled through successfully instead of yielding the turn",
+      "reason": "This run itself is the evidence that polling-through works when actually applied; no code or plan change is warranted from this run, only the recorded finding, which the Admiral already flagged as strengthening the case for a mechanical Stop-hook check (tc1)"
+    },
+    {
+      "id": "D1",
+      "signal": "handle_post_tool_use's Stop-hook binding precondition only engages for a Bash-matcher checklist_engine.py claim, never for this session's own MCP-door spine_lease claim",
+      "classification": "later_only",
+      "affects": "Feasibility of Task 3b (Stop-hook mechanical pid-liveness check) as scoped in LAUNCH_ORDER",
+      "evidence": "Read scripts/hooks/spine_rail.py's decide_stop and handle_post_tool_use directly; verified live against this session that the Stop hook receives an empty {} with no binding file present, despite this session holding an active MCP-door lease",
+      "reason": "Building the proposed pid-liveness clause on an inert binding layer would ship a check indistinguishable from not shipping it for the dominant current dispatch path; declined this run, flagged as triage candidate tc1 for a follow-on lane once the binding gap is closed"
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {"id": "Task-3b-stop-hook-check", "kind": "parked"}
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/run_crew.py",
+      "tests/test_mcp_identity.py",
+      "tests/test_spine_lifecycle.py",
+      "skills/commander/references/crew-dispatch.md",
+      "map/INDEX.md"
+    ],
+    "map_status": "No docs/architecture packet map exists in this repo; the code_map-derived map/INDEX.md was regenerated fresh this run (python -m scripts.code_map build --root .) and is the current substitute per the context step's DEGRADED discharge."
+  }
+}

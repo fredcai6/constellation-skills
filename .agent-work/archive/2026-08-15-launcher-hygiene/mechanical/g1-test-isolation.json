@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g1-test-isolation",
+  "mechanical": {
+    "run": "launcher-hygiene",
+    "project": "constellation-skills",
+    "spine-step": "g1-test-isolation",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-launcher-hygiene-g1-test-isolation@78b7d39ce35319a29e06a57a85d8115da1f93ee4",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "launcher-hygiene",
+    "generated_at": "2026-08-15T20:41:28Z"
+  }
+}

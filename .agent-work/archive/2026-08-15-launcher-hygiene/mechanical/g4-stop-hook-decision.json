@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g4-stop-hook-decision",
+  "mechanical": {
+    "run": "launcher-hygiene",
+    "project": "constellation-skills",
+    "spine-step": "g4-stop-hook-decision",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-launcher-hygiene-g4-stop-hook-decision@93552669f3012395faa7a0a7fd1c46941bf81167",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "launcher-hygiene",
+    "generated_at": "2026-08-15T20:44:27Z"
+  }
+}
