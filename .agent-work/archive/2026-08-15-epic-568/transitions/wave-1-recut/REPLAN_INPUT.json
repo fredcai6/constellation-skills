@@ -1,0 +1,268 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic 568: engine state has an owner - leases, rails, gauge, dispatch",
+      "spec_path": ".agent-work/epic-568/LATITUDE_CONTRACT.md",
+      "intent_and_why": "Every piece of engine state carries who it belongs to and dies when its owner does. This run builds the ownership substrate (WP1 lease lifecycle, WP2 binding store, WP5 postcondition cwd) that the deferred consumer packages read from. The outcome that must not be violated: the engine stays drivable throughout, because this epic edits the machinery every Commander in it is driving."
+    },
+    "definition_of_done": [
+      "Each in-scope issue closes on a live repro that fails before the fix and passes after.",
+      "A stated honest null closes an issue as a complete deliverable.",
+      "The engine remains drivable by the fleet at every wave boundary."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Repro before and after, plus targeted automated tests and the relevant broader suite per docs/agents/ORCHESTRATOR_CONTEXT.md.",
+      "sufficient_evidence": "A demonstrated repro plus a green suite measured on merged main.",
+      "appetite": "One tranche: WP1 + WP2 + WP5 + issues 530 and 510. Consumer packages WP3, WP4, WP6, WP7 deferred."
+    },
+    "hard_constraints": [
+      "Engine-core files scripts/checklist_engine.py, scripts/hooks/spine_rail.py and scripts/agent_work_root.py are edited by ONE Commander at a time; concurrent edits to them are refused.",
+      "Planning makes no direct gh or network mutation.",
+      "Merge only on a green check exit code plus an independent reviewer APPROVE, gating on the exit code and never chaining a merge onto a watch command."
+    ],
+    "fixed_decisions": [
+      "Wave 1 is issue 315 alone, ahead of all other engine-core work.",
+      "Launched identities remain stable across a transition.",
+      "The contract expires at wave 1 merge; nothing past wave 1 is a launch queue."
+    ],
+    "current_wave": {
+      "objective": "Remove the fail-open in command-kind postcondition checks and repair the corpus-wide blast radius that removing it exposes.",
+      "exit_criteria": [
+        "A repro shows a decoy file in the launcher's directory satisfying a gate before the fix, and failing to satisfy it after.",
+        "Every shipped template carrying a relative command check is enumerated BY COMMAND with a stated count, and each is repaired or explicitly ruled correct under the new resolution.",
+        "The relevant broader suite is green on merged main."
+      ],
+      "issues": [
+        {
+          "id": "315",
+          "title": "engine: command-kind checks inherit the launcher's cwd (no cwd= at all) - five shipped relative checks are silently fragile",
+          "desired_outcome": "A command-kind postcondition check runs where the spine lives, not where the launcher happened to stand, and every relative check in the shipped corpus resolves correctly under that change.",
+          "useful_now": "Every gate verified before this fix lands was verified under a check that cannot fail, so every later fix in this epic would inherit unfalsifiable evidence.",
+          "appetite": "One Commander, serialized engine-core lane, Opus tier.",
+          "acceptance_or_falsification_evidence": "A live repro that fails before and passes after, plus a by-command enumeration of every shipped template carrying a relative command check with its count stated.",
+          "implementation_latitude": "Choose how cwd is threaded and where it is resolved from; preserve the existing POSIX-shell routing and the no-posix-shell visible-failure behavior at checklist_engine.py:775-799.",
+          "hard_constraints_no_gos": [
+            "No concurrent Commander may edit scripts/checklist_engine.py during this wave.",
+            "Do not silently reword the frozen four transcribed clauses in references/global-everyone.md."
+          ],
+          "local_unknowns": [
+            "How many shipped templates carry a relative command check - the issue title says five, which is a claim to re-measure, not to inherit."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            ".agent-work/templates"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Lease lifecycle: release-on-terminal, closeout refusal extended to child plans, backfill of the stale actives, reaper for died-mid-flight runs.",
+        "why_likely": "Issues 552, 383, 357, 369, 318, 330 and 208 are the epic's stated substrate and all sit in the serialized engine-core lane behind wave 1.",
+        "entry_conditions": [
+          "Wave 1 merged and the contract refreshed.",
+          "The 552 denominator settled."
+        ]
+      },
+      {
+        "outcome": "Binding store durability: file lock, unique tmp names, reaper, path validation, one id rule.",
+        "why_likely": "Issue 441's four gaps are confirmed live in scripts/hooks/spine_rail.py:83-103 and its own docstring files two of them as known and unchased.",
+        "entry_conditions": [
+          "Wave 1 merged.",
+          "No concurrent Commander editing spine_rail.py."
+        ]
+      },
+      {
+        "outcome": "The two near-mechanical wins that need no substrate: 530 resolved worktree, 510 HARD-trip advisory text.",
+        "why_likely": "Both are bounded and independent of the lease and binding work, so they can ride the parallel lane.",
+        "entry_conditions": [
+          "Wave 1 merged."
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "How many shipped templates carry a relative command check, and whether the count is the five the issue title claims.",
+        "affects": "Wave 1 appetite and whether wave 1 splits.",
+        "settle_by": "Wave 1 execution.",
+        "current_evidence": "The issue title asserts five. Nothing in this run has re-measured it.",
+        "next_probe": "Enumerate by command across the shipped template corpus and state the count."
+      },
+      {
+        "unknown": "Which spine set the 552 backfill must clear - on-disk or tracked.",
+        "affects": "Wave 2 decomposition and the backfill's own correctness.",
+        "settle_by": "Wave 2 planning.",
+        "current_evidence": "The issue says 43 active on disk. A scan of git ls-files for spine.json finds 91 carrying a session and 24 still active, matching the post-418 handoff W7.",
+        "next_probe": "Scan both sets once and state each count with its denominator."
+      },
+      {
+        "unknown": "Whether a stale active lease on an archived spine blocks anything or is inert.",
+        "affects": "How urgent the 552 backfill is and what the reaper must do.",
+        "settle_by": "Wave 2.",
+        "current_evidence": "The post-418 handoff W7 explicitly did not chase this. _active_lease in checklist_engine.py documents that a released lease does not gate mutation and says nothing about the reverse.",
+        "next_probe": "Drive a mutating verb against an archived spine holding an active lease from a different session."
+      }
+    ],
+    "parked_possibilities": [
+      "WP3 stop-rail attribution beyond 530",
+      "WP4 gauge and governor beyond 510",
+      "WP6 crew dispatch and liveness",
+      "WP7 latitude pre-clearance vs the harness classifier, and CLI arg-injection hardening"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "315",
+      "outcome": "Measured negative on the stated question, plus a landed regression guard. Threading cwd into the command-kind check was falsified: verify_worktree_isolation.py reads the ambient cwd as the check's SUBJECT, so forcing a cwd turns COMMANDER_SPINE's init.c0 into the tautology X == X. Two filed numbers were corrected -- 'five relative checks' measures 17 of 22, and '394 immune' counted archived run scrap against a live template corpus of 64 with zero immune.",
+      "evidence": "verify_worktree_isolation.py:100-123 read by the Admiral; an independent reviewer's APPROVE that rebuilt the red-first proof; tests/test_worktree_precondition_wiring.py merged to main at 9bb8c1b6 and confirmed present via git cat-file; enumerate_checks.py re-run by the Admiral over both template corpora."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "Storing the repo root in the spine and passing it as cwd is the SAME falsified fix.",
+      "expected": "A stored, authoritative root would let the engine run the check from the right place.",
+      "observed": "origin.worktree and the EXPECTED value inside the isolation check are BYTE-IDENTICAL -- both derive from the same resolved root at creation. Reproduced live by the Admiral via d_trap_demo.sh with the launcher in the wrong worktree: cwd=launcher's own REFUSES (gate works), cwd=origin.worktree PASSES (gate disarmed).",
+      "source": "Admiral re-ran the Commander's d_trap_demo.sh; output pasted in ADMIRAL_LOG"
+    },
+    {
+      "claim": "The engine can enforce isolation natively instead of delegating it to a subprocess.",
+      "expected": "The isolation check stays a command check and needs an exemption mechanism.",
+      "observed": "With origin.worktree stored, the engine compares its OWN Path.cwd() against it at verb entry. No schema flag, no env var, no --from. It is undisarmable by a child process's cwd and runs on every verb, and init.c0's command check is DELETED rather than repaired.",
+      "source": "Commander costing, COSTING-stored-origin.md"
+    },
+    {
+      "claim": "The change is small and touches none of the 17.",
+      "expected": "Repairing 17 cwd-dependent template checks.",
+      "observed": "About 40 lines: checklist_engine.py ~32 across 3 sites, init_work_area.py ~8, spine_lifecycle.py zero because build_origin and open_work are already correct. Zero edits to the 17 -- all are repo-root-relative and the stored root IS that root.",
+      "source": "Commander costing (estimates flagged as estimates by the Commander)"
+    },
+    {
+      "claim": "The write side and the read side cannot be cut apart.",
+      "expected": "The engine change could land first and the stamp follow.",
+      "observed": "The engine must fall back to inherited cwd for spines lacking origin -- refusing breaks 12 role templates day one, and deriving a root from base_dir reintroduces the defect -- so the read side is INERT until spines carry origin.",
+      "source": "Commander costing, sequencing risk section"
+    },
+    {
+      "claim": "The dead spine_open door does not gate this work.",
+      "expected": "The disciplined init path is unreachable, so the door blocks adoption.",
+      "observed": "open_work() requires a compiled spec and only 2 specs exist against 12 role templates, so routing roles through it is a ~10-spec migration. Stamping origin in init_work_area.py reaches all 12 with no door and no spec.",
+      "source": "Commander costing, question 3"
+    },
+    {
+      "claim": "The backfill population is small.",
+      "expected": "107 or 108 spines need an origin block.",
+      "observed": "108 on the branch and 107 on main -- the branch added the Commander's own spine, so both counts are right against different trees. Of the 108, 106 are archived dead runs; the live backfill population is 2.",
+      "source": "Admiral scan of git ls-files '*spine.json' in both trees"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "R0",
+      "signal": "The human's direction, cut as store-the-root-and-pass-it-as-cwd, reproduces the defect it was meant to fix.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth",
+      "evidence": "d_trap_demo.sh, re-run by the Admiral: origin.worktree and EXPECTED are byte-identical; cwd=origin.worktree disarms the gate.",
+      "reason": "The wave's shape changes: the isolation check goes engine-native and is deleted, rather than the engine forwarding a cwd to it."
+    },
+    {
+      "id": "R1",
+      "signal": "The read side is inert until spines carry an origin block, so the two halves must land in one change.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth",
+      "evidence": "The fallback for origin-less spines is inherited cwd; refusing breaks 12 role templates and deriving a root reintroduces the defect.",
+      "reason": "It fixes the wave's decomposition as a single change rather than two, which is a decomposition fact, not a preference."
+    },
+    {
+      "id": "R2",
+      "signal": "The merge gate was amended by the human from a green exit code to no-new-failures against the main baseline.",
+      "classification": "evidence_only",
+      "affects": "Current planning truth",
+      "evidence": "main's CI is red from pre-existing Windows breakage; the original gate was unsatisfiable by any PR in this repo.",
+      "reason": "The human amended the gate, so it no longer blocks the wave's exit. It is recorded because it changes a contract term the whole epic runs under, and it implies no work item."
+    },
+    {
+      "id": "R3",
+      "signal": "The dead spine_open door is not a prerequisite for this work.",
+      "classification": "drop",
+      "affects": "Current planning truth",
+      "evidence": "open_work requires a compiled spec; only 2 exist against 12 role templates; init_work_area.py reaches all 12 without the door.",
+      "reason": "The blocking evidence recorded at the previous boundary is falsified, so it is dropped rather than carried."
+    },
+    {
+      "id": "R4",
+      "signal": "The wave-1 regression guard merged to main at 9bb8c1b6.",
+      "classification": "evidence_only",
+      "affects": "Current planning truth",
+      "evidence": "gh pr view 576 reports MERGED; git cat-file confirms tests/test_worktree_precondition_wiring.py is on main.",
+      "reason": "It records what already landed and what now protects the re-cut from a half-build."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {
+      "id": "U-552",
+      "kind": "issue"
+    },
+    {
+      "id": "U-441",
+      "kind": "issue"
+    },
+    {
+      "id": "U-530",
+      "kind": "issue"
+    },
+    {
+      "id": "U-510",
+      "kind": "issue"
+    },
+    {
+      "id": "U-lease-lifecycle",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-binding-store",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-template-count",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "U-552-denominator",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "U-stale-lease-inert",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "U-wp3-attribution",
+      "kind": "parked"
+    },
+    {
+      "id": "U-wp4-gauge",
+      "kind": "parked"
+    },
+    {
+      "id": "U-wp6-dispatch",
+      "kind": "parked"
+    },
+    {
+      "id": "U-wp7-preclearance",
+      "kind": "parked"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/spine_lifecycle.py",
+      "/home/tommy/.claude/skills/constellation-admiral/scripts/init_work_area.py",
+      "tests/test_worktree_precondition_wiring.py"
+    ],
+    "map_status": "Degraded. The post-418 handoff W3 records map_orient.py returning DEGRADED-UNPARSEABLE with anchor count 0; docs/architecture/ is absent and map/INDEX.md carries no citable anchor id. Anchors above are file paths, not map ids."
+  }
+}

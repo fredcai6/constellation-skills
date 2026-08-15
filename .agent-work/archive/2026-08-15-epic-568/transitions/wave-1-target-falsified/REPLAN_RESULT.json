@@ -1,0 +1,213 @@
+{
+  "schema_version": 1,
+  "decision": "repair",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "The current wave's exit criteria are held unchanged and are currently unreachable: they require a before/after repro of a fix that measurement falsified. The wave is held open while its blocking evidence is settled -- the costing of the new direction, the dead spine_open door, and a merge gate no PR can satisfy while main is red. It is not re-cut here; a re-cut needs the costing in hand and is a replan.",
+    "epic_done": "The epic is not complete. No member issue is closed and none of the five exit criteria hold.",
+    "good_enough": "Preserved, and strengthened by this evidence: the mandatory quality boundary is a repro that fails before and passes after, and it is exactly that standard that caught the fix as unshippable before it landed."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "E0",
+      "action": "repair_current_wave",
+      "reason": "The wave's stated fix is falsified at source and by a landed guard, so the wave's target is repaired rather than its exit forced.",
+      "issue_created": false
+    },
+    {
+      "id": "E1",
+      "action": "revise_plan",
+      "reason": "The human set a fourth direction that re-cuts work package 5 and pulls spine-init discipline into scope; the Commander is costing it before the new cut is written.",
+      "issue_created": false
+    },
+    {
+      "id": "E2",
+      "action": "repair_current_wave",
+      "reason": "The disciplined init path is unreachable through its dead door, which is blocking evidence the repair must settle before the direction can be adopted.",
+      "issue_created": false
+    },
+    {
+      "id": "E3",
+      "action": "repair_current_wave",
+      "reason": "The merge gate cannot be satisfied while main is red; the wave cannot close until the human settles how to treat it.",
+      "issue_created": false
+    },
+    {
+      "id": "E4",
+      "action": "record_evidence_only",
+      "reason": "It removes the argument for closing 315 as not-worth-it but implies no work item of its own.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Remove the fail-open in command-kind postcondition checks and repair the corpus-wide blast radius that removing it exposes.",
+    "exit_criteria": [
+      "A repro shows a decoy file in the launcher's directory satisfying a gate before the fix, and failing to satisfy it after.",
+      "Every shipped template carrying a relative command check is enumerated BY COMMAND with a stated count, and each is repaired or explicitly ruled correct under the new resolution.",
+      "The relevant broader suite is green on merged main."
+    ],
+    "issues": [
+      {
+        "id": "315",
+        "title": "engine: command-kind checks inherit the launcher's cwd (no cwd= at all) - five shipped relative checks are silently fragile",
+        "desired_outcome": "A command-kind postcondition check runs where the spine lives, not where the launcher happened to stand, and every relative check in the shipped corpus resolves correctly under that change.",
+        "useful_now": "Every gate verified before this fix lands was verified under a check that cannot fail, so every later fix in this epic would inherit unfalsifiable evidence.",
+        "appetite": "One Commander, serialized engine-core lane, Opus tier.",
+        "acceptance_or_falsification_evidence": "A live repro that fails before and passes after, plus a by-command enumeration of every shipped template carrying a relative command check with its count stated.",
+        "implementation_latitude": "Choose how cwd is threaded and where it is resolved from; preserve the existing POSIX-shell routing and the no-posix-shell visible-failure behavior at checklist_engine.py:775-799.",
+        "hard_constraints_no_gos": [
+          "No concurrent Commander may edit scripts/checklist_engine.py during this wave.",
+          "Do not silently reword the frozen four transcribed clauses in references/global-everyone.md."
+        ],
+        "local_unknowns": [
+          "How many shipped templates carry a relative command check - the issue title says five, which is a claim to re-measure, not to inherit."
+        ],
+        "anchors": [
+          "scripts/checklist_engine.py",
+          ".agent-work/templates"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "Lease lifecycle: release-on-terminal, closeout refusal extended to child plans, backfill of the stale actives, reaper for died-mid-flight runs.",
+      "why_likely": "Issues 552, 383, 357, 369, 318, 330 and 208 are the epic's stated substrate and all sit in the serialized engine-core lane behind wave 1.",
+      "entry_conditions": [
+        "Wave 1 merged and the contract refreshed.",
+        "The 552 denominator settled."
+      ]
+    },
+    {
+      "outcome": "Binding store durability: file lock, unique tmp names, reaper, path validation, one id rule.",
+      "why_likely": "Issue 441's four gaps are confirmed live in scripts/hooks/spine_rail.py:83-103 and its own docstring files two of them as known and unchased.",
+      "entry_conditions": [
+        "Wave 1 merged.",
+        "No concurrent Commander editing spine_rail.py."
+      ]
+    },
+    {
+      "outcome": "The two near-mechanical wins that need no substrate: 530 resolved worktree, 510 HARD-trip advisory text.",
+      "why_likely": "Both are bounded and independent of the lease and binding work, so they can ride the parallel lane.",
+      "entry_conditions": [
+        "Wave 1 merged."
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "What it costs to make a spine carry its own repo reference end to end, including the 107 spines that carry no origin block.",
+      "affects": "The re-cut of work package 5 and how much of the epic it pulls forward.",
+      "settle_by": "The Commander's costing, in flight.",
+      "current_evidence": "The write side exists (build_origin, open_work); the read side does not (checklist_engine never reads origin); 0 of 107 spines carry it.",
+      "next_probe": "Cost the change by command across the three modules and state the count of affected checks and spines."
+    },
+    {
+      "unknown": "Whether the dead spine_open MCP door blocks the direction or is incidental to it.",
+      "affects": "Whether adopting the direction needs the door fixed first.",
+      "settle_by": "The Commander's costing.",
+      "current_evidence": "The door returned MCP error -32000 in this session, and its absence is why this epic's own spine has no origin block.",
+      "next_probe": "Determine whether open_work is reachable without the door, e.g. as a direct call."
+    },
+    {
+      "unknown": "How to treat the merge gate while main's CI is red.",
+      "affects": "Whether any wave in this epic can close.",
+      "settle_by": "The human.",
+      "current_evidence": "main and PR failure sets are identical at 76 each; zero regressions; the #555 fix exists unmerged on fix/mcp-door-launchable.",
+      "next_probe": "Human ruling."
+    },
+    {
+      "unknown": "Which spine set the 552 backfill must clear.",
+      "affects": "A later wave's decomposition.",
+      "settle_by": "Later wave planning.",
+      "current_evidence": "Filed as 43 on disk; measured as 24 active of 91 tracked.",
+      "next_probe": "Scan both sets once and state each count with its denominator."
+    }
+  ],
+  "revised_parked": [
+    "WP3 stop-rail attribution beyond 530",
+    "WP4 gauge and governor beyond 510",
+    "WP6 crew dispatch and liveness",
+    "WP7 latitude pre-clearance vs the harness classifier, and CLI arg-injection hardening"
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "U-552",
+      "action": "keep",
+      "reason": "In scope for this tranche; held behind wave 1 by the serialized engine-core lane."
+    },
+    {
+      "id": "U-441",
+      "action": "keep",
+      "reason": "In scope; its four gaps are confirmed present in current source."
+    },
+    {
+      "id": "U-530",
+      "action": "keep",
+      "reason": "In scope as a near-mechanical win that needs no substrate."
+    },
+    {
+      "id": "U-510",
+      "action": "keep",
+      "reason": "In scope as a near-mechanical win that needs no substrate."
+    },
+    {
+      "id": "U-lease-lifecycle",
+      "action": "keep",
+      "reason": "Still the epic's stated substrate; nothing observed contradicts it."
+    },
+    {
+      "id": "U-binding-store",
+      "action": "keep",
+      "reason": "Still supported; the gaps are documented in the module's own docstring."
+    },
+    {
+      "id": "U-template-count",
+      "action": "keep",
+      "reason": "Wave 1 settles it directly."
+    },
+    {
+      "id": "U-552-denominator",
+      "action": "keep",
+      "reason": "Newly raised by this transition's own measurement; carried with a named probe."
+    },
+    {
+      "id": "U-stale-lease-inert",
+      "action": "keep",
+      "reason": "Inherited unresolved from the post-418 handoff; it governs how urgent the backfill is."
+    },
+    {
+      "id": "U-wp3-attribution",
+      "action": "keep",
+      "reason": "Parked by the human's scope ruling; reads from the substrate this tranche builds."
+    },
+    {
+      "id": "U-wp4-gauge",
+      "action": "keep",
+      "reason": "Parked by the human's scope ruling."
+    },
+    {
+      "id": "U-wp6-dispatch",
+      "action": "keep",
+      "reason": "Parked by the human's scope ruling."
+    },
+    {
+      "id": "U-wp7-preclearance",
+      "action": "keep",
+      "reason": "Parked, though 408 is already being exercised live by this Admiral's own permission pre-clearance."
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "uncertainty_register",
+      "before": "The open questions were the shipped-template count and the 552 backfill denominator.",
+      "after": "Three blocking uncertainties are registered: what the origin-block direction costs end to end, whether the dead spine_open door blocks adopting it, and how to treat the merge gate while main's CI is red.",
+      "reason": "Each was raised by wave-1 evidence, each gates the wave's close, and none can be settled by holding the wave alone."
+    }
+  ],
+  "wave_review_comment": "## Wave review - boundary wave-1-target-falsified\n\n**Exit: repair.** The wave's target was falsified by its own evidence, so the wave is held and repaired rather than advanced or abandoned. `launch_id` is null: nothing new launches until the repair's blocking evidence is settled.\n\n**What the wave proved.** Threading `cwd` into a command check disarms `verify_worktree_isolation.py --here`, whose subject IS the ambient cwd (`_git()` runs with no `cwd=`, so `current_toplevel()` measures where the process stands). The comparison becomes `X == X`, and the gate it kills is `COMMANDER_SPINE`'s `init.c0`. Confirmed three ways: the Admiral's own read, an independent reviewer who rebuilt the proof rather than restating it, and a landed guard proven red against the naive fix.\n\n**Two filed numbers were wrong.** \"Five shipped relative checks\" measures 17 of 22. \"394 checks already immune\" counts archived run scrap -- 1649 of 1733 command checks sit under `.agent-work/archive/` and will never run again, while the live template corpus has 64 checks and zero carry a `cd` prefix.\n\n**The direction changed on evidence, not preference.** The human rejected all three Commander options for a fourth: the spine records its own repo reference at creation. It holds because the code already half-exists -- `build_origin()` returns the block, `open_work()` stamps it, `init_work_area.py:148` already computes the resolved root and throws it away -- and is entirely unused: 0 of 107 tracked spines carry an `origin` block, and the engine never reads one.\n\n**Cause of the discipline gap, located.** Two init paths exist. The disciplined one is reachable only through the `spine_open` MCP door, dead in this session. The undisciplined one is one command. This epic's own Admiral took the undisciplined path an hour before diagnosing it, which is the cleanest evidence available that the gap is structural rather than careless.\n\n**Held open:** the dead door, and a merge gate that no PR in this repo can satisfy while main's CI is red.\n",
+  "revised_epic_body": "## Current planning truth - epic 568, boundary wave-1-target-falsified\n\n**Intent.** Every piece of engine state carries who it belongs to and dies when its owner does. Wave 1 sharpened this: state that does not know **where it lives** fails the same way as state that does not know **whose it is**.\n\n**Status: wave 1 repaired, not advanced.** Its filed target is falsified. No next wave launches until the repair settles.\n\n**The new direction.** A spine records its own repo reference when it is created, and the engine reads that rather than deriving a root or taking an argument. The write side already exists and is unused; the read side does not exist yet.\n\n**In scope this tranche, unchanged otherwise.** WP1 lease lifecycle (552, 383, 357, 369, 318, 330, 208), WP2 binding store (441), WP5 (315, re-cut around spine-init discipline), plus 530 and 510.\n\n**Deferred.** WP3 beyond 530, WP4 beyond 510, WP6, WP7.\n\n**Execution shape.** Two lanes, unchanged: engine-core files edited one Commander at a time; everything else 3-4 wide.\n\n**Blocking the wave.** The `spine_open` door is dead, which is what makes the undisciplined init path the default. The merge gate requires a green check exit code that no PR can reach while main's CI is red.\n\n**Landed already.** A regression guard on branch `epic-568/c1-check-cwd` (PR #576) that catches the falsified fix, with zero production code changed.\n\n**Forecast, nonbinding.** Spine-init discipline, then lease lifecycle, then binding-store durability. Not a launch queue.\n",
+  "escalation": null
+}

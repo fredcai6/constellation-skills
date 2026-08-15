@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "decision": "replan",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "The immediate wave is now bounded to #530, #510, and Codex tier/worktree routing.",
+    "epic_done": "The epic is not complete; lifecycle and #441 remain ruled follow-on work.",
+    "good_enough": "Preserved: no unsafe backfill, no silent semantic change, and all immediate work retains red/green and review gates."
+  },
+  "discrepancy_dispositions": [
+    {"id": "F1", "action": "revise_plan", "reason": "Split lifecycle into reporting, preventive guard, migration, liveness, durable-root, and harvest packages under the approved rulings.", "issue_created": false},
+    {"id": "F2", "action": "repair_current_wave", "reason": "Extend the bounded harness item with optional repo-local MCP worktree placement while preserving Claude default.", "issue_created": false},
+    {"id": "F3", "action": "record_evidence_only", "reason": "Narrow #510 to advisory text and a mutation-style ordered-sequence proof.", "issue_created": false}
+  ],
+  "current_wave": {
+    "objective": "Prove and land lease lifecycle, binding durability, #530, #510, and Codex tier routing with serialized engine-core implementation.",
+    "exit_criteria": [
+      "Every item closes on red/green proof or honest measured null.",
+      "Lifecycle floats before implementation if materially complex.",
+      "Independent review approves every positive change.",
+      "Linux and non-Windows CI are green."
+    ],
+    "issues": [
+      {"id": "lease-lifecycle", "title": "Lease lifecycle cluster", "desired_outcome": "Finished ownership terminates and dead ownership is distinguishable.", "useful_now": "Central ownership substrate.", "appetite": "Measure first; one Sol/Opus Commander if bounded.", "acceptance_or_falsification_evidence": "Dual-denominator scan and live lifecycle proof.", "implementation_latitude": "Bounded internals; migration/backfill floats.", "hard_constraints_no_gos": ["No concurrent engine-core implementation."], "local_unknowns": ["Boundedness after measurement."], "anchors": ["scripts/checklist_engine.py", "scripts/spine_lifecycle.py"], "type": "AFK", "blocks": []},
+      {"id": "441", "title": "Binding-store durability", "desired_outcome": "Lossless concurrent claims and one durable identity store.", "useful_now": "Parallel MCP dispatch increases pressure.", "appetite": "One serialized implementation.", "acceptance_or_falsification_evidence": "Real concurrency red/green test.", "implementation_latitude": "Choose mechanics; aging policy floats.", "hard_constraints_no_gos": ["No concurrent spine_rail implementation."], "local_unknowns": ["Reaper policy."], "anchors": ["scripts/hooks/spine_rail.py"], "type": "AFK", "blocks": ["lease-lifecycle"]},
+      {"id": "530", "title": "Resolved worktree binding", "desired_outcome": "Parents are not blocked on child spines.", "useful_now": "Concurrency amplifies the defect.", "appetite": "Bounded serialized change.", "acceptance_or_falsification_evidence": "Real-worktree red/green guard repro.", "implementation_latitude": "Choose authoritative path source.", "hard_constraints_no_gos": ["No concurrent spine_rail implementation."], "local_unknowns": [], "anchors": ["scripts/hooks/spine_rail.py"], "type": "AFK", "blocks": ["lease-lifecycle"]},
+      {"id": "510", "title": "Pending-gate HARD handoff", "desired_outcome": "Successor reads a boundary-trip DIGEST from current alone.", "useful_now": "Repeated live confusion.", "appetite": "Bounded serialized change.", "acceptance_or_falsification_evidence": "Pending-gate HARD advisory mutation test.", "implementation_latitude": "Smallest compatible mechanism.", "hard_constraints_no_gos": ["No concurrent checklist_engine implementation."], "local_unknowns": [], "anchors": ["scripts/checklist_engine.py"], "type": "AFK", "blocks": ["lease-lifecycle"]},
+      {"id": "codex-model-tier-routing", "title": "Codex tier/worktree routing", "desired_outcome": "Codex dispatch applies model/effort and receives a writable MCP worktree.", "useful_now": "This wave uses tiered Codex agents.", "appetite": "Bounded parallel harness change.", "acceptance_or_falsification_evidence": "Dropped-setting and unwritable-worktree reds become green.", "implementation_latitude": "Preserve Claude defaults.", "hard_constraints_no_gos": ["No engine-core edits."], "local_unknowns": [], "anchors": ["scripts/run_crew.py", "scripts/mcp_spine_server.py"], "type": "AFK", "blocks": []}
+    ]
+  },
+  "revised_forecast": [
+    {"outcome": "#441 transactional store and missing-target cleanup.", "why_likely": "#530 lands first and lifecycle ruled no historical active reaping.", "entry_conditions": ["#530 merged.", "New serialized slot."]},
+    {"outcome": "Lifecycle reporting and preventive child-close guard.", "why_likely": "Human ruled semantics and no backfill.", "entry_conditions": ["Immediate bounded wave complete.", "Contained child-reference design."]},
+    {"outcome": "High-risk actor/liveness and durable-root waves.", "why_likely": "The float proved they require separate authority.", "entry_conditions": ["Later checkpoint."]}
+  ],
+  "revised_uncertainty": [
+    {"unknown": "Exact contained child-reference migration shape.", "affects": "Preventive archive guard.", "settle_by": "Lifecycle design wave.", "current_evidence": "Docs say work-id while templates use filenames.", "next_probe": "Design typed contained relative reference with legacy filename reader."}
+  ],
+  "revised_parked": ["Consumer packages", "Actor/PID-less liveness", "Durable-root policy", "Harvest completeness"],
+  "unlaunched_dispositions": [
+    {"id": "U-consumers", "action": "keep", "reason": "Still deferred behind substrate."},
+    {"id": "U-high-risk", "action": "keep", "reason": "Explicitly deferred by the human ruling."}
+  ],
+  "material_changes": [
+    {"surface": "current_wave", "before": "Five items treated as one implementation wave.", "after": "The same launched items are preserved, but only #530, #510, and Codex tier/worktree routing implement now; lifecycle is staged and #441 follows #530.", "reason": "Mandatory lifecycle float and human-approved decomposition."},
+    {"surface": "lifecycle_semantics", "before": "Unsettled auto-release/backfill/child ownership.", "after": "Explicit release retained and journaled/idempotent; no bulk backfill; contained child refs; nonterminal child blocks archive.", "reason": "Human approved the recommendation."},
+    {"surface": "harness_scope", "before": "Model and reasoning metadata only.", "after": "Also optional repo-local MCP worktree placement, preserving Claude default.", "reason": "Live Codex implementation attempt proved sibling worktree unwritable."}
+  ],
+  "wave_review_comment": "## Lifecycle float ruling\n\nThe lifecycle cluster was correctly floated before implementation. All four triggers fired: semantic ambiguity, migration, destructive backfill risk, and multi-wave decomposition. The human retained explicit release, prohibited historical bulk mutation, chose contained child references and a nonterminal-child archive guard, and split high-risk liveness/durable-root/harvest work into later waves.\n\nThe immediate wave is now three bounded items: #530, #510, and Codex tier/worktree routing. #530 precedes #441; #510 is advisory-only; the Codex harness preserves Claude defaults while adding an explicitly selected repo-local worktree root.",
+  "revised_epic_body": "## Current planning truth — bounded wave after lifecycle float\n\nWave 1 is merged. Lifecycle measurement is complete and its semantics are ruled, but implementation is decomposed rather than forced into one unsafe patch. No historical bulk backfill is authorized.\n\nNow active: #530 resolved worktree binding, #510 pending-HARD advisory, and durable Codex model/effort plus writable MCP worktree routing. Engine-core edits remain serialized; harness work may run in parallel. #441 follows #530. Windows-only CI red is allowed; Linux and non-Windows red blocks.",
+  "escalation": null
+}

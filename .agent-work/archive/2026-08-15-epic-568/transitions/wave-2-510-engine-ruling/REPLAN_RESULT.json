@@ -1,0 +1,252 @@
+{
+  "schema_version": 1,
+  "decision": "replan",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Exit criteria are held verbatim and all five launched issue identities are carried unchanged. Three of the five are now dispositioned and merged or ruled. #510 remains open with a changed approach, ruled by the human; #441 remains fenced by external quota.",
+    "epic_done": "Not complete. Two wave-2 lanes are on main (e0c998b6, c23c3d0f); #510 is open and #441 is deferred.",
+    "good_enough": "Preserved. The merge gate refused three lanes on local Linux evidence and was only relaxed once, by the human, on a cause basis \u2014 and that relaxation proved unnecessary for #580, whose set difference was empty."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "D-510-engine-contradiction",
+      "action": "repair_current_wave",
+      "reason": "Ruled by the human: make the engine permit the start the advisory instructs",
+      "issue_created": false
+    },
+    {
+      "id": "D-510-scope-growth",
+      "action": "revise_plan",
+      "reason": "#510 now holds the serialized engine-core lane and closes on an engine red/green, not a text fix",
+      "issue_created": false
+    },
+    {
+      "id": "D-mcp-door-unbindable",
+      "action": "revise_plan",
+      "reason": "Launch orders must stop asserting an unsatisfiable constraint; the binding fix is filed for a later wave",
+      "issue_created": true
+    },
+    {
+      "id": "D-gate-amendment-unused-once",
+      "action": "record_evidence_only",
+      "reason": "Recorded so the amended gate's actual usage is visible rather than assumed",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Land #530, #510, and Codex tier routing on evidence, after the wave-2 gate refused all three on locally reproduced Linux failures.",
+    "exit_criteria": [
+      "Every item closes on red/green proof or honest measured null.",
+      "Each lane's full Linux suite passes in a cache-clean worktree before publication.",
+      "Independent review approves every positive change and states which suite it actually ran.",
+      "Linux and non-Windows CI are green; Windows-only failures recorded but allowed."
+    ],
+    "issues": [
+      {
+        "id": "lease-lifecycle",
+        "title": "Lease lifecycle cluster",
+        "desired_outcome": "Finished ownership terminates and dead ownership is distinguishable.",
+        "useful_now": "Central ownership substrate.",
+        "appetite": "Measure first; one Sol/Opus Commander if bounded.",
+        "acceptance_or_falsification_evidence": "Dual-denominator scan and live lifecycle proof.",
+        "implementation_latitude": "Bounded internals; migration/backfill floats.",
+        "hard_constraints_no_gos": [
+          "No concurrent engine-core implementation."
+        ],
+        "local_unknowns": [
+          "Boundedness after measurement."
+        ],
+        "anchors": [
+          "scripts/checklist_engine.py",
+          "scripts/spine_lifecycle.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "441",
+        "title": "Binding-store durability",
+        "desired_outcome": "Lossless concurrent claims and one durable identity store.",
+        "useful_now": "Parallel MCP dispatch increases pressure.",
+        "appetite": "One serialized implementation.",
+        "acceptance_or_falsification_evidence": "Real concurrency red/green test.",
+        "implementation_latitude": "Choose mechanics; aging policy floats.",
+        "hard_constraints_no_gos": [
+          "No concurrent spine_rail implementation."
+        ],
+        "local_unknowns": [
+          "Reaper policy."
+        ],
+        "anchors": [
+          "scripts/hooks/spine_rail.py"
+        ],
+        "type": "AFK",
+        "blocks": [
+          "lease-lifecycle"
+        ]
+      },
+      {
+        "id": "530",
+        "title": "Resolved worktree binding",
+        "desired_outcome": "Parents are not blocked on child spines.",
+        "useful_now": "Concurrency amplifies the defect.",
+        "appetite": "Bounded serialized change.",
+        "acceptance_or_falsification_evidence": "Real-worktree red/green guard repro.",
+        "implementation_latitude": "Choose authoritative path source.",
+        "hard_constraints_no_gos": [
+          "No concurrent spine_rail implementation."
+        ],
+        "local_unknowns": [],
+        "anchors": [
+          "scripts/hooks/spine_rail.py"
+        ],
+        "type": "AFK",
+        "blocks": [
+          "lease-lifecycle"
+        ]
+      },
+      {
+        "id": "510",
+        "title": "Pending-gate HARD handoff",
+        "desired_outcome": "Successor reads a boundary-trip DIGEST from current alone.",
+        "useful_now": "Repeated live confusion.",
+        "appetite": "Bounded serialized change.",
+        "acceptance_or_falsification_evidence": "Pending-gate HARD advisory mutation test.",
+        "implementation_latitude": "Smallest compatible mechanism.",
+        "hard_constraints_no_gos": [
+          "No concurrent checklist_engine implementation."
+        ],
+        "local_unknowns": [],
+        "anchors": [
+          "scripts/checklist_engine.py"
+        ],
+        "type": "AFK",
+        "blocks": [
+          "lease-lifecycle"
+        ]
+      },
+      {
+        "id": "codex-model-tier-routing",
+        "title": "Codex tier/worktree routing",
+        "desired_outcome": "Codex dispatch applies model/effort and receives a writable MCP worktree.",
+        "useful_now": "This wave uses tiered Codex agents.",
+        "appetite": "Bounded parallel harness change.",
+        "acceptance_or_falsification_evidence": "Dropped-setting and unwritable-worktree reds become green.",
+        "implementation_latitude": "Preserve Claude defaults.",
+        "hard_constraints_no_gos": [
+          "No engine-core edits."
+        ],
+        "local_unknowns": [],
+        "anchors": [
+          "scripts/run_crew.py",
+          "scripts/mcp_spine_server.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "#441 binding-store durability resumes on its existing spine and lease",
+      "why_likely": "Measured and staged; only external Codex quota blocks it, and its serialized spine_rail lane is now clear since #530 landed",
+      "entry_conditions": [
+        "After 2026-08-20T06:19Z"
+      ]
+    },
+    {
+      "outcome": "Lease lifecycle implementation package",
+      "why_likely": "Ruled and scoped by the human; high-risk parts already deferred",
+      "entry_conditions": [
+        "#510 clears the serialized engine-core lane",
+        "A fresh contract, since this refresh expires when the wave-2 items are dispositioned"
+      ]
+    },
+    {
+      "outcome": "Crew dispatch binds the child's MCP spine door before its servers start",
+      "why_likely": "Two independent Commander floats in one wave; it makes a hard constraint unenforceable",
+      "entry_conditions": [
+        "Filed and prioritised by the human",
+        "Sits beside the deferred dispatch/lifecycle work"
+      ]
+    },
+    {
+      "outcome": "Consumer packages beyond the authorized five",
+      "why_likely": "Downstream of the substrate",
+      "entry_conditions": [
+        "A fresh latitude contract; none is authorized today"
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether permitting the advised start changes compliance-ledger semantics that other tests pin",
+      "affects": "#510 exit and engine-core blast radius",
+      "settle_by": "The engine lane's first measurement, before implementation",
+      "current_evidence": "The ledger currently records begin-refused then begin-released for the same gate; other suites assert on trip-ledger content",
+      "next_probe": "Enumerate every test asserting on _trip_hard_gate refusal or ledger entries before changing behavior"
+    },
+    {
+      "unknown": "How many past gate results were measured in a contaminated worktree or against a foreign MCP door",
+      "affects": "Confidence in wave-1 and early wave-2 evidence",
+      "settle_by": "The two filed infrastructure issues",
+      "current_evidence": "One confirmed phantom failure; one confirmed foreign-spine door still carrying the pre-relocation path",
+      "next_probe": "Re-measure any gate whose evidence predates 2026-08-14"
+    }
+  ],
+  "revised_parked": [
+    "Portfolio optimization",
+    "Actor identity, PID-less liveness, durable-root policy"
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "U-consumers",
+      "action": "keep",
+      "reason": "Still forecast-only and unauthorized"
+    },
+    {
+      "id": "U-high-risk",
+      "action": "keep",
+      "reason": "Deferred by the human's lifecycle ruling"
+    },
+    {
+      "id": "U-pycache-guard",
+      "action": "keep",
+      "reason": "Filed as a triage candidate; no filing authority exercised this run"
+    },
+    {
+      "id": "U-spine-door-binding",
+      "action": "keep",
+      "reason": "Filed as a triage candidate from two independent Commander floats"
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "current_wave_approach",
+      "before": "#510 closes by reconciling stale test expectations against the shipped advisory text.",
+      "after": "#510 closes by changing the engine to permit the start its advisory instructs, proven by a red/green on engine behavior.",
+      "reason": "Human ruling on the float. Neither the old nor the new wording was pinnable, so the contradiction is resolved in the engine rather than in prose."
+    },
+    {
+      "surface": "serialized_lane_assignment",
+      "before": "#510 was a bounded text-and-tests repair.",
+      "after": "#510 is an engine-core implementation and holds the serialized checklist_engine.py lane.",
+      "reason": "Consequence of the ruling; the one-implementer-at-a-time rule now binds this lane."
+    },
+    {
+      "surface": "launch_order_constraints",
+      "before": "Launch orders assert that spine interaction is MCP-only.",
+      "after": "Launch orders state the door may be unbound, and a disclosed engine-CLI fallback with intact lease and journal provenance is acceptable.",
+      "reason": "The constraint was unsatisfiable in every dispatched session. Asserting an impossible constraint produced two divergent workarounds, only one of which was disclosed."
+    },
+    {
+      "surface": "wave_progress",
+      "before": "Wave 2 had landed nothing.",
+      "after": "Two lanes are merged to main (e0c998b6, c23c3d0f); #510 is open under a changed approach; #441 stays fenced.",
+      "reason": "Repair completed for the two lanes whose failures were bounded and attributable."
+    }
+  ],
+  "wave_review_comment": "## Wave review \u2014 wave 2, post-repair\n\nTwo of the three refused lanes are now on `main`. The Codex tier lane needed the human's cause-based gate amendment to get there; #530 did not, and its set difference was empty in both directions \u2014 worth recording, because a gate that gets loosened should still be reported as unused when it is unused.\n\n#510 is the interesting one. It was sent to reconcile three stale test expectations and came back having falsified the premise: two were stale, the third was a genuine contradiction between what the advisory instructs and what the engine permits. Under simulated obedience the compliance ledger brands the agent an offender for doing exactly what it was told. Neither the old nor the new wording survives that, so there was nothing to pin. The Commander stopped at its float pre-ruling instead of choosing, which is the behavior the pre-ruling existed to produce. The human ruled to change the engine rather than narrow the wording, which promotes #510 from a text repair to an engine-core implementation holding the serialized lane.\n\nTwo infrastructure findings came out of the wave rather than the code. Stale bytecode from the wave-1 worktree relocation fabricated a failure in a file byte-identical to `main`. And the MCP-only constraint written into both launch orders was unsatisfiable in every dispatched session \u2014 the door binds at import from a demo default and cannot be rebound. One Commander obeyed and lost its lease handling; the other used the engine CLI and disclosed it. That divergence, not either choice, is the finding: an impossible constraint does not stop work, it randomises it, and only the disclosing agent leaves a trace. Both are filed; the Admiral errors behind them are logged rather than smoothed over.",
+  "revised_epic_body": "## Current planning truth \u2014 epic #568\n\nWave 1 substrate and two wave-2 lanes are on `main`: spine origin and worktree isolation (`0448275e`), Codex crew tier/reasoning metadata (`e0c998b6`), and spine-rail binding derived from the spine path (`c23c3d0f`).\n\n#510 is open under a changed approach. It was cut as a pending-gate handoff text fix; measurement found the shipped advisory instructs a `start` the engine refuses, and the compliance ledger then penalises the agent for obeying. The human ruled to make the engine permit that start, so #510 is now an engine-core implementation holding the serialized `checklist_engine.py` lane and closes on a red/green over engine behavior, not over prose.\n\n#441 stays fenced by an external Codex quota until 2026-08-20T06:19Z, holding its own spine and lease. Lease lifecycle remains ruled but deferred.\n\nTwo infrastructure defects are filed and unimplemented: bytecode caches from the wave-1 worktree relocation can fabricate failures, and crew dispatch does not bind the child's MCP spine door, making the MCP-only constraint unenforceable. Neither is authorized work under the current contract, which expires when the wave-2 items are dispositioned.",
+  "escalation": null
+}

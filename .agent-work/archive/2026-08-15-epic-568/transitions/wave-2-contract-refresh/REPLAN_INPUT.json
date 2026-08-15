@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic #568 — spine ownership and lifecycle",
+      "spec_path": ".agent-work/epic-568/LATITUDE_CONTRACT.md",
+      "intent_and_why": "Make engine state carry location and ownership, remain correct under concurrency, and die when its owner does."
+    },
+    "definition_of_done": [
+      "Every authorized issue is merged, closed on an honest measured null, deferred by ruling, or floated with evidence.",
+      "Every positive fix has a pre-fix failure and post-fix proof.",
+      "Linux and non-Windows CI are green; Windows-only failures are recorded but allowed."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Engine-core implementation serialized, independent review, and no check that cannot register failure.",
+      "sufficient_evidence": "Live repro, targeted tests, relevant broader suite, exact CI node-set evidence, and verified merge state.",
+      "appetite": "One wave containing five authorized items, with lifecycle floated if its measured shape becomes materially complex."
+    },
+    "hard_constraints": [
+      "All spine interaction is through MCP, never the engine CLI.",
+      "Only one implementation Commander at a time may edit checklist_engine.py, spine_rail.py, or agent_work_root.py.",
+      "A lower-tier agent may not adjudicate architecture, production behavior, or final engine-core review."
+    ],
+    "fixed_decisions": [
+      "Wave 1 origin/worktree substrate remains intact.",
+      "Windows-only CI failures are non-blocking for this wave; any non-Windows failure blocks.",
+      "Merges are delegated after exact-head pinning, independent APPROVE, and required evidence."
+    ],
+    "current_wave": {
+      "objective": "Land engine-native worktree isolation against a stored spine origin and remove the command check that could not fail.",
+      "exit_criteria": [
+        "Creation stamps origin.worktree.",
+        "The engine enforces its own cwd against that origin.",
+        "The obsolete command check is replaced with behavior tests.",
+        "Independent review approves and post-promotion Linux verification is green."
+      ],
+      "issues": [
+        {
+          "id": "315-native",
+          "title": "Engine-native worktree isolation against stored spine origin",
+          "desired_outcome": "Isolation is an engine invariant.",
+          "useful_now": "It is the location substrate for later ownership work.",
+          "appetite": "One serialized Commander.",
+          "acceptance_or_falsification_evidence": "Red-first repro, review, full suite, verified merge.",
+          "implementation_latitude": "Preserve stored-origin and engine-owned comparison decisions.",
+          "hard_constraints_no_gos": ["No split write/read implementation."],
+          "local_unknowns": [],
+          "anchors": ["scripts/checklist_engine.py", "scripts/init_work_area.py"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {"outcome": "Consumer packages read the completed ownership substrate.", "why_likely": "They were deliberately deferred until location, lifecycle, and binding were trustworthy.", "entry_conditions": ["Wave 2 dispositioned.", "A new human checkpoint."]}
+    ],
+    "uncertainty_register": [
+      {"unknown": "Whether lifecycle remains one bounded implementation.", "affects": "Wave decomposition and migration authority.", "settle_by": "Initial lifecycle measurement.", "current_evidence": "#552 measured 43 on disk historically while the contract's tracked denominator found 24 active of 91.", "next_probe": "Re-scan both populations on current main and trace terminal/archive mutation paths."}
+    ],
+    "parked_possibilities": ["WP3 beyond #530", "WP4 beyond #510", "WP6 crew liveness", "WP7 pre-clearance and CLI hardening"]
+  },
+  "completed_outcomes": [
+    {"issue_id": "315-native", "outcome": "Wave 1 location substrate merged and verified.", "evidence": "PRs #576-#578; main 0448275e; Linux 2980 passed, 7 skipped, 1130 subtests."}
+  ],
+  "wave_evidence": [
+    {"claim": "The human refreshed the expired contract.", "expected": "Explicit authority before any wave-2 dispatch.", "observed": "All retained lanes cleared; lifecycle complexity must float; Windows-only CI red allowed.", "source": "Human message 2026-08-14 and LATITUDE_CONTRACT wave-2 refresh."}
+  ],
+  "discrepancies": [
+    {"id": "R1", "signal": "The old contract expired at wave-1 merge.", "classification": "blocks_current_wave_exit", "affects": "Every wave-2 launch.", "evidence": "wave-1-merged decision=stop and MCP execute block.", "reason": "Human refresh now supplies the missing authority."},
+    {"id": "R2", "signal": "All retained items are authorized but four can touch serialized engine-core files.", "classification": "invalidates_forecast_or_decomposition", "affects": "Concurrency shape.", "evidence": "Issue anchors name checklist_engine.py and spine_rail.py.", "reason": "Planning and measurement fan out; implementation remains one-at-a-time."},
+    {"id": "R3", "signal": "Codex tier routing is added to the wave.", "classification": "later_only", "affects": "Parallel harness lane.", "evidence": "Human explicitly requested the near-term addition.", "reason": "It is bounded and does not touch engine-core files."}
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {"id": "U-lease-lifecycle", "kind": "issue"},
+    {"id": "U-441", "kind": "issue"},
+    {"id": "U-530", "kind": "issue"},
+    {"id": "U-510", "kind": "issue"},
+    {"id": "U-codex-model-tier-routing", "kind": "issue"},
+    {"id": "U-consumers", "kind": "forecast"},
+    {"id": "U-parked", "kind": "parked"}
+  ],
+  "repo_state": {
+    "anchors": ["scripts/checklist_engine.py", "scripts/spine_lifecycle.py", "scripts/hooks/spine_rail.py", "scripts/run_crew.py"],
+    "map_status": "Fresh on main at 0448275e."
+  }
+}
