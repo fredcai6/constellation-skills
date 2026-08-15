@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r5-reconciliation",
+  "files": [],
+  "repo_rev": {
+    "commit": "23ed6b700d5402e2f9ab7b2b348c00a2dd428fb5"
+  },
+  "run": {
+    "work_id": "epic-568-510",
+    "generated_at": "2026-08-15T00:34:28Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-510",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-510",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-510"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-510"
+    }
+  }
+}

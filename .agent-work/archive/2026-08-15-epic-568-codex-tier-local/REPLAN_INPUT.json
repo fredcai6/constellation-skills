@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Codex model-tier routing",
+      "spec_path": ".agent-work/epic-568-codex-tier-local/LAUNCH_ORDER.md",
+      "intent_and_why": "Allow an external Codex crew caller to recover persisted optional model-tier metadata, including reasoning effort, without changing the Claude launch contract."
+    },
+    "definition_of_done": [
+      "Optional reasoning effort is threaded through parser, CrewSpec, registry creation, dispatch, relaunch, resume, and focused tests.",
+      "Legacy registry entries without reasoning effort remain readable through optional lookup.",
+      "Reasoning effort remains registry metadata and is never emitted in Claude argv.",
+      "Focused launcher tests and independent review pass without a blocking discrepancy."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Backward-compatible metadata-only threading with unchanged Claude argv and no external launcher behavior.",
+      "sufficient_evidence": "Focused launcher tests, the complete launcher test module, direct diff inspection, and independent reviewer approval.",
+      "appetite": "One bounded mechanical implementation and review wave."
+    },
+    "hard_constraints": [
+      "Do not add an external process launcher, migration, default change, or schema incompatibility.",
+      "Limit code and test changes to scripts/run_crew.py and tests/test_crew_launcher.py.",
+      "Do not mutate engine, hook, lifecycle, architecture, tracker, issue, or network state."
+    ],
+    "fixed_decisions": [
+      "Reasoning effort is nullable registry metadata only.",
+      "Claude argv and defaults remain unchanged.",
+      "Legacy registry entries use optional lookup and remain readable.",
+      "ExternalBackend remains record-only."
+    ],
+    "current_wave": {
+      "objective": "Implement and independently verify the smallest backward-compatible reasoning-effort metadata path.",
+      "exit_criteria": [
+        "Parser, CrewSpec, common registry creation, both dispatch backends, abandon/relaunch, and resume preserve the optional metadata contract.",
+        "Legacy entries without reasoning_effort resume without failure.",
+        "Claude argv excludes reasoning_effort and all focused launcher verification is green.",
+        "Independent review finds no blocking discrepancy."
+      ],
+      "issues": [
+        {
+          "id": "codex-tier-local-metadata",
+          "title": "Thread optional Codex reasoning effort through the crew registry",
+          "desired_outcome": "External Codex callers can consume persisted optional reasoning effort alongside model metadata while Claude launch behavior remains unchanged.",
+          "useful_now": "It closes the measured launcher-registry gap with the smallest backward-compatible change.",
+          "appetite": "One bounded launcher implementation plus independent review.",
+          "acceptance_or_falsification_evidence": "Focused and complete launcher tests pass, registry/relaunch integration preserves the field, legacy omission is safe, Claude argv excludes the field, and reviewer verdict is APPROVE.",
+          "implementation_latitude": "Choose the smallest nullable parser/schema threading while preserving the fixed metadata-only, legacy, and backend boundaries.",
+          "hard_constraints_no_gos": [
+            "No Claude reasoning-effort flag.",
+            "No external process launcher or default change.",
+            "No production or test files outside the assigned launcher and focused test module."
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/run_crew.py",
+            "tests/test_crew_launcher.py",
+            ".agent-work/epic-568-codex-tier-local/LAUNCH_ORDER.md"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [],
+    "uncertainty_register": [],
+    "parked_possibilities": []
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "codex-tier-local-metadata",
+      "outcome": "Optional reasoning_effort now flows through parser, CrewSpec, shared registry creation, CLI and external dispatch, abandon/relaunch inheritance, and defensive resume lookup without entering Claude argv.",
+      "evidence": ".agent-work/epic-568-codex-tier-local/IMPLEMENTER_RESULT.md and .agent-work/epic-568-codex-tier-local/REVIEWER_RESULT.md; focused tests passed 3/3 and tests/test_crew_launcher.py passed 163/163."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The optional Codex reasoning-effort metadata path is implemented end to end within the bounded launcher scope.",
+      "expected": "Parser, CrewSpec, registry, dispatch, relaunch, and resume preserve nullable reasoning effort.",
+      "observed": "Direct diff inspection and a temporary external-registry/relaunch integration check confirmed every bounded path.",
+      "source": "scripts/run_crew.py; .agent-work/epic-568-codex-tier-local/REVIEWER_RESULT.md"
+    },
+    {
+      "claim": "Backward compatibility and Claude argv isolation hold.",
+      "expected": "Legacy entries remain readable via optional lookup and no reasoning-effort flag reaches Claude.",
+      "observed": "Focused tests passed 3/3, the complete launcher module passed 163/163, legacy omitted-field behavior passed, and fresh/resumed argv excluded --reasoning-effort.",
+      "source": "tests/test_crew_launcher.py; .agent-work/epic-568-codex-tier-local/REVIEWER_RESULT.md"
+    },
+    {
+      "claim": "No blocking discrepancy emerged and no issue filing is warranted.",
+      "expected": "The bounded metadata-only plan completes without scope expansion or non-Windows regression.",
+      "observed": "The independent reviewer returned APPROVE; the only discrepancy is degraded map evidence, which did not affect implementation correctness or wave exit.",
+      "source": ".agent-work/epic-568-codex-tier-local/REVIEWER_RESULT.md; .agent-work/epic-568-codex-tier-local/map-orientation.json"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D-map-degraded",
+      "signal": "No citable architecture map covers scripts/run_crew.py; map orientation is DEGRADED-UNPARSEABLE.",
+      "classification": "evidence_only",
+      "affects": "Architecture-map provenance for the bounded launcher change, not the verified implementation or current-wave exit.",
+      "evidence": ".agent-work/epic-568-codex-tier-local/map-orientation.json records zero anchors and the README substitute; the human-ratified launch order supplied the governing frame.",
+      "reason": "Record the degradation as evidence only. It caused no blocking discrepancy, requires no plan repair, and no issue was filed or is requested."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "scripts/run_crew.py",
+      "tests/test_crew_launcher.py",
+      ".agent-work/epic-568-codex-tier-local/LAUNCH_ORDER.md",
+      ".agent-work/epic-568-codex-tier-local/map-orientation.json"
+    ],
+    "map_status": "DEGRADED-UNPARSEABLE: no citable launcher architecture anchor exists; README and the frozen launch order were used as evidence substitutes."
+  }
+}

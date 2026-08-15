@@ -1,0 +1,353 @@
+{
+  "work_id": "epic-568-510",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a-confined",
+    "r4b-no-weakening",
+    "r4c-narrow",
+    "r4d-still-branded",
+    "r4e-red-green",
+    "r4f-no-stale-deps",
+    "r4g-ast-pin"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md (read), the g2-reviewer handoff, and the full three-file diff (scripts/checklist_engine.py, tests/test_checklist_engine.py, map/INDEX.md). Interpreter confirmed per CREW_CONTEXT: python 3.12.3 / pytest 9.1.1 at /home/tommy/.local/bin/python.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Does what the ruling asked. Authority verified at source, not from the report: the handoff cites 'the Admiral's frozen launch order', and the LAUNCH_ORDER.md inside this worktree is the WAVE-1 order whose pre-rulings say the opposite ('no-runtime-expansion ... do not modify trip guards ... @grade settled/human'). The governing order is .agent-work/epic-568/LAUNCH_ORDER-wave2-510-engine.md (outside the worktree), pre-ruling 1 decision:fix-the-engine-not-the-prose, settled by the human, base commit 23ed6b70 matching. Its ruling is executed literally: the advisory wording is untouched and the engine yields. Claims 1/3/4/7 independently reproduced (see r3).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "In scope. Changed files are exactly the three the wave-2 order owns: scripts/checklist_engine.py, tests/test_checklist_engine.py, map/INDEX.md (map/* is gitignored except INDEX.md + ids.jsonl; tests/test_code_map.py 148 passed, so the map is fresh). Executable delta is 6 lines in one function; everything else in the engine diff is docstring. No stop condition fired: a 1152-state OLD-vs-NEW differential sweep found ZERO differences in whether a verb raised, how many ledger entries were appended, or the resulting gate statuses -- advance semantics, gate lifecycle and production defaults are provably untouched. Only exclusion touched indirectly: docs/CHECKLIST_SCHEMA.md is now stale and correctly NOT edited (outside ownership) -- see r5.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every required evidence item produced and independently reproduced. (1) Cache-clean full suite: 2997 passed / 7 skipped / 1129 subtests. (2) Red/green is real: reverting ONLY scripts/checklist_engine.py makes TripInstructedBeginIsNotAnOffence fail 3/8 with AssertionError \"begin-released\" != \"begin-instructed\" -- a behavior failure, not an import or fixture error; the 5 narrowness controls stay green there, which is correct since they pin unchanged behavior. Restoring makes the file 450 passed. Baseline 23ed6b70 (both files at HEAD) had exactly the 1 documented deliberately-failing test. (3) Assertion-kind census: 0 tests removed, 8 added; every assertion kind same or higher (assertEqual 614->632, assertIn 237->238, assertNotIn 78->82, assertRaises 100->103, all others unchanged); skip/xfail decorators 2->2; whole-string advisory equality assertions 8->10, none downgraded to assertIn. (4) My own reproduction, written by me: reviewer_probe.py reproduces the change in-process AND through the real CLI (persisted trip_ledger on disk reads begin-instructed and  no longer prints TRIP LEDGER/TRIP HISTORY).",
+      "evidence": [
+        {
+          "id": "e-r3-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ ... ; python -m pytest tests/ -q",
+            "result": "2997 passed, 7 skipped, 1129 subtests passed in 123.28s"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r3-evidence-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "engine reverted to HEAD; pytest -k TripInstructedBeginIsNotAnOffence",
+            "result": "3 failed, 5 passed -- AssertionError 'begin-released' != 'begin-instructed', not import/fixture error"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r3-evidence-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "reviewer_diff_probe.py (OLD 23ed6b70 vs NEW, 1152 states)",
+            "result": "0 structural diffs; 3 relabels begin-released->begin-instructed; all 3 == (start, active gate, pending, gated, over-hard)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Umbrella for the seven falsifiable claims; each is recorded separately as r4a..r4g. Inherited crew rules honoured: minimal change (6 executable lines, one branch, no speculative abstraction); behaviour change is test-led with real red/green; fails visibly (no hidden fallback -- the ledger entry is still appended, only its label changes); matches surrounding conventions (issue-tagged block comment, same idiom as the neighbouring #467/#190 comments). CREW_CONTEXT verification discipline satisfied: the guard was demonstrated red before green, the loops assert their counts (1152 states, 3 relabels, printed not assumed), and the behaviour -- not the rendered text -- is what the new class asserts.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "The engine now diverges from its own recorded contract, and the float that was supposed to carry that divergence is not on the record. docs/CHECKLIST_SCHEMA.md is the document agents drive this engine from; its trip-ledger section still closes the outcome vocabulary at two values -- line 448 'outcome | begin-refused or begin-released', with lines 457-465 defining exactly those two and lines 474+/515+ describing the selectors over them. A third outcome is now written to real spines, so a reader of the contract would classify a begin-instructed entry as malformed. Not editing that file is CORRECT (outside this lane's ownership per the wave-2 order, whose stop condition is to report rather than reach). What I could not reproduce is the handoff's claim that it 'is floated to the Admiral': it appears in no durable artifact. The spine holds triage_candidates tc1 (shared-string evidence sufficiency) and tc2 (MCP door binding) and one archive blocker (push/PR fencing) -- none mentions the schema doc; ADMIRAL_LOG.md does not mention it either; and .agent-work/epic-568-510/FINDINGS-wave2-engine.md, which the wave-2 order names as this lane's findings file, does not exist. Per inherited doctrine a claimed side-effect I cannot reproduce is a finding, not an accepted fact. Routed as a triage candidate on this survey so it reaches Commander durably rather than only through handoff prose. Nothing else is stale: grep over the whole worktree finds the vocabulary only in the engine, its tests, the derived map, and this doc; skills/ and the rest of docs/ are clean; and the only test that parses CHECKLIST_SCHEMA.md reads its '## Task' field table, not its trip content, so no test asserts on the stale text.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/epic-568-510/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/epic-568-510/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from epic-568-510 alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-568-510/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Full Fowler pass run and recorded at .agent-work/epic-568-510/FOWLER_PASS.json; scripts/verify_fowler_pass.py exits 0 (smells=12, flagged=['duplicated-code'], overridden=7, absent=4). One smell flagged: the guard's instructed-predicate duplicates the state condition the advisory renders its instruction from, ~200 lines apart in two functions that never call each other, with no code enforcing that they stay co-extensive. They agree today (1152-state sweep, zero counterexamples) and one new positive-control test pins one fixture, but a future edit to the advisory's pending branch could widen the exemption silently. Raised as an observation and routed to Commander, not requested here -- pre-ruling 2 bounds this lane to the contradiction. Seven overrides each name the standard that wins and why (two of them -- feature-envy and message-chains -- rest on a fact I confirmed empirically rather than assumed: the guard runs before id validation, so the defensive dict chain is load-bearing and the module's task() accessor would raise from the wrong place).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-568-510/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/epic-568-510/crew-handoffs/g2-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a-confined": {
+      "id": "r4a-confined",
+      "title": "Claim 1: the engine change is confined to one branch",
+      "imperative": "Falsify: show the engine diff touching anything beyond the new outcome branch and its docstrings.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Could not falsify. The whole engine diff is: (a) 6 executable lines in _trip_hard_gate's already-existing release branch -- one boolean, one conditional expression, one changed argument to the existing _append_trip_entry call; (b) a 24-line comment on that branch; (c) docstring edits in begin_over_line_records and _trip_hard_gate. Nothing else. Neither compliance selector was touched, as claimed: begin_over_line_records and begin_over_line_records_historical still filter on ('begin-refused','begin-released') exactly as before, which is why a third outcome needs no selector change. Proven beyond diff-reading by the OLD-vs-NEW differential sweep over 1152 states: zero states differ in whether the verb raised, how many ledger entries were appended, or the three gates' resulting statuses. advance semantics, gate lifecycle and production defaults are untouched by measurement, not just by inspection.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b-no-weakening": {
+      "id": "r4b-no-weakening",
+      "title": "Claim 2: no test deleted, skipped, loosened, or weakened",
+      "imperative": "Falsify via an assertion-kind census before (23ed6b70) and after; every whole-string assertEqual must still be a whole-string assertEqual.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Could not falsify. AST census over tests/test_checklist_engine.py at 23ed6b70 vs the working tree: 441 -> 449 test methods, 0 removed, 8 added. Assertion-kind totals: assertEqual 614->632, assertIn 237->238, assertNotIn 78->82, assertRaises 100->103; assertTrue/assertFalse/assertIs/assertIsNone/assertIsNotNone/assertIsInstance/assertGreater(Equal)/assertLess/assertNotEqual/assertAlmostEqual/assertNotAlmostEqual all unchanged. No kind decreased. Skip/xfail markers 2->2 (none added). Whole-string advisory equality assertions 8->10 and every re-pinned one is still assertEqual(self._advisory(...), <full expected string>) -- none downgraded to assertIn. Per-test mixes changed in only 3 of the 5 re-aimed tests, and two of those ADDED an assertion (assertRaises, assertNotIn). The single removed assertion is one assertTrue(msg.endswith('g2 -> in-progress')) in test_ledger_begin_released_is_recorded_when_the_same_verb_runs_over_the_line, dropped because the test now exercises reopen instead of start; the state assertion it guarded (assertEqual on the gate's resulting status) is retained and is the stronger of the two. Recorded as an observation, not a weakening: the guarantee (a released over-the-line begin is recorded) is still pinned at 5 assertEqual, unchanged.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4c-narrow": {
+      "id": "r4c-narrow",
+      "title": "Claim 3: the exemption is NARROW",
+      "imperative": "Falsify: find any state that records begin-instructed where the HARD advisory did not instruct that exact start. Probe reopen, no keyed request, non-active gate, in-progress/blocked gate, survey, why_exempt, stale/absent gauge.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Could not falsify, and I tried hard. Swept 1152 states (verb x target gate x active-gate status x refresh-request presence/keying x why_exempt x gauge band x checklist type), computing the advisory the agent WOULD have seen BEFORE dispatching the verb, then asserting the implication outcome == 'begin-instructed' => the advisory literally contained 'begin THIS guarded gate ()'. Zero counterexamples. Every exempted state is exactly (verb=start, target=the active gate, status=pending, type=gated, band=over-hard) with a matching pending refresh-request -- nothing else. Each named probe came back negative: reopen never exempted (0); start at a non-active gate never exempted (0 -- and  itself rejects it, though note the ledger entry is still written first, which is pre-existing #467 behaviour); start at an in-progress or blocked gate never exempted (0); survey checklist writes no ledger at all (0); absent gauge reading writes nothing (0); a well-formed reading that predates the session's claim writes nothing (0). The one probe row I had to chase: a why_exempt gate (live why id None) with a refresh-request carrying a STALE why_ref IS exempted -- because has_pending_refresh_request degrades to a gate-only match when wid is None. That is documented pre-existing #190 behaviour shared by BOTH sites, so the advisory instructs that start too and the implication holds; and the OLD engine already RELEASED that same begin, so the change relabels it rather than newly permitting it.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4d-still-branded": {
+      "id": "r4d-still-branded",
+      "title": "Claim 4: begin-released is still reachable and still branded",
+      "imperative": "Falsify: show a genuinely self-chosen over-the-line begin that the compliance signal no longer fires for.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Could not falsify. reopen over the hard line with a keyed request still records begin-released, still populates begin_over_line_records_historical, and the TRIP HISTORY line still renders -- reproduced in my own probe, independent of the implementer's test. A start with no request still raises and still records begin-refused, and the live selector still names it. The differential sweep is the general statement: of 1152 states, exactly 3 changed what the compliance selectors hold, and those 3 are the advisory-instructed configuration. Every other branded state is branded identically before and after.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4e-red-green": {
+      "id": "r4e-red-green",
+      "title": "Claim 5: the red/green is real",
+      "imperative": "Revert ONLY the engine file; the new class must fail for the RIGHT reason. Restore; it must pass.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Could not falsify. Reverting ONLY scripts/checklist_engine.py (via git checkout HEAD -- <file>, with the after-version copied aside and restored byte-identically; final git diff matches the pre-experiment diffstat exactly) makes TripInstructedBeginIsNotAnOffence fail 3 of 8 with AssertionError \"begin-released\" != \"begin-instructed\" and \"'TRIP LEDGER:' unexpectedly found in ...\" -- behaviour failures with real rendered output in the message, not import or fixture errors. The other 5 in the class stay green, which is correct: they are the narrowness controls and pin behaviour the change does not alter. Across the whole engine test file, the reverted engine fails 6 (3 new + 3 re-aimed expectations), so the re-aims are behaviour-driven, not cosmetic. Restoring gives 450 passed. Cache-clean full suite on the restored tree: 2997 passed, 7 skipped, 1129 subtests. Baseline check for honesty: 23ed6b70 with BOTH files at HEAD fails exactly 1 test, the documented deliberately-failing one -- so this change also closes the lane's known red.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4f-no-stale-deps": {
+      "id": "r4f-no-stale-deps",
+      "title": "Claim 6: nothing else in the repo depends on the old semantics",
+      "imperative": "Grep the worktree for begin-released / begin-refused / trip_ledger and report anything now stale; confirm no TEST asserts on docs/CHECKLIST_SCHEMA.md trip content.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Partially falsified -- one stale consumer, exactly the one the handoff names. Repo-wide grep for begin-released / begin-refused / begin-instructed / trip_ledger / begin_over_line_records hits: tests/test_checklist_engine.py (137), .code-map/statements.jsonl (79, derived+gitignored), scripts/checklist_engine.py (26), docs/CHECKLIST_SCHEMA.md (21), map/ (derived; map/* is gitignored except INDEX.md and ids.jsonl), and one incidental prose match in tests/fixtures/epic-418-redux-w4-to-close/REPLAN_RESULT.json that is unrelated. skills/ and every other file under docs/ are clean. So docs/CHECKLIST_SCHEMA.md is the only stale consumer: line 448 closes the outcome column at begin-refused or begin-released, 457-465 define exactly those two, and 474+/515+ describe the selectors over them. Recorded as fail because the divergence is real; it is NOT a fault of this diff -- the file is outside this lane's ownership and correctly untouched -- and the routing gap is carried as triage candidate tc1 on this survey and detailed at r5-reconciliation. The handoff's specific caveat checks out: no TEST asserts on that doc's trip content. The only test that parses docs/CHECKLIST_SCHEMA.md reads its Task field table (tests/test_checklist_engine.py:5540-5605, issue #476); the two other references are docstring prose in tests/test_mcp_identity.py and tests/test_measure_overread.py, neither of which reads the trip sections.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4g-ast-pin": {
+      "id": "r4g-ast-pin",
+      "title": "Claim 7: the AST call-graph pin still holds",
+      "imperative": "_append_trip_entry must still have exactly one caller and exactly three functions may name trip_ledger.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Could not falsify, and I verified it with my own AST walk rather than by trusting the repo's test. _append_trip_entry has exactly one caller: _trip_hard_gate. Exactly three functions name the trip_ledger string literal: _append_trip_entry, begin_over_line_records, begin_over_line_records_historical. The repo's own pin, test_compliance_ledger_write_site_is_unreachable_from_any_cli_verb, is green in the full cache-clean suite. The change adds no new caller and no new namer, which is the structural reason a third outcome needed no selector edit.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [
+      "r5-reconciliation: The engine now diverges from its own recorded contract, and the float that was supposed to carry that divergence is not on the record. docs/CHECKLIST_SCHEMA.md is the document agents drive this engine from; its trip-ledger section still closes the outcome vocabulary at two values -- line 448 'outcome | begin-refused or begin-released', with lines 457-465 defining exactly those two and lines 474+/515+ describing the selectors over them. A third outcome is now written to real spines, so a reader of the contract would classify a begin-instructed entry as malformed. Not editing that file is CORRECT (outside this lane's ownership per the wave-2 order, whose stop condition is to report rather than reach). What I could not reproduce is the handoff's claim that it 'is floated to the Admiral': it appears in no durable artifact. The spine holds triage_candidates tc1 (shared-string evidence sufficiency) and tc2 (MCP door binding) and one archive blocker (push/PR fencing) -- none mentions the schema doc; ADMIRAL_LOG.md does not mention it either; and .agent-work/epic-568-510/FINDINGS-wave2-engine.md, which the wave-2 order names as this lane's findings file, does not exist. Per inherited doctrine a claimed side-effect I cannot reproduce is a finding, not an accepted fact. Routed as a triage candidate on this survey so it reaches Commander durably rather than only through handoff prose. Nothing else is stale: grep over the whole worktree finds the vocabulary only in the engine, its tests, the derived map, and this doc; skills/ and the rest of docs/ are clean; and the only test that parses CHECKLIST_SCHEMA.md reads its '## Task' field table, not its trip content, so no test asserts on the stale text.",
+      "r4f-no-stale-deps: Partially falsified -- one stale consumer, exactly the one the handoff names. Repo-wide grep for begin-released / begin-refused / begin-instructed / trip_ledger / begin_over_line_records hits: tests/test_checklist_engine.py (137), .code-map/statements.jsonl (79, derived+gitignored), scripts/checklist_engine.py (26), docs/CHECKLIST_SCHEMA.md (21), map/ (derived; map/* is gitignored except INDEX.md and ids.jsonl), and one incidental prose match in tests/fixtures/epic-418-redux-w4-to-close/REPLAN_RESULT.json that is unrelated. skills/ and every other file under docs/ are clean. So docs/CHECKLIST_SCHEMA.md is the only stale consumer: line 448 closes the outcome column at begin-refused or begin-released, 457-465 define exactly those two, and 474+/515+ describe the selectors over them. Recorded as fail because the divergence is real; it is NOT a fault of this diff -- the file is outside this lane's ownership and correctly untouched -- and the routing gap is carried as triage candidate tc1 on this survey and detailed at r5-reconciliation. The handoff's specific caveat checks out: no TEST asserts on that doc's trip content. The only test that parses docs/CHECKLIST_SCHEMA.md reads its Task field table (tests/test_checklist_engine.py:5540-5605, issue #476); the two other references are docstring prose in tests/test_mcp_identity.py and tests/test_measure_overread.py, neither of which reads the trip sections."
+    ],
+    "summary": "APPROVE. The engine half of #510 does exactly what the human ruled and survives every falsification I could aim at it. The change is 6 executable lines in one already-existing branch: an over-the-line start that is the pending-HARD advisory's own instruction is recorded as begin-instructed instead of begin-released, so the compliance selectors -- untouched -- stop counting obedience as an offence. Independently verified, not read: a 1152-state OLD-vs-NEW differential sweep shows zero differences in whether a verb raised, how many ledger entries were written, or the resulting gate statuses; exactly 3 states relabel, and all 3 are the advisory-instructed configuration. A separate 1152-state sweep found zero counterexamples to the implication begin-instructed implies the advisory instructed that exact start. Red/green is real (revert the engine file only: 3 of 8 fail on assertion, not import); no test was deleted, skipped or loosened (census: 0 removed, 8 added, no assertion kind decreased, whole-string equality intact); the AST write-site pin still holds under my own walk; cache-clean full suite 2997 passed / 7 skipped. Two checks recorded fail and both are the same out-of-scope finding, overridden below and routed as triage candidates rather than softened.",
+    "override_reason": "The two fails (r5-reconciliation, r4f-no-stale-deps) are one finding about a file this lane is forbidden to touch, not a defect in the change under review. docs/CHECKLIST_SCHEMA.md still documents the trip-ledger outcome vocabulary as closed at two values while the engine now writes a third. Not editing it is correct: the frozen wave-2 launch order's File Ownership excludes it and its Stop Conditions require reporting rather than reaching. What I could not reproduce is the handoff's claim that the staleness was already floated to the Admiral -- it is on no spine triage list, in no ADMIRAL_LOG entry, and the lane's named findings file FINDINGS-wave2-engine.md was never written. I have therefore routed it durably myself as triage candidate tc1 on this survey, where Commander reads it, so the finding is preserved rather than dismissed. It does not bar the change: no test asserts on the stale text, no code depends on it, and the engine behaviour the doc describes is exactly what the human ruled it should become."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "docs/CHECKLIST_SCHEMA.md is stale after #510: its trip-ledger section closes the outcome vocabulary at begin-refused/begin-released (line 448, elaborated 457-465) while the engine now also writes begin-instructed, and the compliance-selector sections describe the two-value filter. The file is outside the epic-568-510 lane's ownership so this lane correctly did not edit it, but the divergence has no durable route: it is not on the spine's triage_candidates or blockers, not in ADMIRAL_LOG.md, and the lane's named findings file .agent-work/epic-568-510/FINDINGS-wave2-engine.md was never written. Commander should carry it to the Admiral (or file it) before the lane closes."
+    },
+    {
+      "id": "tc2",
+      "from": "r6-fowler",
+      "statement": "Extract the shared 'is this the state the pending-HARD advisory is rendered from' predicate so _trip_advisory's pending branch and _trip_hard_gate's begin-instructed exemption cannot drift. Today the condition is written twice (checklist_engine.py ~1731-1738 and ~1961-1966) in two functions with no call relationship; nothing fails if a later edit adds a condition to one and not the other, which would widen the exemption past what the engine actually instructs. Out of scope for epic-568-510 under its frozen pre-ruling 2."
+    },
+    {
+      "id": "tc3",
+      "from": "r4c-narrow",
+      "statement": "Pre-existing #467 behaviour found while probing #510, unchanged by this diff and out of its scope: over the hard line, a start aimed at a gate id that does not exist writes a trip_ledger row for that nonexistent gate (gate: nope, outcome: begin-refused) and raises the trip refusal, shadowing the engine's own no such item error. The append-only ledger therefore accumulates rows for gates that were never in the checklist, and the agent is told to attach a refresh-request against an id that cannot hold one. Reproduced against BOTH the pre-change and post-change engine, so it belongs to #467, not #510."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/epic-568-510/g2-engine/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-15T00:22:32.525341+00:00",
+    "last_heartbeat": "2026-08-15T00:39:47.202710+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-15T00:39:50.442932+00:00"
+  }
+}

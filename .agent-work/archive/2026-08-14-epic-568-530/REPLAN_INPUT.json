@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic 568 native worktree binding correction",
+      "spec_path": ".agent-work/epic-568-530/LAUNCH_ORDER.md",
+      "intent_and_why": "Keep shared-session rail guards attributable to the worktree that owns each resolved spine."
+    },
+    "definition_of_done": [
+      "A linked-worktree child binding records its owning worktree rather than stale payload cwd.",
+      "Parent Stop and SessionStart behavior is proven without #441 store-policy expansion."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Discriminating real linked-worktree red/green regression and independent review.",
+      "sufficient_evidence": "Focused rail suite passes on Linux and reviewer reproduces the production-handler topology.",
+      "appetite": "One bounded hook correction."
+    },
+    "hard_constraints": [
+      "No checklist-engine CLI or engine JSON edits.",
+      "No #441 locking, identity, reaping, schema, lifecycle, or release-semantic expansion."
+    ],
+    "fixed_decisions": [
+      "Stored worktree derives from validated abs_spine, never hook payload cwd, cd, or --worktree text.",
+      "Release target resolution remains unchanged."
+    ],
+    "current_wave": {
+      "objective": "Correct #530 worktree attribution and prove parent/child rail behavior in a real linked-worktree topology.",
+      "exit_criteria": [
+        "The base writer fails the child-worktree attribution assertion and the corrected writer passes it.",
+        "Focused rail tests pass and independent review approves the bounded diff."
+      ],
+      "issues": [
+        {
+          "id": "#530",
+          "title": "Derive binding worktree from resolved spine path",
+          "desired_outcome": "Claim and SessionStart bindings record the owning worktree for supported JSON checklists.",
+          "useful_now": "It fixes the concrete child/parent Stop guard misattribution measured for this wave.",
+          "appetite": "One helper, two existing writers, and focused real-topology tests.",
+          "acceptance_or_falsification_evidence": "Real linked-worktree red/green proof plus pytest rail suite and independent review.",
+          "implementation_latitude": "Choose helper name and focused test arrangement; preserve fixed ownership source and exclusions.",
+          "hard_constraints_no_gos": [
+            "No #441 store concurrency, identity, reaping, schema, lifecycle, or release work.",
+            "No payload-cwd fallback for malformed/out-of-layout paths."
+          ],
+          "local_unknowns": [
+            "Map coverage is degraded and escalated separately; it does not alter this bounded code correction."
+          ],
+          "anchors": [
+            "README.md declared degraded-map substitute",
+            "scripts/hooks/spine_rail.py binding writers",
+            "tests/test_spine_rail.py real linked-worktree topology"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "#441 store serialization and lifecycle-adjacent policy work remains separately scoped.",
+        "why_likely": "#530 preserves its boundaries and does not change shared-store policy.",
+        "entry_conditions": [
+          "#530 is independently reviewed and handed back to the Admiral."
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "The repository map has no citable spine-rail anchor.",
+        "affects": "Architecture navigation and future rail changes, not #530’s observed behavior.",
+        "settle_by": "Admiral map follow-up after this bounded handoff.",
+        "current_evidence": "map_orient recorded DEGRADED-UNPARSEABLE with README.md hash-pinned.",
+        "next_probe": "Restore citable architecture coverage for scripts/hooks/spine_rail.py."
+      }
+    ],
+    "parked_possibilities": [
+      "Historical binding cleanup and active-lease reaping remain outside #530."
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "#530",
+      "outcome": "Commit 97eb5d34 derives binding worktree from abs_spine in claim and SessionStart and adds strict real linked-worktree coverage.",
+      "evidence": "Implementer red/green result, independent reviewer APPROVE, and python -m pytest -q tests/test_spine_rail.py: 111 passed, 1 skipped."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "A child linked-worktree binding no longer records stale payload cwd.",
+      "expected": "The pre-fix writer stores main cwd and the corrected writer stores the linked child root while production Stop/release/SessionStart paths retain the intended parent/child behavior.",
+      "observed": "The named regression failed against temporarily restored old writer, then passed after the helper; independent review reproduced two named regressions and the focused suite.",
+      "source": "commit 97eb5d34; crew-handoffs/g1-implement-implementer-result.md; crew-handoffs/g1-review-reviewer-result.md"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D-TEST-RUNNER",
+      "signal": "The planned pytest executable is absent on this Linux runner.",
+      "classification": "evidence_only",
+      "affects": "The integration command spelling, not the test surface or issue decomposition.",
+      "evidence": "pytest -q tests/test_spine_rail.py returned command not found; python -m pytest -q tests/test_spine_rail.py passed 111 tests with 1 skip.",
+      "reason": "The execution-plan check was amended through MCP to the equivalent available invocation; no issue was filed."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "README.md",
+      "scripts/hooks/spine_rail.py",
+      "tests/test_spine_rail.py"
+    ],
+    "map_status": "DEGRADED-UNPARSEABLE; README.md hash-pinned and missing rail map coverage escalated to Admiral."
+  }
+}

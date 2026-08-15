@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g1-review",
+  "mechanical": {
+    "run": "epic-568-530",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 0,
+    "spine-step": "g1-review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-568-530-g1-review@7b9e4e1f1af9c8539dfca8fc16450f3b37035280",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-568-530",
+    "generated_at": "2026-08-14T16:32:37Z"
+  }
+}

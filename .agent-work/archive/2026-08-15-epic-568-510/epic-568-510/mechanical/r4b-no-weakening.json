@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4b-no-weakening",
+  "mechanical": {
+    "run": "epic-568-510",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r4b-no-weakening",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-568-510-r4b-no-weakening@a7eb42ce5f42744f8f100c2d5b7114c7176d4f51",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-568-510",
+    "generated_at": "2026-08-15T00:37:31Z"
+  }
+}
