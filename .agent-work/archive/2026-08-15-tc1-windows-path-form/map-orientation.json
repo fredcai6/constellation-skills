@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "work_id": "tc1-windows-path-form",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/tc1-worktree-identity",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "map/INDEX.md",
+      "content_hash": "b13ff6346021fa6d49546fd1ed3bfb01b8b7bd5615c98f23e8602a5941f76ff6",
+      "source": "agent-declared"
+    },
+    {
+      "path": "map/tests.test_spine_origin_isolation/INDEX.md",
+      "content_hash": "3847c99fc980ccb4cf0a2480f5dfa3e785094fd84b05a1d099865620cd92e2ca",
+      "source": "agent-declared"
+    },
+    {
+      "path": ".agent-work/tc1-windows-path-form/LAUNCH_ORDER.md",
+      "content_hash": "87990b617dbbf66c4408f34764a31e2a83050f92b90cf7ed13675451512e811e",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "map_orient's code-map-index candidate treats map/INDEX.md as unparseable (no citable anchor id per its own parser), even though the file has grep-discoverable package/module entries including tests.test_spine_origin_isolation -- a known map_orient/map-format gap in this skill-source repo, not something this ticket's tiny scope can fix"
+  ],
+  "escalation": "None needed for this run: the launch order (admiral-post-568) already names the exact file, test, and assertion diagnosis, and the map's relevant entry (tests.test_spine_origin_isolation) was located manually via grep and matches the launch order's scope. Noting the map_orient parser gap as a candidate for a future skill-tooling fix, not escalating it now.",
+  "emitted_at": "2026-08-15T18:04:52.897669+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

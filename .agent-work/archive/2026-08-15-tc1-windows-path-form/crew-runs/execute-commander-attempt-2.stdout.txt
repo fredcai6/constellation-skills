@@ -1,0 +1,9 @@
+The blocker is now formally recorded at both levels — `g1-integrate` in `execute.json` and the outer `execute` step in `spine.json` are both `blocked`, bubbled to the parent, lease still held. This is an honest stop, not an abandonment: the diagnosis is complete and reproducible, but resolving it requires a waiver only a human can grant (`g1-integrate.c1`'s override policy requires `authority: human`), so I'm not proceeding further without that.
+
+**Where things stand:**
+- `tests/test_spine_origin_isolation.py` has exactly the one-line fix, uncommitted, verified correct.
+- `g1-implement` and `g1-review` are closed (verified directly by me, no crew, per LAUNCH_ORDER-2).
+- `g1-integrate` and the outer `execute` step are `blocked`, with the full root-cause diagnosis recorded in the block reason: the raw cache-clean suite shows 3009 passed/1 failed because my own active spine lease leaks `SPINE_FILE`/`SPINE_SESSION`/`SPINE_PARENT` into the check's environment — confirmed diff-independent and confirmed environmental (clean-env run reproduces the exact 3010/6/0/1136 baseline).
+- Nothing has been committed or pushed. PR #588 is untouched.
+
+To unblock, either grant the waiver (`python scripts/checklist_engine.py --file .agent-work/tc1-windows-path-form/execute.json waive g1-integrate --cond c1 --which postconditions --authority human --reason "<...>"`, then I resume and drive to commit/push/terminal), or tell me another way to resolve it.
