@@ -1,0 +1,21 @@
+PR opened: **https://github.com/fredcai6/constellation-skills/pull/592**
+
+## Return Shape (per LAUNCH_ORDER.md)
+
+**`spine_status` resolved to:** `episode-guard-at-write` throughout, as required. The spine reached the `plan` gate and is now **blocked** at `plan.c6` (`verify-frame`): the worktree's architecture map was `DEGRADED-UNPARSEABLE` (empty `map/INDEX.md`/`map/ids.jsonl`) at orientation time, so no `decision:`/`claim:` anchor in `MISSION_FRAME.md` could resolve against a map inventory that didn't exist. The engine refused my own attempt to waive it ("a crew must not waive its own bound spine check — always ask up"), so I `block`-halted and bubbled it to the parent rather than forcing past it — this is floated up per instructions, not silently worked around. The map has since been regenerated and committed by this same run.
+
+**Where the check lives, and why:** in the apply phase (`_apply_create`, `_apply_restate_assertion`), not inside `validate_delta`. `triggers_for()`/`EXCEPTIONS` are themselves pure (regex over given strings, confirmed by reading the guard's source), but deciding *whether the guard should even run* needs to know which store is being written to, and `validate_delta` has no store to ask. Moving the check to the apply phase — which already touches disk — kept `validate_delta` exactly as pure as before (no new parameter, no new disk touch), and avoided threading a root through the several existing direct callers of `validate_delta` in tests outside this lane's ownership.
+
+**Purity finding, demonstrated:** confirmed by reading `verify_episode_observations.py`'s source that `triggers_for`/`EXCEPTIONS` touch no filesystem; the only disk access is loading the guard's own source file (an ordinary import), never episode-store content.
+
+**Grandfathered amendments:** a `restate-assertion` against an `EXCEPTIONS`-listed `(episode_id, assertion_id)` is exempt from the check entirely, so those 5 records stay editable.
+
+**RED/GREEN/control:** `tests/test_episode_observation_guard_at_write.py`, 9 passed — a pre-change copy of the writer (loaded via `git show 2c46cab8`) accepted a bare-verb workaround statement; the current writer rejects the identical delta before writing; a well-formed statement still writes; the rejection names the offending word and kind.
+
+**A hazard I found that the order didn't anticipate:** enforcing unconditionally broke 46 tests in files I may not touch — `tests/test_episode_observations.py::RedProofTests` builds a store the guard must refuse *by writing through this exact writer*. Fix: scope the guard to the real, suite-scanned store only (`_is_real_store`); every throwaway `--store-root` is unaffected. Also had to add `verify_episode_observations.py`/`query_episodes.py` to `install_constellation.py`'s `SCRIPT_RUNTIME_COMPANIONS` (outside the narrow "yours" file) or the check would silently no-op in every installed skill copy — flagged here as required by the diff itself.
+
+**Clean-env suite:** 3040 passed, 6 skipped, 1146 subtests, **0 failed** (baseline was 3031/6/1136).
+
+**Map:** moved; regenerated and committed.
+
+**Own episodes:** yes — the first-draft workaround statement ("Scope the guard to...") tripped my own check (`imperative 'Scope'`), confirming it works; recast to past tense and it wrote clean.

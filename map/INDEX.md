@@ -4,7 +4,7 @@
 evals: 12 modules, 54 entities
 scripts: 58 modules, 1194 entities
 skills: 1 modules, 18 entities
-tests: 80 modules, 4620 entities
+tests: 81 modules, 4640 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -102,7 +102,7 @@ tests: 80 modules, 4620 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (80 modules, 4620 entities)
+## tests (81 modules, 4640 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -132,6 +132,7 @@ tests: 80 modules, 4620 entities
 - [tests.test_episode_capture](tests.test_episode_capture/INDEX.md) (41 entities, 20 holes): Tests for `scripts/episode_capture.py` — the assembly seam that makes the context manifest a *byproduct* of starting a spine step.
 - [tests.test_episode_fields](tests.test_episode_fields/INDEX.md) (90 entities, 56 holes): Tests for the MECHANICAL FIELD COMPOSER — `episode_capture.mechanical_fields()` and the snapshot it emits at the g1 seam (#305 gate g2).
 - [tests.test_episode_negative_control](tests.test_episode_negative_control/INDEX.md) (49 entities, 17 holes): #305 gate g3 — the NEGATIVE CONTROL for `zero agent effort is literal`.
+- [tests.test_episode_observation_guard_at_write](tests.test_episode_observation_guard_at_write/INDEX.md) (20 entities, 9 holes): Tests for the write-time instruction-shaped-statement guard in scripts/apply_episode_delta.py (episode-guard-at-write).
 - [tests.test_episode_observations](tests.test_episode_observations/INDEX.md) (32 entities, 12 holes): Tests for scripts/verify_episode_observations.py — the guard that keeps episode records reading as observations rather than instructions (issue #460).
 - [tests.test_episode_store](tests.test_episode_store/INDEX.md) (214 entities, 127 holes): Tests for the episode store (docs/EPISODE_STORE.md): scripts/apply_episode_delta.py, the validated all-or-nothing writer (gate g2), and scripts/query_episodes.p
 - [tests.test_explorer_templates](tests.test_explorer_templates/INDEX.md) (43 entities, 42 holes): Verifier<->template cross-check for the constellation-explorer engine artifacts.

@@ -215,7 +215,8 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-plan-1"
         },
         {
           "id": "c4",
@@ -243,18 +244,25 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-plan-2",
+          "waived": {
+            "authority": "admiral",
+            "reason": "Admiral waiver, verified not asserted: map/ids.jsonl is 0 bytes / 0 lines on main at 2c46cab8, so no map inventory exists for a decision:/claim: anchor to resolve against. Pre-existing and independently filed hours earlier by the crew-verdict-and-door lane as code-map-ids-jsonl-is-structurally-empty.md; not caused by this lane and not fixable within its ownership. c6 is a regression floor against map-IGNORING, not map-LATENESS, and this lane did not ignore the map -- it regenerated and committed it. The engineering c6 gates is complete and evidenced (RED/GREEN/control/message tests in tests/test_episode_observation_guard_at_write.py, full suite clean). Commander correctly refused to self-waive and asked up. Correction to its blocker text: map/INDEX.md is populated (27KB), not an unfilled template; the empty ids.jsonl is the operative fault.",
+            "evidence": "e-plan-2",
+            "forced": false
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "blocked",
+      "status": "complete",
       "status_detail": {
         "blocker": "plan.c6 (verify-frame) FRAME-REFUSED: this worktree's architecture map is DEGRADED-UNPARSEABLE (map/INDEX.md was an unfilled template, map/ids.jsonl empty), so no decision:/claim: anchor in MISSION_FRAME.md can resolve against a map inventory that does not exist. The engine refuses my own waive on my bound spine check ('a crew must not waive its own bound spine check -- always ask up'). The underlying engineering work this gate exists to gate is complete and evidenced (RED/GREEN/control/message tests in tests/test_episode_observation_guard_at_write.py, no regression in the full suite, the map has since been regenerated and committed by this same run per LAUNCH_ORDER.md's own closeout instruction).",
         "authority_needed": "admiral",
         "next_action": "A human or the parent commander/admiral waives plan.c6 with reason citing: DEGRADED-UNPARSEABLE map state (pre-existing, not caused by this lane), c6 is a regression floor against map-IGNORING not a fix for map-LATENESS (0/4 measured sensitivity per its own gate text), and the map was regenerated/committed at this run's own closeout (LAUNCH_ORDER.md Evidence Required). Then resume plan and continue to execute/reconcile/review/feedback/archive to formally close the spine, or accept the PR on the strength of the code diff, test evidence, and full-suite result already produced.",
-        "prior_status": "in-progress"
+        "resume_reason": "plan.c6 waived by Admiral per LAUNCH_ORDER-2.md (evidence e-plan-2); resuming to close remaining c3 checkpoint"
       },
       "result": null,
       "finding": null,
@@ -265,6 +273,27 @@
           "payload": {
             "cite": "LAUNCH_ORDER:Mission",
             "plan_summary": "execute.json g1-implement: import verify_episode_observations.triggers_for/EXCEPTIONS into apply_episode_delta.py's apply phase (_apply_create, _apply_restate_assertion), scoped to the real store only; ship the guard as a companion in install_constellation.py; RED/GREEN/control/message evidence in a new test file; no regression in forbidden-to-touch fixture files; full suite green; map regenerated."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-plan-2",
+          "type": "waiver",
+          "payload": {
+            "cond": "c6",
+            "authority": "admiral",
+            "reason": "Admiral waiver, verified not asserted: map/ids.jsonl is 0 bytes / 0 lines on main at 2c46cab8, so no map inventory exists for a decision:/claim: anchor to resolve against. Pre-existing and independently filed hours earlier by the crew-verdict-and-door lane as code-map-ids-jsonl-is-structurally-empty.md; not caused by this lane and not fixable within its ownership. c6 is a regression floor against map-IGNORING, not map-LATENESS, and this lane did not ignore the map -- it regenerated and committed it. The engineering c6 gates is complete and evidenced (RED/GREEN/control/message tests in tests/test_episode_observation_guard_at_write.py, full suite clean). Commander correctly refused to self-waive and asked up. Correction to its blocker text: map/INDEX.md is populated (27KB), not an unfilled template; the empty ids.jsonl is the operative fault.",
+            "forced": false
+          },
+          "produced_by": "human",
+          "ts": ""
+        },
+        {
+          "id": "e-plan-3",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER-2:What remains"
           },
           "produced_by": "engine",
           "ts": ""
@@ -281,7 +310,8 @@
           "id": "p1",
           "statement": "plan approved; context headroom ensured and commander skill reloaded into this context",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Commander skill (constellation-commander-delegated + core) already active in this context; running headless in a single continuous turn per LAUNCH_ORDER-2's 'do not park' instruction, so no separate compaction/reload cycle was invoked \u2014 context headroom is ample this early in the run."
         },
         {
           "id": "p2",
@@ -290,7 +320,8 @@
             "kind": "command",
             "command": "python scripts/verify_state_note.py episode-guard-at-write"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-1"
         }
       ],
       "postconditions": [
@@ -298,7 +329,8 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute.json's only gate, g1-implement, is complete with integrated evidence: e-g1-implement-1 (clean-env suite 0 failed) plus attested purity/grandfathered/RED-GREEN evidence already on the task. verify_iterative_role_artifacts.py commander confirms REPLAN_INPUT.json is a valid G2 packet."
         },
         {
           "id": "c2",
@@ -307,7 +339,8 @@
             "kind": "command",
             "command": "python scripts/verify_iterative_role_artifacts.py commander --work-id episode-guard-at-write"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-2"
         }
       ],
       "constraints": [],
@@ -334,11 +367,34 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_state_note.py episode-guard-at-write",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_iterative_role_artifacts.py commander --work-id episode-guard-at-write",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "reconcile": {
@@ -350,7 +406,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute step advanced to complete (engine transcript: 'execute -> complete')."
         }
       ],
       "postconditions": [
@@ -358,13 +415,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "No docs/architecture packet map exists in this skill-source repo (ls docs/architecture: No such file or directory) -- the fallback path applies. This repo's own structural record is map/ (code_map), already regenerated during execute via python -m scripts.code_map build --root . after the clean-env suite caught it stale; git status shows map/INDEX.md modified to reflect the new apply_episode_delta.py guard call and the new test file. install_constellation.py's SCRIPT_RUNTIME_COMPANIONS change and store_mentions.approved.txt are per-LAUNCH_ORDER-2 correct/necessary consequences (Admiral pre-reviewed, not second-guessed here). No separate schema/design doc beyond map/ is touched by this change."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -380,7 +438,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile advanced to complete."
         }
       ],
       "postconditions": [
@@ -388,7 +447,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute.json carries no triage_candidates field; zero candidates were surfaced during this run. The only structural discrepancy encountered (map/ids.jsonl structurally empty) is already independently filed by the crew-verdict-and-door lane as code-map-ids-jsonl-is-structurally-empty.md, per LAUNCH_ORDER-2 -- filing a duplicate would be noise, not triage. No new issue candidates to route."
         },
         {
           "id": "c2",
@@ -397,17 +457,29 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Inherited Latitude",
+            "note": "Zero new issue candidates to file this run; no issue-creation authority exercised."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -419,7 +491,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage complete."
         }
       ],
       "postconditions": [
@@ -430,17 +503,29 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape",
+            "summary": "Spine driven plan(waived c6, admiral evidence e-plan-2)->execute(g1-implement closed, clean-env suite 3040 passed/6 skipped/1146 subtests/0 failed after map regen)->reconcile(no packet map, map/ regenerated, out-of-ownership files confirmed correct)->triage(zero candidates)->review. Remaining: feedback (episodes), archive (commit+push+PR already open #592), lease release."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -452,7 +537,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "review advanced to complete."
         }
       ],
       "postconditions": [
@@ -463,17 +549,40 @@
             "kind": "command",
             "command": "python scripts/verify_episode_captured.py episode-guard-at-write --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "feedback",
+            "why_ref": "w-8"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-feedback-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py episode-guard-at-write --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -485,7 +594,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "feedback advanced to complete; workflow feedback recorded (episodes 001-004; crew Workflow Feedback 'none -- confirmed after review: no gN-integrate crew ran this delegated integration-only attempt')."
         }
       ],
       "postconditions": [
@@ -563,35 +673,39 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "archive",
+            "why_ref": "w-9"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [
-    {
-      "item": "plan",
-      "blocker": "plan.c6 (verify-frame) FRAME-REFUSED: this worktree's architecture map is DEGRADED-UNPARSEABLE (map/INDEX.md was an unfilled template, map/ids.jsonl empty), so no decision:/claim: anchor in MISSION_FRAME.md can resolve against a map inventory that does not exist. The engine refuses my own waive on my bound spine check ('a crew must not waive its own bound spine check -- always ask up'). The underlying engineering work this gate exists to gate is complete and evidenced (RED/GREEN/control/message tests in tests/test_episode_observation_guard_at_write.py, no regression in the full suite, the map has since been regenerated and committed by this same run per LAUNCH_ORDER.md's own closeout instruction).",
-      "authority_needed": "admiral",
-      "next_action": "A human or the parent commander/admiral waives plan.c6 with reason citing: DEGRADED-UNPARSEABLE map state (pre-existing, not caused by this lane), c6 is a regression floor against map-IGNORING not a fix for map-LATENESS (0/4 measured sensitivity per its own gate text), and the map was regenerated/committed at this run's own closeout (LAUNCH_ORDER.md Evidence Required). Then resume plan and continue to execute/reconcile/review/feedback/archive to formally close the spine, or accept the PR on the strength of the code diff, test evidence, and full-suite result already produced."
-    }
-  ],
+  "blockers": [],
   "origin": {
     "work_id": "episode-guard-at-write",
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write",
     "opened_by": "init_work_area"
   },
-  "refusals": 3,
+  "refusals": 9,
   "engine_session": {
-    "session_id": "constellation/episode-guard-at-write/execute/commander",
+    "session_id": "commander-episode-guard-at-write",
     "status": "active",
-    "claimed_at": "2026-08-15T22:25:20.317380+00:00",
-    "last_heartbeat": "2026-08-15T22:29:58.717481+00:00",
+    "claimed_at": "2026-08-15T22:34:13.450784+00:00",
+    "last_heartbeat": "2026-08-15T22:46:17.514082+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -618,6 +732,94 @@
       "why": null,
       "mechanical": true,
       "ts": "2026-08-15T22:26:52.048262+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "plan",
+      "why": "Plan fully closed: mission frame written (c1), execute.json authored with the LAUNCH_ORDER hazards as gate close criteria (c2), plan approved via user-decision e-plan-3 citing LAUNCH_ORDER-2 What remains (c3), plan-alternatives and cold-critic both skipped as named untaken roads under the frozen single-issue order (c4, c5), and c6 (verify-frame) is Admiral-waived per e-plan-2 since map/ids.jsonl is genuinely empty pre-existing and outside this lane's ownership. Proceeding to execute, where the engineering (apply_episode_delta.py guard, test suite, install_constellation.py bundling) is already implemented per LAUNCH_ORDER-2 and needs integration/verification, not redesign.",
+      "mechanical": false,
+      "ts": "2026-08-15T22:34:33.078343+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "g1-implement (the sole gate in execute.json) is complete with integrated evidence: purity, grandfathered-exception, RED/GREEN/control/message tests (9 passed), no regression in adjacent suites (532 passed), and a clean-env cache-clean full suite at 0 failed (3040 passed, 6 skipped, 1146 subtests) after regenerating the stale map/INDEX.md the first clean-env run caught. REPLAN_INPUT.json is verified against the G2 schema by verify_iterative_role_artifacts.py commander. Proceeding to reconcile.",
+      "mechanical": false,
+      "ts": "2026-08-15T22:40:48.898687+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "No packet map (docs/architecture) exists in this repo; the structural record this repo actually keeps is map/ (code_map), which was regenerated in execute and reflects the new guard call and test file. Both out-of-ownership files (install_constellation.py, store_mentions.approved.txt) confirmed correct/necessary per LAUNCH_ORDER-2's own review, no second-guessing needed.",
+      "mechanical": false,
+      "ts": "2026-08-15T22:41:14.364541+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "No triage_candidates existed in execute.json; the one structural discrepancy found (empty map/ids.jsonl) is already filed by another lane, so nothing new to route. c2 satisfied via user-decision e-triage-1 citing LAUNCH_ORDER Inherited Latitude.",
+      "mechanical": false,
+      "ts": "2026-08-15T22:41:32.634574+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Run summary attached as user-decision e-review-1 citing LAUNCH_ORDER Return Shape. All gates through triage closed with integrated evidence; nothing outstanding blocks proceeding to feedback.",
+      "mechanical": false,
+      "ts": "2026-08-15T22:42:11.558896+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "verify_episode_captured.py confirms 4 episodes recorded (001-004) for this work id. Honest reflection completed: no crew Workflow Feedback exists this attempt since no crew was dispatched (integration-only per LAUNCH_ORDER-2); one constellation-scoped ceremony finding exported to CONSTELLATION_FEEDBACK.md.",
+      "mechanical": false,
+      "ts": "2026-08-15T22:45:13.661269+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "feedback",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1537,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-8",
+      "ts": "2026-08-15T22:44:36.438820+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "feedback",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.1577,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-8",
+      "ts": "2026-08-15T22:45:02.105888+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "archive",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1731,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-9",
+      "ts": "2026-08-15T22:46:14.787715+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "archive",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.1731,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-9",
+      "ts": "2026-08-15T22:46:17.489433+00:00"
     }
   ]
 }

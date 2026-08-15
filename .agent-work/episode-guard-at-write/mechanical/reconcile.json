@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "mechanical": {
+    "run": "episode-guard-at-write",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 6,
+    "spine-step": "reconcile",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-episode-guard-at-write-reconcile@27329b8f90d58baa61b5c4934156fd63857eaaa6",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "episode-guard-at-write",
+    "generated_at": "2026-08-15T22:41:04Z"
+  }
+}

@@ -1,7 +1,9 @@
 {
   "work_id": "episode-guard-at-write-execute",
   "type": "gated",
-  "items": ["g1-implement"],
+  "items": [
+    "g1-implement"
+  ],
   "tasks": {
     "g1-implement": {
       "id": "g1-implement",
@@ -39,7 +41,7 @@
             "command": "cd /home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write && python -m pytest -q tests/test_episode_observation_guard_at_write.py"
           },
           "satisfied": true,
-          "satisfied_by": "9 passed"
+          "satisfied_by": "e-g1-implement-6"
         },
         {
           "id": "c4",
@@ -49,14 +51,14 @@
             "command": "cd /home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write && python -m pytest -q tests/test_episode_observations.py tests/test_episode_store.py tests/test_episode_fields.py tests/test_episode_negative_control.py tests/test_install_constellation.py tests/test_retirement_guard.py"
           },
           "satisfied": true,
-          "satisfied_by": "532 passed"
+          "satisfied_by": "e-g1-implement-7"
         },
         {
           "id": "c5",
           "statement": "clean-env cache-clean full suite: 0 failed",
           "check": null,
-          "satisfied": false,
-          "satisfied_by": null
+          "satisfied": true,
+          "satisfied_by": "Clean-env cache-clean full suite (env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q, __pycache__ pruned first) is 0 failed: 3040 passed, 6 skipped, 1146 subtests passed in 124.78s. First run before map regen was 1 failed (map/INDEX.md stale vs a fresh build); regenerated via python -m scripts.code_map build --root . and re-ran clean to confirm. Exceeds main baseline's 3031 passed at 2c46cab8. Evidence e-g1-implement-1."
         },
         {
           "id": "c6",
@@ -74,12 +76,99 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q (clean-env, cache-clean, worktree episode-guard-at-write, after map/INDEX.md regen)",
+            "exit": "0",
+            "result": "3040 passed, 6 skipped, 1146 subtests passed in 124.78s -- 0 failed; exceeds main baseline (3031 passed, 6 skipped, 1136 subtests at 2c46cab8)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write && python -m pytest -q tests/test_episode_observation_guard_at_write.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write && python -m pytest -q tests/test_episode_observations.py tests/test_episode_store.py tests/test_episode_fields.py tests/test_episode_negative_control.py tests/test_install_constellation.py tests/test_retirement_guard.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write && python -m pytest -q tests/test_episode_observation_guard_at_write.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write && python -m pytest -q tests/test_episode_observations.py tests/test_episode_store.py tests/test_episode_fields.py tests/test_episode_negative_control.py tests/test_install_constellation.py tests/test_retirement_guard.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-6",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write && python -m pytest -q tests/test_episode_observation_guard_at_write.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-7",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write && python -m pytest -q tests/test_episode_observations.py tests/test_episode_store.py tests/test_episode_fields.py tests/test_episode_negative_control.py tests/test_install_constellation.py tests/test_retirement_guard.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
-  }
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "g1-implement",
+      "why": "All six postconditions closed: purity established (guard call sits in apply phase, not validate_delta), grandfathered restate exemption verified, RED/GREEN/control/message evidence (9 passed) drives the real script, no regression across the guard's own and adjacent fixture suites (532 passed), map regenerated after the first clean-env run caught it stale, and the clean-env full suite is now 0 failed (3040 passed, 6 skipped, 1146 subtests), exceeding baseline. g1-implement is the only gate in execute.json; closing it closes execute's c1.",
+      "mechanical": false,
+      "ts": "2026-08-15T22:40:34.816492+00:00"
+    }
+  ]
 }
