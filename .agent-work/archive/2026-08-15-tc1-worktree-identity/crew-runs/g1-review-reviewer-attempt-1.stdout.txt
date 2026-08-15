@@ -1,0 +1,9 @@
+The review dispatch is fully complete, and the completion has now been reported up to the parent Commander directly.
+
+Final state:
+
+- **Verdict: APPROVE** — consolidated through the engine in my survey (`.agent-work/tc1-worktree-identity/g1-review/review.json`: all 7 template items plus 2 appended per-constraint checks recorded pass, 0 fail findings, 2 triage candidates flagged, lease released after the closing consolidate).
+- **Result artifact exists** at the path the handoff names: `.agent-work/tc1-worktree-identity/crew-handoffs/g1-review-reviewer-result.md` — the run's stated completion condition.
+- **Parent notified**: message delivered to the Commander session `tc1-worktree-identity-72` with the verdict, artifact path, key reproduced evidence, and the dispatch-infrastructure note about the misbound `SPINE_FILE`.
+
+On the stop hook: it fires against the Commander's `execute` spine because `run_crew.py` bound the parent's `SPINE_FILE`/`SPINE_SESSION` into this crew's environment. Driving, blocking, or writing state notes for that gate is the Commander's work in the Commander's session — any engine verb from here would impersonate its active session on its own leased spine. The honest-stop path the hook offers ("bubble the blocker to the parent") is exactly what the SendMessage above did, without corrupting the parent's live state. Nothing remains within this crew's scope or authority; ending the turn is the correct terminal action.

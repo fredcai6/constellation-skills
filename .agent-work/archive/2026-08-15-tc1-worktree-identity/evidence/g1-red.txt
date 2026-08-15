@@ -1,0 +1,58 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /home/tommy/.local/share/pyfix-venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/tommy/projects/constellation-skills/.worktrees/tc1-worktree-identity
+collecting ... collected 2 items
+
+tests/test_spine_origin_isolation.py::NestedWorktreeRegression::test_a_guarded_verb_from_inside_a_nested_worktree_is_refused FAILED [ 50%]
+tests/test_spine_origin_isolation.py::NestedWorktreeRegression::test_a_subdirectory_of_the_nested_worktree_is_also_refused FAILED [100%]
+
+=================================== FAILURES ===================================
+_ NestedWorktreeRegression.test_a_guarded_verb_from_inside_a_nested_worktree_is_refused _
+
+self = <test_spine_origin_isolation.NestedWorktreeRegression testMethod=test_a_guarded_verb_from_inside_a_nested_worktree_is_refused>
+
+    def test_a_guarded_verb_from_inside_a_nested_worktree_is_refused(self):
+        import contextlib
+        import io
+    
+        before = self._digest()
+        err = io.StringIO()
+        os.chdir(self.nested)
+        try:
+            with contextlib.redirect_stderr(err):
+                code = self.E.main(["--file", str(self.spine_path), "start", "g1"])
+        finally:
+            os.chdir(self._cwd)
+>       self.assertEqual(code, 1)
+E       AssertionError: 0 != 1
+
+tests/test_spine_origin_isolation.py:565: AssertionError
+----------------------------- Captured stdout call -----------------------------
+RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+
+g1 -> in-progress
+_ NestedWorktreeRegression.test_a_subdirectory_of_the_nested_worktree_is_also_refused _
+
+self = <test_spine_origin_isolation.NestedWorktreeRegression testMethod=test_a_subdirectory_of_the_nested_worktree_is_also_refused>
+
+    def test_a_subdirectory_of_the_nested_worktree_is_also_refused(self):
+        sub = self.nested / ".agent-work"
+        sub.mkdir()
+        os.chdir(sub)
+        try:
+            code = self.E.main(["--file", str(self.spine_path), "start", "g1"])
+        finally:
+            os.chdir(self._cwd)
+>       self.assertEqual(code, 1)
+E       AssertionError: 0 != 1
+
+tests/test_spine_origin_isolation.py:578: AssertionError
+----------------------------- Captured stdout call -----------------------------
+RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+
+g1 -> in-progress
+=========================== short test summary info ============================
+FAILED tests/test_spine_origin_isolation.py::NestedWorktreeRegression::test_a_guarded_verb_from_inside_a_nested_worktree_is_refused
+FAILED tests/test_spine_origin_isolation.py::NestedWorktreeRegression::test_a_subdirectory_of_the_nested_worktree_is_also_refused
+============================== 2 failed in 0.06s ===============================

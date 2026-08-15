@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "worktree identity by git, compared by equality (tc1)",
+      "spec_path": "/home/tommy/projects/constellation-skills/.agent-work/rulings/2026-08-15-worktree-identity.md",
+      "intent_and_why": "checklist_engine.origin_worktree_refusal compared worktree identity by containment (is_relative_to), which #585's nested `<root>/.worktrees/<slug>` layout made unsafe: every worktree is now literally inside the primary checkout, so a primary-stamped spine was drivable from inside any worktree. The Admiral ruling replaces containment with git-worktree-identity equality, resolved at the engine's single impure call site."
+    },
+    "definition_of_done": [
+      "A primary-stamped spine is refused from inside a nested worktree (was allowed before).",
+      "The predicate stays pure and unmodified in its test_it_is_pure coverage.",
+      "Fail-closed: no resolvable git toplevel + origin-carrying spine -> refused; origin-less/malformed spines unchanged.",
+      "The one authorized test migration (subdirectory-passes) lands, moved not deleted."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Cache-clean full suite >= measured baseline (3002 passed, 7 skipped, 0 failed, 1130 subtests at 453f8492), zero failures.",
+      "sufficient_evidence": "Red-before/green-after over real behavior (real git repos, real git worktree add), independently reproduced by implementer, reviewer, and Commander.",
+      "appetite": "One bounded gate, single-file-pair scope (LAUNCH_ORDER File Ownership)."
+    },
+    "hard_constraints": [
+      "Do not edit scripts/hooks/spine_rail.py, scripts/mcp_spine_server.py, .mcp.json, or .worktrees/epic-568-441/.",
+      "test_it_is_pure stays green, unmodified.",
+      "No origin.worktree migration/backfill anywhere."
+    ],
+    "fixed_decisions": [
+      "decision:git-not-lexical — call site resolves cwd via git worktree toplevel, not lexical containment or an exported --from.",
+      "decision:forgery-stays-open — chdir-into-the-stamped-worktree still passes; not closed by this change.",
+      "decision:no-migration — origin.worktree values are immutable engine identity.",
+      "decision:test-migration-authorized — the subdirectory-passes property moves from the pure predicate to a main()-level real-git-repo assertion."
+    ],
+    "current_wave": {
+      "objective": "Implement the 2026-08-15 worktree-identity ruling in scripts/checklist_engine.py and migrate tests/test_spine_origin_isolation.py accordingly.",
+      "exit_criteria": [
+        "Nested-worktree regression refuses after the change (red before, green after).",
+        "test_it_is_pure green, byte-identical.",
+        "OriginRefusalFallback green, intent-unchanged.",
+        "Cache-clean full suite >= baseline, 0 failures."
+      ],
+      "issues": [
+        {
+          "id": "g1",
+          "title": "worktree identity by equality: implement/review/integrate",
+          "desired_outcome": "origin_worktree_refusal compares by equality; the call site resolves cwd to its git worktree toplevel; the authorized test migration lands.",
+          "useful_now": "Closes the regression #585's nested worktree layout introduced against #577's engine-native guard.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "The red/green pair for NestedWorktreeRegression, test_it_is_pure diff-empty, cache-clean suite counts.",
+          "implementation_latitude": "Choose the git-resolution helper and test fixture shape; the ruling fixes the comparison operator, call-site location, and fail-closed rule.",
+          "hard_constraints_no_gos": ["File Ownership exclusions (see hard_constraints above)"],
+          "local_unknowns": [],
+          "anchors": ["scripts/checklist_engine.py::origin_worktree_refusal", "scripts/checklist_engine.py::main"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [],
+    "uncertainty_register": [],
+    "parked_possibilities": [
+      "Closing the forgery hole (decision:forgery-stays-open) — needs authenticated caller identity, out of scope.",
+      "Documenting the spine_rail.py lexical-vs-git split — deferred until #441 is off spine_rail.py (routed to triage)."
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "g1",
+      "outcome": "origin_worktree_refusal compares by equality (here == root) and fails closed on cwd=None; main() resolves engine_cwd to its git worktree toplevel via the existing _git helper before calling the predicate. tests/test_spine_origin_isolation.py migrated: subdirectory-passes moved from the pure predicate to a main()-level real-git-repo assertion; 7 new test methods added (fail-closed at predicate and main() levels, nested-worktree regression with real git worktree add); _SpineOnDisk fixtures git-init both self.worktree and self.foreign as distinct real repos.",
+      "evidence": "git diff scripts/checklist_engine.py; wiring grep shows exactly one rev-parse --show-toplevel call site, in main(), none in the predicate. python -m pytest tests/test_spine_origin_isolation.py -v -> 37 passed, 1 skipped, 16 subtests passed (independently reproduced by Commander)."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "A primary-stamped spine driven from inside a nested worktree is refused after the change (was allowed before).",
+      "expected": "ALLOWED before, REFUSED after, on real git repos with a real `git worktree add` nested layout.",
+      "observed": "Red: 2 failed (guard advanced the verb, exit 0). Green: 2 passed (guard refused, exit 1). Reproduced independently by implementer, reviewer, and Commander.",
+      "source": "tests/test_spine_origin_isolation.py::NestedWorktreeRegression; .agent-work/tc1-worktree-identity/evidence/g1-red.txt and g1-green.txt"
+    },
+    {
+      "claim": "test_it_is_pure stays green and unmodified.",
+      "expected": "Zero diff lines in that test method.",
+      "observed": "git diff scoped to the method: zero lines. Reviewer additionally confirmed byte-identical via extracted-method sha256 against HEAD.",
+      "source": "tests/test_spine_origin_isolation.py::OriginRefusalPredicate::test_it_is_pure"
+    },
+    {
+      "claim": "Cache-clean full suite is at or above the measured baseline with zero failures.",
+      "expected": ">= 3002 passed, 0 failed (baseline at 453f8492: 3002 passed, 7 skipped, 0 failed, 1130 subtests).",
+      "observed": "3010 passed, 6 skipped, 0 failed, 1135 subtests (env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT; the skip delta traced mechanically to a checkout-location-conditional skip in tests/test_spine_lifecycle.py:161, unrelated to this diff). Independently reproduced three times (implementer, reviewer, Commander).",
+      "source": ".agent-work/tc1-worktree-identity/evidence/g1-fullsuite.txt"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "An unplanned file outside the original Allowed Scope needed a 1-line fix: tests/test_explorer_templates.py's ExplorerSpineCrossCheck fixture instantiates an origin-stamped spine into a bare non-git tempdir and drives it, which the new fail-closed rule correctly began refusing.",
+      "classification": "evidence_only",
+      "affects": "This gate's scope only; no forecast or decomposition change.",
+      "evidence": "Implementer flagged it honestly in IMPLEMENTER_RESULT's Stop Conditions section rather than silently including it; reviewer independently verified the repair is required by reverting it and observing the fixture fail under the new rule.",
+      "reason": "Minimal, disclosed, in the same repair class as the _SpineOnDisk git-init this gate's own plan already ordered (git-init a bare tempdir the ruling's fail-closed rule now correctly refuses). No issue warranted; recorded here as evidence."
+    },
+    {
+      "id": "D1",
+      "signal": "test_mcp_identity.py::DC3InheritanceMechanismTests fails inside any run_crew.py-dispatched process (ambient SPINE_FILE/SPINE_SESSION/SPINE_PARENT), unrelated to this diff -- reproduced failing on an unchanged HEAD tree too when those vars are set.",
+      "classification": "later_only",
+      "affects": "Any future crew-dispatched full-suite gate, not this run's planning truth.",
+      "evidence": "Independently reproduced by implementer and reviewer on an unchanged tree with the vars set vs unset.",
+      "reason": "A real defect in the crew-dispatch full-suite gate pattern, but out of this ruling's scope and not blocking this run's exit -- routed to triage as a candidate rather than fixed here."
+    },
+    {
+      "id": "D2",
+      "signal": "The lexical (spine_rail.py::_worktree_from_spine) vs git (mcp_spine_server.py::_worktree_root_for_lifecycle) worktree-derivation split is ruled deliberate but documented nowhere durable.",
+      "classification": "later_only",
+      "affects": "A future documentation-only gate once #441 is off spine_rail.py.",
+      "evidence": "Ruling's \"other half of tc3\" section names it a documentation deliverable, explicitly out of this run's File Ownership.",
+      "reason": "spine_rail.py is fenced from this run (not-mine, live #441 target); routed to triage."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": ["scripts/checklist_engine.py::origin_worktree_refusal", "scripts/checklist_engine.py::main", "tests/test_spine_origin_isolation.py"],
+    "map_status": "map/ids.jsonl is empty repo-wide (0 decision anchors); map/INDEX.md (code_map-derived module index) regenerated and committed with this change; no docs/architecture packet map exists in this skill-source repo."
+  }
+}

@@ -1,0 +1,357 @@
+{
+  "work_id": "tc1-worktree-identity-g1-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-red",
+    "m2-fix",
+    "m3-tests",
+    "m4-verify",
+    "m5-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (implementer skill references/global-crew.md and references/global-everyone.md), then project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff at .agent-work/tc1-worktree-identity/crew-handoffs/g1-implement-handoff.md and the Admiral ruling at /home/tommy/projects/constellation-skills/.agent-work/rulings/2026-08-15-worktree-identity.md in full. Verify the handoff is complete. Read the target code: origin_worktree_refusal, the main() call site, _git, and tests/test_spine_origin_isolation.py. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + ruling + target code loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md, handoff, full Admiral ruling, predicate L102-161, _git L701, main() call site L3393-3416, full test file read; handoff verified complete"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-red": {
+      "id": "m1-red",
+      "title": "TDD red: nested-worktree regression observed ALLOWED on unmodified engine",
+      "imperative": "Write the permanent regression test: a spine stamped to a PRIMARY real git repo, driven through checklist_engine main() from a cwd inside a NESTED real git worktree created via 'git worktree add' under <primary>/.worktrees/<slug>. Run it against the UNMODIFIED engine and capture the full failing output verbatim (scenario currently ALLOWED) to .agent-work/tc1-worktree-identity/evidence/g1-red.txt. Do NOT touch scripts/checklist_engine.py yet. Attest c1 only after red is observed and captured.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: nested-worktree regression test written and observed failing (guarded verb ALLOWED from nested worktree) on unmodified engine; verbatim output captured to evidence file \u2014 manual attest, check null so the engine never runs the by-design-failing test",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Red observed on unmodified engine: NestedWorktreeRegression 2 failed (AssertionError 0 != 1 -- guarded verb ALLOWED from nested worktree, spine mutated to in-progress). Verbatim output in .agent-work/tc1-worktree-identity/evidence/g1-red.txt. git-toplevel measurement reproduced: nested worktree resolves to itself."
+        }
+      ],
+      "constraints": [
+        "If 'git rev-parse --show-toplevel' from a nested worktree does not resolve to the nested worktree, STOP (handoff stop condition)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-fix": {
+      "id": "m2-fix",
+      "title": "Fix: equality predicate, cwd str|None fail-closed, git-toplevel resolution at call site",
+      "imperative": "In scripts/checklist_engine.py: (1) origin_worktree_refusal compares here == root (both Path(os.path.normcase(...))), stays pure; (2) cwd becomes str | None \u2014 when None and the spine carries a valid origin.worktree, return a refusal message (never raise, never None); origin-less/malformed spines keep the existing None fallback; (3) the single main() call site resolves engine_cwd to its git worktree toplevel via the existing _git([\"rev-parse\", \"--show-toplevel\"], base_dir=...) helper, checking returncode and stripping stdout; on failure passes None. Touch nothing else in the file.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "red captured for the nested-worktree regression",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "red captured in evidence/g1-red.txt"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD green: the nested-worktree regression test now passes (scenario REFUSED)",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest \"tests/test_spine_origin_isolation.py::NestedWorktreeRegression\" -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fix-1"
+        }
+      ],
+      "constraints": [
+        "Predicate stays pure: no filesystem/clock/subprocess/ambient-cwd read",
+        "main() only resolves the git toplevel; the predicate remains the single interpreter of origin shape",
+        "No second subprocess-git invocation path"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-fix-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest \"tests/test_spine_origin_isolation.py::NestedWorktreeRegression\" -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-tests": {
+      "id": "m3-tests",
+      "title": "Test migration + new fail-closed tests; test_it_is_pure byte-identical",
+      "imperative": "Migrate tests/test_spine_origin_isolation.py per the ruling's one authorized exception: the synthetic subdirectory-passes case in OriginRefusalPredicate asserts refusal (equality semantics) with a docstring naming where the real property now lives; the subdirectory-allowed property is re-proven through main() against a real temporary git repo. Git-init BOTH self.worktree and self.foreign as two distinct real sibling repos in _SpineOnDisk.setUp. Add: predicate-level fail-closed test (cwd=None with origin-carrying spine refuses) and main()-level fail-closed test (origin-carrying spine driven from a plain non-git tempdir refused, no raise). OriginRefusalFallback stays unmodified in intent; test_it_is_pure stays byte-identical.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "fix landed and regression green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 green: NestedWorktreeRegression 2 passed, captured to evidence/g1-green.txt"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full origin-isolation test file green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_spine_origin_isolation.py -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-tests-1"
+        },
+        {
+          "id": "c2",
+          "statement": "test_it_is_pure byte-identical to HEAD",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import ast,subprocess,sys; new=open('tests/test_spine_origin_isolation.py').read(); old=subprocess.run(['git','show','HEAD:tests/test_spine_origin_isolation.py'],capture_output=True,text=True).stdout; f=lambda src:[ast.get_source_segment(src,n) for n in ast.walk(ast.parse(src)) if isinstance(n,ast.FunctionDef) and n.name=='test_it_is_pure']; sys.exit(0 if f(new) and f(new)==f(old) else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-tests-2"
+        }
+      ],
+      "constraints": [
+        "Never edit test_it_is_pure, including its docstring",
+        "No test case deleted \u2014 the subdirectory property relocates, never disappears"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_spine_origin_isolation.py -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-tests-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import ast,subprocess,sys; new=open('tests/test_spine_origin_isolation.py').read(); old=subprocess.run(['git','show','HEAD:tests/test_spine_origin_isolation.py'],capture_output=True,text=True).stdout; f=lambda src:[ast.get_source_segment(src,n) for n in ast.walk(ast.parse(src)) if isinstance(n,ast.FunctionDef) and n.name=='test_it_is_pure']; sys.exit(0 if f(new) and f(new)==f(old) else 1)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-verify": {
+      "id": "m4-verify",
+      "title": "Wiring grep, cache-clean full suite >= baseline, map regen",
+      "imperative": "Run the wiring grep (expect exactly one _git rev-parse --show-toplevel call site, inside main(), none inside the predicate). Clear __pycache__ and run the cache-clean full suite; confirm the summary is >= baseline at 453f8492 (3002 passed, 7 skipped, 0 failed, 1130 subtests); if any count differs derive the failure distribution mechanically. Regenerate the map (python -m scripts.code_map build --root .) and stage map/ files only if git diff --stat shows they moved. Attest c2 with the counts and wiring evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all origin-isolation tests green, purity guard passing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 advanced through engine: full file green, test_it_is_pure byte-identical via AST check"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "cache-clean full suite exits 0",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -type d -not -path './.git/*' -prune -exec rm -rf {} + && python -m pytest tests/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "suite counts >= baseline (3002/7/0/1130); wiring grep shows exactly one call site in main(); map regenerated and staged iff moved",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Suite 3010 passed / 6 skipped / 0 failed / 1135 subtests vs baseline 3002/7/0/1130. Skip delta derived mechanically: stash experiment shows the identical 6-skip set at HEAD, so no skip converts under this diff; failures 0. Wiring grep: exactly 1 match, scripts/checklist_engine.py:3439 inside main(), none in the predicate. Map regenerated via code_map; map/INDEX.md moved (3 insertions, 3 deletions) and will be committed. One out-of-Allowed-Scope fixture repair applied and flagged: tests/test_explorer_templates.py git-inits its tempdir (ruling fail-closed made a bare-tempdir spine undrivable); test intent unchanged."
+        }
+      ],
+      "constraints": [
+        "map files regenerated only via code_map, never hand-edited"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -not -path './.git/*' -prune -exec rm -rf {} + && python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-result": {
+      "id": "m5-result",
+      "title": "Write IMPLEMENTER_RESULT artifact",
+      "imperative": "Write the full IMPLEMENTER_RESULT (completed slice, files changed, test mode satisfied, evidence including the verbatim red/green pair, assumptions, stop conditions hit, out-of-scope observations including the spine_rail.py lexical/git split note per the ruling, workflow feedback, map impact) to .agent-work/tc1-worktree-identity/crew-handoffs/g1-implement-implementer-result.md.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all verification complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 complete: suite green through engine-run check"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "result artifact exists and is non-empty at the handoff-named path",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/tc1-worktree-identity/crew-handoffs/g1-implement-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-result-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/tc1-worktree-identity/crew-handoffs/g1-implement-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/tc1-worktree-identity/g1-implement/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-15T16:53:44.421625+00:00",
+    "last_heartbeat": "2026-08-15T17:15:16.054557+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-15T17:15:16.133120+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff and ruling align: equality predicate staying pure, git-toplevel resolution at the one impure call site, fail-closed on unresolvable cwd, one authorized test migration. Purity test reads co_names so a cwd=None branch cannot trip it; fixture repos must be real git repos to keep pass-path coverage real.",
+      "mechanical": false,
+      "ts": "2026-08-15T16:56:05.076002+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-red",
+      "why": "The regression is real and reproduced through main() with real git repos: containment lets <primary>/.worktrees/<slug> drive a primary-stamped spine. Red is captured, so the coming green is meaningful.",
+      "mechanical": false,
+      "ts": "2026-08-15T16:57:30.097874+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-fix",
+      "why": "Equality plus call-site git-toplevel resolution closes the nested-worktree hole: git reports a linked worktree as its own toplevel, so a primary-stamped spine no longer matches from inside .worktrees/<slug>, while subdirectories of the right worktree resolve to its root and still pass. cwd=None fails closed only after the malformed-origin fallbacks, preserving no-raise fallback behavior.",
+      "mechanical": false,
+      "ts": "2026-08-15T16:58:41.642146+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-tests",
+      "why": "Migration lands exactly as ruled: the synthetic subdirectory case flips to refusal with a docstring pointing at its new call-site home; the property itself is proven through main() against real git repos (fixtures now git-init worktree AND foreign as distinct siblings, so pass paths exercise real toplevel resolution, not the fail-closed branch); fail-closed pinned at predicate (cwd=None) and main() (non-git tempdir) levels; fallback stays senior to fail-closed so malformed origins never lock out or raise.",
+      "mechanical": false,
+      "ts": "2026-08-15T17:01:05.831887+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-verify",
+      "why": "Full verification holds: green everywhere the baseline was green, plus 7 new tests and one un-skip that pre-dates the diff. The one count below baseline (skips 6 vs 7) is proven diff-independent by a stash experiment. The explorer-fixture repair is the ruling's fail-closed rule meeting the last non-git fixture standing; flagged as a scope misfit for review.",
+      "mechanical": false,
+      "ts": "2026-08-15T17:13:38.113942+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-result",
+      "why": "IMPLEMENTER_RESULT written to the handoff-named path with the verbatim red/green pair, mechanical count derivations, the flagged out-of-scope fixture repair, and the spine_rail lexical/git note routed as documentation deliverable.",
+      "mechanical": false,
+      "ts": "2026-08-15T17:15:16.054550+00:00"
+    }
+  ]
+}

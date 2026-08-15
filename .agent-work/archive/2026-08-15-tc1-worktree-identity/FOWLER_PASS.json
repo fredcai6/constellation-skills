@@ -1,0 +1,20 @@
+{
+  "work_id": "tc1-worktree-identity",
+  "diff_ref": "uncommitted working tree at 453f8492 in .worktrees/tc1-worktree-identity: scripts/checklist_engine.py (origin_worktree_refusal + main() call site), tests/test_spine_origin_isolation.py, tests/test_explorer_templates.py, map/INDEX.md",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, .agent-work/rulings/2026-08-15-worktree-identity.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "origin_worktree_refusal stays ~30 executable lines; the main() call-site change is 2 lines plus rationale comment; NestedWorktreeRegression.setUp is a linear fixture build. Nothing crosses a split-worthy threshold.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "checklist_engine.py is a very large module, but that condition is pre-existing and this diff adds ~10 executable lines to it without widening any class; no class in the diff grows past clarity.", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "The two refusal f-strings share a prefix but state different causes (foreign tree vs no toplevel) — merging them would obscure the fail-closed branch. NestedWorktreeRegression builds its own fixture rather than reusing _SpineOnDisk because its topology (primary + git worktree add) is materially different; not a copy.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "The predicate reads only the spine dict it judges; the call site touches only its own cwd resolution.", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "No recurring parameter groups introduced.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "overridden", "finding": "cwd travels as str|None with None as the 'unresolvable' sentinel where a richer resolved-toplevel type could exist.", "override": {"repo_standard": "2026-08-15 worktree-identity ruling / g1 close criteria pin the signature as cwd: str | None, and the predicate's documented refusal-or-None convention (docstring: the shape this repo already uses for spine_lifecycle.closeout_refusal)", "reason": "the primitive signature is the ruled, binding interface — keeping the predicate pure over plain values is the invariant test_it_is_pure enforces; a wrapper type would add surface without behavior"}},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "Predicate keeps 3 parameters, two keyword-only.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "The behavior change concentrates at one predicate + one call site — the single-impure-call-site design is the locality property, confirmed by grep (one rev-parse invocation).", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "No module gains a second reason to change.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "toplevel.stdout.strip() is a CompletedProcess field read, not a navigation chain.", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "No hooks, flags, or unused parameters added; fail-closed is exercised by tests at both levels.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The added prose documents constraints and ruling provenance (why equality, why None fails closed, why ordering after the shape fallbacks) — decision-bearing documentation in the module's established style, not cover for unclear code.", "override": null}
+  ],
+  "rail_exception": null
+}
