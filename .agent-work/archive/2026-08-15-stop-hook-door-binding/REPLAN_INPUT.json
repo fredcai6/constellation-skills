@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "stop-hook-door-binding",
+      "spec_path": "LAUNCH_ORDER.md",
+      "intent_and_why": "Let the Stop hook's mid-flight refusal see a spine claimed through the MCP door, not only through a Bash checklist_engine.py claim, so a Commander whose spine is driven entirely via spine_lease/spine_start/spine_advance cannot silently end its turn mid-gate believing a backgrounded command will resume it."
+    },
+    "definition_of_done": [
+      "handle_post_tool_use records a session->spine binding for a door-issued spine_lease claim/release",
+      "decide_stop refuses a door-claimed mid-flight turn-end (RED, independently reproduced twice)",
+      "a legitimate door-claimed turn-end is not refused (CONTROL, 4 cases)",
+      "a malformed door payload records no binding and raises nothing (fail-open proof)",
+      "the Bash checklist_engine.py claim/release path is unchanged in behavior"
+    ],
+    "good_enough": {
+      "mandatory_quality": "Fail-open always; no new subprocess; narrow matcher, not '*'; Bash path byte-for-byte unchanged",
+      "sufficient_evidence": "RED + CONTROL + fail-open unit tests over the pure handler functions, plus the full clean-env suite green",
+      "appetite": "One bounded gate"
+    },
+    "hard_constraints": [
+      "_mid_flight_reason and decide_stop are not edited",
+      "no new subprocess on the PostToolUse path",
+      "file ownership limited to scripts/hooks/spine_rail.py, tests/test_spine_rail.py, and the PostToolUse block of .claude/settings.json"
+    ],
+    "fixed_decisions": [
+      "door path resolves the claimed spine from this process's own SPINE_FILE/SPINE_SESSION environment, reusing _is_valid_claim_target unchanged",
+      "matcher scoped to mcp__spine__spine_lease only, not the whole mcp__spine__* namespace and not '*'"
+    ],
+    "current_wave": {
+      "objective": "Close the MCP-door Stop-hook binding gap named in LAUNCH_ORDER.md",
+      "exit_criteria": [
+        "RED and CONTROL and fail-open proofs all pass",
+        "full clean-env suite: 0 failed",
+        "map regenerated if it moved"
+      ],
+      "issues": [
+        {
+          "id": "stop-hook-door-binding",
+          "title": "Record a binding on door-issued spine_lease claim/release",
+          "desired_outcome": "The Stop hook's existing mid-flight refusal fires for a door-claimed spine exactly as it already does for a Bash-claimed one.",
+          "useful_now": "Six Commander dispatches were lost today to auto-backgrounding because the door path left no binding for decide_stop to check; the refusal mechanism already exists and works, it just could not see the door.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "tests/test_spine_rail.py's new door-path tests (RED/CONTROL/fail-open) pass; the full suite stays green.",
+          "implementation_latitude": "Choose the exact helper structure and test layout; the design itself (fail-open, no subprocess, narrow matcher, SPINE_FILE-sourced resolution) is fixed by LAUNCH_ORDER.md.",
+          "hard_constraints_no_gos": [
+            "editing _mid_flight_reason or decide_stop",
+            "widening the matcher beyond mcp__spine__spine_lease"
+          ],
+          "local_unknowns": [],
+          "anchors": ["scripts/hooks/spine_rail.py", "tests/test_spine_rail.py"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [],
+    "uncertainty_register": [],
+    "parked_possibilities": [
+      "extending the same door-binding recognition to mcp__spine-epic__spine_lease, if it is ever reachable from this repo's own configuration"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "stop-hook-door-binding",
+      "outcome": "handle_post_tool_use dispatches a new _handle_door_lease helper on tool_name == \"mcp__spine__spine_lease\", before the existing Bash command-extraction logic; it resolves the claimed spine from this process's own SPINE_FILE/SPINE_SESSION environment, reuses _is_valid_claim_target unchanged, and records/removes a binding entry equivalent in shape to the Bash-path entry. decide_stop/_mid_flight_reason are unchanged and now refuse a door-claimed mid-flight turn-end because a binding exists. .claude/settings.json gained one narrow PostToolUse matcher entry (mcp__spine__spine_lease).",
+      "evidence": "python -m pytest -q tests/test_spine_rail.py -> 139 passed, 1 skipped (was 123 passed, 1 skipped before this gate; +16 new tests, 0 regressions). RED independently reproduced twice (Commander and Reviewer, both via git stash push/pop on scripts/hooks/spine_rail.py alone). Reviewer verdict APPROVE (.agent-work/stop-hook-door-binding/crew-handoffs/g1-review-reviewer-result.md)."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "A door-claimed spine with an open gate, at turn end, is refused by decide_stop.",
+      "expected": "decide_stop returns a block decision naming the open gate.",
+      "observed": "test_stop_door_claimed_mid_flight_blocks passes post-fix; independently reproduced as genuinely FAILING pre-fix via git stash (twice, by two independent agents).",
+      "source": "tests/test_spine_rail.py"
+    },
+    {
+      "claim": "A legitimate door-claimed turn-end is not refused.",
+      "expected": "decide_stop returns {} for terminal/foreign/unreadable/honestly-blocked door-claimed spines.",
+      "observed": "4/4 CONTROL tests pass (test_stop_door_claimed_terminal_released_lease_allows, test_stop_door_claimed_foreign_worktree_not_blocked, test_stop_door_claimed_unreadable_spine_allows, test_stop_door_claimed_blocked_status_honest_stop_allows).",
+      "source": "tests/test_spine_rail.py"
+    },
+    {
+      "claim": "A malformed door payload records no binding and raises nothing.",
+      "expected": "handle_post_tool_use returns {} for every malformed shape, never raises.",
+      "observed": "7 distinct malformed-shape tests plus a 7-row x 2-env-state fuzz test all pass.",
+      "source": "tests/test_spine_rail.py"
+    },
+    {
+      "claim": "The Bash checklist_engine.py claim/release path is unchanged in behavior.",
+      "expected": "Every pre-existing test passes with unmodified assertions; decide_stop/_mid_flight_reason/decide_session_start are byte-identical to HEAD.",
+      "observed": "git diff --numstat shows scripts/hooks/spine_rail.py +105/-0 and tests/test_spine_rail.py +209/-0 -- purely additive. Reviewer hashed the three Stop-path functions byte-identical to HEAD.",
+      "source": "git diff; .agent-work/stop-hook-door-binding/crew-handoffs/g1-review-reviewer-result.md"
+    }
+  ],
+  "discrepancies": [],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": ["scripts/hooks/spine_rail.py", "tests/test_spine_rail.py", ".claude/settings.json"],
+    "map_status": "map/INDEX.md exists but is DEGRADED-UNPARSEABLE for this area (per-module pages absent) -- no packet-level architecture map exists for this repo. Filed as a triage candidate at this run's triage step."
+  }
+}

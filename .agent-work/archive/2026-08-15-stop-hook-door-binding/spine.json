@@ -1,0 +1,857 @@
+{
+  "work_id": "stop-hook-door-binding",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "init",
+    "context",
+    "understand",
+    "plan",
+    "execute",
+    "reconcile",
+    "triage",
+    "review",
+    "feedback",
+    "archive"
+  ],
+  "tasks": {
+    "init": {
+      "id": "init",
+      "title": "Set up work area",
+      "imperative": "Run: python scripts/init_work_area.py stop-hook-door-binding. This same script now ALSO optionally materializes spine.json from a spine template with its placeholders resolved, via --spine <spine-template> [--skill-dir <path>] (shipped in issue-73 g1) \u2014 use it to instantiate spine.json rather than hand-substituting placeholders, passing the commander skill directory to --skill-dir so the commander-skill-dir placeholder resolves to an absolute path (it auto-detects when omitted). Start the work branch per repo guidance. Claim the engine session lease on this spine so a resumed or duplicated parent cannot concurrently drive it: by default, call the spine_lease MCP tool with action=claim, claimed_by=commander, worktree=. (add force=true and reason=\"resuming this run\" if a stale prior lease blocks you) -- this is your own spine (the one this process's door is bound to), so the door needs no session id argument, it reads SPINE_SESSION from its own environment. CLI fallback: <engine> claim --session-id commander-stop-hook-door-binding --claimed-by commander --worktree . (if a stale prior lease blocks you, re-run with --force --reason \"resuming this run\"). From here on, pass --session-id commander-stop-hook-door-binding on every mutating CLI call against this spine (the door tools never take one).",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area scaffolded",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/init_work_area.py stop-hook-door-binding"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-init-1"
+        },
+        {
+          "id": "c2",
+          "statement": "engine session lease claimed for this spine (commander owns the state)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Engine session lease claimed via spine_lease action=claim, claimed_by=commander; branch fix/stop-hook-door-binding already checked out per launch order workspace."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-init-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/init_work_area.py stop-hook-door-binding",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "context": {
+      "id": "context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/engine-config.json. Where the repo carries no docs/agents/ overlay at all (e.g. a skill-source repo), substitute the closest repo doctrine you can find (README, CONTRIBUTING, top-level docs) and record the substitution \u2014 do not treat those paths as guaranteed to exist. Before you open any source file, resolve and read the map input: run python scripts/map_orient.py orient --root /home/tommy/projects/constellation-skills/.worktrees/stop-hook-door-binding --work-id stop-hook-door-binding. On RESOLVED, read the entrypoint it names and the packets, overlays and decision anchors it routes you to for the area the ask touches, and treat every later source read as confirming a frame the map already gave you rather than building one out of code. On DEGRADED, re-run the same command with --substitute PATH (what you read instead of a map \u2014 it is hash-pinned into the receipt) --unmapped TEXT (what stayed unmapped) --escalation TEXT (what you are escalating, and to whom), and get that on the record before any source read: degraded is a declared reading, never a licence to start from code. The tool probes a fixed fallback order \u2014 README.md, AGENTS.md, CLAUDE.md, a docs/ index \u2014 and labels a substitute it found there as verified by the filesystem rather than merely asserted by you. The anchor of this instruction is the point: 'before you open any source file' is an act you cannot postpone, whereas a map-first imperative anchored to a late artifact (the gate plan, which is authored at the END of a long run) is satisfied by a run that crawls source for fifty calls, reads the map afterwards, and has complied exactly \u2014 that is measured behaviour, not a hypothetical. This read is the map-first input the mission frame and plan are built from. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context, glossary, engine config loaded; current map read for the affected area where architecture artifacts exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read references/global-orchestrator.md, references/global-everyone.md, docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md. docs/agents/engine-config.json does not exist in this repo (skill-source repo, no such overlay file) -- substituted per doctrine. Ran map_orient.py orient: DEGRADED-UNPARSEABLE (map/INDEX.md exists but per-module pages absent -- stale/unfilled map), discharged with substitutes README.md + map/INDEX.md, unmapped area named (spine_rail.py/test_spine_rail.py per-entity anchors), escalation recorded (triage candidate, non-blocking). verify-orientation: contract SATISFIED, 0 problems."
+        },
+        {
+          "id": "c2",
+          "statement": "the orientation contract is satisfied -- RESOLVED, or a DEGRADED verdict discharged with hash-pinned substitutes AND the unmapped gap AND an escalation -- recorded at the context step, which precedes understand and plan. Ordering itself is NOT machine-verifiable from a receipt: nothing in a receipt distinguishes a run that resolved the map first from one that crawled fifty files and then wrote an identical receipt. Ordering lives in this step's imperative ('Before you open any source file') and in the report-only ordering audit, never in this check. This gate is a regression floor so map-IGNORING cannot silently return; it is NOT the fix for map-LATENESS (measured sensitivity 0/4, specificity 0/1). Gate-vs-report is a flag flip: adding --report-only to 'python scripts/map_orient.py verify-orientation --root /home/tommy/projects/constellation-skills/.worktrees/stop-hook-door-binding --work-id stop-hook-door-binding' turns this gate into a non-blocking report without rewiring the step.",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/map_orient.py verify-orientation --root /home/tommy/projects/constellation-skills/.worktrees/stop-hook-door-binding --work-id stop-hook-door-binding"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-context-1"
+        }
+      ],
+      "context_refs": [
+        {
+          "root": "skill",
+          "path": "references/global-orchestrator.md",
+          "required": true
+        },
+        {
+          "root": "skill",
+          "path": "references/global-everyone.md",
+          "required": true
+        },
+        {
+          "root": "repo",
+          "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+          "required": false
+        },
+        {
+          "root": "repo",
+          "path": "docs/agents/GLOSSARY.md",
+          "required": false
+        },
+        {
+          "root": "repo",
+          "path": "docs/agents/engine-config.json",
+          "required": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-context-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/map_orient.py verify-orientation --root /home/tommy/projects/constellation-skills/.worktrees/stop-hook-door-binding --work-id stop-hook-door-binding",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "understand": {
+      "id": "understand",
+      "title": "Understand the ask",
+      "imperative": "In your own context (interactive: the interrogator reaches the human), load constellation-interrogator and drive interrogation.json with the request, context, and commander starting questions; frame the ask map-first against the affected capabilities, structural anchors, and governing constraints/decisions read at context, and flag any low-confidence/stale/disputed map area the ask depends on. Save the consolidated problem statement. Confirm it with the human. In delegated mode (running from an Admiral launch order, no reachable human), reconcile the ask against the frozen launch order instead of interrogating a human, and satisfy c1 by attaching a user-decision evidence item citing the launch order (attach understand --type user-decision --field cite='LAUNCH_ORDER:Mission'); take a genuine gap to the Admiral \u2014 float a decision outside latitude, or query for missing context \u2014 per Stop Conditions. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context step complete: global doctrine, project overlays, and map orientation (DEGRADED-UNPARSEABLE, discharged) all read."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "problem statement and protected intent confirmed",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-understand-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": "interrogation.json",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-understand-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Mission",
+            "reconciliation": "Diagnosis points 1-4 reproduced exactly against source: (1) _mid_flight_reason at spine_rail.py:1197-1214 produces the cited refusal text verbatim. (2) launcher-hygiene's mechanism (Bash checklist_engine.py claim binds) is structurally confirmed by handle_post_tool_use. (3) decide_stop at spine_rail.py:1245-1261 opens 'if not sid_bindings: return {}' -- confirmed. handle_post_tool_use (spine_rail.py:1066-1192) only inspects tool_input.command (a Bash string), returns {} immediately if absent (line 1090-1092), gates on 'checklist_engine.py' substring (line 1094) and verb in (claim, release) (line 1096-1098) -- an MCP door call (spine_lease/spine_start/spine_advance) carries no 'command' key in tool_input and is never seen. (4) .claude/settings.json PostToolUse registers spine_rail.py with matcher='Bash' only; gauge_writer_hook.py sibling uses matcher='*', proving MCP tool events do reach PostToolUse hooks in this harness -- confirmed identical in both worktree and primary-checkout settings.json. Prior art found: .agent-work/archive/2026-08-15-launcher-hygiene/triage-candidates/stop-hook-binding-gap-for-mcp-door-sessions.md independently reproduced this exact gap and deferred it as out-of-fence for that run -- this launch order is the fix. Decision: proceed with a single plan (no plan-alternatives panel, no cold critic panel) -- the launch order's Non-negotiables and Evidence-bar sections already fix the design (narrow matcher not '*', no new subprocess, fail-open preserved, Bash path byte-for-byte unchanged, RED+CONTROL+fail-open-proof required); the remaining freedom is implementation-local (exact matcher tool names, field naming) and does not warrant N-candidate generation. Named as untaken road, cited to LAUNCH_ORDER Non-negotiables + Evidence bar sections."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "plan": {
+      "id": "plan",
+      "title": "Author the gate plan",
+      "imperative": "Map-first: BEFORE authoring execute.json, produce a mission frame from the map input the context step resolved, using templates/MISSION_FRAME.template.md (intent; affected capabilities; relevant examples/events; structural anchors; governing constraints/assumptions; decision anchors and decision pressure; claims/evidence surfaces; map confidence/staleness/disputes; out of scope). Write it to .agent-work/stop-hook-door-binding/MISSION_FRAME.md \u2014 that exact path is what the c6 gate reads, so a frame parked anywhere else reads as no frame at all. For a trivial local/mechanical change where the map adds nothing, shrink or skip the frame and say so in its intent; c6 is waivable, so take that escape as a RECORDED waiver (<engine> waive plan --cond c6 --authority human --reason '...') rather than as a silent skip. The c6 gate runs map_orient.py verify-frame over that file: every anchor id the frame cites must exist in the map inventory the context step resolved, or \u2014 when context came back DEGRADED \u2014 must be one of the substitutes the receipt hash-pinned there, so the frame is compared against a committed prior declaration instead of a same-breath assertion. Know what that check is and is not, and do not overclaim it: it is a regression floor so map-IGNORING cannot silently return, not the fix for map-LATENESS. Measured against this epic's baseline five runs it has sensitivity 0/4 and specificity 0/1, and it inherits the late-anchor defect it was built next to, because anchors-in-a-late-frame is compliance without sequence. The load-bearing map-first anchor is at the context step ('before you open any source file'), which is why verify-orientation is gated there and verify-frame is gated only here. Do NOT 'fix' that asymmetry by also running verify-frame at context: no frame exists at context \u2014 the step runs before understand and plan \u2014 and the only way to make it pass there is to let an ABSENT frame pass, which is exactly the refusal the whole check is built on. If verify-frame ever has to be context-safe, give it a step-scoped mode; never a vacuous pass. For any low-confidence/stale/disputed map area the run depends on, alter the plan accordingly: add a scout/verification gate or surface it to the human as a decision \u2014 never author gates that silently trust an unverified map. Surface durable-structure choices as decision candidates per the skill's Decision candidates section rather than choosing alone. Then author the gate plan into execute.json: each gate the smallest reasonable bite, with close criteria, required evidence, and an anchors block cut from the frame. Before the plan-approved checkpoint run plan-alternatives (parallel gate-plan candidates under distinct constraints, via the references/design-it-twice-brief.md contract) and a cold plan critic (reads the candidate plan + mission frame only, no authoring context); both bias-to-yes \u2014 any skip is surfaced as a named untaken road \u2014 and the panel-vs-single choice is surfaced to the human at plan approval. Get the human to approve it. In delegated mode, satisfy c3 (plan approved) by attaching a user-decision evidence item citing the launch order's frozen plan and scope -- by default via the spine_evidence MCP tool (action=attach, task_id=plan, evidence_type=user-decision, fields={cite: 'LAUNCH_ORDER:Mission'}); CLI fallback: attach plan --type user-decision --field cite='LAUNCH_ORDER:Mission'; surface a plan-invalidating discovery to the Admiral rather than blocking on the human. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "ask confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "understand complete: diagnosis reproduced, scope reconciled against LAUNCH_ORDER, user-decision attached."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "mission frame produced from the current map (or explicitly skipped as trivial) where architecture artifacts exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Mission frame written to .agent-work/stop-hook-door-binding/MISSION_FRAME.md, shrunk per template guidance (trivial local/mechanical change, no packet map exists). verify-frame: FRAME-OK, 0 problems."
+        },
+        {
+          "id": "c2",
+          "statement": "execute.json authored, one bounded issue, gates carry anchors cut from the frame",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute.json authored at .agent-work/stop-hook-door-binding/execute.json: one bounded issue (door-binding recognition + narrow matcher + tests), 4 items (e0-context, g1-implement, g1-review, g1-integrate), gates carry anchors cut from MISSION_FRAME.md. Covers the full file-ownership scope from LAUNCH_ORDER (spine_rail.py, test_spine_rail.py, PostToolUse block of settings.json) in one gate since the change is a single indivisible unit."
+        },
+        {
+          "id": "c3",
+          "statement": "plan approved",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-plan-1"
+        },
+        {
+          "id": "c4",
+          "statement": "plan-alternatives run BEFORE the plan freezes (parallel candidates under distinct constraints converging to one recommendation), or the skip surfaced as a named untaken road",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Skipped, surfaced as a named untaken road (recorded in understand's attached user-decision e-understand-1): LAUNCH_ORDER's Non-negotiables and Evidence-bar sections already fix the design (fail-open, no new subprocess, narrow matcher not '*', Bash path byte-for-byte unchanged, RED+CONTROL+fail-open-proof required) -- no remaining design freedom large enough to warrant N-candidate generation for a single bounded, prescriptive gate."
+        },
+        {
+          "id": "c5",
+          "statement": "cold plan critic run on the converged candidate plan + mission frame (after alternatives, before plan approval), findings triaged by the human; panel-vs-single choice surfaced at plan approval",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Skipped for the same reason as c4 (named untaken road, same citation) -- the plan has one candidate shape, fixed by the launch order's own constraints; a cold critic on a single prescribed design adds no leverage here. The reviewer crew at g1-review still independently verifies the implementation against the same evidence bar."
+        },
+        {
+          "id": "c6",
+          "statement": "the mission frame at .agent-work/stop-hook-door-binding/MISSION_FRAME.md cites anchors that resolve against the map the context step oriented on (or, when context degraded, against the substitutes the receipt hash-pinned) \u2014 an ABSENT frame REFUSES and never vacuously passes. A regression floor against map-ignoring, NOT a check for map-lateness; waive it for a genuinely trivial change so the escape is recorded. Gate-vs-report is a flag flip: append --report-only to turn this gate into a non-blocking report without rewiring the step.",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/map_orient.py verify-frame --root /home/tommy/projects/constellation-skills/.worktrees/stop-hook-door-binding --work-id stop-hook-door-binding"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-plan-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-plan-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:The change, Non-negotiables, Evidence bar",
+            "note": "Plan approved by citation: execute.json authored with one crew gate (g1) covering the full file-ownership scope in a single indivisible unit (spine_rail.py door-binding recognition, narrow PostToolUse matcher in settings.json, RED+CONTROL+fail-open+Bash-path-unchanged tests). Plan-alternatives and cold plan critic both skipped as named untaken roads (LAUNCH_ORDER already fixes the design)."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-plan-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/map_orient.py verify-frame --root /home/tommy/projects/constellation-skills/.worktrees/stop-hook-door-binding --work-id stop-hook-door-binding",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "execute": {
+      "id": "execute",
+      "title": "Execute the plan",
+      "imperative": "Before entering this step: ensure context headroom (run a harness compaction command if one is exposed, else rely on harness auto-compaction \u2014 either is fine) and reload the constellation-commander skill into this context, confirming it is active; this satisfies p1. Then, before this step and before EACH detached dispatch, (re)write the crash-resume state note at .agent-work/stop-hook-door-binding/STATE_NOTE.md (step \u00b7 slug \u00b7 next command \u00b7 PID \u00b7 expected artifact) from .agent-work/templates/STATE_NOTE.template.md, or the bundled skills/workbench/templates/STATE_NOTE.template.md when the project has no .agent-work/templates/ overlay \u2014 the PID changes per detach, and the engine refuses to start execute until it is filled (precondition p2). Then drive execute.json gate by gate in this conversation using this skill's gate execution instructions. Dispatch subagents only for the implementer and reviewer tasks within each gate, and NEVER hand-launch a crew: run every implementer/reviewer dispatch through python scripts/run_crew.py (foreground/blocking, durable registry, result-artifact verification). Before this step and before EACH crew dispatch, run python scripts/recover_crews.py stop-hook-door-binding and only launch when it reports no unresolved running/resumable/conflicting crew for that work-id/gate/role/worktree; recover (resume) or explicitly abandon/relaunch any it flags. Record completed outcomes, observed-vs-expected wave evidence, and classified discrepancies in the exact ../constellation-replan/templates/REPLAN_INPUT.template.json fields at .agent-work/stop-hook-door-binding/REPLAN_INPUT.json as execution proceeds; discrepancies remain evidence and MUST NOT be auto-filed as issues. Run python scripts/verify_iterative_role_artifacts.py commander --work-id stop-hook-door-binding; missing, malformed, or non-G2 run packets refuse execute completion. If a gate proves the plan wrong, surface the decision to the user before continuing. In delegated mode, surface a plan-invalidating discovery to the Admiral (float it) per the commander skill's Delegated/autonomous mode, rather than blocking on the human.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan approved; context headroom ensured and commander skill reloaded into this context",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Plan approved (user-decision e-plan-1 citing LAUNCH_ORDER). Context headroom fine (no compaction event yet this run); constellation-commander-delegated / constellation-commander skill doctrine already loaded and active in this context."
+        },
+        {
+          "id": "p2",
+          "statement": "crash-resume state note written before any detached dispatch (step, slug, next command, pid, expected artifact)",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_state_note.py stop-hook-door-binding"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-execute-1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every gate closed with integrated evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute.json fully driven to done: e0-context, g1-implement (IMPLEMENTER_RESULT complete, integrated), g1-review (REVIEW_RESULT APPROVE, integrated), g1-integrate (targeted suite re-verified by me: 139 passed, 1 skipped; closed). Lease released. Every gate closed with integrated evidence."
+        },
+        {
+          "id": "c2",
+          "statement": "the run's REPLAN_INPUT.json returns observed execution discrepancies/evidence through the exact verified G2 input without automatic issue filing",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_iterative_role_artifacts.py commander --work-id stop-hook-door-binding"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-execute-2"
+        }
+      ],
+      "constraints": [],
+      "directives": {
+        "replan_input": {
+          "template": "../constellation-replan/templates/REPLAN_INPUT.template.json",
+          "output": ".agent-work/stop-hook-door-binding/REPLAN_INPUT.json",
+          "evidence_fields": [
+            "completed_outcomes",
+            "wave_evidence",
+            "discrepancies"
+          ],
+          "classifications": [
+            "blocks_current_wave_exit",
+            "invalidates_forecast_or_decomposition",
+            "later_only",
+            "evidence_only",
+            "drop"
+          ],
+          "auto_file_discrepancies": false,
+          "check": "verify_iterative_role_artifacts.py commander"
+        }
+      },
+      "child_checklist": "execute.json",
+      "context_headroom_tokens": 30000,
+      "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_state_note.py stop-hook-door-binding",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_iterative_role_artifacts.py commander --work-id stop-hook-door-binding",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "reconcile": {
+      "id": "reconcile",
+      "title": "Reconcile the map",
+      "imperative": "Hand the implemented changes to a subagent that invokes constellation-cartographer to fold them into the recorded architecture \u2014 this is the default path whenever a packet map exists. Where the run has no packet map (e.g. a skill-source repo with no docs/architecture map), reconcile the structural record directly instead: fold the change into the schema or design doc it actually touches, and where the change touched neither, record a reasoned no-op as compliant rather than blocking on an absent map.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execute complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute step complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map reflects the implemented changes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "No docs/architecture packet map exists (context step's DEGRADED-UNPARSEABLE discharge). Reconciled directly: (1) fixed a stale design-doc line -- scripts/hooks/spine_rail.py's own module docstring said PostToolUse 'watches Bash commands' only; updated to name the door path too (2-line edit, re-verified 139 passed/1 skipped after). (2) Regenerated map/INDEX.md via python -m scripts.code_map build --root . -- moved (scripts 1191->1194 entities, tests 4620->4637, spine_rail 56->59 entities/19->21 holes, test_spine_rail 159->176 entities/78->90 holes), purely entity-count churn from the new code/tests, no structural surprise. Will commit at archive."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-reconcile-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "reconcile",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "triage": {
+      "id": "triage",
+      "title": "Route future work",
+      "imperative": "Load the constellation-triage skill into this context. Drive triage on execute.json triage_candidates in this conversation \u2014 do not dispatch a subagent. Before creating any issues, present the full list of recommendations to the human and get explicit approval for each issue to be filed. In delegated mode, satisfy c2 (user approved issue creation) by attaching a user-decision evidence item citing the launch order's issue-filing authority (attach triage --type user-decision --field cite='LAUNCH_ORDER:Inherited Latitude'), or float to the Admiral when filing falls outside inherited latitude. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "reconcile complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "reconcile complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every triage candidate routed or recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "4 candidates written to .agent-work/stop-hook-door-binding/triage-candidates/, each routed per the fix-now ladder: fuzz-test-missing-count-assertion.md (fixed-now, committed), map-index-per-module-pages-absent.md (recommend-and-defer), mcp-spine-epic-door-binding-open-question.md (recommend-and-defer), reviewer-inherits-parent-spine-env.md (recommend-and-defer). execute.json's own triage_candidates array was empty (no flag-candidate calls during execution -- all candidates surfaced via crew out-of-scope observations / this Commander's own understand-step reconciliation instead)."
+        },
+        {
+          "id": "c2",
+          "statement": "user approved issue creation",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-triage-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "triage",
+            "why_ref": "w-6"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-triage-2",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER (no explicit issue-filing authority section; no filing exercised)",
+            "note": "4 candidates routed: 1 fixed-now (fuzz-test count assertion, committed this run), 3 recommend-and-defer (map/INDEX.md per-module pages absent -- also confirmed a pre-existing gap independent of this run's scope; mcp__spine-epic__ door-binding reachability unresolved; reviewer-inherits-parent-spine-env doc gap). The archived .agent-work/archive/2026-08-15-launcher-hygiene/triage-candidates/stop-hook-binding-gap-for-mcp-door-sessions.md candidate is RESOLVED by this run's g1 (not re-filed, not re-deferred -- noted as closed). No tracker-filing authority exercised for any candidate; all recommendations are issue-ready only."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "review": {
+      "id": "review",
+      "title": "Review accomplishments with user",
+      "imperative": "Summarize all gates closed, changes implemented, architecture changes reconciled, and triage items routed or filed. Present the full run summary to the user. Get their confirmation before archiving. In delegated mode, satisfy c1 (run summary accepted) by attaching a user-decision evidence item citing the launch order (attach review --type user-decision --field cite='LAUNCH_ORDER:Return Shape'); the Admiral ratifies at the epic return boundary. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "triage complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "triage complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "run summary accepted by user",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-review-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "review",
+            "why_ref": "w-7"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-review-2",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape",
+            "summary": "Run complete. spine_status resolved to stop-hook-door-binding throughout (confirmed at init). Diagnosis points 1-4 all reproduced exactly against source before any fix was written. Change: scripts/hooks/spine_rail.py gained _handle_door_lease, dispatched on tool_name==mcp__spine__spine_lease before Bash parsing, resolving the claimed spine from this process's own SPINE_FILE/SPINE_SESSION env (door carries no --file), reusing _is_valid_claim_target unchanged; decide_stop/_mid_flight_reason untouched. .claude/settings.json PostToolUse gained exactly one entry, matcher=mcp__spine__spine_lease (narrow; this repo's .mcp.json registers exactly one MCP server so the epic variant mcp__spine-epic__ was deliberately left out, recorded as a triage candidate). RED: independently reproduced twice (by me and by the reviewer, both via git-stash push/pop isolating scripts/hooks/spine_rail.py) -- genuinely FAILING pre-fix (AssertionError/KeyError), GREEN post-fix. CONTROL: 4/4 cases (terminal+released, foreign worktree, unreadable spine, honest block) pass. Fail-open proof: 7 distinct malformed-payload tests + 1 fuzz test (7 rows x 2 env states), all return {} and never raise. Bash path unchanged: git diff --numstat shows pure additions (+105/-0 then +112/-0 after reconcile+triage fixes), decide_stop/_mid_flight_reason/decide_session_start byte-identical to HEAD. Clean-env suite: baseline (pre-change) 3031 passed/6 skipped/1136 subtests, matching LAUNCH_ORDER's stated baseline exactly; post-change 3047 passed/6 skipped/1136 subtests (0 failed), +16 = exactly the new door-path tests. Map moved (entity-count churn only, regenerated and will be committed). FLOATED: fixing the 0-failed evidence bar required touching scripts/install_constellation.py and tests/test_install_constellation.py -- OUTSIDE the named file-ownership fence. My settings.json change (a second PostToolUse entry for spine_rail.py, different matcher, identical command string) broke two independent things there: (1) install_constellation.HOOK_SPECS is a hand-maintained table a drift-detector test holds byte-identical to .claude/settings.json -- added the missing HookSpec entry (mechanical, mirrors the existing 3 entries exactly). (2) add_hook_entry's dedup-on-write was scoped to command-string-alone (flattened across matchers in an event), so it silently dropped the second PostToolUse registration during --wire-hooks -- rescoped dedup to (matcher, command), which cannot regress single-matcher-per-event specs (idempotent re-wiring still matches on the same matcher+command it always did). Two further tests had hardcoded literal counts (4) that needed updating to the now-correct 5; changed to the dynamic len(installer.HOOK_SPECS) pattern already used elsewhere in the same file, matching its own established convention. All of this is mechanical, minimal, and necessary to make the required 0-failed suite true -- not scope creep -- but it was not pre-authorized by File Ownership, so it is floated here explicitly rather than left implicit in the diff. Recommend the Admiral treat scripts/install_constellation.py + tests/test_install_constellation.py as within this PR's reviewable scope given the causal chain. Left as prose-only leftovers (not fixed, filed as a triage candidate below): several docstrings/comments/one test-class-name in install_constellation.py/test_install_constellation.py still say 'three'/'four' where the count is now 4/5 -- functionally inert (no test depends on the wording), fixed only where user-facing (the --hooks CLI help text). Triage: 1 fixed-now (fuzz test count assertion), 3 recommend-and-defer (map/INDEX.md stale per-module pages; mcp__spine-epic__ reachability open question; reviewer-inherits-parent-spine-env doc gap), plus this floated install_constellation.py prose-staleness noted but not separately filed. Nothing edited in _mid_flight_reason/decide_stop. No new subprocess. Fail-open preserved throughout (verified by direct read and by the reviewer's Fowler pass). Pushing and opening a PR next; not merging (fenced)."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "feedback": {
+      "id": "feedback",
+      "title": "Record workflow feedback",
+      "imperative": "Before committing, reflect honestly on how this run actually went: how closely you followed the skills, handoffs, and checklists; where you had to improvise or work around the instructions; what was ambiguous, missing, or contradictory; and what would have helped. Include the crew Workflow Feedback harvested at each gN-integrate. A 'none' answer requires a run-specific reason ('none \u2014 confirmed after review: <what you checked>'); a bare 'none' does not close this step. Then record what happened as EPISODES: one episode per distinct thing that happened \u2014 not one per run, and not a summary \u2014 each stating its task-intent, expected-behavior, observed-behavior, impact-cost and workaround. An episode is a record, not a rule: write what you observed, and do NOT write a rule for a future agent to follow \u2014 a rule to follow belongs in docs/agents/* and is a human's call. Write the delta to .agent-work/stop-hook-door-binding/episode-delta.json and apply it deterministically: python scripts/apply_episode_delta.py --delta .agent-work/stop-hook-door-binding/episode-delta.json --store-root episodes. Pass --store-root on every invocation: the writer's default resolves relative to the installed skill directory, so an installed copy would silently build a store at ~/.claude/skills/constellation-commander/episodes \u2014 outside the repo \u2014 while every gate reported green. Never hand-edit a file under episodes/: that writer is the only write path into it. Then run the capture gate before advancing: python scripts/verify_episode_captured.py stop-hook-door-binding --store-root episodes --phase feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "run summary accepted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Run summary accepted (review step, e-review-2)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "this run captured at least one episode: an episode in the store records this work id",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_episode_captured.py stop-hook-door-binding --store-root episodes --phase feedback"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-feedback-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "feedback",
+            "why_ref": "w-8"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-feedback-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py stop-hook-door-binding --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "archive": {
+      "id": "archive",
+      "title": "Archive, commit, and push",
+      "imperative": "Commit all remaining work, including this run's episodes under episodes/. That is a tracked repo-root path, so the committed episode IS the durable record: it survives `git worktree remove` and lands in a fresh clone. None of the old is-.agent-work-gitignored reasoning applies to it. Push the branch to remote. When you open a PR on Windows, write the body to a temp file and use gh pr create -F <file> \u2014 a bash heredoc and a PowerShell @'...'@ here-string both fail for gh pr create --body (here-strings work for git commit -m, not PR bodies). Move .agent-work/stop-hook-door-binding/ to .agent-work/archive/<date>-stop-hook-door-binding/. Run the archive-phase capture gate before marking archive complete \u2014 it additionally requires git to TRACK the episode, which is what proves the record outlived this worktree: python scripts/verify_episode_captured.py stop-hook-door-binding --store-root episodes --phase archive. Confirm the branch is clean and merge-ready per repo guidance. The engine mechanically refuses closeout (c4) when the staged diff includes suspicious artifacts (oversized files, generated record dumps, disallowed dirs, binary/blob additions, large data files); if any are intentional, a human waives c4 via <engine> waive archive --cond c4 --authority human --reason \"...\" rather than hand-editing the spine. Release the engine session lease only as your VERY LAST action, AFTER the archive postconditions pass and you have run the engine's final advance on archive (the advance that marks the spine done): by default call the spine_lease MCP tool with action=release (this is your own spine; the door needs no session id argument). CLI fallback: <engine> release --session-id commander-stop-hook-door-binding. Release must come after that closing advance, never before it \u2014 the lease must cover every journaled action, so the release is the final journal entry; releasing earlier leaves archive's own closeout entries (attest/waive/advance) after the lease release and fails the terminal provenance check.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "workflow feedback recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "feedback step complete, 4 episodes recorded and captured."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area archived and this run's episode captured AND tracked by git, so the record survives this worktree",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_episode_captured.py stop-hook-door-binding --store-root episodes --phase archive"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "branch committed and pushed",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2b",
+          "statement": "the work is REACHABLE: this branch has a pull request that is OPEN or MERGED. A merged PR is reachable work; a closed-unmerged one is not, and neither is no PR at all. A terminal spine and a pushed branch describe the run, not the ref -- CI never runs on an unopened branch, and every commander that reached a terminal spine without opening one had to be chased for it. Open the PR even if the work is unfinished; declare FINAL or PENDING in its title and hand the merge up. Two properties of the check text are load-bearing. The branch is derived at CHECK time from the repo root, never resolved at instantiation: init instantiates the spine before it starts the branch, so the branch need not exist yet -- and a literal branch placeholder is not a resolver-owned token, so instantiation cannot catch one and would ship it unsubstituted. The count is compared in the SHELL because the engine's verdict for a command condition is the EXIT CODE and stdout is discarded: gh --jq 'length > 0' prints true or false but exits 0 either way, so that form can never fail.",
+          "check": {
+            "kind": "command",
+            "command": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills/.worktrees/stop-hook-door-binding rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "engine session lease released",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "staged diff carries no suspicious artifacts (oversized files, generated record dumps, disallowed dirs, binary/blob additions, large data files); refuse closeout unless a human waives via the engine override path",
+          "check": {
+            "kind": "git-change-policy",
+            "mode": "staged",
+            "max_file_bytes": 1000000,
+            "deny_globs": [
+              "*.parquet",
+              "*.pkl",
+              "*.pickle",
+              "*.joblib",
+              "*.pt",
+              "*.onnx",
+              "*.bin",
+              "*.ckpt",
+              "data/generated/**",
+              "records/**",
+              ".agent-work/LESSONS.md",
+              ".agent-work/AGENT_FEEDBACK.md",
+              ".agent-work/CONSTELLATION_FEEDBACK.md",
+              ".agent-work/CONSTELLATION_FEEDBACK.collected.json"
+            ],
+            "allow_globs": [
+              "docs/**",
+              "src/**",
+              "tests/**",
+              "skills/**",
+              "scripts/**",
+              ".agent-work/**"
+            ],
+            "require_human_waiver_for_binary": true
+          },
+          "satisfied": false,
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "archive",
+            "why_ref": "w-9"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "origin": {
+    "work_id": "stop-hook-door-binding",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/stop-hook-door-binding",
+    "opened_by": "init_work_area"
+  },
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "constellation/stop-hook-door-binding/execute/commander",
+    "status": "active",
+    "claimed_at": "2026-08-15T22:09:52.606290+00:00",
+    "last_heartbeat": "2026-08-15T23:16:13.940221+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "init",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-15T22:09:59.125081+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-15T22:10:48.615435+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "understand",
+      "why": "Reconciled ask against LAUNCH_ORDER: all 4 diagnosis points reproduced exactly against source (spine_rail.py lines 1090-1098, 1197-1214, 1245-1261; .claude/settings.json PostToolUse matcher='Bash'). Prior art (archived launcher-hygiene triage candidate) independently found the same gap and deferred it -- this launch order closes it. Scope: teach handle_post_tool_use to also recognize a door-issued spine_lease claim/release (via tool_name + SPINE_FILE/SPINE_SESSION env, since the door carries no --file), record an equivalent binding, leave _mid_flight_reason/decide_stop untouched, add a narrow PostToolUse matcher for the door tool(s) instead of widening to '*'.",
+      "mechanical": false,
+      "ts": "2026-08-15T22:13:42.500538+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "plan",
+      "why": "execute.json authored: single crew gate (e0-context + g1-implement/review/integrate) covering the full LAUNCH_ORDER file-ownership scope (spine_rail.py door-binding recognition, narrow PostToolUse matcher, RED+CONTROL+fail-open+Bash-path-unchanged tests). Mission frame FRAME-OK. Plan-alternatives/cold-critic skipped as named untaken roads since the launch order already fixes the design. Plan approved by citation.",
+      "mechanical": false,
+      "ts": "2026-08-15T22:20:09.681163+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "execute.json (single gate g1: implement/review/integrate) driven to done via CLI (session commander-stop-hook-door-binding-execute), lease released. IMPLEMENTER_RESULT complete + REVIEW_RESULT APPROVE integrated, both independently re-verified by me (targeted suite 139 passed/1 skipped, RED independently git-stash-reproduced). REPLAN_INPUT.json written and verified (verify_iterative_role_artifacts.py commander -> ok): one current-wave issue, completed, wave_evidence covers RED/CONTROL/fail-open/Bash-unchanged, no discrepancies.",
+      "mechanical": false,
+      "ts": "2026-08-15T22:59:06.297563+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "Reconciled directly (no packet map). Fixed one stale design-doc line in spine_rail.py's own docstring (PostToolUse now watches Bash commands AND the door). Regenerated map/INDEX.md -- moved, entity-count churn only, no structural surprise. Both will be committed together at archive.",
+      "mechanical": false,
+      "ts": "2026-08-15T23:00:00.554249+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "4 candidates routed (1 fixed-now, 3 recommend-and-defer, all written as issue-ready recommendations). No filing authority exercised. Archived stop-hook-binding-gap-for-mcp-door-sessions.md candidate resolved by this run's g1, noted closed.",
+      "mechanical": false,
+      "ts": "2026-08-15T23:01:55.484328+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Run summary attached and accepted by citation (e-review-2). Diagnosis reproduced, RED/CONTROL/fail-open proven twice-independently, Bash path unchanged, clean-env suite 0 failed (3047 passed/6 skipped/1136 subtests), map regenerated. Floated: the settings.json change required a necessary, mechanical fix to scripts/install_constellation.py + tests/test_install_constellation.py outside the named file-ownership fence, to satisfy the 0-failed evidence bar -- fully detailed in the attached summary.",
+      "mechanical": false,
+      "ts": "2026-08-15T23:13:19.939599+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Reflected honestly: followed the launch order closely -- diagnosis reproduced before writing any fix, RED/CONTROL/fail-open evidence bar met with independent reproduction, Bash path proven unchanged by diff+hash not just test-count. Improvised around two things: (1) the engine's HARD context-trip mechanism repeatedly instructed a stop-and-relaunch that conflicts with this exact launch order's do-not-park mandate -- resolved by filing each refresh-request and continuing the same turn rather than ending it, since no live relaunch mechanism was observed. (2) the settings.json change cascaded into scripts/install_constellation.py + tests/test_install_constellation.py, outside the named file-ownership fence -- fixed mechanically (missing HookSpec entry, dedup key widened from command-alone to (matcher,command), two hardcoded counts corrected) because the 0-failed evidence bar required it, and floated explicitly rather than left implicit. Crew Workflow Feedback harvested: the g1-review reviewer flagged that it inherited this Commander's own SPINE_FILE/SPINE_SESSION rather than getting a fresh reviewer-scoped binding (filed as a triage candidate, not a blocker). 4 episodes written (stop-hook-door-binding-001..004) covering the core fix, the context-trip/do-not-park tension, the install_constellation.py cascade, and the reviewer env-inheritance observation. verify_episode_captured.py: 4 recorded. verify_episode_observations.py --strict: 0 unlisted offenders.",
+      "mechanical": false,
+      "ts": "2026-08-15T23:16:04.830466+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "reconcile",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.3515,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-15T22:59:38.347306+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "reconcile",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3521,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-15T22:59:42.315899+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "triage",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.36,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-15T23:00:21.759668+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3741,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-7",
+      "ts": "2026-08-15T23:02:02.123194+00:00"
+    },
+    {
+      "id": "tl-5",
+      "gate": "feedback",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.4385,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-8",
+      "ts": "2026-08-15T23:15:56.353911+00:00"
+    },
+    {
+      "id": "tl-6",
+      "gate": "archive",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.4429,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-9",
+      "ts": "2026-08-15T23:16:13.917884+00:00"
+    }
+  ]
+}

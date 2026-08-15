@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "work_id": "stop-hook-door-binding",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/stop-hook-door-binding",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "README.md",
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb",
+      "source": "known-fallback"
+    },
+    {
+      "path": "map/INDEX.md",
+      "content_hash": "ab7b29033d490a284055dd59d83bb482a58446f628980316994cf119ed9747dc",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "scripts/hooks/spine_rail.py and tests/test_spine_rail.py have no citable per-entity map anchors: map/INDEX.md links to per-module INDEX.md pages (e.g. map/scripts.hooks.spine_rail/INDEX.md) that do not exist on disk -- the generated map is stale/unfilled for this area, confirmed by orient's own unparseable verdict."
+  ],
+  "escalation": "Proceeding on source read of scripts/hooks/spine_rail.py and tests/test_spine_rail.py directly per LAUNCH_ORDER.md's explicit pointers (line-numbered), plus the one-line map/INDEX.md summary for scripts.hooks.spine_rail. Escalating the stale per-module map to the Admiral (admiral-post-568) as a triage candidate at this run's triage step, not blocking on it.",
+  "emitted_at": "2026-08-15T22:10:39.127415+00:00",
+  "root_proof": "positive: .git entry present at root"
+}
