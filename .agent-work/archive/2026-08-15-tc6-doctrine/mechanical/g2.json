@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g2",
+  "mechanical": {
+    "run": "tc6-doctrine",
+    "project": "constellation-skills",
+    "spine-step": "g2",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-tc6-doctrine-g2@329526b9e87acd10873a71e3c18c7b35ed58f585",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "tc6-doctrine",
+    "generated_at": "2026-08-15T20:39:04Z"
+  }
+}

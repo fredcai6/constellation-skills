@@ -1,0 +1,11 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "g1",
+      "which": "postconditions",
+      "cond": "c4",
+      "command": "grep -q 'REFRESH REQUESTED' docs/CHECKLIST_SCHEMA.md && grep -qi 'recovery escape hatch' docs/CHECKLIST_SCHEMA.md && grep -Piq 'does (\\*\\*)?not(\\*\\*)? make the comparison unforgeable' docs/CHECKLIST_SCHEMA.md"
+    }
+  ]
+}

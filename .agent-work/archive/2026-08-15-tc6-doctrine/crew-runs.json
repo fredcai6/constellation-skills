@@ -1,0 +1,26 @@
+[
+  {
+    "crew_id": "constellation/tc6-doctrine/execute/commander/attempt-1",
+    "work_id": "tc6-doctrine",
+    "gate": "execute",
+    "role": "commander",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/tc6-doctrine/execute/commander/attempt-1",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 3650515,
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/tc6-doctrine",
+    "handoff": ".agent-work/tc6-doctrine/LAUNCH_ORDER.md",
+    "result": null,
+    "spine": ".agent-work/tc6-doctrine/spine.json",
+    "parent": "admiral-post-568",
+    "stdout": ".agent-work/tc6-doctrine/crew-runs/execute-commander-attempt-1.stdout.txt",
+    "stderr": ".agent-work/tc6-doctrine/crew-runs/execute-commander-attempt-1.stderr.txt",
+    "started_at": "2026-08-15T20:26:19.924848+00:00",
+    "last_heartbeat": "2026-08-15T20:26:19.924848+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "model": "sonnet"
+  }
+]

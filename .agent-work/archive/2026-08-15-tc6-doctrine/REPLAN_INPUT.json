@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "tc6-doctrine — worktree-isolation doctrine reconciliation",
+      "spec_path": ".agent-work/tc6-doctrine/LAUNCH_ORDER.md",
+      "intent_and_why": "Reconcile three doctrine surfaces (docs/CHECKLIST_SCHEMA.md, the Commander launch-order template, and skills/workbench/references/checklist-engine.md) against what the shipped engine actually does at main 0646d61b after PR #588 replaced containment with git-toplevel-resolved equality, per launch order admiral-post-568."
+    },
+    "definition_of_done": [
+      "docs/CHECKLIST_SCHEMA.md's origin-block section matches the shipped engine (equality + git-toplevel resolution + fail-closed), with file:line citations into the current code",
+      "skills/admiral/templates/LAUNCH_ORDER.template.md's Task 2 contradiction is resolved with a written, defended (a)/(b) decision",
+      "Task 3's third-surface claim is verified true/false, and any other stale surface found across docs/ and skills/ is fixed or recorded as a finding"
+    ],
+    "good_enough": {
+      "mandatory_quality": "Every rewritten passage is checked against the shipped code with file:line citations, not paraphrase; Task 2's judgment call is defended in writing, not asserted",
+      "sufficient_evidence": "Quoted before/after per passage, Task 3's measurement stated including an honest null, full clean-env suite green",
+      "appetite": "One bounded docs-only lane, no crew dispatch"
+    },
+    "hard_constraints": [
+      "Docs follow the engine, never the reverse -- no behavior change in scripts/checklist_engine.py, scripts/verify_worktree_isolation.py, scripts/hooks/spine_rail.py, scripts/mcp_spine_server.py, or any test file",
+      "No edits to scripts/run_crew.py or skills/commander/references/crew-dispatch.md (owned by the concurrent launcher-hygiene lane) or .worktrees/launcher-hygiene/",
+      "The unforgeability withdrawal stays exactly as strong as written, never upgraded"
+    ],
+    "fixed_decisions": [
+      "engine-is-truth: docs follow the engine, never the reverse",
+      "forgery-stays-named: the unforgeability withdrawal is not upgraded",
+      "honest-null: an unconfirmed Task 3 premise is reported as a null, not manufactured into an edit"
+    ],
+    "current_wave": {
+      "objective": "Correct every stale worktree-isolation doctrine passage this lane owns, defend the Task 2 judgment call, and report Task 3's measurement including an honest null.",
+      "exit_criteria": [
+        "docs/CHECKLIST_SCHEMA.md's origin-block section matches the shipped engine, with file:line citations",
+        "skills/admiral/templates/LAUNCH_ORDER.template.md's Task 2 contradiction is resolved with a written, defended (a)/(b) decision",
+        "Task 3's third-surface claim is verified true/false and any other stale surface found is fixed or recorded",
+        "full suite green cache-clean clean-env; this repo's own derived code map regenerated"
+      ],
+      "issues": [
+        {
+          "id": "T1",
+          "title": "Correct docs/CHECKLIST_SCHEMA.md's stale worktree-isolation passage",
+          "desired_outcome": "The origin-block section (~lines 120-124) describes equality comparison, git-toplevel resolution at the one impure call site, and fail-closed behavior, each with a file:line citation; the guarded/exempt verb reasoning and the unforgeability withdrawal survive unchanged in substance.",
+          "useful_now": "The passage is actively false as of PR #588 and is the launch order's highest-priority item.",
+          "appetite": "One reasoning gate, docs-only",
+          "acceptance_or_falsification_evidence": "grep-verified absence of the stale containment language and presence of the corrected claims; the unforgeability sentence and guarded/exempt reasoning still present",
+          "implementation_latitude": "Wording is the Commander's call; the underlying claims must match scripts/checklist_engine.py:102-179 and :3411-3444 exactly",
+          "hard_constraints_no_gos": ["No edit to scripts/checklist_engine.py or any test file"],
+          "local_unknowns": [],
+          "anchors": ["docs/CHECKLIST_SCHEMA.md", "scripts/checklist_engine.py"],
+          "type": "AFK",
+          "blocks": ["T3"]
+        },
+        {
+          "id": "T2",
+          "title": "Resolve the launch-order template's redundant-or-distinct contradiction",
+          "desired_outcome": "A defended (a)/(b) decision is recorded, the template no longer contradicts docs/CHECKLIST_SCHEMA.md's supersession language, and lines ~46-54 are verified accurate and left untouched.",
+          "useful_now": "The launch order requires this judgment call be made and defended, not left standing.",
+          "appetite": "One reasoning gate, docs-only",
+          "acceptance_or_falsification_evidence": "The template text no longer invites a reader to conclude the line-43 instruction is superseded by the engine guard; lines 46-54 grep-verified intact",
+          "implementation_latitude": "Either (a) drop/demote or (b) distinguish is acceptable; the Commander chooses and defends it",
+          "hard_constraints_no_gos": ["No edit to scripts/run_crew.py or skills/commander/references/crew-dispatch.md"],
+          "local_unknowns": [],
+          "anchors": ["skills/admiral/templates/LAUNCH_ORDER.template.md", "scripts/verify_worktree_isolation.py"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "T3",
+          "title": "Measure the third surface, sweep for any other stale claim, fix or record",
+          "desired_outcome": "skills/workbench/references/checklist-engine.md is measured directly and its isolation-claim status stated plainly (including an honest null if the premise is wrong); a full docs/+skills/ sweep is run and every hit fixed or recorded.",
+          "useful_now": "The launch order's own grep found no isolation claim in this file and asked for re-measurement rather than an assumed edit.",
+          "appetite": "One reasoning gate, docs-only, depends on T1 closing first",
+          "acceptance_or_falsification_evidence": "The exact sweep command's literal output and match count are recorded; every hit is triaged (fixed, or recorded as a finding, or confirmed unrelated)",
+          "implementation_latitude": "Which of the sweep's hits count as 'current engine behavior' vs. a different/historical/unrelated mention is the Commander's judgment call, recorded with reasoning",
+          "hard_constraints_no_gos": ["A hit inside scripts/run_crew.py or skills/commander/references/crew-dispatch.md is reported, never edited"],
+          "local_unknowns": [],
+          "anchors": ["skills/workbench/references/checklist-engine.md"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [],
+    "uncertainty_register": [],
+    "parked_possibilities": []
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "T1",
+      "outcome": "docs/CHECKLIST_SCHEMA.md:120-122 rewritten to describe equality comparison at the pure predicate (scripts/checklist_engine.py:102-179), git-toplevel resolution at the one impure call site (scripts/checklist_engine.py:3411-3444), and fail-closed behavior for an unresolvable cwd. Guarded/exempt verb reasoning and the unforgeability withdrawal preserved unchanged in substance.",
+      "evidence": "execute.json gate g1, closed; command postconditions g1.c1-c4 all passed on advance"
+    },
+    {
+      "issue_id": "T2",
+      "outcome": "Decision (b): verify_worktree_isolation.py --here is distinct from the engine-native guard (different timing -- runs before any spine exists; different expected-value authority -- Admiral-declared in the launch order text, not a same-process spine stamp; different audience -- human-readable artifact in the return report). skills/admiral/templates/LAUNCH_ORDER.template.md gained one clarifying paragraph after line 43. Lines 46-54 verified accurate against scripts/hooks/spine_rail.py:68 and left untouched.",
+      "evidence": "execute.json gate g2, closed; command postcondition g2.c3 passed on advance"
+    },
+    {
+      "issue_id": "T3",
+      "outcome": "skills/workbench/references/checklist-engine.md measured: only worktree mentions are the --worktree lease-claim CLI flag (lines 84, 89); no isolation/origin/containment claim at all. Honest null -- the launch order's recorded third surface does not exist as described. Sweep run (grep -rn -E 'is_relative_to|[Cc]ontainment|Path\\.cwd\\(\\)|verify_worktree_isolation\\.py' docs/ skills/ --include=*.md): 51 hits, all triaged -- the g1/g2-fixed passages themselves, a distinct unrelated containment check (spine_rail._is_valid_claim_target, episode-store directory membership), historical 2026-06-24 design/plan docs (archival), still-accurate descriptions of verify_worktree_isolation.py's own unchanged Admiral-gate/Commander-self-check role, or a false-positive self-containment substring match (docent). None inside launcher-hygiene-owned files.",
+      "evidence": "execute.json gate g3, closed; command postcondition g3.c1 passed on advance; sweep-record evidence e-g3-1"
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "docs/CHECKLIST_SCHEMA.md's origin-block section matches the shipped engine",
+      "expected": "no containment/Path.cwd() language remains describing current behavior; git-toplevel + equality + fail-closed are named",
+      "observed": "confirmed via grep postconditions on advance g1 (c1-c4 all passed)",
+      "source": "docs/CHECKLIST_SCHEMA.md + scripts/checklist_engine.py:102-179,3411-3444"
+    },
+    {
+      "claim": "full suite is green, cache-clean, clean-env",
+      "expected": "matches the launch order's stated worktree-checkout baseline: 3028 passed, 6 skipped",
+      "observed": "3028 passed, 6 skipped, 1136 subtests passed in 123.83s",
+      "source": "pytest -q, /tmp/tc6-suite.log"
+    },
+    {
+      "claim": "this repo's own derived code map is unaffected by a docs-only change",
+      "expected": "map/ids.jsonl and map/INDEX.md unchanged after rebuild",
+      "observed": "git status --porcelain map/ empty after python -m scripts.code_map build --root .",
+      "source": "map/ids.jsonl, map/INDEX.md"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "map/ids.jsonl builds to 0 citable ids for this repo (code map produces 5878 entities, 6030 pages, but 0 'ids' per the build summary), and no docs/architecture packet map exists at all -- context orientation for this run came back DEGRADED-UNPARSEABLE and had to be discharged via declared substitutes rather than a real map.",
+      "classification": "evidence_only",
+      "affects": "Future runs in this repo that expect map-first orientation to resolve cleanly",
+      "evidence": "python scripts/map_orient.py orient --root . --work-id tc6-doctrine returned DEGRADED-UNPARSEABLE; map/ids.jsonl is 0 lines; map/INDEX.md is a landing-zone stub",
+      "reason": "No issue is warranted from this docs-only lane -- recording for the Admiral/Cartographer to weigh whether closing this gap is worth a future issue"
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "docs/CHECKLIST_SCHEMA.md",
+      "skills/admiral/templates/LAUNCH_ORDER.template.md",
+      "skills/workbench/references/checklist-engine.md",
+      "scripts/checklist_engine.py",
+      "scripts/verify_worktree_isolation.py"
+    ],
+    "map_status": "No docs/architecture packet map exists; this repo's own derived code map (map/ids.jsonl, map/INDEX.md) was rebuilt via python -m scripts.code_map build --root . and is unchanged by this docs-only lane. Context oriented DEGRADED-UNPARSEABLE and was discharged via declared substitutes (see .agent-work/tc6-doctrine/map-orientation.json)."
+  }
+}

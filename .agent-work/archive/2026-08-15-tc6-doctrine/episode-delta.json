@@ -1,0 +1,125 @@
+{
+  "work_id": "tc6-doctrine",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "tc6-doctrine",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/tc6-doctrine/execute.json",
+        "refusals": 3,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/tc6-doctrine/RUN_SUMMARY.md",
+          "docs/CHECKLIST_SCHEMA.md",
+          "skills/admiral/templates/LAUNCH_ORDER.template.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Reconcile three doctrine surfaces (docs/CHECKLIST_SCHEMA.md, the Commander launch-order template, and skills/workbench/references/checklist-engine.md) against what the engine actually does at main 0646d61b, per launch order admiral-post-568, verifying every claim against the live code before writing rather than trusting the order's own paraphrase."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The launch order named docs/CHECKLIST_SCHEMA.md's containment/Path.cwd() passage as actively stale after PR #588, asked for a defended judgment call on whether the launch-order template's first-step verify_worktree_isolation.py instruction was now redundant, and flagged skills/workbench/references/checklist-engine.md as a possibly-nonexistent third surface needing re-measurement rather than an assumed edit."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "All three claims held on inspection. scripts/checklist_engine.py:102-179 and :3411-3444 shipped exactly the equality/git-toplevel/fail-closed shape the 2026-08-15 worktree-identity ruling described. skills/workbench/references/checklist-engine.md carried no isolation claim at all -- only a --worktree lease-claim CLI flag -- so the third surface was an honest null. A docs/+skills/ sweep (grep -rn -E 'is_relative_to|[Cc]ontainment|Path\\.cwd\\(\\)|verify_worktree_isolation\\.py' docs/ skills/ --include=*.md) returned 51 hits, none needing correction beyond the two passages already fixed. The full clean-env suite matched the launch order's stated worktree-checkout baseline exactly: 3028 passed, 6 skipped, 1136 subtests."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Ran end to end through init, context, understand, plan, execute (four gates), reconcile, triage, and review, entirely in one context with no crew dispatch since every gate was a reasoning gate over prose. The full suite run alone took 123.83s of the total wall-clock."
+        },
+        "workaround": {
+          "strength": "weak",
+          "statement": "None needed for the doctrine reconciliation itself; both judgment calls (Task 2's redundant-or-distinct question, Task 3's honest null) resolved from direct code inspection rather than requiring escalation."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "tc6-doctrine",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "context",
+        "context-manifest-ref": ".agent-work/tc6-doctrine/map-orientation.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/tc6-doctrine/map-orientation.json",
+          ".agent-work/tc6-doctrine/MISSION_FRAME.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Orient map-first at the context step, before opening any source file, per inherited doctrine, for a repo with no docs/architecture packet map."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "map_orient.py's fixed fallback probe order (generated-map, index, packets-dir, code-map-index, code-map-ids) was expected to resolve against at least one populated candidate."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Every candidate came back absent or empty: no docs/architecture directory exists in this repo, and this repo's own derived code map (map/ids.jsonl) built to 0 citable ids even after a fresh python -m scripts.code_map build --root . run, with map/INDEX.md an unfilled landing-zone stub. Orientation returned DEGRADED-UNPARSEABLE and was discharged by declaring six repo files as substitutes; verify-orientation then confirmed the contract satisfied, and verify-frame confirmed the mission frame's citations resolved against those same declared substitutes."
+        },
+        "impact-cost": {
+          "strength": "weak",
+          "statement": "About ten minutes spent reading the six substitute files directly in place of a map, plus one code-map rebuild that produced no new anchors."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Declared substitutes via map_orient.py orient --substitute/--unmapped/--escalation rather than proceeding on an undischarged degraded verdict, matching the documented degraded path for a repo with no packet map."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "tc6-doctrine",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/tc6-doctrine/execute.json",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/tc6-doctrine/amend-g1-c4.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Author a falsifiable command postcondition on execute.json gate g1 asserting the unforgeability-withdrawal sentence in docs/CHECKLIST_SCHEMA.md survived the rewrite unchanged, via a literal grep for its text."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The grep pattern 'does not make the comparison unforgeable' was expected to match the sentence as it stood in the document."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "advance g1 refused on postcondition c4. The document's actual wording bolds the word 'not' in Markdown ('does **not** make...'), so the literal asterisks broke the plain substring match even though the sentence itself was present and unchanged from before the rewrite."
+        },
+        "impact-cost": {
+          "strength": "weak",
+          "statement": "One refused advance call and one amend round-trip; no document content was wrong, only the check text that verified it."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Corrected via the engine's own amend --delta retext-check op, which requires a reason and authority and leaves an audit entry, rather than hand-editing execute.json's check text directly."
+        }
+      }
+    }
+  ]
+}
