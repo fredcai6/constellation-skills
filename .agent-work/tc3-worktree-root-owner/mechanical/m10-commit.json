@@ -1,0 +1,23 @@
+{
+  "contract": 1,
+  "step": "m10-commit",
+  "mechanical": {
+    "run": "tc3-worktree-root-owner",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 6,
+    "spine-step": "m10-commit",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-tc3-worktree-root-owner-m10-commit@fd05da4fcac3b401e73e46e027238927f611225a",
+    "artifact-ref": [
+      "map/INDEX.md"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "tc3-worktree-root-owner",
+    "generated_at": "2026-08-15T06:05:47Z"
+  }
+}

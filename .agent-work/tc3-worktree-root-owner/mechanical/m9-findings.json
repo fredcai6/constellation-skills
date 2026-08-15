@@ -1,0 +1,23 @@
+{
+  "contract": 1,
+  "step": "m9-findings",
+  "mechanical": {
+    "run": "tc3-worktree-root-owner",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 6,
+    "spine-step": "m9-findings",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-tc3-worktree-root-owner-m9-findings@45759c1fa0445b1816a035b88b4991e84acd4112",
+    "artifact-ref": [
+      "map/INDEX.md"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "tc3-worktree-root-owner",
+    "generated_at": "2026-08-15T06:04:30Z"
+  }
+}

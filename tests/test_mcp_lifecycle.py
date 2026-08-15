@@ -231,6 +231,28 @@ class SpineOpenNeverBindsIdentityTests(unittest.TestCase):
         referenced = _referenced_names(fn, {"SPINE"})
         self.assertEqual(["SPINE"], referenced)
 
+    def test_spine_open_derives_wt_root_from_default_wt_root_not_an_inline_duplicate(self):
+        """`_spine_open`'s own `wt_root` must come from
+        `spine_lifecycle._default_wt_root`, the ONE place that answers "where
+        do worktrees live" -- not a second, inline restatement of the rule
+        (`root.parent / f"{root.name}-wt"`) that could silently drift from it.
+        Checked over `_spine_open`'s own source segment, the same way the
+        identity ban above is checked, so this fails the moment the two
+        derivations diverge again."""
+        tree = ast.parse(SOURCE)
+        fn = _find_funcdef(tree, "_spine_open")
+        segment = ast.get_source_segment(SOURCE, fn)
+        self.assertIn(
+            "spine_lifecycle._default_wt_root(", segment,
+            "_spine_open no longer calls spine_lifecycle._default_wt_root -- it must be "
+            "the single owner of the worktree-root rule, not restated inline here",
+        )
+        self.assertNotIn(
+            'f"{root.name}-wt"', segment,
+            "_spine_open still contains the old inline sibling-'-wt' reconstruction -- "
+            "that duplicate must be removed once _default_wt_root is called instead",
+        )
+
 
 # --------------------------------------------------------------------------- #
 # 3. Containment on spine_open's one caller-derived path.

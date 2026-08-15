@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-gitignore",
+  "mechanical": {
+    "run": "tc3-worktree-root-owner",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 6,
+    "spine-step": "m5-gitignore",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-tc3-worktree-root-owner-m5-gitignore@d1dbedeb93ed145898b86f7f6f5b500d9593b535",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "tc3-worktree-root-owner",
+    "generated_at": "2026-08-15T05:57:18Z"
+  }
+}
