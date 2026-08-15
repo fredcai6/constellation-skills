@@ -1,0 +1,299 @@
+{
+  "work_id": "b441-merge-and-verify",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-merge",
+    "g2-guard-outcome",
+    "g3-suite",
+    "g4-push"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope from MISSION_FRAME.md and LAUNCH_ORDER.md, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "MISSION_FRAME.md and LAUNCH_ORDER.md confirmed"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-merge": {
+      "id": "g1-merge",
+      "title": "Merge origin/main and regenerate map/INDEX.md",
+      "imperative": "REASONING GATE \u2014 no gN-implement/gN-review crew tasks. Crew-waiver reason: LAUNCH_ORDER.md ('Do not park' section) explicitly directs 'Do not dispatch a crew. Everything here is yours, in this turn.' Deliverable is a mechanical merge + regeneration whose result is independently verified by command postconditions, driven directly in this context. Steps: git merge origin/main (expect map/INDEX.md as the only conflict per LAUNCH_ORDER 'The map conflict'; if any other file conflicts, STOP per Stop Conditions and report rather than resolving); resolve map/INDEX.md by regeneration only (python -m scripts.code_map build --root .), never hand-merge; git add map/INDEX.md; git commit.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execution context confirmed at e0-context"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "merge committed with exactly map/INDEX.md as the resolved conflict, resolved by regeneration",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "git merge origin/main committed at bcfba265; git status confirmed map/INDEX.md as the only conflict (UU), resolved via python -m scripts.code_map build --root . then git add; no hand-editing of the file's content, only staging the regenerated output"
+        },
+        {
+          "id": "c2",
+          "statement": "tests/test_code_map.py green after regeneration",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_code_map.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-merge-1"
+        }
+      ],
+      "constraints": [
+        "never hand-merge or hand-edit map/INDEX.md",
+        "stop and report if any file other than map/INDEX.md conflicts"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:102 origin_worktree_refusal",
+          "scripts/checklist_engine.py:3433-3441 toplevel resolution call site"
+        ],
+        "capability": [
+          "map/INDEX.md generated code map"
+        ],
+        "constraint": [
+          "decision:regenerate-dont-handmerge \u2014 map/INDEX.md conflicts resolved by rebuild, never hand-merge"
+        ],
+        "decision": [],
+        "evidence": [
+          "claim:merge-clean \u2014 merge-tree conflicts in exactly map/INDEX.md",
+          "claim:map-regenerates-green \u2014 tests/test_code_map.py passes post-regeneration"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-merge-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_code_map.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-guard-outcome": {
+      "id": "g2-guard-outcome",
+      "title": "Determine outcome 1/2/3 for the origin-worktree-refusal guard interaction",
+      "imperative": "REASONING GATE \u2014 no gN-implement/gN-review crew tasks. Crew-waiver reason: same as g1 (LAUNCH_ORDER 'Do not dispatch a crew'); this gate's deliverable is a diagnosis, exactly the kind reasoning gates are for. Investigate whether #441's tests that spawn claim writers out of a pytest tempdir drive an origin-carrying spine through scripts/checklist_engine.py's origin_worktree_refusal guard. Distinguish and record explicitly: (1) nothing breaks \u2014 guard never engages, with evidence how that was established; (2) a fixture is dishonest \u2014 a bare tempdir stands in for a real git worktree; fix ONLY the specific test fixtures named in File Ownership (tests/test_spine_rail.py / tests/test_gauge_writer.py) by making them honest git repos (git init), exactly as #588's Commander did for tests/test_explorer_templates.py; (3) genuine collision \u2014 STOP, do not resolve, report the specific failing case per Stop Conditions. Under no circumstance edit scripts/checklist_engine.py.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "merge and map regeneration complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "merge and map regeneration complete, g1-merge closed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "outcome (1, 2, or 3) determined and recorded with evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "OUTCOME 1 -- nothing breaks. Evidence: origin_worktree_refusal() (scripts/checklist_engine.py:102) returns None unconditionally when spine.get('origin') is not a dict (line 152-153), BEFORE it ever reaches the cwd/toplevel check. #441's spawn tests (test_spawn_binding_transaction_red_green, test_spawn_binding_sessionstart_claim_mixed_writer_race in tests/test_spine_rail.py) build their spines via put_checklist()/write_spine(), which write raw {items, tasks} JSON with NO origin key at all -- confirmed by grep '\"origin\"' tests/test_spine_rail.py tests/test_gauge_writer.py returning zero hits. Direct repro: invoked scripts/checklist_engine.py claim as a subprocess from a bare (non-git) tempdir cwd twice -- once against a spine WITH an origin stamp naming a different worktree (REFUSED, confirming the guard is live and would engage), once against a spine matching put_checklist's shape with NO origin field (claimed successfully, exit 0). Also ran the two spawn tests directly: pytest tests/test_spine_rail.py -k spawn_binding -> 2 passed. tests/test_gauge_writer.py has no spawn/multiprocessing pattern and no origin field either, so it is not implicated. The guard never engages for this lane's tests because none of their spines carry the origin stamp the guard keys on -- not because a fixture masquerades as something it is not."
+        }
+      ],
+      "constraints": [
+        "never edit scripts/checklist_engine.py",
+        "outcome 3 is reported, not resolved (decision:outcome-3-is-a-finding)",
+        "fixture fixes limited to tests/test_spine_rail.py and tests/test_gauge_writer.py"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:102 origin_worktree_refusal"
+        ],
+        "capability": [
+          "epic-568/441-binding-store transaction claim/release/SessionStart path"
+        ],
+        "constraint": [
+          "decision:guard-is-untouchable \u2014 scripts/checklist_engine.py is merged, not this run's to change"
+        ],
+        "decision": [
+          "decision:outcome-3-is-a-finding \u2014 a genuine collision is reported, not resolved, per LAUNCH_ORDER Pre-Ruling 4"
+        ],
+        "evidence": [],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-suite": {
+      "id": "g3-suite",
+      "title": "Clean-env cache-clean full suite: 0 failed",
+      "imperative": "REASONING GATE \u2014 no gN-implement/gN-review crew tasks. Crew-waiver reason: same as g1/g2. Run the exact commands from LAUNCH_ORDER.md 'Do not park' section: clear __pycache__, run pytest under env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT in the foreground blocking until-loop (never end the turn to wait on a background process). Confirm 0 failed; passed count rising above 3015 is expected and not a defect.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "outcome 1/2/3 determined; any in-scope fixture fix (outcome 2) applied",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "outcome 1 determined at g2-guard-outcome; no fixture fix needed since guard never engages"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "clean-env cache-clean full pytest run: 0 failed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Clean-env (env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT), cache-cleaned (__pycache__ purged first) full pytest -q run, foreground blocking until-loop: 3028 passed, 6 skipped, 1136 subtests passed in 124.25s. 0 failed (grep -c FAILED /tmp/b441-suite.log == 0). Passed count rose from the PR's isolated baseline of 3015 to 3028, as expected from #587/#588's arriving tests."
+        }
+      ],
+      "constraints": [
+        "foreground, blocking until-loop only \u2014 never background-and-end-turn"
+      ],
+      "anchors": {
+        "structural": [],
+        "capability": [
+          "full repo test suite"
+        ],
+        "constraint": [
+          "tests/test_mcp_identity.py:600 asserts SPINE_FILE/SPINE_SESSION/SPINE_PARENT absent"
+        ],
+        "decision": [],
+        "evidence": [
+          "claim:suite-green \u2014 clean-env full pytest -q reports 0 failed"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-push": {
+      "id": "g4-push",
+      "title": "Push and confirm PR 589 mergeable",
+      "imperative": "REASONING GATE \u2014 no gN-implement/gN-review crew tasks. Crew-waiver reason: same as prior gates. Push epic-568/441-binding-store to origin. Run gh pr view 589 --json mergeable and confirm it no longer reports CONFLICTING. Do not merge the PR -- fenced to the Admiral.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "clean-env suite green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "clean-env full suite green (g3-suite complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "branch pushed; PR 589 mergeable status is not CONFLICTING",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Pushed epic-568/441-binding-store to origin (7733d452..bcfba265). gh pr view 589 --json mergeable reports MERGEABLE (was CONFLICTING before this merge). Not merging -- fenced to the Admiral."
+        }
+      ],
+      "constraints": [
+        "never merge PR 589 -- Admiral merges"
+      ],
+      "anchors": {
+        "structural": [],
+        "capability": [
+          "PR 589 mergeability against origin/main"
+        ],
+        "constraint": [],
+        "decision": [],
+        "evidence": [
+          "claim:pr-mergeable \u2014 gh pr view 589 --json mergeable is not CONFLICTING"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-15T19:54:47.031779+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-merge",
+      "why": "Merged origin/main; map/INDEX.md was the sole conflict, resolved by regeneration (python -m scripts.code_map build) not hand-merge; committed at bcfba265",
+      "mechanical": false,
+      "ts": "2026-08-15T19:55:39.872983+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g2-guard-outcome",
+      "why": "Outcome 1 established: none of the #441 spawn-test spines carry an origin stamp, so origin_worktree_refusal short-circuits to None before the cwd/toplevel check regardless of the pytest tempdir. Verified by direct repro contrasting an origin-stamped vs unstamped spine claimed from a bare tempdir cwd, and by running the two spawn tests directly (2 passed).",
+      "mechanical": false,
+      "ts": "2026-08-15T19:57:05.280876+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g3-suite",
+      "why": "Clean-env full suite green: 3028 passed, 6 skipped, 0 failed. Confirms outcome 1 from g2 empirically at full-suite scale, not just the two targeted tests.",
+      "mechanical": false,
+      "ts": "2026-08-15T19:59:39.385886+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g4-push",
+      "why": "Branch pushed, PR 589 mergeable status confirmed MERGEABLE, not CONFLICTING. PR left unmerged for the Admiral per the fence.",
+      "mechanical": false,
+      "ts": "2026-08-15T20:00:03.320651+00:00"
+    }
+  ]
+}

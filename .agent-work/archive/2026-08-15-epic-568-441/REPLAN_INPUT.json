@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "#441 transactional binding store",
+      "spec_path": ".agent-work/epic-568-441/PROBLEM_STATEMENT.md",
+      "intent_and_why": "Close the spine-rail binding registry's lost-update/torn-write race under concurrent PostToolUse claim/release and SessionStart writers, unify rail/gauge acting-agent identity validation, and conservatively reap dead binding entries -- without touching checklist-engine lifecycle, journal, child, actor/PID, or durable-root behavior."
+    },
+    "definition_of_done": [
+      "The transactional binding store is implemented, proven red-to-green against reviewed base 065445de, independently reviewed (APPROVE), and integrated with 0 failures on the focused suites and the full non-Windows suite."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Strict contracts: stable sibling lock covers load->safe reap->one mutation->unique-temp atomic replace for all three writers; bounded fail-open on any lock/filesystem failure; readable active leases never age-reaped.",
+      "sufficient_evidence": "A real spawned multiprocessing.get_context('spawn') production topology (not threads, not a mock) proving red on reviewed base and green after the fix, plus five named lock/adapter failure tests and a mixed-writer (claim + SessionStart) race proof.",
+      "appetite": "One bounded Commander execute gate (g1), four files."
+    },
+    "hard_constraints": [
+      "Allowed production files: scripts/hooks/spine_rail.py, scripts/hooks/gauge_writer_hook.py.",
+      "Allowed test files: tests/test_spine_rail.py, tests/test_gauge_writer.py.",
+      "Never reap a readable active lease by age.",
+      "No checklist-engine lease/journal/child/actor-PID/durable-root/historical-backfill changes.",
+      "Stdlib only; hooks stay fail-open and bounded."
+    ],
+    "fixed_decisions": [
+      "Full read-reap-mutate-replace transaction owned by spine_rail.py, not per-writer locks.",
+      "Stable non-replaced sibling lock file (never the registry inode os.replace targets).",
+      "spine_rail.is_usable_agent_id is the sole 1-64 ASCII alnum/_/- identity predicate; gauge delegates to it.",
+      "24-hour missing-target reap grace and a short named lock retry budget."
+    ],
+    "current_wave": {
+      "objective": "Implement and prove the transactional binding store contract end to end.",
+      "exit_criteria": [
+        "test_spawn_binding_transaction_red_green passes GREEN after RED was proven against reviewed base 065445de.",
+        "The five named lock/adapter failure tests pass.",
+        "An independent reviewer returns verdict APPROVE.",
+        "Focused suites and the full non-Windows suite pass with 0 failures."
+      ],
+      "issues": [
+        {
+          "id": "g1",
+          "title": "Transactional binding store: implement, review, integrate",
+          "desired_outcome": "Concurrent claim/release/SessionStart writers never lose or tear a binding-registry write; identity validation and reap are conservative and unified.",
+          "useful_now": "The current registry write path is provably unsafe under real concurrent writers (measured: 16 spawned production claim writers produced a torn JSON file), which #419/#440 already named but did not close.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "The spawned red/green test, the five named lock/adapter tests, the mixed-writer race test, and the full non-Windows suite all pass; an independent reviewer returns APPROVE.",
+          "implementation_latitude": "Choose the private transaction/lock/reap implementation; preserve the frozen four-file scope, fail-open contract, and active-lease retention rule.",
+          "hard_constraints_no_gos": [
+            "No lifecycle/journal/child/actor-PID/durable-root changes.",
+            "No stale-lockfile PID ownership policy."
+          ],
+          "local_unknowns": [],
+          "anchors": ["scripts/hooks/spine_rail.py", "scripts/hooks/gauge_writer_hook.py"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "The stale .spine-rail-binding.json.lock artifact type is added to .gitignore.",
+        "why_likely": "The independent reviewer flagged it as a real, non-blocking hygiene gap outside this issue's four-file scope.",
+        "entry_conditions": ["Routed through triage rather than expanded here."]
+      },
+      {
+        "outcome": "The run_crew.py Execution-error dispatch failure specific to this lane is diagnosed.",
+        "why_likely": "Two implementer crew dispatches (attempt-1, attempt-2) died immediately with Execution error while sibling lanes ran implementer crews successfully on the same machine, per LAUNCH_ORDER-resume-3.md.",
+        "entry_conditions": ["Routed through triage; not chased in this run per the launch order's explicit 'not yours to debug' instruction."]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Why scripts/run_crew.py dispatch fails with 'Execution error' specifically in this lane/worktree.",
+        "affects": "Whether future gates in this lane can use crew dispatch at all.",
+        "settle_by": "A dedicated diagnostic pass outside this run (triage candidate).",
+        "current_evidence": "crew-runs/g1-implementer-attempt-1.stdout.txt and crew-runs/g1-implementer-attempt-2.stdout.txt both show immediate Execution error; sibling lanes dispatch successfully on the same machine per the launch order.",
+        "next_probe": "Inspect run_crew.py's dispatch path against this lane's specific worktree/session state."
+      }
+    ],
+    "parked_possibilities": [
+      "A standalone historical sweep/backfill of pre-existing malformed binding entries (excluded by the no-backfill ruling; reap is transaction-internal only)."
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "g1",
+      "outcome": "Implemented directly in this commander process (no crew dispatch, per LAUNCH_ORDER-resume-3.md): a private _binding_transaction seam in spine_rail.py (stable sibling lock, POSIX flock / injectable-Windows-msvcrt adapters, bounded fail-open retry, unique-temp atomic replace) now backs all three writers (PostToolUse claim, PostToolUse release, SessionStart bind-on-resume). Identity unified on spine_rail.is_usable_agent_id (gauge delegates). Claim targets validated for containment, readability, and symlink-escape. Conservative reap (24h missing-target grace, readable-active never reaped, released reaped immediately) runs inside every transaction. Independently reviewed (Agent-tool dispatch, APPROVE, no defects). Integrated: 5 named lock/adapter tests, focused suites (193 passed/1 skipped), and the full non-Windows suite (3015 passed/6 skipped/0 failed/1130 subtests) all green.",
+      "evidence": "RED: .agent-work/epic-568-441/evidence/m1-red-observed.txt (torn write, 16 spawned production claim writers, reviewed base 065445de). GREEN: tests/test_spine_rail.py::test_spawn_binding_transaction_red_green, re-run 3x stable, 16/16 entries retained. Full contract: .agent-work/epic-568-441/crew-handoffs/g1-implementer-result.md (all ten exact matched fields for run epic-568-441-g1-attempt-1). Review: .agent-work/epic-568-441/crew-handoffs/g1-reviewer-handoff.md + engine evidence e-g1-review-2 (verdict=APPROVE)."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The pre-#441 binding store loses updates under concurrent writers.",
+      "expected": "A lost update (a subset of expected entries survives).",
+      "observed": "Stronger than expected: 16 spawned production claim writers against reviewed base 065445de produced a TORN WRITE (json.decoder.JSONDecodeError: Extra data) on one run and a straightforward lost update (2/16 survived) on another -- both prove the defect, the torn-write form is more severe than the plan's stated premise.",
+      "source": ".agent-work/epic-568-441/evidence/m1-red-observed.txt and tests/test_spine_rail.py::test_spawn_binding_transaction_red_green"
+    },
+    {
+      "claim": "The transaction closes the race: all three writers now serialize through one stable-lock seam.",
+      "expected": "16/16 spawned claim-writer entries survive; a mixed claim+SessionStart race also survives in full.",
+      "observed": "test_spawn_binding_transaction_red_green: 16/16 survived, re-run 3x stable. test_spawn_binding_sessionstart_claim_mixed_writer_race: 16/16 survived (8 claim + 8 SessionStart-resume), re-run 3x stable.",
+      "source": "tests/test_spine_rail.py"
+    },
+    {
+      "claim": "Lock contention, timeout, lock-API failure, and replace failure all fail open without mutating the registry; the Windows byte-range adapter's contract is correct.",
+      "expected": "5/5 named tests pass.",
+      "observed": "5 passed: test_binding_lock_contention_fails_open, test_binding_lock_timeout_fails_open, test_binding_lock_api_failure_fails_open, test_binding_replace_failure_fails_open, test_windows_lock_adapter_contract.",
+      "source": "tests/test_spine_rail.py"
+    },
+    {
+      "claim": "The four-file production/test change is complete and does not regress the rest of the repository.",
+      "expected": "Focused suites and the full non-Windows suite both pass with 0 failures.",
+      "observed": "Focused: 193 passed, 1 skipped. Full non-Windows (cache-clean, SPINE_FILE/SPINE_SESSION/SPINE_PARENT unset): 3015 passed, 6 skipped, 0 failed, 1130 subtests passed.",
+      "source": "pytest -q tests/test_spine_rail.py tests/test_gauge_writer.py; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D-red-stronger-than-premise",
+      "signal": "The plan's premise was a lost update ('the final valid JSON reliably contained only a subset of these entries'); the measured RED is stronger -- a torn write (two concatenated JSON documents), not merely a dropped entry.",
+      "classification": "evidence_only",
+      "affects": "The severity claim recorded in the plan's premise, not its prescribed fix (unique-temp atomic replacement already covers a torn write).",
+      "evidence": ".agent-work/epic-568-441/evidence/m1-red-observed.txt: json.decoder.JSONDecodeError: Extra data: line 11 column 2 (char 472).",
+      "reason": "LAUNCH_ORDER-resume-3.md rules explicitly: 'No re-plan is needed. Note the correction in your findings and carry on.'"
+    },
+    {
+      "id": "D-dead-child-dispatches",
+      "signal": "Two implementer crew dispatches via scripts/run_crew.py died immediately with 'Execution error' in this lane, while sibling lanes ran implementer crews successfully on the same machine at the same time.",
+      "classification": "later_only",
+      "affects": "Whether future gates in this lane can use crew dispatch; does not block this wave's exit since the implementation was completed directly in-process per the launch order.",
+      "evidence": ".agent-work/epic-568-441/crew-runs/g1-implementer-attempt-1.stdout.txt and .agent-work/epic-568-441/crew-runs/g1-implementer-attempt-2.stdout.txt; attempt-2 left no registry entry at all.",
+      "reason": "Recorded as a finding per LAUNCH_ORDER-resume-3.md ('this is specific to this lane and not yours to debug'); worth a dedicated diagnostic pass later, not a same-run repair."
+    },
+    {
+      "id": "D-stale-running-registry-entry",
+      "signal": "attempt-1's crew-runs.json registry entry was left in a stale/inconsistent state (status abandoned, but originally recorded as if running) after its Execution error.",
+      "classification": "evidence_only",
+      "affects": "Registry hygiene for this work id; already reconciled by recover_crews.py reporting it ABANDONED/ignored.",
+      "evidence": ".agent-work/epic-568-441/crew-runs.json entry constellation/epic-568-441/g1/implementer/attempt-1.",
+      "reason": "No further action needed this run; recorded per the launch order's Return Shape requirement to note it."
+    },
+    {
+      "id": "D-lockfile-gitignore-gap",
+      "signal": "The new stable sibling lock artifact .agent-work/.spine-rail-binding.json.lock is not yet covered by any .gitignore pattern (the sibling .spine-rail-binding.json and .spine-rail-nudges.json are).",
+      "classification": "later_only",
+      "affects": "Future git status/commit hygiene for any worktree that runs this hook; .gitignore is outside this issue's frozen four-file scope.",
+      "evidence": "Independent reviewer finding (Agent-tool dispatch, e-g1-review-2): '.agent-work/*.spine-rail-binding.json.lock is a new untracked artifact type not yet added to .gitignore.'",
+      "reason": "Routed to triage rather than expanding the frozen four-file scope to fix in this run."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": ["scripts/hooks/spine_rail.py", "scripts/hooks/gauge_writer_hook.py"],
+    "map_status": "Degraded at context (binding topology unmapped, hash-pinned README substitute used); map/INDEX.md was regenerated during this run (python -m scripts.code_map build --root .) to clear an unrelated pre-existing staleness failure, entity counts only."
+  }
+}

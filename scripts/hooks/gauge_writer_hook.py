@@ -64,7 +64,6 @@ Design contract (frozen DESIGN_SPEC #178, Module 2 post-review amendments):
 import importlib.util
 import json
 import os
-import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -163,22 +162,21 @@ def _is_contained(gauge_path: Path) -> bool:
 
 # --- the acting agent's identity, and the transcript derived from it --------
 
-# An ALLOWLIST, deliberately not an extension of spine_rail's denylist. That
-# denylist (`#`, `/`, `\`, `..`) is hand-maintained and still admits `:`, `*`
-# and `?` -- and unlike spine_rail, which only ever uses agent_id as a dict
-# KEY, this module interpolates it into `agent-{agent_id}.jsonl`, a real
-# filesystem path on a Windows box. A denylist of path metacharacters is a
-# list that drifts from the predicate the filesystem actually applies; the
-# allowlist is defined by the ids the harness genuinely sends (measured live
-# on 2.1.222: hex-ish tokens such as `a8f0a946eaaa2fe6c`), widened only to `-`
-# and `_`. A value outside it means WRITE NOTHING -- never a repaired or
+# `spine_rail.is_usable_agent_id` is the SOLE identity predicate (#441) -- a
+# 1-64 character ASCII alnum/`_`/`-` allowlist. This module used to carry its
+# own copy (rail's old denylist admitted `:`, `*`, `?` and space, which this
+# module's stricter allowlist correctly rejected before interpolating the id
+# into `agent-{agent_id}.jsonl`, a real filesystem path on a Windows box); the
+# two have now converged on one definition so they cannot drift apart again.
+# A value the predicate rejects means WRITE NOTHING -- never a repaired or
 # sanitized path, and never an exception the outer swallow would flatten into
 # the same indistinguishable silence every other failure produces.
-_AGENT_ID_ALLOWED = re.compile(r"\A[A-Za-z0-9_-]{1,64}\Z")
 
 
 def _is_usable_agent_id(agent_id) -> bool:
-    return isinstance(agent_id, str) and _AGENT_ID_ALLOWED.match(agent_id) is not None
+    if _spine_rail is None:
+        return False
+    return _spine_rail.is_usable_agent_id(agent_id)
 
 
 def derive_subagent_transcript(transcript_path, agent_id):

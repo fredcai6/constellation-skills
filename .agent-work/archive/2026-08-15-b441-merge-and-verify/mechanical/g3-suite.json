@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g3-suite",
+  "mechanical": {
+    "run": "b441-merge-and-verify",
+    "project": "constellation-skills",
+    "spine-step": "g3-suite",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b441-merge-and-verify-g3-suite@5bd4dfdda15f797bdf0ffaf3ecf4a90967ba7504",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "b441-merge-and-verify",
+    "generated_at": "2026-08-15T19:57:11Z"
+  }
+}

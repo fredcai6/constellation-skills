@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g4-push",
+  "mechanical": {
+    "run": "b441-merge-and-verify",
+    "project": "constellation-skills",
+    "spine-step": "g4-push",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b441-merge-and-verify-g4-push@e08299a6a66c5ae615dc4107e146b3b3ea811195",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "b441-merge-and-verify",
+    "generated_at": "2026-08-15T19:59:46Z"
+  }
+}

@@ -1,0 +1,526 @@
+{
+  "work_id": "epic-568-441",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read inherited crew doctrine, project crew context and glossary, then LAUNCH_ORDER.md, PROBLEM_STATEMENT.md, MISSION_FRAME.md, PLAN_CONVERGENCE.md, COLD_PLAN_CRITIQUE.md, COLD_PLAN_REREVIEW.md, PLAN_CRITIC_TRIAGE.md, and PLAN_CRITIC_TRIAGE_2.md. Confirm the frozen one-gate intent and four-file scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context and every frozen plan artifact loaded; intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded inherited and project crew doctrine plus every frozen plan, critique, and triage artifact. Confirmed one gate, two production files, two test files, and no lifecycle expansion."
+        }
+      ],
+      "constraints": [
+        "Drive this plan only through an MCP server bound to execute.json; no checklist-engine CLI or hand-edited engine state."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Transactional binding store: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF.md and dispatch one implementer. Require production multiprocessing spawn red/green through handle_post_tool_use and the real registry, a spawned SessionStart-versus-claim race, deterministic disable-binding-transaction mutation control, shared identity validation, contained checklist validation including symlink escape and validation/open races, recorded release compatibility, safe reap, old-active end-to-end Stop routing, all three writers, stable-lock identity, bounded fail-open advisory locking, and deterministic tests named test_binding_lock_contention_fails_open, test_binding_lock_timeout_fails_open, test_binding_lock_api_failure_fails_open, test_binding_replace_failure_fails_open, and test_windows_lock_adapter_contract. The durable result must carry exactly the matched fields for run epic-568-441-g1-attempt-1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded and frozen gate confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Execute context gate completed; final frozen handoff and critic-approved proof contract confirmed."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "fresh implementer proof is complete and discriminating",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete",
+              "run_id": "epic-568-441-g1-attempt-1",
+              "test_id": "test_spawn_binding_transaction_red_green",
+              "base_revision": "065445de",
+              "mutation": "disable-binding-transaction",
+              "expected_failure": "lost-update",
+              "post_change": "all-entries-retained",
+              "adapter_failure": "four-cases-covered",
+              "mixed_writer": "sessionstart-claim",
+              "blast_radius": "4-files"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1",
+          "attested": {
+            "evidence": "e-g1-implement-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [
+        "Allowed production files: scripts/hooks/spine_rail.py and scripts/hooks/gauge_writer_hook.py.",
+        "Allowed test files: tests/test_spine_rail.py and tests/test_gauge_writer.py.",
+        "Never reap a readable active lease by age; no lifecycle, journal, child, actor/PID, durable-root, or historical-backfill changes.",
+        "All writers lock one stable sibling lock file that is never replaced, from before load through reap, mutation, temp close/flush, replacement, and cleanup.",
+        "POSIX uses flock on the stable handle. Windows initializes one byte, seeks to zero, locks/unlocks that byte with msvcrt, closes temp handles before replace, and fails open on contention, timeout, lock API, or filesystem errors.",
+        "If the production spawn topology cannot show an unlocked lost update, return an honest scoped null; do not manufacture proof."
+      ],
+      "anchors": {
+        "structural": [
+          "rail store and claim/release/SessionStart writers",
+          "gauge identity consumer",
+          "focused rail and gauge tests"
+        ],
+        "capability": [
+          "serializable binding discovery",
+          "consistent identity",
+          "safe cleanup",
+          "retained Stop routing"
+        ],
+        "constraint": [
+          "bounded fail-open hooks",
+          "explicit engine lease lifecycle unchanged",
+          "Linux green required; Windows failure record allowed"
+        ],
+        "decision": [
+          "full read-reap-mutate-replace transaction @grade: settled/human \u00b7 leans g1-implement,g1-review,g1-integrate",
+          "stable non-replaced sibling lock @grade: settled/measured \u00b7 leans g1-implement,g1-review,g1-integrate",
+          "readable active never age-reaped @grade: settled/human \u00b7 leans g1-implement,g1-review,g1-integrate",
+          "rail-owned 1-64 ASCII identity allowlist @grade: settled/measured \u00b7 leans g1-implement,g1-review,g1-integrate",
+          "contained readable checklist claim and recorded-first release @grade: settled/human \u00b7 leans g1-implement,g1-review,g1-integrate",
+          "24-hour missing grace and short named lock budget @grade: settled/inherited \u00b7 leans g1-implement,g1-review,g1-integrate"
+        ],
+        "evidence": [
+          "production spawn red/green",
+          "SessionStart-claim race",
+          "unlocked mutation",
+          "five named lock/adapter failure tests",
+          "old-active Stop discriminator",
+          "identity/path/symlink/reaper matrices"
+        ],
+        "confidence_flags": [
+          "degraded map returned to reconcile"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "blocker": "Global Codex approval/usage layer exhausted until 2026-08-20 06:19; implementer could not execute required red/green or write its result artifact. Only an unexecuted spawned regression patch exists; no production implementation or proof claim.",
+        "authority_needed": "platform capacity / parent Admiral",
+        "next_action": "After capacity resets, resume the existing implementer m1 lease and run `python -m pytest -q -s tests/test_spine_rail.py::test_spawn_binding_transaction_red_green`; proceed only if it demonstrates lost-update, then complete implementation and durable result.",
+        "resume_reason": "Codex-quota blocker superseded by LAUNCH_ORDER-resume-3.md: implementation was completed directly in this Claude commander process (no crew dispatch) rather than resuming the Codex implementer. g1-implementer-plan.json's m1-m4 all completed and its lease released; production transaction, identity unification, reap, and writer routing are implemented and proven per the durable IMPLEMENTER_RESULT."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/epic-568-441/crew-handoffs/g1-implementer-result.md",
+            "status": "complete",
+            "run_id": "epic-568-441-g1-attempt-1",
+            "test_id": "test_spawn_binding_transaction_red_green",
+            "base_revision": "065445de",
+            "mutation": "disable-binding-transaction",
+            "expected_failure": "lost-update",
+            "post_change": "all-entries-retained",
+            "adapter_failure": "four-cases-covered",
+            "mixed_writer": "sessionstart-claim",
+            "blast_radius": "4-files"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Transactional binding store: review",
+      "imperative": "Dispatch an independent reviewer from REVIEWER_HANDOFF.md. Verify the complete frozen contract, exact matched provenance, five named lock/adapter failure tests, mixed-writer and Stop-routing discrimination, four-file scope, and non-Windows results. Attach exactly review-result verdict=APPROVE.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "fresh IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Fresh g1-implementer-result.md received and attested at g1-implement (e-g1-implement-1), matched fields for run epic-568-441-g1-attempt-1."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "independent reviewer approves the complete proof contract",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2",
+          "attested": {
+            "evidence": "e-g1-review-2",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [
+        "Reviewer is independent and does not mutate production or engine state."
+      ],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-review",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "reviewer": "Agent-tool independent dispatch (general-purpose), agentId a84ce0c4f931bc6eb",
+            "summary": "Re-ran all listed commands independently; all 11 handoff verification points confirmed against actual code; no defects found; one non-blocking hygiene observation (.spine-rail-binding.json.lock not yet gitignored, routed to triage rather than expanding the four-file scope)."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Transactional binding store: integrate",
+      "imperative": "Accept only APPROVE. Re-run the dedicated failure-contract command, focused suites, and full non-Windows suite; independently verify the fixed run nonce, base, mutation, expected red, post-change green, mixed writer, Stop retention, adapter failures, and exact four-file blast radius. Attach exactly the matched verification-result. Record Windows risk separately.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "APPROVE review received and adjudicated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Independent reviewer verdict=APPROVE received (e-g1-review-2) and adjudicated at g1-review; no BLOCK findings."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c0",
+          "statement": "contention, timeout, lock API, replacement, and Windows adapter contracts pass",
+          "check": {
+            "kind": "command",
+            "command": "pytest -q tests/test_spine_rail.py::test_binding_lock_contention_fails_open tests/test_spine_rail.py::test_binding_lock_timeout_fails_open tests/test_spine_rail.py::test_binding_lock_api_failure_fails_open tests/test_spine_rail.py::test_binding_replace_failure_fails_open tests/test_spine_rail.py::test_windows_lock_adapter_contract"
+          },
+          "override_policy": {
+            "allowed": false
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-6"
+        },
+        {
+          "id": "c1",
+          "statement": "focused rail and gauge suites pass",
+          "check": {
+            "kind": "command",
+            "command": "pytest -q tests/test_spine_rail.py tests/test_gauge_writer.py"
+          },
+          "override_policy": {
+            "allowed": false
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-7"
+        },
+        {
+          "id": "c2",
+          "statement": "full non-Windows suite passes",
+          "check": {
+            "kind": "command",
+            "command": "pytest -q"
+          },
+          "override_policy": {
+            "allowed": false
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-8"
+        },
+        {
+          "id": "c3",
+          "statement": "independent reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2",
+          "attested": {
+            "evidence": "e-g1-review-2",
+            "note": null
+          }
+        },
+        {
+          "id": "c4",
+          "statement": "fresh exact red/green and policy proof independently verified",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "verification-result",
+            "match": {
+              "run_id": "epic-568-441-g1-attempt-1",
+              "test_id": "test_spawn_binding_transaction_red_green",
+              "base_revision": "065445de",
+              "mutation": "disable-binding-transaction",
+              "expected_failure": "lost-update",
+              "post_change": "all-entries-retained",
+              "adapter_failure": "verified",
+              "mixed_writer": "verified",
+              "stop_retention": "verified",
+              "blast_radius": "4-files"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2",
+          "attested": {
+            "evidence": "e-g1-integrate-2",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [
+        "No Windows-only failure can mask a non-Windows regression."
+      ],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-integrate",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "verification-result",
+          "payload": {
+            "run_id": "epic-568-441-g1-attempt-1",
+            "test_id": "test_spawn_binding_transaction_red_green",
+            "base_revision": "065445de",
+            "mutation": "disable-binding-transaction",
+            "expected_failure": "lost-update",
+            "post_change": "all-entries-retained",
+            "adapter_failure": "verified",
+            "mixed_writer": "verified",
+            "stop_retention": "verified",
+            "blast_radius": "4-files"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "pytest -q tests/test_spine_rail.py::test_binding_lock_contention_fails_open tests/test_spine_rail.py::test_binding_lock_timeout_fails_open tests/test_spine_rail.py::test_binding_lock_api_failure_fails_open tests/test_spine_rail.py::test_binding_replace_failure_fails_open tests/test_spine_rail.py::test_windows_lock_adapter_contract",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "pytest -q tests/test_spine_rail.py tests/test_gauge_writer.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "pytest -q",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-6",
+          "type": "command-output",
+          "payload": {
+            "cmd": "pytest -q tests/test_spine_rail.py::test_binding_lock_contention_fails_open tests/test_spine_rail.py::test_binding_lock_timeout_fails_open tests/test_spine_rail.py::test_binding_lock_api_failure_fails_open tests/test_spine_rail.py::test_binding_replace_failure_fails_open tests/test_spine_rail.py::test_windows_lock_adapter_contract",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-7",
+          "type": "command-output",
+          "payload": {
+            "cmd": "pytest -q tests/test_spine_rail.py tests/test_gauge_writer.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-8",
+          "type": "command-output",
+          "payload": {
+            "cmd": "pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "constellation/epic-568-441/execute/commander/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-15T16:40:40.545302+00:00",
+    "last_heartbeat": "2026-08-15T17:44:38.097777+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": "constellation/epic-568-441-execute",
+    "takeover_reason": "Resuming per Admiral launch-order LAUNCH_ORDER-resume.md: taking over the stale execute.json lease (previously constellation/epic-568-441-execute) without releasing/recreating, to drive g1-implement onward now that the Codex vendor quota is confirmed not to bind this Claude-run dispatch.",
+    "released_at": "2026-08-15T17:44:52.076462+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "The execution context confirms the final critic-approved contract: one store transaction seam, exact provenance-bearing red/green, mixed-writer and Stop proofs, and four-file scope.",
+      "mechanical": false,
+      "ts": "2026-08-14T18:07:33.881853+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Implemented directly in this commander process per LAUNCH_ORDER-resume-3.md (no crew dispatch, both prior crew dispatches died as Execution error and are recorded as findings below). g1-implementer-plan.json's m1-transaction, m2-validation-reap, m3-writers-routing, m4-verify-report all completed and its lease released. Matched implementer-result attached and attested with the exact fields for run epic-568-441-g1-attempt-1: production spawn red/green (torn-write, stronger than the lost-update premise, re-confirmed 3x GREEN after the fix), five named lock/adapter tests, SessionStart-versus-claim mixed-writer race, old-active Stop-routing identity discrimination, symlink-escape and containment claim validation, 24h reap grace matrix, unified rail-owned identity allowlist with gauge delegation, exact four-file blast radius.",
+      "mechanical": false,
+      "ts": "2026-08-15T17:29:31.152979+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Independent reviewer (Agent-tool subagent dispatch, separate context/no shared history with the author) re-ran all listed commands and verified all 11 handoff points against the actual code and diff, not the result artifact's prose. Verdict APPROVE, no defects found. One non-blocking hygiene observation (.spine-rail-binding.json.lock not yet in .gitignore) noted and routed to triage rather than expanding the frozen four-file scope.",
+      "mechanical": false,
+      "ts": "2026-08-15T17:37:09.861347+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Independently re-ran (fresh, this integration pass, not reused from earlier evidence): the 5 named lock/adapter tests (5 passed), the focused rail+gauge suites (193 passed, 1 skipped), and the full non-Windows suite (3015 passed, 6 skipped, 0 failed, 1130 subtests) -- SPINE_FILE/SPINE_SESSION/SPINE_PARENT unset for this and every subsequent engine invocation this gate, since they are this commander session's own ambient env vars and an in-process pytest subprocess inherits them, spuriously tripping test_mcp_identity.py's env-leak test; checklist_engine.py's CLI reads no SPINE_* env var itself (grep-confirmed), so this is safe. Re-verified red/green, the mixed-writer race, and Stop-retention discrimination directly. git diff --name-only confirms exactly the four-file blast radius (map/INDEX.md is a separate Commander-reconcile-level regen). Reviewer verdict APPROVE adjudicated at g1-review.",
+      "mechanical": false,
+      "ts": "2026-08-15T17:44:38.097749+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.3009,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-15T17:36:52.212512+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3013,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-15T17:36:54.898513+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3024,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-15T17:36:58.377799+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "g1-integrate",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3054,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-15T17:37:18.100268+00:00"
+    }
+  ]
+}
