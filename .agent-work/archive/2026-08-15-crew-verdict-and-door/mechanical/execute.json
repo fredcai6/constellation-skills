@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "execute",
+  "mechanical": {
+    "run": "crew-verdict-and-door",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 3,
+    "spine-step": "execute",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-crew-verdict-and-door-execute@2ef217da47d4ba82952c627bef4a78c1c9fb2e76",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "crew-verdict-and-door",
+    "generated_at": "2026-08-15T16:50:53Z"
+  }
+}

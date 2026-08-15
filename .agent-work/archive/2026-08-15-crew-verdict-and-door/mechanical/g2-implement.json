@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g2-implement",
+  "mechanical": {
+    "run": "crew-verdict-and-door",
+    "project": "constellation-skills",
+    "spine-step": "g2-implement",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-crew-verdict-and-door-g2-implement@8d502cc9a30e364f84c2401b5ed2147169fa9467",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "crew-verdict-and-door",
+    "generated_at": "2026-08-15T17:17:21Z"
+  }
+}

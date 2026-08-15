@@ -1,0 +1,261 @@
+{
+  "work_id": "crew-verdict-and-door-g2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-red",
+    "m2-fix",
+    "m3-evidence-and-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (constellation-implementer skill's references/global-crew.md and references/global-everyone.md), then project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the handoff at .agent-work/crew-verdict-and-door/crew-handoffs/g2-implementer-handoff.md and the read-only source anchors it names (scripts/run_crew.py:868- build_entry, :1289-1346 ExternalBackend.dispatch/resume, scripts/mcp_spine_server.py:145-146, tests/test_mcp_identity.py:914). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + source anchors loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md, and the g2 handoff (all sections present: gate, task, protected intent, test mode, close criteria, allowed scope, exclusions, constraints, map anchors, deliverable path check, required evidence, wiring grep, verification commands, model tier, authority, stop conditions, return format). Read source anchors: build_entry (868-951), ExternalBackend.dispatch/resume (1289-1346), CliBackend.dispatch (1182-1226), mcp_spine_server.py:145-146, tests/test_mcp_identity.py:914. Reviewed existing BuildEntryTests and external-dispatch tests in tests/test_crew_launcher.py for conventions."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-red": {
+      "id": "m1-red",
+      "title": "Write pinned tests for door_bound field and the stderr banner; confirm RED baseline before touching build_entry/ExternalBackend.dispatch",
+      "imperative": "Add two new test methods to BuildEntryTests in tests/test_crew_launcher.py: test_build_entry_cli_door_bound_true (backend='cli' -> entry['door_bound'] is True) and test_build_entry_external_door_bound_false (backend='external' -> entry['door_bound'] is False). Add one new test near the existing external-dispatch tests (~line 2505-2535): test_external_dispatch_prints_unbound_door_banner -- call RC.ExternalBackend().dispatch(spec, root=root, entries=[]) inside contextlib.redirect_stderr(io.StringIO()), capture the text, and assert it names the unbound door, mentions .mcp.json's demo default, and instructs verifying spine_status before any mutating verb. Do NOT edit build_entry or ExternalBackend.dispatch yet. Run `python -m pytest -q -k \"test_build_entry_cli_door_bound_true or test_build_entry_external_door_bound_false or test_external_dispatch_prints_unbound_door_banner\" 2>&1 | tail -30` against the UNCHANGED code and paste the real output. Expect all three to FAIL (RED -- door_bound key does not exist yet, no banner is printed). Attest c1 with the pasted transcript once RED is observed.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; context and handoff loaded/verified complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red confirmed by manual attest: three tests written and observed FAILING against the unchanged code -- check MUST be null so the engine never runs the by-design-failing tests itself",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED confirmed. python -m pytest -q -k \"test_build_entry_cli_door_bound_true or test_build_entry_external_door_bound_false or test_external_dispatch_prints_unbound_door_banner\" -> 3 failed, 3012 deselected. test_build_entry_cli_door_bound_true: KeyError 'door_bound'. test_build_entry_external_door_bound_false: KeyError 'door_bound'. test_external_dispatch_prints_unbound_door_banner: AssertionError 'unbound' not found in '' (nothing printed to stderr today). All three fail for the expected reason -- the field/banner do not exist yet."
+        }
+      ],
+      "constraints": [
+        "only add new test methods to tests/test_crew_launcher.py -- reuse existing helpers (write_handoff, result_rel, fake_launch), do not reinvent",
+        "do not edit build_entry or ExternalBackend.dispatch in this step"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-fix": {
+      "id": "m2-fix",
+      "title": "Add door_bound to build_entry and the stderr banner to ExternalBackend.dispatch",
+      "imperative": "Edit build_entry (scripts/run_crew.py ~868-951) to set entry['door_bound'] = (backend == 'cli') -- written as an equality against 'cli', not an inequality against 'external', so a future third backend value defaults to False. Update the docstring to name the new field. Edit ExternalBackend.dispatch (~1303-1335) to print an UNCONDITIONAL stderr line when recording the entry, stating: the door is unbound, it resolves to .mcp.json's demo default, and the crew must verify spine_status before any mutating verb -- match run_crew.py's existing hazard-message tone (see the --spine argparse help text 'instead of .mcp.json's demo default' and the --spine refusal CrewLaunchError wording 'spawns no process and builds no environment, so nothing binds'). Then run the targeted three-test command and the full test_crew_launcher.py file; paste real output for both.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "RED baseline confirmed for all three new tests",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-red complete: RED confirmed for all three new tests."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the three pinned tests pass (TDD green)",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q -k \"test_build_entry_cli_door_bound_true or test_build_entry_external_door_bound_false or test_external_dispatch_prints_unbound_door_banner\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fix-1"
+        },
+        {
+          "id": "c2",
+          "statement": "full test_crew_launcher.py suite passes, no regressions",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_crew_launcher.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fix-2"
+        }
+      ],
+      "constraints": [
+        "scope fence: scripts/run_crew.py (build_entry + ExternalBackend.dispatch + their docstrings only) and tests/test_crew_launcher.py only",
+        "do not touch scripts/checklist_engine.py, scripts/hooks/spine_rail.py, .mcp.json, scripts/mcp_spine_server.py",
+        "do not touch finalize_from_exit_code or anything g1 already changed (commit f06d314e)",
+        "door_bound must be written as backend == 'cli', not backend != 'external'",
+        "the stderr banner must be unconditional within ExternalBackend.dispatch -- printed on every external dispatch, not gated on any condition"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-fix-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q -k \"test_build_entry_cli_door_bound_true or test_build_entry_external_door_bound_false or test_external_dispatch_prints_unbound_door_banner\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-fix-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_crew_launcher.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-evidence-and-result": {
+      "id": "m3-evidence-and-result",
+      "title": "Run the wiring grep, verify deliverable paths, write IMPLEMENTER_RESULT",
+      "imperative": "Run `grep -rn \"door_bound\" --include=*.py . `, state the count and every call site. Run `git check-ignore scripts/run_crew.py tests/test_crew_launcher.py; echo exit:$?` and confirm exit 1. Write IMPLEMENTER_RESULT per templates/IMPLEMENTER_RESULT.template.md to .agent-work/crew-verdict-and-door/crew-handoffs/g2-implementer-result.md with pasted red-then-green pytest output (not a summary), the exact diff, the exact banner text quoted verbatim, evidence, the wiring grep results, workflow feedback, map impact.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "fix implemented; targeted three tests and full suite green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-fix complete: implementation done, targeted 3-test filter and full suite both green (engine-verified)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "deliverable paths not git-ignored",
+          "check": {
+            "kind": "command",
+            "command": "git check-ignore scripts/run_crew.py tests/test_crew_launcher.py; test $? -eq 1"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-evidence-and-result-1"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT.md written to the exact delivery path",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/crew-verdict-and-door/crew-handoffs/g2-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-evidence-and-result-2"
+        }
+      ],
+      "constraints": [
+        "do not commit -- leave changes in the working tree for the Commander to integrate"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-evidence-and-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "git check-ignore scripts/run_crew.py tests/test_crew_launcher.py; test $? -eq 1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-evidence-and-result-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/crew-verdict-and-door/crew-handoffs/g2-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "constellation/crew-verdict-and-door/g2/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-15T17:19:58.608802+00:00",
+    "last_heartbeat": "2026-08-15T17:23:03.850689+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-15T17:23:08.798827+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff is complete and corrected: two concrete pieces required -- door_bound field in build_entry (True for cli, False for external) and an unconditional stderr banner in ExternalBackend.dispatch naming the unbound door / demo default / spine_status verification. Confirmed by direct read that ExternalBackend.dispatch builds no prompt, matching the handoff's cold-critic correction. No design decision needed beyond the two named pieces.",
+      "mechanical": false,
+      "ts": "2026-08-15T17:20:21.824693+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-red",
+      "why": "Wrote three pinned tests (two in BuildEntryTests, one near external-dispatch tests). Confirmed RED against unchanged code: 3 failed as expected -- KeyError 'door_bound' x2, empty-banner assertion failure x1. Proceeding to implement the two pieces.",
+      "mechanical": false,
+      "ts": "2026-08-15T17:20:59.479794+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-fix",
+      "why": "Added entry['door_bound'] = (backend == BACKEND_CLI) in build_entry, and an unconditional stderr banner in ExternalBackend.dispatch naming the unbound door, the .mcp.json demo default, and the spine_status verify instruction. Targeted 3-test filter: 3 passed. Full tests/test_crew_launcher.py: 172 passed, no regressions.",
+      "mechanical": false,
+      "ts": "2026-08-15T17:21:49.809008+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-evidence-and-result",
+      "why": "Ran wiring grep: 6 lines, all within build_entry's docstring/write-site or the two new tests -- no external readers yet, expected. Verified deliverable paths not git-ignored (exit 1). Wrote IMPLEMENTER_RESULT.md to the exact delivery path with pasted RED-then-GREEN pytest output, the exact diff, the exact banner text quoted verbatim, evidence, wiring grep, out-of-scope observations, map impact, workflow feedback.",
+      "mechanical": false,
+      "ts": "2026-08-15T17:23:03.850679+00:00"
+    }
+  ]
+}
