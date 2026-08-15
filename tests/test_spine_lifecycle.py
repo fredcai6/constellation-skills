@@ -694,6 +694,53 @@ class TestCloseoutRefusalAgreesWithSpineTerminal:
 
 
 # --------------------------------------------------------------------------- #
+# spine_terminal resolves THROUGH a real close_work relocation
+# (launcher-hygiene Task 2): `close_work` moves the entire work area, spine
+# included, into `.agent-work/archive/<date>-<work_id>/`. A dispatcher that
+# recorded the spine's ORIGINAL path (every crew-runs.json entry does) reads
+# a plain file-not-found at that path afterward, and `run_crew.spine_terminal`
+# used to read that as "never terminal" -- inverting a genuinely successful
+# spine-only dispatch into `failed`. These tests compose the REAL close_work
+# move with the REAL spine_terminal read (no mock of either), because the bug
+# lives in how the two behaviors compose.
+# --------------------------------------------------------------------------- #
+
+@requires_git
+class TestSpineTerminalThroughArchiveRelocation:
+    def test_terminal_spine_relocated_by_a_real_close_work_still_reads_terminal(self, repo):
+        spine = _terminal_spine()
+        area = _make_work_area(repo, "w1", "spine.json", spine)
+        original_rel = area["spine_path"].relative_to(repo)
+
+        sl.close_work(area["spine_path"], root=repo, today="2026-08-12")
+
+        assert not (repo / original_rel).exists()  # genuinely gone from where it was dispatched
+        assert run_crew.spine_terminal(original_rel, repo) is True
+
+    def test_non_terminal_spine_never_archived_still_reads_not_terminal(self, repo):
+        # Nothing to relocate through: a genuinely incomplete run's spine
+        # simply is not there, at the original path or in any archive dir --
+        # this must NOT become a rubber stamp for a crew that is not done.
+        spine = _terminal_spine(tasks={"m1": {"status": "in-progress"}})
+        area = _make_work_area(repo, "w1", "spine.json", spine)
+        original_rel = area["spine_path"].relative_to(repo)
+
+        assert run_crew.spine_terminal(original_rel, repo) is False
+
+    def test_archive_dir_for_a_prefix_colliding_work_id_is_never_matched(self, repo):
+        # An archive dir exists for "w10" -- a work id that CONTAINS "w1" as
+        # a prefix. The relocation lookup must match the work id exactly,
+        # never as a substring/prefix, or archiving w10 would let w1's own
+        # (never-archived, never-created) spine read back as terminal.
+        spine_w10 = _terminal_spine()
+        area_w10 = _make_work_area(repo, "w10", "spine.json", spine_w10)
+        sl.close_work(area_w10["spine_path"], root=repo, today="2026-08-12")
+
+        missing_w1_path = (repo / ".agent-work" / "w1" / "spine.json").relative_to(repo)
+        assert run_crew.spine_terminal(missing_w1_path, repo) is False
+
+
+# --------------------------------------------------------------------------- #
 # close_work -- refusal leaves the work area byte-for-byte untouched
 # (required evidence: criterion 1).
 # --------------------------------------------------------------------------- #

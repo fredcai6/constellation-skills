@@ -10,6 +10,30 @@ When a gate dispatches a crew, that dispatch goes through `scripts/run_crew.py`,
 
 Before `execute` and before each dispatch, run `scripts/recover_crews.py <work-id>` and only launch when it reports no unresolved running/resumable/conflicting crew; resume a recoverable attempt (`run_crew.py --resume <session>`) or explicitly abandon/relaunch rather than colliding two crews in one worktree. The wrapper is the process/launch layer only: it does not advance gates, integrate results, or touch git.
 
+## A harness-backgrounded command is never awaitable — do not park
+
+`run_crew.py` **launches** foreground/blocking, but your own **process ends when your turn ends**. The agent harness can auto-background any Bash call that runs long — and the full suite (the postcondition every gated lane must run) takes on the order of two minutes, which is enough to trigger it. Once the harness has moved a call to the background, "wait for the completion notification" is **never a valid way to end a turn**: nothing resumes your process to act on that notification, so ending the turn to wait for it is indistinguishable from abandoning the run, no matter how correctly the underlying work finishes.
+
+The fix is not "wait less" or "wait more carefully" — it is to never let a long-running step become backgroundable at all. Run it as one **foreground command that does not return until the result exists**, by polling from inside the same Bash call instead of ending your turn:
+
+```bash
+nohup <long command> > /tmp/out.log 2>&1 &
+until grep -qE '<completion pattern>' /tmp/out.log; do sleep 15; done
+tail -5 /tmp/out.log
+```
+
+Concretely, for the full-suite check that triggers this most often:
+
+```bash
+nohup env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q > /tmp/suite.log 2>&1 &
+until grep -qE '^[0-9]+ (passed|failed|error)' /tmp/suite.log; do sleep 15; done
+tail -5 /tmp/suite.log
+```
+
+The `until` loop itself is the one foreground command your turn is waiting on — it does not return until the suite's own summary line lands in the log, so there is nothing left to be silently backgrounded.
+
+When a step genuinely cannot finish inside your turn, do not park on it either: run `spine_halt block` (the `spine_halt` MCP tool with `action=block`, or the CLI `<engine> block`), recording the crew id and what you were waiting on, so a parent resumes deliberately (the E1 fail-up path). A prohibition alone ("do not park") does not prevent this — it has been stated explicitly in a launch order and still failed, because at the moment a turn ends, waiting looks like the correct and careful thing to do. Reach for the idiom above by name; do not improvise a new wait.
+
 ## Backend: CLI vs Agent-tool harness
 
 The wrapper is backend-pluggable behind one result contract (see `docs/superpowers/specs/2026-07-07-crew-backend-design.md`). Two backends:
