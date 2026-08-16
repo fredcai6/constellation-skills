@@ -1,9 +1,9 @@
 # Crash-resume state note — cleanup-f-derive-worktree
 
-- **step:** execute · leg 3 · `execute.json` gate `g2-implement` (rework 2) — under `ADMIRAL_RULING-2.md`: N2 road 1, delete the engine-side `worktree_from_spine_path`; then g3, `skip` g4 (R2) and g5 (R3).
-- **slug:** cleanup-f-derive-worktree · branch `cleanup/f-derive-worktree` · worktree `/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree` · HEAD `7756fc37` (merging `main` at `17c2cee5`)
+- **step:** execute · leg 3 · `execute.json` gate `g2-review` (rework 2) — under `ADMIRAL_RULING-2.md`: N2 road 1, delete the engine-side `worktree_from_spine_path`; then g3, `skip` g4 (R2) and g5 (R3).
+- **slug:** cleanup-f-derive-worktree · branch `cleanup/f-derive-worktree` · worktree `/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree` · HEAD `84d949eb` (`main` at `17c2cee5` merged; g2 rework 2 committed)
 - **next command:** `py scripts/checklist_engine.py --file .agent-work/cleanup-f-derive-worktree/execute.json current`
-- **pid:** foreground/blocking — `run_crew.py` dispatching `g2/implementer/attempt-3` (rework 2). If this session died mid-dispatch, run `py /home/tommy/.claude/skills/constellation-commander/scripts/recover_crews.py cleanup-f-derive-worktree` first and resume or abandon what it flags.
+- **pid:** foreground/blocking — `run_crew.py` dispatching `g2/reviewer/attempt-2` (rework 2). If this session died mid-dispatch, run `py /home/tommy/.claude/skills/constellation-commander/scripts/recover_crews.py cleanup-f-derive-worktree` first and resume or abandon what it flags.
 - **expected artifact:** `.agent-work/cleanup-f-derive-worktree/execute.json` driven to terminal, then the spine's `archive` closeout — this leg's result artifact is `.agent-work/cleanup-f-derive-worktree/crew-handoffs/execute-commander-result.md`
 
 **Read first on resume:** `LAUNCH_ORDER-3.md`, `ADMIRAL_RULING-2.md`,
@@ -21,4 +21,4 @@ parent launcher's clobber (#617) and restored by union-merge from `HEAD`.
 **Nothing is waiting on the Admiral.** Floats-in-waiting: any case where "cannot
 place" genuinely must refuse (R2's escape hatch), and publication (always theirs).
 
-_Updated: 2026-08-16T19:52:00+00:00_
+_Updated: 2026-08-16T20:22:00+00:00_

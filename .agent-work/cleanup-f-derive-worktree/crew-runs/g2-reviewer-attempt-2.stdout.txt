@@ -1,0 +1,21 @@
+**Stop hook refused, and the refusal is recorded** — in the delivered result artifact at `## On the Stop hook` (line 442), not just asserted here. The grounds, all verified above rather than recalled:
+
+- My registry entry carries **`spine: null`** with `parent: .../execute/commander/attempt-3`. No spine is bound to me.
+- `SPINE_FILE` is my **parent Commander's** spine, and its lease is **active, owned by `commander-cleanup-f-derive-worktree`** — not by me. Reloading the commander skill and driving `execute.json` would advance my parent's gate under someone else's live lease.
+
+The hook's escape clause doesn't apply either. It offers `block` for an honest stop or a waiver with human authority — but I am not blocked as a crew, and there is no check I failed to satisfy. I visited all seven survey items, recorded one `fail` with its finding, and consolidated: **verdict BLOCK, zero open items, my own lease released**. `BLOCK` here is the *review's verdict on the diff*, which is the deliverable I was dispatched to produce — not a crew stoppage to bubble up. Waiving it would be the weak-reviewer move the consolidation guard exists to prevent, and I have no authority to invent.
+
+The gate the hook calls open is my parent's, and it is open precisely because my parent is waiting for the file I just wrote.
+
+## Run complete
+
+The result artifact the handoff names exists and is the delivery:
+`.agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-reviewer-rework2-result.md`
+
+**Verdict: BLOCK** on one narrow, in-scope, comment-only defect — `scripts/checklist_engine.py`'s `main()` still says the engine derives a worktree from the spine path (`:3499`) and still asserts the unqualified pre-R1 ownership claim (`:3507`), both contradicting the same file's repaired header. They survived because neither names the deleted symbol, so every grep this gate specified was blind to them.
+
+Everything else passes, reproduced first-hand: the deletion is total and cost nothing live, behaviour is unchanged at AST level, the case table and its helpers are byte-identical to base and still fail loudly, the new anchor is genuinely load-bearing, the provenance pin bites both directions, the suite is 3170/5/0 with the 34 accounted for test by test, and both adversarial questions are answered with measurements. The result artifact's provenance labelling — this gate's novel check — is honest: nothing reconstructed has drifted or been promoted to first-hand evidence.
+
+Three triage candidates recorded, including the "third stale reference" the handoff invited (`scripts/spine_lifecycle.py`, out of scope). No float raised: I found no case the ruling did not consider.
+
+I changed no production file. Four files were mutated during verification and every one restored byte-identical by sha256; the temporary base worktree was removed and pruned.

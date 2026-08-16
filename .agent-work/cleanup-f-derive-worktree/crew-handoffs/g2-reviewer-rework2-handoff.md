@@ -55,6 +55,16 @@ So: **check the labelling, and spot-check that the reconstruction is faithful.**
   fresh measurement, is a **BLOCK**. Quiet promotion of inherited evidence to
   first-hand evidence is exactly the failure this check exists for.
 
+**One further thing the implementer found, and you should confirm.** Rework 1 had
+**not** finished: its C4 (the result artifact's behaviour-delta sentence restated
+as measured) was still open when its crew died — its `plan.json` records
+`m5-result` in-progress with both postconditions unmet. The rework-2 implementer
+completed it, amending
+`.agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-result.md`.
+Check that amendment says what R1 requires: every mutating verb rather than just
+`claim`, any spine with no active lease whether **never-claimed or released**, and
+that these verbs write state into a foreign tree.
+
 ## Survey State Location
 
 Create your survey at
@@ -65,34 +75,60 @@ predecessors' records and they stay.
 
 ## How to Inspect the Diff
 
-The review target is the **UNCOMMITTED working tree** of
+**The review target is the single commit `84d949eb`**, in
 `/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree`.
+Unlike your two predecessors, you are reviewing committed work: the Commander
+commits as gates close, because this lane has lost a crew's records twice.
 
 ```bash
-git rev-parse HEAD          # the diff base -- read it, do not trust an id in prose
-git status --porcelain      # untracked-safe; --name-only would hide additions
-git diff
+git show --stat 84d949eb
+git diff cb77ff4d..84d949eb          # base..target, the whole gate change
 git log --oneline -5
+git status --porcelain               # should be clean of production files
 ```
 
 Do **not** use `git diff main...HEAD`. `main` at `17c2cee5` was merged into this
 branch, so that range shows three other lanes' work (A, E, G) rather than this
 gate's change.
 
+**One consequence of reviewing a commit rather than a dirty tree.** The
+implementer measured 1183 → 1182 subtests and traced it to
+`tests/test_context_manifest.py`, whose `rev` tests run one subtest per **clean**
+tracked target — `scripts/checklist_engine.py` was dirty in its working tree and
+dropped out of the clean list. Now that the change is committed, expect **1183**
+again. If you see 1182, something in your tree is dirty; check before reporting it.
+
 `.agent-work/` is **not** gitignored in this repo — `git check-ignore` exits 1 on
 it. Two earlier handoffs on this lane said otherwise, confusing *untracked* with
-*ignored*. The implementer's result artifact and evidence are **new files**, so
-they appear in `git status` as untracked, not in `git diff`. That is not a defect
-and not a scope breach; the Commander commits them.
+*ignored*. The implementer's result and evidence are committed in `84d949eb`
+alongside the code.
 
 ## Close Criteria
 
 APPROVE requires all of these. Each is a check you run.
 
-1. **The deletion is total.**
-   `grep -rn "worktree_from_spine_path" --include=*.py scripts/` returns zero.
-   `AGENT_WORK_DIR` is gone from `scripts/checklist_engine.py` and referenced
-   nowhere. State both counts.
+1. **The deletion is total, and the four surviving references are each defensible.**
+   The repo-wide grep is the check:
+
+   ```bash
+   grep -rn "worktree_from_spine_path" --include=*.py --include=*.md . \
+     | grep -v '^./.agent-work/' | grep -v '^./map/'
+   ```
+
+   It returns **four** lines and every one must be a mention, never a use:
+   `scripts/hooks/spine_rail.py` and `tests/test_spine_rail.py` (**fenced, g3's**,
+   stale and known — **not** a finding), plus
+   `tests/test_spine_origin_isolation.py` and `tests/test_worktree_derivation.py`,
+   where the implementer names the symbol deliberately in order to record that it
+   was deleted and where it re-lands. Check those last two say something **true**.
+   Zero references remain in `scripts/checklist_engine.py`. `AGENT_WORK_DIR` is
+   gone from that file and referenced nowhere in the repo. State every count.
+
+   **A correction I owe you:** the implementer handoff's C1 demanded zero hits
+   under `scripts/` while its own exclusions fenced the one file under `scripts/`
+   that produces a hit. That was my error, and the implementer flagged it. The
+   criterion above is what C1 should have said. Do not hold the implementer to
+   the broken wording.
 2. **Nothing live went with it.** The deleted function had one production
    reference — its own definition. Verify that independently against the diff
    base rather than taking it from the result: check out the base version of

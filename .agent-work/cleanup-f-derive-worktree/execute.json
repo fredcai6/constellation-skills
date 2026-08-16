@@ -1302,6 +1302,16 @@
       "id": "tc3",
       "from": "g1-review",
       "statement": "scripts/validate_spine.py's falsifiable-zero-collected rule reports a pytest -k check that collects zero tests as one that 'can never fail'. Measured at e36e630b: pytest exits 5 on no-tests-collected and 4 on a missing file, so such a check DOES fail. The rule inverts the truth and discourages exactly the red-on-an-empty-diff gate checks a cold critic asked for."
+    },
+    {
+      "id": "tc4",
+      "from": "g2-implement",
+      "statement": "The three prose copies of the leaseless-widening claim (scripts/checklist_engine.py's module header, tests/test_spine_origin_isolation.py's module docstring, docs/CHECKLIST_SCHEMA.md) have no mechanical guard in the repo. The drift check that keeps them honest lives under .agent-work/, is written fresh by whichever crew needs it, and has now been hand-updated twice -- catching real drift BOTH times. A repo-level test asserting the three copies carry one claim would make the guard survive the crew that wrote it. Raised by the rework-1 implementer, told a mechanical check was not required, and re-raised by the rework-2 implementer with the second data point."
+    },
+    {
+      "id": "tc5",
+      "from": "g2-implement",
+      "statement": "A crew's completion contract is a result artifact written LAST, so a crash anywhere before that write loses the entire write-up even when the implementation and every measurement survive on disk. The g2 rework-1 implementer finished and verified its work (3196 passed / 5 skipped / 0 failed) and died in its final step; its result had to be reconstructed by a successor from its plan.json and evidence files. Worth considering whether a crew should checkpoint a partial result artifact as it goes, the way it already checkpoints evidence."
     }
   ],
   "blockers": [],

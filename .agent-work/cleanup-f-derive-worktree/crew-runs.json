@@ -333,5 +333,33 @@
     "result_present": true,
     "result_fresh": true,
     "verdict_source": "result"
+  },
+  {
+    "crew_id": "constellation/cleanup-f-derive-worktree/g2/reviewer/attempt-2",
+    "work_id": "cleanup-f-derive-worktree",
+    "gate": "g2",
+    "role": "reviewer",
+    "attempt": 2,
+    "status": "completed",
+    "session_name": "constellation/cleanup-f-derive-worktree/g2/reviewer/attempt-2",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 1299853,
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
+    "handoff": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-reviewer-rework2-handoff.md",
+    "result": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-reviewer-rework2-result.md",
+    "spine": null,
+    "parent": "constellation/cleanup-f-derive-worktree/execute/commander/attempt-3",
+    "stdout": ".agent-work/cleanup-f-derive-worktree/crew-runs/g2-reviewer-attempt-2.stdout.txt",
+    "stderr": ".agent-work/cleanup-f-derive-worktree/crew-runs/g2-reviewer-attempt-2.stderr.txt",
+    "started_at": "2026-08-16T20:10:09.647524+00:00",
+    "last_heartbeat": "2026-08-16T20:28:17.182860+00:00",
+    "completed_at": "2026-08-16T20:28:17.182860+00:00",
+    "abandoned": false,
+    "model": "opus",
+    "exit_code": 0,
+    "result_present": true,
+    "result_fresh": true,
+    "verdict_source": "result"
   }
 ]

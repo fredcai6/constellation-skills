@@ -1,0 +1,86 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "diff_ref": "commit 84d949eb (base cb77ff4d..84d949eb), g2 rework 2: delete checklist_engine.worktree_from_spine_path + AGENT_WORK_DIR, re-scope tests/test_worktree_derivation.py to the hook copy, re-anchor tests/test_spine_origin_isolation.py, repair prose in scripts/checklist_engine.py and docs/CHECKLIST_SCHEMA.md, regenerate map/INDEX.md",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md (Verification Discipline; Evidence You Owe Back), docs/agents/GLOSSARY.md, ADMIRAL_RULING-2 N2, ADMIRAL_RULING-1 R1, references/global-crew.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "No function grew. The diff removes one 40-line function and adds zero executable lines under scripts/ (13 added lines, all comments). main() and require_session are untouched executably -- AST dump-comparison against cb77ff4d shows zero surviving top-level nodes changed.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "No class gained members. tests/test_spine_origin_isolation.TheEngineTakesNoAmbientReading has one method renamed and re-anchored, same count. checklist_engine.py is a large module but this change shrinks it by 68 lines.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "FLAGGED, and it is the mechanism behind this review's blocker. The same ~7-sentence rationale block is now hand-maintained in FOUR copies -- scripts/checklist_engine.py's module header, tests/test_spine_origin_isolation.py's module docstring, docs/CHECKLIST_SCHEMA.md's origin section, and tests/test_worktree_derivation.py's module docstring -- with no repo-level guard keeping them equal. The only guard is check_three_copies.py, which lives under .agent-work/, covers three of the four files, is rewritten by each crew that needs it, and has now been hand-patched twice. The cost is measured, not theoretical: the previous Fowler pass flagged duplicated-code on exactly these copies; rework 1 was ordered because one copy was repaired and the others were not; and this review BLOCKS because a fifth copy of the same claim (checklist_engine.py main(), the comment at :3499/:3507) was missed again. A sixth lives outside scope in scripts/spine_lifecycle.py's build_origin docstring. Raised by the implementer itself as tc-a and re-raised here with a third data point. No documented repo standard sanctions the duplication, so it is flagged rather than overridden.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "No method reaches into another object's data. The deletion removes a pure path function; the surviving hook copy operates only on its own argument.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "No recurring parameter group appears or changes. CASES tuples (id, path, expected) are unchanged and byte-identical to base.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "The derivation trades in str paths and None, which is the stdlib-only constraint on spine_rail, not an avoidable modelling choice. Nothing in the diff widens it.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "No signature in the diff gained a parameter. The deleted function took one argument.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "FLAGGED, distinct from duplicated-code in what it predicts. One conceptual change -- 'the engine no longer derives a worktree from a spine path' -- forced hand-edits in four separate files and SHOULD have forced six. That the change surface is discovered by grep rather than by the type system is why the miss happened: the stale passages at checklist_engine.py:3499/:3507 and in spine_lifecycle.py's build_origin never name the deleted symbol, so the implementer's symbol-level C1 grep could not see them. A claim-level sweep found them. The prediction is that #610's wave, which RE-LANDS this symbol, will pay the same cost in the same places and is likely to miss the same ones.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "The files in the diff each change for one reason here. checklist_engine.py is large and changes for many reasons across the repo's history, but this diff touches it for exactly one.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "No chained navigation added or removed. The deleted function used flat os.path calls.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "overridden",
+      "finding": "The smell IS present in form: tests/test_worktree_derivation.py keeps the IMPLEMENTATIONS dict, the _require indirection and a parametrization over implementations while exactly ONE implementation exists, and keeps 16 cases whose second consumer does not currently exist. Over one implementation that machinery is generality with no present user. It is not flagged, for the reason logged in the override. Note also that the change as a whole REMOVES speculative generality -- deleting a definition kept for a future consumer is the entire point of the ruling.",
+      "override": {
+        "repo_standard": "ADMIRAL_RULING-2 N2 (2026-08-16), the ruling this gate transcribes: 'Keep tests/test_worktree_derivation.py's shared case table, scoped to the hook copy. It is the specification of the rule, and #315 should re-derive against it rather than from scratch.'",
+        "reason": "The retained generality is a ruled requirement with a NAMED consumer and a named wave (#315 in #610's wave), not a guess about a possible future. It is also load-bearing today: _require and IMPLEMENTATIONS are exactly what make the table fail the WHOLE file when an implementation disappears rather than silently shrinking to an empty parametrization -- which I reproduced going red and back to green. Removing the indirection would satisfy Fowler and break the repo's documented 'a check that cannot fail is indistinguishable from one that passed' rule in CREW_CONTEXT.md. The standard subordinates the smell."
+      }
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "The smell is present by volume: this diff's entire net addition under scripts/ is comment prose (13 lines, 0 executable), and the test files carry multi-paragraph docstrings explaining why an anchor was chosen and why a deleted test is not coming back. A naive Fowler read flags that as commentary compensating for code that should speak for itself.",
+      "override": {
+        "repo_standard": "docs/agents/CREW_CONTEXT.md 'Evidence You Owe Back' and the repo's demonstrated practice throughout scripts/checklist_engine.py of recording DECISION RATIONALE in code prose; plus this gate's own handoff constraint: 'if any reason is recorded ONLY in the engine copy, carry it to the case table's docstring rather than losing it.'",
+        "reason": "These comments do not explain away unclear code -- they carry rulings, superseded decisions and the reasons a rule takes the shape it does, for a later wave that must re-derive against them. The handoff made carrying them a close criterion, and my adversarial check confirmed three reasons existed ONLY in the deleted copy and would have left the repo entirely had they not been written down. That is durable rationale, not deodorant. The override is NOT a blanket pass: the same practice is what let a stale comment survive at checklist_engine.py:3499, which I flag under duplicated-code and shotgun-surgery and which drives this review's BLOCK."
+      }
+    }
+  ],
+  "rail_exception": null
+}

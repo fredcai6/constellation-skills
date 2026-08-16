@@ -175,8 +175,8 @@
   },
   {
    "issue_id": "g2",
-   "outcome": "Stamp-and-compare retired: origin_worktree_refusal, its two verb sets and the per-guarded-verb git rev-parse --show-toplevel are gone; origin.worktree is written as provenance and read by nothing for a decision",
-   "evidence": "Committed b8557ff4; reworked under ADMIRAL_RULING-1 R1 (see D5). Reviewer verified by command that no rev-parse --show-toplevel remains in checklist_engine.py and that origin has exactly 2 references under scripts/, both writes; the provenance pin was mutation-tested in both directions."
+   "outcome": "Stamp-and-compare retired: origin_worktree_refusal, its two verb sets and the per-guarded-verb git rev-parse --show-toplevel are gone; origin.worktree is written as provenance and read by nothing for a decision FINAL SHAPE after ADMIRAL_RULING-2 N2: the engine-side worktree_from_spine_path and the AGENT_WORK_DIR constant it was the sole user of are deleted too, so the engine now reads no location at all -- neither ambient nor derived. The shared case table survives whole, re-scoped to spine_rail._worktree_from_spine as the rule's specification for #315 to re-derive against; test_the_two_copies_agree goes with the second copy, since a drift test over one implementation cannot fail.",
+   "evidence": "Committed b8557ff4; reworked under ADMIRAL_RULING-1 R1 (see D5). Reviewer verified by command that no rev-parse --show-toplevel remains in checklist_engine.py and that origin has exactly 2 references under scripts/, both writes; the provenance pin was mutation-tested in both directions. Rework 2 (commit 84d949eb): pure deletion under scripts/ -- 68 lines removed, 13 added and all comments; top-level names 122 -> 120 removing exactly {AGENT_WORK_DIR, worktree_from_spine_path} with no other top-level node changed; refusal vocabulary unchanged (REFUSED 8, raise EngineError 82, sys.exit 1). Suite 3204 -> 3170 passed / 5 skipped / 0 failed, the fall of 34 accounted for as collection (16 engine-parametrized cases, the 16-case drift test, 2 engine-only singletons) and cross-checked against whole-suite collection totals (3209 - 34 = 3175) so 'another file also lost tests' is excluded rather than assumed."
   }
  ],
  "wave_evidence": [
@@ -251,6 +251,12 @@
    "expected": "The claim is stale: the door refuses by name as of e3b5a1c8",
    "observed": "Stale, and more so than the claim states. scripts/mcp_spine_server._spine_from_env collapses THREE readings of 'nothing named' into None -- unset (the old module-scope KeyError at import, which killed the server before it could refuse and showed the client only 'Connection closed'), empty (the case production actually takes, since .mcp.json's ${SPINE_FILE:-} expands to an empty string and Path('').resolve() is the process cwd), and whitespace. Whether the named path is a readable spine is asked per call by _unbound_refusal, not once at import, because a spine's directory can be removed while the process runs (#603, #604).",
    "source": "scripts/mcp_spine_server.py:_spine_from_env docstring; grep for KeyError across scripts/hooks/spine_rail.py and tests/test_spine_rail.py returns nothing"
+  },
+  {
+   "claim": "Deleting the engine-side copy should shrink the diff, not grow it (ADMIRAL_RULING-2)",
+   "expected": "A net subtraction under scripts/ with no behaviour change",
+   "observed": "Held. 68 removed / 13 added under scripts/, every added line a comment; 0 non-comment additions. Measured three ways -- line census, AST top-level-name census, and a refusal-vocabulary count -- rather than by reading the diff.",
+   "source": ".agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-no-refusal.txt; commit 84d949eb"
   }
  ],
  "discrepancies": [

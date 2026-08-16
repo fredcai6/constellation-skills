@@ -4,7 +4,7 @@
   "mechanical": {
     "run": "cleanup-f-derive-worktree",
     "project": "constellation-skills",
-    "role": "reviewer",
+    "role": "agent",
     "refusals": 1,
     "spine-step": "r0-context",
     "rework-count": 0,
@@ -16,6 +16,6 @@
   "refused": [],
   "run": {
     "work_id": "cleanup-f-derive-worktree",
-    "generated_at": "2026-08-16T18:27:44Z"
+    "generated_at": "2026-08-16T20:11:13Z"
   }
 }
