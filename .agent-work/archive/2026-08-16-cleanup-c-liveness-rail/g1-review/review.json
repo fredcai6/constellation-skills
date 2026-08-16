@@ -1,0 +1,179 @@
+{
+  "work_id": "cleanup-c-liveness-rail",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded references/global-crew.md, references/global-everyone.md, docs/agents/CREW_CONTEXT.md, the g1-review-handoff.md, the diff (git show cbd18faf), and tests/test_crew_launcher.py's new EntryLivenessTests.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "entry_liveness(entry, now, alive=None) -> 'active'|'stale'|'unknown' added at scripts/run_crew.py:264, wired into active_duplicate at :330 (stale->continue frees slot, active/unknown->return entry blocks). Verified all 9 close criteria by reading the function body directly (not the docstring): (1) only 3 literal return strings; (2) three ordered buckets -- pid truthy -> alive(pid) at line ~348, pid falsy+BACKEND_EXTERNAL -> heartbeat-age vs HEARTBEAT_STALE_SECONDS, else -> 'unknown' directly with no heartbeat lookup (confirmed via test_liveness_legacy_bucket_no_pid_no_backend_is_unknown_no_heartbeat_lookup); (3) grep for 'recover_crews' inside run_crew.py shows zero import/call of classify_entry, only comment mentions; (4) active_duplicate's continue/return policy matches exactly; (5) grep for 'abandoned' shows no write path in the diff, only is_abandoned() reads; (6) HEARTBEAT_STALE_SECONDS=28800 is a named module constant at run_crew.py:52 with a cited-evidence comment (archived epic-568-441/epic-568-510 registries); (7) git diff --stat cbd18faf~1 cbd18faf -- scripts/recover_crews.py is empty (reproduced); (8) git show cbd18faf --stat shows only scripts/run_crew.py and tests/test_crew_launcher.py; (9) process_alive's def block at run_crew.py:971 is untouched -- git show cbd18faf -- scripts/run_crew.py | grep -A2 '^-.*def process_alive' returns nothing.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Diff touches exactly scripts/run_crew.py (new entry_liveness + HEARTBEAT_STALE_SECONDS + active_duplicate's new signature/body, plus the 'Callable'/'timedelta' imports it needs) and tests/test_crew_launcher.py (a purely additive new EntryLivenessTests class plus the 'timedelta' import its fixtures need). Confirmed test_duplicate_active_lock_is_refused (line 677) is byte-identical to before -- its fixture (no pid/backend key) is the exact bucket-3 case and it still passes unmodified. No other existing test in the file was touched. scripts/recover_crews.py, scripts/hooks/spine_rail.py, and the other fenced files (checklist_engine.py, gauge_reader.py, gauge_writer_hook.py, mcp_spine_server.py, .mcp.json) show zero diff -- confirmed via git show cbd18faf --stat (2 files only) and git diff --stat cbd18faf~1 cbd18faf -- scripts/recover_crews.py (empty).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently reproduced the suite myself: rm -rf __pycache__ dirs; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_crew_launcher.py -> '181 passed in 0.60s', matching the pasted evidence exactly. Cross-checked the two evidence numbers cited in the HEARTBEAT_STALE_SECONDS comment against the real archived registries named: (a) .agent-work/archive/2026-08-15-epic-568-441/crew-runs.json's constellation/epic-568-441/g1/implementer/attempt-1 entry -- started_at/last_heartbeat 2026-08-14T18:10:25.409092+00:00 (never advanced), matches the test fixture _external_phantom_entry field-for-field; (b) .agent-work/archive/2026-08-15-epic-568-510/crew-runs.post-archive.json's constellation/epic-568-510/g2-repair/commander/attempt-1 entry, status completed, started_at 2026-08-14T21:16:14.669216+00:00 -> completed_at 2026-08-15T00:46:17.628910+00:00 = 12602.96s, matching the comment's cited '~3h30m (12602s)' to the second. The 8h constant's evidence is real, not fabricated. Evidence items 1-4 in the test file (test_evidence_1..4) each exercise one active_duplicate direction (cli-dead-frees, cli-live-blocks, external-past-8h-frees, external-within-8h-blocks) against the real archived phantom shape, and test_duplicate_active_lock_is_refused is the regression guard for the untouched bucket-3 case.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Checked each named constraint: (1) entry_liveness is genuinely pure -- read its full body, the only 'now'/'alive' uses are the caller-supplied params, no datetime.now()/os.kill/process read inside it (the 'alive = process_alive' line is a name-binding of the default sentinel, not a call); active_duplicate's own datetime.now(timezone.utc) call is confined to the wrapper's own now=None default-resolution, matching the handoff's own None-sentinel note. (2) Existing positional callers of active_duplicate need zero code changes: now/alive are keyword-only after '*', confirmed via the CLI call site and test_duplicate_active_lock_is_refused's unchanged 5-positional-arg call. (3) Adversarial mutation check (not just trusting pasted evidence): temporarily replaced the 'if entry_liveness(...) == \"stale\": continue' branch with a bare 'return entry' (always-block), reran the suite -- test_evidence_1 and test_evidence_3 both failed exactly as expected (AssertionError: entry is not None), proving the tests are load-bearing and not vacuously green; restored the file and reran -- 181 passed, git status showed zero diff after restore. test_duplicate_active_lock_is_refused and the process_alive tests are confirmed unmodified in the diff.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map orientation is DEGRADED-UNPARSEABLE at baseline (zero authored map anchors corpus-wide, per the handoff) -- there is no recorded architecture artifact for this change to diverge from, so nothing here needs Cartographer reconciliation. The implementer's Map Impact notes (structural: entry_liveness placed above active_duplicate, HEARTBEAT_STALE_SECONDS near ACTIVE_STATUSES; capability: duplicate guard now corroborates liveness; constraints: process_alive reused not modified, no-abandonment-by-inference honored) match the diff -- verified directly against the file, not just the claim. One durable out-of-scope observation (the 8h window really measures time-since-dispatch for external entries, since last_heartbeat is never rewritten after dispatch) was already surfaced by the implementer and is re-flagged here as tc1 so it is not dropped at this gate boundary.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/cleanup-c-liveness-rail/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/cleanup-c-liveness-rail/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/cleanup-c-liveness-rail/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Ran the Fowler baseline pass against commit cbd18faf (scripts/run_crew.py's entry_liveness/active_duplicate, tests/test_crew_launcher.py's EntryLivenessTests). All 12 baseline smells given a verdict in .agent-work/cleanup-c-liveness-rail/FOWLER_PASS.json: 10 absent, 2 overridden (both logged, neither self-asserted): primitive-obsession (entries stay plain dicts, matching the module's existing is_abandoned/entry_backend/load_registry convention -- introducing a typed Entry class here alone would fragment one representation into two) and long-parameter-list (active_duplicate's 7 params: the 2 new ones are keyword-only, default to the real clock/process check, and mirror the process_alive test-injection-seam precedent already documented at run_crew.py:971; keyword-only placement is also what the handoff's own zero-caller-change constraint required). Zero smells flagged -- none needed a blocking or observational finding. verify_fowler_pass.py .agent-work/cleanup-c-liveness-rail/FOWLER_PASS.json exited 0: 'fowler pass ok ... smells=12, flagged=[], overridden=[primitive-obsession, long-parameter-list]'.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/cleanup-c-liveness-rail/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "cbd18faf satisfies g1's close criteria: entry_liveness is a genuinely pure, literal three-bucket function (pid-liveness / external-heartbeat-age / unknown-directly, no heartbeat fallthrough on bucket 3), wired into active_duplicate's fail-toward-active policy (stale->frees, active|unknown->blocks) with zero write-path side effects. recover_crews.py and every fenced file show zero diff; process_alive is byte-identical; scope is exactly the two allowed files, tests purely additive. Independently reproduced the suite (181 passed) and independently verified the HEARTBEAT_STALE_SECONDS evidence against the two named archived registries (exact field/second match). An adversarial mutation (removing the stale-frees branch) made the load-bearing tests fail as expected, then was reverted cleanly, proving the tests are not vacuous. One pre-existing out-of-scope observation (external heartbeat never re-touched after dispatch) re-flagged as tc1 for Triage. Fowler pass: 12/12 smells visited, 2 logged overrides (primitive-obsession, long-parameter-list), 0 flags; verify_fowler_pass.py exited 0."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "External-backend registry entries' last_heartbeat is written once at dispatch and never updated again (confirmed by inspecting build_entry's external-backend construction in scripts/run_crew.py), so HEARTBEAT_STALE_SECONDS really measures time-since-dispatch, not time-since-last-observed-life. A genuinely healthy long-running external crew nearing 8h will eventually misread as stale purely from age. Already named by the implementer's own g1-implement-result.md Out-of-scope observations; re-flagging here so it survives to Commander/Triage rather than being dropped. Candidate: a periodic heartbeat-writer for external-backend entries (re-touch last_heartbeat on some liveness signal), tracked as future work, not required for this gate."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/cleanup-c-liveness-rail/g1-review/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-16T13:04:47.730105+00:00",
+    "last_heartbeat": "2026-08-16T13:08:41.812864+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T13:09:20.748251+00:00"
+  }
+}

@@ -512,27 +512,80 @@ def binding_key(payload: dict):
         return None
 
 
+def _session_keys(binding: dict, sid) -> list[str]:
+    """The ordered list of `binding` keys that "this session's view" merges:
+    the bare `sid` key (if present) plus every per-agent key
+    `sid + BINDING_KEY_SEP + <agent_id>`, in `binding`'s own iteration order.
+
+    Reproduces session_view's exact two-branch asymmetry on purpose, not
+    tidied into one coerced-to-str check: the bare-key branch is an untyped
+    `key == sid` equality (whatever type `sid` is), while the composite
+    branch requires `isinstance(key, str) and key.startswith(prefix)` --
+    a non-str key can never match the prefix branch, but CAN match the bare
+    branch if `sid` itself is that same non-str value. `session_view` and
+    `session_view_provenance` both fold over this SAME list so they can never
+    disagree about what's visible to `sid`. Never raises; [] on unusable
+    input (falsy `sid`, non-dict `binding`).
+    """
+    try:
+        if not sid:
+            return []
+        prefix = "{sid}{sep}".format(sid=sid, sep=BINDING_KEY_SEP)
+        keys = []
+        for key in (binding or {}).keys():
+            if key == sid or (isinstance(key, str) and key.startswith(prefix)):
+                keys.append(key)
+        return keys
+    except Exception:
+        return []
+
+
 def session_view(binding: dict, sid) -> dict:
     """The merged `{abs_spine_path: entry}` a harness session can see: the bare
     `sid` key plus every per-agent key `sid + BINDING_KEY_SEP + <agent_id>`.
 
     Readers (decide_stop, decide_session_start) must keep seeing every spine
     they saw before the per-agent split, so they read through this view rather
-    than `binding[sid]`. The prefix test uses the separator on purpose -- a key
-    that merely starts with the sid (`<sid>-something`) is a different session,
-    not a child of this one. Never raises; returns {} on anything unusable.
+    than `binding[sid]`. Never raises; returns {} on anything unusable.
     """
     merged = {}
     try:
         if not sid:
             return {}
-        prefix = "{sid}{sep}".format(sid=sid, sep=BINDING_KEY_SEP)
-        for key, entries in (binding or {}).items():
+        binding = binding or {}
+        for key in _session_keys(binding, sid):
+            entries = binding.get(key)
             if not isinstance(entries, dict):
                 continue
-            if key == sid or (isinstance(key, str) and key.startswith(prefix)):
-                merged.update(entries)
+            merged.update(entries)
         return merged
+    except Exception:
+        return {}
+
+
+def session_view_provenance(binding: dict, sid) -> dict[str, str]:
+    """Maps each `abs_spine_path` in `session_view(binding, sid)`'s result to
+    the binding key that sourced it -- the bare `sid`, or a composite
+    `sid#agent_id` key.
+
+    Built from the SAME `_session_keys(binding, sid)` list `session_view`
+    folds over, so the two can never disagree about what's visible to `sid`.
+    Last-key-wins on a path collision, matching `session_view`'s own
+    `dict.update` overwrite semantics exactly (later keys in `_session_keys`
+    order win, same as a later `merged.update(entries)` call overwriting an
+    earlier one). Never raises; {} on falsy `binding`/`sid`.
+    """
+    try:
+        if not binding or not sid:
+            return {}
+        owners = {}
+        for key in _session_keys(binding, sid):
+            entries = binding.get(key)
+            if not isinstance(entries, dict):
+                continue
+            for spine_path in entries.keys():
+                owners[spine_path] = key
+        return owners
     except Exception:
         return {}
 
@@ -1320,6 +1373,29 @@ def _mid_flight_reason(spine: dict, aid) -> str:
     ).format(aid=aid, imp=imperative)
 
 
+def _owning_session_reason(spine_path: str, owner_key: str) -> str:
+    """Stop-block reason for a mid-flight entry reachable ONLY through a
+    per-agent key (`owner_key`) that is not this stopping session's own bare
+    id -- e.g. a subordinate subagent's gate, visible to the parent purely
+    because they share a harness `session_id`.
+
+    Deliberately withholds the owning gate's next imperative (#549): a
+    subordinate's own next-step text rendered into the PARENT's Stop-block
+    reason reads as an instruction for the parent to go execute, which is not
+    this session's gate to drive. Still names the stop as BLOCKED and points
+    at who actually owns it, so the parent does not read silence as "done."
+    """
+    return (
+        "SPINE MID-FLIGHT (foreign-owned): a gate on {spine} is still open "
+        "under {owner} -- STILL BLOCKED, but this is not your gate to drive. "
+        "It belongs to a different session/agent (bound under a per-agent "
+        "key you merely share a harness session with), so do not act on its "
+        "next step yourself. Let that session/agent finish or bubble its own "
+        "blocker; if you believe it has gone silent, investigate that "
+        "session rather than ending your own turn to wait on it here."
+    ).format(spine=spine_path, owner=owner_key)
+
+
 def _entry_mid_flight_view(data: dict, entry: dict):
     """Per-entry mid-flight check, unchanged in substance from the pre-#202
     single-entry logic -- just factored so decide_stop can apply it to every
@@ -1363,6 +1439,12 @@ def decide_stop(data: dict, project_dir: Path) -> dict:
         # subagent now lives under `sid#agent_id`, and the stopping session
         # must still see it.
         sid_bindings = session_view(binding, sid)
+        # Which binding key sourced each visible path (#549) -- a bare-sid
+        # entry renders the ordinary imperative-bearing reason, while an
+        # entry reachable ONLY through a per-agent key gets the foreign-owner
+        # wording instead, so the parent never sees a subordinate's own next
+        # step rendered as if it were the parent's instruction to act on.
+        owners = session_view_provenance(binding, sid)
         if not sid_bindings:
             return {}  # no binding -> allow
 
@@ -1392,9 +1474,21 @@ def decide_stop(data: dict, project_dir: Path) -> dict:
             # Escape hatch: allow the stop, but leave a loud marker.
             return {"continue": True, "systemMessage": STUCK_MSG}
 
-        _, spine, aid = mid_flight[0]
-        reason = _mid_flight_reason(spine, aid)
-        ctx = "ENGINE current -> " + reconstruct_current(spine)
+        spine_path, spine, aid = mid_flight[0]
+        owner_key = owners.get(spine_path)
+        if owner_key is None or owner_key == sid:
+            # Same-session entry (or provenance couldn't place it -- fail
+            # toward the pre-existing behavior): unchanged wording.
+            reason = _mid_flight_reason(spine, aid)
+            ctx = "ENGINE current -> " + reconstruct_current(spine)
+        else:
+            # Foreign-owned: reachable only through a per-agent key that is
+            # not this session's own bare id. Withhold the owning gate's next
+            # imperative from BOTH rendered fields -- reason (#549's primary
+            # leak) and additionalContext (reconstruct_current would leak the
+            # same imperative through `ACTIVE {aid} [...] -- {imperative}`).
+            reason = _owning_session_reason(spine_path, owner_key)
+            ctx = "ENGINE current -> (withheld: gate belongs to {})".format(owner_key)
         return {
             "decision": "block",
             "reason": reason,

@@ -1,0 +1,751 @@
+{
+  "work_id": "cleanup-c-liveness-rail",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-verify"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md (docs/agents/engine-config.json absent this repo, no substitution needed -- optional ref). Confirm the frozen plan's intent and scope from MISSION_FRAME.md and PLAN_CONVERGENCE.md, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Global doctrine, ORCHESTRATOR_CONTEXT.md, GLOSSARY.md loaded at the parent spine's context step; MISSION_FRAME.md and PLAN_CONVERGENCE.md confirm intent/scope for this execute run."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "#599 corroborated liveness: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate from PLAN_CONVERGENCE.md's g1 section: add entry_liveness(entry, now, alive=process_alive) -> 'active'|'stale'|'unknown' as a new pure function directly above active_duplicate (scripts/run_crew.py:253), with the explicit THREE-bucket rule (pid truthy -> process_alive(pid); pid falsy AND entry_backend(entry)==BACKEND_EXTERNAL -> heartbeat-age vs HEARTBEAT_STALE_SECONDS; pid falsy AND NOT external -> 'unknown' directly, no heartbeat lookup -- this bucket is NOT the same as recover_crews.classify_entry's pid=None handling, which is the OPPOSITE of fail-toward-active and must not be ported). Add HEARTBEAT_STALE_SECONDS = 28800 (8h) as a documented module constant citing the corpus-measured evidence in PLAN_CONVERGENCE.md. Wire active_duplicate to accept keyword-only now=None, alive=process_alive (existing call sites' signatures stay source-compatible; the RETURN VALUE changes by design -- a corroborated-dead entry now frees the slot) and apply fail-toward-active (stale frees; active and unknown both still block). Do not touch scripts/recover_crews.py (read precedent only) or any fenced file. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT: attach g1-implement --type implementer-result --field status=<value> (lowercase, verbatim from the returned Return status).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "Files: scripts/run_crew.py only. Fenced: scripts/checklist_engine.py, scripts/gauge_reader.py, scripts/hooks/gauge_writer_hook.py, scripts/mcp_spine_server.py, .mcp.json -- do not touch."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/run_crew.py:253 active_duplicate()",
+          "scripts/run_crew.py:864 process_alive()",
+          "scripts/run_crew.py:47 ACTIVE_STATUSES",
+          "scripts/run_crew.py:1393 external-backend pid=None construction",
+          "scripts/run_crew.py:1800 the one launch-refusal call site"
+        ],
+        "capability": [
+          "Crew launch-refusal / duplicate guard -- the predicate a fresh launch call relies on to know whether a gate/role/worktree slot is already held"
+        ],
+        "constraint": [
+          "scripts/recover_crews.py is read-only precedent this lane, not owned -- its pid=None mapping (alive(None)==False -> RESUMABLE/NEEDS_ABANDON) must NOT be ported, it contradicts fail-toward-active",
+          "os.kill(pid,0) is POSIX-only; process_alive's injectable seam must not be broken; state Windows behavior even though CI cannot confirm it"
+        ],
+        "decision": [
+          "decision:fail-toward-active -- uncorroborated liveness reports active, never free. @grade: settled/human \u00b7 leans g1-implement",
+          "decision:three-states-not-two -- the query returns active/stale/unknown, never a collapsed boolean. @grade: settled/measured \u00b7 leans g1-implement",
+          "decision:pidless-means-heartbeat -- external entry corroboration is heartbeat age vs an 8h window (28800s), measured from the corpus: longest healthy completed external run ~3h30m (12602s), shortest confirmed phantom ~22h27m (80820s) unmoved since dispatch. @grade: settled/measured \u00b7 leans g1-implement",
+          "decision:no-abandonment-by-inference -- reporting stale is the deliverable; never write abandoned as a side effect of this read. @grade: settled/human \u00b7 leans g1-implement"
+        ],
+        "evidence": [
+          "tests/test_crew_launcher.py::test_duplicate_active_lock_is_refused (existing, must keep passing unmodified -- its fixture has no pid and no backend key, exercises the third 'unknown' bucket)"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-implement",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "#599 corroborated liveness: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, the inbound map anchors from g1-implement, and the evidence from IMPLEMENTER_RESULT. Explicitly instruct the reviewer to verify: (1) the three-bucket rule is literally present (not two buckets), (2) the pid-less/non-external bucket returns 'unknown' and never silently reuses recover_crews' opposite mapping, (3) active_duplicate's fail-toward-active policy blocks on both 'active' and 'unknown', frees only on 'stale', (4) no write path marks an entry abandoned, (5) recover_crews.py and every fenced file are untouched (diff shows zero lines). Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received (g1-implement complete)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-review",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-3",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-review",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "#599 corroborated liveness: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's side-effects against the world yourself per global-everyone.md (re-read the actual diff, confirm the three-bucket rule and fail-toward-active policy are literally in the code, confirm recover_crews.py/fenced files are untouched), then advance -- the command postcondition re-runs on advance. BLOCK: return to g1-implement for rework or raise a blocker. Log any out-of-scope finds as triage candidates and record REPLAN_INPUT.json evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received (g1-review complete, APPROVE)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "clean __pycache__, tests/test_crew_launcher.py passes in full (existing + new liveness tests)",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_crew_launcher.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2",
+          "attested": {
+            "evidence": "e-g1-review-2",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-integrate",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_crew_launcher.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "#549 provenance-aware Stop reason: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate from PLAN_CONVERGENCE.md's g2 section: extract _session_keys(binding, sid) -> list[str] in scripts/hooks/spine_rail.py as the single source of truth for which binding keys session_view merges (must reproduce session_view's EXACT current two-branch asymmetry: 'key == sid' untyped vs the prefix branch's isinstance(key, str) guard -- not a tidied reimplementation). Rewrite session_view as a thin fold over _session_keys with an UNCHANGED return shape (the existing test_session_view_merges_one_bare_and_two_composite_keys must keep passing byte-for-byte, and decide_session_start -- the other session_view caller -- must be untouched in code and behavior). Add session_view_provenance(binding, sid) -> dict[path, owning_key] built from the same _session_keys list. In decide_stop, look up each mid-flight entry's owning key and branch BOTH the rendered reason AND the additionalContext (reconstruct_current(spine) embeds the same imperative the fix removes from reason -- this is the same leak through a second field, in scope): bare-sid-owned entries keep today's _mid_flight_reason/reconstruct_current wording; per-agent-key-only entries get a new _owning_session_reason(...) naming the owning session and withholding the imperative from both fields. The block/allow decision, nudge/strike counting, and the count>=3 escape hatch are UNCHANGED -- only the two rendered strings for a foreign-owned mid_flight[0] change (decision:keep-the-block-drop-the-imperative). Update the EXISTING test tests/test_spine_rail.py::test_stop_blocks_on_mid_flight_spine_held_only_under_a_composite_key (~line 545), which currently asserts 'COMPOSITE-MARKER' IS in the reason (it pins the pre-fix bug) -- invert to assert it is NOT present and the owning composite key IS. Do not touch any fenced file. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT: attach g2-implement --type implementer-result --field status=<value> (lowercase, verbatim).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 (#599) complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 (#599) complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-2"
+        }
+      ],
+      "constraints": [
+        "Files: scripts/hooks/spine_rail.py only. Fenced: scripts/checklist_engine.py, scripts/gauge_reader.py, scripts/hooks/gauge_writer_hook.py, scripts/mcp_spine_server.py, .mcp.json -- do not touch.",
+        "decide_stop must refuse EXACTLY the same stops it refuses today -- gating outcome unchanged, rendered text only changes for foreign-owned entries."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/hooks/spine_rail.py:515 session_view()",
+          "scripts/hooks/spine_rail.py:640 _foreign_worktree()",
+          "scripts/hooks/spine_rail.py:1323 _entry_mid_flight_view()",
+          "scripts/hooks/spine_rail.py:1303 _mid_flight_reason()",
+          "scripts/hooks/spine_rail.py:1351 decide_stop()",
+          "scripts/hooks/spine_rail.py:467 binding_key()",
+          "scripts/hooks/spine_rail.py:1438 decide_session_start() -- read-only reference, do not change"
+        ],
+        "capability": [
+          "Stop-hook mid-flight block -- refuses a dishonest turn-end while a spine gate is still open; must keep refusing exactly as often"
+        ],
+        "constraint": [
+          "session_view has exactly two callers: decide_stop (in scope) and decide_session_start (explicitly OUT of scope -- a regression test must pin its behavior is unchanged)",
+          "an existing test (test_session_view_merges_one_bare_and_two_composite_keys) pins session_view's exact dict shape and must keep passing unmodified"
+        ],
+        "decision": [
+          "decision:keep-the-block-drop-the-imperative -- #549 changes the rendered reason (and additionalContext) only, never the gating outcome. @grade: settled/human \u00b7 leans g2-implement",
+          "decision:no-abandonment-by-inference -- not directly load-bearing here but the same non-negotiable applies: no side-effect writes. @grade: settled/human \u00b7 leans g2-implement"
+        ],
+        "evidence": [
+          "tests/test_spine_rail.py::test_stop_blocks_on_mid_flight_spine_held_only_under_a_composite_key (existing, currently pins the bug -- must be updated, not just supplemented)",
+          "tests/test_spine_rail.py::test_session_view_merges_one_bare_and_two_composite_keys (existing, must keep passing unchanged)"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g2-implement",
+            "why_ref": "w-4"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "#549 provenance-aware Stop reason: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, the inbound map anchors from g2-implement, and the evidence from IMPLEMENTER_RESULT. Explicitly instruct the reviewer to verify: (1) session_view's body diff is truly a behavior-preserving extraction (same return shape, same two-branch asymmetry) -- run test_session_view_merges_one_bare_and_two_composite_keys and confirm it passes unmodified, (2) decide_session_start's call site and behavior are untouched, (3) decide_stop's block/allow decision, nudge counting, and count>=3 escape hatch are byte-identical in behavior to before (diff the full suite's pass/fail set, not just new assertions), (4) BOTH reason and additionalContext are checked for the foreign-owned case -- a fix that only changes reason and leaves additionalContext leaking the imperative is incomplete, (5) the updated test asserts BOTH halves per Return Shape item 2: stop still blocked, AND reason names the owning session, (6) a control test exists proving a session's OWN mid-flight gate (bare-sid-owned) still renders the original imperative-bearing reason -- the fix must be scoped to foreign-owned entries only. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received (g2-implement complete)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-2"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g2-review",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "#549 provenance-aware Stop reason: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's side-effects against the world yourself per global-everyone.md (re-read the actual diff, confirm session_view's shape is unchanged, confirm decide_session_start untouched, confirm both reason and additionalContext are fixed, confirm the escape hatch/nudge logic is unchanged), then advance. BLOCK: return to g2-implement for rework or raise a blocker. The MOMENT this gate closes APPROVE, write the note to the Admiral for lane B's #600 re-measurement (File Ownership's one required interaction) -- do not wait until archive. Log any out-of-scope finds as triage candidates and record REPLAN_INPUT.json evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received (g2-review complete, APPROVE)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "clean __pycache__, tests/test_spine_rail.py passes in full (existing + updated + new provenance tests)",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-2",
+          "attested": {
+            "evidence": "e-g2-review-2",
+            "note": null
+          }
+        },
+        {
+          "id": "c3",
+          "statement": "Admiral notified that #549 landed (for lane B's #600 re-measurement)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "No live Admiral session addressable via SendMessage (not in peer list). Wrote durable notification to the Admiral's own work area: /home/tommy/projects/constellation-skills/.agent-work/epic-568-cleanup/C-549-LANDED.md (job-file-not-agent-file doctrine -- discoverable by whichever Admiral instance resumes)."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g2-integrate",
+            "why_ref": "w-6"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-verify": {
+      "id": "g3-verify",
+      "title": "Full-suite evidence and main baseline",
+      "imperative": "REASONING GATE, no crew (deliverable is verification evidence this Commander already has full context for). Run the full clean-env, cache-cleared suite at this lane's published head: find . -name __pycache__ -type d -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q. Then re-measure the SAME suite at the main baseline (a69bbac4) in a way that does not disturb this worktree's working tree -- e.g. `git stash` is NOT appropriate here since there should be no uncommitted changes at this point (all gates commit as they close); instead check out a68bbac4 in a disposable manner or diff the failure set against the Inherited Context's recorded baseline (3057 passed / 0 failed) re-confirmed by running the identical suite command against a clean checkout of a69bbac4 in a scratch location, and state the failure-set DIFFERENCE (not just pass/fail counts) between this lane's head and that baseline. State what was NOT tested (Windows -- CI is the only Windows signal and is red at baseline per Inherited Context). Attest c1 and c2 with the pasted evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 (#549) complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 (#549) complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full clean-env cache-cleared suite passed at this lane's head, output pasted as evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Full clean-env cache-cleared suite at head (590bf44d): 3078 passed, 6 skipped, 1146 subtests passed, 0 failed. Log: /tmp/g3-head-suite.log."
+        },
+        {
+          "id": "c2",
+          "statement": "main baseline (a69bbac4) suite re-measured at gate time; failure-set difference against this lane's head stated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "main baseline re-measured at gate time via disposable worktree at CURRENT main tip 43c577d4 (moved from the dispatch-time a69bbac4 -- lane D's #602/#597/#598 already merged): 3068 passed, 7 skipped, 1 failed, 1146 subtests passed. The 1 failure is tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build -- PRE-EXISTING on main itself (main's own map/INDEX.md is stale, unrelated to this lane; noted as a triage candidate). Failure-set DIFFERENCE: head has ZERO failures -- an empty failure set trivially satisfies the merge gate (empty, or every addition already on baseline). Not tested: Windows (CI is the only Windows signal, red at baseline per Inherited Context, unchanged by this lane's POSIX-only os.kill path and OS-agnostic ISO-timestamp arithmetic)."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-verify-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g3-verify",
+            "why_ref": "w-7"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-implement",
+      "statement": "Corpus-wide: map/ids.jsonl is empty repo-wide (zero authored map anchors exist anywhere), forcing every run into DEGRADED-UNPARSEABLE orientation. Not specific to this lane's files -- a corpus-wide authoring gap."
+    },
+    {
+      "id": "tc2",
+      "from": "g1-review",
+      "statement": "External-backend crew registry entries never have last_heartbeat re-touched after dispatch, so #599's 8h heartbeat-stale window really measures time-since-dispatch, not time-since-last-observed-liveness. A periodic heartbeat-writer for external entries would make the corroboration genuine rather than duration-based."
+    },
+    {
+      "id": "tc3",
+      "from": "g3-verify",
+      "statement": "main's own tip (43c577d4, re-measured at gate time) independently fails tests/test_code_map.py::MapTreeFreshnessTests with the same 'map/INDEX.md is stale' signature this lane hit and fixed for its own entity additions -- lane D's #602/#597/#598 work added entities without rebuilding the map. Not this lane's file ownership to fix on main."
+    },
+    {
+      "id": "tc4",
+      "from": "g2-review",
+      "statement": "Minor duplicated fetch-and-validate shape between session_view and session_view_provenance (both walk _session_keys and re-fetch/type-check binding[key]) -- a future simplify pass could fold the shared walk into one internal helper both call, once the pinned-shape test for session_view tolerates it."
+    }
+  ],
+  "blockers": [],
+  "refusals": 6,
+  "engine_session": {
+    "session_id": "commander-cleanup-c-liveness-rail-execute",
+    "status": "released",
+    "claimed_at": "2026-08-16T13:03:01.080836+00:00",
+    "last_heartbeat": "2026-08-16T13:40:19.473622+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T13:40:32.754449+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-16T13:03:06.963186+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Implementer delivered entry_liveness() three-bucket corroborated liveness + active_duplicate wiring, verified independently: diff matches plan exactly, 181/181 tests pass (172 pre-existing + 9 new), recover_crews.py untouched, process_alive byte-identical. run_crew.py --verify-result confirms fresh completion.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:03:17.423615+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Reviewer independently reproduced the suite (181 passed), ran an adversarial mutation test proving the tests load-bearing, cross-checked the archived-registry evidence field-for-field, and confirmed all close criteria. APPROVE, verified by the Commander.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:09:57.170244+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Command postcondition re-ran the suite clean-env (181 passed); reviewer APPROVE evidence attached by reference to g1-review's artifact. g1 (#599) fully closed.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:10:27.628148+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-implement",
+      "why": "Implementer delivered _session_keys shared seam, session_view refactor (unchanged contract, byte-identical test), session_view_provenance, _owning_session_reason, decide_stop wiring. Verified independently: diff matches plan exactly, decide_session_start untouched, fenced files empty diff, 150 passed/1 skipped (Windows-only).",
+      "mechanical": false,
+      "ts": "2026-08-16T13:18:51.638505+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-review",
+      "why": "Reviewer independently diffed decide_session_start (byte-identical), ran two isolated adversarial mutations proving both reason and additionalContext leak-guards load-bearing, reproduced 150 passed/1 skipped, confirmed fenced files empty diff. Found and correctly triaged the map/INDEX.md staleness (pre-existing, widened by this gate's new functions) as non-blocking -- fixed separately by the Commander (590bf44d). APPROVE, verified.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:34:05.747907+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-integrate",
+      "why": "g2 (#549) fully closed: test_spine_rail.py green (150 passed/1 skipped), reviewer APPROVE evidence referenced, Admiral notified via durable artifact (no live session addressable). Map staleness caught and fixed (590bf44d) before this close.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:35:03.585864+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-verify",
+      "why": "Head suite green (3078 passed/6 skipped/0 failed). Main baseline (re-measured at current tip 43c577d4) has 1 pre-existing failure (stale map/INDEX.md, unrelated to this lane) -- head's failure set is empty, trivially satisfying the merge gate. Windows explicitly named as not-tested. execute.json is now fully driven -- all 8 items complete.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:40:19.473613+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "g1-implement",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.2845,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-16T13:03:12.060375+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "g1-implement",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2845,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-16T13:03:17.365410+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.2993,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-16T13:09:51.517741+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2993,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-16T13:09:57.097841+00:00"
+    },
+    {
+      "id": "tl-5",
+      "gate": "g1-integrate",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3027,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-16T13:10:02.499004+00:00"
+    },
+    {
+      "id": "tl-6",
+      "gate": "g2-implement",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3245,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-4",
+      "ts": "2026-08-16T13:18:47.050351+00:00"
+    },
+    {
+      "id": "tl-7",
+      "gate": "g2-review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3393,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-16T13:33:59.645453+00:00"
+    },
+    {
+      "id": "tl-8",
+      "gate": "g2-integrate",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3404,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-16T13:34:11.426466+00:00"
+    },
+    {
+      "id": "tl-9",
+      "gate": "g3-verify",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3522,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-7",
+      "ts": "2026-08-16T13:35:09.834545+00:00"
+    }
+  ]
+}

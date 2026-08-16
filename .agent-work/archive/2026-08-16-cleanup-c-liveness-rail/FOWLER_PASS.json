@@ -1,0 +1,20 @@
+{
+  "work_id": "cleanup-c-liveness-rail",
+  "diff_ref": "915daefa (scripts/hooks/spine_rail.py: _session_keys, session_view_provenance, _owning_session_reason, decide_stop render-step wiring; tests/test_spine_rail.py)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "flagged", "finding": "session_view (spine_rail.py ~:530-538) and session_view_provenance (~:558-580) both loop `for key in _session_keys(binding, sid): entries = binding.get(key); if not isinstance(entries, dict): continue` before diverging on what they do with entries -- the fetch-and-validate step is duplicated verbatim across the two functions. A small helper (e.g. `_iter_owned_entries(binding, sid)` yielding `(key, entries)` pairs, already isinstance-checked) would remove the duplication and, as a bonus, make the two functions' 'must never disagree about what is visible' invariant structurally guaranteed rather than merely true-by-inspection. Non-blocking: the duplication is 3 lines, the invariant is already covered by a direct equality test (test_session_view_provenance_mixed_matches_session_view_keys), and the docstrings already call out the shared-seam intent in prose.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "overridden", "finding": "", "override": {"repo_standard": "docs/agents/CREW_CONTEXT.md 'Verification Discipline' + the file's own pre-existing convention (e.g. the old session_view docstring, _mid_flight_reason's docstring) of dense, invariant-naming docstrings on hook-rail functions where a subtle asymmetry or ordering guarantee is load-bearing and easy to silently break on a future edit.", "reason": "The new docstrings (_session_keys, session_view_provenance, _owning_session_reason) explain WHY a non-obvious asymmetry (untyped bare-key equality vs. isinstance+prefix composite match) is preserved on purpose, and WHY two functions must fold over the same list to never disagree -- genuine correctness invariants for security-adjacent hook code, proven load-bearing by this review's own adversarial mutation tests (both mutations were caught by the existing assertions, not by the comments). This is explaining subtle-but-correct code to the next editor, not padding over code that should have been simplified instead -- matches the existing file's own established documentation density, not a new departure."}}
+  ],
+  "rail_exception": null
+}

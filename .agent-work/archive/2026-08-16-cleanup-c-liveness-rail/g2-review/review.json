@@ -1,0 +1,179 @@
+{
+  "work_id": "cleanup-c-liveness-rail",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded references/global-crew.md, references/global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g2-review-handoff.md, the g2-implement-result.md, and the full diff (git show 915daefa) for both scripts/hooks/spine_rail.py and tests/test_spine_rail.py.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "915daefa does exactly the g2 task: adds _session_keys(binding, sid) (scripts/hooks/spine_rail.py:515-538) as the shared seam, reproducing session_view's exact untyped key==sid / isinstance+startswith asymmetry verbatim (diffed old vs new branch condition -- byte-identical logic, not tidied). session_view_provenance (:558-580) folds over the SAME _session_keys call. decide_stop (:1477-1490) branches at the render step only: owner_key is None or == sid -> unchanged _mid_flight_reason/reconstruct_current; else -> new _owning_session_reason and a withheld additionalContext ('(withheld: gate belongs to {owner})'), never calling reconstruct_current(spine) in the foreign branch so the imperative cannot leak through additionalContext either. decide_session_start's function body (old vs new, 81 lines) is byte-identical -- diffed directly, zero delta, confirming it is untouched in code as the handoff requires. No new side-effect writes introduced (all three new helpers are pure, no file I/O).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git show 915daefa --stat: exactly scripts/hooks/spine_rail.py (+114/-12 net, actually shows insertions/deletions per file) and tests/test_spine_rail.py -- two files only, matching Allowed Scope. Confirmed zero diff (git diff --stat 915daefa~1 915daefa -- <path>, empty output) for every fenced file: scripts/checklist_engine.py, scripts/gauge_reader.py, scripts/hooks/gauge_writer_hook.py, scripts/mcp_spine_server.py, .mcp.json, and also scripts/run_crew.py / tests/test_crew_launcher.py (separate g1 gate, cbd18faf, already merged). Specific Exclusions respected: grepped the diff for '^[+-].*def (binding_key|_foreign_worktree|_mid_flight_reason|_entry_mid_flight_view)' -- zero hits, none of these four functions' def lines appear as added/removed, so they are used as-is. decide_session_start's function body is byte-identical (see r1-handoff finding). The nudge/strike counting block (seq, active_ids, prior, progress, count, save_nudges) and the count>=3 escape hatch sit strictly BEFORE the render-step branch in the diff and show no +/- lines of their own (confirmed via the isolated decide_stop unified diff -- only two hunks: the owners= addition and the render-step if/else).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently reproduced: rm -rf __pycache__ dirs; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py -> '150 passed, 1 skipped', matching the pasted evidence exactly. Named the skip with -rs: 'SKIPPED [1] tests/test_spine_rail.py:833: ntpath's normcase (lowercase + backslash/forward-slash folding) only applies on Windows' -- pre-existing Windows-only test, unrelated to this change. Ran the two named required-evidence tests individually and confirmed pass: test_stop_blocks_on_mid_flight_spine_held_only_under_a_composite_key and test_session_view_merges_one_bare_and_two_composite_keys (also confirmed the latter's test BODY is byte-identical old vs new via AST-adjacent line diff -- zero delta). Also ran the full repo suite (tests/) for a broader sanity check: 3077 passed, 6 skipped, 1146 subtests passed, 1 pre-existing FAILED (test_code_map.py::MapTreeFreshnessTests -- map/INDEX.md staleness). Verified this failure PRE-DATES 915daefa: reproduced it on the parent commit cbd18faf too (git worktree add /tmp/parent-check 915daefa~1, ran the same test) -- it already fails there (1198 vs 1197 entities), just with a smaller drift than on 915daefa (1201 vs 1197). So the map was already stale at baseline (matches the handoff's own DEGRADED-UNPARSEABLE note); this commit's 3 new top-level functions widened the pre-existing drift by 3 more entities but did not create it. Not a blocker for g2 (out of the allowed-scope files, and the handoff explicitly disclaims map artifact reconciliation for this gate) -- flagged as a triage candidate under r5-reconciliation instead.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Checked each handoff constraint: (1) _session_keys/session_view_provenance/_owning_session_reason are genuinely pure -- read all three bodies, no file I/O, no globals mutated, only dict/str operations on their own params; tests exercise them directly with plain dicts (test_session_keys_*, test_session_view_provenance_*), no fixture/disk plumbing needed. (2) session_view never raises, {} on unusable input -- unchanged try/except wrapper, plus test_session_keys_empty_or_none_sid_never_raises and test_session_view_provenance_empty_or_falsy_never_raises cover both helpers' falsy/None paths directly. Adversarial mutation (not just trusting pasted evidence): (a) forced the render-step branch to always take the same-session path (owner check replaced with 'if True') -- test_stop_blocks_on_mid_flight_spine_held_only_under_a_composite_key failed exactly as expected, COMPOSITE-MARKER leaking into reason; restored, git status clean, suite back to 150 passed/1 skipped. (b) isolated mutation of ONLY the additionalContext line in the foreign branch (reverted to reconstruct_current(spine)) while leaving reason's branch alone -- the SAME test failed on its OTHER assertion (COMPOSITE-MARKER leaking into hookSpecificOutput.additionalContext this time), proving both assertions in the test are independently load-bearing, not just the first one; restored, git status clean, suite green again. Both mutations were reverted via the backed-up original file content and confirmed byte-clean via git status --short before continuing.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map orientation is DEGRADED-UNPARSEABLE at baseline per the handoff -- no authored architecture-map anchors corpus-wide to check the diff against, so nothing here needs Cartographer reconciliation on that front. The implementer's Map Impact notes (structural anchors, capability, constraints/assumptions, decision candidate 'keep-the-block-drop-the-imperative') match the diff -- verified each line-number citation directly against the file (session_view ~515, _owning_session_reason ~1379-1399, decide_stop ~1427-1490) and they land in the right neighborhood. One inaccuracy caught and flagged as tc1: the implementer's 'Trust limitations / drift found: none found ... unrelated to this change' understates a real (non-blocking) effect -- map/INDEX.md's staleness test already failed pre-change but this commit's 3 new top-level functions widened the entity-count drift from 1 to 4. Not a blocker for g2 (handoff disclaims map-artifact reconciliation for this gate; the drift is cosmetic, not a gating-behavior concern), but re-flagged here as tc1 so it reaches Commander/Triage rather than being silently absorbed by the implementer's own claim.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged standard + reason. Record the pass to .agent-work/cleanup-c-liveness-rail/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/cleanup-c-liveness-rail/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/cleanup-c-liveness-rail/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Ran the Fowler baseline pass against commit 915daefa's diff (scripts/hooks/spine_rail.py's _session_keys/session_view_provenance/_owning_session_reason + decide_stop render-step wiring; tests/test_spine_rail.py's new tests). All 12 baseline smells given a verdict in .agent-work/cleanup-c-liveness-rail/FOWLER_PASS.json: 10 absent, 1 flagged (duplicated-code: session_view and session_view_provenance both duplicate the 'entries = binding.get(key); if not isinstance(entries, dict): continue' fetch-and-validate step -- non-blocking observation, a small _iter_owned_entries helper would remove it and structurally guarantee the two functions can never disagree), 1 overridden (comments-as-deodorant: the new dense invariant-explaining docstrings match the file's own pre-existing documentation convention for hook-rail correctness invariants, logged with the specific repo-standard precedent and why it applies). verify_fowler_pass.py .agent-work/cleanup-c-liveness-rail/FOWLER_PASS.json exited 0: 'fowler pass ok ... smells=12, flagged=[duplicated-code], overridden=[comments-as-deodorant]'.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/cleanup-c-liveness-rail/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "915daefa satisfies g2's close criteria in full. _session_keys(binding, sid) reproduces session_view's exact pre-existing untyped key==sid / isinstance+startswith asymmetry -- diffed byte-for-byte against the old branch condition, not tidied. session_view's return shape/behavior is unchanged (independently reproduced test_session_view_merges_one_bare_and_two_composite_keys pass, and its test body is byte-identical old vs new). decide_session_start's function body is byte-identical old vs new (81 lines, zero diff), and a new regression test pins it. session_view_provenance folds over the SAME _session_keys call as session_view -- verified by reading the code, not just the claim, and by test_session_view_provenance_mixed_matches_session_view_keys asserting key-set equality against a real multi-agent fixture. decide_stop's block/allow decision, nudge/strike counting, and the count>=3 escape hatch are byte-identical in the isolated function diff -- only the render step (reason/ctx) branches. Independently reproduced the full tests/test_spine_rail.py suite (150 passed, 1 pre-existing Windows-only skip named and confirmed unrelated) and the full repo suite (3077 passed, 1 pre-existing unrelated map-staleness failure, confirmed to predate this commit via a parent-commit worktree check). Both reason AND additionalContext are checked and verified NOT to leak the imperative for the foreign-owned case -- confirmed by reading the code (ctx no longer calls reconstruct_current in that branch) and by two independent adversarial mutations, each of which broke exactly one of the two assertions and was cleanly reverted, proving both halves of the updated test are load-bearing, not vacuous. A genuine control test (test_stop_bare_sid_owned_mid_flight_still_renders_original_imperative_text) exists and exercises a real bare-sid-only scenario, proving the fix is scoped to foreign-owned entries only. No fenced file, run_crew.py, or test_crew_launcher.py shows any diff. Fowler pass: 12/12 smells visited, 1 flagged (duplicated-code, non-blocking, logged), 1 overridden (comments-as-deodorant, logged standard+reason), verify_fowler_pass.py exited 0. One triage candidate flagged (tc1): map/INDEX.md staleness predates this commit but this commit's 3 new functions widened the drift; not a blocker, the implementer's 'unrelated to this change' framing is a minor overstatement worth a workflow note."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "map/INDEX.md is stale (tests/test_code_map.py::MapTreeFreshnessTests fails on both the parent commit cbd18faf and 915daefa) -- a pre-existing baseline condition, but 915daefa's 3 new top-level functions (_session_keys, session_view_provenance, _owning_session_reason) widened the drift from 1 entity (1198 vs committed 1197) to 4 entities (1201 vs committed 1197). The implementer's g2-implement-result.md 'Trust limitations / drift found: none found ... unrelated to this change' undersells this -- the staleness predates the change but this change did add to it. Candidate: rerun 'python -m scripts.code_map build --root .' and commit map/INDEX.md to clear the drift; not required for g2 close since the handoff explicitly disclaims map-artifact reconciliation for this gate."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/cleanup-c-liveness-rail/g2-review/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-16T13:20:56.488289+00:00",
+    "last_heartbeat": "2026-08-16T13:27:59.108911+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T13:28:01.984221+00:00"
+  }
+}

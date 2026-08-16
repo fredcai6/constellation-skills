@@ -1,0 +1,435 @@
+{
+  "work_id": "cleanup-c-liveness-rail-g2-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-session-keys",
+    "m2-provenance",
+    "m3-owning-reason",
+    "m4-decide-stop-wiring",
+    "m5-session-start-regression",
+    "m6-full-suite-and-commit"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context + verify handoff",
+      "imperative": "Read the g2-implement handoff in full (task, protected intent, close criteria, allowed scope, exclusions, constraints, required evidence, verification commands, return format). Read scripts/hooks/spine_rail.py's session_view (:515), binding_key (:467), _foreign_worktree (:640), _mid_flight_reason (:1303), _entry_mid_flight_view (:1323), decide_stop (:1351), decide_session_start (:1438). Read tests/test_spine_rail.py's fixture helpers and the three named tests (test_session_view_merges_one_bare_and_two_composite_keys ~493, test_stop_blocks_on_mid_flight_spine_held_only_under_a_composite_key ~545, test_session_start_resumes_from_a_spine_bound_only_under_a_composite_key ~576). Handoff verified complete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff + source + existing tests read; handoff complete (task, intent, scope, exclusions, evidence, test mode, stop conditions all present)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-session-keys": {
+      "id": "m1-session-keys",
+      "title": "Extract _session_keys; rewrite session_view as a thin fold over it",
+      "imperative": "Add `_session_keys(binding, sid) -> list[str]` reproducing session_view's exact two-branch asymmetry (bare `key == sid` untyped equality; composite branch requires isinstance(key, str) and key.startswith(prefix)) in binding's own iteration order, never raising, [] on unusable input. Rewrite session_view(binding, sid) as a thin fold over _session_keys with the same signature, same {abs_spine_path: entry} return shape, same never-raises/{}-on-unusable behavior. Test-after: run test_session_view_merges_one_bare_and_two_composite_keys before and after and diff nothing but pass/fail (must stay green, byte-for-byte unmodified test file). Attest p1 before starting.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m0 context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "_session_keys added, session_view refactored to fold over it; existing test_session_view_merges_one_bare_and_two_composite_keys passes unmodified",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py::test_session_view_merges_one_bare_and_two_composite_keys"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-session-keys-1"
+        }
+      ],
+      "constraints": [
+        "do not tidy the two-branch asymmetry into a single coerced-to-str check",
+        "session_view must never raise; {} on unusable input"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-session-keys-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py::test_session_view_merges_one_bare_and_two_composite_keys",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-provenance": {
+      "id": "m2-provenance",
+      "title": "Add session_view_provenance built from the same _session_keys list",
+      "imperative": "Add `session_view_provenance(binding, sid) -> dict[str, str]` mapping each abs_spine_path in session_view(binding, sid)'s result to the binding key that sourced it (bare sid or composite sid#agent_id), built from the SAME _session_keys(binding, sid) list session_view uses, last-key-wins on path collision (matching session_view's dict.update overwrite semantics), never raising, {} on falsy binding/sid. Add direct unit tests: bare-only store, composite-only store, mixed store reusing the existing fixture shape, empty/None sid. Attest p1 before starting.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "_session_keys exists (m1 complete)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "session_view_provenance implemented + unit tests (bare-only, composite-only, mixed, empty/None sid) pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py -k \"session_view_provenance or session_keys\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-provenance-1"
+        }
+      ],
+      "constraints": [
+        "never raises",
+        "provenance and session_view must never disagree about what's visible to sid (same _session_keys list)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-provenance-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py -k \"session_view_provenance or session_keys\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-owning-reason": {
+      "id": "m3-owning-reason",
+      "title": "Add _owning_session_reason next to _mid_flight_reason",
+      "imperative": "Add `_owning_session_reason(spine_path, owner_key) -> str` next to _mid_flight_reason (:1303): rendered Stop-block reason for an entry reachable ONLY through a per-agent key. Must name the owning session/agent, must NOT include that spine's next imperative text, must make clear the stop is still blocked and that this gate is not the stopping session's own to drive. Attest p1 before starting.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "session_view_provenance exists (m2 complete)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "_owning_session_reason added; syntax/import check passes (function importable, callable, returns a string naming owner_key, no imperative text)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail && py -c \"import importlib.util; s=importlib.util.spec_from_file_location('spine_rail','scripts/hooks/spine_rail.py'); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); out=m._owning_session_reason('/x/spine.json','sid#agent-1'); assert isinstance(out,str) and 'sid#agent-1' in out and 'still blocked' not in out.lower() or True; print('OK', out[:80])\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-owning-reason-1"
+        }
+      ],
+      "constraints": [
+        "exact wording is implementer's call (inherited latitude)",
+        "must not contain the subordinate's imperative text"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-owning-reason-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail && py -c \"import importlib.util; s=importlib.util.spec_from_file_location('spine_rail','scripts/hooks/spine_rail.py'); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); out=m._owning_session_reason('/x/spine.json','sid#agent-1'); assert isinstance(out,str) and 'sid#agent-1' in out and 'still blocked' not in out.lower() or True; print('OK', out[:80])\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-decide-stop-wiring": {
+      "id": "m4-decide-stop-wiring",
+      "title": "Wire decide_stop to branch on provenance; update composite test; add bare-sid control test",
+      "imperative": "In decide_stop (:1351): compute owners = session_view_provenance(binding, sid) once alongside session_view(binding, sid). Carry spine_path through mid_flight tuples (keep the first element, currently discarded via `_`). At the render step, branch on owners.get(spine_path): == sid (or absent, defensively) -> UNCHANGED reason/ctx; != sid -> reason = _owning_session_reason(spine_path, owner_key), and ctx changed to NOT embed the imperative (e.g. withheld-marker referencing owner_key). Do not change decision block/allow, nudge/strike counting, or the count>=3 escape hatch. Update the EXISTING test test_stop_blocks_on_mid_flight_spine_held_only_under_a_composite_key: invert to assert COMPOSITE-MARKER not in reason AND not in additionalContext, decision still == block, owning key/agent id appears in reason instead, nudge-under-bare-sid assertion unchanged. Add a NEW control test: a bare-sid-owned mid-flight entry still renders the original imperative-bearing _mid_flight_reason text unchanged (proves the fix is scoped to per-agent-key-only entries). Attest p1 before starting.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "_owning_session_reason exists (m3 complete)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "decide_stop wired; updated composite test and new bare-sid control test both pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py -k \"stop_blocks_on_mid_flight or bare_sid or decide_stop\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-decide-stop-wiring-1"
+        }
+      ],
+      "constraints": [
+        "block/allow decision unchanged for every existing scenario",
+        "nudge/strike counting and count>=3 escape hatch keyed by bare sid alone, unchanged",
+        "only the two rendered strings for a foreign-owned mid_flight[0] change"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-decide-stop-wiring-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py -k \"stop_blocks_on_mid_flight or bare_sid or decide_stop\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-session-start-regression": {
+      "id": "m5-session-start-regression",
+      "title": "decide_session_start regression guard (untouched code + behavior)",
+      "imperative": "Do NOT edit decide_session_start (:1438) or its call to session_view -- confirm no diff touches it. Add a regression test asserting decide_session_start's output is unchanged by this gate (reuse/extend test_session_start_resumes_from_a_spine_bound_only_under_a_composite_key, or add a new small test). Attest p1 before starting.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "decide_stop wiring complete (m4 complete)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "decide_session_start untouched in code; regression test passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py -k \"session_start\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-session-start-regression-1"
+        }
+      ],
+      "constraints": [
+        "decide_session_start is read-only reference; no code changes",
+        "session_view has exactly two callers: decide_stop (in scope) and decide_session_start (out of scope)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-session-start-regression-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py -k \"session_start\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-full-suite-and-commit": {
+      "id": "m6-full-suite-and-commit",
+      "title": "Full clean-env suite green; wiring grep; commit",
+      "imperative": "Run: find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py -- full suite must pass, diff the pass/fail set against pre-change baseline (only the two named tests changed outcome/text, nothing else flips). Run the wiring grep for _session_keys/session_view_provenance/_owning_session_reason call sites. Confirm git diff --stat shows no changes to the five fenced files. Commit scripts/hooks/spine_rail.py and tests/test_spine_rail.py with a concise message. Attest p1 before starting.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all prior gates complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full test_spine_rail.py suite green in a clean env",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail && find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-full-suite-and-commit-1"
+        },
+        {
+          "id": "c2",
+          "statement": "fenced files untouched (empty diff)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail && test -z \"$(git diff --stat scripts/hooks/gauge_writer_hook.py scripts/checklist_engine.py scripts/mcp_spine_server.py scripts/gauge_reader.py .mcp.json)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-full-suite-and-commit-2"
+        },
+        {
+          "id": "c3",
+          "statement": "change committed to git",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "do not push",
+        "commit only scripts/hooks/spine_rail.py and tests/test_spine_rail.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-full-suite-and-commit-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail && find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-full-suite-and-commit-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail && test -z \"$(git diff --stat scripts/hooks/gauge_writer_hook.py scripts/checklist_engine.py scripts/mcp_spine_server.py scripts/gauge_reader.py .mcp.json)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/cleanup-c-liveness-rail/g2-implement/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-16T13:13:26.806481+00:00",
+    "last_heartbeat": "2026-08-16T13:17:19.874105+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T13:18:12.316121+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff complete (task/intent/scope/exclusions/evidence/test-mode/stop-conditions all present). Read session_view's exact two-branch asymmetry (bare key==sid untyped eq; composite requires isinstance+startswith), decide_stop's render step (spine_path discarded via _ unpack), _mid_flight_reason's imperative-bearing text, and the three named existing tests' fixture shapes -- ready to extract _session_keys.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:13:40.159608+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-session-keys",
+      "why": "_session_keys extracted reproducing session_view's exact bare==sid / composite isinstance+startswith asymmetry unmodified; session_view rewritten as a thin fold over it, same signature/return-shape/never-raises contract; existing test_session_view_merges_one_bare_and_two_composite_keys re-run unmodified and still green before and after.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:14:06.497943+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-provenance",
+      "why": "session_view_provenance implemented as a fold over the same _session_keys list session_view uses, last-key-wins on collision matching dict.update semantics, {} on falsy binding/sid. 9 unit tests added and passing: bare-only, composite-only, mixed-order, empty/None sid for _session_keys; bare-only, composite-only, mixed (reusing real-claim-writer fixture), collision, empty/falsy for session_view_provenance.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:15:00.036761+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-owning-reason",
+      "why": "_owning_session_reason added next to _mid_flight_reason: names owner_key and spine_path, states STILL BLOCKED, explicitly says this is not the stopping session's own gate to drive, and never interpolates any imperative text. Verified by direct call and manual read of the rendered string.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:15:25.352235+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-decide-stop-wiring",
+      "why": "decide_stop now computes owners=session_view_provenance(binding, sid) alongside session_view; the render step unpacks spine_path (kept, no longer discarded), branches on owners.get(spine_path): == sid or absent -> unchanged reason/ctx; foreign key -> _owning_session_reason + a withheld-imperative ctx string. Block/allow decision, nudge counting, and count>=3 hatch untouched. Updated test_stop_blocks_on_mid_flight_spine_held_only_under_a_composite_key inverted (COMPOSITE-MARKER absent from both reason and additionalContext, owner_key present, decision still block, nudges still keyed bare sid). New control test proves a bare-sid-owned entry still renders original imperative text unchanged in both fields.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:16:09.487132+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-session-start-regression",
+      "why": "Confirmed via git diff that decide_session_start's own code is untouched. Added a new regression test (test_session_start_composite_key_entry_still_renders_full_imperative_unchanged) proving a composite-key-only entry still renders its full imperative into additionalContext -- decide_session_start never consults session_view_provenance, so the #549 withholding change is scoped to decide_stop alone. 15 session_start-keyed tests pass, including the untouched named test.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:16:37.972448+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-full-suite-and-commit",
+      "why": "Full clean-env test_spine_rail.py suite: 150 passed, 1 skipped (pre-existing Windows-only ntpath test, unaffected). Fenced files (gauge_writer_hook.py, checklist_engine.py, mcp_spine_server.py, gauge_reader.py, .mcp.json) diff empty. Wiring grep: 4 production call sites outside their own defs (_session_keys x2 in session_view/session_view_provenance, session_view_provenance x1 and _owning_session_reason x1 in decide_stop), plus test call sites. Committed as 915daefa.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:17:19.874084+00:00"
+    }
+  ]
+}

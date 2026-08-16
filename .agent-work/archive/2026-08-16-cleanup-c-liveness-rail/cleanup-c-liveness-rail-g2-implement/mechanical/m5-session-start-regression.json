@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-session-start-regression",
+  "mechanical": {
+    "run": "cleanup-c-liveness-rail-g2-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m5-session-start-regression",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-c-liveness-rail-g2-implement-m5-session-start-regression@508f4e69c53f8ff931c72c4064c491ef3d6d4a04",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-c-liveness-rail-g2-implement",
+    "generated_at": "2026-08-16T13:16:12Z"
+  }
+}

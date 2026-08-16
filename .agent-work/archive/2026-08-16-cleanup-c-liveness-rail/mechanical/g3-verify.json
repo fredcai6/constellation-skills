@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g3-verify",
+  "mechanical": {
+    "run": "cleanup-c-liveness-rail",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 6,
+    "spine-step": "g3-verify",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-c-liveness-rail-g3-verify@caf23b992e16e5bd3a12b4e2357401d427c85925",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-c-liveness-rail",
+    "generated_at": "2026-08-16T13:35:09Z"
+  }
+}
