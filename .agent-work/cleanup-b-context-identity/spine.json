@@ -427,6 +427,17 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-execute-3",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "execute",
+            "why_ref": "w-3",
+            "note": "Leg 2 is out of context at 17% of a 150000 absolute cap. g1-implement is closed and committed; g1-review is NOT begun and the engine refused to start it. Relaunch a fresh Commander into this same spine and lease name -- read LEG2_DIGEST.md and STATE_NOTE.md first."
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -705,7 +716,7 @@
     "session_id": "commander-cleanup-b-context-identity",
     "status": "active",
     "claimed_at": "2026-08-16T13:12:31.234734+00:00",
-    "last_heartbeat": "2026-08-16T13:20:19.390032+00:00",
+    "last_heartbeat": "2026-08-16T14:09:56.351555+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
