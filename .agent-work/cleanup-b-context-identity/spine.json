@@ -590,7 +590,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage complete: six candidates routed, all recommend-and-defer, recorded in TRIAGE_RECOMMENDATIONS.md."
         }
       ],
       "postconditions": [
@@ -601,17 +602,43 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-2",
+          "attested": {
+            "evidence": "e-review-2",
+            "note": "Delegated mode: no human is reachable, so the run summary is accepted by attaching a user-decision citing LAUNCH_ORDER:Return Shape, with the Admiral ratifying at the epic return boundary. The full summary is RUN_SUMMARY.md and it covers every element the gate asks for: all six execute gates and their outcomes, what #600 implemented, the R4 amendment and how it was relayed without hand-editing the frozen gate, the review's mutation-tested findings, the zero failure-set difference with both gate-time numbers, the lane C re-measurement, the probe retirement, the architecture reconciled directly plus the fenced .mcp.json violation caught and reverted, all six triage items routed as recommend-and-defer with the three that need his eye called out, and why #500 was handed back on the engine's own refusal. It states plainly what is NOT done: T1 is unfixed though it clears the fix-now ladder, and identity-not-time is not complete."
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "review",
+            "why_ref": "w-7"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-review-2",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape",
+            "summary": ".agent-work/cleanup-b-context-identity/RUN_SUMMARY.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -786,7 +813,7 @@
     "session_id": "commander-cleanup-b-context-identity",
     "status": "active",
     "claimed_at": "2026-08-16T14:52:43.039579+00:00",
-    "last_heartbeat": "2026-08-16T14:58:19.786610+00:00",
+    "last_heartbeat": "2026-08-16T14:59:52.334700+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -841,6 +868,13 @@
       "why": "Six candidates routed, none left unrouted, no issue filed without authority. All land on recommend-and-defer because filing is publication and publication must be floated per the launch order; the Admiral has already taken T3's filing himself. The one that matters most for the next leg is T1: R4 row 2 -- write every candidate when 2+ candidates share ONE owner -- is correct by direct drive but untested, proven by a mutation that leaves all 616 gauge tests green. It clears every fix-now rung and was still deferred, because it surfaced after g1-integrate closed and adding code outside a gate is the one thing this run may not do. T2 gained a third occurrence this leg and T3 a second, independent reproduction.",
       "mechanical": false,
       "ts": "2026-08-16T14:58:19.786603+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Run summary written to RUN_SUMMARY.md and accepted in delegated mode by a user-decision citing LAUNCH_ORDER:Return Shape; the Admiral ratifies at the epic return boundary. #600 shipped, reviewed APPROVE, integrated with a ZERO failure-set difference; #500 handed back on the engine's own refusal with the design accepted and unchanged; six triage candidates routed and none filed without authority; the architecture record reconciled directly and a fenced .mcp.json violation caught and reverted rather than shipped. The summary says what is not done as plainly as what is: T1 clears the fix-now ladder and is still unfixed, and decision:identity-not-time remains incomplete.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:59:52.334692+00:00"
     }
   ],
   "trip_ledger": [
@@ -876,6 +910,17 @@
       "model": "claude-opus-5",
       "why_ref": "w-6",
       "ts": "2026-08-16T14:56:12.470388+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2166,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-7",
+      "ts": "2026-08-16T14:58:42.455838+00:00"
     }
   ]
 }
