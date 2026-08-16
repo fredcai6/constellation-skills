@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4-quality",
+  "mechanical": {
+    "run": "cleanup-f-derive-worktree",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r4-quality",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-r4-quality@3ab1d8fd498edbabe2aac4bc6d0998993c114632",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-f-derive-worktree",
+    "generated_at": "2026-08-16T18:37:24Z"
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "diff_ref": "git diff 9ff86f2d (g2, lane F, issue #609 -- retire stamp-and-compare). 5 files, 273 insertions / 623 deletions: scripts/checklist_engine.py (-168 net), scripts/spine_lifecycle.py (+10 docstring), docs/CHECKLIST_SCHEMA.md, tests/test_spine_origin_isolation.py (695 changed, 38 -> 13 collected), map/INDEX.md (regenerated). Every added line under scripts/ is prose; there are zero executable additions in production code.",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md (Verification Discipline; Record Stores Are Never Hand-Edited; Evidence You Owe Back), docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md (deep-module vocabulary, the deletion test, scoped nulls), .agent-work/cleanup-f-derive-worktree/MISSION_FRAME.md decision anchors",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "The change only shortens. main() loses a 6-line impure prologue and the deleted origin_worktree_refusal was 78 lines. No function grows; no added executable line exists anywhere in scripts/.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "No classes in the production diff. On the test side the rewrite replaces one sprawling module (38 collected tests across the retired comparison's scenarios) with three focused unittest classes of 6, 4 and 3 tests. Net reduction in class surface.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The claim 'nothing was left unguarded / ownership is the lease, and always was' is hand-copied into three places with nothing checking the copies against each other: docs/CHECKLIST_SCHEMA.md:124, scripts/checklist_engine.py:95-97, tests/test_spine_origin_isolation.py:25-27. This is the same shape the g1 reviewer flagged for the three-claims prose. It matters more here than usual because the claim is measurably false in the leaseless case (finding B1) -- one wrong sentence now has to be repaired in three files, and nothing will notice if only two are.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "The change removes the one place the engine reached outside itself for state (Path.cwd() plus a git subprocess to interpret it). Nothing added reaches into another module's data.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "The (spine, cwd, verb) triple that travelled together into the refusal predicate is gone with it. The surviving origin block is a single provenance dict written by two producers whose key sets are pinned as a subset relation by test_stamp_keys_are_a_subset_of_the_lifecycle_origin_block.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "origin.worktree remains a bare string rather than a path type, and the test table varies it across a str, an int, an empty string and an absent key.",
+      "override": {
+        "repo_standard": "docs/CHECKLIST_SCHEMA.md -- the checklist is a JSON document and every field in it is a JSON primitive; docs/agents/CREW_CONTEXT.md 'Record Stores Are Never Hand-Edited' makes the serialized shape the contract.",
+        "reason": "The stamp is serialized provenance in a JSON store, so a string is the shape the contract requires, not an unwrapped primitive. The variation across types in the test table is deliberate discriminating power for the differential, not evidence of a missing value object -- and after this gate nothing parses the field at all, so there is no parsing surface a richer type could protect."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "The only signature that changed is a deletion: origin_worktree_refusal(spine, *, cwd, verb) no longer exists. build_origin keeps its existing keyword-only list unchanged; the diff there is docstring only.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "Retiring one predicate required edits in 4 hand-maintained places and left 7 more it may not touch: stale present-tense prose survives in mcp_spine_server.py:18/:371/:384 and run_crew.py:860 (both fenced, correctly reported not fixed), and in tests/test_worktree_precondition_wiring.py:15-17 and tests/test_mcp_door_engine_cwd.py:5 (in allowed scope, deliberately left). That a single deletion scatters this widely is the smell; the fencing is the cause and is legitimate, but the residue is real and is filed as triage candidates tc1-tc3.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "overridden",
+      "finding": "checklist_engine.py continues to hold reasons-to-change that have nothing to do with each other -- lease/session authority, the refusals counter, the doctrine rail, the why-trail, path derivation. This gate does not add one, it removes one (the location capability leaves the module entirely).",
+      "override": {
+        "repo_standard": "references/global-everyone.md deep-module vocabulary -- 'the deletion test' and 'one canonical path; no speculative abstraction'; MISSION_FRAME.md names scripts.checklist_engine as the single engine module.",
+        "reason": "The engine is deliberately one deep module with one canonical path, and splitting it is explicitly out of this gate's scope. This change moves the metric in the right direction (1213 -> 1212 entities, one whole capability removed), so flagging it here would penalise a subtraction for a pre-existing shape."
+      }
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "The chain that existed -- spine.get('origin').get('worktree') compared against a git subprocess's parsed stdout -- is deleted. The two surviving accesses are writes.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "Actively cured. The predicate that had degenerated to returning None on every path was deleted rather than kept as a seam, and ORIGIN_EXEMPT_VERBS -- flagged as having no production consumer by three separate g1-era reviewers of #315 -- went with it. worktree_from_spine_path is left in place unwired and stated plainly as such: it is g1's shipped, tested derivation with a consumer named (g5), not a hook invented here.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "flagged",
+      "finding": "78 lines of executable code were replaced by 14 lines of tombstone comment in checklist_engine.py, and the vacated position before dispatch() now carries an 11-line comment explaining that nothing is there. Some of this is earned -- a deletion this load-bearing should say why it happened, and the repo asks for exactly that. But the tombstone also carries the assertion 'Nothing was left unguarded by that removal', which is prose asserting a behavioural property that measurement contradicts (finding B1). CREW_CONTEXT 'Assert against behaviour, never against text that describes it' is precisely the rule this trips: the comment is doing work a test should do, and it is wrong.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

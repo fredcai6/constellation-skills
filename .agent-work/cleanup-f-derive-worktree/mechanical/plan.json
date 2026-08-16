@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "plan",
+  "mechanical": {
+    "run": "cleanup-f-derive-worktree",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 7,
+    "spine-step": "plan",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-plan@de34a4a0933d59fdf50a274dfcdacc727ef29dda",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-f-derive-worktree",
+    "generated_at": "2026-08-16T16:19:53Z"
+  }
+}

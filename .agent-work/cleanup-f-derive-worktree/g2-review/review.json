@@ -1,0 +1,198 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md + global-everyone.md, docs/agents/CREW_CONTEXT.md, MISSION_FRAME.md, the g2 reviewer handoff, the g2 implementer result, and execute.json tasks g2-implement/g2-review. Confirmed the bound SPINE_FILE is the Commander's execute gate under the Commander's active lease and my crew-runs.json entry has spine:null, so I authored this survey instead of driving the parent spine. No docs/architecture packet map exists (orientation DEGRADED-UNPARSEABLE, discharged); map/INDEX.md used. Diff base 9ff86f2d confirmed: 5 files, 273 insertions, 623 deletions.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All three frozen changes landed, verified by command not accepted. (1) origin_worktree_refusal is deleted outright, not merely stopped from comparing -- sanctioned by the gate's own constraint ('if it degenerates to a no-op, delete it'). (2) 'git grep -n \"rev-parse --show-toplevel\" -- scripts/checklist_engine.py' returns nothing, rc=1; the only surviving --show-toplevel calls under scripts/ are episode_capture.py:96, map_orient.py:1040, mcp_spine_server.py:611 and verify_worktree_isolation.py:123, all other modules. (3) origin.worktree is still written: 'grep -rn --include=*.py -E \"[\\\"']origin[\\\"']\" scripts/' COUNT: 2, both writes (spine_lifecycle.py:323 compiled[\"origin\"]=origin, init_work_area.py:188 setdefault), 0 production reads; ORIGIN_GUARDED_VERBS/ORIGIN_EXEMPT_VERBS have zero references outside archive, docs prose and the pinning test. Deleting the two verb sets is compliant: the handoff sentence 'its guarded/exempt verb sets keep their current meaning' sits inside the no-new-refusal paragraph, and their only production reader was inside the deleted predicate. Five files differ from 9ff86f2d as stated: 273 insertions, 623 deletions.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No scope breach. 'git diff 9ff86f2d --name-status' lists exactly the five allowed paths (docs/CHECKLIST_SCHEMA.md, map/INDEX.md, scripts/checklist_engine.py, scripts/spine_lifecycle.py, tests/test_spine_origin_isolation.py). A targeted diff over every excluded path -- mcp_spine_server.py, .mcp.json, examples/, install_constellation.py, skills/commander/templates/, run_crew.py, recover_crews.py, test_crew_launcher.py, verify_worktree_isolation.py, hooks/spine_rail.py, .agent-work/templates, skills/admiral/templates -- returns empty. spine_rail.py is untouched as g3 requires. No untracked files outside .agent-work/. map/INDEX.md was genuinely regenerated, not hand-edited: 'py -m scripts.code_map build --root .' reproduces the committed file byte-identically (diff empty) and touches nothing else under map/. The three fenced-file prose mentions of the retired guard (mcp_spine_server.py:18,:371; run_crew.py:860) are correctly left stale and are recorded as out-of-scope observations, not defects.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Every FIGURE reproduces; one CONCLUSION does not. Reproduced in my own hands: targeted check green (4 passed, 9 deselected, 18 subtests); four-file run 85 passed; full suite 3135 passed / 5 skipped / 0 failed, cache cleared, clean env; base 3159/6 verified at source in m5-full-suite-BASE.txt; the -25 collected reconciles exactly and mechanically (this file 38 -> 13 collected, and it is the ONLY test file that differs from 9ff86f2d, so no test could silently stop running; the single skipUnless(os.name=='nt') at base :306 is gone, giving 6 -> 5 skips); wiring grep 35 -> 21; enumeration COUNT 2, both writes; map/INDEX.md regenerates byte-identically. Provenance pin is genuine in BOTH directions, run by me: delete the init_work_area worktree line -> test_provenance_the_stamp_is_written_by_both_producers FAILS; delete build_origin's worktree entry -> same test FAILS; re-add a cwd comparison in main() -> 8 failed; restored -> 13 passed, engine byte-identical to pre-mutation. FAIL is for evidence section 5, the adversarial search. probe_adversarial.py drives only the LEASED case (agent-one holds the lease) plus one leaseless ; it never drives a mutating verb on a spine with no active lease. I ran that case and the negative does not hold -- see r4.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Two constraints are not met.\n\n(1) not-a-weaker-guard has a measured counter-case, and the change ships prose asserting the opposite as fact. require_session (checklist_engine.py:1026-1030) returns early when no ACTIVE lease exists, so for a spine with no active lease the lease guards NOTHING and the origin comparison was the sole refusal. Measured by me, same fixture, base engine 9ff86f2d vs the working tree, spine stamped with its own worktree, verbs driven from a foreign git worktree: never-claimed spine, start -> BEFORE exit=1 REFUSED / AFTER exit=0, gate written pending -> in-progress; attach -> BEFORE exit=1 REFUSED / AFTER exit=0. Lease RELEASED then re-driven: start -> BEFORE exit=1 REFUSED / AFTER exit=0, gate written. Active lease held by another session: refused BEFORE and AFTER (the implementer's table is correct for that row only). So the delta is not 'an unclaimed spine can now be claimed from a foreign tree' -- it is every mutating verb, on any spine with no active lease, never-claimed or released, and it WRITES state into a tree the agent is not standing in. Three shipped artifacts now state the falsified claim: docs/CHECKLIST_SCHEMA.md 'Removing it removed no guard ... ownership is the lease, and always was'; checklist_engine.py 'Nothing was left unguarded by that removal'; the test module docstring 'Nothing was left unguarded by removing it'. not-a-weaker-guard is @grade settled/human and its own text says a genuine counter-case is a finding, so this is reported for the ruling tier, not decided here.\n\n(2) The Windows case/separator expectation is not constructed, contrary to evidence section 8. Measured: under a stamp-reading mutant, driven from the foreign cwd the test actually uses, EVERY row refuses identically -- the spine's own worktree, the upper-cased copy, C:\\W\\REPO and a foreign tree all exit=1. Those two rows discriminate nothing the plain foreign-tree row does not. They separate only when driven from the spine's OWN worktree (own=exit 0, wrong case=exit 1), and the test never drives from there. The class as a whole is still non-vacuous, because assertEqual([0,0,0], first['codes']) catches the all-refused collapse -- which is why my mutant went red. Cheap repair: add a third drive, _assert_one_answer_for_every_stamp(self.worktree).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "One divergence needs the Commander, and it is not this gate's to settle. The measured leaseless case in r4 contradicts the decision anchor not-a-weaker-guard, which is @grade settled/human. Doctrine says a settled/human anchor is not the executor's to unsettle and contradicting evidence is a finding to float to the ruling tier -- so the Commander must either (a) get the shipped prose in docs/CHECKLIST_SCHEMA.md, checklist_engine.py and the test module docstring narrowed to what is true ('the lease is the guard wherever a lease exists'), or (b) float the contradiction to the Admiral who owns the anchor. It is a prose/scope question, not necessarily a code question: the subtraction may be exactly what was ruled.\n\nEverything else reconciles. The 2026-08-15 worktree-identity ruling supersession is cited plainly in all three required places (docs/CHECKLIST_SCHEMA.md:122, checklist_engine.py:96, tests/test_spine_origin_isolation.py:22) and the ruling file itself is correctly left unedited. map/INDEX.md moves 1213 -> 1212 script entities and 4737 -> 4699 test entities and regenerates byte-identically. The Map Impact notes match the diff, including the implementer's own correction that the handoff's cited call site :3573-3578 was stale (really :3638-3643) -- the third stale line-number citation this lane has produced.\n\nNO FAIL-CLOSED REFUSAL WAS SMUGGLED IN -- proved mechanically, not sampled. Every added line under scripts/ in this diff is docstring or comment prose: 'git diff 9ff86f2d -- scripts/ | grep ^+ | strip comments/blanks' leaves only docstring text. There are ZERO executable additions in production code, so no new early-return, refusal or verb-set change is possible. main() now runs load -> refusals arming -> dispatch with nothing between; the g4 shape refusal is absent; hooks/spine_rail.py is untouched; the tripwire tests/test_worktree_precondition_wiring.py is green standalone and in the full suite.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/cleanup-f-derive-worktree/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/cleanup-f-derive-worktree/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from cleanup-f-derive-worktree alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/cleanup-f-derive-worktree/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All twelve baseline smells visited; verify_fowler_pass.py exits 0 (smells=12, flagged=[duplicated-code, shotgun-surgery, comments-as-deodorant], overridden=[primitive-obsession, divergent-change], each override logging the winning standard and why it subordinates the smell). Record at .agent-work/cleanup-f-derive-worktree/FOWLER_PASS.json; the g1 reviewer's record was preserved first as FOWLER_PASS-g1-reviewer-attempt-2.json rather than overwritten. No rail exception used. The three flags are non-blocking on their own but two of them converge on this gate's blocking finding: the falsified 'nothing was left unguarded' claim is hand-copied into three files with nothing checking the copies (duplicated-code), and it is asserted in a comment where CREW_CONTEXT requires an assertion against behaviour (comments-as-deodorant). Fixing B1 in one place and not the other two is the concrete risk those two flags name.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/cleanup-f-derive-worktree/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r3-evidence: Every FIGURE reproduces; one CONCLUSION does not. Reproduced in my own hands: targeted check green (4 passed, 9 deselected, 18 subtests); four-file run 85 passed; full suite 3135 passed / 5 skipped / 0 failed, cache cleared, clean env; base 3159/6 verified at source in m5-full-suite-BASE.txt; the -25 collected reconciles exactly and mechanically (this file 38 -> 13 collected, and it is the ONLY test file that differs from 9ff86f2d, so no test could silently stop running; the single skipUnless(os.name=='nt') at base :306 is gone, giving 6 -> 5 skips); wiring grep 35 -> 21; enumeration COUNT 2, both writes; map/INDEX.md regenerates byte-identically. Provenance pin is genuine in BOTH directions, run by me: delete the init_work_area worktree line -> test_provenance_the_stamp_is_written_by_both_producers FAILS; delete build_origin's worktree entry -> same test FAILS; re-add a cwd comparison in main() -> 8 failed; restored -> 13 passed, engine byte-identical to pre-mutation. FAIL is for evidence section 5, the adversarial search. probe_adversarial.py drives only the LEASED case (agent-one holds the lease) plus one leaseless ; it never drives a mutating verb on a spine with no active lease. I ran that case and the negative does not hold -- see r4.",
+      "r4-quality: Two constraints are not met.\n\n(1) not-a-weaker-guard has a measured counter-case, and the change ships prose asserting the opposite as fact. require_session (checklist_engine.py:1026-1030) returns early when no ACTIVE lease exists, so for a spine with no active lease the lease guards NOTHING and the origin comparison was the sole refusal. Measured by me, same fixture, base engine 9ff86f2d vs the working tree, spine stamped with its own worktree, verbs driven from a foreign git worktree: never-claimed spine, start -> BEFORE exit=1 REFUSED / AFTER exit=0, gate written pending -> in-progress; attach -> BEFORE exit=1 REFUSED / AFTER exit=0. Lease RELEASED then re-driven: start -> BEFORE exit=1 REFUSED / AFTER exit=0, gate written. Active lease held by another session: refused BEFORE and AFTER (the implementer's table is correct for that row only). So the delta is not 'an unclaimed spine can now be claimed from a foreign tree' -- it is every mutating verb, on any spine with no active lease, never-claimed or released, and it WRITES state into a tree the agent is not standing in. Three shipped artifacts now state the falsified claim: docs/CHECKLIST_SCHEMA.md 'Removing it removed no guard ... ownership is the lease, and always was'; checklist_engine.py 'Nothing was left unguarded by that removal'; the test module docstring 'Nothing was left unguarded by removing it'. not-a-weaker-guard is @grade settled/human and its own text says a genuine counter-case is a finding, so this is reported for the ruling tier, not decided here.\n\n(2) The Windows case/separator expectation is not constructed, contrary to evidence section 8. Measured: under a stamp-reading mutant, driven from the foreign cwd the test actually uses, EVERY row refuses identically -- the spine's own worktree, the upper-cased copy, C:\\W\\REPO and a foreign tree all exit=1. Those two rows discriminate nothing the plain foreign-tree row does not. They separate only when driven from the spine's OWN worktree (own=exit 0, wrong case=exit 1), and the test never drives from there. The class as a whole is still non-vacuous, because assertEqual([0,0,0], first['codes']) catches the all-refused collapse -- which is why my mutant went red. Cheap repair: add a third drive, _assert_one_answer_for_every_stamp(self.worktree).",
+      "r5-reconciliation: One divergence needs the Commander, and it is not this gate's to settle. The measured leaseless case in r4 contradicts the decision anchor not-a-weaker-guard, which is @grade settled/human. Doctrine says a settled/human anchor is not the executor's to unsettle and contradicting evidence is a finding to float to the ruling tier -- so the Commander must either (a) get the shipped prose in docs/CHECKLIST_SCHEMA.md, checklist_engine.py and the test module docstring narrowed to what is true ('the lease is the guard wherever a lease exists'), or (b) float the contradiction to the Admiral who owns the anchor. It is a prose/scope question, not necessarily a code question: the subtraction may be exactly what was ruled.\n\nEverything else reconciles. The 2026-08-15 worktree-identity ruling supersession is cited plainly in all three required places (docs/CHECKLIST_SCHEMA.md:122, checklist_engine.py:96, tests/test_spine_origin_isolation.py:22) and the ruling file itself is correctly left unedited. map/INDEX.md moves 1213 -> 1212 script entities and 4737 -> 4699 test entities and regenerates byte-identically. The Map Impact notes match the diff, including the implementer's own correction that the handoff's cited call site :3573-3578 was stale (really :3638-3643) -- the third stale line-number citation this lane has produced.\n\nNO FAIL-CLOSED REFUSAL WAS SMUGGLED IN -- proved mechanically, not sampled. Every added line under scripts/ in this diff is docstring or comment prose: 'git diff 9ff86f2d -- scripts/ | grep ^+ | strip comments/blanks' leaves only docstring text. There are ZERO executable additions in production code, so no new early-return, refusal or verb-set change is possible. main() now runs load -> refusals arming -> dispatch with nothing between; the g4 shape refusal is absent; hooks/spine_rail.py is untouched; the tripwire tests/test_worktree_precondition_wiring.py is green standalone and in the full suite."
+    ],
+    "summary": "BLOCK on one blocking finding (B1) and one supporting finding (B2). The CODE change is correct and in scope: the comparison, the two verb sets and the per-verb git rev-parse are gone, the stamp is still written, nothing reads it for a decision, the provenance pin bites in both directions, no fail-closed refusal was smuggled in (zero executable additions in scripts/), no fenced file was touched, and the suite is green at 3135/5/0 with the -25 collected reconciling mechanically to the one changed test file. B1: the gate's load-bearing claim -- 'removing it removed no guard; ownership is the lease, and always was' -- is measurably false. require_session returns early when no ACTIVE lease exists, so on a never-claimed or released spine the origin comparison was the ONLY refusal; measured before/after, start and attach on a leaseless spine go exit=1 REFUSED -> exit=0 and WRITE state from a foreign tree. The implementer's adversarial probe only drove the leased case plus one leaseless claim, so its negative result is unscoped, and the falsified claim now ships as fact in three artifacts. not-a-weaker-guard is @grade settled/human, so this is floated as contradicting evidence, not decided here. B2: the Windows case/separator rows are inert at the cwds the test drives from, so the 'constructed, not inherited' claim in evidence section 8 does not hold; one added drive from the spine's own worktree fixes it."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "Lane A (#603): mcp_spine_server._standing_in_the_bound_spines_worktree exists solely to satisfy the guard this gate deleted, and its own docstring says so (mcp_spine_server.py:18, :371, :384 now stale). The chdir may still be wanted for g5 command-check cwd, but it currently has no stated reason to exist and its tests pass either way. Needs a deliberate decision by the owning lane."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "Lane E: scripts/run_crew.py:860 carries present-tense prose describing the retired origin_worktree_refusal comparison. Correctly left stale by this gate (fenced); belongs to the owning lane."
+    },
+    {
+      "id": "tc3",
+      "from": "r5-reconciliation",
+      "statement": "In-scope-but-untouched stale prose: tests/test_worktree_precondition_wiring.py:15-17 and tests/test_mcp_door_engine_cwd.py:5 both still say enforcement is engine-native via origin_worktree_refusal. Left alone deliberately (the tripwire must not be disturbed before g5), but they are now false and should be repaired when g5 or g3 opens those files."
+    },
+    {
+      "id": "tc4",
+      "from": "r5-reconciliation",
+      "statement": "Line-number anchors in this repo are not carrying their weight: three stale citations on this lane alone (spine_rail :639 vs :693; CHECKLIST_SCHEMA.md's :3411-3444; the g2 handoff's :3573-3578 vs the real :3638-3643). Symbol names would have been correct in all three. Consider a doctrine change to cite symbols, not lines."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/cleanup-f-derive-worktree/g2/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-16T18:27:31.928848+00:00",
+    "last_heartbeat": "2026-08-16T18:39:40.245607+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T18:41:13.306376+00:00"
+  }
+}

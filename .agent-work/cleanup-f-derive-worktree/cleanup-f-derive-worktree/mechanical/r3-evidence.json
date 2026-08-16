@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r3-evidence",
+  "mechanical": {
+    "run": "cleanup-f-derive-worktree",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r3-evidence",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-r3-evidence@04e177f4eeb6bb00e421a8e191106ce60225f4ad",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-f-derive-worktree",
+    "generated_at": "2026-08-16T18:32:43Z"
+  }
+}

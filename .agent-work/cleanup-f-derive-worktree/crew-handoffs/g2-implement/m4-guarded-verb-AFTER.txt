@@ -1,0 +1,39 @@
+--- start g1, cwd = the spine's own worktree
+    exit code        : 0
+    stderr REFUSED   : False
+    gate status after: in-progress
+    origin.worktree  : True (unchanged)
+    git subprocesses : 7
+      episode_capture.py:95    git rev-parse --show-toplevel
+      agent_work_root.py:64    git rev-parse --git-dir
+      agent_work_root.py:64    git rev-parse --git-common-dir
+      checklist_engine.py:709  git rev-parse HEAD
+      episode_capture.py:133   git rev-parse --git-common-dir
+      checklist_engine.py:709  git diff --cached --name-only
+      checklist_engine.py:709  git diff --cached --numstat
+--- start g1, cwd = a foreign git worktree
+    exit code        : 0
+    stderr REFUSED   : False
+    gate status after: in-progress
+    origin.worktree  : True (unchanged)
+    git subprocesses : 7
+      episode_capture.py:95    git rev-parse --show-toplevel
+      agent_work_root.py:64    git rev-parse --git-dir
+      agent_work_root.py:64    git rev-parse --git-common-dir
+      checklist_engine.py:709  git rev-parse HEAD
+      episode_capture.py:133   git rev-parse --git-common-dir
+      checklist_engine.py:709  git diff --cached --name-only
+      checklist_engine.py:709  git diff --cached --numstat
+--- start g1, cwd = a non-git directory
+    exit code        : 0
+    stderr REFUSED   : False
+    gate status after: in-progress
+    origin.worktree  : True (unchanged)
+    git subprocesses : 7
+      episode_capture.py:95    git rev-parse --show-toplevel
+      agent_work_root.py:64    git rev-parse --git-dir
+      agent_work_root.py:64    git rev-parse --git-common-dir
+      checklist_engine.py:709  git rev-parse HEAD
+      episode_capture.py:133   git rev-parse --git-common-dir
+      checklist_engine.py:709  git diff --cached --name-only
+      checklist_engine.py:709  git diff --cached --numstat

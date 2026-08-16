@@ -1,0 +1,7 @@
+exit=1 refused=True  a verb naming a task that does not exist
+exit=1 refused=True  a gate whose precondition is unmet
+exit=1 refused=True  a mutating verb from a session that does not hold the lease
+exit=1 refused=True  a mutating verb with no session id at all
+exit=1 refused=True  advance with an unmet postcondition
+exit=1 refused=True  advance with no running understanding
+exit=1 refused=True  release by a session that does not hold the lease, unforced

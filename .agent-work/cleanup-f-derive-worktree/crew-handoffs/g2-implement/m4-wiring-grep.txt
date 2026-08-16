@@ -1,0 +1,40 @@
+### WIRING GREP
+### COMMAND: grep -rn "origin_worktree_refusal\|worktree_from_spine_path" --include=*.py scripts/ tests/
+### COUNT: BEFORE 35 -> AFTER 21
+
+CALL SITES REMOVED (1):
+  scripts/checklist_engine.py main() -- the single production call of
+  origin_worktree_refusal. The map (map/scripts.checklist_engine/
+  origin_worktree_refusal.md) reported exactly 1 production reference,
+  this module only, which matches.
+
+CALL SITES ADDED (0):
+  This gate does NOT consume worktree_from_spine_path, stated plainly as
+  the handoff asks. With no comparison and no refusal there is no question
+  left in main() for a derived worktree to answer; wiring it in would be
+  for appearances. It remains consumed only by tests/test_worktree_
+  derivation.py:78. So this gate is NOT its first consumer -- g5 (threading
+  it into command-kind checks as their cwd) is, and g5 is floated.
+
+THE 21 REMAINING, CLASSIFIED (none is a call of the retired predicate):
+  scripts/mcp_spine_server.py:18:worktree guard (`checklist_engine.origin_worktree_refusal`) compares a spine's
+  scripts/mcp_spine_server.py:371:    Why the door moves at all. `checklist_engine.origin_worktree_refusal`
+  scripts/checklist_engine.py:88:# its own ambient cwd; `origin_worktree_refusal` and the two verb sets that fed
+  scripts/checklist_engine.py:111:def worktree_from_spine_path(spine_path) -> str | None:
+  scripts/checklist_engine.py:138:    recorded when this was written -- keeping `origin_worktree_refusal` pure
+  scripts/spine_lifecycle.py:92:    `origin_worktree_refusal` used to compare it against its own ambient cwd,
+  scripts/run_crew.py:860:    engine reads directly: `checklist_engine.origin_worktree_refusal` compares a
+  scripts/hooks/spine_rail.py:743:    `checklist_engine.worktree_from_spine_path` -- duplicated because this module
+  tests/test_shipped_check_commands_resolve.py:95:# became engine-native (`checklist_engine.origin_worktree_refusal`). One fewer
+  tests/test_worktree_precondition_wiring.py:15:now engine-native -- `checklist_engine.origin_worktree_refusal` compares the
+  tests/test_spine_rail.py:904:    `checklist_engine.worktree_from_spine_path`. This test covers only what the
+  tests/test_spine_lifecycle.py:182:    nesting it introduced weakened `origin_worktree_refusal` (#588). The one test
+  tests/test_mcp_door_engine_cwd.py:5:`checklist_engine.origin_worktree_refusal` compares a spine's stamped
+  tests/test_spine_origin_isolation.py:4:`checklist_engine.origin_worktree_refusal` compared `origin.worktree` against a
+  tests/test_spine_origin_isolation.py:28:(`checklist_engine.worktree_from_spine_path`), so there is no second value that
+  tests/test_spine_origin_isolation.py:411:        answer for, not a quiet re-landing. `worktree_from_spine_path` is the
+  tests/test_spine_origin_isolation.py:415:        for gone in ("def origin_worktree_refusal(", "ORIGIN_GUARDED_VERBS =",
+  tests/test_spine_origin_isolation.py:418:        self.assertIn("def worktree_from_spine_path(", source)
+  tests/test_worktree_derivation.py:10:- `scripts/checklist_engine.py:worktree_from_spine_path` -- the definition the
+  tests/test_worktree_derivation.py:78:    "engine": _require(_ENGINE, "worktree_from_spine_path"),
+  tests/test_worktree_derivation.py:258:    A `realpath` here would also make `origin_worktree_refusal` impure while its

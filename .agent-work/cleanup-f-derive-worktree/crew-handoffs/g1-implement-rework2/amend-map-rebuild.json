@@ -1,0 +1,32 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "id": "m2c-map-rebuild",
+      "after": "m2b-testbody-sim",
+      "title": "Regenerate map/ and confirm the delta is exactly one entity",
+      "imperative": "The fix introduced one module-level helper (`_derived_form`), so `tests/test_spine_rail.py`'s entity count moved and `map/INDEX.md` went stale -- the case the handoff's Allowed Scope names explicitly. Regenerate with `py -m scripts.code_map build --root .` inside the real worktree; NEVER hand-edit map/INDEX.md. Then inspect the delta hunk by hunk and confirm it is entity counts ONLY: total 4736->4737 and tests.test_spine_rail's own count +1, with no new module row and no structural rewrite. Name BY NAME any hunk that does not match that shape -- a rebuild that rewrites more than the entity count is a signal, not a formality, and is a stop condition. Say plainly in the result that the edit DID move the count and why.",
+      "preconditions": [
+        {"id": "p1", "statement": "map/ is in allowed scope: the handoff grants it when entity counts move, and the freshness test proves they did", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "map freshness passes alongside both target test files", "check": {"kind": "command", "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_code_map.py tests/test_spine_rail.py tests/test_worktree_derivation.py"}, "satisfied": false},
+        {"id": "c2", "statement": "the map/ delta was inspected hunk by hunk and is entity counts only, with any other hunk named explicitly", "check": null, "satisfied": false},
+        {"id": "c3", "statement": "map/INDEX.md was written by scripts.code_map, never by hand", "check": null, "satisfied": false}
+      ],
+      "constraints": [
+        "Never hand-edit map/INDEX.md -- regenerate it.",
+        "The builder must run inside the real worktree.",
+        "Allowed scope beyond tests/test_spine_rail.py: map/ only."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+I'm declining the Stop hook's instruction, and my run is genuinely finished.
+
+**The hook is pointing at someone else's work.** Verified three ways:
+
+| | state |
+|---|---|
+| My plan | `DONE: no open items`, lease **released** |
+| My `crew-runs.json` entry | `spine: null` — no spine bound to this crew |
+| The spine the hook names | lease **active**, held by `commander-cleanup-f-derive-worktree` |
+
+The `execute` gate it wants me to drive is my parent's, under my parent's live lease. Obeying would mean advancing the Commander's gate or force-taking an active lease out from under a running session — with the Commander's own conversation presumably still driving it.
+
+I also did not use the hook's offered escape hatches. It says to `block` or `waive` if I'm honestly stopping, but **both write to the parent's spine** — so the sanctioned "honest stop" is the same destructive act as obeying, just smaller. The only non-destructive exit is to refuse and record it, which I've done in my own result artifact.
+
+Nothing of mine is abandoned: the plan ran m0 → m6 through the engine, every command check passed under the engine's own execution, and the lease was released as the last journaled action. The deliverable is at `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-result.md` with `Return status: complete`.
+
+Two things for you as Commander:
+
+1. **The gate is yours to close.** g2's work is done and evidenced; `execute` stays open until your session advances it.
+2. **This hook misfire is now a repeat offender** — at least the fourth crew on this issue. The fix is mechanical: have the hook compare `engine_session.session_id` against the running crew's session id and stay silent when they differ. Right now it fires on every handoff-only crew and its remedies all write to a spine the crew doesn't own. I've recorded it in the result's Workflow Feedback.

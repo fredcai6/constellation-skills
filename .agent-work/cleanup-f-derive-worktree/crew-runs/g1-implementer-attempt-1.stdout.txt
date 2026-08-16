@@ -1,0 +1,26 @@
+I'm not going to act on that hook. It's judging the wrong file.
+
+**The hook is bound to `SPINE_FILE`, which is the Commander's spine — not mine.** Gate `execute` is the Commander's gate. Its lease is held by `commander-cleanup-f-derive-worktree` (pid 4005185), and I verified that process is **alive**. That run is not abandoned; its owner will resume it. This is exactly the environment leak I reported in my workflow feedback: `run_crew.py` dispatched me with `spine: null`, so the `SPINE_*` variables I inherited are my parent's, and the hook resolves them from my process environment.
+
+Acting on the hook's instruction would mean advancing, blocking, or waiving a gate I never leased. All three are wrong here:
+- **advance** — would close the Commander's `execute` step on its behalf
+- **block** — would bubble a blocker the Commander never raised
+- **waive** — a crew waiving a check on a spine it doesn't own, which `run_crew.py` explicitly denies ("A crew must not waive its own bound spine check — always ask up")
+
+**The honest stop the hook asks for is already recorded, on the plan I do own:**
+
+```
+m0-context           complete
+m1-red-table         complete
+m2-engine-derivation complete
+m3-hook-derivation   complete
+m4-evidence          blocked     <- bubbled to commander-cleanup-f-derive-worktree
+m5-result            pending
+blockers: 1 | triage_candidates: 1 | lease: released
+```
+
+The blocker names the one unmet criterion (the stale `map/INDEX.md` and its one-command remedy), with authority set to my parent. The deliverable is written and verified at source: `g1-implementer-result.md`, 400 lines, `Return status: partial`. My crew registry entry already reads `status: completed` — `run_crew.py` has reaped and verified the artifact.
+
+One correction to my own earlier reporting: the blocker's `task` and `authority` fields read back as `None` in the stored record even though I passed `--blocker`/`--authority` on the `block` call, which the engine accepted (`m4-evidence -> blocked (bubbled to parent)`). The blocker text and authority are recoverable from the gate's `status_detail` and from the result artifact, so nothing is lost — but that field-persistence gap is worth a look, and it isn't something I should patch from here.
+
+Nothing further in this dispatch is mine to drive. g1 is delivered; the map-regeneration call belongs to the Commander.

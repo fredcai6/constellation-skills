@@ -1,0 +1,432 @@
+{
+  "work_id": "cleanup-f-derive-worktree-g1-implement-rework2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-reproduce",
+    "m2-fix",
+    "m2b-testbody-sim",
+    "m2c-map-rebuild",
+    "m3-suite"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and confirm the handoff is complete",
+      "imperative": "Read the inherited global doctrine (constellation-implementer references/global-crew.md, references/global-everyone.md), the project deltas if present (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md), the rework2 handoff, the reviewer's B1 finding, and both files under change. Verify the handoff carries task, intent, allowed scope, exclusions, required evidence, test mode, stop conditions, return format; block and return if not. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff + reviewer B1 + both test files read; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md, global-everyone.md, windows.md, CREW_CONTEXT.md, GLOSSARY.md, the rework2 handoff, reviewer B1, both test files and both derivation copies. Handoff complete: task, protected intent, allowed scope, exclusions, required evidence, test mode (test-after), stop conditions, return format."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-reproduce": {
+      "id": "m1-reproduce",
+      "title": "Reproduce B1 under a simulated Windows path module",
+      "imperative": "Build the simulation the reviewer describes as a runnable harness at .agent-work/cleanup-f-derive-worktree/evidence/g1-windows-sim.py: load BOTH derivation copies with os.path swapped to ntpath, run the target test's six comparisons against a realistic Windows tmp_path, and score the platform-INHERITED expectation (str(worktree)) against the CONSTRUCTED one (normcase(normpath(...))). The harness reads the implementations, never the test file's text, so the same command is meaningful before and after the fix. It must exit 0 only when the inherited form fails every comparison under ntpath, the constructed form passes every comparison under BOTH ntpath and posixpath, and the sibling table's _expected() construction agrees. Attest p1 before start.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "B1 reproduces: the harness exits 0, showing the inherited expectation passing 0/12 under ntpath and the constructed expectation passing 12/12 under both platforms",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py .agent-work/cleanup-f-derive-worktree/evidence/g1-windows-sim.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-reproduce-1"
+        }
+      ],
+      "constraints": [
+        "The harness lives under .agent-work/ (local-only evidence), never in tests/ -- the allowed scope is tests/test_spine_rail.py only.",
+        "No production file may change."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-reproduce-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py .agent-work/cleanup-f-derive-worktree/evidence/g1-windows-sim.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-fix": {
+      "id": "m2-fix",
+      "title": "Construct all six expectations instead of inheriting them",
+      "imperative": "In tests/test_spine_rail.py::test_worktree_from_spine_walks_to_the_nearest_agent_work_ancestor, replace each of the six comparisons against str(worktree)/str(sandbox) with the same construction the sibling table already uses: os.path.normcase(os.path.normpath(str(...))). Reuse that construction rather than inventing a second one. Change nothing in production and nothing in tests/test_worktree_derivation.py. Test mode is test-after -- no production behaviour changes -- so this gate carries one green postcondition: both test files pass AND no inherited comparison survives in the target test.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "B1 reproduced under simulation at m1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-reproduce complete: inherited 0/12 under ntpath."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both test files green and no platform-inherited expectation survives in the target test",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && ! grep -nE '== str\\((worktree|sandbox)\\)' tests/test_spine_rail.py && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py tests/test_worktree_derivation.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fix-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the Windows simulation still passes for both files after the fix",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py .agent-work/cleanup-f-derive-worktree/evidence/g1-windows-sim.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fix-2"
+        }
+      ],
+      "constraints": [
+        "Allowed scope: tests/test_spine_rail.py only (plus map/ if regeneration is forced).",
+        "Frozen: scripts/checklist_engine.py, scripts/hooks/spine_rail.py, tests/test_worktree_derivation.py.",
+        "Construct case expectations explicitly; never inherit them from sys.platform.",
+        "Do not act on the reviewer's tc1/tc2/tc3."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-fix-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && ! grep -nE '== str\\((worktree|sandbox)\\)' tests/test_spine_rail.py && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py tests/test_worktree_derivation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-fix-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py .agent-work/cleanup-f-derive-worktree/evidence/g1-windows-sim.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-suite": {
+      "id": "m3-suite",
+      "title": "Full suite green with cleared cache, and no production file changed",
+      "imperative": "Clear every __pycache__, run the full suite under a clean env, state the count, and derive the failure distribution mechanically even when empty. Then confirm with git diff --stat against e36e630b that no production file differs from the state inherited at attempt 3. Finally write the self-contained IMPLEMENTER_RESULT covering attempts 1-3 to .agent-work/cleanup-f-derive-worktree/crew-handoffs/g1-implementer-result.md, overwriting it; that write is the delivery.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "fix landed and both target files green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Fix landed, both target files green, map regenerated."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green from a cleared cache under a clean env",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-suite-1"
+        },
+        {
+          "id": "c2",
+          "statement": "no production file differs from e36e630b beyond the two frozen implementation files inherited from attempts 1-2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "git diff e36e630b --stat: scripts/checklist_engine.py still +65 (1 hunk, 0 deletion lines) and scripts/hooks/spine_rail.py still 106 changed (2 hunks) -- identical to the shape measured at the start of this attempt and to the reviewer's independent measurement. Only tests/test_spine_rail.py (117->136) and map/INDEX.md moved. mtimes corroborate: both production files 10:04:20, before this attempt began; tests/test_worktree_derivation.py 09:30:54, untouched. No excluded path appears in git diff --name-only."
+        },
+        {
+          "id": "c3",
+          "statement": "the self-contained IMPLEMENTER_RESULT is written to the handoff's named path",
+          "check": {
+            "kind": "command",
+            "command": "test -s /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree/.agent-work/cleanup-f-derive-worktree/crew-handoffs/g1-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-suite-2"
+        }
+      ],
+      "constraints": [
+        "Return status on its own line, lowercase.",
+        "Correct attempt 2's scoped null: the fold was not merely untested on Windows, the test was guaranteed to fail there."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-suite-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree/.agent-work/cleanup-f-derive-worktree/crew-handoffs/g1-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2b-testbody-sim": {
+      "id": "m2b-testbody-sim",
+      "title": "Prove the fix over the REAL test body, not a reconstruction",
+      "imperative": "The m1 harness proves the two candidate expectations apart by reconstructing the six comparisons. That is one step short of what the handoff asks: show the corrected expectation is what the implementation returns under a simulated ntpath. Execute the actual test function from tests/test_spine_rail.py twice -- once with the three comparison lines textually reverted to the platform-inherited form, once as it stands -- under a `normcase` that FOLDS, and again under the host's identity `normcase`. Assert the substitution applied before trusting the pre-fix run, so a silently-matched-nothing revert cannot read as a passing guard. The pre-fix body must FAIL under the fold and PASS on the host; the post-fix body must PASS under both.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the fix is in tree and both target test files are green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-fix complete: 205 passed, 1 skipped across both target files."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the real test body fails pre-fix under a folding normcase and passes post-fix, while both pass under the host's identity normcase",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py .agent-work/cleanup-f-derive-worktree/evidence/g1-windows-testbody-sim.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2b-testbody-sim-1"
+        }
+      ],
+      "constraints": [
+        "The harness lives under .agent-work/ (local-only evidence), never in tests/.",
+        "It must assert its own textual revert applied -- a check that cannot fail is indistinguishable from one that passed."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2b-testbody-sim-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py .agent-work/cleanup-f-derive-worktree/evidence/g1-windows-testbody-sim.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2c-map-rebuild": {
+      "id": "m2c-map-rebuild",
+      "title": "Regenerate map/ and confirm the delta is exactly one entity",
+      "imperative": "The fix introduced one module-level helper (`_derived_form`), so `tests/test_spine_rail.py`'s entity count moved and `map/INDEX.md` went stale -- the case the handoff's Allowed Scope names explicitly. Regenerate with `py -m scripts.code_map build --root .` inside the real worktree; NEVER hand-edit map/INDEX.md. Then inspect the delta hunk by hunk and confirm it is entity counts ONLY: total 4736->4737 and tests.test_spine_rail's own count +1, with no new module row and no structural rewrite. Name BY NAME any hunk that does not match that shape -- a rebuild that rewrites more than the entity count is a signal, not a formality, and is a stop condition. Say plainly in the result that the edit DID move the count and why.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "map/ is in allowed scope: the handoff grants it when entity counts move, and the freshness test proves they did",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tests/test_code_map.py::test_map_tree_freshness_root_index_matches_a_fresh_build failed with 4737 (fresh) vs 4736 (committed)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map freshness passes alongside both target test files",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_code_map.py tests/test_spine_rail.py tests/test_worktree_derivation.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2c-map-rebuild-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the map/ delta was inspected hunk by hunk and is entity counts only, with any other hunk named explicitly",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Diffed map/INDEX.md against a copy taken before the rebuild: exactly 3 hunks, all entity counts. tests total 4736->4737; tests.test_spine_rail 189->190 entities with holes unchanged at 95 (the helper carries a docstring). No new module row, no structural rewrite, no other hunk to name."
+        },
+        {
+          "id": "c3",
+          "statement": "map/INDEX.md was written by scripts.code_map, never by hand",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Written by 'py -m scripts.code_map build --root .' run inside the real worktree; map/INDEX.md was never opened in an editor."
+        }
+      ],
+      "constraints": [
+        "Never hand-edit map/INDEX.md -- regenerate it.",
+        "The builder must run inside the real worktree.",
+        "Allowed scope beyond tests/test_spine_rail.py: map/ only."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2c-map-rebuild-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_code_map.py tests/test_spine_rail.py tests/test_worktree_derivation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/cleanup-f-derive-worktree/g1/implementer/attempt-3",
+    "status": "released",
+    "claimed_at": "2026-08-16T17:17:52.938116+00:00",
+    "last_heartbeat": "2026-08-16T17:31:54.627522+00:00",
+    "claimed_by": "implementer",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T17:32:06.439244+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "B1 is a real, deterministic Windows failure: the six assertions inherit their expectation from the platform (str(worktree)) while the derivation returns a normcase-folded path. The fix is confined to tests/test_spine_rail.py; production is frozen.",
+      "mechanical": false,
+      "ts": "2026-08-16T17:18:20.465023+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-reproduce",
+      "why": "B1 reproduces mechanically: under ntpath the inherited expectation matches 0/12 comparisons across both derivation copies, while the constructed normcase(normpath(...)) form matches 12/12 under ntpath AND 12/12 under posixpath. The bug is invisible on this host precisely because normcase is the identity on POSIX.",
+      "mechanical": false,
+      "ts": "2026-08-16T17:18:26.078725+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-fix",
+      "why": "All six comparisons now construct their expectation with os.path.normcase(os.path.normpath(str(...))) through one local _derived_form helper, spelled exactly as the sibling table's _expected(). The remaining new assertions in this file are boolean, so B1's class is swept, not just its six instances. No production file changed.",
+      "mechanical": false,
+      "ts": "2026-08-16T17:20:41.284860+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m2b-testbody-sim",
+      "why": "The real test body, not a reconstruction: with the three lines reverted it FAILS under a folding normcase and PASSES on this host -- which is exactly why B1 was invisible here -- and as it now stands it passes under both. The revert asserts it applied, so the pre-fix red is real.",
+      "mechanical": false,
+      "ts": "2026-08-16T17:20:47.834774+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m2c-map-rebuild",
+      "why": "The test-body edit DID move the entity count, because the fix is a helper function rather than six inline expressions. The map delta is entity counts only (4736->4737, test_spine_rail 189->190), which is the bounded shape the handoff's scope grant anticipates.",
+      "mechanical": false,
+      "ts": "2026-08-16T17:24:01.028940+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m3-suite",
+      "why": "Full suite green from a cleared cache (3159 passed, 6 skipped, 1164 subtests, 0 FAILED lines), the arithmetic unchanged from attempt 2 because attempt 3 adds a helper and not a test. Production is provably untouched by stat, hunk shape and mtime. The self-contained result covering attempts 1-3 is delivered, including the corrected scoped null: the test was guaranteed to fail on Windows, not merely untested there.",
+      "mechanical": false,
+      "ts": "2026-08-16T17:31:54.627505+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-16T17:20:34.569285+00:00",
+      "reason": "The m1 harness reconstructs the six comparisons; it does not execute the test the blocker names. The handoff's Required Evidence 1 asks for the simulation run before and after against that test, so a gate that runs the REAL body under a folding normcase is added rather than accepting the reconstruction as a proxy.",
+      "authority": "handoff g1-implementer-rework2 (Required Evidence 1)",
+      "ops": [
+        "added m2b-testbody-sim"
+      ]
+    },
+    {
+      "ts": "2026-08-16T17:23:28.015083+00:00",
+      "reason": "The full suite is red on map freshness: the fix adds one module-level helper, so tests.test_spine_rail's entity count moved 4736->4737. The handoff puts map/ in scope for exactly this case and requires regeneration by the builder, so the rebuild gets its own gate with a hunk-shape check rather than being folded silently into the suite gate.",
+      "authority": "handoff g1-implementer-rework2 (Allowed Scope)",
+      "ops": [
+        "added m2c-map-rebuild"
+      ]
+    }
+  ]
+}

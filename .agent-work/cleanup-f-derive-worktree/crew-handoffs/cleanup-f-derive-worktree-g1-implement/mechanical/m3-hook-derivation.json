@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-hook-derivation",
+  "mechanical": {
+    "run": "cleanup-f-derive-worktree-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m3-hook-derivation",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-g1-implement-m3-hook-derivation@f99dd4139a2995dc3db7f58974c7d44b6bf3e27a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-f-derive-worktree-g1-implement",
+    "generated_at": "2026-08-16T16:32:15Z"
+  }
+}

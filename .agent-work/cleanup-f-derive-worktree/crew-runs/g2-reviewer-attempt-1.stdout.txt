@@ -1,0 +1,15 @@
+**Refused — that spine is not mine, and the refusal is recorded in my result artifact.**
+
+Verified by command before refusing:
+
+| | state |
+|---|---|
+| My survey `g2-review/review.json` | `LEASE released: …/g2/reviewer/attempt-1`, `DONE: no open items.` |
+| My `crew-runs.json` entry | `{"role": "reviewer", "gate": "g2", "spine": null}` |
+| The spine the hook points at | `LEASE active: commander-cleanup-f-derive-worktree (by commander)` |
+
+Nothing of mine is abandoned. My deliverable is on disk at `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-reviewer-result.md` (18KB, `Verdict: BLOCK` on line 10), my survey is consolidated across all 7 items, and my lease is released. The gate the hook wants driven is my parent's `execute` gate under my parent's live lease — advancing it would mean force-taking that lease.
+
+The hook's own escape hatches don't fit: it offers `block` or `waive`, but **both write to the parent's spine**, so the sanctioned "honest stop" is the destructive act. Refusing and recording is the only non-destructive exit. This is the fifth crew on #609 to hit it and the first as a *reviewer*, so it isn't implementer-specific — and it fired *after* my work was fully closed, because the hook keys on the spine's mid-flight state rather than on whether the running agent has anything open. I've updated my memory note accordingly. The durable fix remains a lease-ownership check in the hook, not more prose.
+
+**One thing in that spine's `current` needs your attention as Commander**, which I'm surfacing rather than acting on: `execute` now reports `CONTEXT 33% (>= hard)` with `REFRESH REQUESTED: execute (why_ref w-4)`, a trip ledger of 1 begin at/over the hard line under the current understanding, and 2 across the checklist's history. The rail's instruction there — close the gate carrying a handoff via `advance execute --why …` so a fresh agent cold-starts from the DIGEST — is addressed to the lease holder, which is you.

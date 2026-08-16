@@ -1,0 +1,19 @@
+I'm not complying with that hook, and the reason is mechanical rather than a judgment call.
+
+**What the hook asked for.** It read `$SPINE_FILE` from my environment and told me to reload the commander skill and drive `execute.json` gate by gate. Verified at the source rather than assumed:
+
+- That spine's lease is **active**, held by `commander-cleanup-f-derive-worktree` (heartbeat `16:22:16Z`) — my parent, a different session.
+- My session is `constellation/cleanup-f-derive-worktree/g1/implementer/attempt-3`.
+- No spine is bound to me: every implementer row in `crew-runs.json` has `spine: null`.
+- My own plan reports `DONE: no open items`, lease released.
+
+So the gate the hook calls "mid-flight" is my parent's, not mine. Advancing it would mean writing to a live lease I don't hold. **I wrote nothing to that spine.** The hook's stated escape hatches — `block` or `waive` — both write to it too, so for a handoff-only crew the sanctioned "honest stop" is the same destructive act. There is no verb that lets a crew say "that spine isn't mine," which is why the durable fix is a lease-ownership check in the hook: compare the target spine's `engine_session.session_id` against the running session before declaring anyone mid-flight. The data is already in the file the hook reads. Third occurrence across three attempts.
+
+**Two things I found while verifying, which are yours to act on:**
+
+1. **This dispatch has no row in `crew-runs.json`.** Six rows exist — commander, plan-critic, implementer attempts 1 and 2, reviewer attempts 1 and 2 — and no `g1/implementer/attempt-3`. Every prior crew registered; I didn't. An unregistered crew is invisible to `recover_crews.py`, the exact check your execute step runs before each dispatch, so a crash here would have left recovery nothing to find.
+2. **`g1/reviewer/attempt-2` is still marked `running`**, though its result is on disk and fresh. `recover_crews.py` will flag it as unresolved before your next dispatch; resolving or abandoning it needs your authority, not mine.
+
+Both are now recorded in `g1-implementer-result.md` under a new **Post-delivery** section, alongside the refusal and its evidence.
+
+My dispatch is complete and unchanged by any of this: B1 fixed, both simulations green, full suite `3159 passed, 6 skipped` with zero `FAILED` lines, no production file touched, result artifact delivered with status `complete`.

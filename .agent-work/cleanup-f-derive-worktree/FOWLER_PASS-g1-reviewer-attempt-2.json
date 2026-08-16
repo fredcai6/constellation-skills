@@ -1,0 +1,95 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "diff_ref": "git diff e36e630b -- scripts/ tests/ (g1, lane F, issue #609; reviewer attempt 2). 5 files: scripts/checklist_engine.py (+65), scripts/hooks/spine_rail.py (+106), tests/test_spine_rail.py, tests/test_worktree_derivation.py (new), map/INDEX.md (generated).",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md, and this run's decision anchors in .agent-work/cleanup-f-derive-worktree/MISSION_FRAME.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "Decision anchor `one-definition-or-a-pinned-equivalence` @grade: settled/measured (MISSION_FRAME.md), together with the stdlib-only constraint on scripts/hooks/spine_rail.py (a hook that fails takes the turn with it; no SCRIPT_RUNTIME_COMPANIONS entry, and adding one is fenced to the installer this lane may not touch).",
+        "reason": "The headline smell: the same nine-line walk-up rule exists near-verbatim in checklist_engine.worktree_from_spine_path and spine_rail._worktree_from_spine. The standard only subordinates the smell if the pin is REAL, so I re-measured the pin rather than citing the anchor. tests/test_worktree_derivation.py drives 16 cases through both copies via a getattr-built IMPLEMENTATIONS map whose _require raises at import. Mutating the engine copy to outermost-ancestor turns exactly test_derivation[nested-sandbox...-engine] and test_the_two_copies_agree[nested-sandbox...] red; renaming either symbol fails collection of the whole file. The duplication therefore cannot drift silently, which is the property the anchor trades single-definition for. Minor asymmetry noted and not worth raising: the engine names the segment in a module constant AGENT_WORK_DIR while the hook inlines the literal '.agent-work' -- the hook may gain no import, so sharing the constant is impossible and duplicating it would be cosmetic."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "Decision anchor `normalize-once`, revised this run to lexical-only on three independent measurements @grade: settled/measured; and the in-repo idiom the change matches, spine_rail._same_path (:677), which compares paths as normcase+normpath strings.",
+        "reason": "Both derivations pass and return paths as bare `str` rather than a path type, and the sibling _is_claim_layout uses pathlib for the same subject matter -- a real inconsistency on its face. It is subordinated because the lexical rule is only expressible in os.path: pathlib has no normcase equivalent and preserves case, so a Path-typed derivation could not fold the .agent-work segment on Windows, and PurePath comparison would silently reintroduce the case sensitivity the rule must remove. The str return type is also what the two existing consumers of the bound value (`worktree` in the binding dict, consumed by _foreign_worktree) already expect, so introducing a wrapper type here would push conversion into a hook whose contract is never to raise."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "Decision anchor `one-definition-or-a-pinned-equivalence` @grade: settled/measured, plus CREW_CONTEXT.md 'Verification Discipline': a check that cannot fail is indistinguishable from one that passed -- so the shared table is required to be demonstrably red-able, which I demonstrated.",
+        "reason": "A future change to the one derivation rule now requires editing two files, which is the shotgun-surgery shape. It is subordinated because the second edit is not optional and not a matter of the editor's memory: tests/test_worktree_derivation.py::test_the_two_copies_agree fails on any divergence, and I confirmed that mechanically (engine-side mutation -> 2 failed, restored -> 53 passed). The smell's actual cost -- forgetting one site -- is mechanically removed. What remains is the writing cost, which the closed placement decision (single definition needs a fenced installer entry in either direction) already priced."
+      }
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "The frozen plan at .agent-work/cleanup-f-derive-worktree/execute.json, task g1-implement, which states the derivation is defined in this gate and NO consumer is rewired here; the g1 reviewer handoff repeats it ('No engine consumer yet; gate g2 is its first. That is expected, not an oversight').",
+        "reason": "checklist_engine.worktree_from_spine_path is public and has exactly one binding reference in the whole repo -- tests/test_worktree_derivation.py:78 -- which is textbook speculative generality: an abstraction built before any caller needs it. It is subordinated because the gate decomposition, not the implementer, chose to land definition and consumer in separate gates so the equivalence pin could be proven before any behaviour depends on it. I checked that the generality is bounded rather than open-ended: the function takes one argument, has no options, no hooks and no configuration surface, so there is nothing built 'in case' beyond the single rule g2 will consume. Had the signature carried unused parameters or a strategy flag, the standard would not have covered it."
+      }
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "The surrounding modules' own documented convention, measured rather than asserted, plus the run's requirement that decision anchors and their grades be recorded where a later editor meets them.",
+        "reason": "The new docstrings are long relative to their bodies -- 36 lines over a 9-line body in the hook, 42 over 12 in the engine -- which is the classic deodorant shape. Subordinated on measurement: at BASELINE e36e630b, spine_rail.py already had a 36-line maximum docstring and 4 defs at >=20 lines, and checklist_engine.py a 45-line maximum with 12 defs at >=20 lines. The new docstrings tie the hook's existing maximum and sit under the engine's, so they match the surrounding convention rather than exceeding it (global-crew.md: 'Match the surrounding code's naming, labeling, and in-file documentation conventions'). More importantly, what they record is not a restatement of the code but three constraints the code cannot express -- why realpath is forbidden, why nearest and never outermost, and that the answer is LOCATION and never ownership. The lexical-only reason is now written into _is_valid_claim_target's own docstring, where an editor about to break the symlink-escape guard will meet it. Deodorant hides bad code; this records why obvious-looking simplifications are wrong."
+      }
+    }
+  ],
+  "rail_exception": null
+}

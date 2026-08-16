@@ -1,0 +1,470 @@
+{
+  "work_id": "cleanup-f-derive-worktree-g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-red-table",
+    "m2-engine-derivation",
+    "m3-hook-derivation",
+    "m4-evidence",
+    "m4b-map-rebuild",
+    "m5-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the inherited global doctrine (references/global-crew.md, references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, the g1 implementer handoff, and the map orientation named by the handoff (MISSION_FRAME.md, map/INDEX.md). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format); block and return if incomplete. Re-read every cited line number in tree at e36e630b before trusting it. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + map orientation loaded; handoff complete; cited line numbers re-verified in tree",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g1 handoff, and MISSION_FRAME.md. Map orientation DEGRADED-UNPARSEABLE and discharged: map/ids.jsonl is 0 bytes and the per-module map/<mod>/INDEX.md targets INDEX.md links to are not in tree. Handoff complete on all eight fields. Cited lines re-verified at e36e630b: spine_rail.py:712 _worktree_from_spine, :1096 def _is_valid_claim_target with its calls at :1117/:1122, :1169/:1274/:1565 the other call sites, tests/test_spine_rail.py:874, checklist_engine.py:102 origin_worktree_refusal, agent_work_root.py:54 (_normalize; handoff cites :56, the return line is :57). py 3.12.3 / pytest 9.1.1 confirmed."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-red-table": {
+      "id": "m1-red-table",
+      "title": "TDD red: the shared case table",
+      "imperative": "Write tests/test_worktree_derivation.py holding ONE shared table of cases covering all six required cases (project-root spine, worktree spine, nested crew area, deep archived path, nested-sandbox double-.agent-work returning the INNER root, no-.agent-work returning None) plus an explicitly-constructed case-folding case and depth-zero. Drive BOTH implementations from that one table by parametrizing over (implementation, case), importing scripts/checklist_engine.py and scripts/hooks/spine_rail.py via importlib spec_from_file_location. Apply the deletion test: deleting either implementation must fail the table. Run it and OBSERVE IT RED (the engine symbol does not exist; the hook is too narrow). Attest c1 with the observed failure counts.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff verified complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: tests/test_worktree_derivation.py written, run, and observed FAILING against both implementations \u2014 manual attest, check MUST be null so the engine does not run the by-design-failing test",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed at e36e630b. (a) ENGINE half: pytest exits with a COLLECTION error - AttributeError: module has no attribute 'worktree_from_spine_path' - so all 16 cases are red for the engine copy. That collection error is simultaneously the deletion test firing live: a missing implementation fails the whole file rather than silently shrinking the parametrization to the survivor. (b) HOOK half, measured directly against the same 16-case table (the test file cannot be imported while the engine symbol is missing): 6 of 16 cases FAIL - crew-area-nested-under-a-commanders, deep-archived-case, depth-zero-spine-directly-in-agent-work, non-json-leaf-still-has-a-location, dotfile-leaf-still-has-a-location, redundant-separators-and-dot-segments-normalize. Table holds 16 cases covering all six the handoff requires plus depth-zero, the moved-out preconditions, the kept-in preconditions, normalization, segment-not-substring, leaf-is-not-its-own-ancestor, and an explicitly-constructed case-folding case whose expectation is computed from os.path.normcase itself rather than from a platform list."
+        }
+      ],
+      "constraints": [
+        "TDD required by the handoff test mode: red before green.",
+        "ONE table, both implementations \u2014 a drift between them must be a test failure, not a review observation."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-engine-derivation": {
+      "id": "m2-engine-derivation",
+      "title": "Green (engine half): lexical derivation in checklist_engine.py",
+      "imperative": "Add the pure lexical derivation to scripts/checklist_engine.py: walk up to the NEAREST .agent-work ancestor and return its parent; no .agent-work ancestor -> None. Normalize with os.path.normcase + os.path.normpath ONLY \u2014 inline the idiom, no realpath, no import of verify_worktree_isolation. Absolute-path precondition stays IN the function (a relative path has no derivable location and would forge an ambient answer); .json-suffix and non-empty-work-id preconditions stay OUT. No engine consumer is wired in this gate \u2014 g2 is the first. Make the engine half of the table green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "red table observed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Red observed: engine 16/16 (collection error), hook 6/16."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the engine half of the shared table passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_worktree_derivation.py -k engine"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-engine-derivation-1"
+        }
+      ],
+      "constraints": [
+        "Lexical only \u2014 no realpath inside the derivation (three measurements force this).",
+        "No new runtime sibling import: verify_worktree_isolation.normalize_path is forbidden (test_engine_runtime_siblings_are_declared_as_companions compares by exact set equality)."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-engine-derivation-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_worktree_derivation.py -k engine",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-hook-derivation": {
+      "id": "m3-hook-derivation",
+      "title": "Green (hook half): generalize _worktree_from_spine, hold shape at _is_valid_claim_target",
+      "imperative": "Generalize scripts/hooks/spine_rail.py:_worktree_from_spine to the same rule, stdlib only, gaining NO import. Move the narrow-shape preconditions (.json suffix, non-empty work-id segment, exact one-level layout) OUT of the derivation and hold them at _is_valid_claim_target via a dedicated shape predicate, so the ownership gate stays EXACTLY as strict as today \u2014 including still rejecting a symlinked spine, whose resolved re-check must remain able to fail. Rewrite tests/test_spine_rail.py's narrow-shape test with a stated new contract, and add a test proving a symlinked spine still fails _is_valid_claim_target. Make the whole shared table and test_spine_rail.py green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "engine half green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Engine half green: 18 passed, 35 deselected."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the full shared table and tests/test_spine_rail.py pass, including the symlink-rejection proof",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_worktree_derivation.py tests/test_spine_rail.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-hook-derivation-1"
+        }
+      ],
+      "constraints": [
+        "spine_rail.py imports stdlib ONLY and may gain no import \u2014 a hook that fails takes the turn with it.",
+        "_is_valid_claim_target accepts exactly what it accepts today; the symlink-escape guard must remain falsifiable.",
+        "Do not rewire origin_worktree_refusal, do not remove git rev-parse --show-toplevel in main(), do not add any fail-closed refusal, do not thread cwd into command checks (gates g2/g4/g5)."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-hook-derivation-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_worktree_derivation.py tests/test_spine_rail.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-evidence": {
+      "id": "m4-evidence",
+      "title": "Produce the required evidence",
+      "imperative": "Produce every load-bearing and confirmatory evidence item by RUNNING, never by reading: (1) the derivation table printed from the live functions; (2) the deletion test demonstrated on the shared table; (3) all five _worktree_from_spine call sites enumerated with what each now accepts that it did not; (4) the symlink rejection proven; (5) the spine_rail import block shown unchanged; (6) the full suite with __pycache__ cleared and clean env, with the failure distribution derived mechanically; (7) a stated position on Windows separators and case folding. Run the handoff's wiring grep and state the external call-site count, saying explicitly that the engine symbol's only external call site is the test file because g2 is its first consumer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both halves green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Both halves green; differential shows 0 diffs."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green with cache cleared and clean env, re-measured against the stated e36e630b baseline",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-evidence-1"
+        },
+        {
+          "id": "c2",
+          "statement": "derivation table, deletion test, five call sites, symlink proof, import block, wiring grep and Windows position all produced by running",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All seven evidence items produced by running: (1) 16-case derivation table printed live from both functions; (2) deletion test run for real on both implementations, each deletion failing collection of the whole file, mutations asserted applied and restore verified byte-identical; (3) all five call positions enumerated, with site 5 measured empirically via _scan_active_spine rather than reasoned about - none widened; (4) _is_valid_claim_target differential against the e36e630b module over 25 targets = 0 differences, 5/25 accepted, both symlink escapes still rejected and pinned by a committed test; (5) zero import change anywhere in spine_rail.py, shown mechanically; (6) full suite 1 failed / 3158 passed / 6 skipped with the distribution derived by the handoff's grep|sed|sort|uniq command, baseline re-measured at 3110 collected and the +55 delta accounted for exactly; (7) Windows position stated including one Windows-visible behaviour change (the derivation now returns a normcase'd path) and an explicit scoped null on the untested fold."
+        }
+      ],
+      "constraints": [
+        "Clear __pycache__ before every measurement (43c577d4)."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "blocker": "Postcondition c1 (full suite green) is unmet by exactly one test: tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build. It is caused by this gate's own change (measured both ways: reverting my tracked edits in place makes it pass, restoring them makes it fail again). The remedy is one command, py -m scripts.code_map build --root ., writing a 9-hunk entity-count delta to map/INDEX.md. I did not run it: map/ is not in this gate's Allowed Scope, and MISSION_FRAME.md flags map/INDEX.md as conflicting on every parallel branch (#544), so regenerating in-lane is a cross-lane call above a crew. The repo carries both patterns - 43c577d4 rebuilt in-lane, 590bf44d rebuilt post-merge as a standalone chore(map) commit - so there is no default to fall back on.",
+        "authority_needed": "commander-cleanup-f-derive-worktree",
+        "next_action": "Rule one way: regenerate map/INDEX.md in this lane now, or defer it to a post-merge chore(map) commit. Until it is run, g2 and g3 also see a red suite, which will mask any regression they introduce. All other g1 close criteria are met; the result artifact is written at .agent-work/cleanup-f-derive-worktree/crew-handoffs/g1-implementer-result.md with return status partial.",
+        "resume_reason": "Commander ruled the escalated blocker: regenerate map/ in-lane now. The rework handoff grants map/ as allowed scope explicitly, citing the launch order ('map/INDEX.md is generated and freshness-tested; rebuild and commit if entities change ... resolve by regenerating, never by hand-merging'), which also settles the #544 cross-lane conflict question the block raised.",
+        "resume_note": "The regeneration itself and its bounded-delta confirmation are gated at the newly amended m4b-map-rebuild; m4-evidence keeps only its own full-suite-green postcondition."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-result": {
+      "id": "m5-result",
+      "title": "Write IMPLEMENTER_RESULT",
+      "imperative": "Write the full IMPLEMENTER_RESULT to .agent-work/cleanup-f-derive-worktree/crew-handoffs/g1-implementer-result.md \u2014 completed slice, files changed, test mode satisfied, evidence produced, assumptions used, stop conditions hit, out-of-scope observations, workflow feedback, map impact. `Return status` must be lowercase on its own line. That write IS the delivery.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "evidence produced",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Evidence produced: attempt 1's seven load-bearing items (m4-evidence.c2, unchanged and still valid) plus this attempt's two new ones -- the bounded map delta (m4b.c2) and builder provenance (m4b.c3) -- plus a green full suite at 3159 passed / 6 skipped / 1164 subtests, cache cleared and clean env, with an empty mechanically-derived failure distribution."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the result artifact exists, is non-empty, and carries a lowercase Return status line",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && test -s .agent-work/cleanup-f-derive-worktree/crew-handoffs/g1-implementer-result.md && grep -qE '^Return status: (complete|partial|blocked|out-of-scope|failed)$' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g1-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-result-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Post-closure finding that belongs in the result the Commander reads: my Stop hook fired instructing me to reload the constellation-commander skill, rewrite the Commander's STATE_NOTE, and drive its execute gate. Verified the hook is reading my inherited SPINE_FILE, which is my parent's spine (lease ACTIVE, held by commander-cleanup-f-derive-worktree) while my registry entry has spine: null. Obeying would require force-taking a live parent lease. Refused, and recording it -- this is the handoff-only-crew hazard reproduced live by the harness, not just inferred from skill prose."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && test -s .agent-work/cleanup-f-derive-worktree/crew-handoffs/g1-implementer-result.md && grep -qE '^Return status: (complete|partial|blocked|out-of-scope|failed)$' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g1-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m5-result",
+            "reason": "Post-closure finding that belongs in the result the Commander reads: my Stop hook fired instructing me to reload the constellation-commander skill, rewrite the Commander's STATE_NOTE, and drive its execute gate. Verified the hook is reading my inherited SPINE_FILE, which is my parent's spine (lease ACTIVE, held by commander-cleanup-f-derive-worktree) while my registry entry has spine: null. Obeying would require force-taking a live parent lease. Refused, and recording it -- this is the handoff-only-crew hazard reproduced live by the harness, not just inferred from skill prose.",
+            "ts": "2026-08-16T17:00:46.710443+00:00"
+          }
+        },
+        {
+          "id": "e-m5-result-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && test -s .agent-work/cleanup-f-derive-worktree/crew-handoffs/g1-implementer-result.md && grep -qE '^Return status: (complete|partial|blocked|out-of-scope|failed)$' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g1-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "m4b-map-rebuild": {
+      "id": "m4b-map-rebuild",
+      "title": "Regenerate map/ and confirm the delta is bounded",
+      "imperative": "Regenerate the derived code map with `py -m scripts.code_map build --root .` inside the real worktree (the builder shells out to `git ls-files`, so a git-archive export cannot answer this). NEVER hand-edit map/INDEX.md. Then confirm the actual delta matches the shape attempt 1 predicted to a scratch --out: 9 hunks, all entity counts plus one new module row (scripts 1211->1213; tests 82 modules/4725 -> 83 modules/4736; scripts.hooks 84->85; scripts.hooks.spine_rail 62->63; scripts.checklist_engine 110->111; tests.test_spine_rail 187->189 with 96->95 holes; + tests.test_worktree_derivation). Call out BY NAME any hunk that does not match that shape -- a rebuild that rewrites more than entity counts and the one new row is a signal, not a formality, and is a stop condition. Finally run the targeted gate check.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "map/ is in allowed scope for this attempt (rework handoff grants it explicitly, citing the launch order)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "The rework handoff grants map/ explicitly: 'Attempt 1's scope, plus map/ (map/INDEX.md, map/ids.jsonl, and any per-module index the builder writes)', and its Authority section states 'Regenerating map/ is explicitly granted by the launch order and by this handoff.' Verified before touching anything: map/ was clean and tracked, and git check-ignore exits 1 for both map/INDEX.md and map/ids.jsonl, so these are committed deliverables, not local-only."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map freshness and the targeted gate check both pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_code_map.py tests/test_worktree_derivation.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4b-map-rebuild-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the actual map/ delta was inspected hunk by hunk and matches the predicted entity-count-plus-one-new-row shape, with any hunk that does not named explicitly",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Delta inspected hunk by hunk against the prediction: EXACT match, zero unmatched hunks. git diff -U0 map/ gives 9 hunks (1 file changed, 9 insertions, 8 deletions) = 8 count-line rewrites plus 1 pure addition. All six predicted numbers confirmed: scripts 1211->1213 (twice: package summary line 5 and section header line 32); tests 82 modules/4725 -> 83 modules/4736 (twice: line 7 and line 105); scripts.hooks 84->85 (line 45); scripts.hooks.spine_rail 62->63, holes 21 unchanged (line 48); scripts.checklist_engine 110->111, holes 25 unchanged (line 55); tests.test_spine_rail 187->189 with 96->95 holes (line 178); and the new row + tests.test_worktree_derivation (9 entities, 1 holes) at line 190. Falsified mechanically, not eyeballed: filtering the changed lines for any that carry neither 'modules,' nor 'entities' nor 'holes' returns EMPTY, so no prose, link, ordering or structural line moved. Only map/INDEX.md changed; map/ids.jsonl is byte-identical (sha e3b0c442..., still 0 bytes) and the builder created no per-module INDEX.md files, so the DEGRADED-UNPARSEABLE orientation attempt 1 reported is unchanged by this rebuild -- reported as an out-of-scope observation, not fixed here."
+        },
+        {
+          "id": "c3",
+          "statement": "map/INDEX.md was written by scripts.code_map, never by hand",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "map/INDEX.md was written by the builder: the single command run against it was 'py -m scripts.code_map build --root .' (exit 0) inside the real worktree /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree, so git ls-files resolves. No editor, no Edit/Write tool call, and no patch was ever applied to map/INDEX.md by me. sha256 910ffe7a... before -> 1293786d... after; verified clean and tracked beforehand so the whole delta is attributable to that one command. Freshness is independently confirmed by the builder's own test: tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build now passes, which is exactly the assertion that a hand-edited index would fail."
+        }
+      ],
+      "constraints": [
+        "Never hand-edit map/INDEX.md -- regenerate it.",
+        "The builder must run inside the real worktree, not a git archive export.",
+        "Allowed scope beyond attempt 1's: map/ only (map/INDEX.md, map/ids.jsonl, any per-module index the builder writes).",
+        "If a source file needs another edit to make the suite green, that is a finding -- report it, do not silently make it."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4b-map-rebuild-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_code_map.py tests/test_worktree_derivation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m4-evidence",
+      "statement": "map/INDEX.md goes stale from this gate's own change and tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build fails. Remedy is one command: py -m scripts.code_map build --root . (its own failure message says so). Delta is 9 hunks, all entity counts plus one new module row. NOT regenerated here: map/ is not in this gate's Allowed Scope, and MISSION_FRAME.md flags map/INDEX.md as conflicting on every parallel branch (#544), so regenerating in-lane is a cross-lane coordination call above a crew. Repo carries both patterns: 43c577d4 rebuilt in-lane, 590bf44d rebuilt post-merge as a standalone chore(map) commit."
+    },
+    {
+      "id": "tc2",
+      "from": "m5-result",
+      "statement": "SAFETY: the spine Stop hook directs an agent to drive whatever spine $SPINE_FILE names, without checking who holds that spine's lease. A handoff-only crew (registry spine: null) inherits its parent's SPINE_* vars, so the hook told this g1 implementer to reload the commander skill, rewrite the Commander's STATE_NOTE and drive its execute gate -- while that spine's lease was ACTIVE under commander-cleanup-f-derive-worktree. Refused here, but it fires at Stop when a crew is most likely to comply, and its own suggested escape (the block verb) would also write to the parent's spine. Fix: suppress the mid-flight directive when engine_session.session_id != the running session. Mechanical check, data already in the file the hook reads."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/cleanup-f-derive-worktree/g1/implementer/attempt-2",
+    "status": "released",
+    "claimed_at": "2026-08-16T17:00:46.657469+00:00",
+    "last_heartbeat": "2026-08-16T17:01:53.479867+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T17:01:59.305308+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff is complete and every cited line holds at e36e630b. Two documentation contradictions found and carried forward rather than resolved by me: MISSION_FRAME.md lines 100-102 still state the OLD normalize-once ruling (realpath+normcase, reuse verify_worktree_isolation) while lines 41-54 of the same file state the REVISED lexical-only ruling; and both the frame and the handoff cite agent_work_root.py:56 as the inlining precedent, but that line uses realpath, not normpath. The lexical-only rule is unambiguous in the handoff Constraints and is what I implement; spine_rail._same_path (:685) is the repo's actual normcase+normpath precedent and is the idiom I will inline.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:28:49.803022+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-red-table",
+      "why": "The table is the contract and it is genuinely falsifiable on both halves before any implementation exists: engine 16/16 red via collection error, hook 6/16 red via direct measurement. The six hook failures are exactly the widening this gate performs - three depth cases (nested crew area, deep archive, depth zero), two suffix cases (.json precondition moving out to callers), and one normalization case. The four cases the hook already passes (project root, worktree, nested sandbox inner root, and the three unowned shapes) pin the behaviour this gate must NOT change.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:31:32.105382+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-engine-derivation",
+      "why": "checklist_engine.worktree_from_spine_path added: os.path only, normcase+normpath inlined, no realpath, no new import. Engine half of the table is green (18 passed, 35 deselected). The table still discriminates - the full file is 12 failed / 41 passed, which is the 6 hook cases plus the 6 matching test_the_two_copies_agree drift failures, so the equivalence check is provably falsifiable rather than a check that cannot fail. Precondition split implemented as planned: absolute-path stays IN (a relative path's answer would depend on ambient cwd, the exact forgeable reading this removes); .json-suffix and non-empty-work-id move OUT to the callers that care about checklist shape.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:32:11.179989+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-hook-derivation",
+      "why": "Hook half green: tests/test_worktree_derivation.py + tests/test_spine_rail.py = 205 passed, 1 skipped (the skip is pre-existing, test_spine_rail.py:833, Windows-only normcase). The split that made this safe: _worktree_from_spine now answers LOCATION at arbitrary depth, while the narrow claim shape moved to a new _is_claim_layout that _is_valid_claim_target uses at both of its former call positions. Proven, not argued: a differential run of the BASELINE module (git show e36e630b:scripts/hooks/spine_rail.py) against the new one over 25 constructed on-disk targets - valid, deep, depth-zero, bad-suffix, unreadable, missing, directory, relative, non-string, and three symlink shapes - shows 0 differences, with 5 of 25 accepted so the gate is provably still discriminating. Both symlink escapes (leaf symlink and ancestor-directory symlink) are still rejected by the resolved re-check, which stays falsifiable precisely because the derivation is lexical.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:34:10.810894+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-evidence",
+      "why": "The blocker that stopped this gate is resolved, not worked around: the Commander granted map/ as scope and the regeneration ran, so c1's full-suite check now passes on its own terms rather than being waived. Measured before this advance at 3159 passed / 6 skipped / 1164 subtests in 125.46s, cache cleared and clean env, with an empty mechanically-derived failure distribution. The test-count arithmetic is unchanged from attempt 1 (3165 collected); the one test that was red is the map-freshness test and it is now green. c2's seven evidence items stand from attempt 1 and are not re-litigated by a rebuild that changed only derived counts.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:56:20.674824+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m4b-map-rebuild",
+      "why": "The rebuild is bounded and provably builder-written, so the stop condition this gate exists to catch did not fire. The interesting result is the negative one: a regeneration on a branch that added one test module and three entities could have dragged in unrelated drift from other lanes, and it did not -- every changed line carries a count, which is the mechanical form of 'nothing but derived counts moved'. c1 re-runs both the freshness test and the targeted derivation test together so the map's own gate and the gate's own subject are checked in one command.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:57:07.021313+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m5-result",
+      "why": "The result is written self-contained over the whole g1 slice, not as a diff against attempt 1, because the reviewer reads this file alone. Return status is complete: every close criterion in the rework handoff is met and no stop condition fired -- the rebuild was builder-written and bounded to counts plus one row, the suite is green at 3159 passed, and the targeted gate check passes. Attempt 1's five-call-site deviation is carried forward verbatim rather than quietly dropped, since it is still the reviewer's to adjudicate.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:59:31.197685+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m5-result",
+      "reopen": true,
+      "reason": "Post-closure finding that belongs in the result the Commander reads: my Stop hook fired instructing me to reload the constellation-commander skill, rewrite the Commander's STATE_NOTE, and drive its execute gate. Verified the hook is reading my inherited SPINE_FILE, which is my parent's spine (lease ACTIVE, held by commander-cleanup-f-derive-worktree) while my registry entry has spine: null. Obeying would require force-taking a live parent lease. Refused, and recording it -- this is the handoff-only-crew hazard reproduced live by the harness, not just inferred from skill prose.",
+      "ts": "2026-08-16T17:00:46.710464+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m5-result",
+      "why": "Reopened only to record a post-closure safety finding, not to revise any measurement: the Stop hook directed me to drive my parent's live-leased spine, and I refused. The finding is now in the result's Workflow Feedback with the ownership evidence, and flagged as tc2 so it routes to triage rather than dying in prose. The technical verdict is unchanged -- complete, on the same green suite and the same bounded map delta.",
+      "mechanical": false,
+      "ts": "2026-08-16T17:01:53.479856+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-16T16:50:22.513776+00:00",
+      "reason": "Rework attempt 2: the Commander ruled the g1 blocker, granting map/ as allowed scope and directing an in-lane regeneration. The rebuild plus its bounded-delta confirmation is real work that attempt 1's plan has no gate for, so it gets its own gate rather than being smuggled into the evidence gate.",
+      "authority": "commander-cleanup-f-derive-worktree",
+      "ops": [
+        "added m4b-map-rebuild"
+      ]
+    }
+  ]
+}

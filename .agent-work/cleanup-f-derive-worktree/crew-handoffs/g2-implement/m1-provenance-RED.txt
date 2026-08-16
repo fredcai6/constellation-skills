@@ -1,0 +1,269 @@
+.FF.                                                       [100%]
+=================================== FAILURES ===================================
+_ TheStampIsProvenanceNotADecisionInput.test_provenance_the_stamp_is_not_a_decision_input_from_a_foreign_tree (stamp='an empty string') _
+
+self = <test_spine_origin_isolation.TheStampIsProvenanceNotADecisionInput testMethod=test_provenance_the_stamp_is_not_a_decision_input_from_a_foreign_tree>
+cwd = PosixPath('/tmp/tmp7l0_6xsz/elsewhere')
+
+    def _assert_one_answer_for_every_stamp(self, cwd: Path) -> None:
+        table = self._stamps()
+        answers = {name: self._observable(stamp, cwd) for name, stamp in table.items()}
+        first = answers["the spine's own worktree"]
+        for name, answer in answers.items():
+            with self.subTest(stamp=name):
+>               self.assertEqual(
+                    first, answer,
+                    f"{name!r} behaved differently from the spine's own worktree: "
+                    f"something reads origin.worktree for a decision",
+                )
+E               AssertionError: {'codes': [1, 1, 1], 'refused': [True, True, True], [35 chars]None} != {'codes': [0, 0, 0], 'refused': [False, False, False[46 chars]ive'}
+E               - {'codes': [1, 1, 1],
+E               ?            ^  ^  ^
+E               
+E               + {'codes': [0, 0, 0],
+E               ?            ^  ^  ^
+E               
+E               -  'gate status': 'pending',
+E               ?                  ----
+E               
+E               +  'gate status': 'in-progress',
+E               ?                    ++++ ++++
+E               
+E               -  'lease': None,
+E               -  'refused': [True, True, True]}
+E               +  'lease': 'active',
+E               +  'refused': [False, False, False]} : 'an empty string' behaved differently from the spine's own worktree: something reads origin.worktree for a decision
+
+tests/test_spine_origin_isolation.py:803: AssertionError
+_ TheStampIsProvenanceNotADecisionInput.test_provenance_the_stamp_is_not_a_decision_input_from_a_foreign_tree (stamp='a number') _
+
+self = <test_spine_origin_isolation.TheStampIsProvenanceNotADecisionInput testMethod=test_provenance_the_stamp_is_not_a_decision_input_from_a_foreign_tree>
+cwd = PosixPath('/tmp/tmp7l0_6xsz/elsewhere')
+
+    def _assert_one_answer_for_every_stamp(self, cwd: Path) -> None:
+        table = self._stamps()
+        answers = {name: self._observable(stamp, cwd) for name, stamp in table.items()}
+        first = answers["the spine's own worktree"]
+        for name, answer in answers.items():
+            with self.subTest(stamp=name):
+>               self.assertEqual(
+                    first, answer,
+                    f"{name!r} behaved differently from the spine's own worktree: "
+                    f"something reads origin.worktree for a decision",
+                )
+E               AssertionError: {'codes': [1, 1, 1], 'refused': [True, True, True], [35 chars]None} != {'codes': [0, 0, 0], 'refused': [False, False, False[46 chars]ive'}
+E               - {'codes': [1, 1, 1],
+E               ?            ^  ^  ^
+E               
+E               + {'codes': [0, 0, 0],
+E               ?            ^  ^  ^
+E               
+E               -  'gate status': 'pending',
+E               ?                  ----
+E               
+E               +  'gate status': 'in-progress',
+E               ?                    ++++ ++++
+E               
+E               -  'lease': None,
+E               -  'refused': [True, True, True]}
+E               +  'lease': 'active',
+E               +  'refused': [False, False, False]} : 'a number' behaved differently from the spine's own worktree: something reads origin.worktree for a decision
+
+tests/test_spine_origin_isolation.py:803: AssertionError
+_ TheStampIsProvenanceNotADecisionInput.test_provenance_the_stamp_is_not_a_decision_input_from_a_foreign_tree (stamp='worktree key absent') _
+
+self = <test_spine_origin_isolation.TheStampIsProvenanceNotADecisionInput testMethod=test_provenance_the_stamp_is_not_a_decision_input_from_a_foreign_tree>
+cwd = PosixPath('/tmp/tmp7l0_6xsz/elsewhere')
+
+    def _assert_one_answer_for_every_stamp(self, cwd: Path) -> None:
+        table = self._stamps()
+        answers = {name: self._observable(stamp, cwd) for name, stamp in table.items()}
+        first = answers["the spine's own worktree"]
+        for name, answer in answers.items():
+            with self.subTest(stamp=name):
+>               self.assertEqual(
+                    first, answer,
+                    f"{name!r} behaved differently from the spine's own worktree: "
+                    f"something reads origin.worktree for a decision",
+                )
+E               AssertionError: {'codes': [1, 1, 1], 'refused': [True, True, True], [35 chars]None} != {'codes': [0, 0, 0], 'refused': [False, False, False[46 chars]ive'}
+E               - {'codes': [1, 1, 1],
+E               ?            ^  ^  ^
+E               
+E               + {'codes': [0, 0, 0],
+E               ?            ^  ^  ^
+E               
+E               -  'gate status': 'pending',
+E               ?                  ----
+E               
+E               +  'gate status': 'in-progress',
+E               ?                    ++++ ++++
+E               
+E               -  'lease': None,
+E               -  'refused': [True, True, True]}
+E               +  'lease': 'active',
+E               +  'refused': [False, False, False]} : 'worktree key absent' behaved differently from the spine's own worktree: something reads origin.worktree for a decision
+
+tests/test_spine_origin_isolation.py:803: AssertionError
+_ TheStampIsProvenanceNotADecisionInput.test_provenance_the_stamp_is_not_a_decision_input_from_a_foreign_tree _
+
+self = <test_spine_origin_isolation.TheStampIsProvenanceNotADecisionInput testMethod=test_provenance_the_stamp_is_not_a_decision_input_from_a_foreign_tree>
+
+    def test_provenance_the_stamp_is_not_a_decision_input_from_a_foreign_tree(self):
+        """Half two, at its most discriminating: a cwd that is a real git
+        worktree and is NOT the spine's. Any decision reading the stamp has to
+        separate these rows."""
+>       self._assert_one_answer_for_every_stamp(self.foreign)
+
+tests/test_spine_origin_isolation.py:839: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_spine_origin_isolation.py:812: in _assert_one_answer_for_every_stamp
+    self.assertEqual([0, 0, 0], first["codes"], "every stamp was refused, not accepted")
+E   AssertionError: Lists differ: [0, 0, 0] != [1, 1, 1]
+E   
+E   First differing element 0:
+E   0
+E   1
+E   
+E   - [0, 0, 0]
+E   + [1, 1, 1] : every stamp was refused, not accepted
+----------------------------- Captured stdout call -----------------------------
+uuuuuuu
+_ TheStampIsProvenanceNotADecisionInput.test_provenance_the_stamp_is_not_a_decision_input_with_no_git_toplevel (stamp='an empty string') _
+
+self = <test_spine_origin_isolation.TheStampIsProvenanceNotADecisionInput testMethod=test_provenance_the_stamp_is_not_a_decision_input_with_no_git_toplevel>
+cwd = PosixPath('/tmp/tmpfr0gmgak/nogit')
+
+    def _assert_one_answer_for_every_stamp(self, cwd: Path) -> None:
+        table = self._stamps()
+        answers = {name: self._observable(stamp, cwd) for name, stamp in table.items()}
+        first = answers["the spine's own worktree"]
+        for name, answer in answers.items():
+            with self.subTest(stamp=name):
+>               self.assertEqual(
+                    first, answer,
+                    f"{name!r} behaved differently from the spine's own worktree: "
+                    f"something reads origin.worktree for a decision",
+                )
+E               AssertionError: {'codes': [1, 1, 1], 'refused': [True, True, True], [35 chars]None} != {'codes': [0, 0, 0], 'refused': [False, False, False[46 chars]ive'}
+E               - {'codes': [1, 1, 1],
+E               ?            ^  ^  ^
+E               
+E               + {'codes': [0, 0, 0],
+E               ?            ^  ^  ^
+E               
+E               -  'gate status': 'pending',
+E               ?                  ----
+E               
+E               +  'gate status': 'in-progress',
+E               ?                    ++++ ++++
+E               
+E               -  'lease': None,
+E               -  'refused': [True, True, True]}
+E               +  'lease': 'active',
+E               +  'refused': [False, False, False]} : 'an empty string' behaved differently from the spine's own worktree: something reads origin.worktree for a decision
+
+tests/test_spine_origin_isolation.py:803: AssertionError
+_ TheStampIsProvenanceNotADecisionInput.test_provenance_the_stamp_is_not_a_decision_input_with_no_git_toplevel (stamp='a number') _
+
+self = <test_spine_origin_isolation.TheStampIsProvenanceNotADecisionInput testMethod=test_provenance_the_stamp_is_not_a_decision_input_with_no_git_toplevel>
+cwd = PosixPath('/tmp/tmpfr0gmgak/nogit')
+
+    def _assert_one_answer_for_every_stamp(self, cwd: Path) -> None:
+        table = self._stamps()
+        answers = {name: self._observable(stamp, cwd) for name, stamp in table.items()}
+        first = answers["the spine's own worktree"]
+        for name, answer in answers.items():
+            with self.subTest(stamp=name):
+>               self.assertEqual(
+                    first, answer,
+                    f"{name!r} behaved differently from the spine's own worktree: "
+                    f"something reads origin.worktree for a decision",
+                )
+E               AssertionError: {'codes': [1, 1, 1], 'refused': [True, True, True], [35 chars]None} != {'codes': [0, 0, 0], 'refused': [False, False, False[46 chars]ive'}
+E               - {'codes': [1, 1, 1],
+E               ?            ^  ^  ^
+E               
+E               + {'codes': [0, 0, 0],
+E               ?            ^  ^  ^
+E               
+E               -  'gate status': 'pending',
+E               ?                  ----
+E               
+E               +  'gate status': 'in-progress',
+E               ?                    ++++ ++++
+E               
+E               -  'lease': None,
+E               -  'refused': [True, True, True]}
+E               +  'lease': 'active',
+E               +  'refused': [False, False, False]} : 'a number' behaved differently from the spine's own worktree: something reads origin.worktree for a decision
+
+tests/test_spine_origin_isolation.py:803: AssertionError
+_ TheStampIsProvenanceNotADecisionInput.test_provenance_the_stamp_is_not_a_decision_input_with_no_git_toplevel (stamp='worktree key absent') _
+
+self = <test_spine_origin_isolation.TheStampIsProvenanceNotADecisionInput testMethod=test_provenance_the_stamp_is_not_a_decision_input_with_no_git_toplevel>
+cwd = PosixPath('/tmp/tmpfr0gmgak/nogit')
+
+    def _assert_one_answer_for_every_stamp(self, cwd: Path) -> None:
+        table = self._stamps()
+        answers = {name: self._observable(stamp, cwd) for name, stamp in table.items()}
+        first = answers["the spine's own worktree"]
+        for name, answer in answers.items():
+            with self.subTest(stamp=name):
+>               self.assertEqual(
+                    first, answer,
+                    f"{name!r} behaved differently from the spine's own worktree: "
+                    f"something reads origin.worktree for a decision",
+                )
+E               AssertionError: {'codes': [1, 1, 1], 'refused': [True, True, True], [35 chars]None} != {'codes': [0, 0, 0], 'refused': [False, False, False[46 chars]ive'}
+E               - {'codes': [1, 1, 1],
+E               ?            ^  ^  ^
+E               
+E               + {'codes': [0, 0, 0],
+E               ?            ^  ^  ^
+E               
+E               -  'gate status': 'pending',
+E               ?                  ----
+E               
+E               +  'gate status': 'in-progress',
+E               ?                    ++++ ++++
+E               
+E               -  'lease': None,
+E               -  'refused': [True, True, True]}
+E               +  'lease': 'active',
+E               +  'refused': [False, False, False]} : 'worktree key absent' behaved differently from the spine's own worktree: something reads origin.worktree for a decision
+
+tests/test_spine_origin_isolation.py:803: AssertionError
+_ TheStampIsProvenanceNotADecisionInput.test_provenance_the_stamp_is_not_a_decision_input_with_no_git_toplevel _
+
+self = <test_spine_origin_isolation.TheStampIsProvenanceNotADecisionInput testMethod=test_provenance_the_stamp_is_not_a_decision_input_with_no_git_toplevel>
+
+    def test_provenance_the_stamp_is_not_a_decision_input_with_no_git_toplevel(self):
+        """The same, from a directory git resolves no worktree toplevel for.
+        This row is where a fail-closed reading would hide."""
+>       self._assert_one_answer_for_every_stamp(self.nogit)
+
+tests/test_spine_origin_isolation.py:844: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_spine_origin_isolation.py:812: in _assert_one_answer_for_every_stamp
+    self.assertEqual([0, 0, 0], first["codes"], "every stamp was refused, not accepted")
+E   AssertionError: Lists differ: [0, 0, 0] != [1, 1, 1]
+E   
+E   First differing element 0:
+E   0
+E   1
+E   
+E   - [0, 0, 0]
+E   + [1, 1, 1] : every stamp was refused, not accepted
+----------------------------- Captured stdout call -----------------------------
+uuuuuuu
+=========================== short test summary info ============================
+SUBFAILED(stamp='an empty string') tests/test_spine_origin_isolation.py::TheStampIsProvenanceNotADecisionInput::test_provenance_the_stamp_is_not_a_decision_input_from_a_foreign_tree
+SUBFAILED(stamp='a number') tests/test_spine_origin_isolation.py::TheStampIsProvenanceNotADecisionInput::test_provenance_the_stamp_is_not_a_decision_input_from_a_foreign_tree
+SUBFAILED(stamp='worktree key absent') tests/test_spine_origin_isolation.py::TheStampIsProvenanceNotADecisionInput::test_provenance_the_stamp_is_not_a_decision_input_from_a_foreign_tree
+FAILED tests/test_spine_origin_isolation.py::TheStampIsProvenanceNotADecisionInput::test_provenance_the_stamp_is_not_a_decision_input_from_a_foreign_tree
+SUBFAILED(stamp='an empty string') tests/test_spine_origin_isolation.py::TheStampIsProvenanceNotADecisionInput::test_provenance_the_stamp_is_not_a_decision_input_with_no_git_toplevel
+SUBFAILED(stamp='a number') tests/test_spine_origin_isolation.py::TheStampIsProvenanceNotADecisionInput::test_provenance_the_stamp_is_not_a_decision_input_with_no_git_toplevel
+SUBFAILED(stamp='worktree key absent') tests/test_spine_origin_isolation.py::TheStampIsProvenanceNotADecisionInput::test_provenance_the_stamp_is_not_a_decision_input_with_no_git_toplevel
+FAILED tests/test_spine_origin_isolation.py::TheStampIsProvenanceNotADecisionInput::test_provenance_the_stamp_is_not_a_decision_input_with_no_git_toplevel
+8 failed, 2 passed, 38 deselected, 8 subtests passed in 0.30s

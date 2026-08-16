@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-engine-derivation",
+  "mechanical": {
+    "run": "cleanup-f-derive-worktree-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m2-engine-derivation",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-g1-implement-m2-engine-derivation@50a12e86fa75906000d4f1566e82c9b479aa4f81",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-f-derive-worktree-g1-implement",
+    "generated_at": "2026-08-16T16:31:36Z"
+  }
+}

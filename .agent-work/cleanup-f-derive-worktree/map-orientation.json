@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "work_id": "cleanup-f-derive-worktree",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "map/INDEX.md",
+      "content_hash": "910ffe7acd6228848f8e82f8ebbab5ee935541d9a2ad1ee0eda0ad67677ec63f",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "70fc98d8194a28f9f8fc2be73e8455ba556e15b81e9b28fdd82eeb11883b6b10",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/GLOSSARY.md",
+      "content_hash": "574e9ef4f494522653ea8d62cb58a1138f5bf385a17e95a75629bccd3c0340ee",
+      "source": "agent-declared"
+    },
+    {
+      "path": ".agent-work/cleanup-f-derive-worktree/LAUNCH_ORDER.md",
+      "content_hash": "e60272270104849c166eac9fe84af9429b5770263ad048ee32e6b6557fb51761",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "No docs/architecture packet map exists in this repo. map/ids.jsonl is empty (0 bytes) and the per-module map/<module>/INDEX.md files the top-level index links to are not checked in, so map/INDEX.md gives one-line module summaries and entity/hole counts but no citable anchor ids and no per-symbol entries. Nothing in the map records the worktree-identity relationship between scripts/hooks/spine_rail.py, scripts/checklist_engine.py, scripts/spine_lifecycle.py and scripts/verify_worktree_isolation.py; that relationship is carried only by issue #609 and this launch order."
+  ],
+  "escalation": "Not escalating a blocker. The launch order (Mission, Prior-Wave Verdicts, Pre-Rulings) is the frozen design input and supplies the frame the packet map would have; map/INDEX.md supplies module-level orientation for the four modules in scope. Recording the absent packet map and the empty map/ids.jsonl as a map-hole triage candidate to the Admiral rather than blocking on it.",
+  "emitted_at": "2026-08-16T15:49:48.044320+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

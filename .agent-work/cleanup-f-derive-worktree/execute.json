@@ -1,0 +1,1471 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "type": "gated",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate",
+    "g5-implement",
+    "g5-review",
+    "g5-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read references/global-orchestrator.md and references/global-everyone.md, then docs/agents/ORCHESTRATOR_CONTEXT.md and docs/agents/GLOSSARY.md. Re-read LAUNCH_ORDER.md, PROBLEM_STATEMENT.md, MISSION_FRAME.md, UNTAKEN_ROADS.md, and the cold critic's result at crew-handoffs/plan-plan-critic-result.md -- its twelve findings are why this plan has five gates and not four, and why the derivation is lexical. Confirm intent and scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Commander core doctrine, global-orchestrator, global-everyone, ORCHESTRATOR_CONTEXT and GLOSSARY loaded. LAUNCH_ORDER, PROBLEM_STATEMENT, MISSION_FRAME, UNTAKEN_ROADS and the cold critic result all read; the critic's 12 findings are what produced this 5-gate shape and the lexical-only derivation."
+        },
+        {
+          "id": "c2",
+          "statement": "every context document this plan is cut from is present and non-empty",
+          "check": {
+            "kind": "command",
+            "command": "set -e; for f in docs/agents/ORCHESTRATOR_CONTEXT.md docs/agents/GLOSSARY.md .agent-work/cleanup-f-derive-worktree/LAUNCH_ORDER.md .agent-work/cleanup-f-derive-worktree/PROBLEM_STATEMENT.md .agent-work/cleanup-f-derive-worktree/MISSION_FRAME.md .agent-work/cleanup-f-derive-worktree/UNTAKEN_ROADS.md .agent-work/cleanup-f-derive-worktree/crew-handoffs/plan-plan-critic-result.md; do test -s \"$f\" || { echo \"missing or empty: $f\" >&2; exit 1; }; done"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-e0-context-3"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-e0-context-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "e0-context",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-e0-context-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "set -e; for f in docs/agents/ORCHESTRATOR_CONTEXT.md docs/agents/GLOSSARY.md .agent-work/cleanup-f-derive-worktree/LAUNCH_ORDER.md .agent-work/cleanup-f-derive-worktree/PROBLEM_STATEMENT.md .agent-work/cleanup-f-derive-worktree/MISSION_FRAME.md .agent-work/cleanup-f-derive-worktree/UNTAKEN_ROADS.md .agent-work/cleanup-f-derive-worktree/crew-handoffs/plan-plan-critic-result.md; do test -s \"$f\" || { echo \"missing or empty: $f\" >&2; exit 1; }; done",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-e0-context-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "set -e; for f in docs/agents/ORCHESTRATOR_CONTEXT.md docs/agents/GLOSSARY.md .agent-work/cleanup-f-derive-worktree/LAUNCH_ORDER.md .agent-work/cleanup-f-derive-worktree/PROBLEM_STATEMENT.md .agent-work/cleanup-f-derive-worktree/MISSION_FRAME.md .agent-work/cleanup-f-derive-worktree/UNTAKEN_ROADS.md .agent-work/cleanup-f-derive-worktree/crew-handoffs/plan-plan-critic-result.md; do test -s \"$f\" || { echo \"missing or empty: $f\" >&2; exit 1; }; done",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Derivation: one lexical rule, two pinned-equal implementations",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch a constellation-implementer crew through scripts/run_crew.py. Deliverable: a pure LEXICAL worktree-derivation function -- walk up to the NEAREST .agent-work ancestor, take its parent; arbitrary depth; no .agent-work ancestor at all returns None (unowned). Place the definition in scripts/checklist_engine.py and generalize scripts/hooks/spine_rail.py's _worktree_from_spine to the same rule as a stdlib-only second copy. Pin the two equal with a SHARED table of cases in a NEW file tests/test_worktree_derivation.py, parametrized over both implementations, covering all six required cases. STATE EXPLICITLY which of _worktree_from_spine's existing preconditions survive into the derivation function and which move out to its callers: absolute-path, .json suffix, non-empty work-id segment. tests/test_spine_rail.py::test_worktree_from_spine_accepts_only_absolute_agent_work_json_layout (~:874) pins the narrow shape and MUST be updated -- three of its five assertions flip, and the depth-zero case <wt>/.agent-work/checklist.json flips unavoidably because arbitrary depth includes depth zero. Widening the derivation widens what the hook accepts as a claimable spine at five call sites (spine_rail.py :1117, :1122, :1169, :1274, :1565): keep _is_valid_claim_target's gate exactly as strict as it is today by holding the shape preconditions AT THAT CALLER, and prove it with a test. Integrate the returned IMPLEMENTER_RESULT: attach g1-implement --type implementer-result --field status=<verbatim lowercase Return status>.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded and the frozen plan's intent confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context closed; Deliverable Path Check re-confirmed (git check-ignore exits 1 for all committed paths)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with return status complete",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-5"
+        }
+      ],
+      "constraints": [
+        "The derivation is LEXICAL ONLY -- os.path.normcase + os.path.normpath, and NO realpath. This REVISES the launch order's normalize-once pre-ruling (graded settled/measured, so a contradicting measurement may revisit it). Three measurements forced it: (a) origin_worktree_refusal must stay pure and test_it_is_pure reads only the predicate's own co_names, which is not transitive -- a realpath in a callee would make the predicate impure with the purity test still green; (b) spine_rail's _is_valid_claim_target deliberately keeps resolve() OUTSIDE the derivation as a symlink-escape guard, and moving realpath inside makes its second check unfailable; (c) reusing verify_worktree_isolation.normalize_path would add a runtime sibling that tests/test_install_constellation.py's exact-set-equality companion guard rejects, and would need an installer entry this lane may not write. Symlink resolution stays OUTSIDE the derivation on every side, exactly as origin_worktree_refusal's current docstring already says. Use the idiom inline in both copies, as scripts/agent_work_root.py:56 already does.",
+        "scripts/hooks/spine_rail.py imports STDLIB ONLY, deliberately -- a hook that fails takes the turn with it. Its copy must add no cross-module import. Verified: zero cross-module imports today, and no SCRIPT_RUNTIME_COMPANIONS entry of its own.",
+        "Nearest ancestor, never outermost: 27 tracked paths carry two .agent-work segments and the inner one belongs to a nested sandbox project whose root is workspace/.",
+        "'No consumer is rewired' is FALSE for this gate and the plan no longer claims it: no call site is edited, but every call site's BEHAVIOUR changes. Enumerate all five and state what each now accepts that it did not.",
+        "FENCED, do not edit: scripts/install_constellation.py, scripts/mcp_spine_server.py, .mcp.json, examples/**, skills/commander/templates/** (lane A); scripts/run_crew.py, scripts/recover_crews.py, tests/test_crew_launcher.py (lane E); scripts/verify_worktree_isolation.py (#610); and ANY template, including .agent-work/templates/** and skills/admiral/templates/**."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/hooks/spine_rail.py:712 _worktree_from_spine -- lexical already, too narrow",
+          "scripts/hooks/spine_rail.py:1113-1122 _is_valid_claim_target -- the symlink-escape guard whose second, resolved check must stay able to fail",
+          "scripts/hooks/spine_rail.py:1169, :1274, :1565 -- the door claim, CLI claim, and SessionStart resume call sites",
+          "tests/test_spine_rail.py:874 -- the test that pins the narrow shape and must be given a new contract",
+          "scripts/agent_work_root.py:56 -- the repo's own precedent for inlining the normalize idiom"
+        ],
+        "capability": [
+          "scripts.hooks.spine_rail (map/INDEX.md, 62 entities)",
+          "scripts.checklist_engine (map/INDEX.md, 110 entities)"
+        ],
+        "constraint": [
+          "stdlib-only hook",
+          "lexical-only derivation; symlink resolution stays outside",
+          "nearest-ancestor-fail-closed",
+          "the symlink-escape guard must remain falsifiable"
+        ],
+        "decision": [
+          "one-definition-or-a-pinned-equivalence -- SETTLED BY MEASUREMENT this run: the single-definition placement is closed both ways (a definition outside spine_rail.py needs a companion entry in the fenced installer; a definition inside spine_rail.py needs spine_rail.py added to the fenced installer's checklist_engine.py companion tuple). Two copies plus a shared case table it is. @grade: settled/measured \u00b7 leans g1-implement",
+          "normalize-once REVISED to lexical-only by three measurements -- see this gate's first constraint. @grade: settled/measured \u00b7 leans g1-implement,g2-implement",
+          "nearest-ancestor-fail-closed @grade: settled/human \u00b7 leans g1-implement",
+          "decision pressure: which shape preconditions live in the derivation vs at its callers @grade: placeholder \u00b7 leans g1-implement"
+        ],
+        "evidence": [
+          "a table of paths and the worktree each derives, covering ALL SIX cases: a spine at the project root; a spine in a worktree; a crew area nested under a Commander's; the deep archived case .agent-work/archive/2026-07-10-epic-101/harvest/issue-102/full/issue-102/spine.json; the nested-sandbox double-.agent-work case; and a path with no .agent-work ancestor at all",
+          "the shared table drives BOTH implementations, so an equivalence break is a test failure, not a review observation",
+          "a test proving a symlinked spine still fails _is_valid_claim_target"
+        ],
+        "confidence_flags": [
+          "no packet map exists; every cited line was re-read in tree at e36e630b and independently re-verified by the cold critic"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Independent review returned BLOCK on B1 (test_spine_rail's six assertions compare a normcase-folded return against an unfolded str(tmp_path), guaranteed to fail on Windows). Rework attempt 3 landed the fix and the implementer result was re-issued, so this gate's evidence must be re-taken rather than carried from the superseded attempt."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-implement",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g1-implement",
+            "reason": "Independent review returned BLOCK on B1 (test_spine_rail's six assertions compare a normcase-folded return against an unfolded str(tmp_path), guaranteed to fail on Windows). Rework attempt 3 landed the fix and the implementer result was re-issued, so this gate's evidence must be re-taken rather than carried from the superseded attempt.",
+            "ts": "2026-08-16T17:32:24.073880+00:00"
+          }
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-implement",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g1-implement",
+            "reason": "Independent review returned BLOCK on B1 (test_spine_rail's six assertions compare a normcase-folded return against an unfolded str(tmp_path), guaranteed to fail on Windows). Rework attempt 3 landed the fix and the implementer result was re-issued, so this gate's evidence must be re-taken rather than carried from the superseded attempt.",
+            "ts": "2026-08-16T17:32:24.073887+00:00"
+          }
+        },
+        {
+          "id": "e-g1-implement-3",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "artifact": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g1-implementer-result.md",
+            "attempt": "2"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g1-implement",
+            "reason": "Independent review returned BLOCK on B1 (test_spine_rail's six assertions compare a normcase-folded return against an unfolded str(tmp_path), guaranteed to fail on Windows). Rework attempt 3 landed the fix and the implementer result was re-issued, so this gate's evidence must be re-taken rather than carried from the superseded attempt.",
+            "ts": "2026-08-16T17:32:24.073889+00:00"
+          }
+        },
+        {
+          "id": "e-g1-implement-4",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-implement",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g1-implement",
+            "reason": "Independent review returned BLOCK on B1 (test_spine_rail's six assertions compare a normcase-folded return against an unfolded str(tmp_path), guaranteed to fail on Windows). Rework attempt 3 landed the fix and the implementer result was re-issued, so this gate's evidence must be re-taken rather than carried from the superseded attempt.",
+            "ts": "2026-08-16T17:32:24.073891+00:00"
+          }
+        },
+        {
+          "id": "e-g1-implement-5",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "artifact": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g1-implementer-result.md",
+            "attempt": "3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Derivation: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a constellation-reviewer crew through scripts/run_crew.py. RUN the six derivation cases rather than reading them. Apply the deletion test to the equivalence table: delete one implementation in imagination -- would the table still pass? If yes it is a check that cannot fail. Verify spine_rail.py gained no import, that no realpath entered the derivation, and that the symlink-escape guard at _is_valid_claim_target can still fail. Integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Re-issued IMPLEMENTER_RESULT (attempt 3, status complete) attached as e-g1-implement-5 after the reopen cascade superseded the prior evidence."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-5"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "superseded_by_reopen": "g1-implement"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-review",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g1-implement",
+            "reason": "Independent review returned BLOCK on B1 (test_spine_rail's six assertions compare a normcase-folded return against an unfolded str(tmp_path), guaranteed to fail on Windows). Rework attempt 3 landed the fix and the implementer result was re-issued, so this gate's evidence must be re-taken rather than carried from the superseded attempt.",
+            "ts": "2026-08-16T17:32:24.073895+00:00"
+          }
+        },
+        {
+          "id": "e-g1-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "artifact": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g1-reviewer-result.md",
+            "blockers": "1"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g1-implement",
+            "reason": "Independent review returned BLOCK on B1 (test_spine_rail's six assertions compare a normcase-folded return against an unfolded str(tmp_path), guaranteed to fail on Windows). Rework attempt 3 landed the fix and the implementer result was re-issued, so this gate's evidence must be re-taken rather than carried from the superseded attempt.",
+            "ts": "2026-08-16T17:32:24.073896+00:00"
+          }
+        },
+        {
+          "id": "e-g1-review-3",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-review",
+            "why_ref": "w-4"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-4",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-review",
+            "why_ref": "w-6"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-5",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g1-reviewer-result.md",
+            "attempt": "2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Derivation: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: reproduce the crew's evidence yourself against the world before advancing. BLOCK: return for rework or raise a blocker. Log out-of-scope finds as triage candidates and harvest the crew's Workflow Feedback into the run's lesson-candidate pool.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received, verdict APPROVE, attached as e-g1-review-5."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the shared derivation case table exists and passes by name -- this check goes red on an empty diff",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_worktree_derivation.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-4"
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green: cache cleared, clean env",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-5"
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-5",
+          "attested": {
+            "evidence": "e-g1-review-5",
+            "note": null
+          }
+        },
+        {
+          "id": "c4",
+          "statement": "main baseline RE-MEASURED at this gate's close and the failure-set difference against it stated; and what this gate did about Windows path handling (separators, case folding) stated explicitly, since the one windows-latest CI job is red at baseline and cannot tell us",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "MAIN BASELINE RE-MEASURED AT GATE TIME. main has moved under this lane to e0539903 (lanes A and E landed); my base is e36e630b. Fresh detached worktree at main, cache cleared, clean env: 3163 passed, 7 skipped, 1172 subtests, 0 FAILED. This branch: 3159 passed, 6 skipped, 1164 subtests, 0 FAILED. FAILURE-SET DIFFERENCE: empty on both sides, so the difference is empty -- the only signal that matters. The raw counts differ because main carries lanes A+E's new tests that this branch does not, and this branch carries g1's 54 new tests that main does not. WINDOWS: normcase is the identity function on this Linux host, so nothing run here exercises the case fold. The gate handles it by CONSTRUCTION rather than by platform: tests/test_worktree_derivation.py derives _FOLDS_CASE from os.path.normcase('.AGENT-WORK') == '.agent-work' rather than from sys.platform, and the six test_spine_rail assertions now build their expectation with normcase+normpath -- the same predicate the implementation applies. The independent reviewer verified both under a simulated ntpath with a realistic Windows tmp_path. The one windows-latest CI job is red at baseline and told us nothing."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-integrate",
+            "why_ref": "w-7"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_worktree_derivation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_worktree_derivation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Retire stamp-and-compare: the comparison and the ambient git read go away",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch a constellation-implementer crew through scripts/run_crew.py. Three changes: (1) origin_worktree_refusal stops COMPARING -- delete the equality test between the stamped origin.worktree and the engine's ambient cwd, and every parameter that exists only to feed it. (2) The per-guarded-verb `git rev-parse --show-toplevel` at scripts/checklist_engine.py:3573 goes away entirely. (3) origin.worktree keeps being WRITTEN by spine_lifecycle.build_origin and init_work_area, and is read by NOTHING for a decision -- pin that with a test whose name contains 'provenance', in tests/test_spine_origin_isolation.py. THIS GATE ADDS NO FAIL-CLOSED REFUSAL: the shape refusal for an unowned spine path is gate g4 and is floated to the Admiral, because it refuses 362 of the 429 guarded-verb invocations the current suite makes, across 125 tests, three of which sit in the lane-E-fenced tests/test_crew_launcher.py. Do not add it here. Also repair the now-false prose in docs/CHECKLIST_SCHEMA.md (its :120 paragraph describes the retired mechanism, and its :124 line cites the call site as :3411-3444 when it is :3573-3578) and in scripts/spine_lifecycle.py. Integrate the returned IMPLEMENTER_RESULT: attach g2-implement --type implementer-result --field status=<verbatim lowercase Return status>.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1's derivation has landed and is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 landed as commit 9ff86f2d with an independent APPROVE; suite green 3159/0. worktree_from_spine_path is available to this gate."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with return status complete",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-2"
+        }
+      ],
+      "constraints": [
+        "Removing the origin comparison removes NO guard -- the lease is and always was the ownership guard. If you find a case where the comparison was genuinely the only thing preventing harm, that is a FINDING to report, not something to ship around.",
+        "origin.worktree is still WRITTEN. Do not delete the stamp; delete every READ of it that feeds a decision.",
+        "After this gate the predicate may have nothing left to do. If it degenerates to a no-op, say so plainly and delete it rather than leaving a function that returns None on every path.",
+        "scripts/mcp_spine_server.py and scripts/run_crew.py carry PROSE describing the old guard and are FENCED. Report the stale prose as a triage candidate for the owning lane; do not edit it.",
+        "FENCED, do not edit: scripts/install_constellation.py, scripts/mcp_spine_server.py, .mcp.json, examples/**, skills/commander/templates/** (lane A); scripts/run_crew.py, scripts/recover_crews.py, tests/test_crew_launcher.py (lane E); scripts/verify_worktree_isolation.py (#610); and ANY template, including .agent-work/templates/** and skills/admiral/templates/**."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:102-179 origin_worktree_refusal -- read the docstring before changing it; it already withdraws the unforgeability claim",
+          "scripts/checklist_engine.py:3573-3578 -- the single impure call site, before dispatch(), returning without save()",
+          "scripts/checklist_engine.py:98-99 ORIGIN_EXEMPT_VERBS / ORIGIN_GUARDED_VERBS",
+          "scripts/spine_lifecycle.py build_origin",
+          "tests/test_spine_origin_isolation.py",
+          "docs/CHECKLIST_SCHEMA.md:120 and :124"
+        ],
+        "capability": [
+          "scripts.checklist_engine -- guarded-verb refusal path",
+          "scripts.spine_lifecycle (map/INDEX.md, 20 entities)"
+        ],
+        "constraint": [
+          "the refusal path must keep sitting BEFORE dispatch() and returning WITHOUT save(), so a refusal never writes into the tree it protects",
+          "supersedes the 2026-08-15 worktree-identity ruling in .agent-work/rulings/ -- cite it where this contradicts it and say so plainly",
+          "tests/test_spine_origin_isolation.py::test_it_is_pure reads only the predicate's own co_names and is NOT transitive -- do not treat it as proof of purity"
+        ],
+        "decision": [
+          "derivation-authoritative-stamp-becomes-provenance @grade: settled/human \u00b7 leans g2-implement",
+          "not-a-weaker-guard @grade: settled/human \u00b7 leans g2-implement",
+          "decision pressure: whether the degenerate predicate is deleted or kept as a seam @grade: placeholder \u00b7 leans g2-implement"
+        ],
+        "evidence": [
+          "the guarded-verb path exercised BEFORE and AFTER, with the git rev-parse call gone",
+          "a test proving origin.worktree is written and read by no decision path",
+          "an enumeration, by command with the count stated, of every remaining read of origin.worktree"
+        ],
+        "confidence_flags": [
+          "isolation is git-only -- hook code is NOT fenced by it. CLAUDE_PROJECT_DIR resolves once at session launch, so this worktree runs the MAIN checkout's hook (#269). Validate hook behaviour in a FRESH process or by calling functions directly."
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g2-implement",
+            "why_ref": "w-8"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "artifact": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Retire stamp-and-compare: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a constellation-reviewer crew through scripts/run_crew.py. Verify BY COMMAND, stating counts rather than sampling, that no `rev-parse --show-toplevel` remains on the guarded-verb path and that no decision path reads origin.worktree. Adversarially hunt for a case where the removed comparison was the only thing preventing harm. Confirm no fail-closed refusal was smuggled in -- that is g4's, and it is floated. Integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received, status complete; targeted check and full suite reproduced by the Commander."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-2"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g2-review",
+            "why_ref": "w-9"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "artifact": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-reviewer-result.md",
+            "blockers": "1",
+            "floated": "1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Retire stamp-and-compare: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: reproduce the crew's evidence yourself against the world before advancing. BLOCK: return for rework or raise a blocker. Log out-of-scope finds as triage candidates and harvest the crew's Workflow Feedback into the run's lesson-candidate pool.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received, verdict BLOCK, attached as e-g2-review-2."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the ambient git read is gone from the engine AND the stamp-is-provenance-only test passes by name -- both halves go red on an empty diff",
+          "check": {
+            "kind": "command",
+            "command": "! git grep -q 'rev-parse --show-toplevel' -- scripts/checklist_engine.py && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_origin_isolation.py -k provenance"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green: cache cleared, clean env",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "main baseline RE-MEASURED at this gate's close and the failure-set difference against it stated; and what this gate did about Windows path handling (separators, case folding) stated explicitly, since the one windows-latest CI job is red at baseline and cannot tell us",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "The removed origin comparison was the only guard on a LEASELESS spine. Measured base-vs-tree from a foreign worktree: on a spine with no active lease -- never-claimed or released -- every mutating verb went REFUSED -> exit 0, writing state into a tree the agent is not standing in. require_session returns early when _active_lease is None, so 'the lease was always the guard' holds only where a lease exists. This is the exact counter-case #609's not-a-weaker-guard pre-ruling (settled/human) reserves for the Admiral. Also open: reviewer B2, two Windows rows in the new differential test are inert because the test drives them only from a foreign cwd where no stamp can match -- one-line fix, deferred into the ruling's rework.",
+        "authority_needed": "admiral-568-cleanup",
+        "next_action": "Rule which of three shapes applies: (1) prose-only -- accept the widening and narrow the overstated claim in docs/CHECKLIST_SCHEMA.md:124, scripts/checklist_engine.py:95-97 and the test module docstring, plus fix B2; (2) keep a derived refusal for the leaseless case, which inherits g4's blast radius; (3) rule the widening unacceptable, which reopens what #609 retires. Full package: .agent-work/cleanup-f-derive-worktree/FLOAT_TO_ADMIRAL.md",
+        "prior_status": "pending"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "The worktree stops answering 'is this mine'",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch a constellation-implementer crew through scripts/run_crew.py. In scripts/hooks/spine_rail.py, _foreign_worktree (:693) stops being an OWNERSHIP test. It is broken by construction: spines are 1:1 with work AREAS, not worktrees, so an in-tree implementer reports 'not foreign' and the parent's Stop is answered with its crew's gate -- the #549 bug class, which #549 already fixed with binding-key provenance. Rework its two call sites so ownership is decided by binding-key provenance and never by the tree. The two sites are NOT symmetric -- _entry_mid_flight_view (:1411) decides mid-flight Stop blocking, decide_session_start (:1546) picks a binding entry to resume from. State each site's before and after behaviour separately, and ENUMERATE what newly blocks, since removing a skip makes the Stop hook block MORE. Put the new tests in a class named OwnershipIsBindingKeyNotWorktree in tests/test_spine_rail.py. Integrate the returned IMPLEMENTER_RESULT: attach g3-implement --type implementer-result --field status=<verbatim lowercase Return status>.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1's derivation has landed and is green; the location-vs-identity split is settled and available to lean on",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with return status complete",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "The two call sites are not symmetric. Do not assume one replacement fits both.",
+        "The nudge / 3-strike escape hatch stays keyed by session id ALONE, never fragmented per-entry.",
+        "Fail-safe posture: an errored comparison must never relax the rail.",
+        "stdlib only in spine_rail.py.",
+        "FENCED, do not edit: scripts/install_constellation.py, scripts/mcp_spine_server.py, .mcp.json, examples/**, skills/commander/templates/** (lane A); scripts/run_crew.py, scripts/recover_crews.py, tests/test_crew_launcher.py (lane E); scripts/verify_worktree_isolation.py (#610); and ANY template, including .agent-work/templates/** and skills/admiral/templates/**."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/hooks/spine_rail.py:693 _foreign_worktree, :677 _same_path",
+          "scripts/hooks/spine_rail.py:1399-1424 _entry_mid_flight_view",
+          "scripts/hooks/spine_rail.py:1427-1500 decide_stop including the #549 provenance branch",
+          "scripts/hooks/spine_rail.py:1532-1570 decide_session_start",
+          "scripts/hooks/spine_rail.py:543-590 session_view / session_view_provenance -- the discriminator that is already right"
+        ],
+        "capability": [
+          "scripts.hooks.spine_rail -- Stop and SessionStart decisions"
+        ],
+        "constraint": [
+          "worktree-is-location-spine-path-is-identity: the tree may answer WHERE, never WHOSE",
+          "this gate is the run's riskiest behaviour change and was under-recorded in the first mission frame -- the frame has been amended to carry it"
+        ],
+        "decision": [
+          "worktree-is-location-spine-path-is-identity @grade: settled/human \u00b7 leans g3-implement",
+          "decision pressure: what replaces the skip at each of the two call sites @grade: placeholder \u00b7 leans g3-implement"
+        ],
+        "evidence": [
+          "the #549 shape exercised directly: a Commander and an in-tree implementer sharing one worktree, where the parent's Stop must NOT be answered with the crew's gate",
+          "before/after behaviour stated per call site, with what newly blocks enumerated"
+        ],
+        "confidence_flags": [
+          "you cannot validate hook behaviour from inside the session that contains the hook (#269) -- use a fresh process, or call the functions directly with constructed payloads and a constructed binding store"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "Ownership-not-tree: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a constellation-reviewer crew through scripts/run_crew.py. Verify the #549 shape is genuinely exercised (a shared-tree parent and crew, not two trees), that the fail-safe posture survives, and that each call site's before/after claim reproduces when you run it. Integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "Ownership-not-tree: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: reproduce the crew's evidence yourself against the world before advancing. BLOCK: return for rework or raise a blocker. Log out-of-scope finds as triage candidates and harvest the crew's Workflow Feedback into the run's lesson-candidate pool.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the binding-key-ownership tests pass by name -- red on an empty diff",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py -k OwnershipIsBindingKeyNotWorktree"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green: cache cleared, clean env",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "main baseline RE-MEASURED at this gate's close and the failure-set difference against it stated; and what this gate did about Windows path handling (separators, case folding) stated explicitly, since the one windows-latest CI job is red at baseline and cannot tell us",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "FLOATED: fail-closed refusal for an unowned spine path",
+      "imperative": "DO NOT DISPATCH until the Admiral has ruled. This gate adds the shape refusal the nearest-ancestor-fail-closed pre-ruling calls for: a guarded verb against a spine whose path has no .agent-work ancestor is refused. Measured blast radius, by dynamic probe over the whole suite rather than by reading: 429 guarded-verb engine invocations, 67 with an .agent-work ancestor, 362 without -- every one of those 362 is refused. 125 distinct tests across 7 files, of which THREE sit in tests/test_crew_launcher.py, fenced to lane E. This gate must break three tests it may not fix while its own postcondition demands a green suite, so it cannot close on its own terms. Its only exit as authored would be a human override on the suite check, which converts the plan's central regression floor into a rubber stamp for the one gate that most needs it. The Admiral rules: narrow the refusal, lift the lane-E fence for those three tests, accept the 122 non-fenced fixture updates as this gate's declared deliverable, or drop the refusal. Narrowing it to 'fail closed only when the spine carries an origin stamp' is NOT available -- that reinstates reading origin.worktree for a decision, which the derivation-authoritative pre-ruling forbids.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the Admiral has ruled on the fail-closed scope. WITHOUT that ruling this gate does not start.",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "an IMPLEMENTER_RESULT artifact was returned for this gate",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the Commander has adjudicated the returned status: either complete, or an honest blocked/float whose finding is measured, stated, and routed to the Admiral. This gate is one the plan EXPECTS may honestly float, so closing it does not require status=complete -- an implementer must never be pushed to report complete to satisfy a gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "nearest-ancestor-fail-closed is graded settled/human -- only the ruling tier may unsettle it. This lane may not narrow it alone.",
+        "tests/test_crew_launcher.py is fenced to lane E and three of its tests are in the blast radius.",
+        "FENCED, do not edit: scripts/install_constellation.py, scripts/mcp_spine_server.py, .mcp.json, examples/**, skills/commander/templates/** (lane A); scripts/run_crew.py, scripts/recover_crews.py, tests/test_crew_launcher.py (lane E); scripts/verify_worktree_isolation.py (#610); and ANY template, including .agent-work/templates/** and skills/admiral/templates/**."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py origin_worktree_refusal (or its successor)",
+          "tests/test_checklist_engine.py:98 _run_main -- writes every fixture to a TemporaryDirectory with no .agent-work ancestor by construction, which is the structural root of 92 of the 125",
+          "tests/test_crew_launcher.py AssignmentKeyedLeaseTests, DoorHijackRealEngineControlTests -- the three fenced tests"
+        ],
+        "capability": [
+          "scripts.checklist_engine -- guarded-verb refusal path"
+        ],
+        "constraint": [
+          "the fixtures in the blast radius are LEGITIMATE -- they pass today because the predicate returns None for an origin-less spine, a population fail-closed never had to consider"
+        ],
+        "decision": [
+          "nearest-ancestor-fail-closed @grade: settled/human \u00b7 leans g4-implement",
+          "decision pressure: fail-closed scope -- FLOATED, not this lane's @grade: placeholder \u00b7 leans g4-implement"
+        ],
+        "evidence": [
+          "the 429/67/362 and 125-test measurement, reproduced by whoever implements this",
+          "per-file disposition of all 125 tests"
+        ],
+        "confidence_flags": [
+          "the measurement is the cold critic's, reproduced in part by the Commander (the three fenced tests were confirmed to build spines with no .agent-work ancestor and drive guarded verbs). The full 429/362 split has not been independently re-run."
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "Fail-closed: review",
+      "imperative": "Only after the Admiral's ruling and g4-implement. Fill templates/REVIEWER_HANDOFF.template.md and dispatch a constellation-reviewer crew through scripts/run_crew.py. Integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g4-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "Fail-closed: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: reproduce the crew's evidence yourself against the world before advancing. BLOCK: return for rework or raise a blocker. Log out-of-scope finds as triage candidates and harvest the crew's Workflow Feedback into the run's lesson-candidate pool.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the fail-closed refusal test passes by name -- red on an empty diff",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_origin_isolation.py -k unowned"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green: cache cleared, clean env",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "main baseline RE-MEASURED at this gate's close and the failure-set difference against it stated; and what this gate did about Windows path handling (separators, case folding) stated explicitly, since the one windows-latest CI job is red at baseline and cannot tell us",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g5-implement": {
+      "id": "g5-implement",
+      "title": "FLOATED: #315 -- command checks run in the derived worktree",
+      "imperative": "DO NOT DISPATCH until the Admiral has ruled. The change itself is small: _check_condition (:898) has base_dir in scope and drops it, and _run_check_command (:871) calls subprocess.run with no cwd= (:883); thread the derived worktree in as the check's cwd. What is floated is the PREMISE. The launch order states 'zero occurrences of verify_worktree_isolation in any template or spec' and concludes that threading cwd 'no longer disarms anything that ships'. Both halves are false, measured against the tree at e36e630b: (1) .agent-work/templates/COMMANDER_SPINE.template.json:12 carries a live command-kind precondition c0 running `python scripts/verify_worktree_isolation.py --here <repo-root>` -- exactly the kind of check this gate relocates, in the project-local template overlay that resolves FIRST; (2) skills/admiral/templates/LAUNCH_ORDER.template.md:43 ships the same instruction to every Commander, and its own line 45 rules that forcing cwd 'compares the worktree to itself ... and disarms the check entirely', with line 47 stating it is 'Distinct from, not superseded by, the engine-native guard'. Carrier (2) is an agent shell step and is NOT disarmed by this gate; carrier (1) is a spine command check and IS. Separately, tests/test_worktree_precondition_wiring.py::IsolationGateSurvivesThroughTheCLI goes red by construction -- forcing cwd inside the worktree makes --here compare EXPECTED==EXPECTED. Its own docstring names a THIRD road the launch order does not mention and orders it first: 'A command check that observes the environment needs an explicit contract -- a schema flag, or the launcher's cwd passed into the check's environment -- BEFORE the engine may relocate it. If such a contract HAS landed, this fixture is what needs updating.' Land the contract, then teach the fixture. The Admiral rules on all of it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the Admiral has ruled on the false premise and on the tripwire collision. WITHOUT that ruling this gate does not start.",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "an IMPLEMENTER_RESULT artifact was returned for this gate",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the Commander has adjudicated the returned status: either complete, or an honest blocked/float whose finding is measured, stated, and routed to the Admiral. This gate is one the plan EXPECTS may honestly float, so closing it does not require status=complete -- an implementer must never be pushed to report complete to satisfy a gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "You may NOT edit scripts/verify_worktree_isolation.py, nor any template, including .agent-work/templates/**.",
+        "IsolationGateSurvivesThroughTheCLI is the tripwire for exactly this class of error. Do not relax its assertion and do not delete it.",
+        "FENCED, do not edit: scripts/install_constellation.py, scripts/mcp_spine_server.py, .mcp.json, examples/**, skills/commander/templates/** (lane A); scripts/run_crew.py, scripts/recover_crews.py, tests/test_crew_launcher.py (lane E); scripts/verify_worktree_isolation.py (#610); and ANY template, including .agent-work/templates/** and skills/admiral/templates/**."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:898 _check_condition -- base_dir already in scope",
+          "scripts/checklist_engine.py:871-895 _run_check_command -- the subprocess.run with no cwd=",
+          "scripts/checklist_engine.py:2505, :2550, :2620 -- the three call sites that pass base_dir",
+          "tests/test_worktree_precondition_wiring.py:128-155 IsolationGateSurvivesThroughTheCLI -- read the docstring in full",
+          ".agent-work/templates/COMMANDER_SPINE.template.json:12 -- the live command-check carrier",
+          "skills/admiral/templates/LAUNCH_ORDER.template.md:43-47 -- the shipped ruling that cwd-forcing disarms this check"
+        ],
+        "capability": [
+          "scripts.checklist_engine -- command-kind postcondition execution"
+        ],
+        "constraint": [
+          "base_dir is the gauge path base and the --from-child base; do not overload it",
+          "a check whose SUBJECT is the ambient cwd cannot survive having its cwd forced -- structural, not incidental"
+        ],
+        "decision": [
+          "worktree-is-location-spine-path-is-identity -- cwd for checks is exactly the LOCATION use this ruling sanctions @grade: settled/human \u00b7 leans g5-implement",
+          "decision pressure: contract-then-fixture, or stop -- FLOATED @grade: placeholder \u00b7 leans g5-implement"
+        ],
+        "evidence": [
+          "red-before/green-after for the fail-open decoy case AND the false-red case",
+          "the exact behaviour of IsolationGateSurvivesThroughTheCLI before and after, measured rather than predicted"
+        ],
+        "confidence_flags": [
+          "this gate's premise in the frozen launch order is measurably false; the Commander verified both carriers itself"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g5-review": {
+      "id": "g5-review",
+      "title": "#315: review",
+      "imperative": "Only after the Admiral's ruling and g5-implement. Fill templates/REVIEWER_HANDOFF.template.md and dispatch a constellation-reviewer crew through scripts/run_crew.py. Reproduce both #315 cases yourself and judge independently whether the resolution leaves a falsifiable check on the world or a check that cannot fail. Integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g5-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g5-integrate": {
+      "id": "g5-integrate",
+      "title": "#315: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: reproduce the crew's evidence yourself against the world before advancing. BLOCK: return for rework or raise a blocker. Log out-of-scope finds as triage candidates and harvest the crew's Workflow Feedback into the run's lesson-candidate pool.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the #315 repro test passes by name -- red on an empty diff",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_worktree_precondition_wiring.py -k cwd"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green: cache cleared, clean env",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "main baseline RE-MEASURED at this gate's close and the failure-set difference against it stated; and what this gate did about Windows path handling (separators, case folding) stated explicitly, since the one windows-latest CI job is red at baseline and cannot tell us",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-review",
+      "statement": "map/ids.jsonl is 0 bytes and the per-module map/<module>/INDEX.md files are absent; a full 'py -m scripts.code_map build --root .' does NOT create them (re-run, tree byte-identical). The freshness test compares only the root index, so no check notices. This is the mechanical cause of every Commander run in this repo orienting DEGRADED-UNPARSEABLE, and it will not self-heal."
+    },
+    {
+      "id": "tc2",
+      "from": "g1-review",
+      "statement": "The launch order and MISSION_FRAME cited scripts/agent_work_root.py:56 as precedent for an inlined LEXICAL normalize idiom, but that line is os.path.normcase(os.path.realpath(path)) -- it uses the exact call the lane's measured constraint forbids. Frame corrected this run; the underlying point is that agent_work_root.py normalizes with realpath while spine_rail._same_path normalizes lexically, and nothing records which is intended where."
+    },
+    {
+      "id": "tc3",
+      "from": "g1-review",
+      "statement": "scripts/validate_spine.py's falsifiable-zero-collected rule reports a pytest -k check that collects zero tests as one that 'can never fail'. Measured at e36e630b: pytest exits 5 on no-tests-collected and 4 on a missing file, so such a check DOES fail. The rule inverts the truth and discourages exactly the red-on-an-empty-diff gate checks a cold critic asked for."
+    }
+  ],
+  "blockers": [
+    {
+      "item": "g2-integrate",
+      "blocker": "The removed origin comparison was the only guard on a LEASELESS spine. Measured base-vs-tree from a foreign worktree: on a spine with no active lease -- never-claimed or released -- every mutating verb went REFUSED -> exit 0, writing state into a tree the agent is not standing in. require_session returns early when _active_lease is None, so 'the lease was always the guard' holds only where a lease exists. This is the exact counter-case #609's not-a-weaker-guard pre-ruling (settled/human) reserves for the Admiral. Also open: reviewer B2, two Windows rows in the new differential test are inert because the test drives them only from a foreign cwd where no stamp can match -- one-line fix, deferred into the ruling's rework.",
+      "authority_needed": "admiral-568-cleanup",
+      "next_action": "Rule which of three shapes applies: (1) prose-only -- accept the widening and narrow the overstated claim in docs/CHECKLIST_SCHEMA.md:124, scripts/checklist_engine.py:95-97 and the test module docstring, plus fix B2; (2) keep a derived refusal for the leaseless case, which inherits g4's blast radius; (3) rule the widening unacceptable, which reopens what #609 retires. Full package: .agent-work/cleanup-f-derive-worktree/FLOAT_TO_ADMIRAL.md"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "e0-context",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.2588,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": null,
+      "ts": "2026-08-16T16:22:25.428615+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "e0-context",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2595,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": null,
+      "ts": "2026-08-16T16:22:29.360648+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "g1-implement",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.261,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-1",
+      "ts": "2026-08-16T16:23:54.442612+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "g1-implement",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2686,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-1",
+      "ts": "2026-08-16T16:24:01.265381+00:00"
+    },
+    {
+      "id": "tl-5",
+      "gate": "g1-implement",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2692,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-1",
+      "ts": "2026-08-16T16:24:06.105311+00:00"
+    },
+    {
+      "id": "tl-6",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2827,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-16T17:00:41.953489+00:00"
+    },
+    {
+      "id": "tl-7",
+      "gate": "g1-implement",
+      "verb": "reopen",
+      "outcome": "begin-refused",
+      "fill": 0.3033,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-16T17:32:17.231864+00:00"
+    },
+    {
+      "id": "tl-8",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.3059,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-16T17:32:51.621008+00:00"
+    },
+    {
+      "id": "tl-9",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.307,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-16T17:32:57.681599+00:00"
+    },
+    {
+      "id": "tl-10",
+      "gate": "g1-integrate",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3136,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-7",
+      "ts": "2026-08-16T17:45:12.208485+00:00"
+    },
+    {
+      "id": "tl-11",
+      "gate": "g2-implement",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3182,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-8",
+      "ts": "2026-08-16T17:51:27.516365+00:00"
+    },
+    {
+      "id": "tl-12",
+      "gate": "g2-review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.328,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-9",
+      "ts": "2026-08-16T18:26:20.522863+00:00"
+    }
+  ],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Execution context loaded. This plan has FIVE gates, not four, because a cold critic returned BLOCK on the four-gate version with twelve findings. g1 derivation (LEXICAL only -- no realpath, on three measurements), g2 retire the comparison and the ambient git read, g3 the worktree stops answering 'is this mine' in the Stop hook. g4 (fail-closed refusal) and g5 (#315 cwd thread) are authored but MUST NOT START: both are floated to the Admiral, g4 because it refuses 362 of 429 guarded-verb invocations including three tests in a lane-E-fenced file, g5 because the launch order's zero-occurrences premise for verify_worktree_isolation is measurably false. Every gate carries a targeted check measured red today (exit 4 or 5) so no gate can close on an empty diff.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:22:37.419522+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "g1 implementation landed over two attempts. Attempt 1 delivered the whole slice and returned partial on one honest stop -- map/ was missing from the allowed scope I wrote, so it could not regenerate the freshness-tested code map. That was a handoff defect, not an implementation defect; I re-measured and confirmed exactly one failure (the map freshness test) against 3158 passed. Attempt 2 got map/ in scope, regenerated it with scripts.code_map, and returned complete. Derivation is lexical (normcase+normpath); the crew correctly overrode the handoff's agent_work_root.py:56 citation, which uses realpath, reading it as precedent for inlining rather than importing.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:59:42.229246+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Independent reviewer returned BLOCK on exactly one blocker, B1: the rewritten test_spine_rail assertions compare the derivation's normcase-folded return against an unfolded str(tmp_path), which is guaranteed to fail on Windows for every tmp_path -- the drive letter alone decides it. The predecessor test passed there, so this diff turns a green Windows test red, and windows-latest is red at baseline so nothing would ever attribute it. Accepted. The sibling shared table constructs its expectation explicitly and survives the same simulation, so the fix is to reuse that construction. Three out-of-scope finds recorded as tc1-tc3; tc2 was mine to fix and the mission frame no longer contradicts itself on normalization, which matters because g2 reads that frame next.",
+      "mechanical": false,
+      "ts": "2026-08-16T17:15:03.583475+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-implement",
+      "reopen": true,
+      "reason": "Independent review returned BLOCK on B1 (test_spine_rail's six assertions compare a normcase-folded return against an unfolded str(tmp_path), guaranteed to fail on Windows). Rework attempt 3 landed the fix and the implementer result was re-issued, so this gate's evidence must be re-taken rather than carried from the superseded attempt.",
+      "ts": "2026-08-16T17:32:24.073902+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g1-review",
+      "reopen": true,
+      "reason": "Independent review returned BLOCK on B1 (test_spine_rail's six assertions compare a normcase-folded return against an unfolded str(tmp_path), guaranteed to fail on Windows). Rework attempt 3 landed the fix and the implementer result was re-issued, so this gate's evidence must be re-taken rather than carried from the superseded attempt.",
+      "ts": "2026-08-16T17:32:24.073904+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g1-implement",
+      "why": "g1 rework 3 closed B1. The six assertions in test_spine_rail now construct their expectation with normcase+normpath, the same predicate the implementation applies and the same construction the shared table already used, so the fold is proven rather than inherited from the platform. No production file changed from the reviewed state -- verified by diff against e36e630b: checklist_engine +65, spine_rail +106, unchanged. Full suite green in my own hands: 3159 passed, 6 skipped, 0 failed, cache cleared, clean env.",
+      "mechanical": false,
+      "ts": "2026-08-16T17:32:32.806459+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g1-review",
+      "why": "Re-review after rework 3 returned APPROVE. The reviewer re-ran its predecessor's ntpath simulation and confirmed B1 closed, and confirmed the fix is constructed rather than inherited -- the expectation comes from the same normcase+normpath predicate the implementation applies, not from sys.platform and not from a value copied out of a passing Linux run. It also re-verified the whole gate rather than only the delta: the deletion test on the shared table, _is_valid_claim_target's unchanged strictness including symlink and depth-zero rejection, the stdlib-only import block, and that no g2/g4/g5 work was smuggled in.",
+      "mechanical": false,
+      "ts": "2026-08-16T17:45:02.707561+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g1-integrate",
+      "why": "g1 closed. One lexical derivation rule, defined twice and pinned equal by one shared table of cases; the narrow claim shape the derivation gave up is now held at _is_valid_claim_target, the one caller whose strictness is a security property, so the ownership gate is exactly as strict as before. Derivation is lexical -- normcase+normpath, no realpath -- which revised the launch order's normalize-once pre-ruling on three measurements. Cost two reworks: a scope omission of mine (map/ was missing from the handoff, so the crew correctly stopped rather than regenerate the freshness-tested code map) and one real Windows defect the reviewer caught, where the test compared a folded return against an unfolded expectation. Independent APPROVE on re-review. Suite 3159/0 failed; main baseline at e0539903 3163/0 failed; failure-set difference empty.",
+      "mechanical": false,
+      "ts": "2026-08-16T17:49:51.355603+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g2-implement",
+      "why": "g2 implementation landed on the first attempt. Large subtraction: 273 insertions, 623 deletions. I verified the targeted check myself -- no rev-parse --show-toplevel survives in checklist_engine.py, and the provenance-named tests pass (4 passed, 18 subtests). Suite 3135/0 failed; the drop from g1's 3159 is the deleted comparison tests, which the reviewer is asked to account for rather than accept. Six mentions of origin_worktree_refusal survive under scripts/, all prose, two of them in fenced lane-A/E files left deliberately stale.",
+      "mechanical": false,
+      "ts": "2026-08-16T18:26:20.345795+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g2-review",
+      "why": "Independent review returned BLOCK on B1, and B1 is the exact counter-case the launch order's not-a-weaker-guard pre-ruling reserved for the Admiral. Measured, base engine vs working tree, same fixture, driven from a foreign worktree: on a spine with NO ACTIVE LEASE -- never-claimed or released -- every mutating verb went from REFUSED to exit 0, writing state into a tree the agent is not standing in. require_session returns early when no lease exists, so the origin comparison was the sole refusal on that path. 'The lease was always the guard' holds only where a lease exists. The implementer's negative was real but its probe never drove a mutating verb on a leaseless spine, so the null was stated unscoped. The reviewer correctly floated rather than unsettling a settled/human anchor. B2 (two Windows rows in the new test are inert because they are only driven from a foreign cwd, where no stamp can match) is a one-line fix, deferred into whatever rework the ruling produces.",
+      "mechanical": false,
+      "ts": "2026-08-16T18:42:06.368450+00:00"
+    }
+  ]
+}

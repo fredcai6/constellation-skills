@@ -1,0 +1,95 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "diff_ref": "git diff e36e630b -- scripts/ tests/ map/ (5 files; g1, lane F, issue #609)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md, .agent-work/cleanup-f-derive-worktree/MISSION_FRAME.md decision anchors",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "Decision anchor `one-definition-or-a-pinned-equivalence` @grade: settled/measured, plus the stdlib-only constraint on scripts/hooks/spine_rail.py (a hook that fails takes the turn with it) and the fenced SCRIPT_RUNTIME_COMPANIONS declaration that tests/test_install_constellation.py::test_engine_runtime_siblings_are_declared_as_companions enforces by exact set equality.",
+        "reason": "The derivation body is duplicated near-verbatim across checklist_engine.worktree_from_spine_path and spine_rail._worktree_from_spine, which is the single most visible smell in this diff. The single-definition road is closed in BOTH directions by measurement: the hook may gain no import, and moving the definition the other way needs an installer entry this lane may not write. The standard sanctions duplication only when a pinned equivalence backs it, and that pin is real, not asserted -- tests/test_worktree_derivation.py drives one CASES table through both copies, and I applied the deletion test: stubbing either symbol reddens the whole file at collection, stubbing the hook body to always-None gives 19 failed/34 passed, and flipping the engine body from nearest- to outermost-ancestor gives 2 failed. A settled/measured anchor is re-measurable, and my measurement agrees with it."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "The in-file lexical idiom already established by spine_rail._same_path (:677) and scripts/agent_work_root.py, and the JSON binding store whose `worktree`/`spine` fields are strings by format.",
+        "reason": "Both derivations take and return `str` rather than a path type. Introducing a path abstraction would be wrong here rather than merely unnecessary: the whole contract is LEXICAL, and pathlib's `Path.resolve` is exactly the symlink resolution that must stay outside the function so `_is_valid_claim_target`'s second, resolved check can still fail. The values also cross a JSON boundary into the binding store as strings. `str` + `os.path` is the shape the surrounding code and the constraint both require."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "Decision anchor `one-definition-or-a-pinned-equivalence` @grade: settled/measured; CREW_CONTEXT.md 'Verification Discipline' -- a check that cannot fail is indistinguishable from one that passed.",
+        "reason": "Changing the one derivation rule now requires editing two files, which is the cost side of the sanctioned duplication above. The standard subordinates it because the scatter is bounded at exactly two known sites and is mechanically detected rather than left to reviewer eye: any drift between the copies fails tests/test_worktree_derivation.py::test_the_two_copies_agree. I confirmed that detector is falsifiable, so the shotgun-surgery risk is converted into a test failure rather than a silent divergence."
+      }
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "The frozen execute.json plan for lane F: `worktree_from_spine_path` is defined at g1 and first consumed at g2; global-crew.md 'no speculative abstraction' is scoped to abstraction the plan does not call for.",
+        "reason": "checklist_engine.worktree_from_spine_path is public and has zero production callers in this diff -- its only binding reference is tests/test_worktree_derivation.py:78, which I verified by grep. Read alone that is textbook speculative generality. It is sanctioned because the plan states the split explicitly and the reviewer handoff repeats it ('No engine consumer yet; gate g2 is its first. That is expected, not an oversight'), and because the implementer stated the count of 1 rather than letting it read as dead code. I am recording the override rather than treating it as absent so that if g2 does not land, this symbol is already on record as unconsumed."
+      }
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "global-everyone.md 'Decision fixedness: the @grade tag' -- the rationale lives welded to the decision, never in a second place; global-everyone.md 'Pin a claim to the revision you read it at'; the g1 handoff's explicit instruction that the lexical-only reliance be written into `_is_valid_claim_target`'s docstring so a later change cannot break it silently.",
+        "reason": "The ratio is striking and a reader will notice it: ~35 docstring lines above a 12-line body in both copies. It is not deodorant, because the prose does not explain confusing code -- the loop is plain -- it records WHY the rule may not change: the three measurements that closed the realpath option, the nested-sandbox paths that force nearest-over-outermost, and the twin's location. Deleting it would strand exactly the reasoning the next editor needs to avoid silently breaking the symlink-escape guard. The standard puts that rationale here rather than in a separate doc, so its presence is compliance."
+      }
+    }
+  ],
+  "rail_exception": null
+}

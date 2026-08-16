@@ -1,0 +1,29 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "id": "m2b-testbody-sim",
+      "after": "m2-fix",
+      "title": "Prove the fix over the REAL test body, not a reconstruction",
+      "imperative": "The m1 harness proves the two candidate expectations apart by reconstructing the six comparisons. That is one step short of what the handoff asks: show the corrected expectation is what the implementation returns under a simulated ntpath. Execute the actual test function from tests/test_spine_rail.py twice -- once with the three comparison lines textually reverted to the platform-inherited form, once as it stands -- under a `normcase` that FOLDS, and again under the host's identity `normcase`. Assert the substitution applied before trusting the pre-fix run, so a silently-matched-nothing revert cannot read as a passing guard. The pre-fix body must FAIL under the fold and PASS on the host; the post-fix body must PASS under both.",
+      "preconditions": [
+        {"id": "p1", "statement": "the fix is in tree and both target test files are green", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "the real test body fails pre-fix under a folding normcase and passes post-fix, while both pass under the host's identity normcase", "check": {"kind": "command", "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py .agent-work/cleanup-f-derive-worktree/evidence/g1-windows-testbody-sim.py"}, "satisfied": false}
+      ],
+      "constraints": [
+        "The harness lives under .agent-work/ (local-only evidence), never in tests/.",
+        "It must assert its own textual revert applied -- a check that cannot fail is indistinguishable from one that passed."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  ]
+}

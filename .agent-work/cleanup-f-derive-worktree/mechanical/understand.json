@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "understand",
+  "mechanical": {
+    "run": "cleanup-f-derive-worktree",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 3,
+    "spine-step": "understand",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-understand@453846b6d6d1a37570e5c3a27e2c0e383a69b6e9",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-f-derive-worktree",
+    "generated_at": "2026-08-16T15:53:48Z"
+  }
+}

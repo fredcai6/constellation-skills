@@ -1,0 +1,33 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "id": "m4b-map-rebuild",
+      "after": "m4-evidence",
+      "title": "Regenerate map/ and confirm the delta is bounded",
+      "imperative": "Regenerate the derived code map with `py -m scripts.code_map build --root .` inside the real worktree (the builder shells out to `git ls-files`, so a git-archive export cannot answer this). NEVER hand-edit map/INDEX.md. Then confirm the actual delta matches the shape attempt 1 predicted to a scratch --out: 9 hunks, all entity counts plus one new module row (scripts 1211->1213; tests 82 modules/4725 -> 83 modules/4736; scripts.hooks 84->85; scripts.hooks.spine_rail 62->63; scripts.checklist_engine 110->111; tests.test_spine_rail 187->189 with 96->95 holes; + tests.test_worktree_derivation). Call out BY NAME any hunk that does not match that shape -- a rebuild that rewrites more than entity counts and the one new row is a signal, not a formality, and is a stop condition. Finally run the targeted gate check.",
+      "preconditions": [
+        {"id": "p1", "statement": "map/ is in allowed scope for this attempt (rework handoff grants it explicitly, citing the launch order)", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "map freshness and the targeted gate check both pass", "check": {"kind": "command", "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_code_map.py tests/test_worktree_derivation.py"}, "satisfied": false},
+        {"id": "c2", "statement": "the actual map/ delta was inspected hunk by hunk and matches the predicted entity-count-plus-one-new-row shape, with any hunk that does not named explicitly", "check": null, "satisfied": false},
+        {"id": "c3", "statement": "map/INDEX.md was written by scripts.code_map, never by hand", "check": null, "satisfied": false}
+      ],
+      "constraints": [
+        "Never hand-edit map/INDEX.md -- regenerate it.",
+        "The builder must run inside the real worktree, not a git archive export.",
+        "Allowed scope beyond attempt 1's: map/ only (map/INDEX.md, map/ids.jsonl, any per-module index the builder writes).",
+        "If a source file needs another edit to make the suite green, that is a finding -- report it, do not silently make it."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  ]
+}

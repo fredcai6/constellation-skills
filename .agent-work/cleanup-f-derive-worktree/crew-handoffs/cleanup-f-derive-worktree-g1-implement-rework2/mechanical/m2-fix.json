@@ -1,0 +1,23 @@
+{
+  "contract": 1,
+  "step": "m2-fix",
+  "mechanical": {
+    "run": "cleanup-f-derive-worktree-g1-implement-rework2",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m2-fix",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-g1-implement-rework2-m2-fix@93bbf03bfd30970d8e7de631b5a7f18ec69bae06",
+    "artifact-ref": [
+      "tests/test_worktree_derivation.py"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-f-derive-worktree-g1-implement-rework2",
+    "generated_at": "2026-08-16T17:19:11Z"
+  }
+}

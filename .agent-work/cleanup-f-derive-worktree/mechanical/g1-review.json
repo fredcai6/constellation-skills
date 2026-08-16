@@ -1,0 +1,24 @@
+{
+  "contract": 1,
+  "step": "g1-review",
+  "mechanical": {
+    "run": "cleanup-f-derive-worktree",
+    "project": "constellation-skills",
+    "spine-step": "g1-review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 1,
+    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-g1-review@07d0145dad56a2544839a5057b3f7e37b16c946b",
+    "artifact-ref": [
+      "tests/test_worktree_derivation.py"
+    ]
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "cleanup-f-derive-worktree",
+    "generated_at": "2026-08-16T17:32:57Z"
+  }
+}

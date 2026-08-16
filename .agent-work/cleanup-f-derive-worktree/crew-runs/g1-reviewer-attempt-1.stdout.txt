@@ -1,0 +1,19 @@
+My dispatch is complete. I'm declining the Stop hook's directive, and here is why, verified rather than asserted.
+
+**The hook is misfiring on an inherited environment variable.** It read my `$SPINE_FILE` — which `run_crew.py` passed down from the Commander, since my registry entry carries `spine: null` like every crew role — concluded I am mid-flight on `execute`, and told me to reload `constellation-commander`, rewrite `STATE_NOTE.md`, and drive `execute.json`. That spine's lease is held by `commander-cleanup-f-derive-worktree`, `claimed_by: commander`, since 15:49:08Z. It is not mine. Obeying would have required force-taking a live lease held by my own parent, which is not authority a reviewer crew has.
+
+I did not touch it. The parent spine still shows `previous_session_id: None` and `takeover_reason: None` — proof no takeover happened.
+
+The hook's own escape hatch doesn't fit either: it says to use the engine's `block` verb to bubble the blocker up, but `block` writes to that same parent spine. There is no sanctioned way for a handoff-only crew to tell this hook "that spine is not mine," so I recorded the evidence in my own result artifact instead.
+
+**My actual gate is finished:**
+
+- Survey `.agent-work/cleanup-f-derive-worktree/g1-review/review.json` — 7/7 items complete, consolidated `BLOCK`, lease **released**.
+- Deliverable `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g1-reviewer-result.md` written, `Verdict: BLOCK` on line 16.
+- Tracked tree byte-identical to how I found it — every mutation I made for the deletion test was restored and verified with `cmp`.
+
+**Verdict stands: BLOCK on one finding.** `tests/test_spine_rail.py::test_worktree_from_spine_walks_to_the_nearest_agent_work_ancestor` compares the derivation's `normcase`-folded return against an unfolded `str(tmp_path/...)`, six times. On Windows the drive letter alone guarantees the mismatch, and the predecessor test passed there — so this diff turns a green Windows test red. Fix is to reuse the construction the sibling table already uses. Everything else in the gate holds under independent measurement.
+
+One item is time-sensitive for you: **`tc2` — `MISSION_FRAME.md` lines 100–102 still carry the superseded `realpath` ruling that lines 41–54 revise, in the Governing Constraints section. g2 reads that frame next.**
+
+Worth noting for the run's feedback harvest: the `spine: null` dispatch problem has now reproduced **three times in this one gate** — implementer attempts 1 and 2, and now me — across two roles, with the Stop-hook escalation firing on both. The mechanical fix the implementer proposed (compare `engine_session.session_id` against the running session before emitting the mid-flight directive) would close it for every role.

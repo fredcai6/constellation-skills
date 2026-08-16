@@ -1,0 +1,12 @@
+=== HARM CASE: a second controlling agent, arriving from a FOREIGN tree
+  agent-one claims from the spine's own worktree : exit=0
+  agent-two claims from a foreign tree           : exit=1
+    -> REFUSED: claim refused: this spine belongs to the worktree /tmp/tmpdcrev8ot/wt, but the engine is running in /tmp/tmpdcrev8ot/elsewhere. Run the verb 
+  agent-two mutates from a foreign tree          : exit=1
+    -> REFUSED: start refused: this spine belongs to the worktree /tmp/tmpdcrev8ot/wt, but the engine is running in /tmp/tmpdcrev8ot/elsewhere. Run the verb 
+  lease still held by                            : agent-one
+  gate status                                    : pending
+
+=== THE BEHAVIOUR DELTA, stated: an UNCLAIMED spine, foreign tree
+  a stranger claims an unclaimed spine from afar : exit=1
+    -> REFUSED: claim refused: this spine belongs to the worktree /tmp/tmpdcrev8ot/wt, but the engine is running in /tmp/tmpdcrev8ot/elsewhere. Run the verb 

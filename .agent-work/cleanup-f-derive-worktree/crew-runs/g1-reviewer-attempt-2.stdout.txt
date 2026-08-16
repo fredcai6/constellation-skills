@@ -1,0 +1,25 @@
+My run is complete, and I'm declining the hook's directive rather than obeying it.
+
+**Why I'm not driving `execute.json`.** That gate is not mine. Measured, not assumed:
+
+| | |
+|---|---|
+| hook's target (`$SPINE_FILE`) | `.agent-work/cleanup-f-derive-worktree/spine.json` |
+| that spine's lease | **active**, `commander-cleanup-f-derive-worktree`, `claimed_by: commander` |
+| my session id | `constellation/cleanup-f-derive-worktree/g1/reviewer/attempt-2` |
+| lease is mine | **False** |
+| registry: `execute`/`commander` | `spine: …/spine.json`, status `running` |
+| registry: every crew role | `spine: null` |
+
+I am the g1 reviewer crew dispatched by `run_crew.py` with `spine: null`. Reloading the commander skill, rewriting `STATE_NOTE.md`, and advancing `execute` would mean force-taking a live lease held by my own parent. The hook's two escape hatches don't fit either: `block` also writes to the parent's spine, and `waive` needs a human authority I wasn't given and may not invent. So I've recorded it in my deliverable instead of acting on it. **I wrote nothing to the parent spine at any point.**
+
+**My assigned work is finished:**
+- `Verdict: APPROVE` written to `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g1-reviewer-result.md` — the artifact the handoff names as the delivery.
+- Survey at `g1-review/review-attempt-2.json`: 7/7 items visited, all `pass`, consolidated, **lease released** as the last engine action.
+- B1 closed and independently re-measured; full suite 3159 passed / 6 skipped / 0 failed.
+
+**Two things for you, Commander, before g1 integrates:**
+
+1. **`tc2` is only partially fixed.** The addendum says the frame now carries only the lexical-only rule. Its Governing Constraints section does — but the Map anchors line still directs reuse of `verify_worktree_isolation.normalize_path` (a fenced file), and the decision-anchor entry still reads `normalize-once — realpath + normcase`. g2 reads this frame next, and an executor scanning the anchor list rather than the prose takes the superseded rule.
+
+2. **`crew-runs.json` changed under me.** At the start of my turn it held 7 rows including both reviewer attempts; at the end it holds 5 and **no reviewer row at all**. I didn't write it. Since `run_crew.py` verifies a crew's result artifact via its registry entry, worth confirming this review is still discoverable there — the artifact itself is at the handoff's named path regardless.

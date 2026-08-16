@@ -1,0 +1,9 @@
+My run is complete. The result artifact the handoff names exists at `.agent-work/cleanup-f-derive-worktree/crew-handoffs/plan-plan-critic-result.md`, with `Verdict: BLOCK` on its own line.
+
+**On the Stop hook:** it fired the Commander's `plan`-gate imperative into this session — author a mission frame, run `waive plan --cond c6`, attach plan approval. None of that is mine to do. I'm the cold plan critic for `.../plan/plan-critic/attempt-1`; the lease belongs to `commander-cleanup-f-derive-worktree`. My handoff scopes me to two artifacts, forbids edits, and defines delivery as writing the result — all done.
+
+I did not run the engine verbs the hook suggested. `waive` and `block` are guarded verbs against a spine another agent holds the lease on, and a crew member writing to the parent's spine to quiet its own Stop hook is precisely the harm the ownership rule exists to prevent.
+
+The misattribution is itself a live instance of the bug g3 targets: I share the Commander's worktree, so `_foreign_worktree` (`spine_rail.py:693`) reads me as "not foreign" and the parent's gate comes back as mine — the #549 shape, firing unprompted in this run. I've recorded it in the result's Workflow Feedback, including that this session is a ready-made fixture for the evidence surface `g3-implement` asks for.
+
+The Commander needs to pick the run back up. Five blocking findings are waiting, two of which (F4's fenced-test collision, F5's false "zero occurrences" claim) change what the plan can freeze as-is.

@@ -1,0 +1,23 @@
+{
+  "contract": 1,
+  "step": "m4b-map-rebuild",
+  "mechanical": {
+    "run": "cleanup-f-derive-worktree-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m4b-map-rebuild",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-g1-implement-m4b-map-rebuild@a383d943d3c9241bc4a10a4bca851f30d9649fa3",
+    "artifact-ref": [
+      "tests/test_worktree_derivation.py"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-f-derive-worktree-g1-implement",
+    "generated_at": "2026-08-16T16:56:28Z"
+  }
+}

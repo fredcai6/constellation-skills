@@ -1,0 +1,293 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "One spine, one worktree: derive it from the spine path and retire the stamp-and-compare",
+      "spec_path": ".agent-work/cleanup-f-derive-worktree/LAUNCH_ORDER.md",
+      "intent_and_why": "A spine's worktree is derived from its path. Nothing stamps it for a decision, nothing compares it, nothing reads an ambient cwd to find it -- so there is no second source of truth that can disagree with the first."
+    },
+    "definition_of_done": [
+      "One pure lexical derivation function, nearest .agent-work ancestor, arbitrary depth, unowned when there is none.",
+      "origin_worktree_refusal stops comparing and the per-guarded-verb git rev-parse --show-toplevel is gone.",
+      "origin.worktree is still written as provenance and read by nothing for a decision, pinned by a test.",
+      "The worktree stops answering 'is this mine' in the Stop hook; binding-key provenance is the discriminator.",
+      "#315: command-kind checks run with cwd = the derived worktree."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Subtractive change to engine identity with a silent failure mode; targeted automated tests plus the relevant broader suite",
+      "sufficient_evidence": "Local Linux green, independent APPROVE, failure-set difference against a main baseline re-measured at gate time",
+      "appetite": "One working session"
+    },
+    "hard_constraints": [
+      "Lane A fenced: scripts/mcp_spine_server.py, .mcp.json, examples/**, scripts/install_constellation.py, skills/commander/templates/**",
+      "Lane E fenced: scripts/run_crew.py, scripts/recover_crews.py, tests/test_crew_launcher.py",
+      "scripts/verify_worktree_isolation.py is #610's, not this lane's",
+      "Any template edit must be floated to the Admiral",
+      "scripts/hooks/spine_rail.py imports stdlib only",
+      "Do not merge; park at archive"
+    ],
+    "fixed_decisions": [
+      "derivation-authoritative-stamp-becomes-provenance (settled/human)",
+      "worktree-is-location-spine-path-is-identity (settled/human)",
+      "nearest-ancestor-fail-closed (settled/human)",
+      "not-a-weaker-guard (settled/human)",
+      "normalize-once REVISED to lexical-only this run on three contradicting measurements (was settled/measured, re-provenanced settled/measured)",
+      "one-definition-or-a-pinned-equivalence SETTLED by measurement this run: two copies plus a shared case table"
+    ],
+    "current_wave": {
+      "objective": "Land derivation, the retirement, and the ownership-not-tree hook change; float the two gates whose premises failed.",
+      "exit_criteria": [
+        "g1, g2, g3 closed with an independent APPROVE and a targeted check that is red on an empty diff",
+        "g4 and g5 authored and scoped but NOT launched, each floated to the Admiral with a measured reason"
+      ],
+      "issues": [
+        {
+          "id": "g1",
+          "title": "Derivation: one lexical rule, two pinned-equal implementations",
+          "desired_outcome": "A pure lexical derivation, defined twice and pinned equal by a shared case table.",
+          "useful_now": "Every other gate consumes it.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "tests/test_worktree_derivation.py passes by name; it does not exist today, so the check is red on an empty diff.",
+          "implementation_latitude": "Which shape preconditions live in the function versus at its callers.",
+          "hard_constraints_no_gos": [
+            "no realpath inside the derivation",
+            "no new import in spine_rail.py"
+          ],
+          "local_unknowns": [
+            "how many of _worktree_from_spine's five call sites change behaviour"
+          ],
+          "anchors": [
+            "scripts/hooks/spine_rail.py:712",
+            "scripts/checklist_engine.py"
+          ],
+          "type": "AFK",
+          "blocks": [
+            "g2",
+            "g3"
+          ]
+        },
+        {
+          "id": "g2",
+          "title": "Retire stamp-and-compare",
+          "desired_outcome": "The comparison and the ambient git read are gone; the stamp is written and read by nothing.",
+          "useful_now": "It is the launch order's headline retirement.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "No rev-parse --show-toplevel in checklist_engine.py, and a provenance-only test passes by name (exits 5 today).",
+          "implementation_latitude": "Whether the degenerate predicate is deleted or kept as a seam.",
+          "hard_constraints_no_gos": [
+            "adds no fail-closed refusal -- that is g4 and it is floated"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/checklist_engine.py:102-179",
+            "scripts/checklist_engine.py:3573-3578"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "g3",
+          "title": "The worktree stops answering 'is this mine'",
+          "desired_outcome": "Ownership at both Stop-hook call sites is decided by binding-key provenance, never by the tree.",
+          "useful_now": "It closes the #549 bug class at its root.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "tests/test_spine_rail.py -k OwnershipIsBindingKeyNotWorktree passes by name (exits 5 today).",
+          "implementation_latitude": "What replaces the skip at each of the two asymmetric call sites.",
+          "hard_constraints_no_gos": [
+            "the nudge/3-strike escape hatch stays keyed by session id alone"
+          ],
+          "local_unknowns": [
+            "what newly blocks once the skip is removed"
+          ],
+          "anchors": [
+            "scripts/hooks/spine_rail.py:693"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "FLOATED: #315 -- command checks run in the derived worktree",
+        "why_likely": "authored and scoped, but held: its premise or its scope is floated to the Admiral",
+        "entry_conditions": [
+          "Not started -- awaiting an Admiral ruling"
+        ]
+      },
+      {
+        "outcome": "FLOATED: fail-closed refusal for an unowned spine path",
+        "why_likely": "authored and scoped, but held: its premise or its scope is floated to the Admiral",
+        "entry_conditions": [
+          "Not started -- awaiting an Admiral ruling"
+        ]
+      },
+      {
+        "outcome": "#610 provisions the worktree and the work area, closing derivation's misplaced-birth limit",
+        "why_likely": "It is the named provisioning half of #609",
+        "entry_conditions": [
+          "this lane lands"
+        ]
+      },
+      {
+        "outcome": "run_crew.py derives --worktree from --spine",
+        "why_likely": "The launch order names it as a real cleanup that follows lane E",
+        "entry_conditions": [
+          "lane E lands",
+          "this lane's derivation is available"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "The scope of the fail-closed refusal",
+        "affects": "g4, and whether nearest-ancestor-fail-closed ships whole",
+        "settle_by": "an Admiral ruling",
+        "current_evidence": "362 of 429 guarded-verb invocations refused, across 125 tests, 3 of them in a lane-E-fenced file",
+        "next_probe": "reproduce the dynamic probe and produce a per-file disposition of all 125"
+      },
+      {
+        "unknown": "Whether threading cwd into command checks disarms a shipping check",
+        "affects": "g5, and the launch order's stated premise",
+        "settle_by": "an Admiral ruling",
+        "current_evidence": "two live tracked template carriers of verify_worktree_isolation, one of them a command-kind precondition, against the order's claim of zero occurrences",
+        "next_probe": "instantiate a spine through init_work_area.py and read which COMMANDER_SPINE template file actually resolved"
+      },
+      {
+        "unknown": "Windows separator and case-fold behaviour of the derivation",
+        "affects": "every gate",
+        "settle_by": "a Windows host or an explicit case-folding test that does not rely on the platform",
+        "current_evidence": "this host is Linux, where os.path.normcase is the identity function; the one windows-latest CI job is red at baseline",
+        "next_probe": "construct the fold explicitly in the shared case table rather than relying on the platform"
+      }
+    ],
+    "parked_possibilities": [
+      "Retiring verify_worktree_isolation.py --here as a launch-order step (#610)",
+      "Teaching map_orient.py to cite scripts/code_map's id scheme so this repo reads RESOLVED instead of DEGRADED"
+    ]
+  },
+  "completed_outcomes": [],
+  "wave_evidence": [
+    {
+      "claim": "The whole-suite postcondition is a close criterion for each gate",
+      "expected": "a gate that did nothing would fail its own check",
+      "observed": "the suite is green at baseline (3104 passed, 6 skipped, 123.69s at e36e630b), so every gate's suite check passed on zero work; each gate now also carries a targeted check measured red today (exit 4 or 5)",
+      "source": "cold plan critic measurement, reproduced by the Commander"
+    },
+    {
+      "claim": "verify_worktree_isolation ships in no template or spec, so threading cwd disarms nothing that ships",
+      "expected": "zero occurrences in any template",
+      "observed": "two live tracked non-archive template carriers: .agent-work/templates/COMMANDER_SPINE.template.json:12 (a command-kind precondition) and skills/admiral/templates/LAUNCH_ORDER.template.md:43, whose own lines 45 and 47 rule that forcing cwd disarms the check and that it is not superseded by the engine-native guard",
+      "source": "git grep and direct read at e36e630b, verified by the Commander"
+    },
+    {
+      "claim": "Fail-closed on an unowned spine path is a small change",
+      "expected": "few or no existing fixtures affected",
+      "observed": "362 of 429 guarded-verb invocations refused, across 125 tests in 7 files, 3 of them in the lane-E-fenced tests/test_crew_launcher.py; the three fenced ones were independently confirmed to build spines with no .agent-work ancestor and drive guarded verbs",
+      "source": "dynamic suite probe by the cold critic; the fenced three re-verified by the Commander"
+    },
+    {
+      "claim": "The derivation should normalize with realpath plus normcase",
+      "expected": "one normalize definition reused from verify_worktree_isolation",
+      "observed": "realpath inside the derivation would make the refusal predicate impure while its co_names purity test stayed green, would make the hook's symlink-escape guard unfailable, and reusing normalize_path would trip an exact-set-equality companion guard needing a fenced installer edit",
+      "source": "cold plan critic, three independent lines of evidence"
+    },
+    {
+      "claim": "A pytest -k selector that collects zero tests can never fail",
+      "expected": "validate_spine's falsifiable-zero-collected rule holds",
+      "observed": "pytest exits 5 on no-tests-collected and 4 on a missing file, so such a check fails; the rule is a false positive",
+      "source": "measured directly at e36e630b"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "g4's fail-closed refusal must break three tests in a file it is fenced from editing, while its own postcondition demands a green suite",
+      "classification": "blocks_current_wave_exit",
+      "affects": "g4, and the completeness of nearest-ancestor-fail-closed",
+      "evidence": "362/429 guarded-verb invocations refused; 125 tests; 3 in tests/test_crew_launcher.py (lane E)",
+      "reason": "The ruling is graded settled/human, so narrowing it is not this lane's; the obvious narrowing is closed because it reinstates reading the stamp for a decision. Floated, not filed."
+    },
+    {
+      "id": "D1",
+      "signal": "The launch order's zero-occurrences premise for verify_worktree_isolation is false, and shipped doctrine rules that forcing cwd disarms the check",
+      "classification": "blocks_current_wave_exit",
+      "affects": "g5, and the absorbed #315",
+      "evidence": ".agent-work/templates/COMMANDER_SPINE.template.json:12 and skills/admiral/templates/LAUNCH_ORDER.template.md:43-47",
+      "reason": "A premise failure in the frozen order is the Admiral's to rule on, not this lane's to work around. Floated, not filed."
+    },
+    {
+      "id": "D2",
+      "signal": "normalize-once's realpath half is contradicted by three independent measurements",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "g1 and g2's shape",
+      "evidence": "co_names non-transitivity; the symlink-escape guard at _is_valid_claim_target; the installer companion guard's exact set equality",
+      "reason": "The decision is graded settled/measured, which sanctions revisiting on a contradicting measurement. Revised in place and re-provenanced."
+    },
+    {
+      "id": "D3",
+      "signal": "validate_spine.py's falsifiable-zero-collected rule flags a pytest -k check that does in fact fail (exit 5)",
+      "classification": "evidence_only",
+      "affects": "nothing in this wave; the checks were kept",
+      "evidence": "measured exit codes 4 (missing file) and 5 (no match) at e36e630b",
+      "reason": "Recorded as a triage candidate for whoever owns validate_spine.py; no issue filed by this run."
+    },
+    {
+      "id": "D4",
+      "signal": "The launch order's line number for _foreign_worktree (spine_rail.py:639)",
+      "classification": "drop",
+      "affects": "nothing",
+      "evidence": "the function is at :693 at e36e630b; every other cited line in the order and the frame was re-verified correct",
+      "reason": "Stale citation, corrected in the frame. No planning consequence."
+    }
+  ],
+  "open_current_wave_issue_ids": [
+    "g1",
+    "g2",
+    "g3"
+  ],
+  "unlaunched_items": [
+    {
+      "id": "g4",
+      "kind": "issue"
+    },
+    {
+      "id": "g5",
+      "kind": "issue"
+    },
+    {
+      "id": "610-provisioning",
+      "kind": "forecast"
+    },
+    {
+      "id": "run-crew-derives-worktree",
+      "kind": "forecast"
+    },
+    {
+      "id": "fail-closed-scope",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "cwd-thread-premise",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "windows-case-fold",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "map-orient-code-map-ids",
+      "kind": "parked"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/hooks/spine_rail.py",
+      "scripts/spine_lifecycle.py",
+      "scripts/verify_worktree_isolation.py"
+    ],
+    "map_status": "DEGRADED-UNPARSEABLE: no docs/architecture packet map; map/ids.jsonl is empty and map/INDEX.md carries no citable anchor ids. Discharged with four hash-pinned substitutes."
+  }
+}

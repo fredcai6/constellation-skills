@@ -1,0 +1,189 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md + global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g1 reviewer handoff incl. its attempt-2 addendum, the predecessor's REVIEW_RESULT (BLOCK on B1), and the 5-file diff vs e36e630b. No docs/architecture packet map exists (orientation DEGRADED-UNPARSEABLE, discharged); map/INDEX.md used instead.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Delivers the frozen task, verified not accepted. Both copies lexical: AST-extracted sources of checklist_engine.worktree_from_spine_path and spine_rail._worktree_from_spine use only normcase/normpath/split/dirname/isabs -- no realpath, no fs call, no cwd read (the only realpath/cwd tokens in added lines are docstring prose). spine_rail import lines byte-identical to e36e630b including line numbers; checklist_engine import lines identical (the 4 apparent deltas are docstring lines beginning 'from', shifted +65). No consumer rewired: worktree_from_spine_path has one binding reference, tests/test_worktree_derivation.py:78. AST def-level diff: checklist_engine 0 defs changed / 1 added; spine_rail exactly 2 changed (_worktree_from_spine, _is_valid_claim_target) + 1 added (_is_claim_layout). All six required cases present in CASES and green (53 passed). Five call sites enumerated at :1189,:1194 (now _is_claim_layout), :1241, :1346, :1637; measured 0 derivation differences old-vs-new over every path _is_claim_layout admits, so sites 3/4 cannot widen; site 5's input is base.glob('*/spine.json'), a fixed one-level shape.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No drift. Exactly 5 files differ from e36e630b, every one inside allowed scope (map/INDEX.md, scripts/checklist_engine.py, scripts/hooks/spine_rail.py, tests/test_spine_rail.py, tests/test_worktree_derivation.py). Matched the changed set against all 12 fenced patterns (lane A, lane E, #610, any templates/): 0 hits. g2/g4/g5 work verified by reading: origin_worktree_refusal AST source is BYTE-IDENTICAL to e36e630b (sha 5ba4b69bf1963a80, 4136 bytes both sides); checklist_engine's diff has 0 deletion lines and 1 hunk; git rev-parse --show-toplevel still present in main() at :3638; no fail-closed refusal added (no def changed in checklist_engine, and the 3 spine_rail defs touched are the named ones); no cwd threaded into command checks -- the only added lines mentioning cwd are two docstring sentences. Working tree carries no stray edit: git status shows only the 5 files plus the untracked .agent-work/ workbench.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every claimed figure reproduced in my own hands. Full suite, __pycache__ cleared, SPINE_* unset: 3159 passed, 6 skipped, 1164 subtests, 0 failed in 127.42s -- matches the Commander's 127.46s figure. Targeted: test_worktree_derivation.py 53 passed; test_spine_rail.py 152 passed 1 skipped; test_code_map.py 148 passed; test_worktree_precondition_wiring.py 3 passed; test_spine_origin_isolation.py 37 passed; test_install_constellation.py 201 passed. DELETION TEST applied 6 ways, each mutation asserted to have applied and each restore verified byte-identical: hook symbol renamed -> table collection error; engine symbol renamed -> collection error; hook body -> return None -> table 19 failed / test_spine_rail 63 failed; hook body -> outermost-not-nearest -> table 2 failed; engine body -> outermost -> table 2 failed, and the two reds are exactly test_derivation[nested-sandbox...-engine] and test_the_two_copies_agree[nested-sandbox...], so the drift detector is real. _is_valid_claim_target DIFFERENTIAL against the e36e630b module over 17 constructed on-disk targets: 0 differences, 4/17 accepted; leaf symlink and ancestor-dir symlink escaping .agent-work both rejected by old and new; depth-zero <wt>/.agent-work/checklist.json still rejected as a claim target while both derivations now return <wt> -- the split does what it claims. map/INDEX.md regenerated, not hand-edited: py -m scripts.code_map build --root . exits 0 and leaves map/ byte-identical (sha e9a227b0...), and every changed line vs e36e630b is a count line.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Meets every inherited constraint. (1) stdlib-only hook: import lines byte-identical. (2) Lexical-only: no realpath in either copy; the three measured reasons still hold -- test_spine_origin_isolation purity test green, _is_valid_claim_target's resolved re-check still able to FAIL (demonstrated on two symlink shapes), test_install_constellation companions test green. (3) Nearest-never-outermost: pinned by a case that goes red when mutated, proven twice. (4) Location-not-ownership: honored -- the ownership gate is _is_claim_layout and its admitted set is unchanged. B1 CLOSED and independently re-measured: I AST-extracted _derived_form, _expected and both derivations and re-ran them under ntpath with a realistic Windows tmp_path. Pre-fix form (== str(worktree)) fails all six there; the fix passes all six. The fix is CONSTRUCTED, not inherited -- _derived_form is normcase(normpath(str(path))), the same predicate the implementation applies, with no sys.platform branch, and it equals test_worktree_derivation._expected's construction. The fix did NOT weaken the test: only the expected side is normalized, the derivation's return is compared raw, and mutating the hook to return one level too high turns the six-assertion test RED (1 failed) while restoring makes it green.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Nothing Commander must reconcile. Map Impact claims check out: two new entities in scripts (worktree_from_spine_path, AGENT_WORK_DIR) and one in scripts.hooks (_is_claim_layout) show up in map/INDEX.md's counts (scripts 1211->1213, scripts.hooks 84->85, tests 82->83 modules / 4725->4737 entities), and the index is idempotent under rebuild so it is genuinely derived. Both settled/human anchors (nearest-ancestor-fail-closed, worktree-is-location-spine-path-is-identity) are honored; nothing I measured contradicts either, so there is nothing to report as unsettling them. One nuance reproduced rather than argued, already recorded by the predecessor and NOT a blocker: the return value also changes on POSIX for paths carrying '..' (normpath collapses /proj/x/../.agent-work/w1/spine.json from '/proj/x/..' to '/proj'). Unobservable -- the only consumer of the bound worktree field is _foreign_worktree, which compares through _same_path (normcase+normpath on BOTH sides), and I measured it returning the same answer for both forms across five cwds. Three triage candidates carried forward, none blocking.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/cleanup-f-derive-worktree/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/cleanup-f-derive-worktree/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from cleanup-f-derive-worktree alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/cleanup-f-derive-worktree/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Full Fowler baseline pass rendered independently over the diff: 12 smells visited, 0 flagged, 5 overridden with a logged standard and reason (duplicated-code, primitive-obsession, shotgun-surgery, speculative-generality, comments-as-deodorant), 7 absent. verify_fowler_pass.py exits 0. I falsified the rail before trusting it: blanking an override.reason gives REFUSED: OVERRIDE-LOG exit 1; dropping message-chains gives REFUSED: skipped baseline smell exit 1; marking a smell flagged with an empty finding gives REFUSED exit 1; the record was unchanged on disk afterwards. Two overrides rest on measurement rather than citation: duplicated-code/shotgun-surgery are subordinated only because I re-proved the pin is red-able (engine-side outermost mutation -> exactly the 2 nested-sandbox cases fail; symbol rename -> collection error), and comments-as-deodorant only because the new 36- and 42-line docstrings tie/undercut the BASELINE maxima in those same modules (36 in spine_rail, 45 in checklist_engine at e36e630b), so they match the surrounding convention rather than exceeding it. Predecessor's record preserved at FOWLER_PASS-reviewer-attempt-1.json.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/cleanup-f-derive-worktree/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. B1 is closed and independently re-measured: under an ntpath simulation with a realistic Windows tmp_path, the pre-fix assertion form fails all six comparisons and the shipped form passes all six. The fix is constructed from the same normcase+normpath predicate the implementation applies, with no sys.platform branch, and it did not weaken the test -- mutating the derivation to return one level too high turns that test red. Everything the predecessor verified still holds under my own hands: 0 differences in _is_valid_claim_target against the e36e630b module over 17 targets (symlink and depth-zero rejections intact), the shared table proven red-able six ways, the hook's import block byte-identical, origin_worktree_refusal byte-identical, exactly 5 files changed with 0 fenced hits, map/INDEX.md idempotent under rebuild, and a full suite of 3159 passed / 6 skipped / 0 failed. Fowler pass: 12 visited, 0 flagged, 5 logged overrides. Three triage candidates, none blocking; two correct the predecessor's own out-of-scope notes."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "tc1-CORRECTED: map/ids.jsonl is regenerated as 0 bytes by 'py -m scripts.code_map build --root .' (its mtime updates, its content stays empty); it is one of only 2 tracked files under map/, .gitignore:73 ignoring 'map/*'. The predecessor's other half does NOT reproduce: the per-module map/<module>/INDEX.md files ARE created by the build (156 of them, mtimes matching my rebuild) -- they are gitignored, so a git-status check cannot see them. Only the empty tracked ids.jsonl is a real anomaly."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "tc2-PARTIAL: MISSION_FRAME.md's Governing Constraints section is fixed as the Commander reports, but two other places in the same file still carry the superseded realpath rule -- the Map anchors line citing scripts/verify_worktree_isolation.py:47 normalize_path as 'the realpath+normcase definition to reuse rather than mint a second one' (a fenced file this lane may not touch), and the decision-anchor entry 'normalize-once - realpath + normcase at the derivation boundary only @grade: settled/measured'. g2 reads this frame next."
+    },
+    {
+      "id": "tc3",
+      "from": "r5-reconciliation",
+      "statement": "tc3-CONFIRMED, already corrected in the frame: agent_work_root._normalize is os.path.normcase(os.path.realpath(path)); the exact line in tree is :57, not the :56 both the handoff and the frame cite."
+    }
+  ],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "constellation/cleanup-f-derive-worktree/g1/reviewer/attempt-2",
+    "status": "released",
+    "claimed_at": "2026-08-16T17:33:51.656290+00:00",
+    "last_heartbeat": "2026-08-16T17:43:09.893919+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T17:44:51.534562+00:00"
+  }
+}

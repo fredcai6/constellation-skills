@@ -1,0 +1,437 @@
+{
+  "work_id": "cleanup-f-derive-worktree-g2-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-provenance-red",
+    "m2-retire",
+    "m3-prose",
+    "m4-evidence",
+    "m5-suite",
+    "m6-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the handoff",
+      "imperative": "Read the inherited crew doctrine, the g2 handoff, MISSION_FRAME.md, the map entries for scripts.checklist_engine and scripts.spine_lifecycle, and the source at every cited anchor (re-reading every line number, which the handoff itself flags as possibly stale). Verify the handoff carries task, intent, allowed scope, exclusions, required evidence, test mode, stop conditions and return format. Resolve spine ownership: this crew's crew-runs.json entry has spine:null, so SPINE_* names the Commander's spine and this run drives its OWN plan instead. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff complete; anchors re-read in tree; spine ownership resolved (handoff-only crew, own plan)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Handoff complete: task, protected intent, test mode, close criteria, allowed scope, exclusions, constraints, map anchors, deliverable path check, required evidence, wiring grep, verification commands, authority, stop conditions, return format all present. Anchors re-read in tree: the predicate really is at :102-179; the impure call site is NOT at :3573-3578 (that range is append_journal_entry) but at :3638-3643 -- the handoff's own staleness warning was correct. Map read: origin_worktree_refusal.md reports 1 production reference (main, this module only); main.md confirms the _git + Path.cwd pair. Spine ownership resolved: crew-runs.json for this crew has spine:null while SPINE_FILE names the Commander's spine under an active commander lease, so this run drives its OWN plan and writes nothing to the parent spine."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-provenance-red": {
+      "id": "m1-provenance-red",
+      "title": "TDD red: the provenance pin fails against the current tree",
+      "imperative": "Write the provenance-named test(s) in tests/test_spine_origin_isolation.py pinning BOTH halves of the pairing: origin.worktree is still WRITTEN by init_work_area.instantiate_spine and spine_lifecycle.build_origin, and it is read by NOTHING for a decision (differential: a spine whose stamp is foreign/garbage behaves identically under every guarded verb to one whose stamp is correct). Run it against the current tree and observe it FAIL -- the read half is red today because origin_worktree_refusal compares the stamp. Record the red output as evidence. Manual attest only; no command check, because the check would run a by-design-failing test.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context is complete: handoff verified complete, every cited anchor re-read in tree (one confirmed stale), map blast radius read."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: provenance-named test written and observed failing against the unmodified tree, with the failure output recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Four provenance-named tests written in tests/test_spine_origin_isolation.py (class TheStampIsProvenanceNotADecisionInput). Half one (stamp still written by both producers) passes today. Half two (differential: 7 stamp values, same spine, same guarded verbs claim/start/heartbeat, one answer demanded) fails today for the stated reason. Red output saved to .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implement/m1-provenance-RED.txt and attached as g2-m1-red."
+        }
+      ],
+      "constraints": [
+        "TDD required for the provenance pin (handoff Test Mode)",
+        "the test name must contain `provenance`",
+        "no fail-closed refusal may be added anywhere (g4 is floated)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-retire": {
+      "id": "m2-retire",
+      "title": "Retire stamp-and-compare: comparison, ambient git read, and whatever degenerates",
+      "imperative": "Delete the equality test between origin.worktree and the engine's ambient cwd and every parameter that exists only to feed it; delete the per-guarded-verb `git rev-parse --show-toplevel` at the single impure call site in main(). Judge whether origin_worktree_refusal degenerates to returning None on every path -- if it does, delete it and every caller, and say so plainly. Rewrite tests/test_spine_origin_isolation.py: keep the write-side stamp tests, drop the comparison scenarios, keep test_it_is_pure IN SPIRIT by pinning mechanically that the ambient read is gone rather than inheriting a purity claim. Repair tests only as this change breaks them. The gate's targeted check must go red -> green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "provenance pin written and observed red",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete: the provenance pin is written and was observed red against the unmodified tree."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the gate's targeted check is green: no `rev-parse --show-toplevel` in scripts/checklist_engine.py AND the provenance selector passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && find . -name __pycache__ -type d -prune -exec rm -rf {} + ; ! git grep -q 'rev-parse --show-toplevel' -- scripts/checklist_engine.py && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_origin_isolation.py -k provenance"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-retire-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the isolation, lifecycle and tripwire test files are green together",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_origin_isolation.py tests/test_spine_lifecycle.py tests/test_worktree_precondition_wiring.py tests/test_mcp_door_engine_cwd.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-retire-2"
+        },
+        {
+          "id": "c3",
+          "statement": "the delete-or-keep judgment on the degenerate predicate is stated explicitly, with the callers removed named",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "JUDGMENT (delegated by the handoff): the predicate DID degenerate. With the cwd comparison and the fail-closed cwd-is-None branch removed, every remaining path of origin_worktree_refusal returns None -- verb not guarded -> None; origin not a dict -> None; worktree not a non-empty str -> None; and then nothing. So it is DELETED, not kept as a seam. Callers removed: exactly one, the single site in main() (map/scripts.checklist_engine/origin_worktree_refusal.md reported 1 production reference, this module only, and no resolved test references). Also deleted: ORIGIN_GUARDED_VERBS and ORIGIN_EXEMPT_VERBS, whose only production reader was line 149 inside that predicate -- keeping them would leave exactly the hollow leftover the handoff forbids one level up; they are one line to reconstruct from MUTATING_VERBS if g4 is ever unblocked, and their rationale is preserved in the tombstone comment. NO caller was added: this gate does not consume worktree_from_spine_path, because with no comparison and no refusal there is no question left in main() for a derived worktree to answer -- threading it into command checks is g5, floated."
+        }
+      ],
+      "constraints": [
+        "THIS GATE ADDS NO FAIL-CLOSED REFUSAL -- nothing may start refusing what it does not refuse today",
+        "allowed scope only: scripts/checklist_engine.py, scripts/spine_lifecycle.py, docs/CHECKLIST_SCHEMA.md, tests/test_spine_origin_isolation.py, and the four named collateral test files only as broken",
+        "fenced: scripts/mcp_spine_server.py, scripts/run_crew.py, scripts/recover_crews.py, tests/test_crew_launcher.py, scripts/verify_worktree_isolation.py, every template, scripts/hooks/spine_rail.py",
+        "a refusal path (if any survives) stays BEFORE dispatch() and returns WITHOUT save()"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-retire-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && find . -name __pycache__ -type d -prune -exec rm -rf {} + ; ! git grep -q 'rev-parse --show-toplevel' -- scripts/checklist_engine.py && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_origin_isolation.py -k provenance",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-retire-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_origin_isolation.py tests/test_spine_lifecycle.py tests/test_worktree_precondition_wiring.py tests/test_mcp_door_engine_cwd.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-prose": {
+      "id": "m3-prose",
+      "title": "Repair the prose this makes false",
+      "imperative": "Rewrite docs/CHECKLIST_SCHEMA.md's origin section: its :120 paragraph describes the retired mechanism and its call-site citation is stale (cites :3411-3444; the call site was at :3573-3578 per the handoff and is really at :3638-3643 in tree). Say instead what is now true: the stamp is provenance, written and read by nothing for a decision; the lease is the ownership guard. Search scripts/spine_lifecycle.py for prose this makes false and repair what is there; if nothing in it is false, state that as a negative result rather than inventing a repair. Report stale prose in fenced files (mcp_spine_server.py, run_crew.py) as an out-of-scope observation.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the mechanism is actually retired in code",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete: predicate, verb sets and the ambient git read are deleted; targeted check green; collateral suites green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no surviving prose in the allowed-scope files describes the retired comparison as live; every cited line number in the repaired prose was re-read in tree",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "docs/CHECKLIST_SCHEMA.md: the four paragraphs describing the retired mechanism are replaced by five that say what is now true -- the stamp is provenance; the comparison, its verb sets and the per-verb git call are deleted; removing them removed no guard because the lease was always the guard; every origin shape is now inert; and, stated plainly, that the per-template verify_worktree_isolation.py --here check on the Commander spine's init c0 was deleted in #315/#568 in favour of a comparison that is now gone too, so nothing checks location at engine level any more. The 2026-08-15 worktree-identity ruling is cited by name as superseded. NO line numbers are cited in the new prose: the old citation was stale twice over (it said :3411-3444; the handoff said :3573-3578; the call site was really at :3638-3643), so citing a fourth number would just be the next thing to go stale. scripts/spine_lifecycle.py: NEGATIVE RESULT -- searched it for prose this change makes false (grep for enforc/engine/cwd/drivable/isolation, plus a full read of the module docstring and build_origin) and found none; its origin prose is only about WRITING the block, which is unchanged, and its self-verify is verify_worktree_isolation at open time, untouched. Added one positive note to build_origin saying the block is provenance and why to keep writing it accurately."
+        },
+        {
+          "id": "c2",
+          "statement": "the docs tests still pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_shipped_check_commands_resolve.py tests/test_spine_origin_isolation.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-prose-1"
+        }
+      ],
+      "constraints": [
+        "cite the 2026-08-15 worktree-identity ruling where this change contradicts it, and say so plainly"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-prose-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_shipped_check_commands_resolve.py tests/test_spine_origin_isolation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-evidence": {
+      "id": "m4-evidence",
+      "title": "Produce the four load-bearing evidence items",
+      "imperative": "1. Exercise the guarded-verb path through main() BEFORE and AFTER, showing the git rev-parse subprocess present then gone, and showing the verbs still refused where they should be still are. 2. Enumerate BY COMMAND, with the count stated, every remaining read of origin.worktree in the repo, and say for each why it is not a decision -- enumerate, never sample. 3. Demonstrate the provenance pin fails if either half breaks (stop writing the stamp -> red; read it for a decision -> red). 4. Run the adversarial search for a case where the removed comparison was the only thing preventing harm, and state the result either way. Also run the wiring grep and state the count and which call sites were removed/added, and say what was done about Windows separators and case folding.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the change is in and the targeted check is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2/m3 complete: change in, targeted check green, prose repaired."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "before/after guarded-verb evidence, the counted enumeration, the both-halves-break demonstration, the adversarial search result, the wiring grep count, and the Windows statement are all recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All four load-bearing items produced, plus the wiring grep and the Windows statement. (1) BEFORE/AFTER through main(), subprocess-attributed: at base the engine spawned 'checklist_engine.py:785 git rev-parse --show-toplevel' on every guarded verb from every cwd; after, that spawn is gone from all three cwds and the only remaining --show-toplevel belongs to episode_capture.py:95, a different module. Verbs still refused where they should be: a second probe of 7 non-origin refusal paths (unknown task, unmet precondition, impostor session, no session, unmet postcondition, no --why, unforced non-owner release) is byte-identical before and after, all exit=1 refused=True. (2) Enumeration by command with counts: 2 production touches of the origin key repo-wide, BOTH writes (spine_lifecycle.py:323, init_work_area.py:188); 0 production reads; 0 non-Python readers; 5 worktree-on-origin accesses, all in tests, all asserting the stamp itself. So 0 decision reads remain and the per-read justification is vacuous. (3) Mutation-tested both halves: removing the init_work_area stamp reds the written half; re-adding a cwd comparison in main() reds the differential (8 failed); restoring both returns 4 passed. (4) Adversarial search: NEGATIVE, and measured. The harm the comparison existed against -- two controlling agents -- is refused identically before and after; only the refusing mechanism changed, from the worktree comparison to the lease. One genuine behaviour delta found and stated: an UNCLAIMED spine can now be claimed from a foreign tree (exit 1 -> exit 0). I judge that not a harm the comparison was uniquely preventing, because the MCP door already required exactly that transition to succeed and achieved it by chdir-ing into the spine's worktree, making the comparison X==X for the caller production actually uses. Wiring grep 35 -> 21; 1 call site removed, 0 added. Windows: the fold existed only to reconcile the two producers' differing normalizations for the comparison; with no comparison the disagreement is harmless by construction, and rather than inherit that from a host where normcase is identity I added two explicit rows to the differential -- a backslashed drive-lettered 'C:\\W\\REPO' and the worktree upper-cased -- which must be as inert as every other row on any platform."
+        },
+        {
+          "id": "c2",
+          "statement": "the tripwire is still green on its own",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_worktree_precondition_wiring.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-evidence-1"
+        }
+      ],
+      "constraints": [
+        "an adversarial negative result must be stated as a negative result, not omitted"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_worktree_precondition_wiring.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-suite": {
+      "id": "m5-suite",
+      "title": "Full suite, cache cleared, clean env; map regenerated if entity counts moved",
+      "imperative": "Clear __pycache__, run the full suite under a clean env, state the count and derive the failure distribution mechanically even when empty. Regenerate map/ with `py -m scripts.code_map build --root .` if entity counts moved; never hand-edit map/INDEX.md.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "evidence produced",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 complete: all four load-bearing evidence items produced, tripwire green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green from a cleared cache under a clean env, count stated",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-suite-1"
+        },
+        {
+          "id": "c2",
+          "statement": "map regenerated if entity counts moved, or stated as unchanged",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Map REGENERATED, not hand-edited: py -m scripts.code_map build --root . Entity counts did move (root INDEX 1213 -> 1212 entities), and tests/test_code_map.py::MapTreeFreshnessTests caught it before I did -- that failure is why the first full-suite run was red at 20 percent. Only map/INDEX.md is tracked (the per-module map/<module>/INDEX.md files are not checked in, per MISSION_FRAME), so the regeneration is a 1-file diff. map/scripts.checklist_engine/main.md now shows no _git call, no Path.cwd and no origin_worktree_refusal, which is the map agreeing with the deletion."
+        }
+      ],
+      "constraints": [
+        "never hand-edit map/INDEX.md"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-result": {
+      "id": "m6-result",
+      "title": "Write IMPLEMENTER_RESULT",
+      "imperative": "Write the result artifact to .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-result.md with completed slice, files changed, test mode satisfied, evidence produced, assumptions, stop conditions hit, out-of-scope observations, map impact, workflow feedback, and `Return status` on its own line in lowercase.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "suite green and evidence integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m5 complete: full suite green on the frozen tree (3135 passed, 5 skipped, 0 failed), base independently re-measured at 3159/6, map regenerated."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the result artifact exists and carries a lowercase `Return status` line",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && test -s .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-result.md && grep -qE '^Return status: (complete|partial|blocked|out-of-scope|failed)$' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-result-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree && test -s .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-result.md && grep -qE '^Return status: (complete|partial|blocked|out-of-scope|failed)$' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "constellation/cleanup-f-derive-worktree/g2/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-16T17:54:22.300219+00:00",
+    "last_heartbeat": "2026-08-16T18:23:02.864507+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T18:23:12.794745+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "The comparison's own docstring already withdrew the unforgeability claim, so what is left of it is a location check that the lease already covers as ownership. The map says main() is its only production caller, which is why deleting it is a one-site change rather than a sweep.",
+      "mechanical": false,
+      "ts": "2026-08-16T17:55:02.130701+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-provenance-red",
+      "why": "The differential is the honest test here because a source scan for 'origin' cannot separate a decision from a display, while behaviour can: a decision reading the stamp cannot answer identically for the spine's own worktree and /nonexistent/some/other/tree.",
+      "mechanical": false,
+      "ts": "2026-08-16T17:57:53.448628+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-retire",
+      "why": "The comparison could only ever say 'where am I', and the lease already says 'is this mine', so subtracting it costs no guard -- which is why the honest move was deletion rather than a seam that returns None forever.",
+      "mechanical": false,
+      "ts": "2026-08-16T18:01:31.915835+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-prose",
+      "why": "The old paragraph's own call-site citation had been stale through at least two refactors, which is the argument for describing the mechanism and naming the test that pins it instead of pointing at a line.",
+      "mechanical": false,
+      "ts": "2026-08-16T18:02:56.715143+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-evidence",
+      "why": "The adversarial result turned on a measurement rather than an argument: the door chdirs into the spine's own worktree before every engine call, so for production's actual caller the comparison was already comparing a value with itself.",
+      "mechanical": false,
+      "ts": "2026-08-16T18:07:46.007998+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-suite",
+      "why": "The map freshness test is what turned an invisible staleness into a named failure, which is the argument for regenerating rather than reasoning about whether counts moved.",
+      "mechanical": false,
+      "ts": "2026-08-16T18:21:15.281596+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-result",
+      "why": "The result had to carry the delete-the-verb-sets judgment and the one behaviour delta up front rather than buried, because those are the two places a reviewer could reasonably disagree with me and both are cheap to reverse.",
+      "mechanical": false,
+      "ts": "2026-08-16T18:23:02.864498+00:00"
+    }
+  ]
+}

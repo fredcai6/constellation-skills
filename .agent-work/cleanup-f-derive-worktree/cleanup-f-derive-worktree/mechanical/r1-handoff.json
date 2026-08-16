@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r1-handoff",
+  "mechanical": {
+    "run": "cleanup-f-derive-worktree",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r1-handoff",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-r1-handoff@860ab7b2bcfaf8994f81bf250755cd3bc6aa1a6b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-f-derive-worktree",
+    "generated_at": "2026-08-16T18:28:21Z"
+  }
+}

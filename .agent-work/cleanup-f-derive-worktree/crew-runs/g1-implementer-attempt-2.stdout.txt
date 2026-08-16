@@ -1,0 +1,28 @@
+My dispatch is complete, and I did not touch my parent's spine — verified: its lease is still `commander-cleanup-f-derive-worktree`, same claim timestamp, `takeover_reason: None`.
+
+## g1 implementer attempt 2 — `Return status: complete`
+
+**Both tasks in the handoff:**
+
+1. **Map regenerated** by `py -m scripts.code_map build --root .`. The delta matches your prediction **exactly — zero unmatched hunks**: 9 hunks, 9 insertions / 8 deletions, being 8 count-line rewrites plus the one new `tests.test_worktree_derivation` row. All six predicted numbers confirmed. I falsified "nothing else moved" mechanically rather than by eye — filtering changed lines for any carrying neither `modules,` nor `entities` nor `holes` returns empty. Builder-written: sha `910ffe7a… → 1293786d…`, no editor or patch ever touched it.
+
+2. **Suite green**, cache cleared, clean env: **3159 passed, 6 skipped, 1164 subtests in 125.46s**. Failure distribution derived mechanically — empty. Arithmetic ties to attempt 1 at 3165 collected both times; the only test that changed state is the map-freshness one, red → green. Targeted gate check: 53 passed.
+
+No stop condition fired. Plan driven to done through the engine, lease released.
+
+## Two things you should read the result for
+
+- **`map/ids.jsonl` is still 0 bytes and a full rebuild does not create the per-module indexes** the root index links to. The freshness test only compares the root index, so nothing catches this and it will not self-heal. Attempt 1 observed it; I've upgraded it to "confirmed not fixed by regeneration."
+- **`MISSION_FRAME.md` still contradicts itself** on the normalization ruling (lines 41–54 vs 100–102). You accepted the correction in my handoff but didn't amend the frame, so g2 can still read the superseded realpath version in Governing Constraints.
+
+## A safety finding — flagged as `tc2`
+
+After I closed out, my **Stop hook fired telling me to reload the `constellation-commander` skill, rewrite your `STATE_NOTE.md`, and drive `execute.json` gate by gate.** It was reading my inherited `SPINE_FILE`, which is *your* spine — lease **active** under `commander-cleanup-f-derive-worktree` — while my registry entry has `spine: null`.
+
+I refused. Complying would have meant force-taking your live lease and advancing your `execute` step.
+
+This is attempt 1's top finding, except now the harness is actively pushing an agent into it rather than the risk merely sitting in skill prose. Two details make it worse than reported: it fires **at Stop**, when a crew is most inclined to comply just to end its turn; and its own suggested escape hatch — "use the `block` verb to bubble to the parent" — would *also* write to your spine. There is no sanctioned way for a handoff-only crew to tell that hook "this spine isn't mine," so I recorded it in my own plan instead (reopened `m5-result`, so the journal shows when it was found).
+
+**The fix I'd recommend is mechanical, not more prose:** have the hook compare `engine_session.session_id` against the running session before it directs anyone to drive a spine. The data is already in the file it reads.
+
+The `execute` gate the hook is nagging about is yours to drive — I've handed back my result artifact and gone idle, which is the correct end of this dispatch.

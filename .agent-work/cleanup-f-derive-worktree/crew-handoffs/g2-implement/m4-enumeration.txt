@@ -1,0 +1,49 @@
+
+===== (a) EVERY access to an `origin` key, repo-wide
+===== COUNT: 12
+===== of which in PRODUCTION (non test_*.py): 1
+
+  [prod] WRITE scripts/spine_lifecycle.py:323  in open_work()  <- compiled
+  [test] read  tests/test_spine_lifecycle.py:503  in test_origin_block_is_written_and_valid()  <- compiled
+  [test] read  tests/test_spine_lifecycle.py:544  in test_origin_survives_claim_start_attest_advance()  <- cl
+  [test] read  tests/test_spine_lifecycle.py:1171  in test_real_generated_spine_driven_to_terminal_then_closed()  <- archived
+  [test] read  tests/test_spine_lifecycle.py:532  in test_origin_survives_claim_start_attest_advance()  <- cl
+  [test] read  tests/test_spine_lifecycle.py:545  in test_origin_survives_claim_start_attest_advance()  <- cl
+  [test] read  tests/test_spine_lifecycle.py:1151  in test_real_generated_spine_driven_to_terminal_then_closed()  <- cl
+  [test] read  tests/test_spine_origin_isolation.py:94  in test_stamps_exactly_work_id_worktree_and_opened_by()  <- data
+  [test] read  tests/test_spine_origin_isolation.py:124  in test_stamp_keys_are_a_subset_of_the_lifecycle_origin_block()  <- json.loads(out.read_text(encoding='utf-8'))
+  [test] read  tests/test_spine_origin_isolation.py:343  in test_provenance_the_stamp_is_written_by_both_producers()  <- json.loads(out.read_text(encoding='utf-8'))
+  [test] read  tests/test_spine_origin_isolation.py:362  in test_provenance_the_engine_never_rewrites_the_stamp_it_does_not_read()  <- json.loads(self.spine_path.read_text(encoding='utf-8'))
+  [test] read  tests/test_spine_origin_isolation.py:139  in test_an_existing_origin_in_the_template_is_preserved()  <- json.loads(out.read_text(encoding='utf-8'))
+
+===== (b) accesses to `worktree` on an origin-shaped container
+===== COUNT: 5
+===== of which in PRODUCTION (non test_*.py): 0
+
+  [test] read  tests/test_spine_lifecycle.py:506  in test_origin_block_is_written_and_valid()  <- origin
+  [test] read  tests/test_spine_origin_isolation.py:102  in test_stamps_exactly_work_id_worktree_and_opened_by()  <- origin
+  [test] WRITE tests/test_spine_origin_isolation.py:259  in _write_spine()  <- origin
+  [test] read  tests/test_spine_origin_isolation.py:337  in test_provenance_the_stamp_is_written_by_both_producers()  <- built
+  [test] read  tests/test_spine_origin_isolation.py:344  in test_provenance_the_stamp_is_written_by_both_producers()  <- stamped
+
+===== (c) COMPLETENESS: every textual `origin` key token in production Python
+===== COMMAND: grep -rn --include=*.py -E "[\"']origin[\"']" scripts/
+===== COUNT: 2 -- BOTH ARE WRITES, ZERO ARE READS
+  scripts/spine_lifecycle.py:323   compiled["origin"] = origin        (open_work injection)
+  scripts/init_work_area.py:188    spine.setdefault("origin", {...})  (instantiate_spine stamp)
+
+  (c) exists because (a) is AST-based and would miss `setdefault`/`pop`
+  spellings. It catches init_work_area:188, which (a) did not, and confirms
+  there is nothing else. scripts/validate_spine.py does not mention `origin`
+  at all, so no validator reads it either.
+
+===== (d) NON-PYTHON readers of origin.worktree (*.sh, *.json, *.jq, *.js)
+===== COUNT: 0
+
+===== CONCLUSION
+Remaining reads of `origin.worktree` on ANY decision path, production-wide: 0.
+The question "why is each not a decision" is therefore vacuous for production
+code -- there is no read to justify. The 5 accesses in (b) are all in tests and
+all assert the STAMP itself (that it was written, or writing a fixture value);
+none is engine behaviour. The 2 production touches in (c) are both writes, which
+is the half the provenance pin requires to keep passing.

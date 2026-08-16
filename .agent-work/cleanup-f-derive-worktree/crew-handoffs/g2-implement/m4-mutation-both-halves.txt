@@ -1,0 +1,25 @@
+### MUTANT 1 -- STOP WRITING THE STAMP
+### (init_work_area.instantiate_spine no longer stamps origin.worktree)
+    # omitted rather than guessed. The keys are a strict subset of that block's.
+    # `setdefault`: a template that already carries an origin keeps its own.
+    spine.setdefault("origin", {
+        "work_id": work_id,
+        
+        "opened_by": "init_work_area",
+    })
+    dest.write_text(json.dumps(spine, indent=2) + "\n", encoding="utf-8")
+tests/test_spine_origin_isolation.py:344: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_spine_origin_isolation.py::TheStampIsProvenanceNotADecisionInput::test_provenance_the_stamp_is_written_by_both_producers
+1 failed, 3 passed, 9 deselected, 14 subtests passed in 0.26s
+
+### MUTANT 2 -- READ THE STAMP FOR A DECISION
+### (main() refuses a guarded verb when origin.worktree != cwd -- the retired comparison, re-added)
+SUBFAILED(stamp='a number') tests/test_spine_origin_isolation.py::TheStampIsProvenanceNotADecisionInput::test_provenance_the_stamp_is_not_a_decision_input_with_no_git_toplevel
+SUBFAILED(stamp='worktree key absent') tests/test_spine_origin_isolation.py::TheStampIsProvenanceNotADecisionInput::test_provenance_the_stamp_is_not_a_decision_input_with_no_git_toplevel
+FAILED tests/test_spine_origin_isolation.py::TheStampIsProvenanceNotADecisionInput::test_provenance_the_stamp_is_not_a_decision_input_with_no_git_toplevel
+8 failed, 2 passed, 9 deselected, 8 subtests passed in 0.21s
+
+### RESTORED -- both halves back, pin green again
+....                                                       [100%]
+4 passed, 9 deselected, 14 subtests passed in 0.22s

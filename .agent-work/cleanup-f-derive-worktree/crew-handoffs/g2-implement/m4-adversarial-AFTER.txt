@@ -1,0 +1,11 @@
+=== HARM CASE: a second controlling agent, arriving from a FOREIGN tree
+  agent-one claims from the spine's own worktree : exit=0
+  agent-two claims from a foreign tree           : exit=1
+    -> REFUSED: checklist already owned by active session 'agent-one'; use `claim --force --reason ...` to take over
+  agent-two mutates from a foreign tree          : exit=1
+    -> REFUSED: checklist is owned by active session 'agent-one'; pass --session-id 'agent-one' or take over with `claim --force --reason ...`
+  lease still held by                            : agent-one
+  gate status                                    : pending
+
+=== THE BEHAVIOUR DELTA, stated: an UNCLAIMED spine, foreign tree
+  a stranger claims an unclaimed spine from afar : exit=0
