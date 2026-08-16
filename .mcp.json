@@ -6,7 +6,7 @@
         "scripts/mcp_spine_server.py"
       ],
       "env": {
-        "SPINE_FILE": "${SPINE_FILE:-examples/mcp-interactive-demo/spine.json}",
+        "SPINE_FILE": "${SPINE_FILE:-}",
         "SPINE_ENGINE": "${SPINE_ENGINE:-scripts/checklist_engine.py}",
         "SPINE_SESSION": "${SPINE_SESSION:-}"
       }

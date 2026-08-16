@@ -500,5 +500,183 @@ class FullStdioRoundTripTests(unittest.TestCase):
                          "the spine itself must have moved into the archive")
 
 
+# --------------------------------------------------------------------------- #
+# 5. g3 (issue #603): bind-on-open. ONE binder, and the identity guard survives.
+# --------------------------------------------------------------------------- #
+
+#: The module-level names that ARE this door's identity. `_bind_process_to` is
+#: the only function allowed to assign either.
+IDENTITY_GLOBALS = {"SPINE", "SESSION"}
+THE_ONE_BINDER = "_bind_process_to"
+
+
+def _assignments_to(source: str, names: set[str]) -> dict[str, list[str]]:
+    """Every place `names` are ASSIGNED, mapped name -> enclosing scopes.
+
+    Walks the module tree carrying the enclosing function name down, so an
+    assignment nested three functions deep is still attributed to the function
+    that contains it rather than silently read as module scope. Covers plain
+    assignment, annotated assignment (`SPINE: Path | None = ...`, which is an
+    `AnnAssign` and NOT an `Assign`), augmented assignment, walrus, and the
+    binding forms `for`/`with`/`except` -- because "the set of assignment sites"
+    is only a meaningful claim if it counts every way a name can be rebound."""
+    found: dict[str, list[str]] = {n: [] for n in names}
+
+    def targets(node):
+        if isinstance(node, ast.Assign):
+            return node.targets
+        if isinstance(node, (ast.AnnAssign, ast.AugAssign, ast.NamedExpr)):
+            return [node.target]
+        if isinstance(node, (ast.For, ast.AsyncFor)):
+            return [node.target]
+        if isinstance(node, ast.withitem):
+            return [node.optional_vars] if node.optional_vars else []
+        return []
+
+    def walk(node, scope):
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                walk(child, child.name)
+                continue
+            for target in targets(child):
+                for sub in ast.walk(target):
+                    if isinstance(sub, ast.Name) and sub.id in names:
+                        found[sub.id].append(scope)
+            if isinstance(child, ast.ExceptHandler) and child.name in names:
+                found[child.name].append(scope)
+            walk(child, scope)
+
+    walk(ast.parse(source), "<module>")
+    return found
+
+
+class OneBinderPinTests(unittest.TestCase):
+    """Since gate g3 this door can REBIND itself: `spine_open` binds the process
+    to the spine it just minted (`decision:bind-on-open-over-new-verb`).
+
+    That makes a new regression possible which no existing pin can see. The
+    `_spine_open` identifier ban above is scoped to ONE function's source, so a
+    second, quieter rebind site added anywhere ELSE in the module -- inside
+    `call_tool`, inside a helper, inside `main` -- would leave every existing
+    check green while making "one spine per process" untrue. This pin is
+    deliberately ADDED beside that one rather than replacing it: it is strictly
+    stronger (whole module, both identity names, every assignment form) and the
+    older, narrower ban keeps its own distinct purpose, which is that a call
+    meant to open UNRELATED work cannot be redirected onto the bound spine."""
+
+    def test_spine_and_session_are_assigned_only_at_module_scope_and_by_the_one_binder(self):
+        found = _assignments_to(SOURCE, IDENTITY_GLOBALS)
+        for name in sorted(IDENTITY_GLOBALS):
+            scopes = found[name]
+            self.assertIn("<module>", scopes, f"{name} is no longer bound at import")
+            self.assertIn(THE_ONE_BINDER, scopes,
+                          f"{name} is not assigned by {THE_ONE_BINDER} -- the binder is inert")
+            self.assertEqual(
+                {"<module>", THE_ONE_BINDER}, set(scopes),
+                f"{name} is assigned somewhere other than module scope and {THE_ONE_BINDER}: "
+                f"{sorted(set(scopes) - {'<module>', THE_ONE_BINDER})}. One spine per process "
+                f"survives only while exactly one named function can move this door's identity; "
+                f"route the new rebind through {THE_ONE_BINDER} instead of adding a second site.",
+            )
+
+    def test_the_one_binder_pin_can_fail(self):
+        """Positive control. A second rebind site -- the exact regression the
+        pin exists to catch -- written the way it would plausibly arrive: a
+        convenience helper that "just" sets the session, plus a loop variable
+        shadowing the other name. A detector that misses either is not
+        evidence."""
+        leaky = (
+            "SPINE = None\n"
+            "SESSION = ''\n"
+            "def _bind_process_to(spine_file, session):\n"
+            "    global SPINE, SESSION\n"
+            "    SPINE = spine_file\n"
+            "    SESSION = session\n"
+            "def _quietly_retarget(new):\n"
+            "    global SESSION\n"
+            "    SESSION = new\n"
+            "def _also_quietly(paths):\n"
+            "    global SPINE\n"
+            "    for SPINE in paths:\n"
+            "        pass\n"
+        )
+        found = _assignments_to(leaky, IDENTITY_GLOBALS)
+        self.assertIn(
+            "_quietly_retarget", found["SESSION"],
+            "the detector missed a second plain-assignment rebind site -- it is "
+            "incapable of failing and is therefore not evidence")
+        self.assertIn(
+            "_also_quietly", found["SPINE"],
+            "the detector missed a rebind through a `for` target -- enumerating only "
+            "`ast.Assign` is exactly the shape-guessing this repo's identity guards "
+            "have been defeated by six times")
+
+    def test_the_binder_is_actually_called_from_spine_open(self):
+        """A pin proving there is only ONE binder is satisfied vacuously by a
+        binder nothing calls. This is the other half: `_spine_open` reaches it."""
+        segment = ast.get_source_segment(SOURCE, _find_funcdef(ast.parse(SOURCE), "_spine_open"))
+        self.assertIn(f"{THE_ONE_BINDER}(", segment)
+
+
+class IdentityGuardSurvivesARebindTests(unittest.TestCase):
+    """The guard that must NOT have been weakened while the binding was made
+    movable. `_identity_violation` compares against `SPINE` at CALL time
+    (LIFECYCLE_CONTRACT / `IDENTITY_TRADE.md`), so it should survive a rebind by
+    construction -- "by construction" is a claim, and this measures it."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.dir = Path(self.tmp.name)
+        self.first = self.dir / "first" / "spine.json"
+        self.module = _load_module(self.first, "first-session")
+
+    def _rebind_to_a_second_spine(self) -> Path:
+        second = self.dir / "second" / "spine.json"
+        second.parent.mkdir(parents=True, exist_ok=True)
+        second.write_text("{}", encoding="utf-8")
+        self.module._bind_process_to(str(second), "second-session")
+        return second
+
+    def test_the_rebind_moves_both_identity_roots(self):
+        second = self._rebind_to_a_second_spine()
+        self.assertEqual(second.resolve(), self.module.SPINE)
+        self.assertEqual("second-session", self.module.SESSION)
+
+    def test_a_foreign_spine_is_still_refused_after_a_rebind(self):
+        second = self._rebind_to_a_second_spine()
+        foreign = self.dir / "elsewhere" / "spine.json"
+        refusal = self.module._identity_violation(
+            ["--file", str(foreign), "current"])
+        self.assertIsNotNone(refusal, "a foreign --file was accepted after a rebind")
+        self.assertIn("bound to one spine for the life of its process", refusal)
+        self.assertIn(str(second.resolve()), refusal,
+                      "the refusal names the OLD spine -- the guard did not follow the rebind")
+
+    def test_the_spine_bound_by_the_rebind_is_accepted_after_it(self):
+        """The other direction, and the reason the test above is not vacuous: a
+        guard that refused EVERYTHING would satisfy it while breaking the door."""
+        second = self._rebind_to_a_second_spine()
+        self.assertIsNone(
+            self.module._identity_violation(["--file", str(second.resolve()), "current"]))
+
+    def test_the_old_spine_is_refused_after_a_rebind(self):
+        """The rebind is a MOVE, not an addition. `one-spine-per-process` means
+        the spine this door was launched on stops being addressable once it is
+        no longer the bound one."""
+        self._rebind_to_a_second_spine()
+        refusal = self.module._identity_violation(
+            ["--file", str(self.first.resolve()), "current"])
+        self.assertIsNotNone(refusal, "the door still answers for TWO spines after a rebind")
+
+    def test_a_foreign_session_is_still_refused_after_a_rebind(self):
+        self._rebind_to_a_second_spine()
+        refusal = self.module._identity_violation(
+            ["--file", str((self.dir / "second" / "spine.json").resolve()),
+             "claim", "--session-id", "somebody-else", "--claimed-by", "x", "--worktree", "."])
+        self.assertIsNotNone(refusal, "a foreign --session-id was accepted after a rebind")
+        self.assertIn("second-session", refusal)
+
+
 if __name__ == "__main__":
     unittest.main()

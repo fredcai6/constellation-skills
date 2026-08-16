@@ -1,10 +1,19 @@
 # Interactive MCP-door demo spine
 
-This is the checklist the project-scope `.mcp.json` points at. It exists so
-opening this worktree in an interactive Claude Code session gives a real,
-safe, session-less checklist to drive through the `spine_*` tools without
-touching any live project state (the commander spine that actually drove
-issue #424, or any other in-flight `.agent-work` run).
+This is a checklist you can point the MCP door at by hand. The project-scope
+`.mcp.json` no longer defaults to it: since issue #603 a door with no
+`SPINE_FILE` refuses every tool and tells you how to bind one, rather than
+quietly answering about this demo as though it were your own work. To drive
+it, set `SPINE_FILE` to this file when launching the session:
+
+```
+SPINE_FILE=examples/mcp-interactive-demo/spine.json claude
+```
+
+It exists so that gives a real, safe, session-less checklist to drive through
+the `spine_*` tools without touching any live project state (the commander
+spine that actually drove issue #424, or any other in-flight `.agent-work`
+run).
 
 It is a throwaway fixture, not project history in its own right — regenerate
 it any time with:

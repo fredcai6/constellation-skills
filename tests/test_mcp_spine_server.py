@@ -585,29 +585,71 @@ class McpJsonTests(unittest.TestCase):
             value = entry["env"][key]
             self.assertFalse(Path(value).is_absolute(), f"{key} is not portable: {value}")
 
-    def test_mcp_json_referenced_spine_file_exists_and_loads(self):
-        """The committed default must resolve to a real, loadable spine.
+    #: The replacement invariant, named once so the guard and its own positive
+    #: control cannot drift apart. Original: "the committed default resolves to
+    #: a real, loadable spine." That guard caught this class of defect before --
+    #: a `.mcp.json` default pointing at a file that was missing, unparseable,
+    #: or not a spine at all -- and gate g3 (issue #603) removed the default it
+    #: was written against, because an unbound session must get a REFUSAL rather
+    #: than a demo spine's answers. Deleting the guard would have retired the
+    #: protection along with the default. So it is conditional now, not gone:
+    #: **if a default is present, it must resolve to a real, loadable spine.**
+    #: A future default cannot be reintroduced broken.
+    @staticmethod
+    def _default_spine_problem(raw: str) -> str | None:
+        """None when `raw` is an acceptable SPINE_FILE value, else what is wrong.
 
-        SPINE_FILE is written as `${SPINE_FILE:-<default>}` so a dispatcher can
-        rebind it per agent through the calling process's environment, while an
-        interactive session with nothing set still lands on a safe demo spine.
-        Both halves of that form are load-bearing, so both are asserted: a
-        literal path here would bind one spine for every consumer and could not
-        serve two agents driving different spines.
-        """
+        Extracted from the test body so the test below can feed it values that
+        SHOULD fail. A conditional guard whose condition is currently false is
+        exactly the shape that rots into a vacuous pass, and the only defence is
+        to keep exercising the branch that is not taken."""
+        match = re.fullmatch(r"\$\{SPINE_FILE:-(?P<default>[^}]*)\}", raw)
+        if match is None:
+            return (f"SPINE_FILE must stay overridable per dispatch via "
+                    f"${{SPINE_FILE:-<default>}} expansion; got {raw!r}")
+        default = match.group("default").strip()
+        if not default:
+            return None  # no default: an unbound door refuses, which is the point
+        spine_path = ROOT / default
+        if not spine_path.is_file():
+            return f"the default names a spine that is not there: {spine_path}"
+        try:
+            loaded = json.loads(spine_path.read_text(encoding="utf-8"))
+        except ValueError as exc:
+            return f"the default spine is not loadable JSON: {exc}"
+        if not isinstance(loaded, dict) or "type" not in loaded:
+            return f"the default spine has no 'type' -- it is not a spine: {spine_path}"
+        return None
+
+    def test_mcp_json_spine_file_is_overridable_and_any_default_loads(self):
+        """SPINE_FILE stays written as `${SPINE_FILE:-<default>}` so a
+        dispatcher can rebind it per agent through the calling process's
+        environment -- a literal path here would bind one spine for every
+        consumer and could not serve two agents driving different spines.
+
+        The default itself is now EMPTY, deliberately. `${SPINE_FILE:-}`
+        expands to an empty string, which `mcp_spine_server.py` treats as
+        unbound and refuses on, so a session that set nothing is told nothing is
+        bound instead of being handed a demo spine's answers as though they were
+        its own. See `tests/test_mcp_door_unbound.py`."""
         config = json.loads(MCP_JSON.read_text(encoding="utf-8"))
         raw = config["mcpServers"]["spine"]["env"]["SPINE_FILE"]
+        self.assertIsNone(self._default_spine_problem(raw))
 
-        match = re.fullmatch(r"\$\{SPINE_FILE:-(?P<default>[^}]*)\}", raw)
-        self.assertIsNotNone(
-            match,
-            "SPINE_FILE must stay overridable per dispatch via "
-            f"${{SPINE_FILE:-<default>}} expansion; got {raw!r}")
-
-        spine_path = ROOT / match.group("default")
-        self.assertTrue(spine_path.is_file(), f"missing default spine: {spine_path}")
-        loaded = json.loads(spine_path.read_text(encoding="utf-8"))
-        self.assertIn("type", loaded)
+    def test_the_default_spine_guard_still_catches_a_broken_default(self):
+        """The positive control the conditional above needs to be worth
+        anything. Each of these is a way the ORIGINAL guard earned its keep, and
+        each must still be caught the moment a default reappears."""
+        for raw, why in [
+            ("examples/mcp-interactive-demo/does-not-exist.json", "not the ${VAR:-} form at all"),
+            ("${SPINE_FILE:-examples/no-such-spine.json}", "a default that is not there"),
+            ("${SPINE_FILE:-README.md}", "a default that is not loadable JSON"),
+            ("${SPINE_FILE:-.mcp.json}", "a JSON file that is not a spine"),
+        ]:
+            with self.subTest(why=why):
+                self.assertIsNotNone(
+                    self._default_spine_problem(raw),
+                    f"the guard accepted {raw!r} -- it no longer catches {why}")
 
 
 class McpJsonVarExpansionLaunchTests(unittest.TestCase):

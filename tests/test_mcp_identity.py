@@ -490,9 +490,19 @@ class DC3PositiveControlTests(unittest.TestCase):
         """A second, independent way to reach 'no identity': SPINE_FILE
         itself is simply never set (the config-delivery flavor of DC3's
         trap, distinct from the server-never-started flavor above).
-        mcp_spine_server.py requires it at import time, so this crashes
-        immediately -- proof of manipulation is the KeyError itself,
-        verbatim, in the child's own stderr."""
+
+        The CLAIM here is unchanged and is the only thing this control has
+        ever asserted: with no config delivered, the door serves no identity,
+        and the control notices. The MECHANISM changed at gate g3 (issue
+        #603). This used to read `os.environ["SPINE_FILE"]` at import, so the
+        child died with a `KeyError` and proof-of-manipulation was that
+        traceback. A door that dies is indistinguishable from a door that was
+        never installed -- the exact confusion this whole control class
+        exists to separate -- so the door now stays UP and REFUSES.
+
+        Proof of manipulation is correspondingly stronger, not weaker: a
+        positive statement FROM the process under test, naming the reason,
+        instead of a stack trace that only proves something broke."""
         base_env = dict(os.environ)
         for k in SPINE_ENV_KEYS:
             base_env.pop(k, None)
@@ -501,11 +511,14 @@ class DC3PositiveControlTests(unittest.TestCase):
         try:
             with self.assertRaises(AssertionError):
                 assert_door_is_up_and_serving(self, inst, "irrelevant")
-            inst.proc.wait(timeout=10)
-            self.assertNotEqual(0, inst.proc.returncode)
-            stderr = inst.proc.stderr.read()
-            self.assertIn("KeyError", stderr)
-            self.assertIn("SPINE_FILE", stderr)
+            text = inst.status_text(timeout=10)
+            self.assertIsNotNone(
+                text, "the door died instead of refusing -- a dead door cannot "
+                      "distinguish 'no config' from 'never installed'")
+            self.assertIn("no spine is bound", text)
+            self.assertIn("spine_open", text)
+            stderr = inst.proc.stderr.read() if inst.proc.poll() is not None else ""
+            self.assertNotIn("KeyError", stderr)
         finally:
             inst.close()
 
@@ -621,19 +634,29 @@ class DC3InheritanceMechanismTests(unittest.TestCase):
         calling process's real environment, no explicit --mcp-config of its
         own. Per the previous test, that environment structurally cannot
         contain the parent's SPINE_FILE/SPINE_SESSION under this repo's
-        delivery mechanism, so the subagent's server crashes on launch (no
-        SPINE_FILE at all) -- NO IDENTITY, cleanly, never the parent's
-        reading. The positive control is asserted on the PARENT throughout,
-        proving the parent's door stayed genuinely up and unaffected while
-        the subagent's crashed."""
+        delivery mechanism, so the subagent's door has NO IDENTITY, cleanly,
+        and never the parent's reading. The positive control is asserted on
+        the PARENT throughout, proving the parent's door stayed genuinely up
+        and unaffected while the subagent's refused.
+
+        The claim is unchanged since gate g3 (issue #603); the mechanism is
+        not. The subagent's server used to CRASH on launch, and this asserted
+        that crash. It now stays up and refuses -- so the assertion moved from
+        'produced no reply' to 'replied, and what it replied names no spine
+        and is not the parent's'. That is strictly more evidence for DC3: a
+        crash proves only the absence of an answer, while a refusal proves the
+        door was reachable, had no identity of its own, and did not reach the
+        parent's."""
         subagent = ServerInstance(None, None, self.root / "subagent", base_env=None)
         try:
             text = subagent.status_text(timeout=10)
-            self.assertIsNone(text, "a subagent with no special configuration produced a reply -- expected none")
-            subagent.proc.wait(timeout=10)
-            self.assertNotEqual(0, subagent.proc.returncode)
-            stderr = subagent.proc.stderr.read()
-            self.assertIn("SPINE_FILE", stderr)
+            self.assertIsNotNone(
+                text, "the unconfigured subagent's door died instead of refusing")
+            self.assertIn("no spine is bound", text)
+            self.assertNotIn(
+                "parent-session", text,
+                "a subagent with no configuration of its own read the PARENT's identity")
+            self.assertNotIn("PARENT-MARK", text)
 
             assert_door_is_up_and_serving(self, self.parent, "PARENT-MARK")
             parent_text = self.parent.status_text()
