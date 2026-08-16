@@ -1,0 +1,4 @@
+== BEFORE the edit: the two affected test files, as they stand ==
+2026-08-16T19:45:29Z
+...................................................................                                                   [100%]
+67 passed, 27 subtests passed in 0.42s

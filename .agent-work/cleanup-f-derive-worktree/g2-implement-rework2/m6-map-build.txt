@@ -1,0 +1,34 @@
+pass1: 159 modules indexed
+statements: 157028 over 159 files (0 failures)
+{
+ "modules": 159,
+ "entities": 6132,
+ "pages": 6292,
+ "entity_pages": 6132,
+ "holes": 3854,
+ "ids": 0,
+ "median_entity_page_lines": 19,
+ "largest_5": [
+  [
+   83,
+   "tests.test_mcp_identity:IdentityBindingPinTests"
+  ],
+  [
+   80,
+   "scripts.mcp_spine_server:_identity_violation"
+  ],
+  [
+   79,
+   "tests.test_mcp_identity:IdentityBindingPinTests.test_no_argument_can_change_what_the_door_reads_or_where_it_reads_it"
+  ],
+  [
+   75,
+   "scripts.mcp_spine_server:_primary_checkout_for_lifecycle"
+  ],
+  [
+   73,
+   "scripts.spine_lifecycle:close_work"
+  ]
+ ],
+ "stale_tags": []
+}

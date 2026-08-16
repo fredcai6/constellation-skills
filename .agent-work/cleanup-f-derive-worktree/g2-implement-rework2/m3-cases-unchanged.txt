@@ -1,0 +1,5 @@
+CASES block, HEAD vs working tree: byte-identical = True (3807 characters)
+cases evaluated: HEAD 16, working tree 16
+ids and expectations identical = True
+
+OK: same ids, same expectations, same bytes.

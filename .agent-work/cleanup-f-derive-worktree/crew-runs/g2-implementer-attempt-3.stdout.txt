@@ -1,0 +1,9 @@
+Refusing the hook, and the refusal is now recorded with the evidence:
+
+- **The gate it names is not mine.** `execute` lives on my parent Commander's spine, and its lease is held by `commander-cleanup-f-derive-worktree`. My registry entry is `spine: null`, `parent: .../execute/commander/attempt-3`. Loading the commander skill and advancing `execute.json` would mutate another session's state under another session's lease.
+- **My own run is finished, not abandoned.** My plan reports `DONE: no open items`, and I released my lease as the last journaled action. There is no open item of mine to keep working.
+- **The hook's escape clause doesn't fit.** `block` bubbles a blocker to a parent — I am not blocked, and nothing was out of scope. Using it would file a false blocker.
+
+`execute` is open because my parent is waiting on the artifact I just delivered: `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework2-result.md`, return status `complete`. Picking that up is the Commander's move, not mine.
+
+This is the fourth crew on this issue to hit the same hook and refuse it. It is written up in the result's *On the Stop hook* section and again in *Workflow Feedback* — the hook fires on `SPINE_FILE` alone without consulting the `spine: null` binding that says the session doesn't own that spine, so every crew this lane dispatches gets told to drive its parent's gate at exactly the moment it finishes its own.

@@ -6,12 +6,30 @@
 `/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree`,
 branch `cleanup/f-derive-worktree`. **Diff base: current `HEAD` — read it with
 `git rev-parse HEAD` rather than trusting a commit id written here.** `main` at
-`e0539903` has been merged into this branch, so lanes A (#603/#604/#605) and E
-(#607/#525) are present in your tree.
+`17c2cee5` has been merged into this branch, so lanes A (#603/#604/#605), E
+(#607/#525) and G (#611) are present in your tree.
 
 This is the half of #609 that matters most. g1 and g2 are closed; g4 is skipped
 (its ruled behaviour was already shipped by g1) and g5 has left the lane for
 #610. **You are the last code gate.**
+
+**What g2 finally shipped, because it changes one thing for you.** g2 retired the
+stamp-and-compare, and then — under `ADMIRAL_RULING-2` N2 — **deleted the
+engine-side `worktree_from_spine_path` outright**, because R2 and R3 between them
+left it with zero production call sites. The engine now derives no worktree at
+all. Two consequences:
+
+- `scripts/hooks/spine_rail.py:_worktree_from_spine` is **the only implementation
+  of the derivation rule left in the repo**, and `tests/test_worktree_derivation.py`'s
+  shared case table now drives it alone. That table is the rule's *specification*
+  — #610's wave re-derives the engine-side copy against it, with its consumer.
+  **Keep it green.** If you believe a case in it is wrong, that is a finding to
+  report, not a row to edit.
+- Two pieces of prose in **your** files still describe the deleted engine copy as
+  a live twin: the `_worktree_from_spine` docstring's "duplicated because this
+  module..." passage in `scripts/hooks/spine_rail.py`, and the equivalent
+  reference in `tests/test_spine_rail.py` (find both with the Wiring Grep below).
+  **Repairing those two is part of this gate** — see Task, item 3.
 
 ## Task
 
@@ -38,6 +56,22 @@ each site's before and after behaviour **separately**.
 
 The derived worktree may still be used for **location**. It may not be used for
 **identity**.
+
+**3. Repair the two stale references to the deleted engine copy.** In
+`scripts/hooks/spine_rail.py` and `tests/test_spine_rail.py`, prose still names
+`checklist_engine.worktree_from_spine_path` as a live twin of
+`_worktree_from_spine` and explains the duplication. That symbol no longer
+exists. Say what is true instead: one implementation of the rule, here, in the
+stdlib-only hook; the shared case table in `tests/test_worktree_derivation.py` is
+its specification; the engine-side copy was deleted in #609 g2 under
+`ADMIRAL_RULING-2` N2 and re-lands in #610's wave with #315, its consumer. This
+is a prose repair only — no behaviour changes with it.
+
+**Two other stale claims in these same files are NOT yours.** `spine_rail.py` and
+`tests/test_spine_rail.py` each still say the door raises `KeyError` when
+`SPINE_FILE` is unset; it has refused by name since `e3b5a1c8`. The Admiral
+assigned those two to the Commander's `reconcile` step. Leave them, and do not
+report them as findings — they are known.
 
 ## Protected Intent
 
@@ -76,6 +110,10 @@ then make it pass.
   fragmented per-entry.
 - The fail-safe posture survives: an errored comparison must **never** relax the
   rail.
+- **No reference to `checklist_engine.worktree_from_spine_path` survives** in
+  `scripts/hooks/spine_rail.py` or `tests/test_spine_rail.py`, and what replaces
+  each is true (Task item 3). `tests/test_worktree_derivation.py` stays green and
+  unedited.
 - Full suite green, cache cleared, clean env.
 
 ## Allowed Scope
@@ -159,8 +197,13 @@ then make it pass.
 
 - **Committed** — `scripts/hooks/spine_rail.py`, `tests/test_spine_rail.py`,
   `map/**`: `git check-ignore` exits **1** for each; verified before dispatch.
-- **Local-only** — your result artifact and your notes, both under `.agent-work/`.
-  The reviewer must **not** expect them in the tracked diff.
+- **Committed** — your result artifact and your notes, both under `.agent-work/`.
+  **Correction to what earlier handoffs on this lane said:** `.agent-work/` is
+  **not** gitignored here (`git check-ignore` exits 1 on it) and this lane's
+  `.agent-work/` tree is committed. Those handoffs confused *untracked* with
+  *ignored*. Your artifacts are new files, so they appear in `git status`, not in
+  `git diff`, until the Commander stages and commits them. Do not commit them
+  yourself.
 
 ## Required Evidence
 
@@ -190,9 +233,14 @@ then make it pass.
 
 ```bash
 grep -rn "_foreign_worktree\|_same_path\|session_view_provenance" --include=*.py scripts/ tests/
+grep -rn "worktree_from_spine_path" --include=*.py --include=*.md . \
+  | grep -v '^./.agent-work/' | grep -v '^./map/'
 ```
 
-**State the count**, and say which call sites you removed and which you added.
+**State the count** for the first, and say which call sites you removed and which
+you added. The second is Task item 3's check: it must return **zero** lines when
+you are done — the symbol was deleted in g2 and every remaining reference to it
+is stale prose in your two files.
 
 ## Verification Commands
 

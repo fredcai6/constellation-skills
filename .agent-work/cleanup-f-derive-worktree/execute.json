@@ -500,7 +500,12 @@
               "status": "complete"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-3",
+          "attested": {
+            "evidence": "e-g2-implement-3",
+            "note": null
+          }
         }
       ],
       "constraints": [
@@ -544,7 +549,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {
         "reopen_reason": "ADMIRAL_RULING-1 R1 rework. The code subtraction stands and is approved; the CLAIM shipped beside it is false and must be narrowed in four places (docs/CHECKLIST_SCHEMA.md:124, scripts/checklist_engine.py:95-97, the tests/test_spine_origin_isolation.py module docstring, and the result artifact's behaviour-delta sentence), and the reviewer's B2 one-line test fix applied so the Windows case row genuinely discriminates. Cascade-resets g2-review and g2-integrate so the narrowed claim is independently re-checked."
       },
@@ -580,6 +585,18 @@
             "reason": "ADMIRAL_RULING-1 R1 rework. The code subtraction stands and is approved; the CLAIM shipped beside it is false and must be narrowed in four places (docs/CHECKLIST_SCHEMA.md:124, scripts/checklist_engine.py:95-97, the tests/test_spine_origin_isolation.py module docstring, and the result artifact's behaviour-delta sentence), and the reviewer's B2 one-line test fix applied so the Windows case row genuinely discriminates. Cascade-resets g2-review and g2-integrate so the narrowed claim is independently re-checked.",
             "ts": "2026-08-16T19:04:11.701746+00:00"
           }
+        },
+        {
+          "id": "e-g2-implement-3",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "artifact": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework2-result.md",
+            "crew": "constellation/cleanup-f-derive-worktree/g2/implementer/attempt-3",
+            "note": "reworks 1 and 2 as one gate result; rework 1's half reconstructed from the dead attempt-2 crew's evidence and labelled as such"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 1
@@ -1517,6 +1534,13 @@
       "reopen": true,
       "reason": "ADMIRAL_RULING-1 R1 rework. The code subtraction stands and is approved; the CLAIM shipped beside it is false and must be narrowed in four places (docs/CHECKLIST_SCHEMA.md:124, scripts/checklist_engine.py:95-97, the tests/test_spine_origin_isolation.py module docstring, and the result artifact's behaviour-delta sentence), and the reviewer's B2 one-line test fix applied so the Windows case row genuinely discriminates. Cascade-resets g2-review and g2-integrate so the narrowed claim is independently re-checked.",
       "ts": "2026-08-16T19:04:11.701761+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g2-implement",
+      "why": "The engine-side worktree_from_spine_path is gone, and with it the two-copy design: ADMIRAL_RULING-2 N2 took road 1 because R2 and R3 between them left the definition with zero production call sites, and this repo treats a symbol referenced only by its own definition as a stop condition rather than a note. The rule itself did not retire -- spine_rail._worktree_from_spine has three live call sites and the shared case table survives whole, re-scoped to it, as the specification #315 re-derives against when #610's wave re-adds the engine copy WITH its consumer. The deletion is pure: 68 lines removed, 13 added and all of them comments; top-level names 122 -> 120 removing exactly AGENT_WORK_DIR and worktree_from_spine_path; refusal vocabulary unchanged 8/82/1. The suite falls 3204 -> 3170 and every one of the 34 is accounted for as collection: 16 engine-parametrized cases, the 16-case test_the_two_copies_agree drift test that cannot fail over one implementation, and two engine-only singletons -- checked against whole-suite collection so 'another file also lost tests' is excluded rather than assumed. This gate also carries rework 1, which R1 ordered and whose implementer died in its final step: the leaseless-widening claim is narrowed in three places, its C4 amendment finished here, and the result artifact labels which half was measured and which reconstructed.",
+      "mechanical": false,
+      "ts": "2026-08-16T20:09:04.389151+00:00"
     }
   ]
 }

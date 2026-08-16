@@ -305,5 +305,33 @@
     "result_fresh": false,
     "verdict_source": "reconstructed",
     "note": "RECONSTRUCTED by commander leg 3. This entry was destroyed by the parent launcher's registry clobber (#617) and is rebuilt from the crew's own artifacts: crew-runs/g2-implementer-attempt-2.stdout.txt ('Execution error'), g2-implement-rework/plan.json (m0-m4 complete, m5-result in-progress), and g2-implement-rework/m4-full-suite.txt (3196 passed, 5 skipped, 0 failed). The crew finished and verified its implementation but died before writing its IMPLEMENTER_RESULT. Marked abandoned so it does not block the relaunch."
+  },
+  {
+    "crew_id": "constellation/cleanup-f-derive-worktree/g2/implementer/attempt-3",
+    "work_id": "cleanup-f-derive-worktree",
+    "gate": "g2",
+    "role": "implementer",
+    "attempt": 3,
+    "status": "completed",
+    "session_name": "constellation/cleanup-f-derive-worktree/g2/implementer/attempt-3",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 1158737,
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
+    "handoff": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework2-handoff.md",
+    "result": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework2-result.md",
+    "spine": null,
+    "parent": "constellation/cleanup-f-derive-worktree/execute/commander/attempt-3",
+    "stdout": ".agent-work/cleanup-f-derive-worktree/crew-runs/g2-implementer-attempt-3.stdout.txt",
+    "stderr": ".agent-work/cleanup-f-derive-worktree/crew-runs/g2-implementer-attempt-3.stderr.txt",
+    "started_at": "2026-08-16T19:39:19.672550+00:00",
+    "last_heartbeat": "2026-08-16T20:08:14.570662+00:00",
+    "completed_at": "2026-08-16T20:08:14.570662+00:00",
+    "abandoned": false,
+    "model": "opus",
+    "exit_code": 0,
+    "result_present": true,
+    "result_fresh": true,
+    "verdict_source": "result"
   }
 ]

@@ -1,0 +1,14 @@
+baseline (pre-change, this tree): {'passed': 3204, 'skipped': 5, 'failed': 0, 'error': 0}
+after   (post-change, this tree): {'passed': 3170, 'skipped': 5, 'failed': 0, 'error': 0}
+tests/test_worktree_derivation.py collected: 53 -> 19 (delta 34)
+
+accounting, test by test:
+  - 16  test_derivation[engine-*]
+  - 16  test_the_two_copies_agree[*]
+  -  1  test_derivation_is_lexical_not_realpath[engine]
+  -  1  test_derivation_never_raises[engine]
+  ----  expected drop: 34
+
+whole-suite collection now: 3175; baseline collected 3209 - 34 = 3175
+
+OK: 3204 -> 3170 passed, and every one of the 34 lost tests is accounted for.

@@ -36,10 +36,19 @@ not standing in. Under an active lease held by another session, nothing changed.
 
 That widening is ACCEPTED and deliberate, not a no-op. A `cd <worktree> &&`
 prefix defeated the comparison, so it was never a boundary -- but a forgeable
-guard is not the same as no guard. A spine's worktree is now derived from its
-own path (`checklist_engine.worktree_from_spine_path`), so there is no second
-value that can disagree with the first, and no ambient reading a check command
-could forge by `cd`-ing first.
+guard is not the same as no guard. The engine now reads no location at all,
+ambient or derived: there is no second value that can disagree with the first,
+and no ambient reading a check command could forge by `cd`-ing first, because
+the engine no longer asks the question anywhere.
+
+The lexical rule that derives a worktree from a spine's path is NOT retired --
+only the engine's copy of it is. The rule lives in the stdlib-only hook, as
+`spine_rail._worktree_from_spine`, and `tests/test_worktree_derivation.py`'s
+case table is its specification. The engine-side copy was deleted in #609 g2
+under `ADMIRAL_RULING-2` N2: three sound decisions in a row removed all three of
+its consumers, and a definition nothing calls is not shipped. It re-lands in
+#610's wave together with #315 -- the consumer that threads `cwd` into the
+engine's check runner -- and re-derives against that same table.
 
 Every fixture is built in a `tempfile.TemporaryDirectory()` -- never against
 this worktree's own `.git` or the shared checkout.
@@ -429,16 +438,31 @@ class TheEngineTakesNoAmbientReading(unittest.TestCase):
         source = ENGINE_SCRIPT.read_text(encoding="utf-8")
         self.assertNotIn("--show-toplevel", source)
 
-    def test_the_retired_predicate_and_its_verb_sets_are_gone(self):
+    def test_the_retired_predicate_and_its_verb_sets_are_gone_from_a_real_engine(self):
         """Named so a re-introduction is a deliberate act with a red test to
-        answer for, not a quiet re-landing. `worktree_from_spine_path` is the
-        derivation that replaced them and must still be there -- a test that
-        only asserted absence would also pass on an empty file."""
+        answer for, not a quiet re-landing.
+
+        The positive anchor matters as much as the absences: a test that only
+        asserted absence would also pass on an empty file, on a truncated read,
+        or on the wrong path entirely. The anchor used to be the definition of
+        `worktree_from_spine_path`, the derivation that replaced the comparison
+        -- but that definition was itself deleted in #609 g2 under
+        `ADMIRAL_RULING-2` N2 once its last consumer went away, so it can no
+        longer stand for "this is a real engine source".
+
+        `MUTATING_VERBS` replaces it, and is chosen for three reasons. It is the
+        surviving SIBLING of the two verb sets asserted absent just above, so the
+        assertion reads as one statement about the same subject: which verbs the
+        engine gates, and on what. It is load-bearing -- `require_session` gates
+        exactly this set -- so it cannot quietly disappear the way an unused
+        definition can. And nothing in flight moves it: #609 g3 is
+        `scripts/hooks/spine_rail.py`, and #610's wave threads `cwd` into
+        `_run_check_command`. Neither touches the verb vocabulary."""
         source = ENGINE_SCRIPT.read_text(encoding="utf-8")
         for gone in ("def origin_worktree_refusal(", "ORIGIN_GUARDED_VERBS =",
                      "ORIGIN_EXEMPT_VERBS ="):
             self.assertNotIn(gone, source, f"{gone!r} came back")
-        self.assertIn("def worktree_from_spine_path(", source)
+        self.assertIn("MUTATING_VERBS = {", source)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,7 @@
+subtest delta 1183 -> 1182, located by per-file comparison against a detached HEAD worktree:
+  tests/test_context_manifest.py: HEAD 62 subtests, working tree 61
+  cause: ContextManifest rev tests subTest once per CLEAN tracked target;
+  scripts/checklist_engine.py is one of the four TARGETS and is dirty in the
+  working tree, so it drops out of the clean list. The test measures
+  cleanliness rather than assuming it, and asserts at least one clean target
+  survives. It returns to 62 once the Commander commits.

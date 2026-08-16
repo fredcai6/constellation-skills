@@ -1,0 +1,758 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-carry",
+    "m2-delete",
+    "m3-deletion-test",
+    "m4-anchor",
+    "m5-prose",
+    "m6-verify",
+    "m7-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the rework-2 handoff is complete",
+      "imperative": "Read references/global-crew.md and references/global-everyone.md, then docs/agents/CREW_CONTEXT.md, the rework-2 handoff, ADMIRAL_RULING-2 N2, FLOAT_TO_ADMIRAL-2 N2, and the rework-1 handoff plus its surviving evidence under g2-implement-rework/. Verify the handoff carries task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format. Measure the pre-change baseline suite and the pre-change collected count of tests/test_worktree_derivation.py. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + ruling + predecessor evidence loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "pre-change baseline measured: full suite tail and the collect-only count of tests/test_worktree_derivation.py are recorded on disk",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/b0-baseline-suite.txt && test -s .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/b1-collect-before.txt && grep -qE '[0-9]+ tests collected' .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/b1-collect-before.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m0-context-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m0-context-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/b0-baseline-suite.txt && test -s .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/b1-collect-before.txt && grep -qE '[0-9]+ tests collected' .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/b1-collect-before.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m1-carry": {
+      "id": "m1-carry",
+      "title": "Before deleting: prove every reason recorded only in the engine copy is carried elsewhere",
+      "imperative": "Enumerate every rationale clause in checklist_engine.worktree_from_spine_path's docstring (nearest ancestor, arbitrary depth, unowned -> None, lexical-only and why, absolute input required, shape preconditions live at callers). For each, name where it survives: spine_rail._worktree_from_spine's docstring, or tests/test_worktree_derivation.py's module docstring / case table. Anything carried ONLY by the engine copy must be carried into the case table's docstring in m2. Write the enumeration to g2-implement-rework2/m1-carry-analysis.md with a count. Attest c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the clause-by-clause carry analysis exists and states its count",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m1-carry-analysis.md && grep -qE 'clauses examined: [0-9]+' .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m1-carry-analysis.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-carry-1"
+        },
+        {
+          "id": "c2",
+          "statement": "every engine-only reason is named and assigned a carrying home; nothing is lost by the deletion",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "The rule's text is the asset (handoff Constraints). Name in the result anything carried."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-carry-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m1-carry-analysis.md && grep -qE 'clauses examined: [0-9]+' .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m1-carry-analysis.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-delete": {
+      "id": "m2-delete",
+      "title": "C1+C2+C3(scope)+C4 \u2014 delete the engine-side derivation and re-scope the shared table to the hook",
+      "imperative": "Delete worktree_from_spine_path and AGENT_WORK_DIR from scripts/checklist_engine.py. Re-scope tests/test_worktree_derivation.py to the one surviving implementation, spine_rail._worktree_from_spine: keep _require and IMPLEMENTATIONS (now one entry) so a missing implementation still fails collection loudly, keep the CASES table byte-identical, drop the two-copies-agree drift test that no longer has two copies, and rewrite the module docstring per C4. Test-after is allowed: this is a deletion.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the carry analysis is complete, so nothing recorded only in the engine copy is lost",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "C1+C2: zero references to worktree_from_spine_path under scripts/, and AGENT_WORK_DIR is gone from checklist_engine.py",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_c1_c2_scope.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-delete-1"
+        },
+        {
+          "id": "c2",
+          "statement": "C3: the re-scoped table drives the hook copy and is green",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_worktree_derivation.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-delete-2"
+        },
+        {
+          "id": "c3",
+          "statement": "C4: the module docstring states one rule, one implementation in the stdlib-only hook, the table as the rule's specification, and the #609 g2 / ADMIRAL_RULING-2 N2 deletion re-landing with #315 in #610's wave",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_table_docstring.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-delete-3"
+        }
+      ],
+      "constraints": [
+        "Deletion only under scripts/: no added executable line.",
+        "CASES ids and expectations unchanged."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-delete-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_c1_c2_scope.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-delete-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_worktree_derivation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-delete-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_table_docstring.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-deletion-test": {
+      "id": "m3-deletion-test",
+      "title": "C3 evidence \u2014 the deletion test by hand, both directions, and CASES proven unchanged",
+      "imperative": "Apply the deletion test by hand: remove spine_rail._worktree_from_spine, show collection of tests/test_worktree_derivation.py fails loudly, restore, show green. Assert the mutation actually applied and that the tree is byte-identical afterwards. Separately, diff the CASES list against HEAD and show it unchanged.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the table is re-scoped and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the by-hand deletion test is red on delete and green on restore, with the mutation asserted applied and the tree restored byte-identical",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_deletion_test.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-deletion-test-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the CASES list is byte-identical to HEAD's \u2014 same ids, same expectations",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_cases_unchanged.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-deletion-test-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-deletion-test-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_deletion_test.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-deletion-test-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_cases_unchanged.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-anchor": {
+      "id": "m4-anchor",
+      "title": "C5 \u2014 replace the worktree_from_spine_path assertion with a positive anchor that cannot go stale here",
+      "imperative": "In tests/test_spine_origin_isolation.py, drop the assertion that `def worktree_from_spine_path(` is present and put a positive anchor in its place that proves the file being read is a real engine source. Say in the docstring why that anchor was chosen and why this lane will not move it. Rename the test if its name no longer describes what it checks.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the engine-side symbol is deleted, so the old assertion is now false",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the stale assertion is gone, a positive anchor is present and the file is green",
+          "check": {
+            "kind": "command",
+            "command": "! grep -n 'def worktree_from_spine_path(' tests/test_spine_origin_isolation.py && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_spine_origin_isolation.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-anchor-3"
+        },
+        {
+          "id": "c2",
+          "statement": "the new anchor can fail: removing it from the engine source turns the test red, and the tree is restored byte-identical",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_anchor_discriminates.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-anchor-4"
+        }
+      ],
+      "constraints": [
+        "The file must not degenerate into pure absence assertions."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-anchor-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -n 'def worktree_from_spine_path(' tests/test_spine_origin_isolation.py && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_spine_origin_isolation.py",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-anchor-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_anchor_discriminates.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-anchor-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -n 'def worktree_from_spine_path(' tests/test_spine_origin_isolation.py && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_spine_origin_isolation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-anchor-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_anchor_discriminates.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-prose": {
+      "id": "m5-prose",
+      "title": "C6+C7+C8 \u2014 repair the three-way prose claim identically in all three copies",
+      "imperative": "In scripts/checklist_engine.py's module header, tests/test_spine_origin_isolation.py's module docstring and docs/CHECKLIST_SCHEMA.md, repair the sentence that points at checklist_engine.worktree_from_spine_path as the thing that now answers location. Keep the rework-1 leaseless narrowing (R1) and the supersession citation of the 2026-08-15 ruling. Update check_three_copies.py for the new sentence and report that it was updated.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the deletion has landed, so the repaired sentence describes the tree as it now is",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "C6+C7+C8: all three copies carry the same repaired claim, the R1 narrowing and the supersession citation, and none still claims the engine derives a worktree",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_three_copies.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-prose-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the three passages are quoted side by side on disk for the result",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m5-three-copies-quoted.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-prose-2"
+        }
+      ],
+      "constraints": [
+        ".agent-work/rulings/ stays unedited."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-prose-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_three_copies.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-prose-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m5-three-copies-quoted.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-verify": {
+      "id": "m6-verify",
+      "title": "C9+C10+C11 \u2014 no refusal added, suite accounted for test by test, map fresh",
+      "imperative": "Prove the scripts/ diff adds nothing: the only AST-level change to checklist_engine.py is the removal of the two named nodes, and zero non-comment lines were added. Run the full suite with caches cleared and the documented env scrub, and account for the fall from the 3204 baseline as a collected-count difference. Rebuild map/INDEX.md and record the delta.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "every source and prose edit has landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "C9: the scripts/ diff is a pure deletion \u2014 no added executable line, no new refusal path",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_no_refusal_added.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-verify-5"
+        },
+        {
+          "id": "c2",
+          "statement": "C10: full suite green with caches cleared and the env scrub",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q > .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-full-suite.txt 2>&1; rc=$?; tail -3 .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-full-suite.txt; exit $rc"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-verify-6"
+        },
+        {
+          "id": "c3",
+          "statement": "C10: the fall from baseline is derived mechanically as a collected-count difference and matches the suite delta",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_count_delta.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-verify-7"
+        },
+        {
+          "id": "c4",
+          "statement": "C11: map/INDEX.md is rebuilt and its delta recorded",
+          "check": {
+            "kind": "command",
+            "command": "py -m scripts.code_map build --root . > .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-map-build.txt 2>&1 && git status --porcelain -- map/ > .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-map-status.txt && git diff -- map/ > .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-map-diff.txt && test -s .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-map-build.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-verify-8"
+        }
+      ],
+      "constraints": [
+        "A drop in the suite count that cannot be accounted for is a stop condition."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_no_refusal_added.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q > .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-full-suite.txt 2>&1; rc=$?; tail -3 .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-full-suite.txt; exit $rc",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-verify-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_count_delta.py",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-verify-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m scripts.code_map build --root . > .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-map-build.txt 2>&1 && git status --porcelain -- map/ > .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-map-status.txt && git diff -- map/ > .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-map-diff.txt && test -s .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-map-build.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-verify-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_no_refusal_added.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-verify-6",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q > .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-full-suite.txt 2>&1; rc=$?; tail -3 .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-full-suite.txt; exit $rc",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-verify-7",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_count_delta.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-verify-8",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m scripts.code_map build --root . > .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-map-build.txt 2>&1 && git status --porcelain -- map/ > .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-map-status.txt && git diff -- map/ > .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-map-diff.txt && test -s .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-map-build.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-result": {
+      "id": "m7-result",
+      "title": "Delivery \u2014 IMPLEMENTER_RESULT covering both reworks, plus rework 1's unfinished C4 amendment",
+      "imperative": "Write the IMPLEMENTER_RESULT for both reworks as one gate result to crew-handoffs/g2-implementer-rework2-result.md, separating what this crew performed from what it reconstructed from the dead crew's artifacts. Also apply rework 1's C4, which its implementer never reached: amend the behaviour-delta sentence in crew-handoffs/g2-implementer-result.md as a rework amendment.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all evidence is on disk",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the result artifact exists and carries a lowercase Return status",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework2-result.md && grep -qE '^\\*\\*Return status\\*\\*: (complete|partial|blocked|out-of-scope|failed)$' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework2-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-result-1"
+        },
+        {
+          "id": "c2",
+          "statement": "rework 1's C4 amendment is applied to the original g2 implementer result",
+          "check": {
+            "kind": "command",
+            "command": "grep -qi 'rework amendment' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-result.md && grep -qi 'every mutating verb' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-result-2"
+        }
+      ],
+      "constraints": [
+        "Do not present reconstructed evidence as this crew's own measurement."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m7-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework2-result.md && grep -qE '^\\*\\*Return status\\*\\*: (complete|partial|blocked|out-of-scope|failed)$' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework2-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m7-result-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -qi 'rework amendment' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-result.md && grep -qi 'every mutating verb' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/cleanup-f-derive-worktree/g2/implementer/attempt-3",
+    "status": "released",
+    "claimed_at": "2026-08-16T19:43:10.763110+00:00",
+    "last_heartbeat": "2026-08-16T20:07:20.296112+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T20:07:26.519680+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "baseline re-measured on this tree: 3204 passed / 5 skipped / 0 failed, matching the handoff's figure; collect-only on tests/test_worktree_derivation.py is 53",
+      "mechanical": false,
+      "ts": "2026-08-16T19:44:29.707754+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-carry",
+      "why": "13 clauses examined; 3 reasons are engine-only (what location is FOR, the 2026-08-16 ruling citation, and why the lexical idiom is inlined rather than imported) and are carried into the case table docstring in m2",
+      "mechanical": false,
+      "ts": "2026-08-16T19:45:21.933232+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-delete",
+      "why": "engine-side derivation and AGENT_WORK_DIR deleted (66 lines out of scripts/checklist_engine.py, zero added); table re-scoped to the hook copy, 53 -> 19 collected; the one surviving grep hit under scripts/ is prose in the g3-fenced spine_rail.py, which C1's literal wording cannot reach without touching an exclusion",
+      "mechanical": false,
+      "ts": "2026-08-16T19:48:38.150861+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-deletion-test",
+      "why": "deletion test by hand: 19 passed -> collection error carrying _require's own message (rc=2, no tests collected) -> restored byte-identical -> 19 passed; CASES block byte-identical to HEAD (3807 chars) and the 16 evaluated ids/expectations identical",
+      "mechanical": false,
+      "ts": "2026-08-16T19:49:53.221696+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-anchor",
+      "why": "the stale worktree_from_spine_path assertion is replaced by MUTATING_VERBS, the surviving sibling of the two verb sets asserted absent beside it; proven to discriminate by renaming it away (green -> red -> green, engine restored byte-identical). The docstring names the symbol rather than quoting the old assertion literal, which the c1 grep reads as the assertion itself.",
+      "mechanical": false,
+      "ts": "2026-08-16T19:51:07.427741+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-prose",
+      "why": "all three copies carry the same repaired claim; the updated drift check caught one real partial repair (the engine header said 'deleted here' where the others cited #609 g2 and the ruling) and one checker defect (a leading #610 stripped as a comment marker), both fixed; 72 clause-assertions across 3 copies pass",
+      "mechanical": false,
+      "ts": "2026-08-16T19:53:09.578044+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-verify",
+      "why": "map/INDEX.md refreshed (scripts.checklist_engine 110 -> 109 entities, tests 4833 -> 4832); suite re-run after the refresh",
+      "mechanical": false,
+      "ts": "2026-08-16T19:59:10.468104+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-result",
+      "why": "IMPLEMENTER_RESULT written covering both reworks, separating performed from reconstructed; rework 1's unfinished C4 amendment applied to g2-implementer-result.md as a marked rework amendment",
+      "mechanical": false,
+      "ts": "2026-08-16T20:07:20.296100+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-16T19:48:00.722719+00:00",
+      "reason": "C1's literal grep (zero hits for worktree_from_spine_path under scripts/) is unsatisfiable without editing scripts/hooks/spine_rail.py, which the same handoff fences as g3's; the handoff's own Wiring Grep expects that file to still name the symbol. The replacement check applies C1's intent and states every count: zero references outside the fenced file, and the fenced hits proven to be prose rather than a definition or call.",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m2-delete.c1"
+      ]
+    },
+    {
+      "ts": "2026-08-16T19:53:09.508011+00:00",
+      "reason": "point c1 at this gate's own updated copy of check_three_copies.py: the rework-1 copy required a clause (all three copies naming checklist_engine.worktree_from_spine_path) that ADMIRAL_RULING-2 N2 made false",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m5-prose.c1"
+      ]
+    }
+  ]
+}

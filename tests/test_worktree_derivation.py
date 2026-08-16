@@ -1,35 +1,44 @@
-"""One shared table of cases, pinning the TWO worktree-derivation copies equal.
+"""The case table that SPECIFIES the worktree-derivation rule, and drives it.
 
-#609 lane F gate g1. A spine's owning worktree is a property of WHERE THE SPINE
-IS: walk up to the NEAREST `.agent-work` ancestor and take its parent, at
+#609 lane F, gates g1-g2. A spine's owning worktree is a property of WHERE THE
+SPINE IS: walk up to the NEAREST `.agent-work` ancestor and take its parent, at
 arbitrary depth; no `.agent-work` ancestor at all means unowned (`None`). The
-derivation answers LOCATION only -- never "is this mine".
+derivation answers LOCATION only -- where the spine lives, hence where a check
+should run and where git should be invoked. It never answers "is this mine":
+ownership is the lease, and among spines sharing one tree the discriminator is
+binding-key provenance (2026-08-16 worktree-is-location ruling).
 
-There are deliberately two implementations of that one rule:
+There is ONE lexical rule and ONE implementation of it:
+`scripts/hooks/spine_rail.py:_worktree_from_spine`, in the stdlib-only hook.
 
-- `scripts/checklist_engine.py:worktree_from_spine_path` -- the definition the
-  engine consumes (first engine consumer lands in g2).
-- `scripts/hooks/spine_rail.py:_worktree_from_spine` -- the hook's own copy.
+The engine-side twin, `checklist_engine.worktree_from_spine_path`, was DELETED in
+#609 g2 under `ADMIRAL_RULING-2` N2. It had two consumers when it was written;
+three sound decisions in a row took all of them away, and a definition nothing
+calls is not shipped. It RE-LANDS in #610's wave together with #315 -- the
+consumer that threads `cwd` into the engine's check runner -- which is why this
+table stays whole and stays here: #315 re-derives against THESE CASES rather than
+from scratch, and the two copies are pinned equal again by re-adding "engine" to
+`IMPLEMENTATIONS` below.
 
-They are duplicated because the single-definition placement is closed in BOTH
-directions: `spine_rail.py` is stdlib-only by design (a hook that fails takes the
-turn with it) and has no `SCRIPT_RUNTIME_COMPANIONS` entry, so it may gain no
-import; and moving the definition the other way would need an installer entry
-this lane may not write. `CASES` below is what stops that duplication from
-drifting: every case runs through EVERY implementation in `IMPLEMENTATIONS`, so a
-divergence between the two copies is a test failure here, not an observation a
-reviewer has to make by eye.
+It re-lands as a COPY rather than an import: `spine_rail.py` is stdlib-only by
+design (a hook that fails takes the turn with it) and has no
+`SCRIPT_RUNTIME_COMPANIONS` entry, so it may gain no import, and moving the
+definition the other way would need an installer entry lane F may not write.
 
-**Why this table cannot silently stop checking one copy.** `IMPLEMENTATIONS` is
+**Why this table cannot silently stop checking a copy.** `IMPLEMENTATIONS` is
 built with `getattr` at module import and `_require` raises on a missing symbol,
-so deleting either implementation fails COLLECTION of this whole file rather than
-quietly shrinking the parametrization to the surviving one. Applying the deletion
-test by hand: delete either function and every case in this file goes red.
+so deleting an implementation fails COLLECTION of this whole file rather than
+quietly shrinking the parametrization to whatever is left. Applying the deletion
+test by hand: delete `_worktree_from_spine` and every case in this file goes red.
 
 Normalization is LEXICAL ONLY -- `os.path.normcase` + `os.path.normpath`, never
-`realpath`. Symlink resolution stays OUTSIDE the derivation on every side; the
-hook's `_is_valid_claim_target` depends on that (it checks lexically, then
-re-checks the RESOLVED path, and that second check has to stay able to fail).
+`realpath`, and inlined rather than imported. Symlink resolution stays OUTSIDE
+the derivation on every side; the hook's `_is_valid_claim_target` depends on that
+(it checks lexically, then re-checks the RESOLVED path, and that second check has
+to stay able to fail). The idiom is inlined because importing
+`verify_worktree_isolation.normalize_path` would add an undeclared runtime
+sibling -- `agent_work_root._normalize` inlines its own for the same reason. A
+re-landing engine-side copy inherits that constraint.
 """
 
 import importlib.util
@@ -52,7 +61,6 @@ def _load(name: str, relative: str):
     return module
 
 
-_ENGINE = _load("checklist_engine_for_derivation", "scripts/checklist_engine.py")
 _HOOK = _load("spine_rail_for_derivation", "scripts/hooks/spine_rail.py")
 
 
@@ -60,22 +68,24 @@ def _require(module, attr: str):
     """Resolve an implementation, failing LOUDLY at import if it is gone.
 
     A plain `getattr(module, attr, None)` would let a deleted implementation drop
-    out of `IMPLEMENTATIONS` and leave this file green against the survivor --
-    exactly the check-that-cannot-fail this table exists to prevent.
+    out of `IMPLEMENTATIONS` and leave this file green against whatever is left
+    -- exactly the check-that-cannot-fail this table exists to prevent. It is
+    what keeps the table honest when a copy is re-added, too.
     """
     try:
         return getattr(module, attr)
     except AttributeError as exc:  # pragma: no cover -- the deletion test's path
         raise AssertionError(
-            f"{module.__name__}.{attr} is missing: the shared derivation table "
-            f"must drive BOTH copies, so a missing one fails the whole file "
-            f"rather than silently checking only the other."
+            f"{module.__name__}.{attr} is missing: the derivation table must "
+            f"drive EVERY implementation it names, so a missing one fails the "
+            f"whole file rather than silently checking only the others."
         ) from exc
 
 
-# The two copies of the one rule. Keyed by the name that appears in test ids.
+# Every implementation of the one rule. Keyed by the name that appears in test
+# ids. One entry today; #315 re-adds `"engine"` here when the engine-side copy
+# re-lands with its consumer.
 IMPLEMENTATIONS = {
-    "engine": _require(_ENGINE, "worktree_from_spine_path"),
     "hook": _require(_HOOK, "_worktree_from_spine"),
 }
 
@@ -224,10 +234,14 @@ _CASE_IDS = [case[0] for case in CASES]
 
 def test_the_table_is_not_empty_and_has_unique_ids():
     """A parametrized guard over an empty or duplicate-keyed table reports clean
-    without examining anything. Assert what is looped over."""
+    without examining anything. Assert what is looped over.
+
+    The implementation set is pinned EXACTLY, so re-adding the engine-side copy
+    is a deliberate act with a red test to answer for -- the same discipline the
+    deletion had to pass through."""
     assert len(CASES) >= 16
     assert len(set(_CASE_IDS)) == len(_CASE_IDS)
-    assert set(IMPLEMENTATIONS) == {"engine", "hook"}
+    assert set(IMPLEMENTATIONS) == {"hook"}
 
 
 @pytest.mark.parametrize("impl_name", sorted(IMPLEMENTATIONS))
@@ -239,13 +253,11 @@ def test_derivation(impl_name, case_id, spine_path, expected):
     assert derive(spine_path) == expected
 
 
-@pytest.mark.parametrize("case_id,spine_path,expected", CASES, ids=_CASE_IDS)
-def test_the_two_copies_agree(case_id, spine_path, expected):
-    """The drift detector proper: the copies must return the SAME value, not
-    merely each satisfy the table. Stated separately from `test_derivation` so a
-    divergence reads as drift rather than as one copy being wrong."""
-    answers = {name: derive(spine_path) for name, derive in IMPLEMENTATIONS.items()}
-    assert len(set(answers.values())) == 1, f"copies disagree: {answers}"
+# The drift detector proper -- every implementation returning the SAME value,
+# stated separately so a divergence read as drift rather than as one copy being
+# wrong -- was deleted with the second copy in #609 g2. Over a single
+# implementation it is a check that cannot fail: one answer is always one answer.
+# It comes back with the engine-side copy in #610's wave, not before.
 
 
 @pytest.mark.parametrize("impl_name", sorted(IMPLEMENTATIONS))

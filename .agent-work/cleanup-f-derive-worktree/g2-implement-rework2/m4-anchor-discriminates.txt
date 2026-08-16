@@ -1,0 +1,10 @@
+[1] anchored test, unmutated: rc=0 :: 1 passed in 0.01s
+[2] rename applied: `MUTATING_VERBS = {` present = False
+[3] with the anchor renamed away: rc=1
+    | =========================== short test summary info ============================
+    | FAILED tests/test_spine_origin_isolation.py::TheEngineTakesNoAmbientReading::test_the_retired_predicate_and_its_verb_sets_are_gone_from_a_real_engine
+    | 1 failed in 0.02s
+[4] restored byte-identical: True (e666c1d1ff95)
+[5] after restore: rc=0 :: 1 passed in 0.01s
+
+OK: the anchor discriminates -- green, red without it, green again.

@@ -87,9 +87,19 @@ TRIP_HARD_GUARDED_VERBS = {"start", "reopen"}
 # on every mutating verb, against a worktree toplevel the engine resolved from
 # its own ambient cwd; `origin_worktree_refusal` and the two verb sets that fed
 # it are gone, along with the per-verb `git rev-parse` that supplied the other
-# side. A spine's worktree is now DERIVED from its path (`worktree_from_spine_
-# path` below), so there is no second value that can disagree with the first and
-# no ambient reading a check command could forge by `cd`-ing first.
+# side. THE ENGINE NOW READS NO LOCATION AT ALL, ambient or derived. There is no
+# second value that can disagree with the first, and no ambient reading a check
+# command could forge by `cd`-ing first, because the engine no longer asks the
+# question anywhere.
+#
+# The lexical rule that derives a worktree from a spine's path is NOT retired --
+# only the engine's copy of it is. The rule lives in the stdlib-only hook, as
+# `spine_rail._worktree_from_spine`, and `tests/test_worktree_derivation.py`'s
+# case table is its specification. The engine-side copy was deleted in #609 g2
+# under `ADMIRAL_RULING-2` N2: three sound decisions in a row removed all three
+# of its consumers, and a definition nothing calls is not shipped. It re-lands in
+# #610's wave together with #315 -- the consumer that threads `cwd` into the
+# engine's check runner -- and re-derives against that same table.
 #
 # Nothing was left unguarded by that removal WHEREVER A LEASE EXISTS -- and the
 # leaseless path was WIDENED. The comparison answered "where am I", never "is
@@ -114,71 +124,6 @@ TRIP_HARD_GUARDED_VERBS = {"start", "reopen"}
 # reconciler reads to see where a spine came from -- and nothing reads it to
 # decide anything. `tests/test_spine_origin_isolation.py` pins both halves of
 # that pairing and goes red if either one breaks.
-
-
-# The work-area directory every spine lives under. Compared after `normcase`,
-# so the fold applies to both sides on Windows and to neither on POSIX.
-AGENT_WORK_DIR = ".agent-work"
-
-
-def worktree_from_spine_path(spine_path) -> str | None:
-    """The worktree that owns the spine at `spine_path`, or `None` if none does.
-
-    The rule, in one sentence: walk up to the NEAREST `.agent-work` ancestor and
-    return its parent. Arbitrary depth. No `.agent-work` ancestor at all means
-    unowned.
-
-    A spine's worktree is a property of WHERE THE SPINE IS -- derivable by anyone
-    holding the path, with no stamp to disagree with and no ambient reading to
-    forge. This answers LOCATION only: where the spine lives, hence where a check
-    should run and where git should be invoked. It never answers "is this mine" --
-    ownership is the lease, and among spines sharing one tree the discriminator is
-    binding-key provenance (2026-08-16 worktree-is-location ruling).
-
-    NEAREST, never outermost. Paths of the shape
-    `.agent-work/archive/<epic>/workspace/.agent-work/<id>/spine.json` exist in
-    tree, and that inner segment belongs to a nested SANDBOX project rooted at
-    `workspace/`. Taking the outermost `.agent-work` would derive the real repo as
-    the root of a spine that belongs to the sandbox.
-
-    LEXICAL ONLY -- `normcase` + `normpath`, never `realpath`. Two things depend
-    on symlink resolution staying outside this function:
-    `spine_rail._is_valid_claim_target` checks lexically and then re-checks the
-    RESOLVED path as a symlink-escape guard, which resolving here would make
-    unfailable; and importing `verify_worktree_isolation.normalize_path` would
-    add an undeclared runtime sibling. The idiom is therefore inlined, as
-    `agent_work_root._normalize` already inlines its own. (A third reason was
-    recorded when this was written -- keeping `origin_worktree_refusal` pure
-    under a non-transitive purity test -- and retired with that predicate in
-    #609 g2. The remaining two are enough on their own.)
-
-    Absolute input is required: a relative path's answer would depend on the
-    ambient cwd, which is exactly the forgeable reading this derivation exists to
-    remove. The `.json` suffix and a non-empty work-id segment are NOT required --
-    those are checklist-SHAPE questions, not location questions, and they live at
-    the callers that care (`spine_rail._is_claim_layout`).
-
-    This has a twin: `spine_rail._worktree_from_spine` implements the same rule
-    for the stdlib-only hook, which may gain no import. `tests/
-    test_worktree_derivation.py` drives both from one shared table of cases, so
-    the two cannot drift apart without a test failure.
-
-    NEVER raises -- returns `None` for any input it cannot derive from.
-    """
-    try:
-        if not isinstance(spine_path, str) or not os.path.isabs(spine_path):
-            return None
-        target = os.path.normcase(AGENT_WORK_DIR)
-        current = os.path.dirname(os.path.normcase(os.path.normpath(spine_path)))
-        while True:
-            head, tail = os.path.split(current)
-            if tail == target:
-                return head or None
-            if not head or head == current:
-                return None
-            current = head
-    except Exception:
-        return None
 
 
 # --------------------------------------------------------------------------- #

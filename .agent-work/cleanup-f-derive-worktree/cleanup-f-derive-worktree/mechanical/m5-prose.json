@@ -1,21 +1,21 @@
 {
   "contract": 1,
-  "step": "m0-context",
+  "step": "m5-prose",
   "mechanical": {
     "run": "cleanup-f-derive-worktree",
     "project": "constellation-skills",
     "role": "implementer",
-    "refusals": 0,
-    "spine-step": "m0-context",
+    "refusals": 1,
+    "spine-step": "m5-prose",
     "rework-count": 0,
     "failed-commands": 0,
     "reopens": 0,
-    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-m0-context@e9be393fd53ee08c35e73c290d72e4a0a96bfd91",
+    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-m5-prose@c68fb781a5dd33041ee1eb7d4596642474fc6897",
     "artifact-ref": []
   },
   "refused": [],
   "run": {
     "work_id": "cleanup-f-derive-worktree",
-    "generated_at": "2026-08-16T19:44:29Z"
+    "generated_at": "2026-08-16T19:51:31Z"
   }
 }

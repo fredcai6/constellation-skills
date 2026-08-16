@@ -1,0 +1,2 @@
+{"ops": [{"op": "retext-check", "id": "m2-delete", "which": "postconditions", "cond": "c1",
+  "command": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework2/check_c1_c2_scope.py"}]}

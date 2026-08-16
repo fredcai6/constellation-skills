@@ -3,9 +3,9 @@
 ## packages
 evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
-scripts: 58 modules, 1225 entities
+scripts: 58 modules, 1224 entities
 skills: 1 modules, 18 entities
-tests: 87 modules, 4833 entities
+tests: 87 modules, 4832 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -36,7 +36,7 @@ tests: 87 modules, 4833 entities
 
 - [examples.mcp-interactive-demo.make_demo_spine](examples.mcp-interactive-demo.make_demo_spine/INDEX.md) (4 entities, 2 holes): Generate this directory's throwaway demo spine.
 
-## scripts (58 modules, 1225 entities)
+## scripts (58 modules, 1224 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -59,7 +59,7 @@ tests: 87 modules, 4833 entities
 - [scripts.build_architecture_map](scripts.build_architecture_map/INDEX.md) (16 entities, 15 holes): HOLE: no docstring
 - [scripts.check_corpus_freshness](scripts.check_corpus_freshness/INDEX.md) (11 entities, 7 holes): Report whether an installed constellation corpus is current with upstream main.
 - [scripts.check_skill_freshness](scripts.check_skill_freshness/INDEX.md) (10 entities, 5 holes): Report template drift for a project against its installed-skill baseline.
-- [scripts.checklist_engine](scripts.checklist_engine/INDEX.md) (110 entities, 25 holes): Workbench checklist engine: work one gated/survey plan through its gates.
+- [scripts.checklist_engine](scripts.checklist_engine/INDEX.md) (109 entities, 25 holes): Workbench checklist engine: work one gated/survey plan through its gates.
 - [scripts.collect_feedback](scripts.collect_feedback/INDEX.md) (38 entities, 15 holes): Sweep consuming projects' CONSTELLATION_FEEDBACK.md exports into one report.
 - [scripts.context_manifest](scripts.context_manifest/INDEX.md) (14 entities): Deterministic projection substrate: what was made available to an agent, and at which revision.
 - [scripts.curate_corpus](scripts.curate_corpus/INDEX.md) (18 entities, 4 holes): Curator MEASUREMENT pass over the skills corpus (mechanical-only, flags-never-gates).
@@ -109,7 +109,7 @@ tests: 87 modules, 4833 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (87 modules, 4833 entities)
+## tests (87 modules, 4832 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -198,6 +198,6 @@ tests: 87 modules, 4833 entities
 - [tests.test_verify_worktree_isolation](tests.test_verify_worktree_isolation/INDEX.md) (40 entities, 39 holes): HOLE: no docstring
 - [tests.test_wire_mcp_interpreter](tests.test_wire_mcp_interpreter/INDEX.md) (16 entities, 16 holes): Tests for scripts/wire_mcp_interpreter.py (M2 job 2, widened M2 g4-repair).
 - [tests.test_work_id_nesting](tests.test_work_id_nesting/INDEX.md) (43 entities, 16 holes): A work-id may NEST, and four tools used to disagree about that.
-- [tests.test_worktree_derivation](tests.test_worktree_derivation/INDEX.md) (9 entities, 1 holes): One shared table of cases, pinning the TWO worktree-derivation copies equal.
+- [tests.test_worktree_derivation](tests.test_worktree_derivation/INDEX.md) (8 entities, 1 holes): The case table that SPECIFIES the worktree-derivation rule, and drives it.
 - [tests.test_worktree_precondition_wiring](tests.test_worktree_precondition_wiring/INDEX.md) (15 entities, 13 holes): Deliberate-breakage tests for a worktree-isolation precondition (#329/#422).
 - [tests.test_write_a_skill](tests.test_write_a_skill/INDEX.md) (20 entities, 17 holes): Tests for constellation-write-a-skill's mint RAIL (scripts/verify_skill_registered.py) and the shared skill-goodness criteria seam.

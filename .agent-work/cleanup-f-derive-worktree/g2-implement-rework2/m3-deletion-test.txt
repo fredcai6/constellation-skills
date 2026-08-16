@@ -1,0 +1,13 @@
+[1] unmutated collection+run: rc=0 :: 19 passed in 0.02s
+[2] excision applied: `def _worktree_from_spine(` present = False
+[3] collection with the implementation deleted: rc=2
+    |     raise AssertionError(
+    | E   AssertionError: spine_rail_for_derivation._worktree_from_spine is missing: the derivation table must drive EVERY implementation it names, so a missing one fails the whole file rather than silently checking only the others.
+    | =========================== short test summary info ============================
+    | ERROR tests/test_worktree_derivation.py - AssertionError: spine_rail_for_deri...
+    | !!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+    | no tests collected, 1 error in 0.05s
+[4] restored byte-identical: True (37cf424e9711)
+[5] after restore: rc=0 :: 19 passed in 0.02s
+
+OK: green -> red on deletion -> green on restore, tree byte-identical.

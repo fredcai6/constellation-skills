@@ -81,6 +81,25 @@ actually uses; and taking a lease on an unclaimed spine is what `claim` is for,
 while the second-agent case is refused. It is stated here rather than buried
 because it is the only place a reviewer could reasonably disagree with me.
 
+> **Rework amendment (g2 rework 1, `ADMIRAL_RULING-1` R1; applied by the rework-2
+> implementer, session `.../g2/implementer/attempt-3`).** The sentence above
+> understates the delta and is corrected here rather than rewritten, so the
+> original claim and its correction both stay readable.
+>
+> The delta is not confined to `claim`. It is **every mutating verb**, on **any
+> spine with no active lease** — never claimed, *or* claimed and since released,
+> because `_active_lease` reads a released lease as absent and `require_session`
+> returns early when there is no active lease. Unlike `claim`, those verbs
+> **write state into a tree the agent is not standing in**. Measured base vs
+> tree from a foreign worktree: `start` and `attach` on a never-claimed spine,
+> and `start` after a release, all went `REFUSED`/exit 1 → exit 0. On a spine
+> under an **active** lease held by another session, nothing changed.
+>
+> Rework 1 landed this correction in the three prose copies
+> (`scripts/checklist_engine.py`, `tests/test_spine_origin_isolation.py`,
+> `docs/CHECKLIST_SCHEMA.md`) but died before amending this result, which was its
+> C4. That is why the amendment carries a later session's name.
+
 ## Map Impact
 
 - **Structural anchors touched:** `scripts/checklist_engine.py:102-179`

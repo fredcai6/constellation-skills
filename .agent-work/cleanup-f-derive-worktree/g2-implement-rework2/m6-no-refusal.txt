@@ -1,0 +1,7 @@
+[1] scripts/ diff vs HEAD: 13 added line(s), 68 removed; 0 added line(s) are not comments
+[2] scripts/checklist_engine.py top-level names: 122 -> 120; removed=['AGENT_WORK_DIR', 'worktree_from_spine_path'], added=[], otherwise-changed=[]
+[3] 'REFUSED': HEAD 8 -> working tree 8
+[3] 'raise EngineError': HEAD 82 -> working tree 82
+[3] 'sys.exit': HEAD 1 -> working tree 1
+
+OK: pure deletion under scripts/ — nothing added, no refusal introduced.
