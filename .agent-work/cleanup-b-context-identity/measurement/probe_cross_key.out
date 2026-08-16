@@ -1,0 +1,15 @@
+work dir            : /tmp/probe-cross-key-xx40_e8e/proj/.agent-work/W
+key A (dispatched)  : SESS-ORCH#agentsub -> execute.json
+key B (orchestrator): SESS-ORCH -> spine.json
+both resolve to     : /tmp/probe-cross-key-xx40_e8e/proj/.agent-work/W/gauge.json
+
+after DISPATCHED agent's call : {"schema_version": 1, "fill_fraction": 0.02, "model": "claude-opus-5", "observed_at": "2026-08-16T12:38:27.149499Z", "identity_resolution_ms": 0.024329987354576588}
+after ORCHESTRATOR's call     : {"schema_version": 1, "fill_fraction": 0.9, "model": "claude-opus-5", "observed_at": "2026-08-16T12:38:22.149499Z"}
+gauge-skip.json               : (none)
+
+VERDICT: CANDIDATE 2 CONFIRMED. The orchestrator's own fill (0.9) OVERWROTE the dispatched agent's (0.02) at the same path. Two distinct keys, one gauge file, no guard.
+
+  The overwrite is FRESH, which is the decisive part:
+    dispatched agent claimed_at : 2026-08-16T12:37:27.149499+00:00
+    foreign reading observed_at : 2026-08-16T12:38:22.149499+00:00
+    observed_at > claimed_at    : True  -> _reading_predates_claim is False -> #477/#601 guard does NOT fire

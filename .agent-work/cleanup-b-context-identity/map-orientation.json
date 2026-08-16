@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "work_id": "cleanup-b-context-identity",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/GAUGE_WRITER_HOOK.md",
+      "content_hash": "d0126f7dc6a2a77d97fced0bbe5646036ea87f969870d16f3298e2a16dd44dad",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "70fc98d8194a28f9f8fc2be73e8455ba556e15b81e9b28fdd82eeb11883b6b10",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/GLOSSARY.md",
+      "content_hash": "574e9ef4f494522653ea8d62cb58a1138f5bf385a17e95a75629bccd3c0340ee",
+      "source": "agent-declared"
+    },
+    {
+      "path": "map/INDEX.md",
+      "content_hash": "ba031fe32eab95807c06e02c2383a77422a9e0f2571450a4c54cd4572cd7effe",
+      "source": "agent-declared"
+    },
+    {
+      "path": ".agent-work/cleanup-b-context-identity/LAUNCH_ORDER.md",
+      "content_hash": "8bac3b50c575c1839c591e97f2e1803e2305d10c8f77f00b32a71955ab229721",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "No docs/architecture packet map exists in this repo. map/ids.jsonl is EMPTY and map/INDEX.md carries no citable anchor id, so the generated code map cannot supply anchors to map_orient even though it lists scripts/ modules. The gauge/trip/refresh subsystem (gauge_reader.py, gauge_writer_hook.py, checklist_engine.py trip block) therefore has no anchored map entry; its design intent lives in prose at docs/GAUGE_WRITER_HOOK.md and in the in-code trip-block comment from checklist_engine.py:1304 and gauge_reader.py _PROFILES, which the launch order names as the charter-lite carrier."
+  ],
+  "escalation": "Escalated to admiral-568-cleanup: map/ids.jsonl is empty so map_orient can cite no anchors; the plan-step verify-frame gate will be satisfied against these hash-pinned substitutes rather than map anchors. Filed as a triage candidate at the triage step.",
+  "emitted_at": "2026-08-16T12:33:08.206588+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

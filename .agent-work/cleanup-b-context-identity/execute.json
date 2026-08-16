@@ -1,0 +1,113 @@
+{
+  "work_id": "cleanup-b-context-identity",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["e0-context", "g0-measure", "g1-implement", "g1-review", "g1-integrate", "g2-design-500"],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read the inherited global doctrine (constellation-commander-delegated references/global-orchestrator.md and references/global-everyone.md) and the project deltas docs/agents/ORCHESTRATOR_CONTEXT.md and docs/agents/GLOSSARY.md. Confirm the frozen plan's intent and scope against .agent-work/cleanup-b-context-identity/LAUNCH_ORDER.md and MISSION_FRAME.md, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {"id": "c1", "statement": "orchestrator context, glossary, launch order and mission frame loaded; plan intent and scope confirmed", "check": null, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g0-measure": {
+      "id": "g0-measure",
+      "title": "Settle the #600 open question by measurement",
+      "imperative": "REASONING GATE -- no crew. Crew waiver reason: the deliverable is a diagnosis, not code or an independently-verifiable change, and the Commander already holds the whole context the diagnosis turns on; a crew here would be shallower, not safer (commander-core.md, 'Crew gate vs reasoning gate'). Settle which mechanism leaves a reading the acting agent does not own in place at the instant of a trip. Two candidates were offered by the launch order: (1) the write is skipped on an ambiguous or unresolvable binding and the stale file survives; (2) another agent's key resolves into the same directory and writes its own fill. Drive the REAL handle_post_tool_use in a fresh process against a real binding store, real transcript files, and the real payload shapes the harness sends -- never a patched _read_gauge and never a hand-injected CLAUDE_PROJECT_DIR. Capture gauge.json and .agent-work/.spine-rail-binding.json as artifacts. A measured negative is a complete deliverable (launch order, Honest-Null Clause): if neither candidate is reproduced, report that and stop rather than designing against the wrong mechanism.",
+      "preconditions": [
+        {"id": "p1", "statement": "execution context loaded", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "the probe drives the real writer hook in a fresh process and reaches a verdict on the two candidates", "check": {"kind": "command", "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CLAUDE_PROJECT_DIR py .agent-work/cleanup-b-context-identity/measurement/probe_cross_key.py | grep -q 'VERDICT: CANDIDATE 2 CONFIRMED'"}, "satisfied": false},
+        {"id": "c2", "statement": "the T0 artifacts the launch order asks for -- gauge.json and the binding store, captured live -- are on disk", "check": {"kind": "command", "command": "test -f /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity/.agent-work/cleanup-b-context-identity/measurement/gauge-at-T0.json && test -f /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity/.agent-work/cleanup-b-context-identity/measurement/worktree-binding-at-T0.json"}, "satisfied": false},
+        {"id": "c3", "statement": "the settled mechanism is written up with its file:line citations in notes-b.md", "check": null, "satisfied": false}
+      ],
+      "constraints": ["measure before design (decision:measure-before-design) -- no design freezes until c1 and c3 are met"],
+      "anchors": {
+        "structural": ["docs/GAUGE_WRITER_HOOK.md", ".agent-work/cleanup-b-context-identity/LAUNCH_ORDER.md"],
+        "decision": ["decision:measure-before-design"],
+        "evidence": [".agent-work/cleanup-b-context-identity/measurement/probe_cross_key.out"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "#600: a gauge reading is named for the agent that produced it",
+      "imperative": "ONE gate, not three, deliberately: the writer, the reader and the engine must change together or the suite is red between gates, and a planned red window bridged by waivers is a plan smell (commander-core.md). Implement decision:owner-in-the-filename and decision:no-shared-file-fallback per .agent-work/cleanup-b-context-identity/PLAN_ALTERNATIVES.md candidate B. The writer (scripts/hooks/gauge_writer_hook.py) already resolves a binding entry that carries engine_session; write the record to gauge-<owner>.json beside the spine instead of gauge.json, and let the two existing sidecars follow that name (they are derived with .with_name() off the gauge path). The engine (scripts/checklist_engine.py, _gauge_path and the trip region only) knows its own active lease session_id; resolve the gauge path from it. When no owner is resolvable on either side, write nothing and read nothing -- decision:unattributable-means-no-reading, fail OPEN, no new refusal. Do NOT fall back to a shared gauge.json: that reinstates the folder-owned file this issue exists to remove. Reuse spine_rail.is_usable_agent_id's allowlist idiom for filename safety rather than inventing a second identity predicate; you may READ spine_rail.py but it is FENCED for edits (lane C). FIRST TASK, before any edit: enumerate BY COMMAND -- never by memory -- every artifact that asserts the literal name gauge.json (code, tests, docs, templates, skills) and STATE THE COUNT in the result; that enumeration is the blast radius of this change and the author is the only one positioned to know it. Evidence standard, inherited from tests/test_checklist_engine.py::TripGaugeReadingOwnership: red-before / green-after over BEHAVIOR, driving the real reader and a real gauge file, never a patched _read_gauge. Hook code cannot be validated from inside the session that contains it -- validate in a fresh process, never a fixture that hand-injects CLAUDE_PROJECT_DIR.",
+      "preconditions": [
+        {"id": "p1", "statement": "g0-measure settled the mechanism; the design targets the mechanism that was actually measured", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)", "check": {"kind": "artifact", "evidence_type": "implementer-result", "match": {"status": "complete"}}, "satisfied": false}
+      ],
+      "constraints": [
+        "FENCED, do not edit: scripts/hooks/spine_rail.py, scripts/run_crew.py (lane C); scripts/mcp_spine_server.py, .mcp.json (lane A)",
+        "checklist_engine.py's claim path changed on main this morning (#601) -- leave it alone unless the design requires it, and say so if it does",
+        "nothing here may make the governor REFUSE where it currently permits; that is outside inherited latitude and must be floated to the Admiral",
+        "clear __pycache__ before every measurement (#597)"
+      ],
+      "anchors": {
+        "structural": ["docs/GAUGE_WRITER_HOOK.md", "map/INDEX.md"],
+        "decision": ["decision:owner-in-the-filename", "decision:no-shared-file-fallback", "decision:identity-not-time", "decision:unattributable-means-no-reading", "decision:no-new-state-file"],
+        "evidence": ["tests/test_checklist_engine.py::TripGaugeReadingOwnership", "tests/test_gauge_writer.py", "tests/test_gauge_reader.py", "tests/test_gauge_chain_writer_to_trip.py"],
+        "map_entry_point": "map/INDEX.md -- scripts.gauge_reader, scripts.hooks.gauge_writer_hook, scripts.checklist_engine. The map is DEGRADED (empty ids.jsonl, absent per-module INDEX targets); docs/GAUGE_WRITER_HOOK.md is the hash-pinned substitute and the real entry point."
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Independent review of the #600 change",
+      "imperative": "Independently verify the g1 diff against the close criteria. Specifically check, and do not take the implementer's word for any of them: (a) the governor never REFUSES anywhere it previously permitted -- enumerate the refusal paths rather than sampling them; (b) there is no fallback to a shared gauge.json anywhere on the read or write side; (c) the enumeration of artifacts asserting the literal name gauge.json is complete and its COUNT is stated -- re-run the enumeration yourself, because an under-inclusive sweep reports clean precisely because it never reached the interesting items; (d) the red-before/green-after evidence drives the real reader and a real gauge file, not a patched _read_gauge; (e) no fenced file was edited. Reproduce every pasted command yourself.",
+      "preconditions": [
+        {"id": "p1", "statement": "implementer result integrated", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}
+      ],
+      "constraints": [], "anchors": {"decision": ["decision:owner-in-the-filename", "decision:no-shared-file-fallback"]},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Integrate #600",
+      "imperative": "Check the verdict. On APPROVE, re-run the verification yourself before advancing: the IMPLEMENTER_RESULT exists and is fresh (scripts/run_crew.py --verify-result, not a stale leftover), the pasted evidence reproduces, and the postconditions pass in your hands. On BLOCK, return for rework or raise a blocker. Log out-of-scope finds as triage candidates and harvest the crew's Workflow Feedback into the run's lesson-candidate pool.",
+      "preconditions": [
+        {"id": "p1", "statement": "review verdict returned", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "the targeted gauge/trip suites pass on a cleared cache in a clean env", "check": {"kind": "command", "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_gauge_writer.py tests/test_gauge_reader.py tests/test_checklist_engine.py tests/test_gauge_chain_writer_to_trip.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false},
+        {"id": "c3", "statement": "the full suite is green on a cleared cache in a clean env, and its failure set is compared against a main baseline re-measured at gate time", "check": {"kind": "command", "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2-design-500": {
+      "id": "g2-design-500",
+      "title": "#500: hand back a settled design for consuming a refresh-request",
+      "imperative": "REASONING GATE -- no crew, and NO CODE. Crew waiver reason: the deliverable is a design note, and the launch order's Budget section explicitly permits #500 to hand back as a settled design if the session runs out; this Commander declared that choice at the understand step, before starting. Write the design to .agent-work/cleanup-b-context-identity/DESIGN_500.md. It must settle the open item the launch order's pre-ruling names: decision:consume-on-lease-change is graded a GUESS whose settle condition is 'enumerate what distinguishes a relaunch from an idempotent re-claim now that #601 re-stamps claimed_at, and say whether it is sufficient'. Do that enumeration against the code and answer it plainly. Record what is settled, what remains a guess with its own settle experiment, and what would have to be floated. Do NOT ship the consume path this wave.",
+      "preconditions": [
+        {"id": "p1", "statement": "#600 integrated, so the design can state what it inherits", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "DESIGN_500.md exists and answers the decision:consume-on-lease-change settle condition explicitly", "check": {"kind": "command", "command": "test -s /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity/.agent-work/cleanup-b-context-identity/DESIGN_500.md && grep -q 'consume-on-lease-change' /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity/.agent-work/cleanup-b-context-identity/DESIGN_500.md"}, "satisfied": false},
+        {"id": "c2", "statement": "no code shipped for #500 this wave, and the hand-back is stated as such", "check": null, "satisfied": false}
+      ],
+      "constraints": ["design only -- shipping a consume path this wave is out of the declared scope"],
+      "anchors": {"decision": ["decision:consume-on-lease-change"], "evidence": ["scripts/checklist_engine.py has_pending_refresh_request", "scripts/checklist_engine.py _why_suffix"]},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}
