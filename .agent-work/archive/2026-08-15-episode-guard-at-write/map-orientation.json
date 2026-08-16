@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "work_id": "episode-guard-at-write",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/EPISODE_STORE.md",
+      "content_hash": "144327a1a3fb5fb4bf2e05ca090351b9e159a622dc75ffd30f7e885f1a010e72",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "70fc98d8194a28f9f8fc2be73e8455ba556e15b81e9b28fdd82eeb11883b6b10",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "docs/architecture/ generated map is absent and map/INDEX.md is an unfilled template with an empty map/ids.jsonl, so scripts/apply_episode_delta.py's and scripts/verify_episode_observations.py's own structure (validate/apply seams, the guard's triggers_for/EXCEPTIONS) is unmapped; read directly from source instead, after this run had already read those files ahead of running map_orient (a real process deviation, named here rather than hidden)."
+  ],
+  "escalation": "Map regeneration is named explicitly in LAUNCH_ORDER.md's own Evidence Required section (python -m scripts.code_map build --root .) and will run as part of this lane's closeout; no further escalation beyond that scheduled regen.",
+  "emitted_at": "2026-08-15T22:26:00.428239+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

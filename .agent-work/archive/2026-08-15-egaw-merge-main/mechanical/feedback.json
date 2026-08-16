@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "feedback",
+  "mechanical": {
+    "run": "egaw-merge-main",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 8,
+    "spine-step": "feedback",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-egaw-merge-main-feedback@2bc7eb24b7ea49468793d7171e9bea22f580909c",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "egaw-merge-main",
+    "generated_at": "2026-08-16T03:35:52Z"
+  }
+}

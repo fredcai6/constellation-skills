@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "plan",
+  "files": [],
+  "repo_rev": {
+    "commit": "2c46cab81f087213732030044719b53ec1d6a4e2"
+  },
+  "run": {
+    "work_id": "episode-guard-at-write",
+    "generated_at": "2026-08-15T22:27:03Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write"
+    }
+  }
+}

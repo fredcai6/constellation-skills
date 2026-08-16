@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "init",
+  "mechanical": {
+    "run": "episode-guard-at-write",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 1,
+    "spine-step": "init",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-episode-guard-at-write-init@178eab97c0b145598340ad703b18a598a1fd6efc",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "episode-guard-at-write",
+    "generated_at": "2026-08-15T22:25:41Z"
+  }
+}

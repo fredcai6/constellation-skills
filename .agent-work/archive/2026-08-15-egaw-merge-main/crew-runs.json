@@ -1,0 +1,26 @@
+[
+  {
+    "crew_id": "constellation/egaw-merge-main/execute/commander/attempt-1",
+    "work_id": "egaw-merge-main",
+    "gate": "execute",
+    "role": "commander",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/egaw-merge-main/execute/commander/attempt-1",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 1096667,
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write",
+    "handoff": ".agent-work/egaw-merge-main/LAUNCH_ORDER.md",
+    "result": null,
+    "spine": ".agent-work/egaw-merge-main/spine.json",
+    "parent": "admiral-post-568",
+    "stdout": ".agent-work/egaw-merge-main/crew-runs/execute-commander-attempt-1.stdout.txt",
+    "stderr": ".agent-work/egaw-merge-main/crew-runs/execute-commander-attempt-1.stderr.txt",
+    "started_at": "2026-08-16T03:22:22.919143+00:00",
+    "last_heartbeat": "2026-08-16T03:22:22.919143+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "model": "sonnet"
+  }
+]

@@ -76,6 +76,7 @@ Python 3.13+ while CI pins 3.12 — see those helpers.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import re
@@ -903,6 +904,112 @@ def _next_episode_id(run: str, known_ids: set[str]) -> str:
     return f"{prefix}{max_seq + 1:03d}"
 
 
+# --- the instruction-shaped-statement guard, imported rather than reimplemented -----
+#
+# scripts/verify_episode_observations.py is tests/test_episode_observations.py's own
+# judgement of "does this statement read as an instruction rather than an observation".
+# This writer calls it rather than restating its rules, so the two can never drift —
+# drift here is exactly the failure this seam exists to remove (a record that writes
+# cleanly and then reds the closeout suite).
+#
+# PLACEMENT. Both call sites (_apply_create, _apply_restate_assertion below) sit in the
+# APPLY phase, not inside validate_delta. validate_delta stays exactly as pure as it was
+# before this change — no new parameter, no new disk touch, nothing — because deciding
+# whether the guard should even run for a given write needs to know WHICH store is being
+# written to (see _is_real_store below), and validate_delta has no root to ask: it
+# validates delta SHAPE only, the same way for every caller, several of which (this
+# module's own direct callers in tests/test_episode_fields.py and
+# tests/test_episode_negative_control.py) call it with no store in the picture at all.
+# The apply phase already has `tx.root` and already touches disk (ensure_store_layout,
+# tx.load), so this is the "impure layer just outside validate_delta" rather than a
+# purity violation of it — and because the write plan is only staged, never committed,
+# until every op has applied cleanly (_Transaction.commit), a rejection raised here still
+# lands before any file is ever touched, same as a validate_delta rejection would.
+#
+# SCOPE: THE REAL STORE ONLY. See _is_real_store's own docstring for why a throwaway
+# root (every temp store built by this store's own tests, AND by
+# tests/test_episode_observations.py's red proofs, which build a store the GUARD must
+# refuse and can only do so by writing through this exact writer) must not be guarded:
+# nothing scans it, so guarding it protects nothing and only breaks fixtures that exist
+# to test something else.
+
+_GUARD_PATH = Path(__file__).resolve().parent / "verify_episode_observations.py"
+_GUARD_MODULE = "verify_episode_observations"
+
+
+def _is_real_store(root: Path) -> bool:
+    """True when `root` resolves to THE tracked, suite-scanned episodes/ store this
+    writer defaults to (store_root()) — the one tests/test_episode_observations.py::
+    RealStoreTests scans, and therefore the only store where a write-time rejection
+    actually prevents that suite from going red later. Every other root — a temp
+    directory built by a test fixture, most of all — is not scanned by anything, ever;
+    guarding it would protect nothing while blocking the many existing fixtures (in
+    this store's own tests and in the guard's) that deliberately build
+    instruction-shaped or otherwise-adversarial statements to test something OTHER
+    than this rule.
+    """
+    try:
+        return root.resolve() == store_root().resolve()
+    except OSError:
+        return False
+
+
+def _guard():
+    """Resolve the guard module lazily, by file location — mirroring
+    verify_episode_observations.py's own `query()` (which resolves query_episodes.py
+    the same way), and for the same two reasons: this module ships into installed
+    skill copies where the guard sits next to it on disk but is not necessarily an
+    importable package member (store_root()'s own installed-skill hazard, documented
+    above), and a caller that already imported the guard elsewhere in this process
+    should share that exact module object rather than load a second, divergent copy of
+    the same rules.
+
+    PURITY, established rather than assumed. This module calls exactly two names on
+    the loaded module: `triggers_for()` and `EXCEPTIONS`. `triggers_for(kind,
+    statement)` is regex over the two strings it is handed — it touches no path, no
+    episode, no store. `EXCEPTIONS` is a literal dict built at import time. Neither
+    reaches `query()` or `scan_store()`, which are the ONLY two names in
+    verify_episode_observations.py that touch the filesystem (both go through
+    query_episodes.enumerate_episodes()) — this module never calls either, so the
+    filesystem-reading half of the guard is never reached from here.
+
+    Loading the guard's own source file is the one disk access this function
+    performs, and it is an ordinary Python import in every way that matters here: its
+    result depends only on the guard's fixed source on disk, never on the episode
+    STORE's contents. validate_delta's own claim below — "rejected before any file is
+    ever touched, regardless of what the real store on disk contains" — is a claim
+    about the STORE, and this call carries no dependency on it."""
+    module = sys.modules.get(_GUARD_MODULE)
+    if module is not None:
+        try:
+            if Path(getattr(module, "__file__", "")).resolve() == _GUARD_PATH:
+                return module
+        except (OSError, ValueError):
+            pass
+    spec = importlib.util.spec_from_file_location(_GUARD_MODULE, _GUARD_PATH)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[_GUARD_MODULE] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _reject_instruction_shaped(kind: str, statement: str, where: str) -> None:
+    """Raise if `statement` trips the guard's imperative or second-person rule for
+    `kind`. The message names the offending token(s), the kind, and which rule
+    tripped, so the author can recast the sentence without reading the guard's
+    source."""
+    hits = _guard().triggers_for(kind, statement)
+    if not hits:
+        return
+    described = "; ".join(f"{trigger} {token!r}" for trigger, token in hits)
+    raise EpisodeDeltaError(
+        f"{where}: statement reads as an instruction, not an observation, for "
+        f"kind={kind} ({described}). Recast as a past-tense description of what "
+        "happened rather than a directive addressed to a reader — see "
+        "scripts/verify_episode_observations.py for the rule this trips."
+    )
+
+
 # --- validate (pure — no disk I/O, so a structurally-invalid delta is rejected before
 # any file is ever touched, regardless of what the real store on disk contains) -------
 
@@ -1296,27 +1403,34 @@ def _apply_create(tx: _Transaction, op: dict) -> str:
     mech = op["mechanical"]
     run = mech["run"]
     episode_id = _next_episode_id(run, tx.known_ids())
+    enforce_guard = _is_real_store(tx.root)
 
     agent_supplied = {}
     for i, kind in enumerate(AGENT_SUPPLIED_KINDS, start=1):
         payload = op["agent_supplied"][kind]
+        statement = payload["statement"].strip()
+        if enforce_guard:
+            _reject_instruction_shaped(kind, statement, f"create.agent_supplied.{kind}")
         agent_supplied[kind] = Assertion(
             aid=f"a{i}",
             kind=kind,
             strength=payload["strength"],
             lifecycle_standing="active",
-            statement=payload["statement"].strip(),
+            statement=statement,
         )
 
     diagnosis = []
     for i, entry in enumerate(op.get("diagnosis", []), start=1):
+        statement = entry["statement"].strip()
+        if enforce_guard:
+            _reject_instruction_shaped(entry["kind"], statement, f"create.diagnosis[{i}]")
         diagnosis.append(
             Assertion(
                 aid=f"d{i}",
                 kind=entry["kind"],
                 strength=entry["strength"],
                 lifecycle_standing="active",
-                statement=entry["statement"].strip(),
+                statement=statement,
             )
         )
 
@@ -1385,13 +1499,29 @@ def _apply_restate_assertion(tx: _Transaction, op: dict) -> str:
     assertion = assertions.get(assertion_id)
     if assertion is None:
         raise EpisodeDeltaError(f"restate-assertion {episode_id}.{assertion_id}: no such assertion")
+    new_statement = op["statement"].strip()
+    # The guard needs this assertion's real `kind` to decide whether the imperative
+    # rule even applies (it is scoped to workaround/proposed-remedy) — restate-assertion
+    # carries no `kind` field (RESTATE_ALLOWED_FIELDS), so that fact only exists once the
+    # episode is loaded. This apply step already reads the episode from disk to build
+    # the history line below, so the check belongs here rather than forcing
+    # validate_delta to read the store.
+    #
+    # A grandfathered assertion (on the guard's own EXCEPTIONS list) is exempt: the
+    # guard already excuses it because the record cannot support a factual restatement,
+    # and a write-time check that still rejected an edit to it would make that
+    # assertion permanently uneditable — the opposite of what an exception means.
+    if _is_real_store(tx.root) and (episode_id, assertion_id) not in _guard().EXCEPTIONS:
+        _reject_instruction_shaped(
+            assertion.kind, new_statement, f"restate-assertion {episode_id}.{assertion_id}"
+        )
     # Read the original BEFORE overwriting it, and build the history line from that read
     # rather than from anything the delta carries. Surgical in exactly the same sense as
     # _apply_amend_assertion(): only this assertion's statement changes, plus one appended
     # history line. kind/strength/lifecycle-standing, every sibling assertion, every
     # mechanical line and the retirement block are left exactly as parsed.
     original_statement = assertion.statement
-    assertion.statement = op["statement"].strip()
+    assertion.statement = new_statement
     assertion.history.append(
         _restatement_history_line(op["history"].strip(), original_statement)
     )

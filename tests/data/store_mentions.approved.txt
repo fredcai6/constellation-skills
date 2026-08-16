@@ -206,3 +206,18 @@ scripts/verify_episode_captured.py:f"(apply_episode_delta.py) can never record i
 
 # work-id nesting fix: the same refusal message, naming the WRITE path whose advice cannot be followed for an ungrammatical id
 scripts/verify_episode_captured.py:"BLOCKED: 'capture one with apply_episode_delta.py' is advice that cannot "
+
+# episode-guard-at-write: a comment describing the writer's own dynamic load of the read-time guard, so a future companion-guard scan can see the load it documents; instructs no agent to read the store
+scripts/install_constellation.py:# apply_episode_delta.py._guard() -> Path(__file__).parent /
+
+# episode-guard-at-write: a comment explaining why query_episodes.py must ship alongside the guard even though the writer never calls the functions that need it; instructs no agent to read the store
+scripts/install_constellation.py:# query_episodes.py the same lazy way for its OWN scan_store()/query() -- unused by
+
+# episode-guard-at-write: a comment pointing at the pre-existing write-side bundle comment that already anticipated query_episodes.py travelling with the writer; instructs no agent to read the store
+scripts/install_constellation.py:# below) already named for query_episodes.py travelling with the writer: "a future
+
+# episode-guard-at-write: continuation of the same comment; instructs no agent to read the store
+scripts/install_constellation.py:# bundled script that imports query_episodes would drag it along automatically."
+
+# episode-guard-at-write: the actual companion declaration -- the writer's own SCRIPT_RUNTIME_COMPANIONS entry, a WRITE-path bundling fact, not advice to read the store
+scripts/install_constellation.py:"apply_episode_delta.py": ("verify_episode_observations.py", "query_episodes.py"),

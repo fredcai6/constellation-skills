@@ -116,6 +116,18 @@ SCRIPT_RUNTIME_COMPANIONS: dict[str, tuple[str, ...]] = {
     # Commander and Explorer, installed, raised `ModuleNotFoundError` at
     # import -- before argparse ever ran -- and could launch no crew at all.
     "run_crew.py": ("install_constellation.py",),
+    # apply_episode_delta.py._guard() -> Path(__file__).parent /
+    # "verify_episode_observations.py" (episode-guard-at-write): the writer imports the
+    # closeout suite's own instruction-shaped-statement guard so a write-time rejection
+    # can never drift from the read-time one. The guard module in turn resolves
+    # query_episodes.py the same lazy way for its OWN scan_store()/query() -- unused by
+    # the writer (it calls only triggers_for()/EXCEPTIONS, never scan_store()), but the
+    # companion guard below walks reachability statically, not by what is actually
+    # called, so it has to ship too or this entry alone would still fail the guard.
+    # This is one of the four routes the write-side bundle comment (SKILL_SCRIPT_BUNDLES,
+    # below) already named for query_episodes.py travelling with the writer: "a future
+    # bundled script that imports query_episodes would drag it along automatically."
+    "apply_episode_delta.py": ("verify_episode_observations.py", "query_episodes.py"),
 }
 
 # SOURCE SUBDIRECTORIES: scripts whose source lives under a subdirectory of

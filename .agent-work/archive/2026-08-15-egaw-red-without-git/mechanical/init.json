@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "init",
+  "mechanical": {
+    "run": "egaw-red-without-git",
+    "project": "constellation-skills",
+    "spine-step": "init",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-egaw-red-without-git-init@5e2482224a655682483b24cc3438d76d5a46cfc6",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "egaw-red-without-git",
+    "generated_at": "2026-08-15T23:03:55Z"
+  }
+}

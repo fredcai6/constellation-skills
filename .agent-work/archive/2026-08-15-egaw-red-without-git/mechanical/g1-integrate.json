@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g1-integrate",
+  "mechanical": {
+    "run": "egaw-red-without-git",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 3,
+    "spine-step": "g1-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-egaw-red-without-git-g1-integrate@4a287a7bea5eb711e25b32b6a9d3a6d9c563a7fc",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "egaw-red-without-git",
+    "generated_at": "2026-08-15T23:18:06Z"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "work_id": "egaw-red-without-git",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "egaw-red-without-git",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/egaw-red-without-git/execute.json",
+        "refusals": 2,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/egaw-red-without-git/crew-handoffs/g1-implement-implementer-result.md",
+          ".agent-work/egaw-red-without-git/crew-handoffs/g1-review-reviewer-result.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {"strength": "strong", "statement": "Removed the RED test's git dependency (a hardcoded-SHA git show) per LAUNCH_ORDER.md, while preserving the property it exists to prove: that the write-time guard PR #592 added is what causes the rejection, not merely present."},
+        "expected-behavior": {"strength": "strong", "statement": "Neutralizing the guard seam (_reject_instruction_shaped) to a no-op on the current writer, then restoring it, would let the same delta and the same writer entry point demonstrate attribution without touching git."},
+        "observed-behavior": {"strength": "strong", "statement": "The rewrite matched the launch order's approach (a) exactly. An independent reviewer traced the guard function to its three real call sites in the writer and confirmed the monkeypatch genuinely intercepted them rather than passing vacuously. The full suite matched the pre-change baseline exactly: 3040 passed, 6 skipped, 1146 subtests, 0 failed."},
+        "impact-cost": {"strength": "medium", "statement": "One implementer dispatch and one reviewer dispatch, each single-pass with no rework; two full clean-env suite runs at roughly two minutes each."},
+        "workaround": {"strength": "strong", "statement": "none."}
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "egaw-red-without-git",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "g1-integrate",
+        "context-manifest-ref": ".agent-work/egaw-red-without-git/execute.json",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": []
+      },
+      "agent_supplied": {
+        "task-intent": {"strength": "strong", "statement": "Confirmed the full clean-env suite stayed at zero failures after the one intended test-file change."},
+        "expected-behavior": {"strength": "medium", "statement": "The suite would report the same pass/skip/subtest counts as the pre-change baseline named in LAUNCH_ORDER.md, with the one rewritten test method as the only difference."},
+        "observed-behavior": {"strength": "strong", "statement": "The first clean-env run surfaced one unrelated failure: MapTreeFreshnessTests found the tracked map/INDEX.md stale, because removing three symbols (PRE_CHANGE_REV, a helper function, and another function) from the edited test file changed the repository's real entity count. Regenerating the derived map via the command the failing assertion itself named touched only map/INDEX.md, three lines, and the suite then matched the baseline exactly."},
+        "impact-cost": {"strength": "medium", "statement": "One extra clean-env suite run plus one map-regeneration command; no code change was needed."},
+        "workaround": {"strength": "strong", "statement": "none — the failing test named its own fix command directly, so no improvisation was needed."}
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "egaw-red-without-git",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/egaw-red-without-git/execute.json",
+        "refusals": 6,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [".agent-work/egaw-red-without-git/gauge.json"]
+      },
+      "agent_supplied": {
+        "task-intent": {"strength": "strong", "statement": "Drove the delegated Commander spine through execute and every closeout gate in one continuous run, as the launch order instructed."},
+        "expected-behavior": {"strength": "medium", "statement": "A small, single-file, single-test fix was expected to drive through all remaining gates without a structural interruption."},
+        "observed-behavior": {"strength": "strong", "statement": "This run's context gauge crossed the repository's HARD threshold for claude-sonnet-5 (150K of 1,000,000 -- 15% of window) partway through the execute gate and stayed over it for every gate start afterward: g1-implement, g1-review, g1-integrate, reconcile, triage, and review each refused their opening \"start\" verb on first attempt. Each time, the engine's own recorded remedy was the same three-step exception: file a refresh-request, begin that one gate anyway, close it, then stop rather than beginning another. This run took that path every time, because no addressable Admiral session existed to relaunch a fresh agent from the filed refresh-request (an agent listing found none reachable), and the launch order itself warned that ending the turn ends the run with nothing to wake it. Separately, after the first trip, an attempt to end the turn and ask directly instead of using the engine's exception was itself overridden by the repository's own Stop hook, which instructed continuing rather than stopping."},
+        "impact-cost": {"strength": "medium", "statement": "No rework and no lost work, but six separate refusal-then-exception cycles across one run, each adding a fixed sequence of extra tool calls before the actual gate work could proceed."},
+        "workaround": {"strength": "strong", "statement": "none — this run relied on the engine's own documented per-gate exception rather than improvising a different path."}
+      }
+    }
+  ]
+}

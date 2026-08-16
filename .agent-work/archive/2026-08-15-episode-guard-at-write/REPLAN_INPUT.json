@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "episode-guard-at-write",
+      "spec_path": ".agent-work/episode-guard-at-write/LAUNCH_ORDER-2.md",
+      "intent_and_why": "Reject an instruction-shaped episode statement at write time (apply_episode_delta.py), so a lane's own write-time check catches what the closeout suite (RealStoreTests) would otherwise catch later, after episodes already exist for the suite to scan."
+    },
+    "definition_of_done": [
+      "apply_episode_delta.py rejects a create/restate-assertion op whose statement trips verify_episode_observations.py's guard, scoped to the real store only.",
+      "RED-before/GREEN-after, control, and offender-naming evidence exist and pass against the real script.",
+      "No regression in the guard's own tests or the writer's existing fixtures.",
+      "Full clean-env cache-clean suite passes with 0 failed."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Guard call sits in the apply phase, not inside validate_delta; validate_delta stays exactly as pure as before.",
+      "sufficient_evidence": "tests/test_episode_observation_guard_at_write.py (RED/GREEN/control/message) plus a clean full suite.",
+      "appetite": "One bounded gate, single-issue launch order."
+    },
+    "hard_constraints": [
+      "Do not modify scripts/verify_episode_observations.py or tests/test_episode_observations.py.",
+      "Do not change the guard's rules or its exception list.",
+      "Do not retro-fix existing episodes/ records."
+    ],
+    "fixed_decisions": [
+      "Import verify_episode_observations.py's triggers_for()/EXCEPTIONS rather than reimplementing the guard's rules.",
+      "install_constellation.py must bundle verify_episode_observations.py and query_episodes.py as runtime companions of the writer."
+    ],
+    "current_wave": {
+      "objective": "Close the write-time gap for instruction-shaped episode statements before this lane's own closeout episodes are written.",
+      "exit_criteria": [
+        "g1-implement closed with integrated evidence.",
+        "Clean-env cache-clean full suite: 0 failed, exceeding the main baseline's passed count."
+      ],
+      "issues": [
+        {
+          "id": "episode-guard-at-write",
+          "title": "Reject an instruction-shaped episode statement at write time",
+          "desired_outcome": "apply_episode_delta.py refuses a write whose statement trips the read-time guard, before episodes reach RealStoreTests.",
+          "useful_now": "Three lanes tripped the closeout-episode gap in one day; a fourth dispatch existed only to clean up after one of them.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "tests/test_episode_observation_guard_at_write.py passes; full suite passes clean.",
+          "implementation_latitude": "Choose where in apply_episode_delta.py the guard call sits and how install_constellation.py bundles the companion scripts; preserve validate_delta's purity and the guard's own rules/exceptions.",
+          "hard_constraints_no_gos": [
+            "Do not modify scripts/verify_episode_observations.py or tests/test_episode_observations.py.",
+            "Do not change the guard's rules or its exception list."
+          ],
+          "local_unknowns": [],
+          "anchors": ["scripts/apply_episode_delta.py", "scripts/verify_episode_observations.py"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [],
+    "uncertainty_register": [],
+    "parked_possibilities": []
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "episode-guard-at-write",
+      "outcome": "scripts/apply_episode_delta.py now imports verify_episode_observations.py's triggers_for()/EXCEPTIONS and calls the guard from the apply phase (_apply_create, _apply_restate_assertion), scoped to the real store via _is_real_store; grandfathered (episode_id, assertion_id) pairs in EXCEPTIONS stay exempt on restate. install_constellation.py's SCRIPT_RUNTIME_COMPANIONS now ships verify_episode_observations.py and query_episodes.py alongside the writer.",
+      "evidence": "tests/test_episode_observation_guard_at_write.py: 9 passed (RED/GREEN/control/message). Regression check across test_episode_observations.py, test_episode_store.py, test_episode_fields.py, test_episode_negative_control.py, test_install_constellation.py, test_retirement_guard.py: 532 passed. Committed at 54544404."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The write-time guard rejects an instruction-shaped statement before it ever reaches the episode store.",
+      "expected": "A create/restate-assertion op whose statement trips triggers_for() is refused with a message naming the offending statement, scoped to the real store only.",
+      "observed": "9/9 passed in tests/test_episode_observation_guard_at_write.py, covering RED-before/GREEN-after, a control (non-triggering statement passes), grandfathered-exception exemption, and offender-naming in the refusal message.",
+      "source": "tests/test_episode_observation_guard_at_write.py"
+    },
+    {
+      "claim": "The empty map inventory is a pre-existing repo-wide fault, not something this lane introduced or could fix within scope.",
+      "expected": "map/ids.jsonl would contain a real inventory for the frame's anchors to resolve against.",
+      "observed": "map/ids.jsonl is 0 bytes / 0 lines on main at 2c46cab8. Admiral verified this claim directly and waived plan.c6 (evidence e-plan-2) rather than accepting it asserted.",
+      "source": "LAUNCH_ORDER-2.md"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0-empty-map-inventory",
+      "signal": "map/ids.jsonl is structurally empty (0 bytes), so plan.c6 (verify-frame) cannot resolve any decision:/claim: anchor against a real map inventory.",
+      "classification": "evidence_only",
+      "affects": "Every future lane's plan.c6 gate in this repo until the map inventory is populated.",
+        "evidence": "map/ids.jsonl 0 bytes / 0 lines on main at 2c46cab8; independently filed hours earlier by the crew-verdict-and-door lane as code-map-ids-jsonl-is-structurally-empty.md.",
+      "reason": "Already tracked by another lane's filing; this run's job was to get its own gate waived on the strength of that pre-existing, independently-verified fault, not to file a duplicate or fix the inventory itself."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": ["scripts/apply_episode_delta.py", "scripts/verify_episode_observations.py", "scripts/install_constellation.py"],
+    "map_status": "map/ids.jsonl was empty at plan time (DEGRADED-UNPARSEABLE, waived at plan.c6); regenerated and committed by this run's own closeout per LAUNCH_ORDER-2.md."
+  }
+}

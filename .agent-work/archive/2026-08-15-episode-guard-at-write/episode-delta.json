@@ -1,0 +1,123 @@
+{
+  "work_id": "episode-guard-at-write",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "episode-guard-at-write",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "plan",
+        "context-manifest-ref": "ctx-egaw-plan@2c46cab8",
+        "refusals": 1,
+        "reopens": 1,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/episode-guard-at-write/LAUNCH_ORDER-2.md",
+          ".agent-work/episode-guard-at-write/spine.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Close plan.c6 (verify-frame) after MISSION_FRAME.md cited anchors that could not resolve against a map inventory."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The engine would refuse a commander's own attempt to waive its own bound spine check, per the doctrine that a crew must not waive its own bound check."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The prior attempt hit exactly that refusal on plan.c6, blocked, and escalated to the Admiral rather than self-waiving. The Admiral verified the empty-map claim directly against map/ids.jsonl (0 bytes, 0 lines) on main, corrected one supporting detail in the blocker text (map/INDEX.md was populated, not an unfilled template), and recorded a waiver as evidence e-plan-2. This run read that waiver, attached the required c3 user-decision evidence, and advanced plan without ever waiving c6 itself."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One full commander attempt spent its entire run reaching and reporting the blocker, with plan never advancing past it; a second attempt resumed from the recorded waiver rather than re-deriving the same evidence."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The commander escalated to the Admiral through the engine's block path instead of waiving its own bound check; the Admiral's independent verification and recorded waiver, not a self-granted exception, is what unblocked plan."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "episode-guard-at-write",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute-g1-implement",
+        "context-manifest-ref": "ctx-egaw-g1-suite@54544404",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 1,
+        "failed-commands": 1,
+        "artifact-ref": [
+          "map/INDEX.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Confirm the clean-env cache-clean full suite passed with 0 failed before treating execute's g1-implement c5 as satisfied."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The suite would pass cleanly on the first run, since the code changes (apply_episode_delta.py, the new test file, install_constellation.py) had already been implemented and reviewed by the Admiral before this run began."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The first clean-env run found exactly one failure: MapTreeFreshnessTests, because map/INDEX.md had not been regenerated after the guard's code changes landed (81 modules, 4640 entities from a fresh build versus 80 modules, 4620 entities committed). A second clean-env run, after rebuilding the map, passed 3040 tests, 6 skipped, 1146 subtests, 0 failed."
+        },
+        "impact-cost": {
+          "strength": "weak",
+          "statement": "One extra full-suite run, about two minutes, plus one map rebuild; LAUNCH_ORDER-2 had already anticipated a map move, so the failure was expected in kind, only not yet resolved when this run started."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "This run rebuilt the map with the code_map builder and reran the identical clean-env suite command a second time, rather than accepting the first run's stale-map failure as final."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "episode-guard-at-write",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": "ctx-egaw-replan-input@54544404",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 1,
+        "failed-commands": 1,
+        "artifact-ref": [
+          ".agent-work/episode-guard-at-write/REPLAN_INPUT.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "medium",
+          "statement": "Satisfy execute's c2 postcondition, a G2-schema REPLAN_INPUT.json verified by verify_iterative_role_artifacts.py, for a single-issue frozen launch order with no epic-level wave plan behind it."
+        },
+        "expected-behavior": {
+          "strength": "weak",
+          "statement": "A lighter path might exist for a one-issue delegated run with no multi-issue wave to describe."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The full G2 schema (epic, definition_of_done, good_enough, hard_constraints, fixed_decisions, a typed current_wave with one issue, wave_forecast, uncertainty_register, parked_possibilities, completed_outcomes, wave_evidence, discrepancies, an open/unlaunched partition, repo_state) had to be authored in full, synthesizing epic-shaped fields that did not otherwise exist for a single-issue launch order, to pass verify_replan_input's strict allowed-field checks. The first attempt failed validation on one extra key (\"issue\") left in a wave_evidence entry; removing it passed."
+        },
+        "impact-cost": {
+          "strength": "weak",
+          "statement": "One schema-authoring pass and one validator round-trip."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "This run filled every required G2 field with real content drawn from LAUNCH_ORDER-2 and the actual test and commit evidence, rather than leaving template placeholder text, and dropped the one non-conforming key the validator named."
+        }
+      }
+    }
+  ]
+}
