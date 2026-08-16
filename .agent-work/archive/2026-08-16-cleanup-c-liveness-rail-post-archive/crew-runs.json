@@ -1,0 +1,30 @@
+[
+  {
+    "crew_id": "constellation/cleanup-c-liveness-rail/execute/commander/attempt-1",
+    "work_id": "cleanup-c-liveness-rail",
+    "gate": "execute",
+    "role": "commander",
+    "attempt": 1,
+    "status": "completed",
+    "session_name": "constellation/cleanup-c-liveness-rail/execute/commander/attempt-1",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 2796122,
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail",
+    "handoff": ".agent-work/cleanup-c-liveness-rail/LAUNCH_ORDER.md",
+    "result": null,
+    "spine": ".agent-work/cleanup-c-liveness-rail/spine.json",
+    "parent": "admiral-568-cleanup",
+    "stdout": ".agent-work/cleanup-c-liveness-rail/crew-runs/execute-commander-attempt-1.stdout.txt",
+    "stderr": ".agent-work/cleanup-c-liveness-rail/crew-runs/execute-commander-attempt-1.stderr.txt",
+    "started_at": "2026-08-16T12:31:19.345445+00:00",
+    "last_heartbeat": "2026-08-16T13:49:48.647099+00:00",
+    "completed_at": "2026-08-16T13:49:48.647099+00:00",
+    "abandoned": false,
+    "model": "sonnet",
+    "exit_code": 0,
+    "result_present": false,
+    "result_fresh": false,
+    "verdict_source": "spine_terminal"
+  }
+]
