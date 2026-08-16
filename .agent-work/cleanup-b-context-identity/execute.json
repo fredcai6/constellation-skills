@@ -2,112 +2,410 @@
   "work_id": "cleanup-b-context-identity",
   "type": "gated",
   "config_ref": "docs/agents/engine-config.json",
-  "items": ["e0-context", "g0-measure", "g1-implement", "g1-review", "g1-integrate", "g2-design-500"],
+  "items": [
+    "e0-context",
+    "g0-measure",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement-500"
+  ],
   "tasks": {
     "e0-context": {
       "id": "e0-context",
       "title": "Load execution context",
-      "imperative": "Read the inherited global doctrine (constellation-commander-delegated references/global-orchestrator.md and references/global-everyone.md) and the project deltas docs/agents/ORCHESTRATOR_CONTEXT.md and docs/agents/GLOSSARY.md. Confirm the frozen plan's intent and scope against .agent-work/cleanup-b-context-identity/LAUNCH_ORDER.md and MISSION_FRAME.md, then attest c1.",
+      "imperative": "Read the inherited global doctrine (constellation-commander-delegated references/global-orchestrator.md and references/global-everyone.md) and the project deltas docs/agents/ORCHESTRATOR_CONTEXT.md and docs/agents/GLOSSARY.md. Confirm the frozen plan's intent and scope against .agent-work/cleanup-b-context-identity/LAUNCH_ORDER.md AS AMENDED BY ADMIRAL_RULING-1.md and LAUNCH_ORDER-2.md -- the ruling supersedes the frozen order wherever they disagree -- and against MISSION_FRAME.md, then attest c1.",
       "preconditions": [],
       "postconditions": [
-        {"id": "c1", "statement": "orchestrator context, glossary, launch order and mission frame loaded; plan intent and scope confirmed", "check": null, "satisfied": false}
+        {
+          "id": "c1",
+          "statement": "orchestrator context, glossary, frozen order, Admiral ruling and mission frame loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded this leg: constellation-commander-delegated SKILL.md, constellation-commander references/commander-core.md (Executing a gate, replan evidence, delegated mode, decision candidates), ADMIRAL_RULING-1.md, LAUNCH_ORDER-2.md, LAUNCH_ORDER.md, the revised MISSION_FRAME.md and execute.json. Intent and scope confirmed: make a context reading belong to an AGENT, not a FOLDER; ship the measurement (accepted, not redone) plus #600 under R1-R4; #500 under R5 if context allows, else hand back on the accepted DESIGN_500.md. The ruling supersedes the frozen order wherever they disagree -- notably that identity-not-time is AMENDED, not satisfied, and #601's timestamp comparison stays permanently. Note leg 1's correction to the frozen order, which claimed this repo has no docs/agents overlay -- it does, and ORCHESTRATOR_CONTEXT.md and GLOSSARY.md are two of the receipt's hash-pinned substitutes."
+        }
       ],
-      "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
     "g0-measure": {
       "id": "g0-measure",
       "title": "Settle the #600 open question by measurement",
-      "imperative": "REASONING GATE -- no crew. Crew waiver reason: the deliverable is a diagnosis, not code or an independently-verifiable change, and the Commander already holds the whole context the diagnosis turns on; a crew here would be shallower, not safer (commander-core.md, 'Crew gate vs reasoning gate'). Settle which mechanism leaves a reading the acting agent does not own in place at the instant of a trip. Two candidates were offered by the launch order: (1) the write is skipped on an ambiguous or unresolvable binding and the stale file survives; (2) another agent's key resolves into the same directory and writes its own fill. Drive the REAL handle_post_tool_use in a fresh process against a real binding store, real transcript files, and the real payload shapes the harness sends -- never a patched _read_gauge and never a hand-injected CLAUDE_PROJECT_DIR. Capture gauge.json and .agent-work/.spine-rail-binding.json as artifacts. A measured negative is a complete deliverable (launch order, Honest-Null Clause): if neither candidate is reproduced, report that and stop rather than designing against the wrong mechanism.",
+      "imperative": "REASONING GATE -- no crew. Crew waiver reason: the deliverable is a diagnosis, not code or an independently-verifiable change, and the Commander already holds the whole context the diagnosis turns on; a crew here would be shallower, not safer (commander-core.md, 'Crew gate vs reasoning gate'). ALREADY DISCHARGED BY LEG 1 AND ACCEPTED BY THE ADMIRAL -- ADMIRAL_RULING-1.md, 'Do not redo', names the measurement (notes-b.md sections 1-2b, measurement/) as accepted. Do NOT re-run it as if it were open; close this gate on leg 1's artifacts and CITE them. Settled verdict: candidate 2. Two DISTINCT binding keys whose spine files share one .agent-work/<work-id>/ each resolve to exactly one gauge candidate, each take the clean single-candidate branch, and each write -- last writer wins, and the guard at gauge_writer_hook.py:609 is len(gauge_paths) > 1, a WITHIN-key test that nothing anywhere crosses. The foreign write is FRESH, so observed_at > claimed_at and _reading_predates_claim (checklist_engine.py:1444) is False: #477/#601's timestamp guard is structurally blind to it.",
       "preconditions": [
-        {"id": "p1", "statement": "execution context loaded", "check": null, "satisfied": false}
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete."
+        }
       ],
       "postconditions": [
-        {"id": "c1", "statement": "the probe drives the real writer hook in a fresh process and reaches a verdict on the two candidates", "check": {"kind": "command", "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CLAUDE_PROJECT_DIR py .agent-work/cleanup-b-context-identity/measurement/probe_cross_key.py | grep -q 'VERDICT: CANDIDATE 2 CONFIRMED'"}, "satisfied": false},
-        {"id": "c2", "statement": "the T0 artifacts the launch order asks for -- gauge.json and the binding store, captured live -- are on disk", "check": {"kind": "command", "command": "test -f /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity/.agent-work/cleanup-b-context-identity/measurement/gauge-at-T0.json && test -f /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity/.agent-work/cleanup-b-context-identity/measurement/worktree-binding-at-T0.json"}, "satisfied": false},
-        {"id": "c3", "statement": "the settled mechanism is written up with its file:line citations in notes-b.md", "check": null, "satisfied": false}
+        {
+          "id": "c1",
+          "statement": "the probe drives the real writer hook in a fresh process and reaches a verdict on the two candidates",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && grep -q 'VERDICT: CANDIDATE 2 CONFIRMED' .agent-work/cleanup-b-context-identity/measurement/probe_cross_key.out"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g0-measure-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the T0 artifacts the launch order asks for -- gauge.json and the binding store, captured LIVE (not hand-authored: each must carry a field only a live capture has)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity/.agent-work/cleanup-b-context-identity/measurement && test -s gauge-at-T0.json && test -s worktree-binding-at-T0.json && grep -q observed_at gauge-at-T0.json && grep -q claimed_at worktree-binding-at-T0.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g0-measure-2"
+        },
+        {
+          "id": "c3",
+          "statement": "the settled mechanism is written up with its file:line citations in notes-b.md",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "notes-b.md sections 1-2b carry the settled mechanism with file:line citations: resolve_gauge_path enumerates candidates for ONE binding key (gauge_writer_hook.py:233), the ambiguity guard is len(gauge_paths) > 1 and therefore WITHIN-key (:609), nothing compares ACROSS keys, so two distinct keys sharing one .agent-work/<work-id>/ each take the clean single-candidate branch and each write -- last writer wins. The foreign write is FRESH, so _reading_predates_claim (checklist_engine.py:1444) returns False and #477/#601's timestamp guard is structurally blind to it. Accepted by the Admiral (ADMIRAL_RULING-1.md, 'Do not redo') and independently corroborated there: 82 of 398 distinct engine_session ids fail the allowlist leg 1 proposed. Live corroboration at this moment: .agent-work/.spine-rail-binding.json holds THREE distinct harness keys all carrying engine_session commander-cleanup-b-context-identity against the identical spine."
+        }
       ],
-      "constraints": ["measure before design (decision:measure-before-design) -- no design freezes until c1 and c3 are met"],
+      "constraints": [
+        "measure before design (decision:measure-before-design) -- no design freezes until c1 and c3 are met"
+      ],
       "anchors": {
-        "structural": ["docs/GAUGE_WRITER_HOOK.md", ".agent-work/cleanup-b-context-identity/LAUNCH_ORDER.md"],
-        "decision": ["decision:measure-before-design"],
-        "evidence": [".agent-work/cleanup-b-context-identity/measurement/probe_cross_key.out"]
+        "structural": [
+          "docs/GAUGE_WRITER_HOOK.md",
+          ".agent-work/cleanup-b-context-identity/LAUNCH_ORDER.md"
+        ],
+        "decision": [
+          "decision:measure-before-design"
+        ],
+        "evidence": [
+          ".agent-work/cleanup-b-context-identity/measurement/probe_cross_key.out"
+        ]
       },
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g0-measure-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && grep -q 'VERDICT: CANDIDATE 2 CONFIRMED' .agent-work/cleanup-b-context-identity/measurement/probe_cross_key.out",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g0-measure-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity/.agent-work/cleanup-b-context-identity/measurement && test -s gauge-at-T0.json && test -s worktree-binding-at-T0.json && grep -q observed_at gauge-at-T0.json && grep -q claimed_at worktree-binding-at-T0.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
     },
     "g1-implement": {
       "id": "g1-implement",
       "title": "#600: a gauge reading is named for the agent that produced it",
-      "imperative": "ONE gate, not three, deliberately: the writer, the reader and the engine must change together or the suite is red between gates, and a planned red window bridged by waivers is a plan smell (commander-core.md). Implement decision:owner-in-the-filename and decision:no-shared-file-fallback per .agent-work/cleanup-b-context-identity/PLAN_ALTERNATIVES.md candidate B. The writer (scripts/hooks/gauge_writer_hook.py) already resolves a binding entry that carries engine_session; write the record to gauge-<owner>.json beside the spine instead of gauge.json, and let the two existing sidecars follow that name (they are derived with .with_name() off the gauge path). The engine (scripts/checklist_engine.py, _gauge_path and the trip region only) knows its own active lease session_id; resolve the gauge path from it. When no owner is resolvable on either side, write nothing and read nothing -- decision:unattributable-means-no-reading, fail OPEN, no new refusal. Do NOT fall back to a shared gauge.json: that reinstates the folder-owned file this issue exists to remove. Reuse spine_rail.is_usable_agent_id's allowlist idiom for filename safety rather than inventing a second identity predicate; you may READ spine_rail.py but it is FENCED for edits (lane C). FIRST TASK, before any edit: enumerate BY COMMAND -- never by memory -- every artifact that asserts the literal name gauge.json (code, tests, docs, templates, skills) and STATE THE COUNT in the result; that enumeration is the blast radius of this change and the author is the only one positioned to know it. Evidence standard, inherited from tests/test_checklist_engine.py::TripGaugeReadingOwnership: red-before / green-after over BEHAVIOR, driving the real reader and a real gauge file, never a patched _read_gauge. Hook code cannot be validated from inside the session that contains it -- validate in a fresh process, never a fixture that hand-injects CLAUDE_PROJECT_DIR.",
+      "imperative": "ONE gate, not three, deliberately: the writer, the reader and the engine must change together or the suite is red between gates, and a planned red window bridged by waivers is a plan smell (commander-core.md). Build exactly what ADMIRAL_RULING-1.md R1-R4 orders -- the ruling supersedes the frozen order's pre-rulings wherever they disagree, and PLAN_ALTERNATIVES.md candidate B is amended by it, not replaced.\n\nR1 -- FILENAME AND FIELD, and the timestamp guard STAYS. Write the record to gauge-<owner>.json beside the spine, keyed on the LEASE session id, and also stamp an `owner` field into the record. The filename removes the collision; the field makes a mismatch detectable if one ever reappears. Do NOT delete or weaken #601's timestamp comparison in checklist_engine.py: identity handles the CONCURRENT case, time handles the SEQUENTIAL one, and a relaunch reuses its predecessor's lease name by design, so identity cannot see it. This wave does NOT complete decision:identity-not-time and must not claim it does.\n\nR2 -- NORMALIZE, NEVER REJECT. Every lease session id must yield a usable owner key: SLUG PLUS HASH. 82 of 398 distinct session ids in this checkout fail the allowlist leg 1 proposed, because slash-bearing lease names are current fleet practice. Rejecting an unusable owner takes the governor away from a fifth of the fleet permanently and INVISIBLY -- losing the governor never fails a test. Reserve `skip` and `uncalibrated` as owner names so a normalized owner can never collide with SKIP_FILENAME/UNCALIBRATED_FILENAME (critic F4).\n\nR3 -- NO LEASE KEEPS TODAY'S BEHAVIOUR. Owner-keying applies only where a lease exists. With no lease there is no owner, so read the unowned gauge.json and trip on it exactly as today. Fail-safe stays 'no attributable reading yields None'; it does NOT become 'no lease yields nothing'. Where a lease DOES exist and no owner-keyed gauge resolves, return None -- no fallback to the shared file, which would reinstate the folder-owned file this issue exists to remove.\n\nR4 -- THE AMBIGUITY GUARD IS ABOUT ATTRIBUTION. In resolve_gauge_path (gauge_writer_hook.py:233), dedupe by resolved OWNER-KEYED path, write EVERY distinct candidate, and fire the len(...)>1 skip only when a candidate cannot be attributed an owner at all. Two spines in one work directory under the same owner still collapse to one file -- that is #488's own case and it must stay working.\n\nONE DEFINITION OF THE OWNER KEY (decision:one-owner-key-definition, a guess, not ruled). The key is computed on both sides of a process boundary: the hook from the binding entry's `engine_session`, the engine from its own active lease session_id. Drift between them silently stops every reading resolving. Define it ONCE in scripts/gauge_reader.py and load it in the hook through the by-path loader idiom this codebase already uses twice (gauge_writer_hook._load_spine_rail, checklist_engine._load_gauge_reader), keeping the existing fail-safe: a load failure yields no owner, which is today's behaviour and not a new refusal. If you depart from that, say why in the result.\n\nCORRECTIONS THE COLD CRITIC LANDED, all accepted (CRITIC_TRIAGE.md):\n- F4: the two sidecars use CONSTANTS (SKIP_FILENAME, UNCALIBRATED_FILENAME) on BOTH sides, so they do NOT follow the gauge name via .with_name(). Decide explicitly whether they go per-owner and state the choice; do not assume they follow.\n- F5: _uncalibrated_advisory and _no_reading_advisory take base_dir only and sit OUTSIDE the trip region. Left on the shared path they would report on a file nobody reads. Name what each advisory resolves to.\n- F11: tests/test_spine_rail.py (2 occurrences of the literal name) is the test of a FENCED module lane C is editing concurrently -- do NOT touch it; it goes to the Admiral as a cross-lane note. episodes/** are historical records and are never edited. Everything else in the blast radius gets an explicit change/no-change disposition in the result.\n\nFIRST TASK, before any edit: enumerate BY COMMAND -- never by memory -- every artifact that asserts the literal name gauge.json (code, tests, docs, templates, skills) and STATE THE COUNT in the result. That enumeration is the blast radius and the author is the only one positioned to know it. Note that the literal name SURVIVES this change on the leaseless read path (R3), so 'zero occurrences' is the WRONG target -- each occurrence needs a disposition, not deletion.\n\nREQUIRED NEW TESTS, by node id, because the four existing suites already pass and so cannot discriminate the healthy world from the broken one (critic F8). Create exactly these:\n  tests/test_gauge_writer.py::OwnerKeyedGaugePath::test_two_keys_one_work_dir_each_keep_their_own_reading\n  tests/test_gauge_writer.py::OwnerKeyedGaugePath::test_two_spines_one_key_one_owner_still_writes\n  tests/test_gauge_reader.py::OwnerKeyNormalization::test_every_live_session_id_yields_a_usable_owner\n  tests/test_checklist_engine.py::TripGaugeReadingOwnership::test_leaseless_checklist_reads_the_unowned_gauge\nThe second is #488's exact shape -- an Admiral's spine.json and its latitude-interrogation.json in ONE work directory -- and asserts the write HAPPENS. That regression cost an entire wave of dark governor and must not be re-armed by a rename (R4). The third must feed real session ids INCLUDING slash-bearing ones and the live null / literal '$SID' cases (R2). Run all four against the merge base a69bbac4 and paste the RED result; then paste them green at your head.\n\nEvidence standard, inherited from tests/test_checklist_engine.py::TripGaugeReadingOwnership: red-before / green-after over BEHAVIOR, driving the real reader and a real gauge file, never a patched _read_gauge. Hook code cannot be validated from inside the session that contains it -- validate in a fresh process, never a fixture that hand-injects CLAUDE_PROJECT_DIR.\n\nDO NOT fix measurement/probe_cross_key.py in this gate. After the change there is no gauge.json, so it takes its `after_sub is None` branch and prints 'VERDICT: NEITHER', which misdescribes the FIXED world. It must keep describing the CURRENT world truthfully until the design lands; updating it is g1-integrate's job.",
       "preconditions": [
-        {"id": "p1", "statement": "g0-measure settled the mechanism; the design targets the mechanism that was actually measured", "check": null, "satisfied": false}
+        {
+          "id": "p1",
+          "statement": "g0-measure settled the mechanism; the design targets the mechanism that was actually measured",
+          "check": null,
+          "satisfied": false
+        }
       ],
       "postconditions": [
-        {"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)", "check": {"kind": "artifact", "evidence_type": "implementer-result", "match": {"status": "complete"}}, "satisfied": false}
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "no fenced file was modified -- spine_rail.py, run_crew.py (lane C), mcp_spine_server.py, .mcp.json (lane A), and tests/test_spine_rail.py per critic F11",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && test -z \"$(git diff --name-only a69bbac4 -- scripts/hooks/spine_rail.py scripts/run_crew.py scripts/mcp_spine_server.py .mcp.json tests/test_spine_rail.py)\""
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the four named new tests exist and pass by node id -- they are the only checks in this plan that can discriminate the fixed world from the broken one (critic F8), and the second is #488's exact shape (R4)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q 'tests/test_gauge_writer.py::OwnerKeyedGaugePath::test_two_keys_one_work_dir_each_keep_their_own_reading' 'tests/test_gauge_writer.py::OwnerKeyedGaugePath::test_two_spines_one_key_one_owner_still_writes' 'tests/test_gauge_reader.py::OwnerKeyNormalization::test_every_live_session_id_yields_a_usable_owner' 'tests/test_checklist_engine.py::TripGaugeReadingOwnership::test_leaseless_checklist_reads_the_unowned_gauge'"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "the blast-radius enumeration of the literal name gauge.json was run BY COMMAND and its COUNT is stated in the result, with a change/no-change disposition per occurrence",
+          "check": null,
+          "satisfied": false
+        }
       ],
       "constraints": [
-        "FENCED, do not edit: scripts/hooks/spine_rail.py, scripts/run_crew.py (lane C); scripts/mcp_spine_server.py, .mcp.json (lane A)",
-        "checklist_engine.py's claim path changed on main this morning (#601) -- leave it alone unless the design requires it, and say so if it does",
+        "FENCED, do not edit: scripts/hooks/spine_rail.py, scripts/run_crew.py (lane C); scripts/mcp_spine_server.py, .mcp.json (lane A); tests/test_spine_rail.py (critic F11, lane C's test)",
+        "checklist_engine.py is yours in the GAUGE, TRIP and REFRESH regions only (ADMIRAL_RULING-1.md, Scope). The claim path is not this gate's business; #601's timestamp comparison stays untouched by R1",
         "nothing here may make the governor REFUSE where it currently permits; that is outside inherited latitude and must be floated to the Admiral",
+        "runtime coupling to lane C: this design reads spine_rail.is_usable_agent_id's alphabet. Reading is permitted, the coupling is stated, and a lane C change to that predicate changes the gauge filename alphabet under this lane",
         "clear __pycache__ before every measurement (#597)"
       ],
       "anchors": {
-        "structural": ["docs/GAUGE_WRITER_HOOK.md", "map/INDEX.md"],
-        "decision": ["decision:owner-in-the-filename", "decision:no-shared-file-fallback", "decision:identity-not-time", "decision:unattributable-means-no-reading", "decision:no-new-state-file"],
-        "evidence": ["tests/test_checklist_engine.py::TripGaugeReadingOwnership", "tests/test_gauge_writer.py", "tests/test_gauge_reader.py", "tests/test_gauge_chain_writer_to_trip.py"],
+        "structural": [
+          "docs/GAUGE_WRITER_HOOK.md",
+          "map/INDEX.md"
+        ],
+        "decision": [
+          "decision:owner-in-the-filename",
+          "decision:normalize-never-reject",
+          "decision:no-lease-keeps-todays-behaviour",
+          "decision:ambiguity-guard-is-about-attribution",
+          "decision:identity-not-time",
+          "decision:unattributable-means-no-reading",
+          "decision:no-new-state-file",
+          "decision:one-owner-key-definition"
+        ],
+        "evidence": [
+          "tests/test_checklist_engine.py::TripGaugeReadingOwnership",
+          "tests/test_gauge_writer.py",
+          "tests/test_gauge_reader.py",
+          "tests/test_gauge_chain_writer_to_trip.py"
+        ],
         "map_entry_point": "map/INDEX.md -- scripts.gauge_reader, scripts.hooks.gauge_writer_hook, scripts.checklist_engine. The map is DEGRADED (empty ids.jsonl, absent per-module INDEX targets); docs/GAUGE_WRITER_HOOK.md is the hash-pinned substitute and the real entry point."
       },
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
     "g1-review": {
       "id": "g1-review",
       "title": "Independent review of the #600 change",
-      "imperative": "Independently verify the g1 diff against the close criteria. Specifically check, and do not take the implementer's word for any of them: (a) the governor never REFUSES anywhere it previously permitted -- enumerate the refusal paths rather than sampling them; (b) there is no fallback to a shared gauge.json anywhere on the read or write side; (c) the enumeration of artifacts asserting the literal name gauge.json is complete and its COUNT is stated -- re-run the enumeration yourself, because an under-inclusive sweep reports clean precisely because it never reached the interesting items; (d) the red-before/green-after evidence drives the real reader and a real gauge file, not a patched _read_gauge; (e) no fenced file was edited. Reproduce every pasted command yourself.",
+      "imperative": "Independently verify the g1 diff against ADMIRAL_RULING-1.md R1-R4. Reproduce every pasted command yourself; take the implementer's word for nothing. Check specifically:\n(a) the governor never REFUSES anywhere it previously permitted -- ENUMERATE the refusal paths rather than sampling them;\n(b) R2 holds TOTALLY: feed the checkout's real session ids through the normalizer and confirm EVERY one yields a usable key, including slash-bearing ids, null, and the literal '$SID'. A normalizer that rejects even one is the invisible-coverage-loss failure this ruling exists to prevent;\n(c) R3 holds: a LEASELESS checklist still reads the unowned gauge.json and trips exactly as today -- and, separately, that a LEASED checklist with no owner-keyed gauge returns None rather than falling back to the shared file;\n(d) R4 holds: #488's exact shape (an Admiral's spine.json plus its latitude-interrogation.json in one work directory) still WRITES, and two distinct owners in one work directory BOTH write;\n(e) R1's limit is respected: #601's timestamp comparison is still present and still fires on the sequential relaunch case, and the result does not claim identity-not-time is complete;\n(f) the owner key has ONE definition, or the departure is argued -- two definitions across the hook/engine process boundary is a silent-drift hazard, not a style question;\n(g) the blast-radius enumeration is complete and its COUNT is stated -- RE-RUN the enumeration yourself, because an under-inclusive sweep reports clean precisely because it never reached the interesting items;\n(h) the red-before/green-after evidence drives the real reader and a real gauge file, not a patched _read_gauge;\n(i) no fenced file was edited.\nNote for the record: this gate's own postcondition is satisfied by ANY verdict including BLOCK -- that is deliberate. Discrimination lives at g1-integrate c2, which requires APPROVE.",
       "preconditions": [
-        {"id": "p1", "statement": "implementer result integrated", "check": null, "satisfied": false}
+        {
+          "id": "p1",
+          "statement": "implementer result integrated",
+          "check": null,
+          "satisfied": false
+        }
       ],
       "postconditions": [
-        {"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
       ],
-      "constraints": [], "anchors": {"decision": ["decision:owner-in-the-filename", "decision:no-shared-file-fallback"]},
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "constraints": [],
+      "anchors": {
+        "decision": [
+          "decision:owner-in-the-filename",
+          "decision:normalize-never-reject",
+          "decision:no-lease-keeps-todays-behaviour",
+          "decision:ambiguity-guard-is-about-attribution"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
     "g1-integrate": {
       "id": "g1-integrate",
       "title": "Integrate #600",
-      "imperative": "Check the verdict. On APPROVE, re-run the verification yourself before advancing: the IMPLEMENTER_RESULT exists and is fresh (scripts/run_crew.py --verify-result, not a stale leftover), the pasted evidence reproduces, and the postconditions pass in your hands. On BLOCK, return for rework or raise a blocker. Log out-of-scope finds as triage candidates and harvest the crew's Workflow Feedback into the run's lesson-candidate pool.",
+      "imperative": "Check the verdict. On APPROVE, re-run the verification yourself before advancing: the IMPLEMENTER_RESULT exists and is fresh (scripts/run_crew.py --verify-result, not a stale leftover), the pasted evidence reproduces, and the postconditions pass in your hands. On BLOCK, return for rework or raise a blocker. Two things belong to THIS gate and nowhere else:\n1. UPDATE measurement/probe_cross_key.py now that the design has landed. Before the change it correctly printed 'VERDICT: CANDIDATE 2 CONFIRMED'; after it, with no gauge.json to find, it takes its `after_sub is None` branch and prints 'VERDICT: NEITHER' -- which misdescribes the FIXED world to anyone re-running the archived artifact. g0-measure's stored `satisfied` is never re-checked, so this is a misleading-artifact problem, not a gate problem. Keep the original output file as the pre-fix record and make the probe assert the fixed behaviour, saying plainly which world each artifact describes.\n2. RE-MEASURE against lane C. Its #549 fix removes one ROUTE into the collision but not the MECHANISM -- leg 1's SessionStart finding shows co-located sessions collide with no orchestrator/subagent relationship at all. Report whether #549 landed while this lane worked, and if so re-run the probe rather than assuming either way.\nLog out-of-scope finds as triage candidates and harvest the crew's Workflow Feedback into the run's lesson-candidate pool.",
       "preconditions": [
-        {"id": "p1", "statement": "review verdict returned", "check": null, "satisfied": false}
+        {
+          "id": "p1",
+          "statement": "review verdict returned",
+          "check": null,
+          "satisfied": false
+        }
       ],
       "postconditions": [
-        {"id": "c1", "statement": "the targeted gauge/trip suites pass on a cleared cache in a clean env", "check": {"kind": "command", "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_gauge_writer.py tests/test_gauge_reader.py tests/test_checklist_engine.py tests/test_gauge_chain_writer_to_trip.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
-        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false},
-        {"id": "c3", "statement": "the full suite is green on a cleared cache in a clean env, and its failure set is compared against a main baseline re-measured at gate time", "check": {"kind": "command", "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false}
+        {
+          "id": "c1",
+          "statement": "the targeted gauge/trip suites pass on a cleared cache in a clean env",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_gauge_writer.py tests/test_gauge_reader.py tests/test_checklist_engine.py tests/test_gauge_chain_writer_to_trip.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the full suite runs green on a cleared cache in a clean env at this head",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "the failure-set DIFFERENCE against a main baseline RE-MEASURED at gate time is attested, with BOTH numbers recorded -- c3 measures one side only (critic F7), and the merge gate is a difference, not an absolute",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c5",
+          "statement": "measurement/probe_cross_key.py updated so the archived artifact no longer misdescribes the fixed world, and the pre-fix output retained as the record of the world it did describe",
+          "check": null,
+          "satisfied": false
+        }
       ],
-      "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
-    "g2-design-500": {
-      "id": "g2-design-500",
-      "title": "#500: hand back a settled design for consuming a refresh-request",
-      "imperative": "REASONING GATE -- no crew, and NO CODE. Crew waiver reason: the deliverable is a design note, and the launch order's Budget section explicitly permits #500 to hand back as a settled design if the session runs out; this Commander declared that choice at the understand step, before starting. Write the design to .agent-work/cleanup-b-context-identity/DESIGN_500.md. It must settle the open item the launch order's pre-ruling names: decision:consume-on-lease-change is graded a GUESS whose settle condition is 'enumerate what distinguishes a relaunch from an idempotent re-claim now that #601 re-stamps claimed_at, and say whether it is sufficient'. Do that enumeration against the code and answer it plainly. Record what is settled, what remains a guess with its own settle experiment, and what would have to be floated. Do NOT ship the consume path this wave.",
+    "g2-implement-500": {
+      "id": "g2-implement-500",
+      "title": "#500: a re-claim consumes the agent's own pending refresh-request",
+      "imperative": "SCOPE DECISION FIRST, declared at this boundary and not run past: ADMIRAL_RULING-1.md's Scope section says '#500 under R5 if context allows... may again be handed back as a design if it does not fit; say so at the boundary rather than running long.' Decide, state the decision and the context reading it rests on, and then do exactly one of the two branches. Do not start the code branch and abandon it mid-way.\n\nSHIP BRANCH (R5, option (a), decision:consume-on-lease-change is SETTLED and no longer a guess): a re-claim retires the agent's OWN pending refresh-request, so its next `start` is refused where today it is released. Option (b) -- exempting a same-session_id re-claim -- is DECLINED by the ruling, because it preserves today's behaviour by refusing to serve the one case #500 exists for. The design is already written and accepted at DESIGN_500.md; implement that, do not re-derive it. This is a REFUSE-where-we-currently-PERMIT change, which is normally outside inherited latitude -- it is authorized here ONLY by R5, and the report must say so. It touches checklist_engine.py's claim path, which the frozen order fenced; the ruling's 'refresh regions' scope plus R5's explicit order is the authority, and the report must say that too. Evidence standard is unchanged: red-before / green-after over behaviour, real engine, no patched internals.\n\nHAND-BACK BRANCH: DESIGN_500.md already exists, is accepted, and answers the settle condition. Return it as the deliverable, state plainly that no code shipped for #500 this wave, and name what the next leg picks up.",
       "preconditions": [
-        {"id": "p1", "statement": "#600 integrated, so the design can state what it inherits", "check": null, "satisfied": false}
+        {
+          "id": "p1",
+          "statement": "#600 integrated, so #500 can state what it inherits",
+          "check": null,
+          "satisfied": false
+        }
       ],
       "postconditions": [
-        {"id": "c1", "statement": "DESIGN_500.md exists and answers the decision:consume-on-lease-change settle condition explicitly", "check": {"kind": "command", "command": "test -s /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity/.agent-work/cleanup-b-context-identity/DESIGN_500.md && grep -q 'consume-on-lease-change' /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity/.agent-work/cleanup-b-context-identity/DESIGN_500.md"}, "satisfied": false},
-        {"id": "c2", "statement": "no code shipped for #500 this wave, and the hand-back is stated as such", "check": null, "satisfied": false}
+        {
+          "id": "c1",
+          "statement": "the ship-or-hand-back decision is DECLARED at this boundary with the context reading it rests on, before any work starts",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "DESIGN_500.md answers the decision:consume-on-lease-change settle condition with an explicit verdict token, not a restatement of the question",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity/.agent-work/cleanup-b-context-identity && test -s DESIGN_500.md && grep -q 'consume-on-lease-change' DESIGN_500.md && grep -q 'NOT SUFFICIENT' DESIGN_500.md"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "SHIP branch only: a re-claim retires the claiming agent's own pending refresh-request, proven red-before/green-after against the real engine; and the report states that R5 is the sole authority for a refuse-where-we-permit change and for touching the claim path. On the HAND-BACK branch this condition is closed as not-applicable with the boundary reason recorded.",
+          "check": null,
+          "satisfied": false
+        }
       ],
-      "constraints": ["design only -- shipping a consume path this wave is out of the declared scope"],
-      "anchors": {"decision": ["decision:consume-on-lease-change"], "evidence": ["scripts/checklist_engine.py has_pending_refresh_request", "scripts/checklist_engine.py _why_suffix"]},
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "constraints": [
+        "if the ship branch is chosen, R5 is the only authority for making the governor refuse where it currently permits -- nothing else in this plan may do that",
+        "the hand-back branch ships NO code for #500; do not leave a half-built consume path behind"
+      ],
+      "anchors": {
+        "decision": [
+          "decision:consume-on-lease-change"
+        ],
+        "evidence": [
+          "scripts/checklist_engine.py has_pending_refresh_request",
+          "scripts/checklist_engine.py _why_suffix",
+          ".agent-work/cleanup-b-context-identity/DESIGN_500.md"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     }
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": []
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Execution context loaded and plan intent confirmed against the frozen order AS AMENDED by the ruling. The one thing worth stating before any gate opens: this wave fixes the CONCURRENT collision and does not complete identity-not-time, because a relaunch reuses its predecessor's lease name by design and no identity scheme can see that -- which is why #601's timestamp comparison stays.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:21:11.572148+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g0-measure",
+      "why": "Closed on leg 1's ACCEPTED artifacts rather than re-run, per the ruling's do-not-redo list. Candidate 2 is confirmed: the collision is ACROSS binding keys and the timestamp guard cannot see it, because a foreign write is fresh. That is why the fix has to be identity for the concurrent case, and why time still has to stay for the sequential one.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:21:22.863993+00:00"
+    }
+  ]
 }

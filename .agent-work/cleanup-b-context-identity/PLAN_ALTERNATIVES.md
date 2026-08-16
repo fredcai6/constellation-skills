@@ -125,3 +125,34 @@ learn its own binding key — measured live, two harness keys carried the identi
 `engine_session` against the identical spine, so even a binding-store lookup keyed
 on (spine, engine_session) comes back ambiguous. Only the ruling tier can unsettle
 a `settled/human` decision.
+
+---
+
+## Addendum — leg 2, after `ADMIRAL_RULING-1.md` (2026-08-16)
+
+Candidate B is **amended, not replaced**. The comparison above still holds on its
+own terms; four things in it are now settled from above rather than argued here.
+
+- **Filename *and* field (R1).** B chose the filename *over* the record field. The
+  ruling takes the cold critic's graft and ships **both**: `gauge-<owner>.json`
+  keyed on the lease session id, plus an `owner` field stamped into the record. The
+  filename removes the collision, the field makes a mismatch visible if one
+  reappears. B's retraction stands — the rename does **not** retire #601's
+  timestamp comparison, which stays permanently for the sequential relaunch case.
+- **Normalize, never reject (R2).** B's allowlist-and-refuse is **withdrawn**: 82
+  of 398 real session ids fail it. Slug plus hash, total over every input.
+- **`decision:no-shared-file-fallback` is narrowed (R3).** It applies where a lease
+  exists. A **leaseless** checklist keeps exactly today's behaviour — read the
+  unowned `gauge.json`, trip on it — because losing that coverage as a side effect
+  of a rename is how governors go dark.
+- **The `len(gauge_paths) > 1` guard is re-scoped (R4)** rather than re-armed:
+  dedupe by owner-keyed path, write every distinct candidate, fire only on a
+  candidate that cannot be attributed an owner at all. Pinned by a test in #488's
+  exact shape.
+
+**Untaken road, named:** leg 2 did **not** re-run plan-alternatives on the amended
+plan. The alternatives exercise answered "filename versus field", and the ruling
+answered that question from above with a settled/human decision; a second panel
+would have been re-litigating a ruling, not exploring a space. The cold critic's
+findings were carried into this revision instead, all 11 disposed of in
+`CRITIC_TRIAGE.md`.
