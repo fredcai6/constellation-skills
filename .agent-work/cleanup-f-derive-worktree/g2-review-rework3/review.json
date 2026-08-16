@@ -1,0 +1,209 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded: global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md; the rework-3 reviewer handoff; the rework-2 review result (BLOCK on B1); the rework-3 implementer handoff (C1-C8) and result; ADMIRAL_RULING-1 R1 and ADMIRAL_RULING-2 N2. Review target is the single commit d7908d18 (base 84d949eb); production diff is 5 files / 47 insertions / 14 deletions, all prose. Read checklist_engine's module header and main()'s load-time comment block WHOLE, not as diff hunks.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 10 close criteria PASS; B1 is fixed everywhere and the fix stayed prose. (1) main()'s load-time block, read WHOLE not as hunks, no longer derives anything: 'THE ENGINE NOW READS NO LOCATION AT ALL, ambient or derived ... because the engine no longer asks the question anywhere', and it names where the rule does live (spine_rail._worktree_from_spine) plus 'the engine holds no copy of it'. No surrounding sentence implies the retired picture. (2) Module header and main() tell ONE story -- header: 'THE ENGINE NOW READS NO LOCATION AT ALL, ambient or derived ... because the engine no longer asks the question anywhere'; main(): the same sentence in the same words. The contradiction that WAS the finding is gone. (3) spine_lifecycle.build_origin is repaired and CARRIES the R1 shape rather than dropping the claim -- 'Ownership is the lease, but only where a lease is actually held'. (4) R1 exact in BOTH repaired passages, verified by my own clause check independent of the implementer's: leaseless path (never claimed or released), accepted AND deliberate, forgeable-guard-is-not-no-guard, and 'under an active lease held by another session, nothing changed' -- all four present in each, widening named explicitly, NO hedge, and the pre-R1 unqualified claim absent from both. (5) Sweep re-run by me: classify_hits.py exits 0 on the pre-repair capture at 64/64. I then built an INDEPENDENT sweep of different construction -- semantic-block extraction (contiguous comment runs, AST docstrings, markdown paragraphs) flattened WHOLE with no window limit, strictly stronger than their 160-char windowed line-flattening -- over the current tree: 174 live blocks, and within the two families NOT ONE stale claim their sweep missed. The 14 hits their table did not cover are line-shifted or newly-repaired passages, each read individually and confirmed correct. Their rendering does not hide a hit. (6) Zero executable change reproduced structurally, not by line-grep: with docstrings blanked the AST of both changed scripts/ files is identical to 84d949eb, and I added the discrimination the claim needs -- a one-token executable mutation DOES flip the comparison, and a docstring-text mutation does NOT. Extended to the two changed tests/ files: also identical. (7) Suite 3170 passed / 5 skipped / 0 failed, 1183 subtests -- the 84d949eb baseline exactly, on a quiet tree. (8) map/INDEX.md fresh: code_map build leaves git status -- map/ empty. (9) Both citations survive by count, reproduced by my own block-flattened counter file-for-file: 2026-08-15 = 6 at base and 6 at target; 2026-08-16 worktree-is-location = exactly 1 at both. (10) Scope exact: 5 production files, and both g3-fenced files plus every lane-A/lane-E/#610/template/rulings fence show an EMPTY diff.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No scope drift. d7908d18 touches exactly 5 production files -- docs/CHECKLIST_SCHEMA.md, scripts/checklist_engine.py, scripts/spine_lifecycle.py, tests/test_spine_origin_isolation.py, tests/test_worktree_derivation.py -- all inside Allowed Scope, all prose. map/INDEX.md was rebuilt and the rebuild is a no-op, so it correctly does not appear. Every fence verified by an EMPTY diff, not by eye: scripts/hooks/spine_rail.py and tests/test_spine_rail.py (g3), scripts/install_constellation.py, scripts/mcp_spine_server.py, .mcp.json, examples/, skills/ (lane A incl. all templates), scripts/run_crew.py, scripts/recover_crews.py, tests/test_crew_launcher.py (lane E), scripts/verify_worktree_isolation.py (#610), and both ADMIRAL_RULING files under .agent-work/rulings scope. The 19 hits the sweep found inside the two g3 files were reported and NOT edited, exactly as ordered. My own footprint: I changed no production file -- git status --porcelain shows only .agent-work/ paths; I ran the map build (no-op) and mutated nothing to verify, so no restore-by-hash was needed this pass.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Evidence present and it REPRODUCES; every figure re-derived by me, several by a method the implementer did not use. All five of its check scripts re-run: sweep_claims.py exits 0; classify_hits.py exits 0 at 64/64 on the pre-repair capture; check_claims_repaired.py is RED at 84d949eb (29 problems) and GREEN on the tree in the same run -- a genuinely discriminating check, not an assertion; check_no_exec_change.py and check_citations.py exit 0. Independently reproduced: (a) the AST equality, with a discrimination probe the implementer did not run -- one executable token flips it, docstring text does not, which is what makes the check load-bearing; (b) the citation counts, by my own block-flattened counter, matching file-for-file (6 and 1); (c) the suite, 3170/5/0 with 1183 subtests. The implementer's 1182 subtest figure is explained and confirmed: it measured with scripts/checklist_engine.py dirty and tests/test_context_manifest.py runs one subtest per CLEAN tracked target; committed, it returns to 1183. Not a movement in passed/skipped/failed. Every evidence script pins 84d949eb explicitly rather than HEAD, so tc6 is discharged -- I re-ran them after the Commander had committed twice more and they still reproduce. One measurement caveat I hit and resolved rather than reported blind: my FIRST full-suite run showed 1 failed (test_gauge_chain_writer_to_trip.py::test_containment_repo_agent_work_untouched_by_the_chain). That test snapshots the live .agent-work/ by size and mtime and asserts nothing moved, and I was running my own sweeps and engine verbs under .agent-work/ concurrently. Re-run alone it passes in 0.28s, and a quiet full-suite run returns the exact baseline. Self-inflicted ambient contamination, not a regression -- but it is a real trap for any crew that measures while working, and I raise it as tc10.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Meets the handoff's constraints. CONSUMER COUNT -- the canonical FLOAT_TO_ADMIRAL-2 N2 reading (two real consumers plus a third withdrawn before it existed) is now in all four copies that state it, and I verified this by extracting the sentence from each file and comparing normalized text rather than reading it: three are byte-identical and docs/CHECKLIST_SCHEMA.md differs ONLY in using an em-dash where the Python comments use '--', which is the right convention per medium. Both old formulations ('removed all three of its consumers', 'two consumers when it was written') are GONE from the whole tree outside .agent-work/. The implementer resolved a real seam between Allowed Scope ('only if your sweep finds a stale claim') and Constraints (which orders the harmonization) toward the constraint and said so openly -- I agree; leaving two of four copies on the old count would reproduce the exact failure this gate exists to end. PROSE-NOT-DECIDING -- the repaired passages transcribe R1 and N2; nothing re-decides a ruling. SYMBOL NAMES OVER file:line -- honoured; the new prose cites spine_rail._worktree_from_spine, require_session, _active_lease and dispatch() by name, and the one 'module header, above' pointer is direction rather than a line number. Line citations have gone stale five times on this lane and this diff adds none. EVIDENCE PINNED TO A BASE COMMIT -- all five scripts pin 84d949eb, never HEAD (tc6). Writing quality is good: the repaired main() block states the mechanism (require_session returns early, _active_lease reads a released lease as absent) before the conclusion, so a reader can check it rather than take it.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The change itself does not diverge from the recorded architecture -- it transcribes ADMIRAL_RULING-1 R1 and ADMIRAL_RULING-2 N2 into prose and re-decides nothing. Decision anchors verified: not-a-weaker-guard (settled/human, amended-by ADMIRAL_RULING-1) has its amendment propagated to the two passages that had not received it; two-copies-pinned-by-a-shared-table (superseded-by ADMIRAL_RULING-2) is transcribed as superseded; worktree-is-location-spine-path-is-identity (settled/human) is untouched and still cited exactly once repo-wide. Map Impact notes match the diff: no entity added, removed or renamed, and the map rebuild is genuinely a no-op. I raise ONE float, tc11 -- a third stale-claim family, live and unfenced, that no sweep on this lane has hunted and that this gate could not have repaired within its scope. Per the handoff I float it as contradicting evidence rather than deciding it: it does not bar this gate's verdict, and it does need an owner.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/cleanup-f-derive-worktree/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/cleanup-f-derive-worktree/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from cleanup-f-derive-worktree alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/cleanup-f-derive-worktree/FOWLER_PASS-g2-reviewer-rework3.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass run over the 47-line prose diff: 12/12 baseline smells visited, verify_fowler_pass.py exits 0 on .agent-work/cleanup-f-derive-worktree/FOWLER_PASS-g2-reviewer-rework3.json. FLAGGED 2. duplicated-code -- the hand-synchronized rationale block is now SIX prose segments, up from four; the copies agree today, but widening a hand-maintained block without a repo-level guard raises the cost of the next drift, and this is the mechanism that produced B1 (tc12). shotgun-surgery -- one conceptual change took five hand-edits across five files, the third consecutive round where that has held, and the count is rising (rework 1: three copies, rework 2: one file, rework 3: five files); each round's edit set was correct and each round a copy outside it was later found stale, including by me this pass (tc11). Neither is a blocker: both describe the shape of the change, and the alternative -- leaving passages stale -- is the defect this gate exists to end. OVERRIDDEN 2, each with a logged standard. speculative-generality: IMPLEMENTATIONS/_require parametrize over ONE surviving implementation, but ADMIRAL_RULING-2 N2 (settled/human) orders the table kept whole for #315's re-derivation and the fail-loudly guard is load-bearing now, not hypothetical -- my predecessor measured that the whole file fails at collection rather than shrinking to an empty parametrization. comments-as-deodorant: a diff that is 100% comment prose with a ~30-line comment block above main()'s statements is the archetype of the smell, but these comments record what the code deliberately NO LONGER does; the deleted comparison left no code to read, so prose is the only home that information has, and deleting it would destroy the gate's entire deliverable. ABSENT 8, each checked against the diff rather than assumed -- no signature, class, parameter, type or call chain is touched, and the docstring-blanked AST is identical to base.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "fowler-pass",
+          "payload": {
+            "record": ".agent-work/cleanup-f-derive-worktree/FOWLER_PASS-g2-reviewer-rework3.json",
+            "result": "verify_fowler_pass.py exit 0; smells=12 flagged=[duplicated-code,shotgun-surgery] overridden=[speculative-generality,comments-as-deodorant] absent=8"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/cleanup-f-derive-worktree/FOWLER_PASS-g2-reviewer-rework3.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. B1 is fixed, everywhere, and the fix stayed prose. All seven survey items pass and all ten close criteria pass, every figure reproduced by me and several by a method the implementer did not use. The two passages B1 named no longer say the engine derives a worktree from a spine path and no longer assert the unqualified pre-R1 ownership claim; read WHOLE rather than as diff hunks, no surrounding sentence implies the retired picture. checklist_engine's module header and main() now tell one story in the same words -- that contradiction WAS the finding and it is gone. spine_lifecycle.build_origin is repaired and carries the R1 shape rather than dropping the claim. R1 is exact in both repaired passages: leaseless path (never claimed or released), accepted AND deliberate, forgeable-guard-is-not-no-guard, and unchanged under an active foreign lease -- all four present in each, no hedge, verified by my own clause extractor. The sweep is real: I re-ran theirs (64/64, exit 0) and built an independent block-level sweep of different construction -- whole comment runs, AST docstrings and markdown paragraphs flattened with NO window limit, strictly stronger than their 160-char windowed line-flattening -- and within the two families found not one stale claim they missed. Zero executable change is proven structurally, with the discrimination the claim needs: docstring-blanked ASTs of all four changed Python files are identical to 84d949eb, one executable token flips the comparison, docstring text does not. Suite 3170 passed / 5 skipped / 0 failed / 1183 subtests on a quiet tree -- the baseline exactly. Map fresh, both citation counts preserved file-for-file (6 and 1), scope exact at five production files with every fence showing an empty diff. ONE FLOAT, tc11, which does not bar this verdict: a THIRD stale-claim family nobody on this lane has swept -- prose asserting the engine still reads its ambient cwd and still enforces the origin.worktree comparison -- is live and UNFENCED in tests/test_explorer_templates.py and tests/test_mcp_door_engine_cwd.py. I measured it false rather than inferring it (claim and start both return rc=0 from a foreign cwd with origin.worktree pointing elsewhere), and tests/test_explorer_templates.py cites the 2026-08-15 ruling as live authority for behaviour the engine's own header says this change superseded. It is outside both families the gate defined and outside its Allowed Scope, so this gate could not have repaired it; route it to g3 or #610 with the third family named explicitly. Also raised: tc10 (the .agent-work containment test fails for any crew that measures while working -- it cost me a false 1-failed reading) and tc12 (fourth data point: the six-copy prose block still has no repo-level guard)."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "tc11 (FLOAT, contradicting evidence -- not decided by me). A THIRD stale-claim family exists that no sweep on this lane has ever hunted, and it is live and UNFENCED. This gate swept two families: 'the engine derives a worktree from a spine path' and 'the lease is the ownership guard'. Neither covers the OTHER half of the same retired mechanism -- prose asserting the engine still READS ITS AMBIENT CWD and still ENFORCES the origin.worktree comparison. My block-level sweep finds 3 such blocks in 2 live, unfenced files: tests/test_explorer_templates.py ('the engine resolves its cwd to a git toplevel and fails closed when nothing resolves', and 'the engine enforces worktree isolation natively against the origin.worktree stamped at instantiation ... Without cwd, the engine would read the test runner's cwd and correctly refuse'), and tests/test_mcp_door_engine_cwd.py's module docstring ('checklist_engine.origin_worktree_refusal compares a spine's stamped origin.worktree against the engine's AMBIENT cwd'). I MEASURED that these are false as shipped rather than inferring it: driving a spine whose origin.worktree is '/totally/elsewhere' from a foreign cwd, both claim and start return rc=0. Sharper still, tests/test_explorer_templates.py cites the 2026-08-15 worktree-identity ruling as LIVE authority for that behaviour, while checklist_engine's module header says this change SUPERSEDES that ruling -- so one of the six preserved supersession citations sits inside a passage asserting the superseded behaviour as current. Two live files now contradict the engine's own header, which is the same defect B1 was, one file over. Why I do NOT block on it: it is outside both families the gate defined, outside the gate's Allowed Scope (the implementer could not have repaired it without exceeding scope, and its stop condition would have forced a stop that this gate cannot itself resolve), and it is the same class as the already-reported tc-A residue. Route to g3 or #610's wave, and give whoever takes it the third family explicitly. Fenced instances of the same family, correctly not this gate's: scripts/mcp_spine_server.py (lane A, 2 blocks) and scripts/run_crew.py (lane E, 1 block)."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "tc10. tests/test_gauge_chain_writer_to_trip.py::test_containment_repo_agent_work_untouched_by_the_chain snapshots the LIVE .agent-work/ by size and mtime and asserts nothing moved -- so it fails for any agent that runs the suite while doing its own work under .agent-work/, which is where every crew's survey, plan, evidence and scratch lives. It cost me one full 128s suite run and a false 1-failed reading that looked exactly like a regression. Same class as the documented CREW_SCRATCH_DIR caveat and it deserves the same one-line note in the handoff's Verification Commands block: measure on a quiet tree, run nothing else concurrently. Better still, the test could snapshot only paths outside the current crew's work-id subtree."
+    },
+    {
+      "id": "tc3",
+      "from": "r5-reconciliation",
+      "statement": "tc12 (fourth data point, re-raising the implementer's tc-B and my predecessor's tc-A). The prose block still has NO repo-level guard. Three crews have now hand-written a clause checker under .agent-work/ -- check_three_copies.py, then check_claims_repaired.py -- each covering a different subset of the copies, and the gap between subsets is where each round's defect lived. Every one of them dies with the crew that wrote it. This round's check_claims_repaired.py is the best of them (six segments, red at base and green on the tree) and it will die too. Roughly 120 lines -- the segment extractor plus the clause table -- promoted into tests/ would make the guard outlive the crew and would have caught B1 at implement time. Additionally, sweep_claims.py's strip-markers-and-flatten rendering is eight lines and belongs in shared tooling: a claim wrapped across two comment lines is invisible to every line-oriented grep this lane's doctrine specifies, which is how B1 survived three passes and how one of the six C8 citations hides from the obvious verification command."
+    }
+  ],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/cleanup-f-derive-worktree/g2/reviewer/attempt-3",
+    "status": "released",
+    "claimed_at": "2026-08-16T20:49:37.162785+00:00",
+    "last_heartbeat": "2026-08-16T21:03:13.045021+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T21:04:52.358949+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-16T20:49:55.909631+00:00",
+      "reason": "The survey template resolves the Fowler record to one fixed path shared by every reviewer on this work-id; three predecessor records already sit at FOWLER_PASS.json and my handoff forbids overwriting a predecessor's record. Re-point c1 at a per-crew filename (triage candidate tc7).",
+      "authority": "constellation/cleanup-f-derive-worktree/execute/commander/attempt-3",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}

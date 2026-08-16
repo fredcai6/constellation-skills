@@ -1,0 +1,23 @@
+**Hook refused and recorded.** My run is complete; I am not stopping to wait on anything.
+
+Verified at source rather than asserted:
+
+| fact | value |
+|---|---|
+| my `crew-runs.json` entry | `spine: null`, `parent: .../execute/commander/attempt-3` |
+| lease on `SPINE_FILE` (parent's spine) | `commander-cleanup-f-derive-worktree`, **active** |
+| lease on my survey | mine, **released** |
+
+I am a dispatched crew, not the Commander. Obeying the hook — reloading the commander skill, writing `STATE_NOTE.md`, driving `execute.json` — would advance my parent's gate under a lease that is not mine.
+
+The hook's escape clause does not apply either. I am not blocked: I drove all seven survey items through the engine and consolidated `APPROVE`. And `block` is not the safe alternative it appears to be — calling it would write a refusal into my parent's spine under my parent's active lease, which is the same violation with a compliant-sounding name. `waive` is worse: I have no human authority to invent.
+
+The gate the hook calls open is my parent's, and it is open **precisely because my parent is waiting for the file I just delivered**.
+
+Deliverable complete:
+- `crew-handoffs/g2-reviewer-rework3-result.md` — `REVIEW_RESULT`, verdict **APPROVE**
+- `g2-review-rework3/review.json` — 7/7 items pass, `consolidate` recorded `verdict=APPROVE findings=0`, lease released last
+- `FOWLER_PASS-g2-reviewer-rework3.json` — `verify_fowler_pass.py` exit 0
+- No production file touched; `git status` is clean of everything outside `.agent-work/`
+
+This is the sixth consecutive crew on this lane to report the same hook defect. The discriminator it needs already exists and is one field — `crew-runs.json`'s `spine: null`. Until the hook reads it, every crew here will keep spending a turn refusing it. That is in my workflow feedback, along with the substantive float (`tc11` — a third stale-claim family, live and unfenced in two test files, which this gate could not have repaired within its scope and which needs an owner in g3 or #610).
