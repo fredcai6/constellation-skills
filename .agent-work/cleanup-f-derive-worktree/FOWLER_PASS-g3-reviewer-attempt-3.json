@@ -1,0 +1,86 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "diff_ref": "g3 rework 2: git diff 6bba3fd2..7d12c29d -- scripts/hooks/spine_rail.py tests/test_spine_rail.py (the handoff pins this commit as 9b1a551e, which was amended into 7d12c29d; the two trees are identical). Read in the context of the whole gate, 999b7663..c5ad8d61.",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md, constellation-how-to-talk",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "decide_session_start is ~130 lines (scripts/hooks/spine_rail.py:1714-1845) doing five things in one body: ownership selection, the withhold decision, the blind scan, the bind-on-resume WRITE, and the resume-context rendering. The rework-1 reviewer flagged it at 105 lines and tied the flag to B4 directly; the fix for B4 made it longer, not shorter. This is not a style note on this gate -- B5, my blocker, lives exactly in the coupling between its first part (what `owned` means) and its fourth (what the scan-bind writes), and at this length nothing invites a reader to check that the guard covers every way the fourth part is reached. Extracting the bind step is the structural fix; the implementer named it as a triage candidate and I agree it is not this gate's work.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "Production code is module-level functions, no class. The test class OwnershipIsBindingKeyNotWorktree grows 14 -> 18 methods plus one extracted helper, all on one invariant that its docstring states; that is a focused grouping, not a large class.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "absent",
+      "finding": "The four new tests share the fixture through an extracted _in_tree_crew_only helper rather than repeating it, and the one production comparison stays in _own_entries with exactly two call sites.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "references/global-everyone.md 'one canonical path; no speculative abstraction', plus this gate's pinned constraint that scripts/hooks/spine_rail.py stays a single stdlib-only hook module (the import block is asserted byte-identical by the gate's own differential).",
+        "reason": "decide_session_start and decide_stop both manipulate the binding store's internals more than their own state, which is textbook feature envy toward a binding module. There is no such module and the standard forbids inventing one here: a hook that must run stdlib-only from one file has nowhere to move the behaviour to. The smell is real and it is subordinated, not dismissed -- it is the same root the data-clumps flag names, and the flagged entry is where the recommendation lives."
+      }
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "flagged",
+      "finding": "`sid_bindings`, `owners` (session_view_provenance) and `own_key` (binding_key) are computed together and travel together at BOTH call sites, and `_own_entries` takes the last two as loose arguments. Because they are three loose locals rather than one value, the fix's discriminator had to be spelled as raw truthiness on one line -- `if spine is None and sid_bindings and not owned` -- where the three states that actually matter (owns nothing visible / owns something unusable / has no binding at all) have no names. B5 is the state that has no name. A small ownership view carrying those three fields, with owns_nothing_visible() and own_entries() on it, would have made the missing third case a visible gap rather than an unwritten one.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "binding_key()'s documented contract -- 'the SINGLE place the composite per-agent key is composed anywhere in the codebase' -- together with references/global-everyone.md 'no speculative abstraction'.",
+        "reason": "Binding identity is a raw string with a '#' separator and ownership is a raw string equality, which is primitive obsession by the letter. The repo has already answered it the way it means to: one composer function, one comparison function, both documented as sole authorities, so the two sides cannot drift. Introducing a BindingKey type inside a stdlib-only hook would be the speculative abstraction the standard forbids and would buy nothing the two chokepoints do not already buy."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "_own_entries takes three arguments and the rework adds none; no signature in the diff grows.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "One rule change forced prose edits in four places that each restate the same rule: the module-level section comment (~line 691), _is_own_entry's docstring, _own_entries' docstring, and the branch comment inside decide_session_start -- plus four test docstrings. That is shotgun surgery in the documentation dimension, and it is measurably costly here rather than theoretically: of the five false sentences I found, four are in three different restatements of the one rule. Each restatement is another copy that can go stale independently, and on this lane they have, at every rework.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "flagged",
+      "finding": "decide_session_start's single body has now been edited three times on this one gate for three different reasons: how selection identifies an owner (rework 1), whether a withheld session may reach the writer (rework 2), and -- if B5 is fixed as I recommend -- what the writer itself may file. Three unrelated axes of change landing in one function is divergent change, and it is the same structural fact the long-method flag names from the other side.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "The deepest chains are the pre-existing two-hop guarded reads (spine.get('engine_session') or {}).get('status'); the rework adds none.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "The rework adds no symbol, no parameter, no extension point -- one hoisted local and one condition. map/INDEX.md's scripts entity count is unchanged at 1225, which is the mechanical confirmation.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "flagged",
+      "finding": "The strongest smell in this diff. A one-line condition carries roughly thirty lines of comment arguing that it is correct, and the argument is where the defect hides: the paragraph explaining why the OWN-but-unreadable case is safely excluded ('this agent is contradicting no one', 'a spine nobody claimed') is false in a topology I reproduced through production writers. Fowler's point exactly -- prose was used to make a structure readable instead of the structure being made readable, and here the prose did not merely fail to help, it actively certified the gap. The same diff also carries a test NAME making a universal claim ('..._is_never_bound_to_its_in_tree_crews_spine') that the tree falsifies. This is the fifth recurrence of this defect on this lane and the first time it has concealed a blocker rather than merely misdescribed one.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

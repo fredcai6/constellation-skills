@@ -1,0 +1,39 @@
+probe capture: probe_payloads.jsonl | sid: c9b25095-7728-405e-bfe7-69c03d7343b0 | crew key: c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c
+==============================================================================
+PREGATE  999b7663
+    keys after the two real claims               ['c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c', 'c9b25095-7728-405e-bfe7-69c03d7343b0']
+    keys after the restart                       ['c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c', 'c9b25095-7728-405e-bfe7-69c03d7343b0']
+    parent now bound to the CREW's spine         False
+    provenance(crew spine)                       c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c
+    SessionStart handed the parent CREWMARK      True
+    parent Stop reason                           SPINE MID-FLIGHT (foreign-owned): a ga
+    parent Stop handed it CREWMARK               False
+    the CREW still sees its own gate             False
+REWORK1  6bba3fd2
+    keys after the two real claims               ['c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c', 'c9b25095-7728-405e-bfe7-69c03d7343b0']
+    keys after the restart                       ['c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c', 'c9b25095-7728-405e-bfe7-69c03d7343b0']
+    parent now bound to the CREW's spine         True
+    provenance(crew spine)                       c9b25095-7728-405e-bfe7-69c03d7343b0
+    SessionStart handed the parent CREWMARK      True
+    parent Stop reason                           SPINE MID-FLIGHT: gate g3 is still ope
+    parent Stop handed it CREWMARK               True
+    the CREW still sees its own gate             False
+HEAD     c5ad8d61
+    keys after the two real claims               ['c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c', 'c9b25095-7728-405e-bfe7-69c03d7343b0']
+    keys after the restart                       ['c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c', 'c9b25095-7728-405e-bfe7-69c03d7343b0']
+    parent now bound to the CREW's spine         True
+    provenance(crew spine)                       c9b25095-7728-405e-bfe7-69c03d7343b0
+    SessionStart handed the parent CREWMARK      True
+    parent Stop reason                           SPINE MID-FLIGHT: gate g3 is still ope
+    parent Stop handed it CREWMARK               True
+    the CREW still sees its own gate             False
+------------------------------------------------------------------------------
+CONTROL (HEAD, no SessionStart between the claims and the Stop):
+    keys after the two real claims               ['c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c', 'c9b25095-7728-405e-bfe7-69c03d7343b0']
+    keys after the restart                       ['c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c', 'c9b25095-7728-405e-bfe7-69c03d7343b0']
+    parent now bound to the CREW's spine         False
+    provenance(crew spine)                       c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c
+    SessionStart handed the parent CREWMARK      False
+    parent Stop reason                           SPINE MID-FLIGHT (foreign-owned): a ga
+    parent Stop handed it CREWMARK               False
+    the CREW still sees its own gate             True

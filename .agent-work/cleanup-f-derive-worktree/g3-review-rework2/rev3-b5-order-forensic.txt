@@ -1,0 +1,12 @@
+==============================================================================
+ORDER: parent key FIRST (commander claimed before its crew)
+  PREGATE  {"parent bound to crew spine": true, "SessionStart ctx leaks CREWMARK": true, "provenance of crew path": "s-parent#agentcrew", "parent Stop": "SPINE MID-FLIGHT (foreign-", "parent Stop leaks CREWMARK": false, "CREW's own Stop leaks/keeps its gate": false}
+  REWORK1  {"parent bound to crew spine": true, "SessionStart ctx leaks CREWMARK": true, "provenance of crew path": "s-parent#agentcrew", "parent Stop": "SPINE MID-FLIGHT (foreign-", "parent Stop leaks CREWMARK": false, "CREW's own Stop leaks/keeps its gate": true}
+  HEAD     {"parent bound to crew spine": true, "SessionStart ctx leaks CREWMARK": true, "provenance of crew path": "s-parent#agentcrew", "parent Stop": "SPINE MID-FLIGHT (foreign-", "parent Stop leaks CREWMARK": false, "CREW's own Stop leaks/keeps its gate": true}
+  HEAD/no-restart(control) {"parent bound to crew spine": false, "SessionStart ctx leaks CREWMARK": false, "provenance of crew path": "s-parent#agentcrew", "parent Stop": "SPINE MID-FLIGHT (foreign-", "parent Stop leaks CREWMARK": false, "CREW's own Stop leaks/keeps its gate": true}
+==============================================================================
+ORDER: crew key FIRST (crew claimed before the parent)
+  PREGATE  {"parent bound to crew spine": false, "SessionStart ctx leaks CREWMARK": true, "provenance of crew path": "s-parent#agentcrew", "parent Stop": "SPINE MID-FLIGHT (foreign-", "parent Stop leaks CREWMARK": false, "CREW's own Stop leaks/keeps its gate": false}
+  REWORK1  {"parent bound to crew spine": true, "SessionStart ctx leaks CREWMARK": true, "provenance of crew path": "s-parent", "parent Stop": "SPINE MID-FLIGHT: gate g3 ", "parent Stop leaks CREWMARK": true, "CREW's own Stop leaks/keeps its gate": false}
+  HEAD     {"parent bound to crew spine": true, "SessionStart ctx leaks CREWMARK": true, "provenance of crew path": "s-parent", "parent Stop": "SPINE MID-FLIGHT: gate g3 ", "parent Stop leaks CREWMARK": true, "CREW's own Stop leaks/keeps its gate": false}
+  HEAD/no-restart(control) {"parent bound to crew spine": false, "SessionStart ctx leaks CREWMARK": false, "provenance of crew path": "s-parent#agentcrew", "parent Stop": "SPINE MID-FLIGHT (foreign-", "parent Stop leaks CREWMARK": false, "CREW's own Stop leaks/keeps its gate": true}

@@ -1,0 +1,39 @@
+==============================================================================
+ARMS: PREGATE=999b7663 (37cf424e9711), REWORK1=6bba3fd2 (aca8fb61d6a0), HEAD=c5ad8d61 (f0cde2e7b4c6)
+working tree sha f0cde2e7b4c6 == HEAD blob: True
+GUARD OK: arms distinct by hash AND by behaviour on the B4 cell
+==============================================================================
+cell                                                 arm      SessionStart WROTE (key,workdir)   start ctx    Stop       Stop markers
+-------------------------------------------------------------------------------------------------------------------------------------
+C1 B4: sees crew's entry, owns none, 1 in-tree spine PREGATE  []                                 CREWMARK     block/foreign -
+                                                     REWORK1  [('s-parent', 'run-crew')]         CREWMARK     block      CREWMARK
+                                                     HEAD     []                                 -            block/foreign -
+-------------------------------------------------------------------------------------------------------------------------------------
+C2 #261: empty view, 1 in-tree spine                 PREGATE  [('s-parent', 'run-solo')]         SOLOMARK     block      SOLOMARK
+                                                     REWORK1  [('s-parent', 'run-solo')]         SOLOMARK     block      SOLOMARK
+                                                     HEAD     [('s-parent', 'run-solo')]         SOLOMARK     block      SOLOMARK
+-------------------------------------------------------------------------------------------------------------------------------------
+C3 owns an UNREADABLE entry + crew's in-tree spine   PREGATE  [('s-parent', 'run-crew')]         CREWMARK     block/foreign -
+                                                     REWORK1  [('s-parent', 'run-crew')]         CREWMARK     block/foreign -
+                                                     HEAD     [('s-parent', 'run-crew')]         CREWMARK     block/foreign -
+-------------------------------------------------------------------------------------------------------------------------------------
+C4 owns an UNREADABLE entry + unclaimed in-tree spine PREGATE  [('s-parent', 'run-alone')]        ALONEMARK    block      ALONEMARK
+                                                     REWORK1  [('s-parent', 'run-alone')]        ALONEMARK    block      ALONEMARK
+                                                     HEAD     [('s-parent', 'run-alone')]        ALONEMARK    block      ALONEMARK
+-------------------------------------------------------------------------------------------------------------------------------------
+C5 B4 topology, 2 in-tree spines (ambiguous scan)    PREGATE  []                                 CREWMARK     block/foreign -
+                                                     REWORK1  []                                 CREWMARK     block/foreign -
+                                                     HEAD     []                                 -            block/foreign -
+-------------------------------------------------------------------------------------------------------------------------------------
+C6 B4 topology, malformed agent_id in payload        PREGATE  []                                 CREWMARK     block/foreign -
+                                                     REWORK1  [('s-parent', 'run-crew')]         CREWMARK     block/foreign -
+                                                     HEAD     []                                 -            block/foreign -
+-------------------------------------------------------------------------------------------------------------------------------------
+
+CONTROL: same cells with NO SessionStart (Stop only), HEAD arm
+  C1 B4: sees crew's entry, owns none, 1 in-tree spine block/foreign      -
+  C2 #261: empty view, 1 in-tree spine                 (allow)            -
+  C3 owns an UNREADABLE entry + crew's in-tree spine   block/foreign      -
+  C4 owns an UNREADABLE entry + unclaimed in-tree spine (allow)            -
+  C5 B4 topology, 2 in-tree spines (ambiguous scan)    block/foreign      -
+  C6 B4 topology, malformed agent_id in payload        block/foreign      -

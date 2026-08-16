@@ -1,0 +1,10 @@
+==============================================================================
+ROUTE: parent key FIRST (natural), own entry 48h stale (reaped)
+  {"arm/label": "PREGATE", "binding key order after": ["s-parent#agentcrew", "s-parent"], "parent bound to CREW spine": true, "provenance(crew path)": "s-parent", "SessionStart leaked CREWMARK": true, "parent Stop reason": "SPINE MID-FLIGHT: gate g3 is still", "parent Stop LEAKED CREWMARK": true}
+  {"arm/label": "REWORK1", "binding key order after": ["s-parent#agentcrew", "s-parent"], "parent bound to CREW spine": true, "provenance(crew path)": "s-parent", "SessionStart leaked CREWMARK": true, "parent Stop reason": "SPINE MID-FLIGHT: gate g3 is still", "parent Stop LEAKED CREWMARK": true}
+  {"arm/label": "HEAD", "binding key order after": ["s-parent#agentcrew", "s-parent"], "parent bound to CREW spine": true, "provenance(crew path)": "s-parent", "SessionStart leaked CREWMARK": true, "parent Stop reason": "SPINE MID-FLIGHT: gate g3 is still", "parent Stop LEAKED CREWMARK": true}
+==============================================================================
+ROUTE: parent key FIRST (natural), own entry fresh (retained)
+  {"arm/label": "PREGATE", "binding key order after": ["s-parent", "s-parent#agentcrew"], "parent bound to CREW spine": true, "provenance(crew path)": "s-parent#agentcrew", "SessionStart leaked CREWMARK": true, "parent Stop reason": "SPINE MID-FLIGHT (foreign-owned): ", "parent Stop LEAKED CREWMARK": false}
+  {"arm/label": "REWORK1", "binding key order after": ["s-parent", "s-parent#agentcrew"], "parent bound to CREW spine": true, "provenance(crew path)": "s-parent#agentcrew", "SessionStart leaked CREWMARK": true, "parent Stop reason": "SPINE MID-FLIGHT (foreign-owned): ", "parent Stop LEAKED CREWMARK": false}
+  {"arm/label": "HEAD", "binding key order after": ["s-parent", "s-parent#agentcrew"], "parent bound to CREW spine": true, "provenance(crew path)": "s-parent#agentcrew", "SessionStart leaked CREWMARK": true, "parent Stop reason": "SPINE MID-FLIGHT (foreign-owned): ", "parent Stop LEAKED CREWMARK": false}
