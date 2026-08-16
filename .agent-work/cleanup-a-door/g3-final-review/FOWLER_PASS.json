@@ -1,0 +1,86 @@
+{
+  "work_id": "cleanup-a-door",
+  "diff_ref": "gate g3, a69bbac4..176133ac (4e1f22cb the door change, 359d93df the docs/map rework, 176133ac the pin-message correction). Final re-review, attempt 3. The slice this attempt was scoped to is one string literal, which is not smell-testable on its own, so the pass is rendered over the gate's whole change -- 425 lines of scripts/mcp_spine_server.py plus five test modules -- and judged independently rather than inherited from the two prior passes.",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "Every function this gate adds has a short body: _spine_from_env and _engine_from_env are 2-4 statements, _telemetry_path and the three accessors over it are one-liners, _bind_process_to is 4 statements, _unbound_refusal and _rebind_refusal are flat guard sequences. _spine_open is 40 statements but is a linear validate-then-act dispatch with no nesting past one level. The module's one long function, call_tool, is a pre-existing dispatcher this gate did not restructure.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "scripts/mcp_spine_server.py defines no classes and this gate adds none. The added classes are unittest.TestCase suites, each grouped around one pinned invariant (OneBinderPinTests, IdentityGuardSurvivesARebindTests, SpineOpenNeverBindsIdentityTests) and of ordinary size.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "Two repetitions. (1) _calllog, _start_marker and _rejectionlog are three one-line wrappers over _telemetry_path differing only in an env-var name and a filename. (2) _HOW_TO_BIND and _HOW_TO_REBIND are two 2-line constants differing in one word.",
+      "override": {
+        "repo_standard": "global-everyone.md, Universal posture: 'One canonical path; no speculative abstraction', and its deep-module vocabulary's deletion test -- 'delete the module in imagination: if complexity vanishes it was a pass-through; if it reappears across N callers it was earning its keep'. Plus 'Fail visibly rather than emit plausible wrong output'.",
+        "reason": "(1) This IS the de-duplicated form. 4e1f22cb extracted the shared override-then-derive logic into the single _telemetry_path; the three wrappers are named seams over one canonical implementation. Deleting them pushes two magic strings per channel back to every call site and loses each channel's recorded contract, so complexity reappears across callers. (2) The two refusal texts are deliberately not one parameterized string: _unbound_refusal's own docstring records that an unbound door has no path to name, so a single message promising to name one is unsatisfiable there and invites a fabricated path. Merging them would re-merge the two refusal classes whose separation is the fix, which is the fail-visibly standard directly."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "The new functions act on their own module's state. _primary_checkout_for_lifecycle reaches into git via _git_rev_parse and into spine_lifecycle._default_wt_root, but those are the owning modules for those questions and are called rather than reimplemented -- _spine_open's own docstring records that _default_wt_root is the ONE place that answers 'where do worktrees live'.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "overridden",
+      "finding": "SPINE and SESSION are two loose module globals that always travel together: they are assigned together at import, moved together by _bind_process_to, mirrored together into os.environ, and enumerated together by IDENTITY_GLOBALS in the new pin. That is an unnamed pair -- a door identity with no type.",
+      "override": {
+        "repo_standard": "global-everyone.md, Universal posture: 'One canonical path; no speculative abstraction', and the deletion test in its deep-module vocabulary.",
+        "reason": "This gate answers the clump the way the standard prefers: not with a value object but by reducing the number of places the pair can move to exactly one named function, and pinning that count with a whole-module AST check over every assignment form (OneBinderPinTests, which I mutation-proved can fail). A DoorIdentity type would have exactly one constructor and one consumer, so the deletion test retires it as a pass-through -- complexity does not reappear across callers. The invariant the clump threatens is 'one spine per process', and that is now enforced structurally rather than by types."
+      }
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "Paths are Path, not str, throughout the new code; the None-vs-Path distinction in _spine_from_env carries the unbound state in the type rather than in a sentinel string, and _unbound_refusal returns None-or-message rather than a bool plus an out-param.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "Longest signature added is _resolve_confined(candidate, join_relative_to, bound_dir) at three, and _telemetry_path(env_var, beside_the_spine) at two. The tool dispatch functions take the MCP-mandated (name, args) pair.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "One change to how the door acquires identity required coordinated edits in nine files, and the sweep evidence shows it did not reach all of them. The CODE half was handled well -- the four scattered import-time SPINE derivations were collapsed behind _telemetry_path and late-bound accessors, so a future change to that rule now has one site. The DOCUMENTATION half was not: the same fact ('where does spine_open get its checkout from') is restated in scripts/mcp_spine_server.py's module docstring, in _spine_open's docstring, in _primary_checkout_for_lifecycle's docstring, in a pin's failure message, in a test comment, and in tests/test_mcp_adoption.py, with no single source of truth. Three of those six were updated and three were not, which is the mechanism behind this review's blocker and behind rework 2's. The blast radius runs further still, into scripts/run_crew.py, tests/test_crew_launcher.py and scripts/hooks/spine_rail.py.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "The module changes for one reason here -- how identity is acquired -- and the gate's edits all serve it. The telemetry-path work is #604's, landed in g1, not a second axis introduced by this gate.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "The longest chain added is Path(__file__).resolve().parent, which is one Path idiom rather than a walk across collaborators' internals. _primary_checkout_for_lifecycle deliberately avoids a chain by asking git for --git-common-dir with an explicit cwd instead of resolving through the ambient one.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "No unused hooks, no parameters added for a caller that does not exist. _telemetry_path's two parameters both have three live callers. The one place generality was available -- adding a spine_bind verb -- was explicitly declined in favour of binding on the existing spine_open (decision:bind-on-open-over-new-verb).",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "flagged",
+      "finding": "This is the gate's blocker, in Fowler terms. Four comments and docstrings in scope describe a mechanism the code no longer has: scripts/mcp_spine_server.py:129-131 ('deriving the primary checkout it opens work from fresh off SPINE_FILE ... rather than the module's own SPINE binding' -- inverted at HEAD), :30 ('Ambient state is bound at server-launch time ... a model cannot point the door at a different spine or identity mid-conversation' -- which _bind_process_to's own docstring at :868 says must now read 'bound at launch OR at spine_open'), tests/test_mcp_lifecycle.py:335-339, and tests/test_mcp_adoption.py:98-102. The test_mcp_lifecycle.py one is the sharpest case of the smell: the comment does not merely describe stale behaviour, it JUSTIFIES live setup code, and replacing that code's os.environ write with a pop leaves the test green -- so the comment is holding up scaffolding that measurement shows is inert. The gate's prose is unusually rich and mostly excellent; the defect is that its density is exactly what makes a stale claim expensive, and nothing ties these six restatements of one fact together.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

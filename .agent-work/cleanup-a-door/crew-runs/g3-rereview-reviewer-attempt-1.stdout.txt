@@ -1,0 +1,17 @@
+I'm not acting on that imperative, and this is not a stall — my dispatch is genuinely finished.
+
+**The hook is addressing the wrong agent.** It keys on `SPINE_FILE`, which for a `run_crew.py`-dispatched crew is the **Commander's** spine, inherited from the dispatching process:
+
+- `$SPINE_FILE` → `.agent-work/cleanup-a-door/spine.json`, `LEASE active: commander-cleanup-a-door (by commander)`
+- My session → `constellation/cleanup-a-door/g3-rereview/reviewer/attempt-1`
+- My `SPINE_PARENT` → `constellation/cleanup-a-door/execute/commander/attempt-1`
+
+The open `execute` gate belongs to my parent and is leased by them. The imperative it hands me is the Commander's: reload `constellation-commander`, rewrite `STATE_NOTE.md`, drive `execute.json` gate by gate, dispatch crews through `run_crew.py`. A reviewer crew driving its Commander's `execute` gate is precisely what that lease exists to prevent, so I ran no mutating verb against it — only read-only `current` to establish which file was whose.
+
+**My own work file is complete:** `LEASE released`, `DONE: no open items`. Seven items visited, 6 pass / 1 fail, consolidated `BLOCK`, and the delivery artifact the handoff named is written to `.agent-work/cleanup-a-door/crew-handoffs/g3-rereview-result.md`.
+
+**On the hook's "use the block verb or waive" instruction:** neither applies. `block` and `waive` are verbs against a checklist, and the only checklist that is mine is finished. Bubbling my blocker to my parent is exactly what the `REVIEW_RESULT` does — that artifact *is* the escalation path for a dispatched crew, and it reports `BLOCK` with the one finding and its one-line fix. Waiving would require human authority I do not have and would be waiving someone else's check.
+
+Worth flagging to whoever picks this up: **this is the fifth crew-side firing of the same gap in this run** — g3's implementer, g3's reviewer, g3's rework implementer, and now me twice. The hook should compare the bound spine's lease holder against the calling session before declaring a crew mid-flight; a crew whose own work file reports `DONE` and whose session does not hold the bound spine's lease is not mid-flight. I recorded it under *Instructions improvised around* in the result, alongside the `--finding` backtick hazard that episode `epic-559_c2-generate-the-spine-006` assertion `a4` already documents for `--why`.
+
+The Commander needs to resume their own `execute` gate in their own session and act on the `BLOCK`.

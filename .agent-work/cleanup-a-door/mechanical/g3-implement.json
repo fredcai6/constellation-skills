@@ -5,9 +5,9 @@
     "run": "cleanup-a-door",
     "project": "constellation-skills",
     "spine-step": "g3-implement",
-    "rework-count": 0,
+    "rework-count": 3,
     "failed-commands": 0,
-    "reopens": 0,
+    "reopens": 3,
     "context-manifest-ref": "ctx-cleanup-a-door-g3-implement@925369f1d772405fab6b74df207e7523ffcac929",
     "artifact-ref": []
   },
@@ -17,6 +17,6 @@
   ],
   "run": {
     "work_id": "cleanup-a-door",
-    "generated_at": "2026-08-16T13:55:33Z"
+    "generated_at": "2026-08-16T15:59:13Z"
   }
 }

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m5-sweep",
+  "files": [],
+  "repo_rev": {
+    "commit": "176133ac18a8f8eab91bbc9eca0afe30421e234f"
+  },
+  "run": {
+    "work_id": "cleanup-a-door-g3-rework3-implementer",
+    "generated_at": "2026-08-16T16:12:00Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door"
+    }
+  }
+}

@@ -1,0 +1,85 @@
+# g3 RED: tests/test_mcp_door_unbound.py on the PRE-FIX tree
+# measured 2026-08-16T07:02:32-07:00 at 408e6d26, __pycache__ cleared (#597)
+# The whole file is red: the server dies at import (KeyError: 'SPINE_FILE',
+# mcp_spine_server.py:146) before it can refuse anything.
+
+
+tests/test_mcp_door_unbound.py:298: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def door_tool_names() -> list[str]:
+        """Every tool the door declares, asked of the door itself rather than
+        hand-copied -- so a tool added later is covered here the day it ships."""
+        proc = subprocess.Popen(
+            [sys.executable, str(SERVER)],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            text=True, encoding="utf-8", env={"PATH": os.environ.get("PATH", ""), **unbound_env()},
+        )
+        out, err = proc.communicate(json.dumps(
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}) + "\n", timeout=120)
+        for line in out.splitlines():
+            try:
+                msg = json.loads(line)
+            except ValueError:
+                continue
+            if msg.get("id") == 1:
+                return [t["name"] for t in msg["result"]["tools"]]
+>       raise AssertionError(
+            f"the unbound door could not even list its tools; exit {proc.returncode}, "
+            f"stderr:\n{err}")
+E       AssertionError: the unbound door could not even list its tools; exit 1, stderr:
+E       Traceback (most recent call last):
+E         File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 146, in <module>
+E           SPINE = Path(os.environ["SPINE_FILE"]).resolve()
+E                        ~~~~~~~~~~^^^^^^^^^^^^^^
+E         File "<frozen os>", line 685, in __getitem__
+E       KeyError: 'SPINE_FILE'
+
+tests/test_mcp_door_unbound.py:164: AssertionError
+_ EveryToolRefusesWhenUnboundTests.test_stdout_stays_pure_json_rpc_while_refusing _
+
+self = <test_mcp_door_unbound.EveryToolRefusesWhenUnboundTests testMethod=test_stdout_stays_pure_json_rpc_while_refusing>
+
+    def test_stdout_stays_pure_json_rpc_while_refusing(self):
+        """`constraint:stdout-is-the-protocol-channel`. A refusal printed to
+        stdout would corrupt the transport it travels on."""
+        run = drive_door(unbound_env(), [(2, "spine_status", {}), (3, "spine_close", {})])
+        # Assert the answers exist FIRST: a door that died writes no stdout at
+        # all, and a loop over nothing would pass this vacuously.
+        for mid in (2, 3):
+>           self.assertTrue(run.is_error(mid))
+                            ^^^^^^^^^^^^^^^^^
+
+tests/test_mcp_door_unbound.py:329: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = DoorRun(stdout='', stderr='Traceback (most recent call last):\n  File "/home/tommy/projects/constellation-skills/.work...   ~~~~~~~~~~^^^^^^^^^^^^^^\n  File "<frozen os>", line 685, in __getitem__\nKeyError: \'SPINE_FILE\'\n', returncode=1)
+mid = 2
+
+    def is_error(self, mid: int) -> bool:
+        answer = self.answer(mid)
+>       assert answer is not None, (
+            f"the door never answered call id={mid}; exit {self.returncode}, "
+            f"stderr:\n{self.stderr}")
+E       AssertionError: the door never answered call id=2; exit 1, stderr:
+E         Traceback (most recent call last):
+E           File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 146, in <module>
+E             SPINE = Path(os.environ["SPINE_FILE"]).resolve()
+E                          ~~~~~~~~~~^^^^^^^^^^^^^^
+E           File "<frozen os>", line 685, in __getitem__
+E         KeyError: 'SPINE_FILE'
+E         
+E       assert None is not None
+
+tests/test_mcp_door_unbound.py:94: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_mcp_door_unbound.py::UnboundDoorRefusesTests::test_a_directory_as_spine_file_is_refused
+FAILED tests/test_mcp_door_unbound.py::UnboundDoorRefusesTests::test_an_unreadable_spine_file_is_refused
+FAILED tests/test_mcp_door_unbound.py::UnboundDoorRefusesTests::test_empty_spine_file_refuses_rather_than_binding_the_cwd
+FAILED tests/test_mcp_door_unbound.py::UnboundDoorRefusesTests::test_missing_spine_file_names_the_path
+FAILED tests/test_mcp_door_unbound.py::UnboundDoorRefusesTests::test_unset_spine_engine_does_not_kill_the_server_at_import
+FAILED tests/test_mcp_door_unbound.py::UnboundDoorRefusesTests::test_unset_spine_file_refuses_instead_of_dying_at_import
+FAILED tests/test_mcp_door_unbound.py::UnboundDoorRefusesTests::test_whitespace_only_spine_file_is_the_same_class_as_empty
+FAILED tests/test_mcp_door_unbound.py::EveryToolRefusesWhenUnboundTests::test_every_tool_but_the_one_that_binds_refuses
+FAILED tests/test_mcp_door_unbound.py::EveryToolRefusesWhenUnboundTests::test_stdout_stays_pure_json_rpc_while_refusing
+9 failed in 0.24s

@@ -4,8 +4,8 @@
   "mechanical": {
     "run": "cleanup-a-door",
     "project": "constellation-skills",
-    "role": "reviewer",
-    "refusals": 1,
+    "role": "agent",
+    "refusals": 2,
     "spine-step": "r2-scope",
     "rework-count": 0,
     "failed-commands": 0,
@@ -16,6 +16,6 @@
   "refused": [],
   "run": {
     "work_id": "cleanup-a-door",
-    "generated_at": "2026-08-16T13:10:51Z"
+    "generated_at": "2026-08-16T15:52:43Z"
   }
 }

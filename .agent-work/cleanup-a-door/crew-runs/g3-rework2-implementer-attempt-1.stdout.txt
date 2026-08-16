@@ -1,0 +1,22 @@
+My run is complete and I'm deliberately not acting on the hook. Here's the verification:
+
+| | |
+|---|---|
+| Open gate `execute` lives in | `spine.json`, lease `commander-cleanup-a-door`, `claimed_by: commander` |
+| My plan `cleanup-a-door-g3-rework2-implementer` | 6/6 complete, lease released |
+| Deliverables | commit `176133ac` (one file); result artifact written; source tree clean |
+
+The Stop hook is reading the `SPINE_FILE` I **inherited from the dispatching commander**, not a spine of my own. Gate `execute` is open because my parent is mid-run — waiting on the artifact I just wrote.
+
+The hook offers three exits and none is available to a crew:
+
+- **Keep driving `execute`** — that is a crew driving its parent's spine. This repo has archived that exact failure twice (`.agent-work/archive/2026-08-15-stop-hook-door-binding/`, `.../2026-08-15-tc1-worktree-identity/`).
+- **`block`** — would bubble a blocker onto the Commander's own gate, and would require `--force` takeover of an active lease I don't hold.
+- **`waive`** — needs human authority I don't have, and doctrine is explicit: never invent one.
+
+So I declined all three rather than pick the least-wrong. I've added the measured detail to my result artifact's Workflow Feedback, since that's the channel my parent actually reads: the hook should compare the bound spine's lease owner against the acting session and stay silent when the open gate belongs to a different session. A crew that closed its own plan and released its own lease is finished, whatever its parent's spine says.
+
+Two things still need your decision, both in the result artifact:
+
+1. **`scripts/mcp_spine_server.py:128-130`** carries a third instance of the #603-invalidated claim. Out of my scope, untouched, flagged as `tc1`. g3's "no invalidated claim survives" property is not yet true tree-wide.
+2. **"in-scope" is ambiguous** between your close criteria and your stop condition. I read it as *my allowed scope* and returned `complete`; under the broader reading this is `partial` and the docstring needs assigning.

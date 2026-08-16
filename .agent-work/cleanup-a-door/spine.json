@@ -326,7 +326,8 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "all 10 execute.json items closed with integrated evidence; engine reports DONE: no open items"
         },
         {
           "id": "c2",
@@ -335,7 +336,8 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id cleanup-a-door"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-3"
         }
       ],
       "constraints": [],
@@ -362,7 +364,7 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -382,6 +384,17 @@
           "type": "command-output",
           "payload": {
             "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_state_note.py cleanup-a-door",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id cleanup-a-door",
             "exit": 0,
             "shell": "posix"
           },
@@ -640,7 +653,7 @@
     "session_id": "commander-cleanup-a-door",
     "status": "active",
     "claimed_at": "2026-08-16T12:31:35.996339+00:00",
-    "last_heartbeat": "2026-08-16T12:52:16.736020+00:00",
+    "last_heartbeat": "2026-08-16T16:48:26.006774+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -674,6 +687,13 @@
       "why": "Plan frozen AFTER a cold critic materially reshaped it. Three crew gates: g1 #604 telemetry-never-fatal, g2 #605 usable shipped demo, g3 #603 fail-closed + bind-on-open. Two declared departures from the order, both measured: gate order reversed so the shipped default never points at a broken file at any commit, and #605's own 'relative paths' fix direction overridden because checklist_engine.py:883 runs command checks with no cwd. The critic proved four blocking gaps I had missed -- a second hard os.environ read at :593 on spine_open's own path, SESSION being a second identity root that claim refuses without, empty-string being the failure world production actually takes, and both integrate postconditions passing on the defective tree. All independently verified before acting. c6 waived: no frame can pass verify-frame in this repo.",
       "mechanical": false,
       "ts": "2026-08-16T12:51:31.668207+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "All three gates closed. #604, #605 and #603 fixed; the epic's exit criterion reproduced in one process with no CLI. Three reworks on g3, every one a documentation-truth failure rather than a behaviour failure -- a map rebuilt before staging, a pin message asserting a read the fix had removed, and four further invalidated claims a keyword sweep could not see. Two of those escaped because a line-based grep cannot see a string built from adjacent literals, and because my own rework handoff scoped the sweep to EDIT PERMISSION rather than BLAST RADIUS. Three fenced files owned by lanes B and C still carry claims this change falsified; they go to the Admiral, not fixed here.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:48:26.006755+00:00"
     }
   ],
   "trip_ledger": [

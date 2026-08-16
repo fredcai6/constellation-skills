@@ -1,0 +1,12 @@
+# g3 rework 2 — diffstat, source tree only (.agent-work run artifacts excluded: they are the run's own bookkeeping, not this rework's change)
+$ git diff --stat -- . ":!.agent-work"
+ tests/test_mcp_lifecycle.py | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+$ git check-ignore -v tests/test_mcp_lifecycle.py ; echo "exit=$?"
+exit=1 (1 = not ignored, deliverable path is committable)
+
+# for completeness, the tracked .agent-work churn is the engine's own state, written by checklist_engine verbs:
+ .agent-work/cleanup-a-door/execute.json.journal    |  19 ++
+ .../cleanup-a-door/mechanical/g3-implement.json    |   6 +-
+ 13 files changed, 491 insertions(+), 84 deletions(-)

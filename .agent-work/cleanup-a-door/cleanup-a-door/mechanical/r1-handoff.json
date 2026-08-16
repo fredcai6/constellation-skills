@@ -4,25 +4,18 @@
   "mechanical": {
     "run": "cleanup-a-door",
     "project": "constellation-skills",
-    "role": "reviewer",
+    "role": "agent",
     "refusals": 2,
     "spine-step": "r1-handoff",
     "rework-count": 0,
     "failed-commands": 0,
     "reopens": 0,
     "context-manifest-ref": "ctx-cleanup-a-door-r1-handoff@8362b1ec9aa0e9fbbd1cad0a744a0b576e5c6e1f",
-    "artifact-ref": [
-      "examples/mcp-interactive-demo/.gitignore",
-      "examples/mcp-interactive-demo/README.md",
-      "examples/mcp-interactive-demo/make_demo_spine.py",
-      "examples/mcp-interactive-demo/spine.json",
-      "map/INDEX.md",
-      "tests/test_shipped_examples_are_portable.py"
-    ]
+    "artifact-ref": []
   },
   "refused": [],
   "run": {
     "work_id": "cleanup-a-door",
-    "generated_at": "2026-08-16T13:48:36Z"
+    "generated_at": "2026-08-16T16:38:54Z"
   }
 }

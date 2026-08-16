@@ -525,7 +525,8 @@
               "status": "complete"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-8"
         }
       ],
       "constraints": [
@@ -582,8 +583,10 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
-      "status_detail": {},
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Final review BLOCK: four invalidated claims survive in the change's blast radius (mcp_spine_server.py:30 and :129-131, tests/test_mcp_lifecycle.py:335-339 plus the inert os.environ write it justifies, tests/test_mcp_adoption.py:98-102). Docs and dead scaffolding only. Root cause: the prior rework's sweep was scoped to edit permission rather than blast radius."
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -595,10 +598,111 @@
             "why_ref": "w-7"
           },
           "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "Final review BLOCK: four invalidated claims survive in the change's blast radius (mcp_spine_server.py:30 and :129-131, tests/test_mcp_lifecycle.py:335-339 plus the inert os.environ write it justifies, tests/test_mcp_adoption.py:98-102). Docs and dead scaffolding only. Root cause: the prior rework's sweep was scoped to edit permission rather than blast radius.",
+            "ts": "2026-08-16T15:59:13.041821+00:00"
+          }
+        },
+        {
+          "id": "e-g3-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "Final review BLOCK: four invalidated claims survive in the change's blast radius (mcp_spine_server.py:30 and :129-131, tests/test_mcp_lifecycle.py:335-339 plus the inert os.environ write it justifies, tests/test_mcp_adoption.py:98-102). Docs and dead scaffolding only. Root cause: the prior rework's sweep was scoped to edit permission rather than blast radius.",
+            "ts": "2026-08-16T15:59:13.041835+00:00"
+          }
+        },
+        {
+          "id": "e-g3-implement-3",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g3-implement",
+            "why_ref": "w-9"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "Final review BLOCK: four invalidated claims survive in the change's blast radius (mcp_spine_server.py:30 and :129-131, tests/test_mcp_lifecycle.py:335-339 plus the inert os.environ write it justifies, tests/test_mcp_adoption.py:98-102). Docs and dead scaffolding only. Root cause: the prior rework's sweep was scoped to edit permission rather than blast radius.",
+            "ts": "2026-08-16T15:59:13.041837+00:00"
+          }
+        },
+        {
+          "id": "e-g3-implement-4",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "Final review BLOCK: four invalidated claims survive in the change's blast radius (mcp_spine_server.py:30 and :129-131, tests/test_mcp_lifecycle.py:335-339 plus the inert os.environ write it justifies, tests/test_mcp_adoption.py:98-102). Docs and dead scaffolding only. Root cause: the prior rework's sweep was scoped to edit permission rather than blast radius.",
+            "ts": "2026-08-16T15:59:13.041838+00:00"
+          }
+        },
+        {
+          "id": "e-g3-implement-5",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g3-implement",
+            "why_ref": "w-13"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "Final review BLOCK: four invalidated claims survive in the change's blast radius (mcp_spine_server.py:30 and :129-131, tests/test_mcp_lifecycle.py:335-339 plus the inert os.environ write it justifies, tests/test_mcp_adoption.py:98-102). Docs and dead scaffolding only. Root cause: the prior rework's sweep was scoped to edit permission rather than blast radius.",
+            "ts": "2026-08-16T15:59:13.041840+00:00"
+          }
+        },
+        {
+          "id": "e-g3-implement-6",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "Final review BLOCK: four invalidated claims survive in the change's blast radius (mcp_spine_server.py:30 and :129-131, tests/test_mcp_lifecycle.py:335-339 plus the inert os.environ write it justifies, tests/test_mcp_adoption.py:98-102). Docs and dead scaffolding only. Root cause: the prior rework's sweep was scoped to edit permission rather than blast radius.",
+            "ts": "2026-08-16T15:59:13.041841+00:00"
+          }
+        },
+        {
+          "id": "e-g3-implement-7",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g3-implement",
+            "why_ref": "w-17"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "Final review BLOCK: four invalidated claims survive in the change's blast radius (mcp_spine_server.py:30 and :129-131, tests/test_mcp_lifecycle.py:335-339 plus the inert os.environ write it justifies, tests/test_mcp_adoption.py:98-102). Docs and dead scaffolding only. Root cause: the prior rework's sweep was scoped to edit permission rather than blast radius.",
+            "ts": "2026-08-16T15:59:13.041842+00:00"
+          }
+        },
+        {
+          "id": "e-g3-implement-8",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
           "ts": ""
         }
       ],
-      "rework_count": 0
+      "rework_count": 3
     },
     "g3-review": {
       "id": "g3-review",
@@ -609,7 +713,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g3",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "rework 3 received and independently swept"
         }
       ],
       "postconditions": [
@@ -620,7 +725,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-10"
         }
       ],
       "constraints": [],
@@ -629,11 +735,145 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "complete",
+      "status_detail": {
+        "superseded_by_reopen": "g3-implement"
+      },
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g3-review",
+            "why_ref": "w-8"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "Final review BLOCK: four invalidated claims survive in the change's blast radius (mcp_spine_server.py:30 and :129-131, tests/test_mcp_lifecycle.py:335-339 plus the inert os.environ write it justifies, tests/test_mcp_adoption.py:98-102). Docs and dead scaffolding only. Root cause: the prior rework's sweep was scoped to edit permission rather than blast radius.",
+            "ts": "2026-08-16T15:59:13.041848+00:00"
+          }
+        },
+        {
+          "id": "e-g3-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "Final review BLOCK: four invalidated claims survive in the change's blast radius (mcp_spine_server.py:30 and :129-131, tests/test_mcp_lifecycle.py:335-339 plus the inert os.environ write it justifies, tests/test_mcp_adoption.py:98-102). Docs and dead scaffolding only. Root cause: the prior rework's sweep was scoped to edit permission rather than blast radius.",
+            "ts": "2026-08-16T15:59:13.041849+00:00"
+          }
+        },
+        {
+          "id": "e-g3-review-3",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g3-review",
+            "why_ref": "w-10"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "Final review BLOCK: four invalidated claims survive in the change's blast radius (mcp_spine_server.py:30 and :129-131, tests/test_mcp_lifecycle.py:335-339 plus the inert os.environ write it justifies, tests/test_mcp_adoption.py:98-102). Docs and dead scaffolding only. Root cause: the prior rework's sweep was scoped to edit permission rather than blast radius.",
+            "ts": "2026-08-16T15:59:13.041850+00:00"
+          }
+        },
+        {
+          "id": "e-g3-review-4",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g3-review",
+            "why_ref": "w-12"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "Final review BLOCK: four invalidated claims survive in the change's blast radius (mcp_spine_server.py:30 and :129-131, tests/test_mcp_lifecycle.py:335-339 plus the inert os.environ write it justifies, tests/test_mcp_adoption.py:98-102). Docs and dead scaffolding only. Root cause: the prior rework's sweep was scoped to edit permission rather than blast radius.",
+            "ts": "2026-08-16T15:59:13.041851+00:00"
+          }
+        },
+        {
+          "id": "e-g3-review-5",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "Final review BLOCK: four invalidated claims survive in the change's blast radius (mcp_spine_server.py:30 and :129-131, tests/test_mcp_lifecycle.py:335-339 plus the inert os.environ write it justifies, tests/test_mcp_adoption.py:98-102). Docs and dead scaffolding only. Root cause: the prior rework's sweep was scoped to edit permission rather than blast radius.",
+            "ts": "2026-08-16T15:59:13.041852+00:00"
+          }
+        },
+        {
+          "id": "e-g3-review-6",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g3-review",
+            "why_ref": "w-15"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "Final review BLOCK: four invalidated claims survive in the change's blast radius (mcp_spine_server.py:30 and :129-131, tests/test_mcp_lifecycle.py:335-339 plus the inert os.environ write it justifies, tests/test_mcp_adoption.py:98-102). Docs and dead scaffolding only. Root cause: the prior rework's sweep was scoped to edit permission rather than blast radius.",
+            "ts": "2026-08-16T15:59:13.041853+00:00"
+          }
+        },
+        {
+          "id": "e-g3-review-7",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "Final review BLOCK: four invalidated claims survive in the change's blast radius (mcp_spine_server.py:30 and :129-131, tests/test_mcp_lifecycle.py:335-339 plus the inert os.environ write it justifies, tests/test_mcp_adoption.py:98-102). Docs and dead scaffolding only. Root cause: the prior rework's sweep was scoped to edit permission rather than blast radius.",
+            "ts": "2026-08-16T15:59:13.041855+00:00"
+          }
+        },
+        {
+          "id": "e-g3-review-8",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g3-review",
+            "why_ref": "w-19"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-review-9",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g3-review",
+            "why_ref": "w-20"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-review-10",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-integrate": {
@@ -645,7 +885,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for g3",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT APPROVE received"
         }
       ],
       "postconditions": [
@@ -661,7 +902,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
         },
         {
           "id": "c2",
@@ -673,17 +915,44 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-10",
+          "attested": {
+            "evidence": "e-g3-review-10",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g3-integrate",
+            "why_ref": "w-21"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -778,6 +1047,116 @@
       "model": "claude-opus-5",
       "why_ref": "w-7",
       "ts": "2026-08-16T13:55:33.196759+00:00"
+    },
+    {
+      "id": "tl-9",
+      "gate": "g3-review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2374,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-8",
+      "ts": "2026-08-16T14:29:40.225380+00:00"
+    },
+    {
+      "id": "tl-10",
+      "gate": "g3-implement",
+      "verb": "reopen",
+      "outcome": "begin-refused",
+      "fill": 0.3122,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-9",
+      "ts": "2026-08-16T14:53:10.055643+00:00"
+    },
+    {
+      "id": "tl-11",
+      "gate": "g3-implement",
+      "verb": "reopen",
+      "outcome": "begin-released",
+      "fill": 0.3161,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-9",
+      "ts": "2026-08-16T14:53:14.874179+00:00"
+    },
+    {
+      "id": "tl-12",
+      "gate": "g3-review",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.3264,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-12",
+      "ts": "2026-08-16T15:12:07.756637+00:00"
+    },
+    {
+      "id": "tl-13",
+      "gate": "g3-review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3272,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-12",
+      "ts": "2026-08-16T15:12:12.068566+00:00"
+    },
+    {
+      "id": "tl-14",
+      "gate": "g3-implement",
+      "verb": "reopen",
+      "outcome": "begin-released",
+      "fill": 0.3369,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-13",
+      "ts": "2026-08-16T15:27:35.707934+00:00"
+    },
+    {
+      "id": "tl-15",
+      "gate": "g3-implement",
+      "verb": "reopen",
+      "outcome": "begin-released",
+      "fill": 0.1602,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-17",
+      "ts": "2026-08-16T15:59:13.016433+00:00"
+    },
+    {
+      "id": "tl-16",
+      "gate": "g3-review",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.2164,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-20",
+      "ts": "2026-08-16T16:31:07.851249+00:00"
+    },
+    {
+      "id": "tl-17",
+      "gate": "g3-review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3683,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-20",
+      "ts": "2026-08-16T16:31:33.254935+00:00"
+    },
+    {
+      "id": "tl-18",
+      "gate": "g3-integrate",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3723,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-21",
+      "ts": "2026-08-16T16:44:50.327732+00:00"
     }
   ],
   "why_trail": [
@@ -829,6 +1208,111 @@
       "why": "g2 closed. The demo now runs where it is installed: workspace resolves through shell expansion to an absolute path outside the repo on any machine, with no ambient cwd, which is the property checklist_engine.py:883 actually requires. Zero machine-specific paths remain under examples/. Two guards keep it that way -- a portability sweep with a named vacuity floor, and a regenerate-and-compare test that makes a hand-edit back to a machine path fail the suite. Both proven able to fail (3/7 fire on the pre-fix spine). I drove the demo from /tmp and the reviewer drove it from $HOME with the default workspace branch unset; both closed a gate whose command postcondition actually ran.",
       "mechanical": false,
       "ts": "2026-08-16T13:54:11.259282+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-implement",
+      "why": "#603 fixed, and I reproduced the EPIC'S EXIT CRITERION myself in one process: a door launched with SPINE_FILE genuinely unset refused spine_status BY NAME ('no spine is bound... call spine_open'), then spine_open minted and bound (returning SPINE_FILE and SPINE_SESSION), then spine_lease claim -- a MUTATING verb -- SUCCEEDED with the lease recorded as constellation/verify-exit-criterion, which is what proves SESSION was rebound and not just SPINE. No CLI touched. That is what #559 ruled and what epic 568 could not do. Also verified by me: empty-string SPINE_FILE, the case production actually takes, gives the same refusal (was IsADirectoryError); tests/test_mcp_lifecycle.py has ZERO removed lines against a69bbac4, so :194 and its positive control are byte-identical and the new module-wide assignment pin is pure addition; IdentityGuardSurvivesARebindTests 5/5 pass, so the fenced guard still refuses a foreign spine after a rebind; and the new regression suite fails 12/12 on a reverted server. I removed the throwaway worktree my probe created.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:29:40.083341+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g3-review",
+      "why": "REVIEW_RESULT: BLOCK, two blockers, both mechanical and both precisely attributed. (1) The full suite is RED at 4e1f22cb -- map/INDEX.md is stale. The reviewer proved the mechanism rather than guessing it: code_map enumerates via git ls-files (TRACKED files only), the implementer's suite evidence is stamped 07:19:27 and the commit 07:27:11, so the map was rebuilt eight minutes BEFORE its own new test file was staged; the rebuild then matched a corpus that did not yet include tests/test_mcp_door_unbound.py. It bisected seven revisions to show the parent green and this commit red, and it ruled ITSELF out first -- and caught its own methodology error, that code_map titles the index from the directory name so a differently-named clone fails for a bogus reason. (2) Three doc references stranded by this commit's own renames. It also refuted two of the implementer's own triage candidates by measurement rather than forwarding them. Reworking.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:53:10.007743+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g3-implement",
+      "reopen": true,
+      "reason": "REVIEW BLOCK: full clean-env suite red at 4e1f22cb (map/INDEX.md stale -- rebuilt before the new test file was staged; code_map counts only tracked files), plus three doc references stranded by this commit's own renames. Both mechanical; remedy measured by the reviewer.",
+      "ts": "2026-08-16T14:53:14.901678+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g3-review",
+      "reopen": true,
+      "reason": "REVIEW BLOCK: full clean-env suite red at 4e1f22cb (map/INDEX.md stale -- rebuilt before the new test file was staged; code_map counts only tracked files), plus three doc references stranded by this commit's own renames. Both mechanical; remedy measured by the reviewer.",
+      "ts": "2026-08-16T14:53:14.901680+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g3-implement",
+      "why": "g3 rework 1/3 complete and VERIFIED BY ME: full clean-env suite at 359d93df is 3093 passed, 6 skipped, 1153 subtests, 0 failed -- the map-freshness failure the review found is gone. My own blast-radius sweep for the two named stranded identifiers returns nothing. No behaviour changed; the rework was a generated-index rebuild plus three doc references, exactly as scoped. The ordering lesson is now recorded twice in this run: stage FIRST, rebuild the map LAST, then commit -- a rebuild run while a new file is still untracked passes its own guard, because code_map enumerates via git ls-files.",
+      "mechanical": false,
+      "ts": "2026-08-16T15:12:07.615736+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g3-review",
+      "why": "Re-review: BLOCK, one blocker, and the finding is better than the bug. tests/test_mcp_lifecycle.py:201's pin failure message still claims _spine_open re-reads SPINE_FILE fresh -- measured against the AST at HEAD it reads SPINE_FILE ZERO times, because removing that read IS the #603 fix. It is the same invalidated claim, in the same words, that the rework fixed at mcp_spine_server.py:962-963. It survived because the sweep ran a line-based grep and the phrase is assembled from two ADJACENT STRING LITERALS ('...re-read ' + 'fresh)...'), so it appears on no single line: git grep -F 're-read fresh' returns 0 files tree-wide while a whitespace-normalized sweep returns 1. That is CREW_CONTEXT's own warned hazard firing against the very sweep meant to enforce the blast-radius rule -- the instance is one line, the hole in the method is what would recur. The reviewer also stated the counts the doctrine actually asks for: 7 identifiers removed, 5 re-bound, 2 gone, 0 live stranded identifier references; widening to invalidated CLAIMS gives 4 live, of which one is in scope (this blocker), one is in fenced hook code, and two are in an episode.",
+      "mechanical": false,
+      "ts": "2026-08-16T15:27:35.614076+00:00"
+    },
+    {
+      "id": "w-14",
+      "gate": "g3-implement",
+      "reopen": true,
+      "reason": "Re-review BLOCK: tests/test_mcp_lifecycle.py:201's pin failure message asserts _spine_open re-reads SPINE_FILE fresh, which this change made false. Invisible to a line-based grep because the phrase spans two adjacent string literals. Text only -- no behaviour, no test logic, no map rebuild.",
+      "ts": "2026-08-16T15:27:35.733796+00:00"
+    },
+    {
+      "id": "w-15",
+      "gate": "g3-review",
+      "reopen": true,
+      "reason": "Re-review BLOCK: tests/test_mcp_lifecycle.py:201's pin failure message asserts _spine_open re-reads SPINE_FILE fresh, which this change made false. Invisible to a line-based grep because the phrase spans two adjacent string literals. Text only -- no behaviour, no test logic, no map rebuild.",
+      "ts": "2026-08-16T15:27:35.733799+00:00"
+    },
+    {
+      "id": "w-16",
+      "gate": "g3-implement",
+      "why": "g3 rework 2/3 complete and verified by me: the diff is exactly ONE file (5 insertions, 3 deletions) touching only the pin's failure-message string; the parenthetical now names SPINE_PARENT re-read fresh plus the repo root from _primary_checkout_for_lifecycle, which reads no environment; my own whitespace-normalized sweep for the invalidated phrasing returns 0 live hits. The method lesson is the durable part: a line-based grep structurally cannot see a string assembled from adjacent literals, so a blast-radius sweep over MESSAGE TEXT must be whitespace-normalized or AST-aware.",
+      "mechanical": false,
+      "ts": "2026-08-16T15:45:45.737880+00:00"
+    },
+    {
+      "id": "w-17",
+      "gate": "g3-review",
+      "why": "Final review: BLOCK, one blocker class with four instances, and the root cause is MY handoff error. I wrote ALLOWED_SCOPE=tests/test_mcp_lifecycle.py into the rework-2 sweep, which is the rework's EDIT PERMISSION, not the change's BLAST RADIUS -- so the instrument found the surviving claims and its own classification filed them out of the headline as 'out of scope'. My reported 0 was real and measured the wrong set. Four invalidated claims survive, all docs or dead scaffolding: mcp_spine_server.py:129-131 states the INVERSE of the code (both halves of its 'rather than' are backwards); :30 still says 'bound at server-launch time' although the binder's own docstring at :868 records that this must change; test_mcp_lifecycle.py:335-339 is a stale comment JUSTIFYING an os.environ write the reviewer proved inert by replacing it with a pop and watching the test still pass; and test_mcp_adoption.py:98-102 asserts the KeyError that #603 was written to remove, disproved by importing the module with both vars unset. Two escaped both sweeps because a keyword sweep only finds claims phrased the way you guessed.",
+      "mechanical": false,
+      "ts": "2026-08-16T15:59:12.921529+00:00"
+    },
+    {
+      "id": "w-18",
+      "gate": "g3-implement",
+      "reopen": true,
+      "reason": "Final review BLOCK: four invalidated claims survive in the change's blast radius (mcp_spine_server.py:30 and :129-131, tests/test_mcp_lifecycle.py:335-339 plus the inert os.environ write it justifies, tests/test_mcp_adoption.py:98-102). Docs and dead scaffolding only. Root cause: the prior rework's sweep was scoped to edit permission rather than blast radius.",
+      "ts": "2026-08-16T15:59:13.041858+00:00"
+    },
+    {
+      "id": "w-19",
+      "gate": "g3-review",
+      "reopen": true,
+      "reason": "Final review BLOCK: four invalidated claims survive in the change's blast radius (mcp_spine_server.py:30 and :129-131, tests/test_mcp_lifecycle.py:335-339 plus the inert os.environ write it justifies, tests/test_mcp_adoption.py:98-102). Docs and dead scaffolding only. Root cause: the prior rework's sweep was scoped to edit permission rather than blast radius.",
+      "ts": "2026-08-16T15:59:13.041861+00:00"
+    },
+    {
+      "id": "w-20",
+      "gate": "g3-implement",
+      "why": "g3 rework 3/3 complete. All four invalidated claims corrected, plus docs/CHECKLIST_ENGINE_DESIGN.md -- outside my enumerated file list but squarely inside the blast radius I told the crew to sweep, and the correction is accurate, so I accept it as justified extension rather than drift. I ran my OWN AST-aware sweep independently: 4 hits, of which 3 are false positives (text that QUOTES the old phrasing precisely to mark that it changed -- the binder docstring at :903 and two accurate test docstrings) and 1 is genuine. The genuine one is scripts/run_crew.py:468-471, which still says mcp_spine_server 'raises KeyError if either is unset' -- false since this change. run_crew.py is FENCED to lanes B/C, so the crew reported it and did not fix it, which is exactly the stop condition I set. That makes TWO fenced files carrying claims my change invalidated (run_crew.py and hooks/spine_rail.py); both go to the Admiral as cross-lane consequences. In-scope live invalidated claims: 0.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:31:07.738893+00:00"
+    },
+    {
+      "id": "w-21",
+      "gate": "g3-review",
+      "why": "Final review: APPROVE. Honest shape, which is why I accept it: the reviewer recorded r5 as a FAIL and carried it past consolidation with an explicit --override-reason rather than downgrading it to pass, then filed it as tc1 so it cannot be lost. The residue is a two-word imprecision in docs/CHECKLIST_ENGINE_DESIGN.md's new paragraph -- it lists SPINE_ENGINE among what is bound 'again' (only SPINE and SESSION are), and describes the second binding moment as reading from the environment when those values come from open_work's RETURN and are written INTO it. The load-bearing half is verified true. I leave it as triage rather than patching it myself: I am at the rework cap, and a post-review edit would be unreviewed code. The reviewer also noted, wryly and correctly, that this paragraph WAS the previous rework's hand-found finding and its correction introduced the next imprecision -- the shotgun-surgery smell producing its next instance in real time. It found a THIRD cross-lane consequence too: tests/test_spine_rail.py:2698 quotes the now-deleted module-scope SPINE assignment, so the Admiral float is three fenced sites, not two.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:44:50.212483+00:00"
+    },
+    {
+      "id": "w-22",
+      "gate": "g3-integrate",
+      "why": "g3 closed after 3 reworks and 4 reviews. #603 is fixed: unbound/empty/missing/not-a-file/unreadable all refuse with the server alive, and spine_open binds SPINE and SESSION together so a session that starts unbound can mint work and immediately claim it. I reproduced the epic's exit criterion myself, in one process, no CLI. The fenced guard is intact -- tests/test_mcp_lifecycle.py:194 and its positive control are byte-identical to a69bbac4 (zero removed lines), with a strictly stronger module-wide assignment pin ADDED beside it. The three reworks were all documentation-truth failures, never behaviour: a map rebuilt before staging, a pin message asserting a read the fix removed, and four further invalidated claims that a keyword sweep could not see. That pattern is the run's main lesson.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:47:07.760691+00:00"
     }
   ]
 }
