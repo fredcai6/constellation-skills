@@ -1,0 +1,27 @@
+The run is complete — spine driven to terminal `archive`, lease released as the last journaled action.
+
+## What shipped
+
+**#600 — a gauge reading is named for the agent that produced it.** A context reading now belongs to an agent, not a folder: one owner-key definition in `gauge_reader.py`, `gauge-<owner>.json` plus a matching `owner` field from the writer hook, and the engine resolving the same name from its own lease. PR **#608**, parked for you — not merged.
+
+The reviewer returned **APPROVE**, checks (a)–(i) all PASS, 4 findings, 0 blocking. It tested two claims by mutation and verified the out-of-scope extensions by actually installing and driving the loader. **Failure-set difference is ZERO** — branch 3104/6/0, `main` 3089/7/0 re-measured at gate time.
+
+## Three things that need your eye
+
+**Your R4 amendment arrived after `execute.json` was frozen**, so the review gate's check (d) still demanded the superseded behaviour. I relayed the amendment through the reviewer handoff rather than hand-editing the frozen gate. Both obligations you held to verified: #488's case writes and its test is same-owner-*discriminating*, and the skip stays visible. One correction — ruling 2 says #488's case "lands in row 2"; it lands in row 1, since same directory plus same owner dedupes to a single candidate. The outcome you required holds; only the row attribution is off.
+
+**T1 is the sharpest finding and it is not fixed.** R4 row 2 is correct by direct drive but nothing tests it — reverting to the old skip-on-count rule leaves all 616 gauge tests green. It clears every fix-now rung and I still deferred it, because it surfaced after `g1-integrate` closed and adding code outside a gate isn't mine to do. It's the next leg's first pickup.
+
+**The lane C re-measurement went your way, by measurement.** `main` at `d7b911a7` isolates #549 without #600; the pre-fix probe still reports `CANDIDATE 2 CONFIRMED` there. #549 removed a route, not the mechanism.
+
+## #500 handed back, third time
+
+Not my judgement — the engine refused the gate at 17%, and the reading it fired on was this leg's *own* owner-keyed gauge. The fix this wave shipped is what made that refusal attributable. `DESIGN_500.md` returns accepted and unchanged.
+
+## Two corrections worth stating
+
+I attested that pushing wasn't this epic's convention, inferring it from no `cleanup/*` branch existing on origin. That was wrong — lane C's branch was deleted after merging. I pushed, opened the PR, and corrected the attestation on the record rather than leaving the wrong reasoning in the journal.
+
+I also found `.mcp.json` (fenced, lane A) modified in the tree during the run and reverted it before staging. Nothing in this run edited it; the suspected cause is recorded as an episode.
+
+Six triage candidates routed, none filed — filing is publication and wasn't inherited. `REPLAN_INPUT.json` carries ten classified discrepancies as evidence. Six episodes committed under `episodes/`.
