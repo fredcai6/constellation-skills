@@ -35,8 +35,9 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Callable
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import checklist_engine  # noqa: E402 -- spine-only completion reads its `active_id` (#559)
@@ -46,6 +47,16 @@ import install_constellation  # noqa: E402 -- shell-safety guard for the waive-d
 # therefore block a duplicate launch until explicitly abandoned.
 ACTIVE_STATUSES = {"running", "resumable"}
 DEFAULT_LAUNCHER = "claude"
+
+# How stale a pidless (external-backend) entry's heartbeat must be before it
+# corroborates as dead (issue #599, `entry_liveness`). Measured from this
+# repo's own archived registries: the longest observed genuinely-`completed`
+# external run is ~3h30m (12602s, `epic-568-510/g2-repair/commander/attempt-1`);
+# the shortest confirmed phantom (heartbeat never advanced, later abandoned) is
+# ~22h27m (80820s, `epic-568-441/g1/implementer/attempt-1`,
+# `.agent-work/archive/2026-08-15-epic-568-441/crew-runs.json`). 8h sits
+# ~2.3x above the healthy max and ~2.8x below the phantom min.
+HEARTBEAT_STALE_SECONDS = 28800
 
 # Dispatch modes. "spawn" (default) launches a real `claude` CLI subprocess via
 # `launch_process`. "external" records the durable registry entry but spawns
@@ -250,11 +261,105 @@ def is_abandoned(entry: dict) -> bool:
     return bool(entry.get("abandoned")) or entry.get("status") == "abandoned"
 
 
-def active_duplicate(entries: list[dict], work_id: str, gate: str, role: str, worktree: str) -> dict | None:
+def entry_liveness(
+    entry: dict,
+    now: datetime,
+    alive: Callable[[int | None], bool] | None = None,
+) -> str:
+    """Corroborated three-state liveness for one registry entry: exactly one of
+    `"active"`, `"stale"`, `"unknown"` — never a boolean, never any other
+    string. PURE — `now` and `alive` are always caller-supplied, no real
+    wall-clock or PID reads happen inside this function, which is what makes
+    it directly unit-testable.
+
+    `alive` defaults to the real `process_alive` when omitted (`None`
+    sentinel, resolved inside the body rather than as a literal default
+    value): `process_alive` is defined LATER in this module, and a default
+    VALUE — unlike a name referenced inside a function body — is bound at
+    `def`-time, so writing `alive=process_alive` directly in this signature
+    would raise `NameError` at import time. The sentinel keeps the externally
+    observable default behavior identical while staying import-order-safe.
+
+    Three buckets, in this order, never collapsed to two (issue #599):
+
+    1. `entry["pid"]` truthy (a `cli`-backend entry) — corroborate against the
+       real process: `"active"` if `alive(pid)`, else `"stale"`. This is the
+       existing, already-correct signal; it is unchanged by this function.
+    2. `entry["pid"]` falsy AND the entry's backend is `BACKEND_EXTERNAL` (a
+       spine-only dispatch that never had a PID to check) — corroborate by
+       heartbeat age instead: read `entry["last_heartbeat"]`, falling back to
+       `entry["started_at"]` when `last_heartbeat` is absent, parse it as
+       ISO-8601, and compare its age against `now`. Unparseable or missing →
+       `"unknown"` (fail-toward-active, see below). Otherwise: older than
+       `HEARTBEAT_STALE_SECONDS` → `"stale"`, else → `"active"`.
+    3. Anything else — `pid` falsy AND the backend is NOT external, i.e. a
+       legacy/malformed entry carrying neither a live PID nor an external
+       heartbeat trail — reports `"unknown"` directly, with NO heartbeat
+       lookup attempted. This deliberately does NOT reuse
+       `recover_crews.classify_entry`'s `pid=None` mapping (there,
+       `alive(None)` is always `False`, routing to `RESUMABLE`/
+       `NEEDS_ABANDON`): that classifier answers a different question
+       (recovery guidance) under a different, ITS OWN fail-toward-abandon
+       posture, and porting it here would silently flip this function's
+       fail-toward-active contract for exactly the ambiguous case that
+       contract exists to protect.
+
+    Fail-toward-active is the reason `"unknown"` is a real third state rather
+    than defaulting into `"active"` or `"stale"` at the call site: the two
+    non-`"stale"` outcomes (`"active"`, `"unknown"`) are handled identically by
+    `active_duplicate` below — both still block a fresh launch — so an
+    uncorroborated entry can never be mistaken for a corroborated-dead one."""
+    if alive is None:
+        alive = process_alive
+    pid = entry.get("pid")
+    if pid:
+        return "active" if alive(pid) else "stale"
+    if entry_backend(entry) == BACKEND_EXTERNAL:
+        heartbeat = entry.get("last_heartbeat") or entry.get("started_at")
+        if not heartbeat:
+            return "unknown"
+        try:
+            hb = datetime.fromisoformat(heartbeat)
+        except (TypeError, ValueError):
+            return "unknown"
+        age = now - hb
+        return "stale" if age.total_seconds() > HEARTBEAT_STALE_SECONDS else "active"
+    return "unknown"
+
+
+def active_duplicate(
+    entries: list[dict],
+    work_id: str,
+    gate: str,
+    role: str,
+    worktree: str,
+    *,
+    now: datetime | None = None,
+    alive: Callable[[int | None], bool] | None = None,
+) -> dict | None:
     """The blocking duplicate, if any: an existing entry for the same
     work-id/gate/role/worktree whose status is still active (`running`/
-    `resumable`) and which has NOT been abandoned. PURE — used both to refuse a
-    fresh launch and (by recover_crews) to report an active lock."""
+    `resumable`), which has NOT been abandoned, and whose corroborated
+    liveness (`entry_liveness`, issue #599) is not `"stale"`. PURE — used both
+    to refuse a fresh launch and (by recover_crews) to report an active lock.
+
+    `now`/`alive` are keyword-only with defaults so every existing positional
+    caller (the CLI, `tests/test_crew_launcher.py`) keeps working unchanged —
+    only the return value for a corroborated-dead entry changes, which is the
+    entire point of #599. `now` defaults to the real current UTC time when
+    omitted; `alive` defaults to the real `process_alive` (both via a `None`
+    sentinel resolved below — `process_alive` is defined later in this
+    module, so it cannot be a literal default value here, same reasoning as
+    `entry_liveness` above).
+
+    A `"stale"` liveness verdict only changes what this READ reports — it
+    never writes `abandoned` as a side effect (no-abandonment-by-inference is
+    non-negotiable: reporting stale is the deliverable). `"active"` and
+    `"unknown"` both still block — fail-toward-active — because a genuinely
+    live crew losing its slot to a false "it's dead" read is the worst
+    outcome this guard exists to prevent."""
+    if now is None:
+        now = datetime.now(timezone.utc)
     for entry in entries:
         if is_abandoned(entry):
             continue
@@ -266,6 +371,8 @@ def active_duplicate(entries: list[dict], work_id: str, gate: str, role: str, wo
             and entry.get("role") == role
             and entry.get("worktree") == worktree
         ):
+            if entry_liveness(entry, now, alive) == "stale":
+                continue
             return entry
     return None
 

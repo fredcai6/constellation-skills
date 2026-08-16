@@ -8,7 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
@@ -757,6 +757,134 @@ class LaunchTests(unittest.TestCase):
                 code = RC.main(["--root", str(root), "--resume",
                                 "constellation/issue-1/g1/reviewer/attempt-9"])
             self.assertEqual(1, code)
+
+
+class EntryLivenessTests(unittest.TestCase):
+    """Issue #599: `entry_liveness`'s corroborated three-state rule, and its
+    wiring into `active_duplicate` so a corroborated-dead entry stops
+    blocking a fresh launch while an uncorroborated one still blocks
+    (fail-toward-active). The two `active_duplicate` cases per direction (1-4
+    below) are this gate's load-bearing evidence."""
+
+    def _cli_entry(self, pid):
+        return {
+            "session_name": "constellation/issue-1/g1/reviewer/attempt-1",
+            "crew_id": "constellation/issue-1/g1/reviewer/attempt-1",
+            "work_id": "issue-1", "gate": "g1", "role": "reviewer", "attempt": 1,
+            "worktree": ".", "status": "running", "abandoned": False,
+            "backend": "cli", "pid": pid,
+        }
+
+    def _external_phantom_entry(self, started_at):
+        """Shaped exactly like the real archived phantom entry
+        `constellation/epic-568-441/g1/implementer/attempt-1` in
+        `.agent-work/archive/2026-08-15-epic-568-441/crew-runs.json` (pid null,
+        backend external, last_heartbeat == started_at) -- status forced to
+        `running` here (the archive already shows it `abandoned`, which this
+        test does not exercise) so the duplicate-guard path is live."""
+        return {
+            "crew_id": "constellation/epic-568-441/g1/implementer/attempt-1",
+            "work_id": "epic-568-441",
+            "gate": "g1",
+            "role": "implementer",
+            "attempt": 1,
+            "status": "running",
+            "session_name": "constellation/epic-568-441/g1/implementer/attempt-1",
+            "backend": "external",
+            "pid": None,
+            "worktree": "/home/tommy/projects/constellation-skills/.worktrees/epic-568-441",
+            "handoff": ".agent-work/epic-568-441/crew-handoffs/g1-implementer-handoff.md",
+            "result": ".agent-work/epic-568-441/crew-handoffs/g1-implementer-result.md",
+            "spine": None,
+            "parent": "constellation/epic-568-441",
+            "stdout": ".agent-work/epic-568-441/crew-runs/g1-implementer-attempt-1.stdout.txt",
+            "stderr": ".agent-work/epic-568-441/crew-runs/g1-implementer-attempt-1.stderr.txt",
+            "started_at": started_at,
+            "last_heartbeat": started_at,
+            "completed_at": None,
+            "abandoned": False,
+            "dispatch": "external",
+            "model": "gpt-5.6-sol",
+        }
+
+    # -- entry_liveness bucket unit tests -------------------------------- #
+
+    def test_liveness_pid_bucket_active_and_stale(self):
+        now = datetime(2026, 8, 16, tzinfo=timezone.utc)
+        entry = self._cli_entry(pid=12345)
+        self.assertEqual("active", RC.entry_liveness(entry, now, alive=lambda pid: True))
+        self.assertEqual("stale", RC.entry_liveness(entry, now, alive=lambda pid: False))
+
+    def test_liveness_external_bucket_heartbeat_age(self):
+        started_at = "2026-08-14T18:10:25.409092+00:00"
+        entry = self._external_phantom_entry(started_at)
+        hb = datetime.fromisoformat(started_at)
+        within_8h = hb + timedelta(hours=4)
+        past_8h = hb + timedelta(hours=9)
+        self.assertEqual("active", RC.entry_liveness(entry, within_8h))
+        self.assertEqual("stale", RC.entry_liveness(entry, past_8h))
+
+    def test_liveness_external_bucket_falls_back_to_started_at(self):
+        started_at = "2026-08-14T18:10:25.409092+00:00"
+        entry = self._external_phantom_entry(started_at)
+        del entry["last_heartbeat"]
+        hb = datetime.fromisoformat(started_at)
+        self.assertEqual("stale", RC.entry_liveness(entry, hb + timedelta(hours=9)))
+
+    def test_liveness_external_bucket_unparseable_heartbeat_is_unknown(self):
+        entry = self._external_phantom_entry("not-a-timestamp")
+        self.assertEqual("unknown", RC.entry_liveness(entry, datetime.now(timezone.utc)))
+
+    def test_liveness_legacy_bucket_no_pid_no_backend_is_unknown_no_heartbeat_lookup(self):
+        # Exactly the fixture shape test_duplicate_active_lock_is_refused uses:
+        # no pid, no backend/dispatch key -- bucket 3, unknown directly.
+        entry = {
+            "session_name": "constellation/issue-1/g1/reviewer/attempt-1",
+            "crew_id": "constellation/issue-1/g1/reviewer/attempt-1",
+            "work_id": "issue-1", "gate": "g1", "role": "reviewer", "attempt": 1,
+            "worktree": ".", "status": "running", "abandoned": False,
+        }
+        self.assertEqual("unknown", RC.entry_liveness(entry, datetime.now(timezone.utc)))
+
+    # -- active_duplicate wiring: required evidence 1-4 ------------------- #
+
+    def test_evidence_1_cli_dead_pid_frees_the_slot(self):
+        entries = [self._cli_entry(pid=99999)]
+        dup = RC.active_duplicate(
+            entries, "issue-1", "g1", "reviewer", ".", alive=lambda pid: False,
+        )
+        self.assertIsNone(dup)
+
+    def test_evidence_2_cli_live_pid_still_blocks(self):
+        entries = [self._cli_entry(pid=99999)]
+        dup = RC.active_duplicate(
+            entries, "issue-1", "g1", "reviewer", ".", alive=lambda pid: True,
+        )
+        self.assertIsNotNone(dup)
+        self.assertEqual(entries[0], dup)
+
+    def test_evidence_3_external_phantom_past_8h_frees_the_slot(self):
+        started_at = "2026-08-14T18:10:25.409092+00:00"
+        entry = self._external_phantom_entry(started_at)
+        entries = [entry]
+        now = datetime.fromisoformat(started_at) + timedelta(hours=9)
+        dup = RC.active_duplicate(
+            entries, "epic-568-441", "g1", "implementer",
+            entry["worktree"], now=now,
+        )
+        self.assertIsNone(dup)
+
+    def test_evidence_4_external_within_8h_still_blocks(self):
+        started_at = "2026-08-14T18:10:25.409092+00:00"
+        entry = self._external_phantom_entry(started_at)
+        entries = [entry]
+        now = datetime.fromisoformat(started_at) + timedelta(hours=4)
+        dup = RC.active_duplicate(
+            entries, "epic-568-441", "g1", "implementer",
+            entry["worktree"], now=now,
+        )
+        self.assertIsNotNone(dup)
+        self.assertEqual(entry, dup)
 
 
 class ParentCliTests(unittest.TestCase):
