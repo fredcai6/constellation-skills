@@ -1,0 +1,18 @@
+**I refuse the hook, and I've recorded the refusal.**
+
+The nudge tells me to reload the commander skill and drive `execute.json`. I won't, and this is not an honest-stop case where `block` or `waive` would be the right exit — both of those verbs write to `.agent-work/cleanup-f-derive-worktree/spine.json`, which is my parent Commander's spine under my parent's live lease. Using the sanctioned escape hatch would itself be the destructive act.
+
+Verified just now rather than assumed:
+
+- my own plan: `LEASE released`, `DONE: no open items`
+- `spine.json`'s `engine_session`: `commander-cleanup-f-derive-worktree`, status `active`, claimed_by `commander` — not mine
+- my `crew-runs.json` entry: `spine: null`
+
+My dispatch is complete. Six plan items driven through the engine, lease released as the last journaled action, and the result artifact delivered at the path the handoff named.
+
+Two honest notes I added to the artifact, because both would be easy to get wrong in the other direction:
+
+1. **This firing says nothing about whether my fix works.** `CLAUDE_PROJECT_DIR` resolves at session launch (#269), so this worktree runs the *main checkout's* hook — this nudge came from unmodified code.
+2. **It isn't the B4 shape either.** B4 is a SessionStart manufacturing a binding that a later Stop reads as its own. Nothing here wrote a binding; the parent is being answered from its own live claim on its own spine. That's `tc1`, and fixing B4 was never expected to close it.
+
+The B4 fix and this refusal are the same failure seen from two sides — an agent handed another agent's next imperative as its own — but only one of them was mine to fix.

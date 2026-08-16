@@ -1,0 +1,31 @@
+# m1 GREEN — the same instruments, after the fix
+
+## 1. Forensic reproduction, re-run
+```
+========================================================================
+CONTROL: Stop alone
+  SessionStart wrote binding keys: (not called)
+  Stop reason : SPINE MID-FLIGHT (foreign-owned): a gate on /tmp/g3rw2-zhz9ezic/.agent-work/run-crew/spine.json is still open under parent-sid#crewagent1234 -- STILL BLOCKED, but this is not your gate to drive. It belongs to a different session/agent (bound under a per-agent key you merely share a harness session w
+  Stop context: ENGINE current -> (withheld: gate belongs to parent-sid#crewagent1234)
+  crew imperative leaked: no
+========================================================================
+SEQUENCE: SessionStart, then Stop
+  SessionStart wrote binding keys: []
+  SessionStart context: 
+  Stop reason : SPINE MID-FLIGHT (foreign-owned): a gate on /tmp/g3rw2-zhz9ezic/.agent-work/run-crew/spine.json is still open under parent-sid#crewagent1234 -- STILL BLOCKED, but this is not your gate to drive. It belongs to a different session/agent (bound under a per-agent key you merely share a harness session w
+  Stop context: ENGINE current -> (withheld: gate belongs to parent-sid#crewagent1234)
+  crew imperative leaked: no
+```
+
+## 2. Targeted class
+```
+..................                              [100%]
+18 passed, 152 deselected, 25 subtests passed in 0.19s
+```
+
+## 3. Whole file + the derivation specification
+```
+.................................................................. [ 62%]
+......................................................................   [100%]
+188 passed, 1 skipped, 25 subtests passed in 1.52s
+```

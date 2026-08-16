@@ -1,0 +1,32 @@
+# m1 RED — measured at HEAD b9709cfec7b2c796324bfaade355a68e88047e0d, hook byte-identical to 6bba3fd2
+
+## 1. Forensic reproduction (direct calls, constructed payloads + binding store, #269)
+```
+========================================================================
+CONTROL: Stop alone
+  SessionStart wrote binding keys: (not called)
+  Stop reason : SPINE MID-FLIGHT (foreign-owned): a gate on /tmp/g3rw2-jnk7d2_i/.agent-work/run-crew/spine.json is still open under parent-sid#crewagent1234 -- STILL BLOCKED, but this is not your gate to drive. It belongs to a different session/agent (bound under a per-agent key you merely share a harness session w
+  Stop context: ENGINE current -> (withheld: gate belongs to parent-sid#crewagent1234)
+  crew imperative leaked: no
+========================================================================
+SEQUENCE: SessionStart, then Stop
+  SessionStart wrote binding keys: ['parent-sid']
+  SessionStart context: RESUMING an active Constellation spine run after a restart or compaction. ENGINE current -> LEASE active: eng-crew (by crew, heartbeat 2026-07-12T00:00:00+00:00)
+ACTIVE g3 [in-progress] -- CREW-MARKER implement the crew gate Pick the run back up at this gate and drive it through the engine. Remember
+  Stop reason : SPINE MID-FLIGHT: gate g3 is still open -- you are in the MIDDLE of the spine, not at its end, so ending your turn now abandons an active run. Keep working the gate -- do not end your turn to wait. Next imperative: CREW-MARKER implement the crew gate If this is an honest stop (genuinely blocked or o
+  Stop context: ENGINE current -> LEASE active: eng-crew (by crew, heartbeat 2026-07-12T00:00:00+00:00)
+ACTIVE g3 [in-progress] -- CREW-MARKER implement the crew gate
+  crew imperative leaked: YES
+```
+
+## 2. The new tests, red against the committed code
+```
+
+tests/test_spine_rail.py:1572: AssertionError
+=========================== short test summary info ============================
+SUBFAILED(arm='restart first') tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_a_restart_does_not_change_what_the_next_stop_is_told
+FAILED tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_a_restart_does_not_change_what_the_next_stop_is_told
+FAILED tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_a_restarting_parent_is_never_bound_to_its_in_tree_crews_spine
+SUBFAILED(row="sees a crew's entry, owns none -> withhold (B4)") tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_bind_on_resume_is_withheld_only_when_the_session_owns_nothing_visible
+4 failed, 16 passed, 152 deselected, 23 subtests passed in 0.31s
+```

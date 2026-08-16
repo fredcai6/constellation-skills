@@ -1,0 +1,23 @@
+  arms GUARDED: BEFORE(999b7663) has _foreign_worktree and no _own_entries; REWORK1(6bba3fd2)
+  and AFTER both have _own_entries and differ byte-wise, and are separated by
+  BEHAVIOUR on the B4 cell -- REWORK1 binds there, AFTER does not.
+
+Each cell is a SessionStart followed by a Stop, sharing one binding store.
+bound = binding keys the SessionStart WROTE; start/stop = whose marker rendered.
+
+cell                                   | BEFORE 999b7663              | REWORK1 6bba3fd2             | AFTER (working tree)        
+-----------------------------------------------------------------------------------------------------------------------------------
+empty view, 1 in-tree spine (#261)     | +parent-sid SCAN   own-gate:SCAN | +parent-sid SCAN   own-gate:SCAN | +parent-sid SCAN   own-gate:SCAN
+empty view, no spine                   | -        -      -            | -        -      -            | -        -      -           
+empty view, 2 in-tree spines           | -        SCAN   -            | -        SCAN   -            | -        SCAN   -           
+* sees crew only, 1 in-tree spine (B4) | -        CREW   foreign-owner | +parent-sid CREW   own-gate:CREW | -        -      foreign-owner
+sees crew only, nothing to scan        | -        -      -            | -        -      foreign-owner | -        -      foreign-owner
+* sees crew only, 2 in-tree spines     | -        CREW   foreign-owner | -        CREW   foreign-owner | -        -      foreign-owner
+owns a readable entry                  | -        CREW   foreign-owner | -        PARENT own-gate:PARENT | -        PARENT own-gate:PARENT
+owns an UNREADABLE entry, 1 spine      | +parent-sid SCAN   own-gate:SCAN | +parent-sid SCAN   own-gate:SCAN | +parent-sid SCAN   own-gate:SCAN
+* unidentifiable agent (#441)          | -        CREW   foreign-owner | +parent-sid CREW   foreign-owner | -        -      foreign-owner
+* tc5 path collision                   | -        CREW   foreign-owner | -        CREW   foreign-owner | -        -      foreign-owner
+
+10 cells, 4 moved by this rework (marked *).
+A cell that did NOT move is evidence too: rework 1's approved answers are unchanged.
+exit=0

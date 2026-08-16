@@ -691,9 +691,18 @@ def reconstruct_current(spine: dict) -> str:
 # spine. The sites differ only in what they do when the acting agent owns
 # nothing visible, and that difference follows from the second half of the rule:
 # a Stop blocks either way, so it still names the leading gate and withholds its
-# imperative, while a SessionStart blocks nothing and so hands out no gate from
-# the binding at all (it still falls through to the blind scan below, which
-# reads no binding key and is not this rule's business).
+# imperative, while a SessionStart blocks nothing and so hands out nothing.
+#
+# "Hands out nothing" has to mean the scan too, and that is the correction this
+# rule needed (#609 lane F g3 rework 2). The scan below reads no binding key,
+# but the branch it sits in WRITES one, under the bare `sid` -- the same key
+# this rule reads as OWN. So a SessionStart that withheld at the selection and
+# then fell through to the scan manufactured, one branch later, the ownership
+# it had just withheld, and the next Stop was answered with another agent's
+# gate as its own. A withholding that feeds a writer is not a withholding.
+# `decide_session_start` therefore separates "I own none of what I can see"
+# (hand out nothing, scan included) from "I have no binding at all" (#261's
+# resumed session, whose only route back to its own run is the scan).
 #
 # What remains here compares paths and locates spines, and decides nothing
 # about identity.
@@ -1498,8 +1507,11 @@ def _is_own_entry(owner_key, own_key) -> bool:
       who is acting. Nothing placed then matches, so every attributable entry
       reads as foreign. Each caller's no-match path is its own withholding
       direction: decide_stop still BLOCKS and withholds the imperative,
-      decide_session_start hands out no gate from the binding. Uncertainty
-      withholds; it never hands an unidentifiable agent someone's next step.
+      decide_session_start hands out no gate -- and, where anything at all is
+      visible, does not fall through to the scan that would bind one. That
+      second clause is not decoration: the scan's bind writes the key this
+      comparison reads, so without it an unidentifiable agent was handed an
+      ownership record on its next call.
 
     NEVER raises.
     """
@@ -1521,12 +1533,17 @@ def _own_entries(candidates, owners, own_key) -> list:
     question with the SAME comparison, which is the point of naming it once:
     selection is a binding-key property at both call sites (#609 lane F g3).
 
-    What each site does when this returns EMPTY is its own business, and the
-    two differ on purpose. decide_stop still has to answer a stop that blocks
-    regardless, so it renders the leading entry with the imperative withheld.
-    decide_session_start is deciding whether to hand out a gate at all, so it
-    hands out nothing from the binding. Folding those two fallbacks together is
-    what would put one site's answer in the other site's mouth.
+    What each site does when this returns EMPTY differs on purpose, and the
+    two are still not folded together. decide_stop has to answer a stop that
+    blocks regardless, so it renders the leading entry with the imperative
+    withheld. decide_session_start is deciding whether to hand out a gate at
+    all, so it hands out nothing.
+
+    The one thing an empty result must NOT do at either site is reach a writer.
+    decide_session_start's fallback scan binds under the bare `sid`, which is
+    the key this comparison reads as OWN, so an empty result there is gated on
+    the view being empty too -- otherwise this function's answer is undone one
+    branch later by a write it caused (#609 lane F g3 rework 2).
 
     NEVER raises; [] on unusable input, which is the withholding direction at
     both sites.
@@ -1727,18 +1744,43 @@ def decide_session_start(data: dict, project_dir: Path) -> dict:
         # would then answer the agent the payload names, not a different one.
         owners = session_view_provenance(binding, sid)
         own_key = binding_key(data)
+        owned = _own_entries(list(sid_bindings.items()), owners, own_key)
         spine = None
-        for _spine_path, entry in _own_entries(list(sid_bindings.items()), owners, own_key):
+        for _spine_path, entry in owned:
             if entry.get("spine"):
                 spine = load_spine(entry.get("spine"))
                 break
-        # Owning none of the visible entries leaves `spine` None and falls
-        # through to the scan below, which is what the deleted worktree skip
-        # did when it skipped everything. Nothing another agent claimed is ever
-        # substituted: this site withholds rather than guessing, which is the
-        # fail-safe direction where the failure mode is being told to drive
-        # someone else's gate. The scan itself consults no binding key at all
-        # and is untouched here.
+        # Owning none of the VISIBLE entries is a DIFFERENT situation from
+        # holding no binding at all, and the fallback below must not conflate
+        # them. `_scan_active_spine` itself reads no binding key, but the branch
+        # it sits in WRITES one, under the bare `sid` -- exactly the key this
+        # site and decide_stop read as OWN. So falling through to it is not a
+        # passive withholding: on one active-leased in-tree spine it manufactures
+        # the very ownership that was just withheld, and the next Stop is then
+        # answered with another agent's gate AS ITS OWN. That is the #549 leak
+        # produced by the rule meant to end it, so the two cases are told apart
+        # by the two facts already in hand here:
+        #
+        # - `sid_bindings` non-empty and NOTHING in it this agent's -- every
+        #   visible entry was claimed by another agent under a per-agent key,
+        #   and a spine this session had claimed would already be in this view.
+        #   Withhold entirely: no binding, and no resume context either, because
+        #   that context reconstructs the owning gate through
+        #   `reconstruct_current` and ends "Pick the run back up at this gate and
+        #   drive it through the engine" -- the same imperative decide_stop's
+        #   foreign-owner branch refuses to render, in the same direction.
+        # - `sid_bindings` EMPTY -- nothing has been claimed under this session
+        #   at all, so there is no ownership to contradict. That is #261's
+        #   resumed/compacted session that never itself ran `claim`, and the
+        #   scan is its only route back to its own run. Untouched.
+        #
+        # An OWN entry whose spine is merely unreadable also lands here with
+        # `spine` None, and it keeps the scan: this agent is contradicting no
+        # one, and whether the scan should bind a session to a spine nobody
+        # claimed is a separate open question about the scan itself, not this
+        # rule's to settle.
+        if spine is None and sid_bindings and not owned:
+            return {}
         if spine is None:
             matches = _scan_active_spine(project_dir)  # best-effort fallback
             if matches:

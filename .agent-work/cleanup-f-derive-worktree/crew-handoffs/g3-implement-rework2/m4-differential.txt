@@ -1,0 +1,122 @@
+## The pinned three-arm differential (rework 1's harness, re-run unmodified)
+==============================================================================
+#609 lane F g3 -- BEFORE (999b7663) vs BLOCKED (e3e50a69) vs AFTER (working tree)
+==============================================================================
+  arm pins GUARDED by symbol, not by trust: BEFORE(999b7663) has _foreign_worktree only,
+  BLOCKED(e3e50a69) has _is_own_entry but no _own_entries, AFTER has both, all three differ.
+
+--- (1) the #549 shape, and (2) call site 1: mid-flight Stop blocking ---
+
+S1  parent + IN-TREE crew, ONE worktree, the PARENT stops
+  BEFORE  BLOCK (foreign-owner) about ['run-crew'], rendering NOTHING
+  BLOCKED BLOCK (own-gate) about ?, rendering ['PARENT-MARKER']
+  AFTER   BLOCK (own-gate) about ?, rendering ['PARENT-MARKER']
+
+S2  same, the CREW stops (payload carries its agent_id)
+  BEFORE  BLOCK (foreign-owner) about ['run-crew'], rendering NOTHING
+  BLOCKED BLOCK (own-gate) about ?, rendering ['CREW-MARKER']
+  AFTER   BLOCK (own-gate) about ?, rendering ['CREW-MARKER']
+
+S3  this agent's OWN claim, recorded in another worktree, it stops
+  BEFORE  EMPTY -- Stop allowed / no SessionStart context injected
+  BLOCKED BLOCK (own-gate) about ?, rendering ['OWN-MARKER']
+  AFTER   BLOCK (own-gate) about ?, rendering ['OWN-MARKER']
+
+S4  crew in ITS OWN tree, parent stops with no gate of its own
+  BEFORE  EMPTY -- Stop allowed / no SessionStart context injected
+  BLOCKED BLOCK (foreign-owner) about ['run-crew'], rendering NOTHING
+  AFTER   BLOCK (foreign-owner) about ['run-crew'], rendering NOTHING
+
+--- (2) call site 2: which binding entry a resumed session picks up ---
+
+S5  SessionStart: own binding recorded in another worktree, nothing to scan
+  BEFORE  EMPTY -- Stop allowed / no SessionStart context injected
+  BLOCKED INJECT ['RESUME-MARKER']
+  AFTER   INJECT ['RESUME-MARKER']
+
+--- (4) the fail-safe direction: errored / garbage input ---
+
+S6  null worktree    -- uncertainty must BLOCK, never relax
+  BEFORE  BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+  BLOCKED BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+  AFTER   BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+
+S6  int worktree     -- uncertainty must BLOCK, never relax
+  BEFORE  BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+  BLOCKED BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+  AFTER   BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+
+S6  empty worktree   -- uncertainty must BLOCK, never relax
+  BEFORE  BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+  BLOCKED BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+  AFTER   BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+
+S6  int cwd          -- uncertainty must BLOCK, never relax
+  BEFORE  BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+  BLOCKED BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+  AFTER   BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+
+S6  dict cwd         -- uncertainty must BLOCK, never relax
+  BEFORE  BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+  BLOCKED BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+  AFTER   BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+
+S6  no cwd at all    -- uncertainty must BLOCK, never relax
+  BEFORE  BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+  BLOCKED BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+  AFTER   BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+
+S7  malformed agent_id ('a/b'): the hook cannot say who is stopping
+  BEFORE  BLOCK (own-gate) about ?, rendering ['FAILSAFE-MARKER']
+  BLOCKED BLOCK (foreign-owner) about ['run1'], rendering NOTHING
+  AFTER   BLOCK (foreign-owner) about ['run1'], rendering NOTHING
+
+--- Windows: separators and case folding, constructed not inherited ---
+  os.path.normcase folds case+separators only on win32; this host is linux,
+  where normcase is the identity function -- so the expectation below is
+  CONSTRUCTED: recorded worktree 'C:\\Foo\\wt' vs cwd 'c:/foo/wt' are the
+  same path on Windows and two different paths here. Ownership is now an
+  exact binding-key comparison, so the verdict must not depend on that.
+  normcase folds these two equal here: False (expected only on win32)
+
+S8  recorded 'C:\Foo\wt', stopping from 'c:/foo/wt'
+  BEFORE  EMPTY -- Stop allowed / no SessionStart context injected
+  BLOCKED BLOCK (own-gate) about ?, rendering ['PLATFORM-MARKER']
+  AFTER   BLOCK (own-gate) about ?, rendering ['PLATFORM-MARKER']
+
+--- (5) call site 2 again: SELECTION, the g3 rework (B2) ---
+  Every row below places its spines OUTSIDE `<proj>/.agent-work/*/spine.json`,
+  so the blind fallback scan finds nothing and only the BINDING can answer.
+  These four are the reviewer's cases 2, 6, 3 and 5.
+
+S9   SessionStart: crew's key written FIRST, the PARENT's session starts
+  BEFORE  EMPTY -- Stop allowed / no SessionStart context injected
+  BLOCKED INJECT ['CREW-MARKER']
+  AFTER   INJECT ['PARENT-MARKER']
+
+S10  the SAME binding, the PARENT's key written first -- the answer must not move
+  BEFORE  EMPTY -- Stop allowed / no SessionStart context injected
+  BLOCKED INJECT ['PARENT-MARKER']
+  AFTER   INJECT ['PARENT-MARKER']
+
+S11  only a CREW's per-agent key exists; the parent never claimed anything
+  BEFORE  EMPTY -- Stop allowed / no SessionStart context injected
+  BLOCKED INJECT ['CREW-MARKER']
+  AFTER   EMPTY -- Stop allowed / no SessionStart context injected
+
+S12  two crew agents; the payload NAMES agentB -- whose gate comes back?
+  BEFORE  EMPTY -- Stop allowed / no SessionStart context injected
+  BLOCKED INJECT ['AGENT-A-MARKER']
+  AFTER   INJECT ['AGENT-B-MARKER']
+
+--- the import block: stdlib only, and unchanged ---
+  BEFORE: ['import errno', 'import json', 'import os', 'import re', 'import shlex', 'import subprocess', 'import sys', 'import tempfile', 'import time', 'from datetime import datetime, timezone', 'from pathlib import Path']
+  AFTER : ['import errno', 'import json', 'import os', 'import re', 'import shlex', 'import subprocess', 'import sys', 'import tempfile', 'import time', 'from datetime import datetime, timezone', 'from pathlib import Path']
+  identical: True
+exit=0
+
+## Stop rows unmoved: the SAME harness with its AFTER arm swapped to 6bba3fd2
+```
+IDENTICAL -- all 13 Stop rows unmoved 6bba3fd2 -> working tree
+IDENTICAL -- S9-S12 unmoved too (their spines are outside the scan's glob)
+```
