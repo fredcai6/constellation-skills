@@ -1,0 +1,397 @@
+{
+  "work_id": "cleanup-f-derive-worktree-g3-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-red",
+    "m2-green",
+    "m3-prose",
+    "m4-evidence",
+    "m5-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the handoff",
+      "imperative": "Read the inherited global doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), the project deltas if present (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md), the g3 handoff, MISSION_FRAME.md and the map anchors for scripts.hooks.spine_rail. Verify the handoff carries task, intent, allowed scope, exclusions, required evidence, test mode, stop conditions. Re-measure the baseline suite rather than trusting the handoff's numbers. Attest c1 and c2.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + map anchors loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "handoff read in full and complete (task, protected intent, test mode, close criteria, allowed scope, exclusions, constraints, map anchors, required evidence, verification commands, authority, stop conditions, return format); global-crew.md + global-everyone.md + docs/agents/CREW_CONTEXT.md + MISSION_FRAME.md read; map orientation DEGRADED-UNPARSEABLE as declared -- map/INDEX.md names scripts.hooks.spine_rail (63 entities, 21 holes) but the per-module INDEX.md is absent (tc1, not mine)"
+        },
+        {
+          "id": "c2",
+          "statement": "baseline re-measured on the unmodified tree: full suite count recorded, and the targeted -k OwnershipIsBindingKeyNotWorktree selector confirmed red (pytest exit 5)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "baseline re-measured at HEAD 999b7663 on this tree, __pycache__ cleared, SPINE_FILE/SPINE_SESSION/SPINE_PARENT/CREW_SCRATCH_DIR scrubbed: 3170 passed, 5 skipped, 1183 subtests passed, 0 failed (m0-baseline-full-suite.txt); failure distribution empty, derived mechanically. Targeted selector -k OwnershipIsBindingKeyNotWorktree: 0 collected, 153 deselected, pytest exit 5 = red (m0-targeted-selector-red.txt)"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-red": {
+      "id": "m1-red",
+      "title": "TDD red: ownership-is-the-binding-key tests fail against the current tree",
+      "imperative": "Write class OwnershipIsBindingKeyNotWorktree in tests/test_spine_rail.py. It must exercise the #549 shape DIRECTLY: a Commander and an in-tree crew sharing ONE worktree, where the parent's Stop must be answered with the PARENT's own gate and never with the crew's. Cover both call sites (_entry_mid_flight_view via decide_stop, and decide_session_start), the inverse (a crew must not be handed its parent's gate), the fail-safe direction under garbage input, and a CONSTRUCTED Windows case/separator expectation that must not be inherited from this Linux host's identity normcase. Run the class against the unmodified tree and record the failures as evidence. Manual attest only -- a command check would run the by-design-failing tests and block the gate.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: handoff verified, doctrine loaded, baseline re-measured"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "OwnershipIsBindingKeyNotWorktree exists in tests/test_spine_rail.py, collects >0, and its #549-shape and newly-blocks cases are observed FAILING against the unmodified scripts/hooks/spine_rail.py; red output recorded as evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "OwnershipIsBindingKeyNotWorktree (unittest.TestCase, so pytest collects it under the required name despite this repo shipping no pytest config) collects 8 methods; against the unmodified hook: 8 failed (5 methods + 3 subtests), 3 passed, 153 deselected -- m1-red.txt. The #549-shape failure is verbatim what the handoff describes: with parent and crew in ONE tree the parent's Stop is answered with 'a gate on .../run-crew/spine.json is still open under <sid>#<agent_id>' and PARENT-MARKER never renders. The two green cases are deliberate controls (differing trees; garbage location data already fail-safe)"
+        }
+      ],
+      "constraints": [
+        "New tests live in a class named exactly OwnershipIsBindingKeyNotWorktree",
+        "Parent and crew share the SAME worktree -- a differing-tree test proves nothing here",
+        "Construct case expectations explicitly; never inherit them from the platform"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-green": {
+      "id": "m2-green",
+      "title": "Ownership moves from the tree to binding-key provenance at both call sites",
+      "imperative": "Rework the two _foreign_worktree call sites so neither decides ownership from the tree: _entry_mid_flight_view stops testing the tree entirely (mid-flight is a property of the spine, not of a location), and decide_stop decides WHOSE gate to render from session_view_provenance against the acting agent's own binding_key(payload) -- preferring an entry the stopping agent actually owns. decide_session_start stops testing the tree and resumes from any entry in its own merged session view. Delete _foreign_worktree if it ends with no callers; keep _same_path, which has others. spine_rail.py gains NO import. Turn the m1 tests green without editing tests/test_worktree_derivation.py.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 red observed and recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 red observed and recorded in m1-red.txt"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "targeted class passes",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_spine_rail.py -k OwnershipIsBindingKeyNotWorktree"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-green-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the whole spine_rail suite and the shared derivation case table stay green",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_spine_rail.py tests/test_worktree_derivation.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-green-2"
+        },
+        {
+          "id": "c3",
+          "statement": "no reference to the tree remains in either call site's ownership decision; _foreign_worktree callers enumerated and the symbol deleted if callerless",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Ownership no longer reads the tree at either site. _foreign_worktree had exactly 2 call sites (_entry_mid_flight_view, decide_session_start); both are gone, so the symbol is deleted -- pinned by test_foreign_worktree_is_gone_and_stays_gone. _same_path SURVIVES with 3 remaining callers in this module (git_worktree_roots, resolve_spine_candidate) plus an unrelated same-named helper in scripts/map_orient.py. Wiring grep _foreign_worktree|_same_path|session_view_provenance|_is_own_entry over scripts/ tests/: 57 lines, down from 61"
+        }
+      ],
+      "constraints": [
+        "stdlib-only: no new import in scripts/hooks/spine_rail.py",
+        "fail-safe, not fail-open: uncertainty blocks, never relaxes the rail",
+        "#549's rendering survives: a foreign-owned gate's imperative stays withheld from BOTH reason and additionalContext",
+        "the nudge / 3-strike hatch stays keyed by session id alone",
+        "no fail-closed refusal; _worktree_from_spine returning None must refuse nothing"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_spine_rail.py -k OwnershipIsBindingKeyNotWorktree",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-green-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_spine_rail.py tests/test_worktree_derivation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-prose": {
+      "id": "m3-prose",
+      "title": "Repair the two stale references to the engine copy deleted in g2",
+      "imperative": "In scripts/hooks/spine_rail.py (_worktree_from_spine's docstring) and tests/test_spine_rail.py, replace the prose that names checklist_engine.worktree_from_spine_path as a live twin with what is true: one implementation of the rule, here, in the stdlib-only hook; tests/test_worktree_derivation.py's shared case table is its specification; the engine-side copy was deleted in #609 g2 under ADMIRAL_RULING-2 N2 and re-lands in #610's wave with #315, its consumer. Prose only -- no behaviour changes with it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-green complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "zero references to worktree_from_spine_path survive in the two files in allowed scope",
+          "check": {
+            "kind": "command",
+            "command": "test 0 -eq \"$(grep -c worktree_from_spine_path scripts/hooks/spine_rail.py tests/test_spine_rail.py | awk -F: '{s+=$2} END {print s+0}')\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-prose-1"
+        },
+        {
+          "id": "c2",
+          "statement": "tests/test_worktree_derivation.py is unedited",
+          "check": {
+            "kind": "command",
+            "command": "git diff --quiet -- tests/test_worktree_derivation.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-prose-2"
+        }
+      ],
+      "constraints": [
+        "Prefer symbol names to file:line in any prose written"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-prose-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test 0 -eq \"$(grep -c worktree_from_spine_path scripts/hooks/spine_rail.py tests/test_spine_rail.py | awk -F: '{s+=$2} END {print s+0}')\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-prose-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "git diff --quiet -- tests/test_worktree_derivation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-evidence": {
+      "id": "m4-evidence",
+      "title": "Produce the four load-bearing evidence items and the confirmatory suite",
+      "imperative": "Produce and record: (1) the #549 shape failing before and passing after; (2) before/after per call site, stated SEPARATELY because they are asymmetric; (3) an enumeration of what NEWLY BLOCKS and whether each is intended; (4) the fail-safe direction demonstrated with errored/garbage input. Then the confirmatory spot-checks: full suite with __pycache__ cleared and a clean env, count stated and failure distribution derived mechanically; the import block shown unchanged; and the Windows separator/case-folding answer, constructed rather than inherited.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3-prose complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green with cache cleared and a clean env; count and failure distribution recorded",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-evidence-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the four load-bearing evidence items plus the import block and the Windows answer are written to the gate's evidence files",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4-differential-before-after.txt (8 scenarios + 6 garbage rows, BEFORE=999b7663 and AFTER=working tree in one process, constructed payloads and binding store per #269); m4-call-sites-and-what-newly-blocks.md (per-site before/after stated separately, the 3 newly-blocking classes with intent, the fail-safe direction, the Windows answer); m1-red.txt / m1-green.txt (the #549 shape failing then passing); import block identical BEFORE/AFTER, 11 stdlib imports, printed at the end of the differential"
+        }
+      ],
+      "constraints": [
+        "Failure distribution derived mechanically even when empty"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-result": {
+      "id": "m5-result",
+      "title": "Deliver IMPLEMENTER_RESULT",
+      "imperative": "Write the result artifact to .agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implementer-result.md with completed slice, files changed, test mode satisfied, evidence, assumptions, stop conditions, out-of-scope observations, map impact, workflow feedback, and `Return status` on its own line in lowercase. Record the refusal of any SPINE MID-FLIGHT nudge pointing at the parent Commander's spine.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "evidence produced",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4-evidence complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "result artifact exists at the handoff's named path",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-result-1"
+        }
+      ],
+      "constraints": [
+        "Return status lowercase, on its own line"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 5,
+  "engine_session": {
+    "session_id": "constellation/cleanup-f-derive-worktree/g3/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-16T21:31:27.411927+00:00",
+    "last_heartbeat": "2026-08-16T21:53:10.839673+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T21:53:14.661128+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Baseline matches the handoff (3170/5/0 at 999b7663), so any red after my edit is mine. The gate's real target is narrower than 'delete the worktree test': at site 1 the tree skip was hiding entries from decide_stop's #549 renderer, so an in-tree crew's entry can win mid_flight[0] and the parent is answered with the crew's gate instead of its own -- that asymmetry is what the same-worktree test must catch, and why a differing-tree test proves nothing. Site 2 is not symmetric: SessionStart never carries an agent_id, so the merged view holds only this harness session's own claims and the replacement there is to stop testing the tree, not to add a second ownership test.",
+      "mechanical": false,
+      "ts": "2026-08-16T21:34:07.745298+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-red",
+      "why": "The red output pins the mechanism, not just a failure: the tree skip was hiding entries from decide_stop's #549 renderer, so mid_flight[0] is whichever entry leads the merged view and the parent gets the crew's spine. So the fix has two halves -- stop testing the tree in _entry_mid_flight_view, and make decide_stop choose WHICH mid-flight entry to render by provenance against binding_key(payload) rather than taking the first. The crew-side red shows the same renderer telling a crew its own claimed gate is foreign, because the comparison target was the bare sid instead of the acting agent's own key.",
+      "mechanical": false,
+      "ts": "2026-08-16T21:37:44.391377+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-green",
+      "why": "Both call sites are reworked and asymmetric, as the handoff said they would be. Site 1 (_entry_mid_flight_view) now decides NO ownership at all -- mid-flight is a property of the spine -- and ownership moved up to decide_stop, where it picks WHICH mid-flight entry the stopping agent is answered with, against binding_key(payload) rather than the bare sid. Site 2 (decide_session_start) has no second live agent to tell apart, since SessionStart carries no agent_id, so membership in the merged view IS the binding-key answer there and the tree test simply goes. Eight pre-existing tests moved: two deleted with the symbol, three flipped to now-blocks, three had used a foreign worktree only as a device to reach a branch and now use an unreadable target instead. Two of those three turned out to be written in the pre-#202 flat shape that load_binding drops, so they had been answered by the fallback scan rather than by the binding they named -- repaired.",
+      "mechanical": false,
+      "ts": "2026-08-16T21:43:13.220117+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-prose",
+      "why": "Both stale passages replaced with what test_worktree_derivation.py's own header already says: one implementation of the rule, here, specified by that shared case table; the engine twin deleted in g2 under ADMIRAL_RULING-2 N2 and re-landing in #610 with #315 as a copy, since this module may gain no import. Zero references survive in my two files. The handoff's Wiring Grep asked for zero repo-wide, which is wrong: two references remain outside my scope (test_worktree_derivation.py's header and test_spine_origin_isolation.py's docstring) and BOTH are true prose recording the deletion, not stale claims -- reported rather than edited.",
+      "mechanical": false,
+      "ts": "2026-08-16T21:43:50.572892+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-evidence",
+      "why": "The differential is the load-bearing artifact: same payloads, both hooks, one process, so the before/after is measured rather than recalled. It also caught what prose would have missed -- the parent's pre-change Stop was answered ABOUT the crew's spine (run-crew named in the reason) with the imperative already withheld by #549, so the defect is that the parent's own open gate never rendered at all, not that the crew's imperative leaked. Full suite 3177 passed / 5 skipped / 0 failed, +7 over baseline and the arithmetic accounts for every one. map/INDEX.md regenerated (tests 4832->4843 entities); scripts entity count is unchanged because _foreign_worktree left and _is_own_entry arrived.",
+      "mechanical": false,
+      "ts": "2026-08-16T21:51:11.441325+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-result",
+      "why": "Result written to the handoff's named path with the four load-bearing evidence items, the three newly-blocking classes and their intent, the asymmetric per-site before/after, two triage candidates (the SessionStart scan-bind that is the actual five-crew mechanism, and the handoff's unachievable repo-wide grep), and the recorded refusal of any parent-spine Stop nudge. Return status: complete.",
+      "mechanical": false,
+      "ts": "2026-08-16T21:53:10.839664+00:00"
+    }
+  ]
+}

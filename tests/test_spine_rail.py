@@ -15,8 +15,11 @@ import importlib.util
 import json
 import multiprocessing
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
+import unittest
 from pathlib import Path
 
 import pytest
@@ -750,15 +753,19 @@ def test_session_start_bind_on_resume_still_writes_under_the_bare_key(proj):
     """SessionStart never carries an agent_id, so a resumed session is by
     definition top-level: the bind-on-unambiguous-scan write must land under
     the BARE session_id, never under a composite one. The sid's pre-existing
-    composite entry is FOREIGN so the existing-binding read is skipped and the
-    scan path is actually reached."""
+    composite entry is made UNREADABLE so the existing-binding read is skipped
+    and the scan path is actually reached -- it used to be skipped for sitting
+    in another worktree, until #609 lane F g3 stopped decide_session_start from
+    reading the tree. The composite entry was claimed by the real writer just
+    above, so its `claimed_at` is fresh and the reaper retains it."""
     sub = _real_subagent_payloads()[0]
     sid = sub["session_id"]
     composite = sid + sr.BINDING_KEY_SEP + sub["agent_id"]
     alt = proj / "altwt"
-    write_spine(alt, make_spine([("gx", "in-progress")]), work="run-sub")
+    sub_spine = write_spine(alt, make_spine([("gx", "in-progress")]), work="run-sub")
     sr.handle_post_tool_use(_real_post_tool_use(sub, _claim_cmd("run-sub", "eng-s"), alt), proj)
     assert list(sr.load_binding(proj).keys()) == [composite]
+    os.remove(sub_spine)  # bound, then the target vanishes
 
     sp = write_spine(proj, make_spine([("g1", "in-progress")], session_id="eng-alone",
                                       imperatives={"g1": "ONLY-MARKER keep going"}),
@@ -822,7 +829,14 @@ def test_reconstruct_current_no_lease_line_when_released():
     assert "ACTIVE g1" in out
 
 
-# --- worktree attribution helpers (_same_path / _foreign_worktree) -----------
+# --- path comparison helper (_same_path) -------------------------------------
+#
+# `_foreign_worktree` used to live here and answered "is this bound spine mine?"
+# by comparing the stopping payload's cwd against the binding's recorded
+# worktree. #609 lane F g3 deleted it with both its call sites: ownership is the
+# binding key, never the tree (see OwnershipIsBindingKeyNotWorktree below).
+# `_same_path` survives because its other callers -- git_worktree_roots and
+# resolve_spine_candidate -- ask it about PATHS, which is all it ever knew.
 
 def test_same_path_fail_safe_returns_true_on_bad_input():
     # (d) a comparison error must NEVER relax the rail: default True.
@@ -859,16 +873,295 @@ def test_same_path_distinct_paths_differ():
     assert sr._same_path("C:/a/wtParent", "C:/a/wtChild") is False
 
 
-def test_foreign_worktree_requires_both_present():
-    # (e) only one of cwd / worktree present -> no positive mismatch -> False.
-    assert sr._foreign_worktree({"cwd": "X"}, {}) is False
-    assert sr._foreign_worktree({}, {"worktree": "Y"}) is False
-    assert sr._foreign_worktree({}, {}) is False
+def test_foreign_worktree_is_gone_and_stays_gone():
+    """The tree-as-ownership test was deleted, not softened (#609 lane F g3).
+    A reintroduced `_foreign_worktree` would read as a harmless helper right up
+    until something asked it who owns a spine, so its absence is pinned here
+    rather than left to be noticed."""
+    assert not hasattr(sr, "_foreign_worktree")
 
 
-def test_foreign_worktree_true_only_on_positive_mismatch():
-    assert sr._foreign_worktree({"cwd": "C:/a/parent"}, {"worktree": "C:/a/child"}) is True
-    assert sr._foreign_worktree({"cwd": "C:/a/same"}, {"worktree": "C:/a/same"}) is False
+class OwnershipIsBindingKeyNotWorktree(unittest.TestCase):
+    """#609 lane F g3. Ownership -- "is this spine MINE to drive?" -- is decided
+    by the BINDING KEY that claimed it, never by the tree it sits in.
+
+    Spines are 1:1 with work AREAS, not worktrees. A Commander gets a worktree;
+    an in-tree crew works in its Commander's tree, in its own area. So one
+    worktree holds several spines, and `same worktree, therefore mine` is wrong
+    the moment a crew shares its Commander's tree: the tree answers WHERE, and
+    only the binding key answers WHOSE.
+
+    Every case here puts parent and crew in ONE worktree on purpose. Giving
+    them different trees proves nothing about this change -- that is the case
+    the deleted worktree test already got right, and it is preserved as an
+    explicit control below.
+
+    `unittest.TestCase` rather than this module's function style so pytest
+    collects the class under its required name: this repo ships no pytest
+    config, so the default `python_classes = Test*` would skip a plain class,
+    while a `TestCase` subclass is collected whatever it is called.
+    """
+
+    def setUp(self):
+        self.proj = Path(tempfile.mkdtemp(prefix="ownership-binding-key-")).resolve()
+        self.addCleanup(shutil.rmtree, str(self.proj), True)
+        prior = os.environ.get("CLAUDE_PROJECT_DIR")
+        os.environ["CLAUDE_PROJECT_DIR"] = str(self.proj)
+        self.addCleanup(self._restore_project_dir, prior)
+
+    @staticmethod
+    def _restore_project_dir(prior):
+        if prior is None:
+            os.environ.pop("CLAUDE_PROJECT_DIR", None)
+        else:
+            os.environ["CLAUDE_PROJECT_DIR"] = prior
+
+    # -- the shape: one worktree, a parent and its crew ----------------------
+
+    def _parent_and_in_tree_crew(self):
+        """A Commander and an in-tree crew sharing ONE worktree, bound by the
+        REAL claim writer from the REAL captured payloads (#419's probe): the
+        parent carries no `agent_id`, so it binds under the bare session_id;
+        the crew carries one, so it binds under `sid#agent_id`. Both spines
+        live under the same project dir and both claims are issued from it, so
+        every recorded `worktree` is the same string and the tree can decide
+        nothing.
+
+        The crew claims FIRST so its composite key leads the binding map and
+        its entry leads the merged session view. That ordering is the point,
+        not incidental: with the worktree skip gone, whichever entry leads is
+        what `decide_stop` would render, so a parent that is answered with its
+        own gate here is answered with it by ownership, not by luck.
+        """
+        parent = _real_parent_payloads()[0]
+        crew = _real_subagent_payloads()[0]
+        self.assertEqual(crew["session_id"], parent["session_id"])  # one harness session
+        write_spine(
+            self.proj,
+            make_spine([("g3", "in-progress")],
+                       imperatives={"g3": "CREW-MARKER implement the crew gate"}),
+            work="run-crew", journal_lines=1,
+        )
+        write_spine(
+            self.proj,
+            make_spine([("execute", "in-progress")],
+                       imperatives={"execute": "PARENT-MARKER drive execute.json"}),
+            work="run-parent", journal_lines=1,
+        )
+        sr.handle_post_tool_use(
+            _real_post_tool_use(crew, _claim_cmd("run-crew", "eng-crew"), self.proj), self.proj)
+        sr.handle_post_tool_use(
+            _real_post_tool_use(parent, _claim_cmd("run-parent", "eng-parent"), self.proj), self.proj)
+
+        sid = parent["session_id"]
+        crew_key = sid + sr.BINDING_KEY_SEP + crew["agent_id"]
+        binding = sr.load_binding(self.proj)
+        self.assertEqual(list(binding), [crew_key, sid])  # crew's key leads
+        entries = sr.session_view(binding, sid)
+        self.assertEqual(
+            list(entries),
+            [_abs_spine(self.proj, "run-crew"), _abs_spine(self.proj, "run-parent")],
+        )
+        # ONE worktree: whatever spelling the claim writer recorded, both
+        # entries carry the SAME one, so no comparison against it can tell
+        # these two spines apart.
+        self.assertEqual(len({e["worktree"] for e in entries.values()}), 1)
+        return sid, crew, crew_key
+
+    def test_a_parents_stop_is_answered_with_its_own_gate_not_its_in_tree_crews(self):
+        """THE #549 shape. The parent's Stop must be answered with the PARENT's
+        gate. Before this change the crew's in-tree entry was not "foreign", so
+        it led the mid-flight list and the parent's Stop was answered with the
+        crew's gate -- the parent's own open gate never rendered at all."""
+        sid, _crew, crew_key = self._parent_and_in_tree_crew()
+
+        out = sr.decide_stop({"session_id": sid, "cwd": str(self.proj)}, self.proj)
+
+        self.assertEqual(out["decision"], "block")  # both gates are open; still blocked
+        reason = out["reason"]
+        ctx = out["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("PARENT-MARKER", reason)      # answered with its OWN gate
+        self.assertIn("PARENT-MARKER", ctx)
+        self.assertNotIn("CREW-MARKER", reason)     # never with the crew's
+        self.assertNotIn("CREW-MARKER", ctx)
+        self.assertNotIn(crew_key, reason)
+        # The 3-strike hatch stays keyed by session id ALONE, never fragmented
+        # per entry -- two mid-flight entries, one nudge record.
+        self.assertEqual(list(sr.load_nudges(self.proj)), [sid])
+
+    def test_the_same_answer_when_the_crew_has_its_own_tree_control(self):
+        """CONTROL, green before and after: the differing-tree case the deleted
+        worktree test already got right. Kept so the change is visibly a
+        generalization -- the parent gets its own gate whether or not the crew
+        shares its tree -- rather than a swap of one skip for another."""
+        parent = _real_parent_payloads()[0]
+        crew = _real_subagent_payloads()[0]
+        sid = parent["session_id"]
+        crew_tree = self.proj / "crewwt"
+        write_spine(crew_tree, make_spine([("g3", "in-progress")],
+                                          imperatives={"g3": "CREW-MARKER implement the crew gate"}),
+                    work="run-crew", journal_lines=1)
+        write_spine(self.proj, make_spine([("execute", "in-progress")],
+                                          imperatives={"execute": "PARENT-MARKER drive execute.json"}),
+                    work="run-parent", journal_lines=1)
+        sr.handle_post_tool_use(
+            _real_post_tool_use(crew, _claim_cmd("run-crew", "eng-crew"), crew_tree), self.proj)
+        sr.handle_post_tool_use(
+            _real_post_tool_use(parent, _claim_cmd("run-parent", "eng-parent"), self.proj), self.proj)
+        entries = sr.session_view(sr.load_binding(self.proj), sid)
+        self.assertEqual(len({e["worktree"] for e in entries.values()}), 2)  # two trees here
+
+        out = sr.decide_stop({"session_id": sid, "cwd": str(self.proj)}, self.proj)
+
+        self.assertEqual(out["decision"], "block")
+        self.assertIn("PARENT-MARKER", out["reason"])
+        self.assertNotIn("CREW-MARKER", out["reason"])
+        self.assertNotIn("CREW-MARKER", out["hookSpecificOutput"]["additionalContext"])
+
+    def test_a_crew_that_stops_is_not_handed_its_parents_gate(self):
+        """The inverse, and the failure five crews on this issue actually hit:
+        a crew told by the Stop hook to go drive its PARENT's `execute` gate.
+
+        The acting agent's own key is `binding_key(payload)` -- the one function
+        that composes a key anywhere in this codebase -- so when the harness
+        delivers an `agent_id` (measured for PostToolUse in the pinned probe
+        capture), the crew is answered with the gate it actually claimed, and
+        its parent's imperative is withheld from it exactly as the crew's is
+        withheld from the parent. If a Stop payload carries no `agent_id`, this
+        collapses to the bare-key case above rather than to a different rule."""
+        sid, crew, _crew_key = self._parent_and_in_tree_crew()
+
+        out = sr.decide_stop(
+            {"session_id": sid, "agent_id": crew["agent_id"], "cwd": str(self.proj)}, self.proj)
+
+        self.assertEqual(out["decision"], "block")
+        reason = out["reason"]
+        ctx = out["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("CREW-MARKER", reason)        # its own gate
+        self.assertNotIn("PARENT-MARKER", reason)   # never its parent's
+        self.assertNotIn("PARENT-MARKER", ctx)
+
+    # -- site 1: mid-flight Stop blocking ------------------------------------
+
+    def test_stop_blocks_on_an_own_entry_recorded_in_another_worktree(self):
+        """What NEWLY blocks. This session claimed the spine -- the binding key
+        says so -- so its Stop is refused wherever it happens to be standing.
+        Before this change the recorded worktree differed from the payload cwd,
+        the entry was skipped as "foreign", and the session walked away from
+        its own mid-flight run."""
+        other = self.proj / "otherwt"
+        sp = write_spine(other, make_spine([("g1", "in-progress")],
+                                           imperatives={"g1": "OWN-MARKER finish it"}),
+                         journal_lines=1)
+        bind(self.proj, "s1", sp, worktree=str(other))
+
+        out = sr.decide_stop({"session_id": "s1", "cwd": str(self.proj)}, self.proj)
+
+        self.assertEqual(out["decision"], "block")
+        self.assertIn("OWN-MARKER", out["reason"])
+
+    # -- site 2: which binding entry a resumed session picks up --------------
+
+    def test_session_start_resumes_from_its_own_binding_in_another_worktree(self):
+        """The two call sites are NOT symmetric. Here the skip did not decide
+        blocking -- it decided whether a resumed session reads its OWN binding
+        or falls through to `_scan_active_spine`, the blind glob that can hand a
+        session a spine it never claimed. Dropping the tree test keeps the
+        session on its own binding, which is the safer of the two paths."""
+        alt = self.proj / "altwt"
+        sp = write_spine(alt, make_spine([("g2", "in-progress")],
+                                         imperatives={"g2": "RESUME-MARKER keep going"}))
+        bind(self.proj, "s1", sp, worktree=str(alt))
+        self.assertEqual(sr._scan_active_spine(self.proj), [])  # nothing for the fallback
+
+        out = sr.decide_session_start({"session_id": "s1", "cwd": str(self.proj)}, self.proj)
+
+        ctx = out["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("RESUMING", ctx)
+        self.assertIn("RESUME-MARKER", ctx)
+
+    # -- fail-safe: uncertainty blocks, it never relaxes ---------------------
+
+    def test_garbage_location_data_never_relaxes_the_rail(self):
+        """Location data is now inert, and inert must mean BLOCKED, not
+        allowed. Every row is a mid-flight entry this session claimed, with the
+        location fields ranging over absent, wrong-typed and structurally
+        nonsense values."""
+        sp = write_spine(self.proj, make_spine([("g1", "in-progress")],
+                                               imperatives={"g1": "FAILSAFE-MARKER finish it"}),
+                         journal_lines=1)
+        rows = [
+            ("no cwd at all", {"session_id": "s1"}, str(self.proj)),
+            ("int cwd", {"session_id": "s1", "cwd": 12345}, str(self.proj)),
+            ("dict cwd", {"session_id": "s1", "cwd": {"not": "a path"}}, str(self.proj)),
+            ("null worktree", {"session_id": "s1", "cwd": str(self.proj)}, None),
+            ("int worktree", {"session_id": "s1", "cwd": str(self.proj)}, 12345),
+            ("empty worktree", {"session_id": "s1", "cwd": str(self.proj)}, ""),
+        ]
+        for label, payload, worktree in rows:
+            with self.subTest(row=label):
+                sr.save_binding(self.proj, {})
+                sr.save_nudges(self.proj, {})
+                bind(self.proj, "s1", sp, worktree=worktree)
+                out = sr.decide_stop(payload, self.proj)
+                self.assertEqual(out.get("decision"), "block", label)
+                self.assertIn("FAILSAFE-MARKER", out["reason"], label)
+        self.assertEqual(len(rows), 6)  # a loop that asserts what it looped over
+
+    def test_an_unidentifiable_agent_blocks_and_is_told_nothing_to_drive(self):
+        """The other fail-safe direction. `binding_key` refuses to compose a key
+        for a malformed `agent_id` (#441's allowlist), so the hook cannot say
+        who is stopping. Uncertainty must block -- and it must withhold, since
+        handing an imperative to an agent whose identity is unestablished is the
+        very confusion this gate exists to end."""
+        sp = write_spine(self.proj, make_spine([("g1", "in-progress")],
+                                               imperatives={"g1": "WITHHELD-MARKER finish it"}),
+                         journal_lines=1)
+        bind(self.proj, "s1", sp)
+        for label, agent_id in [("path separator", "a/b"), ("empty", ""), ("wrong type", 12345)]:
+            with self.subTest(agent_id=label):
+                # Reset the strike counter per row: the journal is frozen, so
+                # three no-progress rows in a row would otherwise trip the
+                # 3-strike hatch and the third row would measure THAT.
+                sr.save_nudges(self.proj, {})
+                self.assertIsNone(sr.binding_key({"session_id": "s1", "agent_id": agent_id}))
+                out = sr.decide_stop(
+                    {"session_id": "s1", "agent_id": agent_id, "cwd": str(self.proj)}, self.proj)
+                self.assertEqual(out.get("decision"), "block", label)
+                self.assertNotIn("WITHHELD-MARKER", out["reason"], label)
+                self.assertNotIn(
+                    "WITHHELD-MARKER", out["hookSpecificOutput"]["additionalContext"], label)
+
+    # -- Windows -------------------------------------------------------------
+
+    def test_ownership_no_longer_folds_case_or_separators(self):
+        """Windows, CONSTRUCTED rather than inherited. `os.path.normcase` is the
+        identity function on POSIX, so a case expectation read off this host
+        proves nothing -- the platform split is stated explicitly below.
+
+        The old test compared a recorded worktree against the payload cwd
+        through `normcase`, which made this Stop decision PLATFORM-DEPENDENT:
+        `C:\\Foo\\wt` and `c:/foo/wt` are the same path on Windows and two
+        different paths on POSIX, so the same binding allowed the stop on one
+        platform and refused it on the other. Ownership is now an exact
+        binding-key comparison over harness-issued session and agent ids --
+        which are opaque tokens, never paths, and cannot contain a separator
+        (`_AGENT_ID_ALLOWED`) -- so nothing here folds case or separators and
+        the answer is the same on both platforms."""
+        recorded, standing_in = "C:\\Foo\\wt", "c:/foo/wt"
+        folds = os.path.normcase(recorded) == os.path.normcase(standing_in)
+        self.assertEqual(folds, sys.platform == "win32")  # the split, stated not observed
+        self.assertEqual(sr._same_path(recorded, standing_in), folds)  # still true of paths
+
+        sp = write_spine(self.proj, make_spine([("g1", "in-progress")],
+                                               imperatives={"g1": "PLATFORM-MARKER finish it"}),
+                         journal_lines=1)
+        bind(self.proj, "s1", sp, worktree=recorded)
+
+        out = sr.decide_stop({"session_id": "s1", "cwd": standing_in}, self.proj)
+
+        self.assertEqual(out["decision"], "block")  # on BOTH platforms
+        self.assertIn("PLATFORM-MARKER", out["reason"])
 
 
 def _derived_form(path):
@@ -899,10 +1192,12 @@ def test_worktree_from_spine_walks_to_the_nearest_agent_work_ancestor(tmp_path):
     permits. The narrow shape did not disappear: it moved to `_is_claim_layout`,
     which is what the ownership gate now uses (see the two tests below).
 
-    The exhaustive cross-implementation table lives in
-    `tests/test_worktree_derivation.py`, which pins this function equal to
-    `checklist_engine.worktree_from_spine_path`. This test covers only what the
-    hook itself must guarantee.
+    The rule's SPECIFICATION is the exhaustive case table in
+    `tests/test_worktree_derivation.py`, which drives this function -- now the
+    one implementation of the rule in the repo, since #609 g2 deleted the
+    engine-side twin under `ADMIRAL_RULING-2` N2 (it re-lands in #610's wave
+    with #315, its consumer, and re-derives against that same table). This test
+    covers only what the hook itself must guarantee.
     """
     worktree = tmp_path / "worktree"
 
@@ -1047,28 +1342,32 @@ def test_stop_mid_flight_blocks_with_substrings(proj):
     assert "ACTIVE g1" in hso["additionalContext"]
 
 
-def test_stop_foreign_worktree_parent_not_blocked(proj):
-    # (a) Production-shaped: a subagent SHARING the parent's session_id claims a
-    # spine in ITS OWN worktree; the real PostToolUse path writes a NESTED entry
-    # (keyed by abs_spine, #202) pointing at the subagent's worktree/spine. The
-    # PARENT then ends its turn (Stop) from the PARENT worktree while that bound
-    # spine is mid-flight. The worktree mismatch must let the parent stop
-    # (parent is not this driver).
+def test_stop_own_claim_from_another_worktree_now_blocks(proj):
+    # (a) Production-shaped, and FLIPPED by #609 lane F g3. This payload carries
+    # no agent_id, so the real PostToolUse path files the entry under the BARE
+    # session_id: the claim is this agent's own, made while standing in another
+    # worktree. It then ends its turn from elsewhere. The recorded worktree used
+    # to differ from the payload cwd and the entry was skipped as "foreign",
+    # which let a session walk away from its OWN mid-flight run; ownership is
+    # the binding key now, so it is refused wherever it is standing.
     sub = proj / "subwt"
-    subspine = write_spine(sub, make_spine([("g1", "in-progress")]), journal_lines=1)
+    subspine = write_spine(sub, make_spine([("g1", "in-progress")],
+                                           imperatives={"g1": "OWN-CLAIM-MARKER keep going"}),
+                           journal_lines=1)
     cmd = ('py scripts/checklist_engine.py --file .agent-work/run1/spine.json '
            'claim --session-id eng-9 --claimed-by commander')
     sr.handle_post_tool_use(_bash(cmd, session_id="shared", cwd=str(sub)), proj)
     sid_bindings = sr.load_binding(proj)["shared"]
     assert len(sid_bindings) == 1
     entry = next(iter(sid_bindings.values()))
-    assert entry["worktree"] == str(sub)            # binding wrote subagent wt
+    assert entry["worktree"] == str(sub)            # binding wrote the other wt
     assert sr._same_path(entry["spine"], subspine)  # via the real code path
-    # PARENT stops from the PARENT worktree -> foreign -> NOT blocked.
     out = sr.decide_stop({"session_id": "shared", "cwd": str(proj)}, proj)
-    assert out == {}
-    # And no nudge was recorded for the parent (guard fired before nudge logic).
-    assert "shared" not in sr.load_nudges(proj)
+    assert out["decision"] == "block"
+    assert "OWN-CLAIM-MARKER" in out["reason"]      # its own gate, imperative and all
+    # And the nudge IS recorded now -- this is a real refusal, so it accrues a
+    # strike toward the escape hatch like any other.
+    assert list(sr.load_nudges(proj).keys()) == ["shared"]
 
 
 def test_stop_same_worktree_and_no_cwd_still_block(proj):
@@ -1149,17 +1448,22 @@ def test_stop_blocks_when_any_of_two_entries_is_mid_flight(proj):
     assert "keep going" in out["reason"]
 
 
-def test_stop_does_not_block_when_all_entries_foreign_or_non_mid_flight(proj):
-    """One session_id bound to TWO spines: one is genuinely mid-flight but
-    FOREIGN (a subagent's own worktree, parent stopping elsewhere), the other
-    is not mid-flight at all (released lease). Neither should block -- the
-    Stop is allowed."""
+def test_stop_does_not_block_when_no_entry_is_mid_flight(proj):
+    """One session_id bound to TWO spines, neither a genuine mid-flight
+    blocker: one is unreadable, the other has a released lease. Neither should
+    block -- the Stop is allowed.
+
+    A FOREIGN WORKTREE used to be the first of these shapes and is no longer
+    one of them (#609 lane F g3): a differing tree says nothing about who owns
+    a spine, so it no longer excuses anything. The surviving non-blocking
+    shapes are exactly unreadable, released, and honestly blocked."""
     sub = proj / "subwt"
-    sp_foreign_mid_flight = write_spine(sub, make_spine([("g1", "in-progress")]), journal_lines=1)
+    sp_unreadable = write_spine(sub, make_spine([("g1", "in-progress")]), journal_lines=1)
     sp_released = write_spine(proj, make_spine([("g2", "complete")], lease_status="released"), work="run-done")
-    bind(proj, "shared", sp_foreign_mid_flight, worktree=str(sub))
+    bind(proj, "shared", sp_unreadable, worktree=str(sub))
     bind(proj, "shared", sp_released)
     assert len(sr.load_binding(proj)["shared"]) == 2
+    Path(sp_unreadable).write_text("{ not json", encoding="utf-8")  # bound, then corrupted
 
     out = sr.decide_stop({"session_id": "shared", "cwd": str(proj)}, proj)
     assert out == {}
@@ -1215,26 +1519,38 @@ def test_session_start_fallback_scan_finds_active(proj):
     assert "RESUMING" in out["hookSpecificOutput"]["additionalContext"]
 
 
-def test_session_start_foreign_skip_same_reinject_fallback_reinject(proj):
-    # (c) three-way: a FOREIGN-worktree binding is skipped (no re-inject), a
-    # SAME-worktree binding re-injects, and with no binding the _scan_active_spine
-    # fallback still re-injects.
-    # -- foreign: bound spine lives in the subagent worktree (outside proj/.agent-work)
+def test_session_start_unreadable_skip_bound_reinject_fallback_reinject(proj):
+    # (c) three-way: an UNREADABLE binding is skipped (no re-inject), a readable
+    # binding re-injects from the BINDING, and with no binding at all the
+    # _scan_active_spine fallback still re-injects.
+    #
+    # The first leg used to be a FOREIGN-WORKTREE binding, until #609 lane F g3
+    # stopped decide_session_start from reading the tree. Both legs also used to
+    # be written in the pre-#202 FLAT shape, which `load_binding` drops on sight
+    # -- so each was silently answered by the fallback scan rather than by the
+    # binding it named. They go through `bind()`'s real nested shape here, and
+    # the readable leg is deliberately placed OUTSIDE proj/.agent-work so the
+    # scan cannot reach it and only the binding can explain the marker.
     sub = proj / "subwt"
-    subspine = write_spine(sub, make_spine([("g2", "in-progress")]))
-    sr.save_binding(proj, {
-        "shared": {"spine": subspine, "engine_session": "eng-1", "worktree": str(sub)}
-    })
-    out_foreign = sr.decide_session_start({"session_id": "shared", "cwd": str(proj)}, proj)
-    assert out_foreign == {}  # foreign -> bound spine skipped, fallback finds none
-    # -- same worktree: re-injects
-    sp = write_spine(proj, make_spine([("g3", "in-progress")], imperatives={"g3": "keep going"}))
-    sr.save_binding(proj, {
-        "s1": {"spine": sp, "engine_session": "eng-1", "worktree": str(proj)}
-    })
-    out_same = sr.decide_session_start({"session_id": "s1", "cwd": str(proj)}, proj)
-    assert "RESUMING" in out_same["hookSpecificOutput"]["additionalContext"]
+    subspine = write_spine(sub, make_spine([("g2", "in-progress")]), work="run-sub")
+    bind(proj, "shared", subspine, worktree=str(sub))
+    os.remove(subspine)  # bound, then the target vanishes
+    binding = sr.load_binding(proj)
+    binding["shared"][subspine]["claimed_at"] = sr._now_iso()  # inside the reap grace window
+    sr.save_binding(proj, binding)
+    out_unreadable = sr.decide_session_start({"session_id": "shared", "cwd": str(proj)}, proj)
+    assert out_unreadable == {}  # unreadable -> skipped, and the scan finds none
+    # -- readable binding, out of the scan's reach: re-injects from the binding
+    alt = proj / "altwt"
+    sp = write_spine(alt, make_spine([("g3", "in-progress")],
+                                     imperatives={"g3": "BOUND-MARKER keep going"}), work="run-alt")
+    bind(proj, "s1", sp, worktree=str(alt))
+    assert sr._scan_active_spine(proj) == []  # nothing for the fallback to answer with
+    out_bound = sr.decide_session_start({"session_id": "s1", "cwd": str(proj)}, proj)
+    assert "RESUMING" in out_bound["hookSpecificOutput"]["additionalContext"]
+    assert "BOUND-MARKER" in out_bound["hookSpecificOutput"]["additionalContext"]
     # -- no binding: fallback scan under proj/.agent-work still re-injects
+    write_spine(proj, make_spine([("g4", "in-progress")]), work="run-scan")
     out_fallback = sr.decide_session_start({"session_id": "unbound", "cwd": str(proj)}, proj)
     assert "RESUMING" in out_fallback["hookSpecificOutput"]["additionalContext"]
 
@@ -1377,22 +1693,28 @@ def test_session_start_no_bind_when_sid_missing(proj):
 
 def test_session_start_unambiguous_scan_merges_onto_existing_sibling_binding(proj):
     """The bind-on-unambiguous-scan write must not clobber a sibling
-    abs_spine_path entry this sid already holds for a DIFFERENT (foreign-
-    worktree) spine (mirrors the real claim writer's leave-siblings-
-    untouched behavior, #202). The sibling is made FOREIGN on purpose: a
-    non-foreign sibling would already satisfy the existing-binding read
-    (g1's territory, unrelated to this scan-bind path) and the scan would
-    never run at all -- foreign is the one shape that reaches this branch
-    with a pre-existing sibling still in place."""
+    abs_spine_path entry this sid already holds for a DIFFERENT spine (mirrors
+    the real claim writer's leave-siblings-untouched behavior, #202). The
+    sibling is made UNREADABLE on purpose: a readable one would satisfy the
+    existing-binding read and the scan would never run at all, so an unreadable
+    sibling is the shape that reaches this branch with a pre-existing entry
+    still in place. It used to be a foreign-worktree sibling, until #609 lane F
+    g3 stopped decide_session_start from reading the tree at all.
+
+    Its `claimed_at` is refreshed to now because the reaper drops an
+    unreadable target only once it is a day old (REAP_MISSING_TARGET_GRACE_
+    SECONDS) -- a recently-claimed one is retained, which is the shape this
+    test needs and also the realistic one: a spine deleted or archived out from
+    under a live session."""
     sub = proj / "subwt"
-    # lease_status left at its "active" default (#441): a released sibling is
-    # reaped by the resume-bind's own transaction before this test can prove
-    # what it is actually about, which is unrelated -- that the merge leaves
-    # a pre-existing, still-live sibling entry alone.
     other_sp = write_spine(
         sub, make_spine([("gx", "in-progress")]), work="other-run"
     )
-    bind(proj, "resuming-sid", other_sp, worktree=str(sub))  # foreign relative to cwd=proj
+    bind(proj, "resuming-sid", other_sp, worktree=str(sub))
+    os.remove(other_sp)  # bound, then the target vanishes
+    binding = sr.load_binding(proj)
+    binding["resuming-sid"][other_sp]["claimed_at"] = sr._now_iso()
+    sr.save_binding(proj, binding)
 
     sp = write_spine(
         proj,
@@ -2594,7 +2916,15 @@ def test_binding_worktree_comes_from_resolved_spine_in_real_linked_worktree(tmp_
         },
         main_tree,
     )
-    assert sr.decide_stop({"session_id": shared_sid, "cwd": str(main_tree)}, main_tree) == {}
+    # The parent's own run is closed, but the CHILD's is still open -- and the
+    # parent is still refused (#419), now that a differing tree no longer excuses
+    # it (#609 lane F g3). It is told whose gate it is and NOT what that gate's
+    # next step is (#549).
+    after_release = sr.decide_stop({"session_id": shared_sid, "cwd": str(main_tree)}, main_tree)
+    assert after_release["decision"] == "block"
+    assert shared_sid + "#child-agent" in after_release["reason"]
+    assert "do child" not in after_release["reason"]  # the child's imperative, withheld
+    assert "do child" not in after_release["hookSpecificOutput"]["additionalContext"]
 
     # A child SessionStart is also handed the stale main cwd; its unambiguous
     # scan still records the child worktree from the discovered absolute spine.
@@ -3053,9 +3383,15 @@ def test_stop_door_claimed_terminal_released_lease_allows(proj, monkeypatch):
     assert sr.decide_stop({"session_id": "s1"}, proj) == {}
 
 
-def test_stop_door_claimed_foreign_worktree_not_blocked(proj, monkeypatch):
+def test_stop_door_claimed_own_spine_in_another_worktree_now_blocks(proj, monkeypatch):
+    # The door twin of test_stop_own_claim_from_another_worktree_now_blocks, and
+    # flipped for the same reason (#609 lane F g3): the door claim carries no
+    # agent_id either, so this is the same agent's own binding and its Stop is
+    # refused wherever it stands.
     sub = proj / "subwt"
-    subspine = write_spine(sub, make_spine([("g1", "in-progress")]), journal_lines=1)
+    subspine = write_spine(sub, make_spine([("g1", "in-progress")],
+                                           imperatives={"g1": "DOOR-CLAIM-MARKER keep going"}),
+                           journal_lines=1)
     monkeypatch.setenv("SPINE_FILE", subspine)
     monkeypatch.setenv("SPINE_SESSION", "eng-9")
     sr.handle_post_tool_use(_door("claim", session_id="shared", cwd=str(sub)), proj)
@@ -3063,9 +3399,9 @@ def test_stop_door_claimed_foreign_worktree_not_blocked(proj, monkeypatch):
     assert len(sid_bindings) == 1
     entry = next(iter(sid_bindings.values()))
     assert entry["worktree"] == str(sub)
-    # PARENT stops from the PARENT worktree -> foreign -> NOT blocked.
     out = sr.decide_stop({"session_id": "shared", "cwd": str(proj)}, proj)
-    assert out == {}
+    assert out["decision"] == "block"
+    assert "DOOR-CLAIM-MARKER" in out["reason"]
 
 
 def test_stop_door_claimed_unreadable_spine_allows(proj, monkeypatch):

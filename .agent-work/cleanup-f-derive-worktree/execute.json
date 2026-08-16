@@ -863,7 +863,8 @@
               "status": "complete"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-2"
         }
       ],
       "constraints": [
@@ -902,7 +903,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -913,6 +914,15 @@
           "payload": {
             "seam": "g3-implement",
             "why_ref": "w-10"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
           },
           "produced_by": "engine",
           "ts": ""
@@ -1708,6 +1718,13 @@
       "why": "g2 closes as pure engine-side retirement. The engine no longer reads location at all: the ambient git toplevel read is gone (targeted check green, and both halves of it go red on an empty diff), origin.worktree is written by two producers and read by no decision path (5 provenance tests pass by name), and after ADMIRAL_RULING-2 N2 the engine-side derivation itself is deleted rather than shipped inert. Suite 3170 passed / 5 skipped / 0 failed on the committed tree; main at 17c2cee5 re-measured independently in an isolated clone at 3171 / 7 / 0; both failure sets empty, so the difference is empty in both directions. Windows is stated rather than assumed: this gate added no path handling, and the surviving case table derives its case-folding expectation from normcase itself rather than from a platform list. One thing about this very close, worth recording: the engine's own c2 command scrubs SPINE_FILE, SPINE_SESSION and SPINE_PARENT but not CREW_SCRATCH_DIR, so run under run_crew.py it fails the one lane-E test that asserts that key is absent without scrubbing it from the parent env first -- 1 failed / 3169 passed. That is ambient contamination from my launcher, not a property of the tree, so I re-ran the close with the variable unset rather than waiving the regression floor. The lesson worth carrying is not about this gate's code, which was small and correct after one pass -- it is that this gate needed three implementer passes and three reviewers because every check anyone wrote, mine included, keyed on a SYMBOL while the defect lived in a CLAIM spread across wrapped comment lines that no line-oriented grep can see. Two reviewers earned their BLOCK by measuring instead of reading. What remains open and is NOT this gate's: a third stale-claim family, measured live in two unfenced test files (tc10), which I take up in reconcile because this lane's change is what made those claims false.",
       "mechanical": false,
       "ts": "2026-08-16T21:16:50.100624+00:00"
+    },
+    {
+      "id": "w-16",
+      "gate": "g3-implement",
+      "why": "Verified in my own hands, not from the return: targeted class 8 passed where the empty diff exited 5; full suite 3177/5/0 against the 3170/5/0 baseline I measured at 53c89ba1, and the +7 accounts exactly (8 new methods + the deletion pin - 2 deleted _foreign_worktree unit tests); result artifact fresh per --verify-result; worktree_from_spine_path is 0/0 in the two files; test_worktree_derivation.py unedited. The gate's own claim holds asymmetrically, as the plan demanded: _entry_mid_flight_view now decides no ownership at all and ownership moved UP into decide_stop, which compares session_view_provenance against binding_key(payload) rather than the bare sid, while decide_session_start simply stopped testing the tree because SessionStart carries no agent_id and membership in the merged view IS the binding-key answer. Three newly-blocking classes are enumerated and each is intended; nothing newly stops blocking; the nudge stays keyed by sid alone. Fail-safe survives - six garbage rows block on both sides, and the new uncertainty (malformed agent_id) blocks with the imperative withheld. The crew returned one finding this gate cannot reach: SessionStart's scan-bind writes a binding for an unbound session onto the single active-leased spine it finds, which is how five crews on this issue were handed their parent's gate. It is a triage candidate, not a defect in this change.",
+      "mechanical": false,
+      "ts": "2026-08-16T21:56:10.389959+00:00"
     }
   ]
 }

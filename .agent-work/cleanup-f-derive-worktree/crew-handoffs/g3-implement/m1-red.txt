@@ -1,0 +1,214 @@
+$ py -m pytest -q tests/test_spine_rail.py -k OwnershipIsBindingKeyNotWorktree  (RED: unmodified scripts/hooks/spine_rail.py at HEAD 999b7663)
+FF..FFF.                                                        [100%]
+=================================== FAILURES ===================================
+_ OwnershipIsBindingKeyNotWorktree.test_a_crew_that_stops_is_not_handed_its_parents_gate _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_a_crew_that_stops_is_not_handed_its_parents_gate>
+
+    def test_a_crew_that_stops_is_not_handed_its_parents_gate(self):
+        """The inverse, and the failure five crews on this issue actually hit:
+        a crew told by the Stop hook to go drive its PARENT's `execute` gate.
+    
+        The acting agent's own key is `binding_key(payload)` -- the one function
+        that composes a key anywhere in this codebase -- so when the harness
+        delivers an `agent_id` (measured for PostToolUse in the pinned probe
+        capture), the crew is answered with the gate it actually claimed, and
+        its parent's imperative is withheld from it exactly as the crew's is
+        withheld from the parent. If a Stop payload carries no `agent_id`, this
+        collapses to the bare-key case above rather than to a different rule."""
+        sid, crew, _crew_key = self._parent_and_in_tree_crew()
+    
+        out = sr.decide_stop(
+            {"session_id": sid, "agent_id": crew["agent_id"], "cwd": str(self.proj)}, self.proj)
+    
+        self.assertEqual(out["decision"], "block")
+        reason = out["reason"]
+        ctx = out["hookSpecificOutput"]["additionalContext"]
+>       self.assertIn("CREW-MARKER", reason)        # its own gate
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: 'CREW-MARKER' not found in 'SPINE MID-FLIGHT (foreign-owned): a gate on /tmp/ownership-binding-key-59tc040o/.agent-work/run-crew/spine.json is still open under c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c -- STILL BLOCKED, but this is not your gate to drive. It belongs to a different session/agent (bound under a per-agent key you merely share a harness session with), so do not act on its next step yourself. Let that session/agent finish or bubble its own blocker; if you believe it has gone silent, investigate that session rather than ending your own turn to wait on it here.'
+
+tests/test_spine_rail.py:1033: AssertionError
+_ OwnershipIsBindingKeyNotWorktree.test_a_parents_stop_is_answered_with_its_own_gate_not_its_in_tree_crews _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_a_parents_stop_is_answered_with_its_own_gate_not_its_in_tree_crews>
+
+    def test_a_parents_stop_is_answered_with_its_own_gate_not_its_in_tree_crews(self):
+        """THE #549 shape. The parent's Stop must be answered with the PARENT's
+        gate. Before this change the crew's in-tree entry was not "foreign", so
+        it led the mid-flight list and the parent's Stop was answered with the
+        crew's gate -- the parent's own open gate never rendered at all."""
+        sid, _crew, crew_key = self._parent_and_in_tree_crew()
+    
+        out = sr.decide_stop({"session_id": sid, "cwd": str(self.proj)}, self.proj)
+    
+        self.assertEqual(out["decision"], "block")  # both gates are open; still blocked
+        reason = out["reason"]
+        ctx = out["hookSpecificOutput"]["additionalContext"]
+>       self.assertIn("PARENT-MARKER", reason)      # answered with its OWN gate
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: 'PARENT-MARKER' not found in 'SPINE MID-FLIGHT (foreign-owned): a gate on /tmp/ownership-binding-key-uk11gibk/.agent-work/run-crew/spine.json is still open under c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c -- STILL BLOCKED, but this is not your gate to drive. It belongs to a different session/agent (bound under a per-agent key you merely share a harness session with), so do not act on its next step yourself. Let that session/agent finish or bubble its own blocker; if you believe it has gone silent, investigate that session rather than ending your own turn to wait on it here.'
+
+tests/test_spine_rail.py:976: AssertionError
+_ OwnershipIsBindingKeyNotWorktree.test_an_unidentifiable_agent_blocks_and_is_told_nothing_to_drive (agent_id='path separator') _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_an_unidentifiable_agent_blocks_and_is_told_nothing_to_drive>
+
+    def test_an_unidentifiable_agent_blocks_and_is_told_nothing_to_drive(self):
+        """The other fail-safe direction. `binding_key` refuses to compose a key
+        for a malformed `agent_id` (#441's allowlist), so the hook cannot say
+        who is stopping. Uncertainty must block -- and it must withhold, since
+        handing an imperative to an agent whose identity is unestablished is the
+        very confusion this gate exists to end."""
+        sp = write_spine(self.proj, make_spine([("g1", "in-progress")],
+                                               imperatives={"g1": "WITHHELD-MARKER finish it"}),
+                         journal_lines=1)
+        bind(self.proj, "s1", sp)
+        for label, agent_id in [("path separator", "a/b"), ("empty", ""), ("wrong type", 12345)]:
+            with self.subTest(agent_id=label):
+                self.assertIsNone(sr.binding_key({"session_id": "s1", "agent_id": agent_id}))
+                out = sr.decide_stop(
+                    {"session_id": "s1", "agent_id": agent_id, "cwd": str(self.proj)}, self.proj)
+                self.assertEqual(out.get("decision"), "block", label)
+>               self.assertNotIn("WITHHELD-MARKER", out["reason"], label)
+E               AssertionError: 'WITHHELD-MARKER' unexpectedly found in "SPINE MID-FLIGHT: gate g1 is still open -- you are in the MIDDLE of the spine, not at its end, so ending your turn now abandons an active run. Keep working the gate -- do not end your turn to wait. Next imperative: WITHHELD-MARKER finish it If this is an honest stop (genuinely blocked or out of scope), use the engine's block verb to bubble the blocker to the parent, or waive the check with human authority -- do not just stop." : path separator
+
+tests/test_spine_rail.py:1120: AssertionError
+_ OwnershipIsBindingKeyNotWorktree.test_an_unidentifiable_agent_blocks_and_is_told_nothing_to_drive (agent_id='empty') _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_an_unidentifiable_agent_blocks_and_is_told_nothing_to_drive>
+
+    def test_an_unidentifiable_agent_blocks_and_is_told_nothing_to_drive(self):
+        """The other fail-safe direction. `binding_key` refuses to compose a key
+        for a malformed `agent_id` (#441's allowlist), so the hook cannot say
+        who is stopping. Uncertainty must block -- and it must withhold, since
+        handing an imperative to an agent whose identity is unestablished is the
+        very confusion this gate exists to end."""
+        sp = write_spine(self.proj, make_spine([("g1", "in-progress")],
+                                               imperatives={"g1": "WITHHELD-MARKER finish it"}),
+                         journal_lines=1)
+        bind(self.proj, "s1", sp)
+        for label, agent_id in [("path separator", "a/b"), ("empty", ""), ("wrong type", 12345)]:
+            with self.subTest(agent_id=label):
+                self.assertIsNone(sr.binding_key({"session_id": "s1", "agent_id": agent_id}))
+                out = sr.decide_stop(
+                    {"session_id": "s1", "agent_id": agent_id, "cwd": str(self.proj)}, self.proj)
+                self.assertEqual(out.get("decision"), "block", label)
+>               self.assertNotIn("WITHHELD-MARKER", out["reason"], label)
+E               AssertionError: 'WITHHELD-MARKER' unexpectedly found in "SPINE MID-FLIGHT: gate g1 is still open -- you are in the MIDDLE of the spine, not at its end, so ending your turn now abandons an active run. Keep working the gate -- do not end your turn to wait. Next imperative: WITHHELD-MARKER finish it If this is an honest stop (genuinely blocked or out of scope), use the engine's block verb to bubble the blocker to the parent, or waive the check with human authority -- do not just stop." : empty
+
+tests/test_spine_rail.py:1120: AssertionError
+_ OwnershipIsBindingKeyNotWorktree.test_an_unidentifiable_agent_blocks_and_is_told_nothing_to_drive (agent_id='wrong type') _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_an_unidentifiable_agent_blocks_and_is_told_nothing_to_drive>
+
+    def test_an_unidentifiable_agent_blocks_and_is_told_nothing_to_drive(self):
+        """The other fail-safe direction. `binding_key` refuses to compose a key
+        for a malformed `agent_id` (#441's allowlist), so the hook cannot say
+        who is stopping. Uncertainty must block -- and it must withhold, since
+        handing an imperative to an agent whose identity is unestablished is the
+        very confusion this gate exists to end."""
+        sp = write_spine(self.proj, make_spine([("g1", "in-progress")],
+                                               imperatives={"g1": "WITHHELD-MARKER finish it"}),
+                         journal_lines=1)
+        bind(self.proj, "s1", sp)
+        for label, agent_id in [("path separator", "a/b"), ("empty", ""), ("wrong type", 12345)]:
+            with self.subTest(agent_id=label):
+                self.assertIsNone(sr.binding_key({"session_id": "s1", "agent_id": agent_id}))
+                out = sr.decide_stop(
+                    {"session_id": "s1", "agent_id": agent_id, "cwd": str(self.proj)}, self.proj)
+>               self.assertEqual(out.get("decision"), "block", label)
+E               AssertionError: None != 'block' : wrong type
+
+tests/test_spine_rail.py:1119: AssertionError
+_ OwnershipIsBindingKeyNotWorktree.test_ownership_no_longer_folds_case_or_separators _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_ownership_no_longer_folds_case_or_separators>
+
+    def test_ownership_no_longer_folds_case_or_separators(self):
+        """Windows, CONSTRUCTED rather than inherited. `os.path.normcase` is the
+        identity function on POSIX, so a case expectation read off this host
+        proves nothing -- the platform split is stated explicitly below.
+    
+        The old test compared a recorded worktree against the payload cwd
+        through `normcase`, which made this Stop decision PLATFORM-DEPENDENT:
+        `C:\\Foo\\wt` and `c:/foo/wt` are the same path on Windows and two
+        different paths on POSIX, so the same binding allowed the stop on one
+        platform and refused it on the other. Ownership is now an exact
+        binding-key comparison over harness-issued session and agent ids --
+        which are opaque tokens, never paths, and cannot contain a separator
+        (`_AGENT_ID_ALLOWED`) -- so nothing here folds case or separators and
+        the answer is the same on both platforms."""
+        recorded, standing_in = "C:\\Foo\\wt", "c:/foo/wt"
+        folds = os.path.normcase(recorded) == os.path.normcase(standing_in)
+        self.assertEqual(folds, sys.platform == "win32")  # the split, stated not observed
+        self.assertEqual(sr._same_path(recorded, standing_in), folds)  # still true of paths
+    
+        sp = write_spine(self.proj, make_spine([("g1", "in-progress")],
+                                               imperatives={"g1": "PLATFORM-MARKER finish it"}),
+                         journal_lines=1)
+        bind(self.proj, "s1", sp, worktree=recorded)
+    
+        out = sr.decide_stop({"session_id": "s1", "cwd": standing_in}, self.proj)
+    
+>       self.assertEqual(out["decision"], "block")  # on BOTH platforms
+                         ^^^^^^^^^^^^^^^
+E       KeyError: 'decision'
+
+tests/test_spine_rail.py:1152: KeyError
+_ OwnershipIsBindingKeyNotWorktree.test_session_start_resumes_from_its_own_binding_in_another_worktree _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_session_start_resumes_from_its_own_binding_in_another_worktree>
+
+    def test_session_start_resumes_from_its_own_binding_in_another_worktree(self):
+        """The two call sites are NOT symmetric. Here the skip did not decide
+        blocking -- it decided whether a resumed session reads its OWN binding
+        or falls through to `_scan_active_spine`, the blind glob that can hand a
+        session a spine it never claimed. Dropping the tree test keeps the
+        session on its own binding, which is the safer of the two paths."""
+        alt = self.proj / "altwt"
+        sp = write_spine(alt, make_spine([("g2", "in-progress")],
+                                         imperatives={"g2": "RESUME-MARKER keep going"}))
+        bind(self.proj, "s1", sp, worktree=str(alt))
+        self.assertEqual(sr._scan_active_spine(self.proj), [])  # nothing for the fallback
+    
+        out = sr.decide_session_start({"session_id": "s1", "cwd": str(self.proj)}, self.proj)
+    
+>       ctx = out["hookSpecificOutput"]["additionalContext"]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'hookSpecificOutput'
+
+tests/test_spine_rail.py:1072: KeyError
+_ OwnershipIsBindingKeyNotWorktree.test_stop_blocks_on_an_own_entry_recorded_in_another_worktree _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_stop_blocks_on_an_own_entry_recorded_in_another_worktree>
+
+    def test_stop_blocks_on_an_own_entry_recorded_in_another_worktree(self):
+        """What NEWLY blocks. This session claimed the spine -- the binding key
+        says so -- so its Stop is refused wherever it happens to be standing.
+        Before this change the recorded worktree differed from the payload cwd,
+        the entry was skipped as "foreign", and the session walked away from
+        its own mid-flight run."""
+        other = self.proj / "otherwt"
+        sp = write_spine(other, make_spine([("g1", "in-progress")],
+                                           imperatives={"g1": "OWN-MARKER finish it"}),
+                         journal_lines=1)
+        bind(self.proj, "s1", sp, worktree=str(other))
+    
+        out = sr.decide_stop({"session_id": "s1", "cwd": str(self.proj)}, self.proj)
+    
+>       self.assertEqual(out["decision"], "block")
+                         ^^^^^^^^^^^^^^^
+E       KeyError: 'decision'
+
+tests/test_spine_rail.py:1053: KeyError
+=========================== short test summary info ============================
+FAILED tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_a_crew_that_stops_is_not_handed_its_parents_gate
+FAILED tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_a_parents_stop_is_answered_with_its_own_gate_not_its_in_tree_crews
+SUBFAILED(agent_id='path separator') tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_an_unidentifiable_agent_blocks_and_is_told_nothing_to_drive
+SUBFAILED(agent_id='empty') tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_an_unidentifiable_agent_blocks_and_is_told_nothing_to_drive
+SUBFAILED(agent_id='wrong type') tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_an_unidentifiable_agent_blocks_and_is_told_nothing_to_drive
+FAILED tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_ownership_no_longer_folds_case_or_separators
+FAILED tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_session_start_resumes_from_its_own_binding_in_another_worktree
+FAILED tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_stop_blocks_on_an_own_entry_recorded_in_another_worktree
+8 failed, 3 passed, 153 deselected, 6 subtests passed in 0.34s

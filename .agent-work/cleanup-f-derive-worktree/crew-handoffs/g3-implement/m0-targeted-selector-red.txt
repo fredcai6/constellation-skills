@@ -1,0 +1,4 @@
+$ env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_spine_rail.py -k OwnershipIsBindingKeyNotWorktree
+
+153 deselected in 0.03s
+exit=5

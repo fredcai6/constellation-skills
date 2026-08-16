@@ -672,7 +672,20 @@ def reconstruct_current(spine: dict) -> str:
     return "\n".join(lines)
 
 
-# --- worktree attribution (subagent session-sharing guard) -------------------
+# --- path comparison and spine location --------------------------------------
+#
+# What this section is NOT, since it was for a long time: an ownership test.
+# `_foreign_worktree` used to answer "is this bound spine mine to drive?" by
+# comparing the stopping payload's cwd against the binding's recorded worktree.
+# That is broken by construction (#609 lane F g3). Spines are 1:1 with work
+# AREAS, not worktrees: a Commander gets a worktree, an in-tree crew works in
+# its Commander's tree in its own area, so ONE worktree holds several spines and
+# `same worktree, therefore mine` is wrong the moment a crew shares its
+# Commander's tree. The tree answers WHERE; only the binding key answers WHOSE
+# (decision:worktree-is-location-spine-path-is-identity). Ownership is decided
+# by binding-key provenance at both former call sites -- see decide_stop and
+# decide_session_start. What remains here compares paths and locates spines,
+# and decides nothing about identity.
 
 def _same_path(a, b) -> bool:
     """True if a and b name the same path after normcase+normpath.
@@ -688,25 +701,6 @@ def _same_path(a, b) -> bool:
         return na == nb
     except Exception:
         return True
-
-
-def _foreign_worktree(data: dict, b: dict) -> bool:
-    """True only when the stopping session's cwd is positively a DIFFERENT
-    worktree than the binding's recorded worktree.
-
-    Returns True iff both `data["cwd"]` and `b["worktree"]` are truthy AND
-    `_same_path` says they differ. Absent either -> False: no positive mismatch
-    evidence, so the rail does not relax (and `_same_path`'s fail-safe True keeps
-    an errored comparison from reading as foreign).
-    """
-    try:
-        cwd = data.get("cwd")
-        worktree = b.get("worktree")
-        if not cwd or not worktree:
-            return False
-        return not _same_path(cwd, worktree)
-    except Exception:
-        return False
 
 
 def _worktree_from_spine(abs_spine):
@@ -739,11 +733,17 @@ def _worktree_from_spine(abs_spine):
 
     `os.path` rather than `Path`, and `normcase` + `normpath` rather than
     `realpath`: symlink resolution stays OUTSIDE, so `_is_valid_claim_target`'s
-    second, resolved check can still fail (see its own docstring). Twin of
-    `checklist_engine.worktree_from_spine_path` -- duplicated because this module
-    is stdlib-only by design and may gain no import; `tests/
-    test_worktree_derivation.py` drives both from one shared table of cases so
-    the two cannot drift apart silently.
+    second, resolved check can still fail (see its own docstring).
+
+    This is the ONE implementation of the rule in the repo. Its specification is
+    the shared case table in `tests/test_worktree_derivation.py`, which drives
+    this function directly -- read the table, not this docstring, for what the
+    rule admits. The engine-side twin was deleted in #609 g2 under
+    `ADMIRAL_RULING-2` N2, once its consumers had gone; it re-lands in #610's
+    wave together with #315, the consumer that threads the derived worktree into
+    the engine's check runner, and re-derives against that same table. It will
+    re-land as a COPY, not an import: this module is stdlib-only by design and
+    may gain none.
 
     NEVER raises.
     """
@@ -1468,21 +1468,59 @@ def _owning_session_reason(spine_path: str, owner_key: str) -> str:
     ).format(spine=spine_path, owner=owner_key)
 
 
-def _entry_mid_flight_view(data: dict, entry: dict):
+def _is_own_entry(owner_key, own_key) -> bool:
+    """Whether a visible binding entry belongs to the AGENT that is acting.
+
+    `owner_key` is the binding key that sourced the entry
+    (`session_view_provenance`); `own_key` is `binding_key(payload)`, the acting
+    agent's own key. Ownership is that comparison and nothing else -- never the
+    tree the entry sits in (#609 lane F g3, decision:worktree-is-location-spine-
+    path-is-identity).
+
+    Two deliberate readings of a missing key, in opposite directions:
+
+    - `owner_key is None` -- provenance could not place this path at all. Read
+      it as OWN, which preserves the pre-#549 rendering rather than inventing a
+      foreign owner for an entry nobody can attribute.
+    - `own_key is None` -- `binding_key` refused to compose a key for this
+      payload (a malformed `agent_id`, #441's allowlist), so the hook cannot say
+      who is acting. Nothing placed then matches, so every attributable entry
+      reads as foreign: the stop still BLOCKS, and the imperative is withheld.
+      Uncertainty withholds; it never hands an unidentifiable agent someone's
+      next step.
+
+    NEVER raises.
+    """
+    try:
+        if owner_key is None:
+            return True
+        return owner_key == own_key
+    except Exception:
+        return False
+
+
+def _entry_mid_flight_view(entry: dict):
     """Per-entry mid-flight check, unchanged in substance from the pre-#202
     single-entry logic -- just factored so decide_stop can apply it to every
     bound abs_spine_path entry for a session_id, not just one.
 
-    Returns None if this entry is NOT a genuine mid-flight blocker (foreign
-    worktree, unreadable spine, released/inactive lease, or an honest engine
-    block); else `(spine_path, spine_dict, aid)`.
+    Returns None if this entry is NOT a genuine mid-flight blocker (unreadable
+    spine, released/inactive lease, or an honest engine block); else
+    `(spine_path, spine_dict, aid)`.
+
+    Mid-flight is a property of the SPINE -- an open gate under an active lease
+    -- so nothing here reads the payload. It used to skip an entry whose
+    recorded worktree differed from the stopping payload's cwd, on the theory
+    that a different tree meant a different driver; that skip let a session walk
+    away from its own mid-flight run whenever it stopped from somewhere else,
+    and did nothing at all about the case it was aimed at, an in-tree crew.
+    WHOSE gate this is is decided by binding-key provenance in decide_stop,
+    which is also the only thing that decision may change: what gets rendered,
+    never whether an open gate blocks.
     """
     spine_path = entry.get("spine")
     if not spine_path:
         return None
-    if _foreign_worktree(data, entry):
-        return None  # stopping session is not THIS entry's driver (subagent
-        # sharing the parent's session_id claimed a spine in its own worktree)
     spine = load_spine(spine_path)
     if spine is None:
         return None  # unreadable -> allow
@@ -1497,12 +1535,17 @@ def _entry_mid_flight_view(data: dict, entry: dict):
 
 
 def decide_stop(data: dict, project_dir: Path) -> dict:
-    """Block the Stop if ANY non-foreign bound entry for this session_id is
-    genuinely mid-flight (same per-entry semantics as the pre-#202 single-
-    entry version, just applied across every abs_spine_path entry now bound
-    under `sid`). The nudge-tracking / 3-strike escape hatch stays keyed by
-    `sid` ALONE -- never fragmented per-entry, which would weaken the escape
-    hatch.
+    """Block the Stop if ANY bound entry for this session_id is genuinely
+    mid-flight (same per-entry semantics as the pre-#202 single-entry version,
+    just applied across every abs_spine_path entry now bound under `sid`). The
+    nudge-tracking / 3-strike escape hatch stays keyed by `sid` ALONE -- never
+    fragmented per-entry, which would weaken the escape hatch.
+
+    Ownership decides WHAT IS RENDERED, never whether an open gate blocks
+    (#609 lane F g3): every visible mid-flight entry blocks, and binding-key
+    provenance picks which one the stopping agent is answered with -- its own
+    gate where it has one, and otherwise the foreign-owner wording with the
+    imperative withheld.
     """
     try:
         sid = data.get("session_id")
@@ -1511,23 +1554,29 @@ def decide_stop(data: dict, project_dir: Path) -> dict:
         # subagent now lives under `sid#agent_id`, and the stopping session
         # must still see it.
         sid_bindings = session_view(binding, sid)
-        # Which binding key sourced each visible path (#549) -- a bare-sid
-        # entry renders the ordinary imperative-bearing reason, while an
-        # entry reachable ONLY through a per-agent key gets the foreign-owner
-        # wording instead, so the parent never sees a subordinate's own next
-        # step rendered as if it were the parent's instruction to act on.
+        # Which binding key sourced each visible path (#549), against the
+        # ACTING agent's own key (#609 lane F g3) -- an entry this agent
+        # claimed renders the ordinary imperative-bearing reason, while one
+        # claimed by another agent it merely shares a harness session with
+        # gets the foreign-owner wording instead, so neither a parent nor a
+        # crew ever sees the other's next step rendered as its own instruction
+        # to act on. `binding_key` is the one function that composes a key
+        # anywhere in this codebase, so the two sides of this comparison
+        # cannot drift: a payload with no `agent_id` yields the bare `sid`,
+        # which is exactly the pre-#609 comparison.
         owners = session_view_provenance(binding, sid)
+        own_key = binding_key(data)
         if not sid_bindings:
             return {}  # no binding -> allow
 
         mid_flight = []
         for entry in sid_bindings.values():
-            view = _entry_mid_flight_view(data, entry)
+            view = _entry_mid_flight_view(entry)
             if view is not None:
                 mid_flight.append(view)
 
         if not mid_flight:
-            return {}  # every bound entry is foreign/unreadable/closed/honest-blocked -> allow
+            return {}  # every bound entry is unreadable/closed/honest-blocked -> allow
 
         # Mid-flight: aggregate a single progress signal across every
         # mid-flight entry (never fragment nudges[sid] per-entry).
@@ -1546,14 +1595,20 @@ def decide_stop(data: dict, project_dir: Path) -> dict:
             # Escape hatch: allow the stop, but leave a loud marker.
             return {"continue": True, "systemMessage": STUCK_MSG}
 
-        spine_path, spine, aid = mid_flight[0]
-        owner_key = owners.get(spine_path)
-        if owner_key is None or owner_key == sid:
-            # Same-session entry (or provenance couldn't place it -- fail
+        # Answer this agent with ITS OWN gate wherever it has one, and fall
+        # back to the leading entry only when it has none. Order alone would
+        # hand a Commander whichever entry happened to be claimed first --
+        # routinely its in-tree crew's, whose gate is precisely the one it must
+        # not be told to drive.
+        own = [view for view in mid_flight if _is_own_entry(owners.get(view[0]), own_key)]
+        spine_path, spine, aid = (own or mid_flight)[0]
+        if _is_own_entry(owners.get(spine_path), own_key):
+            # This agent's own entry (or provenance couldn't place it -- fail
             # toward the pre-existing behavior): unchanged wording.
             reason = _mid_flight_reason(spine, aid)
             ctx = "ENGINE current -> " + reconstruct_current(spine)
         else:
+            owner_key = owners.get(spine_path)
             # Foreign-owned: reachable only through a per-agent key that is
             # not this session's own bare id. Withhold the owning gate's next
             # imperative from BOTH rendered fields -- reason (#549's primary
@@ -1611,11 +1666,23 @@ def decide_session_start(data: dict, project_dir: Path) -> dict:
         # Per-entry iteration mirroring decide_stop's already-generalized
         # pattern (#202/#261): `sid_bindings` is a dict of abs_spine_path ->
         # entry (never a flat {spine, ...} directly). Take the FIRST entry
-        # (natural dict.values() order) that has a spine and is not foreign
-        # -- same "first match" tone as _scan_active_spine below.
+        # (natural dict.values() order) that has a spine -- same "first match"
+        # tone as _scan_active_spine below.
+        #
+        # NOT symmetric with decide_stop's ownership decision (#609 lane F g3),
+        # deliberately. This skip never decided blocking; it decided whether a
+        # resumed session reads its own binding or falls through to
+        # _scan_active_spine, the blind glob that can hand a session a spine it
+        # never claimed. And SessionStart carries no `agent_id` -- it is a
+        # per-harness-session event, so there is no second live agent here to
+        # tell apart: every entry in this merged view was claimed by THIS
+        # session, under its bare key or under a per-agent key of its own
+        # (#419's read-through, which the worktree test silently undid whenever
+        # a subagent claimed from elsewhere). Membership in the view IS the
+        # binding-key answer at this site, and the tree adds nothing to it.
         spine = None
         for entry in sid_bindings.values():
-            if entry.get("spine") and not _foreign_worktree(data, entry):
+            if entry.get("spine"):
                 spine = load_spine(entry.get("spine"))
                 break
         if spine is None:

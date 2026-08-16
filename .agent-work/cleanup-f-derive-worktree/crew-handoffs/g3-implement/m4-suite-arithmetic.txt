@@ -1,0 +1,9 @@
+count arithmetic, baseline -> after
+  baseline (999b7663): 3170 passed, 5 skipped, 0 failed
+  after              : 3177 passed, 5 skipped, 0 failed
+  delta +7 = 8 new OwnershipIsBindingKeyNotWorktree methods + 1 test_foreign_worktree_is_gone_and_stays_gone - 2 deleted _foreign_worktree unit tests
+
+failure distribution, derived mechanically (empty on both sides):
+$ grep '^FAILED' <run> | sed 's/::.*//' | sort | uniq -c
+  baseline: 0 FAILED lines
+  after   : 0 FAILED lines
