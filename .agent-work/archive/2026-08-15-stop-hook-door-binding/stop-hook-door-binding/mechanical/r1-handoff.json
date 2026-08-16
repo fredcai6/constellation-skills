@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r1-handoff",
+  "mechanical": {
+    "run": "stop-hook-door-binding",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r1-handoff",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-stop-hook-door-binding-r1-handoff@188da5c77d8b8ce6a152faa430818f2e143041ef",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "stop-hook-door-binding",
+    "generated_at": "2026-08-15T22:46:05Z"
+  }
+}

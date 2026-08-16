@@ -846,16 +846,18 @@ HOOK_TIMEOUT = 10
 class HookSpec:
     """ONE hook this installer knows how to wire and to detect.
 
-    Four exist (#539), not one: the Context Governor's PostToolUse gauge writer
-    plus the three `spine_rail.py` events. Before this table the installer
-    hard-coded the gauge writer's event/matcher/timeout as module constants and
-    had no representation at all for the other three -- so `--wire-hooks` could
-    only ever produce a quarter of the wiring, and detection could only ever
-    see a quarter of it.
+    Five exist (#539, #door-binding), not one: the Context Governor's PostToolUse
+    gauge writer plus four `spine_rail.py` registrations. Before this table the
+    installer hard-coded the gauge writer's event/matcher/timeout as module
+    constants and had no representation at all for the rest -- so `--wire-hooks`
+    could only ever produce a fraction of the wiring, and detection could only
+    ever see that same fraction.
 
-    `(event, script)` is the identity: two specs never share both, so one
-    settings.json entry belongs to at most one spec, and `spine_rail.py`
-    appearing under three different events stays unambiguous."""
+    `(event, script, matcher)` is the identity: two specs never share all
+    three, so one settings.json entry belongs to at most one spec.
+    `spine_rail.py` appears under three distinct events, and twice under
+    `PostToolUse` alone (once per matcher) -- both stay unambiguous because
+    `matcher` is part of the identity, not just `name`."""
 
     name: str                  # stable id used in reports; never user-facing config
     script: str                # the hook script's FILE NAME, not a path
@@ -886,6 +888,14 @@ SPINE_RAIL_SPECS: tuple[HookSpec, ...] = (
     HookSpec(
         "spine_rail_post_tool_use", SPINE_RAIL_HOOK_SCRIPT, "PostToolUse",
         "Bash", ("PostToolUse",), 10,
+    ),
+    # #door-binding: the MCP spine door's own claim/release tool. A second
+    # PostToolUse entry for the SAME script -- the `(event, script)` identity
+    # claim above is no longer true on its own; `matcher` now also
+    # distinguishes entries for one (event, script) pair, same as `name` does.
+    HookSpec(
+        "spine_rail_post_tool_use_door", SPINE_RAIL_HOOK_SCRIPT, "PostToolUse",
+        "mcp__spine__spine_lease", ("PostToolUse",), 10,
     ),
 )
 HOOK_SPECS: tuple[HookSpec, ...] = (GAUGE_WRITER_SPEC, *SPINE_RAIL_SPECS)
@@ -1363,7 +1373,14 @@ def add_hook_entry(settings: dict, entry: dict, event: str = HOOK_EVENT) -> bool
     never removes anything -- including a stale governor entry, which is
     reported rather than silently rewritten (no self-healing, by design).
 
-    Returns False when an identical command is already present under `event`."""
+    Returns False when an identical command is already present under the SAME
+    matcher within `event`. Scoped to (matcher, command), not command alone
+    (#door-binding): two specs now legitimately share one (event, script) --
+    `spine_rail.py`'s two PostToolUse registrations, one per matcher -- and
+    they build the IDENTICAL command string (same script, same event
+    argument). A command-only dedup would read the second registration as a
+    repeat of the first and silently drop it, leaving a spec in `HOOK_SPECS`
+    that `--wire-hooks` can never actually wire."""
     hooks = settings.setdefault("hooks", {})
     if not isinstance(hooks, dict):
         raise InstallError(f"--wire-hooks: 'hooks' in settings is not an object: {type(hooks).__name__}")
@@ -1372,8 +1389,14 @@ def add_hook_entry(settings: dict, entry: dict, event: str = HOOK_EVENT) -> bool
         raise InstallError(
             f"--wire-hooks: 'hooks.{event}' in settings is not an array: {type(entries).__name__}"
         )
-    if entry["hooks"][0]["command"] in _event_hook_commands(settings, event):
-        return False
+    new_matcher = entry.get("matcher")
+    new_command = entry["hooks"][0]["command"]
+    for existing in entries:
+        if not isinstance(existing, dict) or existing.get("matcher") != new_matcher:
+            continue
+        for hook in existing.get("hooks") or []:
+            if hook_command_text(hook) == new_command:
+                return False
     entries.append(entry)
     return True
 
@@ -2292,8 +2315,8 @@ def build_parser() -> argparse.ArgumentParser:
             "Which hooks --wire-hooks writes and which hooks are reported on: "
             "'governor' (default) is the Context Governor's PostToolUse gauge writer "
             "alone -- exactly what --wire-hooks has always written; 'rail' is the three "
-            "spine_rail.py events (Stop, SessionStart, PostToolUse); 'all' is all four. "
-            "Also applies to --check-readiness."
+            "spine_rail.py events (Stop, SessionStart, PostToolUse -- the latter registered "
+            "twice, once per matcher); 'all' is all five. Also applies to --check-readiness."
         ),
     )
     parser.add_argument(

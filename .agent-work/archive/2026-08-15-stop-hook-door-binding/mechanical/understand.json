@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "understand",
+  "mechanical": {
+    "run": "stop-hook-door-binding",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 1,
+    "spine-step": "understand",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-stop-hook-door-binding-understand@9ba6f2656d298be20f0c9ca59d778ac66458498c",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "stop-hook-door-binding",
+    "generated_at": "2026-08-15T22:10:58Z"
+  }
+}

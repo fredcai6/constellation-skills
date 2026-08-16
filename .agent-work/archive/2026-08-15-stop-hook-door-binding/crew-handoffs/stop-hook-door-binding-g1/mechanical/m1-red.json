@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-red",
+  "mechanical": {
+    "run": "stop-hook-door-binding-g1",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m1-red",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-stop-hook-door-binding-g1-m1-red@919318c1632fe0e442fac57fa9e1fc72584bb124",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "stop-hook-door-binding-g1",
+    "generated_at": "2026-08-15T22:35:46Z"
+  }
+}

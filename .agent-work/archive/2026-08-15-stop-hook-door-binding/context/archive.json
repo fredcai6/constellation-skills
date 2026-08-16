@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "archive",
+  "files": [],
+  "repo_rev": {
+    "commit": "2c46cab81f087213732030044719b53ec1d6a4e2"
+  },
+  "run": {
+    "work_id": "stop-hook-door-binding",
+    "generated_at": "2026-08-15T23:16:13Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/stop-hook-door-binding",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/stop-hook-door-binding",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/stop-hook-door-binding"
+    }
+  }
+}
