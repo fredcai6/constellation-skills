@@ -1,10 +1,10 @@
 # Crash-resume state note — cleanup-f-derive-worktree
 
-- **step:** execute · leg 4 (the closeout leg) · `g3-implement` CLOSED, `g3-review` returned **BLOCK** (3 blockers, B2 substantive and Commander-reproduced). **`g3` rework 1 is dispatching.** After g3: `skip` g4 (R2), `skip` g5 (R3), then reconcile → triage → review → feedback → archive. **Park at `archive`; do NOT merge.**
+- **step:** execute · leg 4 · `g3-implement` CLOSED; review 1 returned BLOCK (B1/B2/B3), **rework 1 committed at `6bba3fd2` and all three verified fixed by me**. **`g3` rework review is dispatching.** Then `skip` g4 (R2), `skip` g5 (R3), reconcile → triage → review → feedback → archive. **Park at `archive`; do NOT merge.**
 - **slug:** cleanup-f-derive-worktree · branch `cleanup/f-derive-worktree` · worktree `/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree` · HEAD `e3e50a69` (g3 implementation committed)
 - **next command:** `env -u CREW_SCRATCH_DIR py scripts/checklist_engine.py --file .agent-work/cleanup-f-derive-worktree/execute.json current`
-- **pid:** commander leg 4 is pid **1634189** (foreground). The g3 rework implementer is dispatched through `run_crew.py`; its pid is recorded in `crew-runs.json` under `constellation/cleanup-f-derive-worktree/g3/implementer/attempt-2`.
-- **expected artifact:** `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implementer-rework-result.md` for the crew; for this leg, `.agent-work/cleanup-f-derive-worktree/crew-handoffs/execute-commander-result.md`
+- **pid:** commander leg 4 is pid **1634189** (foreground). The g3 rework reviewer is dispatched through `run_crew.py`; its pid is recorded in `crew-runs.json` under `constellation/cleanup-f-derive-worktree/g3/reviewer/attempt-2`.
+- **expected artifact:** `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-reviewer-rework-result.md` for the crew; for this leg, `.agent-work/cleanup-f-derive-worktree/crew-handoffs/execute-commander-result.md`
 
 **Read first on resume:** `LAUNCH_ORDER-4.md`, `ADMIRAL_RULING-3.md`,
 `ADMIRAL_RULING-2.md`, `ADMIRAL_RULING-1.md`, then `LAUNCH_ORDER.md`,
@@ -24,7 +24,8 @@ is not yours to fix, and it goes in when this lane parks.
 |---|---|
 | this branch at `53c89ba1` (pre-g3) | **3170 passed / 5 skipped / 0 failed** |
 | `main` at `17c2cee5`, isolated clone | **3171 / 7 / 0** |
-| this branch at `e3e50a69` (post-g3) | **3177 / 5 / 0** |
+| this branch at `e3e50a69` (g3 pass 1) | **3177 / 5 / 0** |
+| this branch at `6bba3fd2` (g3 rework 1) | **3183 / 5 / 0** |
 
 Failure-set difference empty in every direction. The g3 targeted check
 (`-k OwnershipIsBindingKeyNotWorktree`) exited **5** on the empty diff and now
