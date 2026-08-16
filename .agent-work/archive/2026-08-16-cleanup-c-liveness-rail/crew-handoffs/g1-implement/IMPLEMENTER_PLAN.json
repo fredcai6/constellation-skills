@@ -1,0 +1,261 @@
+{
+  "work_id": "cleanup-c-liveness-rail-g1",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-implement",
+    "m2-evidence-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (constellation-implementer skill's references/global-crew.md and references/global-everyone.md), then project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the handoff at .agent-work/cleanup-c-liveness-rail/crew-handoffs/g1-implement-handoff.md and the read-only source anchors it names (scripts/run_crew.py:253 active_duplicate, :864 process_alive, :47 ACTIVE_STATUSES, :1118 entry_backend, :1393 external-backend pid=None construction, :1800 CLI call site; tests/test_crew_launcher.py:677 test_duplicate_active_lock_is_refused, :2093 ProcessAliveTests). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + source anchors loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-implement": {
+      "id": "m1-implement",
+      "title": "Add entry_liveness + HEARTBEAT_STALE_SECONDS, wire into active_duplicate, add the 4 required-evidence tests",
+      "imperative": "In scripts/run_crew.py: add `HEARTBEAT_STALE_SECONDS = 28800` as a documented module constant near ACTIVE_STATUSES (:47) with the comment citing the archived-registry provenance (epic-568-510/g2-repair/commander/attempt-1 ~3h30m/12602s genuinely-completed max; epic-568-441/g1/implementer/attempt-1 ~22h27m/80820s phantom min). Add a pure `entry_liveness(entry, now, alive=process_alive) -> str` directly above active_duplicate (:253) implementing the three-bucket rule exactly as specified in the handoff's Close Criteria (pid truthy -> active/stale via alive(pid); pid falsy + entry_backend==BACKEND_EXTERNAL -> heartbeat-age corroboration against last_heartbeat (fallback started_at), unparseable/missing -> unknown, else stale/active vs HEARTBEAT_STALE_SECONDS; anything else -> unknown directly, no heartbeat lookup, do NOT port recover_crews.classify_entry's pid=None mapping). Add `now=None`/`alive=process_alive` keyword-only params to active_duplicate's signature (existing positional callers at :1800 and tests/test_crew_launcher.py:689 must keep working unchanged); inside the loop after the existing is_abandoned/ACTIVE_STATUSES/work_id+gate+role+worktree filters, call entry_liveness and continue on 'stale', return entry on 'active' or 'unknown' (fail-toward-active; never write abandoned as a side effect). Add `from typing import Callable` / `datetime, timezone, timedelta` imports only if not already present (result_fresh at :295 already uses datetime.fromisoformat). Then in tests/test_crew_launcher.py add the 4 new tests from the handoff's Required Evidence 1-4 (cli dead-pid frees; cli live-pid still blocks; external phantom >8h frees; external within-8h still blocks), using the REAL crew-runs.json shape pulled from .agent-work/archive/2026-08-15-epic-568-441/crew-runs.json for the external case. Do not modify process_alive or scripts/recover_crews.py. Do not modify or weaken test_duplicate_active_lock_is_refused or ProcessAliveTests. Run the full suite clean-env and paste output.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: doctrine + handoff loaded and confirmed complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "existing test_duplicate_active_lock_is_refused still passes unmodified",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q tests/test_crew_launcher.py -k test_duplicate_active_lock_is_refused"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-implement-1"
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green, clean-env (__pycache__ cleared first)",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q tests/test_crew_launcher.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-implement-2"
+        },
+        {
+          "id": "c3",
+          "statement": "scripts/recover_crews.py left untouched",
+          "check": {
+            "kind": "command",
+            "command": "git diff --stat scripts/recover_crews.py; test -z \"$(git diff --stat scripts/recover_crews.py)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-implement-3"
+        }
+      ],
+      "constraints": [
+        "scope fence: scripts/run_crew.py (entry_liveness + HEARTBEAT_STALE_SECONDS + active_duplicate only) and tests/test_crew_launcher.py (new tests only) -- no fenced file touched (checklist_engine.py, gauge_reader.py, hooks/gauge_writer_hook.py, mcp_spine_server.py, .mcp.json, hooks/spine_rail.py)",
+        "entry_liveness must be genuinely pure: no real wall-clock/PID reads inside it, now and alive always caller-supplied",
+        "process_alive's contract/docstring/seam must stay byte-identical",
+        "three-bucket rule and 8h window are pre-decided -- do not re-derive; if a genuine correctness problem is found with them, stop and report as a blocker instead of silently picking a different number",
+        "bucket 3 (pid falsy, not external) must report unknown directly -- never port recover_crews.classify_entry's pid=None mapping"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-implement-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q tests/test_crew_launcher.py -k test_duplicate_active_lock_is_refused",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-implement-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q tests/test_crew_launcher.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-implement-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "git diff --stat scripts/recover_crews.py; test -z \"$(git diff --stat scripts/recover_crews.py)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-evidence-result": {
+      "id": "m2-evidence-result",
+      "title": "Wiring grep, deliverable path checks, write IMPLEMENTER_RESULT, commit",
+      "imperative": "Run `grep -rn \"entry_liveness\" --include=*.py . | grep -v \"def entry_liveness\"` and state the count of call sites found (active_duplicate's own call + the new tests calling it directly are the expected ones). Confirm `git check-ignore scripts/run_crew.py` and `git check-ignore tests/test_crew_launcher.py` both exit 1. Write IMPLEMENTER_RESULT per templates/IMPLEMENTER_RESULT.template.md to .agent-work/cleanup-c-liveness-rail/crew-handoffs/g1-implement-result.md with all 6 required-evidence items (1-4 load-bearing behavior-change evidence, 5 the regression guard, 6 confirmatory full-suite run), assumptions, stop conditions hit (if any), out-of-scope observations, workflow feedback, and Windows-behavior note per the handoff's Constraints. Then commit scripts/run_crew.py and tests/test_crew_launcher.py to git with a concise message (plain add + commit, do not push).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "entry_liveness implemented and wired; all tests green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "entry_liveness implemented and wired into active_duplicate; all tests green (181 passed)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "deliverable paths not git-ignored",
+          "check": {
+            "kind": "command",
+            "command": "git check-ignore scripts/run_crew.py tests/test_crew_launcher.py; test $? -eq 1"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-evidence-result-1"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT.md written to the exact delivery path",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/cleanup-c-liveness-rail/crew-handoffs/g1-implement-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-evidence-result-2"
+        },
+        {
+          "id": "c3",
+          "statement": "change committed to git",
+          "check": {
+            "kind": "command",
+            "command": "git log -1 --name-only -- scripts/run_crew.py | grep -q run_crew.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-evidence-result-3"
+        }
+      ],
+      "constraints": [
+        "do not push",
+        "commit only scripts/run_crew.py and tests/test_crew_launcher.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-evidence-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "git check-ignore scripts/run_crew.py tests/test_crew_launcher.py; test $? -eq 1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-evidence-result-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/cleanup-c-liveness-rail/crew-handoffs/g1-implement-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-evidence-result-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "git log -1 --name-only -- scripts/run_crew.py | grep -q run_crew.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/cleanup-c-liveness-rail/g1-implement/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-16T12:57:18.618324+00:00",
+    "last_heartbeat": "2026-08-16T13:02:17.531934+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T13:02:20.145112+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Doctrine loaded (global-crew.md, global-everyone.md from skills/_shared/ per dogfooding-on-source-repo rule since skills/implementer/references/ is empty pre-install; CREW_CONTEXT.md, GLOSSARY.md). Handoff at .agent-work/cleanup-c-liveness-rail/crew-handoffs/g1-implement-handoff.md read and confirmed complete: task, protected intent, test mode, close criteria (3-bucket entry_liveness rule, HEARTBEAT_STALE_SECONDS=28800, active_duplicate wiring), allowed scope, exclusions, constraints, map anchors, required evidence (6 items), verification commands, authority, stop conditions, return format all present. Source anchors confirmed: active_duplicate at run_crew.py:253, process_alive at :864, ACTIVE_STATUSES at :47, entry_backend at :1118 (defined AFTER active_duplicate positionally but resolved at call-time so no import-order issue), existing test_duplicate_active_lock_is_refused at tests/test_crew_launcher.py:677 (fixture has no pid, no backend key -- confirmed maps to bucket 3/unknown). Real phantom shape pulled from .agent-work/archive/2026-08-15-epic-568-441/crew-runs.json: backend=external, pid=null, started_at==last_heartbeat.",
+      "mechanical": false,
+      "ts": "2026-08-16T12:57:56.072848+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-implement",
+      "why": "Added HEARTBEAT_STALE_SECONDS=28800 near ACTIVE_STATUSES (:47-56) with archived-registry provenance comment. Added pure entry_liveness(entry, now, alive=None) directly above active_duplicate implementing the exact 3-bucket rule (pid->alive(); pid-falsy+external->heartbeat-age vs 8h; else->unknown, no heartbeat lookup, deliberately not porting recover_crews.classify_entry's pid=None mapping). Wired now=None/alive=None keyword-only params into active_duplicate; loop calls entry_liveness after existing filters, continue on stale, return entry on active/unknown (fail-toward-active, no abandoned write). DEVIATION FROM HANDOFF'S LITERAL SIGNATURE SUGGESTION: handoff's suggested default alive=process_alive is NOT valid Python here -- process_alive is defined ~600 lines later in the file, and a default VALUE (unlike a name resolved inside a function body) is bound at def-time, so alive=process_alive would raise NameError at import time. Used a None-sentinel resolved inside each function body instead (if alive is None: alive = process_alive) -- identical externally observable default behavior, now=None already used exactly this pattern per the handoff's own suggestion. Verified with a minimal reproduction (def f(x=g): ... NameError) before diagnosing. Added 9 new tests (EntryLivenessTests class): 5 direct entry_liveness bucket tests + the 4 required-evidence active_duplicate integration tests (cli dead-pid frees; cli live-pid blocks; external phantom >8h frees using the REAL epic-568-441 archived shape; external within-8h blocks). Targeted run (10 tests incl. existing test_duplicate_active_lock_is_refused): 10 passed. Full suite clean-env: 181 passed (172 orig + 9 new). git diff --stat scripts/recover_crews.py: empty (untouched). process_alive: grep confirms zero diff hunks touch its own definition, only new references to its name.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:00:54.623690+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-evidence-result",
+      "why": "Wiring grep: 13 lines total (1 production call site at run_crew.py:374 inside active_duplicate's loop, 7 test call sites across EntryLivenessTests, 5 comment/docstring mentions) -- no unexpected readers. Verified git check-ignore scripts/run_crew.py tests/test_crew_launcher.py exits 1 (not ignored). Wrote IMPLEMENTER_RESULT.md to .agent-work/cleanup-c-liveness-rail/crew-handoffs/g1-implement-result.md with all 6 required-evidence items (1-4 load-bearing, 5 load-bearing regression guard, 6 confirmatory), the forced alive=process_alive default-value deviation documented under Assumptions and Workflow Feedback, out-of-scope heartbeat-writer triage candidate, and Windows-behavior note. Committed scripts/run_crew.py + tests/test_crew_launcher.py as cbd18faf, not pushed.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:02:17.531925+00:00"
+    }
+  ]
+}
