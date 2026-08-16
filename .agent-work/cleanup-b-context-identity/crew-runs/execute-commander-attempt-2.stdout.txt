@@ -1,0 +1,16 @@
+`execute` is now **blocked and bubbled to the parent** — the stop is explicit rather than an idle in-progress step. Lease left active under `commander-cleanup-b-context-identity` for leg 3 to re-claim.
+
+## Final state
+
+**#600 shipped and unreviewed. #500 not started.** Six commits on `cleanup/b-context-identity`, parked before `archive`, not merged.
+
+- `g1-implement` **closed and committed** (`3bc87e93`) — its fenced-paths and four-node-id command postconditions passed on advance.
+- `g1-review` **not begun** — the engine refused it at 17% of the 150,000 cap. I obeyed that refusal; refresh-requests are attached at both seams so leg 3's guard takes its release path.
+
+**Against the ruling:** R1, R2, R3 implemented as ruled. R4 implemented in two of three branches, **narrowed in the third** — that's your call, not mine, and it's carried in the blocker rather than buried. R5 not reached. `decision:identity-not-time` is explicitly **not complete**: this fixes the concurrent collision only.
+
+**Four triage candidates filed** — `tc1` (the same ambient-context defect one layer up, in the hooks), `tc2` (a blocked Commander goes lease-stale while healthy), `tc3` (a format sweep is not a dependency sweep — it would have shipped a dark governor in every install), `tc6` (`verify-frame` refuses `decision:` ids under a degraded map; `plan.c6` waived on that reason).
+
+**Still owed by leg 3:** `REPLAN_INPUT.json`, retiring `measurement/probe_cross_key.py` at `g1-integrate`, the lane C #549 re-measurement, and `g2-implement-500`. The reviewer handoff is already written.
+
+One thing worth stating plainly: I spent this wave living inside the bug I was fixing, and the last act of the run was the fixed governor correctly refusing me on a reading that — for the first time — provably carried my own name.

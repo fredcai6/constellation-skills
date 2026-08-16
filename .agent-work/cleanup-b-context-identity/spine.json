@@ -727,8 +727,8 @@
   "engine_session": {
     "session_id": "commander-cleanup-b-context-identity",
     "status": "active",
-    "claimed_at": "2026-08-16T13:12:31.234734+00:00",
-    "last_heartbeat": "2026-08-16T14:10:37.727705+00:00",
+    "claimed_at": "2026-08-16T14:13:23.541364+00:00",
+    "last_heartbeat": "2026-08-16T14:13:23.541364+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
