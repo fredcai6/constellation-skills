@@ -297,3 +297,103 @@ them was a discipline rather than a mechanism, and it is worth writing into revi
 **reproducing a falsifier its author designed proves only that the probe works — attack with a mutation
 the author did NOT choose.** Written into two re-review briefs on this run deliberately; both bit. One
 of them was turned against the Commander, refuting a triage candidate he had filed.
+
+## 2026-08-15 — epic-568 post-close harvest (two fenced runs, staged then swept)
+
+Harvested from `.agent-work/staged-feedback/{epic-568-510,episode-guard-at-write}/`, both of which
+staged their export rather than writing here: #510's Commander was fenced from the main checkout by
+its frozen launch order, and `episode-guard-at-write` hit the archive gate's `c4` git-change-policy,
+which deny-globs this file unconditionally. Both left a FENCE.md asking the Admiral to harvest before
+the sweep. That harvest did not happen at closeout; it is happening now, which is itself the finding
+worth naming first.
+
+### The staged-export handoff has no owner once the Admiral's contract expires
+
+**Target:** the delegated-commander skill's fenced feedback/archive closeout clause.
+
+**Defect:** the clause correctly refuses to let learning be dropped — the run stages its export and
+cites the fence. But the receiving half is a sentence addressed to a role (*"Admiral: harvest this
+directory before sweeping the worktree"*) with no gate behind it. Epic 568's contract expired at
+closeout, so by the time these two runs finished there was no Admiral holding an obligation to read
+them. The exports sat in the primary checkout for a day, survived the archive sweep untouched, and
+were found by an audit rather than by any step.
+
+**Grounding:** two runs, two staged exports, both correctly formed, neither harvested. The `#510`
+export was staged 2026-08-15 and carries ten episodes' worth of run context.
+
+**Suggested fix:** make the harvest mechanical rather than addressed — an epic's closeout gate should
+have a postcondition that `staged-feedback/` is empty, so a non-empty directory blocks the close the
+way an unreleased lease does. Related: #596 (this file still mandated in four places after the switch
+to the episode ledger) — if the ledger is being retired, the staging path retires with it and the same
+gate should point at the episode store instead.
+
+### A crew handoff that names its governing order by role instead of by path can be reviewed against the wrong order
+
+**Target:** crew handoff templates.
+
+**Defect:** the #510 handoff cited "the Admiral's frozen launch order" without a path. The launch order
+physically present in that worktree was the **wave-1** one, whose settled pre-rulings forbid exactly
+the change wave 2 authorized. A reviewer trusting the artifact in front of it would have blocked
+correctly-scoped work as a scope violation.
+
+**Grounding:** reported by the g2-engine falsifier on the #510 lane.
+
+**Suggested fix:** name the governing order by absolute path in every crew handoff.
+
+### A handoff that calls a test "deliberately failing" without stating the baseline forces the reviewer to re-measure
+
+**Target:** crew handoff templates.
+
+**Defect:** the #510 handoff described one test as deliberately failing but never said the lane's
+baseline was therefore 1-red, so the reviewer could not tell a real regression from the known one
+until it re-ran the base commit itself.
+
+**Grounding:** same falsifier, same lane. Cost one full baseline re-measurement.
+
+**Suggested fix:** state baseline suite counts in the handoff, not just the delta.
+
+### `git stash` is the wrong red/green mechanism in a worktree holding live engine state
+
+**Target:** reviewer red/green doctrine.
+
+**Defect:** the #510 handoff prescribed `git stash` for the red/green. The reviewer declined it,
+because a stash in a worktree that also holds live `.agent-work/` spine state is recoverable only by
+hand if anything fails midway, and used copy-aside + `git checkout HEAD -- <file>` + restore instead,
+verifying by re-diffing to the exact pre-experiment diffstat.
+
+**Grounding:** the reviewer's own reported departure from its handoff, with the verification method
+stated. This is a good decision that had to be invented at review time rather than read.
+
+**Suggested fix:** write the copy-aside idiom into reviewer doctrine for any checkout carrying engine
+state, and stop prescribing `git stash` there.
+
+### Recurrence — `record --finding` backticks are still shell-mangled
+
+**Target:** `scripts/checklist_engine.py` finding text, already this file's section 4 and tracked as
+**#551**.
+
+**Defect:** unchanged and recurring — two engine-recorded findings on the #510 lane each silently lost
+a code-span literal to command substitution. Recording the recurrence because recurrence is this
+file's validator.
+
+### G2 REPLAN_INPUT has no lightweight path for a one-issue delegated run
+
+**Episode:** `episode-guard-at-write-004` · **filed as #594**
+
+**Target:** the commander spine's `execute` step c2 (`verify_iterative_role_artifacts.py commander`,
+backed by `skills/replan/scripts/verify_replan.py::verify_replan_input`).
+
+**Defect (scope, not correctness):** the check validated correctly and caught a real mistake on its
+first pass. The gap is that its G2 schema assumes an epic-level wave plan — `epic`,
+`definition_of_done`, `good_enough`, `hard_constraints`, `fixed_decisions`, a typed `current_wave`
+with `blocks` edges, `wave_forecast`, `uncertainty_register`, `parked_possibilities` — even when the
+principal is a single frozen launch order for one bounded issue and none of that structure exists
+anywhere in the run.
+
+**Grounding:** `episode-guard-at-write` attempt 2, a delegated single-issue run under
+`admiral-post-568`, had no wave, no forecast, no uncertainty register and no parked possibilities to
+report. Every G2 field still had to be filled, so the authored packet is a plausible-sounding artifact
+standing in for structure nobody decided.
+
+**Suggested fix:** a reduced-schema mode for a single-issue delegated run, asking for
+`completed_outcomes`, `wave_evidence` and `discrepancies` against the launch order directly.
