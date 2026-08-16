@@ -337,6 +337,22 @@ clean.
   at the skill's documented convention path. This is the **identical** friction the g2
   implementer reported in its own feedback #2 — two crews in one gate improvising around the
   same sentence is a skill defect, not two coincidences.
+
+  **The same root cause has a second, sharper symptom: the stop hook.** On finishing — survey
+  consolidated, lease released, result artifact written — the `Stop` hook fired
+  `SPINE MID-FLIGHT: gate execute is still open`, quoting the *Commander's* `execute`
+  imperative and instructing me to reload the commander skill, rewrite `STATE_NOTE.md` and
+  dispatch crews through `run_crew.py`. That is my parent's gate, not mine. The hook resolves
+  `SPINE_FILE` and reports on whoever's spine is bound, with no notion of which role the
+  current process is — so **every dispatched crew will be told it abandoned a run at the exact
+  moment it correctly completed one.** The instruction it offers as the honest exit ("use the
+  engine's `block` verb to bubble the blocker to the parent") is also unavailable: the lease on
+  that file is held by `commander-cleanup-a-door`, so every mutating verb from my session is
+  refused on ownership, and taking it by force to inject a blocker into my parent's run would
+  be well outside review authority. I did neither, and reported instead. Suggested fix: the
+  hook should compare the bound spine's `engine_session.session_id` against the current
+  session and stay silent when they differ — a crew that does not own the lease cannot be the
+  one abandoning the run.
   (2) **`FOWLER_PASS.json` is pinned to one path per work-id**, but a work-id has many
   gates. g1's record was already there. I copied it to
   `.agent-work/cleanup-a-door/g1-review/FOWLER_PASS.json` before writing mine, so the g1

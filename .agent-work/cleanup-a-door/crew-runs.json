@@ -139,7 +139,7 @@
     "gate": "g2",
     "role": "reviewer",
     "attempt": 1,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/cleanup-a-door/g2/reviewer/attempt-1",
     "backend": "cli",
     "door_bound": true,
@@ -152,9 +152,13 @@
     "stdout": ".agent-work/cleanup-a-door/crew-runs/g2-reviewer-attempt-1.stdout.txt",
     "stderr": ".agent-work/cleanup-a-door/crew-runs/g2-reviewer-attempt-1.stderr.txt",
     "started_at": "2026-08-16T13:39:27.660886+00:00",
-    "last_heartbeat": "2026-08-16T13:39:27.660886+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-16T13:55:06.989490+00:00",
+    "completed_at": "2026-08-16T13:55:06.989490+00:00",
     "abandoned": false,
-    "model": "opus"
+    "model": "opus",
+    "exit_code": 0,
+    "result_present": true,
+    "result_fresh": true,
+    "verdict_source": "result"
   }
 ]
