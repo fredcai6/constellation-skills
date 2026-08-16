@@ -1,0 +1,263 @@
+.....FF..F....                                      [100%]
+=================================== FAILURES ===================================
+_ OwnershipIsBindingKeyNotWorktree.test_session_start_answers_the_agent_the_payload_names _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_session_start_answers_the_agent_the_payload_names>
+
+    def test_session_start_answers_the_agent_the_payload_names(self):
+        """Two DIFFERENT crew agents under one harness session. The site reads
+        `binding_key(payload)`, the one function that composes a key anywhere in
+        this codebase, so if a payload ever does carry an `agent_id` the answer
+        follows THAT agent's claim rather than whichever key leads the view.
+        Both ids here are real, from the pinned capture. No test claims the
+        harness sends `agent_id` at SessionStart; the point is that the site no
+        longer ignores it when it is there."""
+        agent_a, agent_b = _real_subagent_payloads()[0], _real_subagent_payloads()[1]
+        self.assertNotEqual(agent_a["agent_id"], agent_b["agent_id"])
+        sid = agent_a["session_id"]
+        for agent, work, marker in ((agent_a, "run-a", "CREW-MARKER"),
+                                    (agent_b, "run-b", "OTHERCREW-MARKER")):
+            tree = self.proj / work
+            write_spine(tree, make_spine([("g1", "in-progress")],
+                                         imperatives={"g1": marker + " gate"}),
+                        work=work, journal_lines=1)
+            sr.handle_post_tool_use(
+                _real_post_tool_use(agent, _claim_cmd(work, "eng-" + work), tree), self.proj)
+        self.assertEqual(sr._scan_active_spine(self.proj), [])
+    
+        out = sr.decide_session_start(
+            {"session_id": sid, "agent_id": agent_b["agent_id"], "cwd": str(self.proj)},
+            self.proj)
+    
+        ctx = out["hookSpecificOutput"]["additionalContext"]
+>       self.assertIn("OTHERCREW-MARKER", ctx)  # agent B's own gate
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: 'OTHERCREW-MARKER' not found in 'RESUMING an active Constellation spine run after a restart or compaction. ENGINE current -> LEASE active: eng-1 (by commander, heartbeat 2026-07-12T00:00:00+00:00)\nACTIVE g1 [in-progress] -- CREW-MARKER gate Pick the run back up at this gate and drive it through the engine. Remember release-is-last: the run is not done until you release the engine lease.'
+
+tests/test_spine_rail.py:1311: AssertionError
+_ OwnershipIsBindingKeyNotWorktree.test_session_start_does_not_resume_from_a_crews_binding_it_never_claimed _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_session_start_does_not_resume_from_a_crews_binding_it_never_claimed>
+
+    def test_session_start_does_not_resume_from_a_crews_binding_it_never_claimed(self):
+        """A session that claimed NOTHING must not be handed a gate. Here only
+        the crew's per-agent key exists -- visible to the parent's session
+        because they share a session_id, asserted below -- and the parent has
+        no binding of its own. Before this change it was told to drive the
+        crew's gate; the answer must be no context at all."""
+        parent = _real_parent_payloads()[0]
+        crew = _real_subagent_payloads()[0]
+        sid = parent["session_id"]
+        crew_tree = self.proj / "crewwt"
+        write_spine(crew_tree,
+                    make_spine([("g3", "in-progress")],
+                               imperatives={"g3": "CREW-MARKER implement the crew gate"}),
+                    work="run-crew", journal_lines=1)
+        sr.handle_post_tool_use(
+            _real_post_tool_use(crew, _claim_cmd("run-crew", "eng-crew"), crew_tree), self.proj)
+    
+        binding = sr.load_binding(self.proj)
+        self.assertEqual(list(binding), [sid + sr.BINDING_KEY_SEP + crew["agent_id"]])
+        self.assertEqual(len(sr.session_view(binding, sid)), 1)  # visible to the parent
+        self.assertEqual(sr._scan_active_spine(self.proj), [])   # and nothing to scan
+    
+        out = sr.decide_session_start({"session_id": sid, "cwd": str(self.proj)}, self.proj)
+    
+>       self.assertEqual(out, {})  # no gate of its own -> no context, not the crew's
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: {'hookSpecificOutput': {'hookEventName': '[411 chars]e.'}} != {}
+E       Diff is 1142 characters long. Set self.maxDiff to None to see it.
+
+tests/test_spine_rail.py:1283: AssertionError
+_ OwnershipIsBindingKeyNotWorktree.test_session_start_resumes_from_its_own_entry_not_its_crews _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_session_start_resumes_from_its_own_entry_not_its_crews>
+
+    def test_session_start_resumes_from_its_own_entry_not_its_crews(self):
+        """A restarting Commander must be handed its OWN gate. Before this
+        change `decide_session_start` took the first entry in dict order, and
+        the crew claimed first, so the parent was told to drive the crew's
+        gate."""
+        sid, _crew, _crew_key = self._parent_and_out_of_tree_crew()
+    
+        out = sr.decide_session_start({"session_id": sid, "cwd": str(self.proj)}, self.proj)
+    
+        ctx = out["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("RESUMING", ctx)
+>       self.assertIn("PARENT-MARKER", ctx)   # its own gate
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: 'PARENT-MARKER' not found in 'RESUMING an active Constellation spine run after a restart or compaction. ENGINE current -> LEASE active: eng-1 (by commander, heartbeat 2026-07-12T00:00:00+00:00)\nACTIVE g3 [in-progress] -- CREW-MARKER implement the crew gate Pick the run back up at this gate and drive it through the engine. Remember release-is-last: the run is not done until you release the engine lease.'
+
+tests/test_spine_rail.py:1239: AssertionError
+_ OwnershipIsBindingKeyNotWorktree.test_session_start_selection_is_ownership_not_write_order (order="crew's key written first") _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_session_start_selection_is_ownership_not_write_order>
+
+    def test_session_start_selection_is_ownership_not_write_order(self):
+        """The proof that selection is a decision and not an accident: the SAME
+        binding, differing only in which key was written first, must give the
+        same answer. Before this change the answer flipped with the order."""
+        for label, parent_first in (("crew's key written first", False),
+                                    ("parent's key written first", True)):
+            with self.subTest(order=label):
+                sr.save_binding(self.proj, {})  # each order builds its own binding
+                sid, _crew, _crew_key = self._parent_and_out_of_tree_crew(parent_first)
+    
+                out = sr.decide_session_start({"session_id": sid, "cwd": str(self.proj)},
+                                              self.proj)
+    
+                ctx = out["hookSpecificOutput"]["additionalContext"]
+>               self.assertIn("PARENT-MARKER", ctx, label)
+E               AssertionError: 'PARENT-MARKER' not found in 'RESUMING an active Constellation spine run after a restart or compaction. ENGINE current -> LEASE active: eng-1 (by commander, heartbeat 2026-07-12T00:00:00+00:00)\nACTIVE g3 [in-progress] -- CREW-MARKER implement the crew gate Pick the run back up at this gate and drive it through the engine. Remember release-is-last: the run is not done until you release the engine lease.' : crew's key written first
+
+tests/test_spine_rail.py:1256: AssertionError
+_ OwnershipIsBindingKeyNotWorktree.test_session_start_withholds_when_it_cannot_say_who_is_starting (agent_id='path separator') _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_session_start_withholds_when_it_cannot_say_who_is_starting>
+
+    def test_session_start_withholds_when_it_cannot_say_who_is_starting(self):
+        """The fail-safe direction at THIS site. Withholding is not blocking
+        here -- SessionStart never blocks -- it is declining to hand out a gate.
+        `binding_key` refuses to compose a key for a malformed `agent_id`
+        (#441's allowlist), so the hook cannot say who is starting, nothing is
+        attributable to it, and it is told nothing to drive rather than being
+        pointed at the only entry lying around.
+    
+        Scoped honestly: this asserts what the BINDING can hand out. A session
+        that owns nothing still falls through to `_scan_active_spine`, the blind
+        glob that consults no binding key at all, exactly as it did before --
+        that path is tc1 and binding-key provenance cannot reach it. The spine
+        is placed outside the glob so this test measures the binding decision
+        and not that one."""
+        alt = self.proj / "altwt"
+        sp = write_spine(alt, make_spine([("g2", "in-progress")],
+                                         imperatives={"g2": "WITHHELD-MARKER keep going"}))
+        bind(self.proj, "s1", sp, worktree=str(alt))
+        self.assertEqual(sr._scan_active_spine(self.proj), [])  # only the binding can answer
+        self.assertEqual(len(sr.session_view(sr.load_binding(self.proj), "s1")), 1)
+        for label, agent_id in (("path separator", "a/b"), ("empty", ""),
+                                ("wrong type", 12345), ("explicit null", None)):
+            with self.subTest(agent_id=label):
+                payload = {"session_id": "s1", "agent_id": agent_id, "cwd": str(self.proj)}
+                self.assertIsNone(sr.binding_key(payload))
+                out = sr.decide_session_start(payload, self.proj)
+                ctx = (out.get("hookSpecificOutput") or {}).get("additionalContext", "")
+>               self.assertNotIn("WITHHELD-MARKER", ctx, label)
+E               AssertionError: 'WITHHELD-MARKER' unexpectedly found in 'RESUMING an active Constellation spine run after a restart or compaction. ENGINE current -> LEASE active: eng-1 (by commander, heartbeat 2026-07-12T00:00:00+00:00)\nACTIVE g2 [in-progress] -- WITHHELD-MARKER keep going Pick the run back up at this gate and drive it through the engine. Remember release-is-last: the run is not done until you release the engine lease.' : path separator
+
+tests/test_spine_rail.py:1341: AssertionError
+_ OwnershipIsBindingKeyNotWorktree.test_session_start_withholds_when_it_cannot_say_who_is_starting (agent_id='empty') _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_session_start_withholds_when_it_cannot_say_who_is_starting>
+
+    def test_session_start_withholds_when_it_cannot_say_who_is_starting(self):
+        """The fail-safe direction at THIS site. Withholding is not blocking
+        here -- SessionStart never blocks -- it is declining to hand out a gate.
+        `binding_key` refuses to compose a key for a malformed `agent_id`
+        (#441's allowlist), so the hook cannot say who is starting, nothing is
+        attributable to it, and it is told nothing to drive rather than being
+        pointed at the only entry lying around.
+    
+        Scoped honestly: this asserts what the BINDING can hand out. A session
+        that owns nothing still falls through to `_scan_active_spine`, the blind
+        glob that consults no binding key at all, exactly as it did before --
+        that path is tc1 and binding-key provenance cannot reach it. The spine
+        is placed outside the glob so this test measures the binding decision
+        and not that one."""
+        alt = self.proj / "altwt"
+        sp = write_spine(alt, make_spine([("g2", "in-progress")],
+                                         imperatives={"g2": "WITHHELD-MARKER keep going"}))
+        bind(self.proj, "s1", sp, worktree=str(alt))
+        self.assertEqual(sr._scan_active_spine(self.proj), [])  # only the binding can answer
+        self.assertEqual(len(sr.session_view(sr.load_binding(self.proj), "s1")), 1)
+        for label, agent_id in (("path separator", "a/b"), ("empty", ""),
+                                ("wrong type", 12345), ("explicit null", None)):
+            with self.subTest(agent_id=label):
+                payload = {"session_id": "s1", "agent_id": agent_id, "cwd": str(self.proj)}
+                self.assertIsNone(sr.binding_key(payload))
+                out = sr.decide_session_start(payload, self.proj)
+                ctx = (out.get("hookSpecificOutput") or {}).get("additionalContext", "")
+>               self.assertNotIn("WITHHELD-MARKER", ctx, label)
+E               AssertionError: 'WITHHELD-MARKER' unexpectedly found in 'RESUMING an active Constellation spine run after a restart or compaction. ENGINE current -> LEASE active: eng-1 (by commander, heartbeat 2026-07-12T00:00:00+00:00)\nACTIVE g2 [in-progress] -- WITHHELD-MARKER keep going Pick the run back up at this gate and drive it through the engine. Remember release-is-last: the run is not done until you release the engine lease.' : empty
+
+tests/test_spine_rail.py:1341: AssertionError
+_ OwnershipIsBindingKeyNotWorktree.test_session_start_withholds_when_it_cannot_say_who_is_starting (agent_id='wrong type') _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_session_start_withholds_when_it_cannot_say_who_is_starting>
+
+    def test_session_start_withholds_when_it_cannot_say_who_is_starting(self):
+        """The fail-safe direction at THIS site. Withholding is not blocking
+        here -- SessionStart never blocks -- it is declining to hand out a gate.
+        `binding_key` refuses to compose a key for a malformed `agent_id`
+        (#441's allowlist), so the hook cannot say who is starting, nothing is
+        attributable to it, and it is told nothing to drive rather than being
+        pointed at the only entry lying around.
+    
+        Scoped honestly: this asserts what the BINDING can hand out. A session
+        that owns nothing still falls through to `_scan_active_spine`, the blind
+        glob that consults no binding key at all, exactly as it did before --
+        that path is tc1 and binding-key provenance cannot reach it. The spine
+        is placed outside the glob so this test measures the binding decision
+        and not that one."""
+        alt = self.proj / "altwt"
+        sp = write_spine(alt, make_spine([("g2", "in-progress")],
+                                         imperatives={"g2": "WITHHELD-MARKER keep going"}))
+        bind(self.proj, "s1", sp, worktree=str(alt))
+        self.assertEqual(sr._scan_active_spine(self.proj), [])  # only the binding can answer
+        self.assertEqual(len(sr.session_view(sr.load_binding(self.proj), "s1")), 1)
+        for label, agent_id in (("path separator", "a/b"), ("empty", ""),
+                                ("wrong type", 12345), ("explicit null", None)):
+            with self.subTest(agent_id=label):
+                payload = {"session_id": "s1", "agent_id": agent_id, "cwd": str(self.proj)}
+                self.assertIsNone(sr.binding_key(payload))
+                out = sr.decide_session_start(payload, self.proj)
+                ctx = (out.get("hookSpecificOutput") or {}).get("additionalContext", "")
+>               self.assertNotIn("WITHHELD-MARKER", ctx, label)
+E               AssertionError: 'WITHHELD-MARKER' unexpectedly found in 'RESUMING an active Constellation spine run after a restart or compaction. ENGINE current -> LEASE active: eng-1 (by commander, heartbeat 2026-07-12T00:00:00+00:00)\nACTIVE g2 [in-progress] -- WITHHELD-MARKER keep going Pick the run back up at this gate and drive it through the engine. Remember release-is-last: the run is not done until you release the engine lease.' : wrong type
+
+tests/test_spine_rail.py:1341: AssertionError
+_ OwnershipIsBindingKeyNotWorktree.test_session_start_withholds_when_it_cannot_say_who_is_starting (agent_id='explicit null') _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_session_start_withholds_when_it_cannot_say_who_is_starting>
+
+    def test_session_start_withholds_when_it_cannot_say_who_is_starting(self):
+        """The fail-safe direction at THIS site. Withholding is not blocking
+        here -- SessionStart never blocks -- it is declining to hand out a gate.
+        `binding_key` refuses to compose a key for a malformed `agent_id`
+        (#441's allowlist), so the hook cannot say who is starting, nothing is
+        attributable to it, and it is told nothing to drive rather than being
+        pointed at the only entry lying around.
+    
+        Scoped honestly: this asserts what the BINDING can hand out. A session
+        that owns nothing still falls through to `_scan_active_spine`, the blind
+        glob that consults no binding key at all, exactly as it did before --
+        that path is tc1 and binding-key provenance cannot reach it. The spine
+        is placed outside the glob so this test measures the binding decision
+        and not that one."""
+        alt = self.proj / "altwt"
+        sp = write_spine(alt, make_spine([("g2", "in-progress")],
+                                         imperatives={"g2": "WITHHELD-MARKER keep going"}))
+        bind(self.proj, "s1", sp, worktree=str(alt))
+        self.assertEqual(sr._scan_active_spine(self.proj), [])  # only the binding can answer
+        self.assertEqual(len(sr.session_view(sr.load_binding(self.proj), "s1")), 1)
+        for label, agent_id in (("path separator", "a/b"), ("empty", ""),
+                                ("wrong type", 12345), ("explicit null", None)):
+            with self.subTest(agent_id=label):
+                payload = {"session_id": "s1", "agent_id": agent_id, "cwd": str(self.proj)}
+                self.assertIsNone(sr.binding_key(payload))
+                out = sr.decide_session_start(payload, self.proj)
+                ctx = (out.get("hookSpecificOutput") or {}).get("additionalContext", "")
+>               self.assertNotIn("WITHHELD-MARKER", ctx, label)
+E               AssertionError: 'WITHHELD-MARKER' unexpectedly found in 'RESUMING an active Constellation spine run after a restart or compaction. ENGINE current -> LEASE active: eng-1 (by commander, heartbeat 2026-07-12T00:00:00+00:00)\nACTIVE g2 [in-progress] -- WITHHELD-MARKER keep going Pick the run back up at this gate and drive it through the engine. Remember release-is-last: the run is not done until you release the engine lease.' : explicit null
+
+tests/test_spine_rail.py:1341: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_session_start_answers_the_agent_the_payload_names
+FAILED tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_session_start_does_not_resume_from_a_crews_binding_it_never_claimed
+FAILED tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_session_start_resumes_from_its_own_entry_not_its_crews
+SUBFAILED(order="crew's key written first") tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_session_start_selection_is_ownership_not_write_order
+SUBFAILED(agent_id='path separator') tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_session_start_withholds_when_it_cannot_say_who_is_starting
+SUBFAILED(agent_id='empty') tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_session_start_withholds_when_it_cannot_say_who_is_starting
+SUBFAILED(agent_id='wrong type') tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_session_start_withholds_when_it_cannot_say_who_is_starting
+SUBFAILED(agent_id='explicit null') tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_session_start_withholds_when_it_cannot_say_who_is_starting
+8 failed, 11 passed, 152 deselected, 16 subtests passed in 0.44s

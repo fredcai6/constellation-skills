@@ -705,34 +705,61 @@ def test_stop_bare_sid_owned_mid_flight_still_renders_original_imperative_text(p
     assert list(sr.load_nudges(proj).keys()) == [sid]
 
 
-def test_session_start_resumes_from_a_spine_bound_only_under_a_composite_key(proj):
-    """decide_session_start's read goes through session_view too. The spine
-    lives outside proj/.agent-work so the fallback scan cannot find it -- the
-    only route to it is the composite key."""
+def test_session_start_reads_through_to_a_composite_key_but_answers_only_its_owner(proj):
+    """decide_session_start's read goes through session_view too -- #419's
+    read-through, which this asserts directly: the entry IS visible to the
+    session and provenance attributes it to the composite key.
+
+    What CHANGED (#609 lane F g3): being visible is not being yours. A bare
+    SessionStart is the top-level agent restarting, and handing it a spine its
+    SUBAGENT claimed is #549/#419's own failure -- "pick the run back up at this
+    gate", about someone else's gate. It used to depend on where the payload
+    was standing: same tree as the recorded worktree and the entry was resumed,
+    different tree and it was skipped. Selection is the binding key now, so the
+    answer is the same from anywhere, and the agent that DID claim it is still
+    answered with it. The spine lives outside proj/.agent-work so the fallback
+    scan cannot find it -- the only route to it is the composite key.
+
+    This test asserted the opposite until #609 lane F g3. It is not weakened:
+    it makes the same read-through claim, plus the ownership claim, plus the
+    round trip that shows nothing became unreachable."""
     sub = _real_subagent_payloads()[0]
     sid = sub["session_id"]
+    composite = sid + sr.BINDING_KEY_SEP + sub["agent_id"]
     alt = proj / "altwt"
-    write_spine(alt, make_spine([("g4", "in-progress")], imperatives={"g4": "COMPOSITE-RESUME keep going"}),
-                work="run-sub")
+    sp = write_spine(alt, make_spine([("g4", "in-progress")], imperatives={"g4": "COMPOSITE-RESUME keep going"}),
+                     work="run-sub")
     sr.handle_post_tool_use(_real_post_tool_use(sub, _claim_cmd("run-sub", "eng-s"), alt), proj)
 
     binding = sr.load_binding(proj)
-    assert list(binding.keys()) == [sid + sr.BINDING_KEY_SEP + sub["agent_id"]]
+    assert list(binding.keys()) == [composite]
+    assert list(sr.session_view(binding, sid)) == [sp]              # read-through intact
+    assert sr.session_view_provenance(binding, sid)[sp] == composite  # and attributed
     assert sr._scan_active_spine(proj) == []  # nothing for the fallback to find
 
-    out = sr.decide_session_start({"session_id": sid, "cwd": str(alt), "source": "resume"}, proj)
-    ctx = out["hookSpecificOutput"]["additionalContext"]
+    # The top-level agent restarting: visible, not its own, so not its gate.
+    bare = sr.decide_session_start({"session_id": sid, "cwd": str(alt), "source": "resume"}, proj)
+    assert bare == {}
+
+    # The agent that claimed it is still answered with it, from the same tree
+    # and by the same route -- the entry did not become unreachable.
+    own = sr.decide_session_start(
+        {"session_id": sid, "agent_id": sub["agent_id"], "cwd": str(alt), "source": "resume"}, proj)
+    ctx = own["hookSpecificOutput"]["additionalContext"]
     assert "RESUMING" in ctx
     assert "COMPOSITE-RESUME" in ctx
 
 
-def test_session_start_composite_key_entry_still_renders_full_imperative_unchanged(proj):
-    """Regression guard for #549: decide_session_start is the OTHER caller of
-    session_view and is explicitly out of scope for this gate -- its own
-    behavior must not move. Unlike decide_stop, decide_session_start never
-    consults session_view_provenance, so a composite-key-only entry's
-    imperative must still render into additionalContext in full, exactly as
-    before -- no foreign-owner withholding here."""
+def test_session_start_withholds_a_composite_key_imperative_from_the_bare_session(proj):
+    """#549's concern -- one agent being handed another's next imperative --
+    reaching decide_session_start (#609 lane F g3). decide_stop answers a
+    foreign-owned gate with the foreign-owner wording, because the stop blocks
+    whatever it renders; this site has no such obligation, so it says nothing
+    at all and the imperative appears in NEITHER field.
+
+    Until #609 lane F g3 this asserted that the imperative rendered in full,
+    guarding #549's fence around a site that was then out of scope. The fence
+    is gone; the concern it was fencing now applies here too."""
     sub = _real_subagent_payloads()[0]
     sid = sub["session_id"]
     alt = proj / "altwt2"
@@ -744,9 +771,9 @@ def test_session_start_composite_key_entry_still_renders_full_imperative_unchang
     assert list(binding.keys()) == [sid + sr.BINDING_KEY_SEP + sub["agent_id"]]
 
     out = sr.decide_session_start({"session_id": sid, "cwd": str(alt), "source": "resume"}, proj)
-    ctx = out["hookSpecificOutput"]["additionalContext"]
-    assert "g7" in ctx
-    assert "REGRESSION-MARKER" in ctx  # imperative NOT withheld here -- decide_stop-only change
+    assert out == {}
+    assert "REGRESSION-MARKER" not in json.dumps(out)  # neither field, nowhere
+    assert "g7" not in json.dumps(out)
 
 
 def test_session_start_bind_on_resume_still_writes_under_the_bare_key(proj):
@@ -891,10 +918,20 @@ class OwnershipIsBindingKeyNotWorktree(unittest.TestCase):
     the moment a crew shares its Commander's tree: the tree answers WHERE, and
     only the binding key answers WHOSE.
 
-    Every case here puts parent and crew in ONE worktree on purpose. Giving
-    them different trees proves nothing about this change -- that is the case
-    the deleted worktree test already got right, and it is preserved as an
-    explicit control below.
+    Which tree the cases use is chosen per SITE, and the two sites want
+    opposite shapes:
+
+    - For the Stop site, one worktree shared by parent and crew is the shape
+      that matters. Giving them different trees proves nothing there -- that is
+      the case the deleted worktree test already got right, and it is preserved
+      as an explicit control below.
+    - For the SessionStart site it is the other way round. The differing-tree
+      case is exactly where the deleted test was doing real work: the skip it
+      performed was the only thing keeping a restarting Commander on its own
+      binding, so that is the shape that REGRESSED when the skip went and
+      nothing replaced it. The cases below put parent and crew in different
+      trees for that reason, and place both spines outside the fallback scan's
+      reach so only the binding can explain the answer.
 
     `unittest.TestCase` rather than this module's function style so pytest
     collects the class under its required name: this repo ships no pytest
@@ -1162,6 +1199,211 @@ class OwnershipIsBindingKeyNotWorktree(unittest.TestCase):
 
         self.assertEqual(out["decision"], "block")  # on BOTH platforms
         self.assertIn("PLATFORM-MARKER", out["reason"])
+
+    # -- site 2, continued: SELECTION is a binding-key question here too -----
+    #
+    # Nothing measured says a SessionStart payload carries an `agent_id` -- the
+    # pinned capture is PostToolUse only -- and it is tempting to read that
+    # absence as "so every entry in the merged view is this session's own". It
+    # is not. `session_view` merges the bare `sid` PLUS
+    # every `sid#<agent_id>` key, and Agent-tool subagents SHARE their parent's
+    # session_id -- that sharing is the whole premise of #419 and of the
+    # per-agent key -- so another AGENT's entry is in the view by construction.
+    # Taking the first entry in dict order therefore hands a restarting
+    # Commander whichever spine happened to be claimed first, routinely its
+    # crew's, together with "Pick the run back up at this gate and drive it
+    # through the engine". That is the #549/#419 failure itself.
+
+    def _parent_and_out_of_tree_crew(self, parent_first=False):
+        """A Commander and a crew in DIFFERENT worktrees, bound by the REAL
+        claim writer from the REAL captured payloads (the parent carries no
+        `agent_id` and binds under the bare session_id; the crew carries one
+        and binds under `sid#agent_id`), with `parent_first` choosing which key
+        is written first.
+
+        BOTH spines are placed outside `_scan_active_spine`'s glob, which only
+        reaches `<project>/.agent-work/*/spine.json`, and that emptiness is
+        asserted rather than assumed: with nothing for the fallback to find,
+        only the BINDING can explain what a restarted session is told to
+        resume, so a passing assertion here is about selection and cannot be
+        the blind scan answering by luck.
+
+        Differing trees are the point at THIS site, not a control. The deleted
+        worktree test skipped the crew's entry because its tree differed, and
+        that skip was the only thing keeping the parent on its own binding --
+        so this is exactly the shape that regressed when the skip went and
+        nothing replaced it.
+        """
+        parent = _real_parent_payloads()[0]
+        crew = _real_subagent_payloads()[0]
+        self.assertEqual(crew["session_id"], parent["session_id"])  # one harness session
+        parent_tree, crew_tree = self.proj / "parentwt", self.proj / "crewwt"
+        write_spine(parent_tree,
+                    make_spine([("execute", "in-progress")],
+                               imperatives={"execute": "PARENT-MARKER drive execute.json"}),
+                    work="run-parent", journal_lines=1)
+        write_spine(crew_tree,
+                    make_spine([("g3", "in-progress")],
+                               imperatives={"g3": "CREW-MARKER implement the crew gate"}),
+                    work="run-crew", journal_lines=1)
+        claims = [(crew, _claim_cmd("run-crew", "eng-crew"), crew_tree),
+                  (parent, _claim_cmd("run-parent", "eng-parent"), parent_tree)]
+        if parent_first:
+            claims.reverse()
+        for payload, command, tree in claims:
+            sr.handle_post_tool_use(_real_post_tool_use(payload, command, tree), self.proj)
+
+        sid = parent["session_id"]
+        crew_key = sid + sr.BINDING_KEY_SEP + crew["agent_id"]
+        binding = sr.load_binding(self.proj)
+        self.assertEqual(list(binding), [sid, crew_key] if parent_first else [crew_key, sid])
+        entries = sr.session_view(binding, sid)
+        self.assertEqual(len(entries), 2)  # the crew's entry IS in the parent's view
+        self.assertEqual(len({e["worktree"] for e in entries.values()}), 2)  # two trees
+        self.assertEqual(sr._scan_active_spine(self.proj), [])  # nothing for the fallback
+        return sid, crew, crew_key
+
+    def test_session_start_resumes_from_its_own_entry_not_its_crews(self):
+        """A restarting Commander must be handed its OWN gate. Before this
+        change `decide_session_start` took the first entry in dict order, and
+        the crew claimed first, so the parent was told to drive the crew's
+        gate."""
+        sid, _crew, _crew_key = self._parent_and_out_of_tree_crew()
+
+        out = sr.decide_session_start({"session_id": sid, "cwd": str(self.proj)}, self.proj)
+
+        ctx = out["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("RESUMING", ctx)
+        self.assertIn("PARENT-MARKER", ctx)   # its own gate
+        self.assertNotIn("CREW-MARKER", ctx)  # never its crew's
+
+    def test_session_start_selection_is_ownership_not_write_order(self):
+        """The proof that selection is a decision and not an accident: the SAME
+        binding, differing only in which key was written first, must give the
+        same answer. Before this change the answer flipped with the order."""
+        for label, parent_first in (("crew's key written first", False),
+                                    ("parent's key written first", True)):
+            with self.subTest(order=label):
+                sr.save_binding(self.proj, {})  # each order builds its own binding
+                sid, _crew, _crew_key = self._parent_and_out_of_tree_crew(parent_first)
+
+                out = sr.decide_session_start({"session_id": sid, "cwd": str(self.proj)},
+                                              self.proj)
+
+                ctx = out["hookSpecificOutput"]["additionalContext"]
+                self.assertIn("PARENT-MARKER", ctx, label)
+                self.assertNotIn("CREW-MARKER", ctx, label)
+
+    def test_session_start_does_not_resume_from_a_crews_binding_it_never_claimed(self):
+        """A session that claimed NOTHING must not be handed a gate. Here only
+        the crew's per-agent key exists -- visible to the parent's session
+        because they share a session_id, asserted below -- and the parent has
+        no binding of its own. Before this change it was told to drive the
+        crew's gate; the answer must be no context at all."""
+        parent = _real_parent_payloads()[0]
+        crew = _real_subagent_payloads()[0]
+        sid = parent["session_id"]
+        crew_tree = self.proj / "crewwt"
+        write_spine(crew_tree,
+                    make_spine([("g3", "in-progress")],
+                               imperatives={"g3": "CREW-MARKER implement the crew gate"}),
+                    work="run-crew", journal_lines=1)
+        sr.handle_post_tool_use(
+            _real_post_tool_use(crew, _claim_cmd("run-crew", "eng-crew"), crew_tree), self.proj)
+
+        binding = sr.load_binding(self.proj)
+        self.assertEqual(list(binding), [sid + sr.BINDING_KEY_SEP + crew["agent_id"]])
+        self.assertEqual(len(sr.session_view(binding, sid)), 1)  # visible to the parent
+        self.assertEqual(sr._scan_active_spine(self.proj), [])   # and nothing to scan
+
+        out = sr.decide_session_start({"session_id": sid, "cwd": str(self.proj)}, self.proj)
+
+        self.assertEqual(out, {})  # no gate of its own -> no context, not the crew's
+
+    def test_session_start_answers_the_agent_the_payload_names(self):
+        """Two DIFFERENT crew agents under one harness session. The site reads
+        `binding_key(payload)`, the one function that composes a key anywhere in
+        this codebase, so if a payload ever does carry an `agent_id` the answer
+        follows THAT agent's claim rather than whichever key leads the view.
+        Both ids here are real, from the pinned capture. No test claims the
+        harness sends `agent_id` at SessionStart; the point is that the site no
+        longer ignores it when it is there."""
+        agent_a, agent_b = _real_subagent_payloads()[0], _real_subagent_payloads()[1]
+        self.assertNotEqual(agent_a["agent_id"], agent_b["agent_id"])
+        sid = agent_a["session_id"]
+        for agent, work, marker in ((agent_a, "run-a", "AGENT-A-MARKER"),
+                                    (agent_b, "run-b", "AGENT-B-MARKER")):
+            tree = self.proj / work
+            write_spine(tree, make_spine([("g1", "in-progress")],
+                                         imperatives={"g1": marker + " gate"}),
+                        work=work, journal_lines=1)
+            sr.handle_post_tool_use(
+                _real_post_tool_use(agent, _claim_cmd(work, "eng-" + work), tree), self.proj)
+        self.assertEqual(sr._scan_active_spine(self.proj), [])
+
+        out = sr.decide_session_start(
+            {"session_id": sid, "agent_id": agent_b["agent_id"], "cwd": str(self.proj)},
+            self.proj)
+
+        ctx = out["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("AGENT-B-MARKER", ctx)     # agent B's own gate
+        self.assertNotIn("AGENT-A-MARKER", ctx)  # not agent A's, which leads the view
+
+    def test_session_start_withholds_when_it_cannot_say_who_is_starting(self):
+        """The fail-safe direction at THIS site. Withholding is not blocking
+        here -- SessionStart never blocks -- it is declining to hand out a gate.
+        `binding_key` refuses to compose a key for a malformed `agent_id`
+        (#441's allowlist), so the hook cannot say who is starting, nothing is
+        attributable to it, and it is told nothing to drive rather than being
+        pointed at the only entry lying around.
+
+        Scoped honestly: this asserts what the BINDING can hand out. A session
+        that owns nothing still falls through to `_scan_active_spine`, the blind
+        glob that consults no binding key at all, exactly as it did before --
+        that path is tc1 and binding-key provenance cannot reach it. The spine
+        is placed outside the glob so this test measures the binding decision
+        and not that one."""
+        alt = self.proj / "altwt"
+        sp = write_spine(alt, make_spine([("g2", "in-progress")],
+                                         imperatives={"g2": "WITHHELD-MARKER keep going"}))
+        bind(self.proj, "s1", sp, worktree=str(alt))
+        self.assertEqual(sr._scan_active_spine(self.proj), [])  # only the binding can answer
+        self.assertEqual(len(sr.session_view(sr.load_binding(self.proj), "s1")), 1)
+        for label, agent_id in (("path separator", "a/b"), ("empty", ""),
+                                ("wrong type", 12345), ("explicit null", None)):
+            with self.subTest(agent_id=label):
+                payload = {"session_id": "s1", "agent_id": agent_id, "cwd": str(self.proj)}
+                self.assertIsNone(sr.binding_key(payload))
+                out = sr.decide_session_start(payload, self.proj)
+                ctx = (out.get("hookSpecificOutput") or {}).get("additionalContext", "")
+                self.assertNotIn("WITHHELD-MARKER", ctx, label)
+
+    def test_session_start_location_data_is_inert_not_load_bearing(self):
+        """The other half of the fail-safe direction: garbage in the LOCATION
+        fields must not cost a session its own resume. `cwd` absent, wrong-typed
+        or structurally nonsense, and a recorded `worktree` that is null, wrong-
+        typed or empty -- the session still picks its own binding back up,
+        because location no longer participates in the decision at all."""
+        alt = self.proj / "altwt"
+        sp = write_spine(alt, make_spine([("g2", "in-progress")],
+                                         imperatives={"g2": "RESUME-MARKER keep going"}))
+        rows = [
+            ("no cwd at all", {"session_id": "s1"}, str(alt)),
+            ("int cwd", {"session_id": "s1", "cwd": 12345}, str(alt)),
+            ("dict cwd", {"session_id": "s1", "cwd": {"not": "a path"}}, str(alt)),
+            ("null worktree", {"session_id": "s1", "cwd": str(self.proj)}, None),
+            ("int worktree", {"session_id": "s1", "cwd": str(self.proj)}, 12345),
+            ("empty worktree", {"session_id": "s1", "cwd": str(self.proj)}, ""),
+        ]
+        for label, payload, worktree in rows:
+            with self.subTest(row=label):
+                sr.save_binding(self.proj, {})
+                bind(self.proj, "s1", sp, worktree=worktree)
+                self.assertEqual(sr._scan_active_spine(self.proj), [])  # only the binding
+                out = sr.decide_session_start(payload, self.proj)
+                ctx = out["hookSpecificOutput"]["additionalContext"]
+                self.assertIn("RESUME-MARKER", ctx, label)
+        self.assertEqual(len(rows), 6)  # a loop that asserts what it looped over
 
 
 def _derived_form(path):

@@ -682,10 +682,21 @@ def reconstruct_current(spine: dict) -> str:
 # its Commander's tree in its own area, so ONE worktree holds several spines and
 # `same worktree, therefore mine` is wrong the moment a crew shares its
 # Commander's tree. The tree answers WHERE; only the binding key answers WHOSE
-# (decision:worktree-is-location-spine-path-is-identity). Ownership is decided
-# by binding-key provenance at both former call sites -- see decide_stop and
-# decide_session_start. What remains here compares paths and locates spines,
-# and decides nothing about identity.
+# (decision:worktree-is-location-spine-path-is-identity).
+#
+# Ownership is decided by binding-key provenance at both former call sites, by
+# the same comparison: `_own_entries`, which decide_stop and decide_session_start
+# both call. Stated as one rule -- SELECTION is a property of the binding key at
+# both sites, and BLOCKING, at the one site that blocks, is a property of the
+# spine. The sites differ only in what they do when the acting agent owns
+# nothing visible, and that difference follows from the second half of the rule:
+# a Stop blocks either way, so it still names the leading gate and withholds its
+# imperative, while a SessionStart blocks nothing and so hands out no gate from
+# the binding at all (it still falls through to the blind scan below, which
+# reads no binding key and is not this rule's business).
+#
+# What remains here compares paths and locates spines, and decides nothing
+# about identity.
 
 def _same_path(a, b) -> bool:
     """True if a and b name the same path after normcase+normpath.
@@ -1485,9 +1496,10 @@ def _is_own_entry(owner_key, own_key) -> bool:
     - `own_key is None` -- `binding_key` refused to compose a key for this
       payload (a malformed `agent_id`, #441's allowlist), so the hook cannot say
       who is acting. Nothing placed then matches, so every attributable entry
-      reads as foreign: the stop still BLOCKS, and the imperative is withheld.
-      Uncertainty withholds; it never hands an unidentifiable agent someone's
-      next step.
+      reads as foreign. Each caller's no-match path is its own withholding
+      direction: decide_stop still BLOCKS and withholds the imperative,
+      decide_session_start hands out no gate from the binding. Uncertainty
+      withholds; it never hands an unidentifiable agent someone's next step.
 
     NEVER raises.
     """
@@ -1497,6 +1509,32 @@ def _is_own_entry(owner_key, own_key) -> bool:
         return owner_key == own_key
     except Exception:
         return False
+
+
+def _own_entries(candidates, owners, own_key) -> list:
+    """The subset of `candidates` the ACTING agent owns, in the order given.
+
+    `candidates` is any sequence whose element `[0]` is the abs spine path that
+    `owners` (`session_view_provenance`) is keyed by -- decide_stop passes its
+    mid-flight `(spine_path, spine, aid)` tuples, decide_session_start passes
+    the merged view's `(spine_path, entry)` items. Both sites ask the SAME
+    question with the SAME comparison, which is the point of naming it once:
+    selection is a binding-key property at both call sites (#609 lane F g3).
+
+    What each site does when this returns EMPTY is its own business, and the
+    two differ on purpose. decide_stop still has to answer a stop that blocks
+    regardless, so it renders the leading entry with the imperative withheld.
+    decide_session_start is deciding whether to hand out a gate at all, so it
+    hands out nothing from the binding. Folding those two fallbacks together is
+    what would put one site's answer in the other site's mouth.
+
+    NEVER raises; [] on unusable input, which is the withholding direction at
+    both sites.
+    """
+    try:
+        return [c for c in candidates if _is_own_entry(owners.get(c[0]), own_key)]
+    except Exception:
+        return []
 
 
 def _entry_mid_flight_view(entry: dict):
@@ -1600,7 +1638,7 @@ def decide_stop(data: dict, project_dir: Path) -> dict:
         # hand a Commander whichever entry happened to be claimed first --
         # routinely its in-tree crew's, whose gate is precisely the one it must
         # not be told to drive.
-        own = [view for view in mid_flight if _is_own_entry(owners.get(view[0]), own_key)]
+        own = _own_entries(mid_flight, owners, own_key)
         spine_path, spine, aid = (own or mid_flight)[0]
         if _is_own_entry(owners.get(spine_path), own_key):
             # This agent's own entry (or provenance couldn't place it -- fail
@@ -1665,26 +1703,42 @@ def decide_session_start(data: dict, project_dir: Path) -> dict:
         sid_bindings = session_view(binding, sid)
         # Per-entry iteration mirroring decide_stop's already-generalized
         # pattern (#202/#261): `sid_bindings` is a dict of abs_spine_path ->
-        # entry (never a flat {spine, ...} directly). Take the FIRST entry
-        # (natural dict.values() order) that has a spine -- same "first match"
-        # tone as _scan_active_spine below.
+        # entry (never a flat {spine, ...} directly).
         #
-        # NOT symmetric with decide_stop's ownership decision (#609 lane F g3),
-        # deliberately. This skip never decided blocking; it decided whether a
-        # resumed session reads its own binding or falls through to
-        # _scan_active_spine, the blind glob that can hand a session a spine it
-        # never claimed. And SessionStart carries no `agent_id` -- it is a
-        # per-harness-session event, so there is no second live agent here to
-        # tell apart: every entry in this merged view was claimed by THIS
-        # session, under its bare key or under a per-agent key of its own
-        # (#419's read-through, which the worktree test silently undid whenever
-        # a subagent claimed from elsewhere). Membership in the view IS the
-        # binding-key answer at this site, and the tree adds nothing to it.
+        # SELECTION is a binding-key property here exactly as it is at
+        # decide_stop (#609 lane F g3); only the BLOCKING decision is asymmetric
+        # between the two sites, because this site has none. Membership in the
+        # merged view is NOT the binding-key answer: session_view folds in every
+        # `sid#<agent_id>` key, and Agent-tool subagents SHARE their parent's
+        # session_id -- that sharing is the whole premise of #419 and of the
+        # per-agent key -- so ANOTHER AGENT's entry is in this view by
+        # construction. Taking the first entry in dict order would hand a
+        # restarting Commander whichever spine happened to be claimed first,
+        # routinely its crew's, together with "pick the run back up at this gate
+        # and drive it through the engine". That is the #549/#419 failure class
+        # itself, here, in the hook whose job is to end it.
+        #
+        # Nothing measured says a SessionStart payload carries an `agent_id`:
+        # the pinned probe capture is PostToolUse only, and a SessionStart is a
+        # per-harness-session event. With no `agent_id`, `binding_key` yields the
+        # bare `sid`, which selects this session's own top-level claim and
+        # ignores its crews'. Asking `binding_key` rather than assuming that
+        # absence is what keeps the site honest if one ever does arrive: it
+        # would then answer the agent the payload names, not a different one.
+        owners = session_view_provenance(binding, sid)
+        own_key = binding_key(data)
         spine = None
-        for entry in sid_bindings.values():
+        for _spine_path, entry in _own_entries(list(sid_bindings.items()), owners, own_key):
             if entry.get("spine"):
                 spine = load_spine(entry.get("spine"))
                 break
+        # Owning none of the visible entries leaves `spine` None and falls
+        # through to the scan below, which is what the deleted worktree skip
+        # did when it skipped everything. Nothing another agent claimed is ever
+        # substituted: this site withholds rather than guessing, which is the
+        # fail-safe direction where the failure mode is being told to drive
+        # someone else's gate. The scan itself consults no binding key at all
+        # and is untouched here.
         if spine is None:
             matches = _scan_active_spine(project_dir)  # best-effort fallback
             if matches:

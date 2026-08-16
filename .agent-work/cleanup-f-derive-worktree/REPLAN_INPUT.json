@@ -423,6 +423,22 @@
       "affects": "The gN-implement gate imperative's close-criteria wording where it mandates a test class name, and the targeted-check design that reads a zero-collected selector as red.",
       "evidence": "The gate required the new tests in a class named OwnershipIsBindingKeyNotWorktree. With no pytest config in this repo, a plain class of that name is not collected at all -- the selector would report success while collecting zero. It works only because the implementer made it subclass unittest.TestCase, which the gate never said.",
       "reason": "The gate's targeted check was designed to be red on an empty diff and green after; a silently-zero-collected class would read as still-red rather than as a defect, so the failure mode is confusing rather than dangerous. Worth stating in the criterion next time. Feeds the feedback step."
+    },
+    {
+      "id": "D16",
+      "signal": "g3's first pass fixed the ownership defect at decide_stop and introduced the SAME defect class at decide_session_start, the sibling call site the gate also owned",
+      "classification": "blocks_current_wave_exit",
+      "affects": "scripts/hooks/spine_rail.py decide_session_start's entry selection, and the gate's own recorded decision about what replaces the skip at each call site.",
+      "evidence": "Independent reviewer BLOCK, reproduced by the Commander with the reviewer's own constructed-payload harness: with a crew in ANOTHER worktree claimed first, a parent's SessionStart resumes from PARENT-MARKER before the change and CREW-MARKER after it -- the deleted tree test was getting that case right. A session with no binding of its own newly resumes from a crew's entry. Writing the parent's key first flips the answer back, which proves selection is dict order and not ownership. The premise that failed is stated in the shipped comment: every entry in the merged view was claimed by THIS session 'under a per-agent key of its own' -- but session_view merges every sid#<agent_id> key and Agent-tool subagents share the parent's session_id, so another AGENT's key is in that view by construction.",
+      "reason": "Being repaired in g3 rework 1 rather than carried, so it will not block exit once closed. Recorded because the shape is the lane's most instructive: a gate that removes a broken guard inherits every decision the guard was accidentally making, and the sibling site's replacement was argued in prose rather than measured. The reviewer's counter-formulation -- blocking is a spine property at both sites, selection is a binding-key property at both sites -- is the open decision this gate hands up."
+    },
+    {
+      "id": "D17",
+      "signal": "An implementer-authored differential harness pinned its BEFORE arm with `git rev-parse HEAD`, so it silently inverted into comparing the change against itself the moment the change was committed",
+      "classification": "evidence_only",
+      "affects": "crew-handoffs/g3-implement/m4_differential.py, and any crew-built before/after instrument a later role is told to re-run as verification.",
+      "evidence": "The harness's docstring names a pinned pre-change base while line 23 reads HEAD at runtime. It was honest at authoring time only. Re-run by the reviewer after the commit, it printed BEFORE (ca577709) and returned 26 identical rows -- including the three rows the review criterion asks a reviewer to spot-check, which came back BEFORE BLOCK / AFTER BLOCK, the exact inverse of the truth, reading as confirmation. The reviewer caught it only because it had already built its own differential and held a contradicting number.",
+      "reason": "A check that cannot fail is indistinguishable from one that passed, and this one degraded from honest to inverted with no edit and no error. The durable lesson is an ordering one the reviewer named: a verifier should build its own instrument BEFORE running the one the implementer shipped. Feeds the feedback step."
     }
   ],
   "open_current_wave_issue_ids": [

@@ -1,10 +1,22 @@
 """Differential evidence for #609 lane F g3: the SAME constructed payloads and
-binding store run through the hook BEFORE the change (git HEAD 999b7663) and
-AFTER it (working tree), side by side.
+binding store run through three hooks side by side -- BEFORE the gate (its base,
+999b7663), the BLOCKED intermediate an independent reviewer refused (e3e50a69),
+and AFTER the rework (working tree).
 
 Constructed payloads and a constructed binding store, per the handoff: the hook
 cannot be validated from inside a session whose CLAUDE_PROJECT_DIR resolved at
 launch to the main checkout (#269).
+
+Every arm is PINNED, and every pin is guarded. This harness read `git rev-parse
+HEAD` for its BEFORE arm until the g3 reviewer caught it: that was honest only
+while HEAD happened to be the base, and the moment the change was committed both
+arms loaded the same post-change hook and printed 26 identical rows -- including
+the three rows a reviewer is told to spot-check, which came back BEFORE BLOCK /
+AFTER BLOCK and read as confirmation. A check that cannot fail is
+indistinguishable from one that passed. `_assert_arms_are_what_they_claim` is
+what makes this one able to fail: it identifies each arm by symbols the changes
+moved rather than by a commit id, so an arm pinned at the wrong revision kills
+the run instead of printing agreeable rows.
 
 Run: py .agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implement/m4_differential.py
 """
@@ -20,8 +32,13 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[4]
 HOOK = "scripts/hooks/spine_rail.py"
-BASE_REV = subprocess.run(["git", "-C", str(REPO), "rev-parse", "HEAD"],
-                          capture_output=True, text=True).stdout.strip()
+# The gate's base: the commit this lane's g3 branched from, PINNED. Never
+# `rev-parse HEAD` -- see the module docstring.
+BASE_REV = "999b7663"
+# The commit an independent reviewer BLOCKED, carried as a third arm so the
+# regression it found (SessionStart selecting by claim order) and the repair
+# are visible in one table instead of in two runs a reader has to reconcile.
+BLOCKED_REV = "e3e50a69"
 
 
 def _load(name, path):
@@ -31,13 +48,56 @@ def _load(name, path):
     return mod
 
 
+def _assert_arms_are_what_they_claim(sources, mods):
+    """Refuse to report a differential whose arms cannot disagree.
+
+    Each arm is identified by symbols the changes moved, not by a commit id a
+    reader has to trust: BEFORE still has the tree-as-ownership test that g3
+    deleted; BLOCKED has `_is_own_entry` (g3's comparison) but not
+    `_own_entries` (the rework's shared selection); AFTER has both. Any arm
+    pinned at the wrong revision trips one of these and the harness dies
+    instead of printing agreeable rows.
+    """
+    expected = {
+        "BEFORE": {"_foreign_worktree": True, "_is_own_entry": False, "_own_entries": False},
+        "BLOCKED": {"_foreign_worktree": False, "_is_own_entry": True, "_own_entries": False},
+        "AFTER": {"_foreign_worktree": False, "_is_own_entry": True, "_own_entries": True},
+    }
+    problems = []
+    for arm, wanted in expected.items():
+        for symbol, want in wanted.items():
+            if hasattr(mods[arm], symbol) is not want:
+                problems.append("%s %s %s" % (arm, "lacks" if want else "already has", symbol))
+    for a, b in (("BEFORE", "BLOCKED"), ("BLOCKED", "AFTER"), ("BEFORE", "AFTER")):
+        if sources[a] == sources[b]:
+            problems.append("%s and %s are byte-identical" % (a, b))
+    if problems:
+        raise SystemExit("REFUSING to print a differential that cannot fail:\n  - "
+                         + "\n  - ".join(problems))
+    print("  arm pins GUARDED by symbol, not by trust: BEFORE(%s) has _foreign_worktree only,"
+          % BASE_REV)
+    print("  BLOCKED(%s) has _is_own_entry but no _own_entries, AFTER has both, all three differ."
+          % BLOCKED_REV)
+
+
+def _at(rev):
+    src = subprocess.run(["git", "-C", str(REPO), "show", "%s:%s" % (rev, HOOK)],
+                         capture_output=True, text=True).stdout
+    if not src:
+        raise SystemExit("could not read %s:%s -- is %s in this repo?" % (rev, HOOK, rev))
+    path = os.path.join(_tmp, "spine_rail_%s.py" % rev)
+    with open(path, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(src)
+    return src, path
+
+
 _tmp = tempfile.mkdtemp(prefix="g3-differential-")
-_before_path = os.path.join(_tmp, "spine_rail_before.py")
-with open(_before_path, "w", encoding="utf-8", newline="\n") as fh:
-    fh.write(subprocess.run(["git", "-C", str(REPO), "show", "%s:%s" % (BASE_REV, HOOK)],
-                            capture_output=True, text=True).stdout)
+_before_src, _before_path = _at(BASE_REV)
+_blocked_src, _blocked_path = _at(BLOCKED_REV)
+_after_src = (REPO / HOOK).read_text(encoding="utf-8")
 
 BEFORE = _load("spine_rail_before", _before_path)
+BLOCKED = _load("spine_rail_blocked", _blocked_path)
 AFTER = _load("spine_rail_after", str(REPO / HOOK))
 
 
@@ -93,7 +153,7 @@ def render(out, markers):
 
 def scenario(label, build, call, markers):
     rows = []
-    for name, mod in (("BEFORE", BEFORE), ("AFTER", AFTER)):
+    for name, mod in (("BEFORE", BEFORE), ("BLOCKED", BLOCKED), ("AFTER", AFTER)):
         proj = Path(tempfile.mkdtemp(prefix="g3-%s-" % name.lower())).resolve()
         os.environ["CLAUDE_PROJECT_DIR"] = str(proj)
         try:
@@ -130,8 +190,12 @@ MARKERS = ("PARENT-MARKER", "CREW-MARKER", "OWN-MARKER", "RESUME-MARKER",
            "FAILSAFE-MARKER", "PLATFORM-MARKER")
 
 print("=" * 78)
-print("#609 lane F g3 -- BEFORE (%s) vs AFTER (working tree)" % BASE_REV[:8])
+print("#609 lane F g3 -- BEFORE (%s) vs BLOCKED (%s) vs AFTER (working tree)"
+      % (BASE_REV, BLOCKED_REV))
 print("=" * 78)
+_assert_arms_are_what_they_claim(
+    {"BEFORE": _before_src, "BLOCKED": _blocked_src, "AFTER": _after_src},
+    {"BEFORE": BEFORE, "BLOCKED": BLOCKED, "AFTER": AFTER})
 
 print("\n--- (1) the #549 shape, and (2) call site 1: mid-flight Stop blocking ---")
 
@@ -252,11 +316,75 @@ scenario(
                        {"session_id": "s1", "cwd": "c:/foo/wt"})[1],
     STOP, MARKERS)
 
+print("\n--- (5) call site 2 again: SELECTION, the g3 rework (B2) ---")
+print("  Every row below places its spines OUTSIDE `<proj>/.agent-work/*/spine.json`,")
+print("  so the blind fallback scan finds nothing and only the BINDING can answer.")
+print("  These four are the reviewer's cases 2, 6, 3 and 5.")
+
+SELECT_MARKERS = MARKERS + ("AGENT-A-MARKER", "AGENT-B-MARKER")
+
+
+def parent_and_crew(mod, proj, parent_first=False):
+    """Two spines in two trees, one harness session, two binding keys."""
+    parent = write_spine(proj / "parentwt", make_spine([("execute", "in-progress")],
+                         imperatives={"execute": "PARENT-MARKER"}), work="run-parent")
+    crew = write_spine(proj / "crewwt", make_spine([("g3", "in-progress")],
+                       imperatives={"g3": "CREW-MARKER"}), work="run-crew")
+    keys = [(CREW_KEY, {crew: entry(crew, str(proj / "crewwt"))}),
+            (SID, {parent: entry(parent, str(proj / "parentwt"))})]
+    if parent_first:
+        keys.reverse()
+    mod.save_binding(proj, dict(keys))
+    assert mod._scan_active_spine(proj) == [], "the scan must find nothing here"
+
+
+scenario(
+    "S9   SessionStart: crew's key written FIRST, the PARENT's session starts",
+    lambda mod, proj: (parent_and_crew(mod, proj), {"session_id": SID, "cwd": str(proj),
+                                                    "source": "resume"})[1],
+    START, SELECT_MARKERS)
+
+scenario(
+    "S10  the SAME binding, the PARENT's key written first -- the answer must not move",
+    lambda mod, proj: (parent_and_crew(mod, proj, parent_first=True),
+                       {"session_id": SID, "cwd": str(proj), "source": "resume"})[1],
+    START, SELECT_MARKERS)
+
+
+def only_a_crews_key(mod, proj):
+    crew = write_spine(proj / "crewwt", make_spine([("g3", "in-progress")],
+                       imperatives={"g3": "CREW-MARKER"}), work="run-crew")
+    mod.save_binding(proj, {CREW_KEY: {crew: entry(crew, str(proj / "crewwt"))}})
+    assert mod._scan_active_spine(proj) == [], "the scan must find nothing here"
+
+
+scenario(
+    "S11  only a CREW's per-agent key exists; the parent never claimed anything",
+    lambda mod, proj: (only_a_crews_key(mod, proj), {"session_id": SID, "cwd": str(proj),
+                                                     "source": "resume"})[1],
+    START, SELECT_MARKERS)
+
+
+def two_crew_agents(mod, proj):
+    a = write_spine(proj / "wt-a", make_spine([("g1", "in-progress")],
+                    imperatives={"g1": "AGENT-A-MARKER"}), work="run-a")
+    b = write_spine(proj / "wt-b", make_spine([("g1", "in-progress")],
+                    imperatives={"g1": "AGENT-B-MARKER"}), work="run-b")
+    mod.save_binding(proj, {SID + "#agentA": {a: entry(a, str(proj / "wt-a"))},
+                            SID + "#agentB": {b: entry(b, str(proj / "wt-b"))}})
+    assert mod._scan_active_spine(proj) == [], "the scan must find nothing here"
+
+
+scenario(
+    "S12  two crew agents; the payload NAMES agentB -- whose gate comes back?",
+    lambda mod, proj: (two_crew_agents(mod, proj),
+                       {"session_id": SID, "agent_id": "agentB", "cwd": str(proj),
+                        "source": "resume"})[1],
+    START, SELECT_MARKERS)
+
 print("\n--- the import block: stdlib only, and unchanged ---")
-before_imports = [l for l in open(_before_path, encoding="utf-8").read().splitlines()
-                  if l.startswith(("import ", "from "))]
-after_imports = [l for l in (REPO / HOOK).read_text(encoding="utf-8").splitlines()
-                 if l.startswith(("import ", "from "))]
+before_imports = [l for l in _before_src.splitlines() if l.startswith(("import ", "from "))]
+after_imports = [l for l in _after_src.splitlines() if l.startswith(("import ", "from "))]
 print("  BEFORE: %s" % before_imports)
 print("  AFTER : %s" % after_imports)
 print("  identical: %s" % (before_imports == after_imports))

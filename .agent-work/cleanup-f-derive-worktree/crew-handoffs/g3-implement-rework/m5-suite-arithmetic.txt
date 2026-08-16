@@ -1,0 +1,8 @@
+=== failure distribution, derived mechanically (both sides) ===
+-- baseline (m0, HEAD 06e23b89):
+   FAILED line count: 0
+-- after (m5):
+   FAILED line count: 0
+
+baseline: 3177 passed, 5 skipped, 1192 subtests passed in 128.07s (0:02:08)
+after   : 3183 passed, 5 skipped, 1204 subtests passed in 127.75s (0:02:07)

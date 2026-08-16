@@ -1,0 +1,15 @@
+**I refuse the hook, and the refusal is already recorded** in `g3-implementer-rework-result.md` §"On the Stop hook".
+
+Measured, not assumed:
+
+- `SPINE_FILE` → the Commander's `spine.json`, lease `commander-cleanup-f-derive-worktree`, **status active, claimed_by commander** — my parent's live lease, claimed at 21:21:13.
+- My own `crew-runs.json` entry: **`spine: null`**, `parent: .../execute/commander/attempt-4`, `role: implementer`, `gate: g3`.
+- My own plan: **released, no open items**, driven to done through the engine.
+
+The gate the hook names is not mine to drive. Obeying would advance someone else's run under someone else's lease. The hook's own escape hatches are no better: `block` and `waive` both **write to that same parent spine**, so the sanctioned honest stop is itself the destructive act here. A plain recorded refusal is the correct response — the g3 implementer and the g3 reviewer both did exactly this, and neither was penalised.
+
+I wrote nothing to `spine.json`.
+
+Worth being precise, since this gate is about exactly this failure: **what I changed today would not have prevented this nudge.** It comes from the parent's own session state via `tc1`'s scan-bind mechanism, not from a binding of mine — `decide_stop` keyed on the *spine's* mid-flight state. What binding-key provenance now prevents is the adjacent failure: an agent that *has* a binding being answered with another agent's gate, at **both** call sites rather than one. Closing `tc1` needs the engine lease's owner as the discriminator and an authority decision, which the handoff explicitly recorded as not mine.
+
+My dispatch is complete: plan driven to done, lease released, result artifact delivered at the path the handoff named. The two things wanting your judgement are in my previous message and in the result — the two rewritten `#419`-era tests, and the fallback-wording ambiguity I resolved toward the Close Criteria.
