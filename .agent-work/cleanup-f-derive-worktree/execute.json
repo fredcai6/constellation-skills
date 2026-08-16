@@ -964,7 +964,17 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-integrate": {

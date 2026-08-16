@@ -1,0 +1,14 @@
+Refusing again; nothing has changed since I measured it one turn ago.
+
+The hook is firing on my **parent's** spine (`engine_session: commander-cleanup-f-derive-worktree`, active, `claimed_by: commander`), not mine. My `crew-runs.json` entry is `spine: null`. Both escapes the hook offers — `block` and `waive` — write to that same parent spine under that live lease, so taking the "honest stop" would be the destructive act. This is the failure the gate I just reviewed exists to end, arriving from the one path that gate cannot reach (`tc1`, the SessionStart scan-bind), already filed on my survey and seconded in my result.
+
+My dispatch is finished and nothing is pending:
+
+- `REVIEW_RESULT` → `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-reviewer-result.md`
+- Survey → all 19 checks visited, consolidated **BLOCK**, 6 findings, 3 triage candidates
+- Fowler record verified, exit 0
+- My lease released
+
+Verdict: **BLOCK** — B1 (differential compares the change against itself), B2 (`decide_session_start` selects by claim order, not ownership; measured regression), B3 (false claim in the replacement prose). `decide_stop`'s half is sound.
+
+I am not the actor for gate `execute`. The Commander is, and it has what it needs.

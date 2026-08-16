@@ -1,10 +1,10 @@
 # Crash-resume state note — cleanup-f-derive-worktree
 
-- **step:** execute · leg 4 (the closeout leg) · **`g3-implement` is CLOSED** (implementer returned `complete`, Commander re-verified). `execute.json` gate **`g3-review`** is dispatching. g1/g2 CLOSED. After g3: `skip` g4 (R2), `skip` g5 (R3), then reconcile → triage → review → feedback → archive. **Park at `archive`; do NOT merge** — publication is the Admiral's.
+- **step:** execute · leg 4 (the closeout leg) · `g3-implement` CLOSED, `g3-review` returned **BLOCK** (3 blockers, B2 substantive and Commander-reproduced). **`g3` rework 1 is dispatching.** After g3: `skip` g4 (R2), `skip` g5 (R3), then reconcile → triage → review → feedback → archive. **Park at `archive`; do NOT merge.**
 - **slug:** cleanup-f-derive-worktree · branch `cleanup/f-derive-worktree` · worktree `/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree` · HEAD `e3e50a69` (g3 implementation committed)
 - **next command:** `env -u CREW_SCRATCH_DIR py scripts/checklist_engine.py --file .agent-work/cleanup-f-derive-worktree/execute.json current`
-- **pid:** commander leg 4 is pid **1634189** (foreground). The g3 reviewer crew is dispatched through `run_crew.py`; its pid is recorded in `crew-runs.json` under `constellation/cleanup-f-derive-worktree/g3/reviewer/attempt-1`.
-- **expected artifact:** `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-reviewer-result.md` for the crew; for this leg, `.agent-work/cleanup-f-derive-worktree/crew-handoffs/execute-commander-result.md`
+- **pid:** commander leg 4 is pid **1634189** (foreground). The g3 rework implementer is dispatched through `run_crew.py`; its pid is recorded in `crew-runs.json` under `constellation/cleanup-f-derive-worktree/g3/implementer/attempt-2`.
+- **expected artifact:** `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implementer-rework-result.md` for the crew; for this leg, `.agent-work/cleanup-f-derive-worktree/crew-handoffs/execute-commander-result.md`
 
 **Read first on resume:** `LAUNCH_ORDER-4.md`, `ADMIRAL_RULING-3.md`,
 `ADMIRAL_RULING-2.md`, `ADMIRAL_RULING-1.md`, then `LAUNCH_ORDER.md`,

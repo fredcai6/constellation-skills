@@ -1,0 +1,43 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "diff_ref": "999b7663..e3e50a69 -- scripts/hooks/spine_rail.py, tests/test_spine_rail.py, and the evidence harness .agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implement/m4_differential.py",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "decide_stop is now ~95 lines and the change added a fourth distinct concern to it: entry SELECTION ('own = [view for view in mid_flight if _is_own_entry(...)]' then '(own or mid_flight)[0]'), on top of the try/except envelope, the nudge/3-strike bookkeeping and the two rendering branches. Extracting that step as a named helper -- _select_entry_for(mid_flight, owners, own_key) -- is worth doing for its own sake, and it is not cosmetic here: the identical selection is exactly what decide_session_start is missing (finding B2), so the extraction and the fix are the same edit. A rule that exists once as an inline list comprehension inside one function is a rule the second call site cannot reuse.",
+      "override": null
+    },
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "m4_differential.py re-implements make_spine, write_spine and the binding-entry builder from tests/test_spine_rail.py rather than importing them, and re-derives its own base revision. That duplication is not harmless bookkeeping: it is precisely how the harness's BEFORE arm drifted away from the pinned base the test file uses, producing the self-comparing run recorded as B1. The two copies had no mechanism holding them in step -- unlike tests/test_worktree_derivation.py, which the same lane deliberately built with a _require that fails collection when a copy goes missing.",
+      "override": null
+    },
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "scripts/hooks/spine_rail.py's stdlib-only rule (docs/agents/CREW_CONTEXT.md and the module's own header: a hook that fails takes the turn with it, so it may gain no import), together with the module's stated single-composer discipline -- binding_key is documented as 'the SINGLE place the composite per-agent key is composed anywhere in the codebase', and _AGENT_ID_ALLOWED as 'the SOLE acting-agent-id predicate'.",
+        "reason": "Binding keys are bare strings ('sid', 'sid#agent_id') passed around untyped, and a BindingKey value type would normally be the answer. It is subordinated here because the property a type would buy -- one place that can construct or validate a key -- is already bought by the single-composer rule, which is enforced by both consumers driving off the same two definitions. Adding a class to a stdlib-only hook whose failure mode is deadlocking every agent's turn costs more than the untyped string does, and _is_own_entry deliberately compares with a catch-all that survives a non-string on either side (verified: an object whose __eq__ raises returns False, i.e. blocks and withholds)."
+      }
+    },
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "flagged",
+      "finding": "The new section header at scripts/hooks/spine_rail.py:685-687 states 'Ownership is decided by binding-key provenance at both former call sites -- see decide_stop and decide_session_start.' The code at decide_session_start does no such thing: it compares no provenance key and selects the first entry in dict order. The comment is doing the work the code was supposed to do, and it is the first thing a reader of this module meets. This is the same finding as B3, reached from the smell side: prose asserting a property the implementation does not have is worse than no prose, because it forecloses the question.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}
