@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g4-push-confirm",
+  "mechanical": {
+    "run": "egaw-merge-main",
+    "project": "constellation-skills",
+    "spine-step": "g4-push-confirm",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-egaw-merge-main-g4-push-confirm@44ea53057419da3bf7dfaa42c12968ae7c6694ad",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "egaw-merge-main",
+    "generated_at": "2026-08-16T03:32:18Z"
+  }
+}

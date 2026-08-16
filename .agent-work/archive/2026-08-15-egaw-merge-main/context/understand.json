@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "understand",
+  "files": [],
+  "repo_rev": {
+    "commit": "c2515f0b325f48401df1414eefeb26eb5dff9544"
+  },
+  "run": {
+    "work_id": "egaw-merge-main",
+    "generated_at": "2026-08-16T03:23:49Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write"
+    }
+  }
+}
