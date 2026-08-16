@@ -1,0 +1,15 @@
+files written in the one work directory:
+  execute.json
+  gauge-owner-dispatched-b6445a5eac4f.json
+  gauge-owner-orchestrator-8c6bb04ff8f5.json
+  spine.json
+
+DISPATCHED agent's file  : gauge-owner-dispatched-b6445a5eac4f.json
+  -> {'schema_version': 1, 'fill_fraction': 0.02, 'model': 'claude-opus-4-8', 'observed_at': '2026-08-16T12:00:00.000Z', 'owner': 'owner-dispatched-b6445a5eac4f'}
+ORCHESTRATOR's file      : gauge-owner-orchestrator-8c6bb04ff8f5.json
+  -> {'schema_version': 1, 'fill_fraction': 0.9, 'model': 'claude-opus-4-8', 'observed_at': '2026-08-16T12:00:00.000Z', 'owner': 'owner-orchestrator-8c6bb04ff8f5'}
+shared gauge.json        : None
+gauge-skip.json          : None
+
+VERDICT: EACH AGENT KEPT ITS OWN READING.
+  Two distinct files, each carrying its own fill and an `owner` field that matches its own filename.

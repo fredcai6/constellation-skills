@@ -138,6 +138,77 @@ def _load_spine_rail():
 _spine_rail = _load_spine_rail()
 
 
+def _load_gauge_reader():
+    """Load scripts/gauge_reader.py by file path, same idiom and same fail-safe
+    as `_load_spine_rail` above and as `checklist_engine._load_gauge_reader`.
+
+    The owner key (#600) is defined ONCE, in the reader, because it is computed
+    on both sides of a process boundary -- here from the binding entry, and in
+    the engine from its own active lease -- and drift between the two would
+    silently stop every reading resolving. Reaching it by path rather than
+    reimplementing it is what makes that drift impossible
+    (decision:one-owner-key-definition).
+
+    TWO LOCATIONS, and both are real. In THIS checkout the hook lives in
+    `scripts/hooks/` and the reader one level up in `scripts/`; in an INSTALL
+    the destination is FLAT (`<installed skill>/scripts/<name>`, see
+    install_constellation.SCRIPT_SOURCE_SUBDIRS) and the two land side by side.
+    Trying only the checkout layout would make every install fail this load --
+    and fail it SILENTLY, into no owner, which would leave the writer producing
+    `gauge.json` while the engine (which ships the reader and so always resolves
+    an owner) read `gauge-<owner>.json`. That is a dark governor in exactly the
+    shape this repo has already been burned by, and it would show up in no test
+    that runs from a checkout.
+
+    Returns None on any failure. A load failure means NO owner, which resolves
+    to the unowned `gauge.json` -- today's behaviour, and not a new refusal.
+    Note the direction: the harness-specific writer depends on the bundled
+    reader, never the reverse; the reader still imports nothing from here, which
+    is the portability seam the file format exists to protect."""
+    here = Path(__file__).resolve().parent
+    for path in (here / "gauge_reader.py",           # flat install layout
+                 here.parent / "gauge_reader.py"):   # this checkout's layout
+        try:
+            if not path.is_file():
+                continue
+            spec = importlib.util.spec_from_file_location("gauge_reader", path)
+            mod = importlib.util.module_from_spec(spec)
+            # Register BEFORE exec: the reader's frozen @dataclass resolves its
+            # own module through sys.modules during class creation.
+            sys.modules[spec.name] = mod
+            spec.loader.exec_module(mod)
+            return mod
+        except Exception:
+            continue
+    return None
+
+
+_gauge_reader = _load_gauge_reader()
+
+
+def _owner_key(engine_session):
+    """This binding entry's owner key, or None for "no owner" -- never a
+    repaired or invented one. Guarded here rather than at each call site for the
+    same reason `_binding_key` carries its `_spine_rail is None` guard."""
+    if _gauge_reader is None:
+        return None
+    try:
+        return _gauge_reader.owner_key(engine_session)
+    except Exception:
+        return None
+
+
+def _gauge_filename(owner):
+    """The gauge file name for `owner`, degrading to the unowned name if the
+    reader could not be loaded."""
+    if _gauge_reader is None:
+        return "gauge.json"
+    try:
+        return _gauge_reader.gauge_filename(owner)
+    except Exception:
+        return "gauge.json"
+
+
 def _is_contained(gauge_path: Path) -> bool:
     """True only for the documented shape `<root>/.agent-work/<work_id>/gauge.json`.
 
@@ -230,10 +301,52 @@ def _binding_key(data: dict):
     return _spine_rail.binding_key(data)
 
 
+def resolve_gauge_targets(project_dir: Path, binding_key):
+    """`(gauge_path, owner)` for every DISTINCT gauge path this binding key is
+    bound to -- the owner-aware form of `resolve_gauge_path` below, which is
+    kept as the plain-path view every existing caller and test already uses.
+
+    The owner comes from the binding ENTRY's own `engine_session` (#600), which
+    is the string the engine will independently recompute from its active
+    lease's `session_id` -- the same value by construction, since the entry is
+    parsed from `claim --session-id X` and the lease holds that same X.
+
+    `owner` is None for an entry with no usable `engine_session` (the live
+    binding store carries `engine_session: null` entries right now). That is NOT
+    a rejection: it resolves to the unowned `gauge.json`, which is exactly what
+    a LEASELESS engine reads, so the two sides stay symmetric and pre-#600
+    behaviour is preserved end to end (R3).
+
+    Deduped by RESOLVED PATH, first-seen wins, so two spine files in one work
+    directory under one owner still collapse to a single candidate -- #488's
+    case, which must keep working (R4)."""
+    try:
+        if _spine_rail is None or not binding_key:
+            return []
+        binding = _spine_rail.load_binding(project_dir)
+        sid_bindings = binding.get(binding_key) or {}
+        targets = []
+        seen = set()
+        for entry in sid_bindings.values():
+            if not isinstance(entry, dict):
+                continue
+            spine_path = entry.get("spine")
+            if not spine_path:
+                continue
+            owner = _owner_key(entry.get("engine_session"))
+            candidate = Path(spine_path).parent / _gauge_filename(owner)
+            if _is_contained(candidate) and candidate not in seen:
+                seen.add(candidate)
+                targets.append((candidate, owner))
+        return targets
+    except Exception:
+        return []
+
+
 def resolve_gauge_path(project_dir: Path, binding_key):
-    """`.agent-work/<work_id>/gauge.json` for EVERY DISTINCT gauge path this
-    BINDING KEY is currently bound to (#202: one key can hold N distinct spine
-    bindings at once) -- a list of Path, possibly empty. Each candidate is
+    """`.agent-work/<work_id>/gauge-<owner>.json` for EVERY DISTINCT gauge path
+    this BINDING KEY is currently bound to (#202: one key can hold N distinct
+    spine bindings at once) -- a list of Path, possibly empty. Each candidate is
     individually checked against `_is_contained`; a candidate that fails the
     fence is dropped rather than failing the whole call, so one bad entry
     never blinds the write for the key's other, legitimate bindings.
@@ -242,17 +355,18 @@ def resolve_gauge_path(project_dir: Path, binding_key):
     bindings are two spine FILES, not necessarily two work areas: an Admiral's
     own spine and the `latitude` survey its spine step requires it to drive
     both live in one work directory (`spine.json` + `latitude-interrogation.json`
-    under the same `.agent-work/<work_id>/`) and resolve to the identical
-    gauge.json. The caller below treats 2+ candidates as ambiguous and skips
-    the write entirely -- correct when two candidates might belong to two
-    different agents sharing a session_id (#261's real protection), vacuous
-    when they are the same file: there is no whose-reading-is-it question when
-    either answer writes to one place. Measured live: this undeduped version
-    left an Admiral's own governor dark for an entire wave (#488). Order is
-    preserved (first-seen wins) so behaviour stays deterministic across calls
-    with the same binding contents; genuinely different gauge paths still
-    yield 2+ candidates here, so the caller's ambiguous-binding skip still
-    fires for that case exactly as before.
+    under the same `.agent-work/<work_id>/`) and, under ONE owner, resolve to
+    the identical file. Measured live: the undeduped version left an Admiral's
+    own governor dark for an entire wave (#488). Order is preserved (first-seen
+    wins) so behaviour stays deterministic across calls with the same binding
+    contents.
+
+    SINCE #600 the name carries the OWNER, so what 2+ candidates mean has
+    changed and the caller's guard changed with it -- see
+    `handle_post_tool_use`. Candidates that differ only because two spine files
+    share a work directory now collapse (they always did); candidates that
+    differ because two OWNERS are involved stay distinct, and the writer can
+    finally tell which is which instead of skipping both.
 
     The key is `_binding_key(payload)`, NOT the bare `session_id` (#419):
     Agent-tool subagents share their parent's session_id, so a session-keyed
@@ -263,22 +377,7 @@ def resolve_gauge_path(project_dir: Path, binding_key):
 
     Empty list if unresolvable (no sibling module, no key, no binding at all)
     -- skip-on-uncertainty applies to WHERE we write, not just to what."""
-    try:
-        if _spine_rail is None or not binding_key:
-            return []
-        binding = _spine_rail.load_binding(project_dir)
-        sid_bindings = binding.get(binding_key) or {}
-        candidates = []
-        for entry in sid_bindings.values():
-            spine_path = entry.get("spine") if isinstance(entry, dict) else None
-            if not spine_path:
-                continue
-            candidate = Path(spine_path).parent / "gauge.json"
-            if _is_contained(candidate) and candidate not in candidates:
-                candidates.append(candidate)
-        return candidates
-    except Exception:
-        return []
+    return [path for path, _owner in resolve_gauge_targets(project_dir, binding_key)]
 
 
 # --- X2 strategic-compact: parse transcript, sum latest usage record -------
@@ -601,24 +700,48 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
             # PARENT's key -- the same misattribution this keying exists to
             # remove, just wearing a different hat. Fail closed, write nothing.
             return {}
-        gauge_paths = resolve_gauge_path(project_dir, key)
-        if not gauge_paths:
+        targets = resolve_gauge_targets(project_dir, key)
+        if not targets:
             # Zero: unresolvable binding, no known gauge path to flag either.
             # Existing skip-on-uncertainty, unchanged.
             return {}
-        if len(gauge_paths) > 1:
-            # WHICH spine this reading belongs to is itself uncertain --
-            # fabricating a gauge.json write to any of them (let alone all of
-            # them) risks cross-writing a reading from an unrelated agent
-            # sharing this session_id. But the AMBIGUITY ITSELF is a fact
-            # every one of these candidates shares right now, so flag all N
-            # (one shared observed_at for this one event).
+        # #600: the guard is a question about ATTRIBUTION, not about COUNT.
+        #
+        # It exists because the writer could not tell WHOSE reading it held
+        # when one key bound two spines. The owner in the filename answers that
+        # by construction, so 2+ candidates is no longer ambiguous on its own:
+        # under ONE owner they are one agent's several spines, the reading is
+        # that agent's wherever it lands, and each candidate is written under
+        # its own name and cannot overwrite the other (R4).
+        #
+        # What is STILL ambiguous, and still skips:
+        #   - a candidate with NO owner at all sitting beside others. Nothing
+        #     names whose that file is, which is the original question,
+        #     unanswered.
+        #   - candidates under two or more DIFFERENT owners. R4's wording says
+        #     to write every distinct candidate here; this narrows that one
+        #     branch deliberately, and the departure is argued in the run's
+        #     IMPLEMENTER_RESULT rather than taken quietly. Two owners under
+        #     ONE binding key means two agents reached through one harness
+        #     identity, and there is exactly one transcript to read: writing it
+        #     to both files would file agent A's context fill against agent B,
+        #     which is the fan-out that #202/#261 already tried, measured, and
+        #     reverted. Owner-keying removes the OVERWRITE; it does not tell
+        #     two agents' readings apart. A confident wrong record is worse
+        #     than silence, so this stays silence -- and stays visible, because
+        #     the skip sidecar below still says so.
+        owners = {owner for _path, owner in targets}
+        unattributable = len(targets) > 1 and (None in owners or len(owners) > 1)
+        if unattributable:
+            # The AMBIGUITY ITSELF is a fact every one of these candidates
+            # shares right now, so flag all N (one shared observed_at for this
+            # one event). Fan-out is safe for a diagnostic -- unlike a reading,
+            # a fact about why nothing was written can never be misattributed.
             now_iso = datetime.now(timezone.utc).isoformat()
-            for candidate in gauge_paths:
+            for candidate, _owner in targets:
                 _write_skip_flag(candidate, "ambiguous-binding",
-                                  candidate_count=len(gauge_paths), observed_at=now_iso)
+                                  candidate_count=len(targets), observed_at=now_iso)
             return {}
-        gauge_path = gauge_paths[0]
         acting_agent_id = data.get("agent_id") if "agent_id" in data else None
         if acting_agent_id is None:
             read_path = transcript_path
@@ -640,24 +763,28 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
                 # skip_reason does not whitelist reason strings and the
                 # engine's advisory renders an unrecognized one verbatim, so
                 # this costs zero change on the reading side.
-                _write_skip_flag(gauge_path, "subagent-transcript-missing")
+                for gauge_path, _owner in targets:
+                    _write_skip_flag(gauge_path, "subagent-transcript-missing")
                 return {}
         record, uncalibrated = compute_record(read_path, acting_agent_id)
         if uncalibrated is not None:
-            # No window for this model: raise the flag and leave gauge.json
-            # exactly as it was. It ages into staleness naturally, which the
-            # reader already collapses to "no reading" -- the correct
+            # No window for this model: raise the flag and leave the gauge
+            # record exactly as it was. It ages into staleness naturally, which
+            # the reader already collapses to "no reading" -- the correct
             # outcome. This IS a resolved outcome for this path, so clear any
             # stale skip flag left over from an earlier ambiguous/no-usable
             # call at this exact path.
-            _write_uncalibrated_flag(gauge_path, uncalibrated)
-            _clear_skip_flag(gauge_path)
+            for gauge_path, _owner in targets:
+                _write_uncalibrated_flag(gauge_path, uncalibrated)
+                _clear_skip_flag(gauge_path)
             return {}
         if record is None:
-            # Transcript exists and is readable, exactly one candidate, but
-            # nothing usable was found in it -- the second positively-
-            # localizable skip cause. Single path, no candidate_count.
-            _write_skip_flag(gauge_path, "no-usable-record")
+            # Transcript exists and is readable, and every candidate is
+            # attributable, but nothing usable was found in the transcript --
+            # the second positively-localizable skip cause. No candidate_count:
+            # the count is not what went wrong.
+            for gauge_path, _owner in targets:
+                _write_skip_flag(gauge_path, "no-usable-record")
             return {}
         if acting_agent_id is not None:
             # An OPTIONAL FIFTH field, additive only. gauge_reader validates
@@ -669,9 +796,20 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
             # fields keep their meaning untouched.
             record = dict(record)
             record["identity_resolution_ms"] = identity_ms
-        _atomic_write_json(gauge_path, record)
-        _clear_uncalibrated_flag(gauge_path)
-        _clear_skip_flag(gauge_path)
+        for gauge_path, owner in targets:
+            # The `owner` field is stamped to match THE FILENAME IT SITS IN, so
+            # the two can be compared and a disagreement is a detectable bug
+            # rather than an invisible one (#600 R1: filename AND field, not
+            # either). Same additive-field bargain as `identity_resolution_ms`
+            # above -- the reader validates its four required fields and does
+            # not reject extras. An unowned candidate gets no field at all,
+            # which is byte-identical to a pre-#600 record.
+            if owner is None:
+                _atomic_write_json(gauge_path, record)
+            else:
+                _atomic_write_json(gauge_path, dict(record, owner=owner))
+            _clear_uncalibrated_flag(gauge_path)
+            _clear_skip_flag(gauge_path)
         return {}
     except Exception:
         return {}

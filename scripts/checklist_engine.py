@@ -1369,27 +1369,101 @@ def _why_suffix(cl: dict, aid: str | None) -> str:
 # invoker watching and can strand. Both bands are built and tested here; this is a
 # rollout-ordering constraint, not a build dependency.
 # --------------------------------------------------------------------------- #
-def _gauge_path(base_dir: Path | None) -> Path | None:
-    """The gauge file for this checklist: `.agent-work/<work_id>/gauge.json`, a
-    SIBLING of the spine — #180's writer drops it at `Path(spine).parent /
-    "gauge.json"`, and `base_dir` IS that spine directory. Returns None when the
-    location is unresolvable (no `base_dir`, e.g. a checklist processed without a
-    file path): an unresolvable work_id yields no reading and no advice."""
+def _checklist_owner(cl: dict) -> str | None:
+    """The owner key of the session currently driving this checklist, or None
+    (#600).
+
+    The gauge used to be one file per work DIRECTORY, so two agents whose spine
+    files share an `.agent-work/<work_id>/` wrote to one path and the last one
+    won. The writer now names each record for its owner; this is the read side
+    of that same name, and the two are the SAME STRING BY CONSTRUCTION: the
+    writer takes it from the binding entry's `engine_session`, which was parsed
+    from `claim --session-id X`, and this takes it from the lease holding that
+    same X. Neither side spells the name itself — `gauge_reader.owner_key` is
+    the one definition both load (decision:one-owner-key-definition), because
+    drift of a single character here would silently stop every reading
+    resolving.
+
+    Only an ACTIVE lease names an owner. No lease, a released lease, an absent
+    reader, or a `session_id` there is nothing to key on — all yield None, which
+    means the UNOWNED file, which is today's behaviour exactly (R3). Never
+    raises."""
+    if _gauge_reader is None or not isinstance(cl, dict):
+        return None
+    lease = _active_lease(cl)
+    if lease is None:
+        return None
+    try:
+        return _gauge_reader.owner_key(lease.get("session_id"))
+    except Exception:
+        return None
+
+
+def _gauge_path(cl: dict, base_dir: Path | None) -> Path | None:
+    """The gauge file for this checklist: `.agent-work/<work_id>/gauge-<owner>.json`
+    when a lease names an owner, and `gauge.json` when none does — a SIBLING of
+    the spine either way, because #180's writer drops it at `Path(spine).parent`
+    and `base_dir` IS that spine directory. Returns None when the location is
+    unresolvable (no `base_dir`, e.g. a checklist processed without a file path):
+    an unresolvable work_id yields no reading and no advice.
+
+    NO FALLBACK, and that is the point (#600,
+    decision:unattributable-means-no-reading). When a lease DOES name an owner
+    and no file of that name exists, this still returns the owner-keyed path, so
+    the read below simply finds nothing. Reaching for the shared `gauge.json`
+    instead would reinstate the folder-owned file this whole change exists to
+    remove, and would hand this session a number some other agent sampled."""
     if base_dir is None:
         return None
-    return Path(base_dir) / "gauge.json"
+    owner = _checklist_owner(cl)
+    if _gauge_reader is None:
+        return Path(base_dir) / "gauge.json"
+    return Path(base_dir) / _gauge_reader.gauge_filename(owner)
 
 
-def _read_gauge(base_dir: Path | None):
+def _owner_mismatch(cl: dict, path: Path | None) -> str | None:
+    """The owner a record CLAIMS when that disagrees with the name it is sitting
+    in, else None (#600).
+
+    The filename removes the collision; the field makes a mismatch DETECTABLE if
+    one ever reappears — both, not either (R1). A record whose stamped owner is
+    not this checklist's owner can only be a bug (the two sides compute the key
+    from the same string through the same function), and the safe response to a
+    bug in a provenance claim is to decline the reading, which is always the
+    QUIET direction and never a new refusal.
+
+    None — no mismatch — for a record with no `owner` at all: every gauge file
+    written before this field existed has none, and they must keep working."""
+    if _gauge_reader is None or path is None:
+        return None
+    try:
+        stamped = _gauge_reader.record_owner(path)
+    except Exception:
+        return None
+    if stamped is None:
+        return None
+    owner = _checklist_owner(cl)
+    return stamped if owner is not None and stamped != owner else None
+
+
+def _read_gauge(cl: dict, base_dir: Path | None):
     """Read a fresh `Reading` for this checklist, or None. Fail-safe: an absent
     reader binding or unresolvable path collapses to None, and the reader itself
     never raises (every failure mode — absent/corrupt/malformed/stale/clock-skew —
     is already collapsed to None inside `read()`). A None reading must produce
-    neither a SOFT question nor a HARD refusal."""
+    neither a SOFT question nor a HARD refusal.
+
+    `cl` is threaded in for the OWNER (#600), which decides WHICH file this is.
+    A record whose stamped owner contradicts that name is declined here too, so
+    the band an agent is judged against and the advisory it is shown agree about
+    ownership — the same one-place rule `_reading_predates_claim` already keeps
+    for the sequential case."""
     if _gauge_reader is None:
         return None
-    path = _gauge_path(base_dir)
+    path = _gauge_path(cl, base_dir)
     if path is None:
+        return None
+    if _owner_mismatch(cl, path) is not None:
         return None
     return _gauge_reader.read(path)
 
@@ -1519,7 +1593,7 @@ def _refresh_attach_hint(gate: str, why_id: str | None = None) -> str:
             f"--field seam={gate} --field why_ref={why_id or '<why-id>'}")
 
 
-def _uncalibrated_advisory(base_dir: Path | None) -> str:
+def _uncalibrated_advisory(cl: dict, base_dir: Path | None) -> str:
     """A visible notice that the context governor is OFF for this run because
     the running model has no calibration entry.
 
@@ -1530,7 +1604,7 @@ def _uncalibrated_advisory(base_dir: Path | None) -> str:
     yields the empty string."""
     if _gauge_reader is None:
         return ""
-    path = _gauge_path(base_dir)
+    path = _gauge_path(cl, base_dir)
     if path is None:
         return ""
     try:
@@ -1661,27 +1735,63 @@ def _declined_reading_advisory(cl: dict, reading) -> str:
             f"a refresh-request against this one.")
 
 
-def _no_reading_advisory(base_dir: Path | None) -> str:
+def _owner_mismatch_advisory(cl: dict, gauge_path: Path | None,
+                             stamped: str) -> str:
+    """The record at this path names an owner that is not this session's (#600).
+
+    This can only happen through a BUG — the writer and the engine compute the
+    owner from the same string through the same function, so the filename and
+    the field cannot honestly disagree. That is exactly why it must be loud
+    rather than quiet: silence here would look identical to "no gauge yet", and
+    an unexplained quiet governor is how #252's miscalibration and #271's
+    ambiguous binding both survived unnoticed. Naming both strings is what makes
+    the bug diagnosable from the one line an agent actually sees."""
+    lease = _active_lease(cl) or {}
+    return (f"\nCONTEXT GAUGE DECLINED: the reading at "
+            f"{getattr(gauge_path, 'name', gauge_path)!r} is stamped for owner "
+            f"{stamped!r}, but this checklist is being driven by session "
+            f"{lease.get('session_id')!r}. A record's owner field and its "
+            f"filename are computed from the same value, so a disagreement is a "
+            f"defect, not a stale file — the reading is NOT used and no "
+            f"soft/hard trip fires on it. Watch your own context and hand off on "
+            f"judgement, and report this: the gauge writer and this engine have "
+            f"drifted apart on how they name an owner.")
+
+
+def _no_reading_advisory(cl: dict, base_dir: Path | None) -> str:
     """Dispatch across every localizable "why is there no reading" cause, in
     order, returning the FIRST non-empty result — exactly one signal reaches
     the caller even when more than one sidecar happens to exist at a path:
 
-    1. `_uncalibrated_advisory` (#252) — completely unchanged, called exactly
-       as before this gate. A STANDING defect (true until a human edits a
-       code table), so it takes priority over the two newer, TRANSIENT causes
-       below.
-    2. `_skip_reason_advisory` (#271) — the writer hook positively localized
+    1. `_owner_mismatch_advisory` (#600) — the record at this path names a
+       DIFFERENT owner than the session driving this checklist. First because
+       it is the only cause here that can only be a DEFECT rather than a
+       condition: the other three describe a gauge that is working correctly
+       and has nothing to say, and burying a code bug underneath them is how it
+       stays unnoticed.
+    2. `_uncalibrated_advisory` (#252) — otherwise unchanged, called exactly as
+       before this gate. A STANDING defect (true until a human edits a code
+       table), so it takes priority over the two TRANSIENT causes below.
+    3. `_skip_reason_advisory` (#271) — the writer hook positively localized
        WHY it skipped this exact path (ambiguous binding / no usable record).
-    3. `_stale_record_advisory` (#271) — last resort: `read()` itself rejected
+    4. `_stale_record_advisory` (#271) — last resort: `read()` itself rejected
        the file at this path, so report its raw last-known facts rather than
        staying silent about a frozen number.
 
+    EVERY ONE of these now resolves against the file this checklist ACTUALLY
+    READS (#600): they take the checklist as well as the directory, so the
+    owner-keyed path is what gets inspected. Left on the shared `gauge.json`
+    they would each report, in perfect detail, on a file nobody reads.
+
     Each branch already fails safe to "" on its own (see their docstrings);
     this dispatcher adds no new failure surface."""
-    advisory = _uncalibrated_advisory(base_dir)
+    gauge_path = _gauge_path(cl, base_dir)
+    mismatch = _owner_mismatch(cl, gauge_path)
+    if mismatch is not None:
+        return _owner_mismatch_advisory(cl, gauge_path, mismatch)
+    advisory = _uncalibrated_advisory(cl, base_dir)
     if advisory:
         return advisory
-    gauge_path = _gauge_path(base_dir)
     advisory = _skip_reason_advisory(gauge_path)
     if advisory:
         return advisory
@@ -1699,7 +1809,7 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
     gate = active_id(cl)
     if gate is None:
         return ""
-    reading = _read_gauge(base_dir)
+    reading = _read_gauge(cl, base_dir)
     if _reading_predates_claim(cl, reading):
         # #477: a real, fresh, well-formed reading that belongs to somebody else.
         # Checked BEFORE the None branch below because it is a different question
@@ -1713,7 +1823,7 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
         # an uncalibrated model (#252), a positively-localized writer skip
         # (#271), or the gauge file's own raw facts if `read()` rejected it.
         # See _no_reading_advisory for the dispatch order and why.
-        return _no_reading_advisory(base_dir)
+        return _no_reading_advisory(cl, base_dir)
     # #467: the ACTIVE gate's own headroom reserve tightens the pair this advisory
     # is computed from — the same resolver, and so the same number, the begin-work
     # guard is about to judge the agent against (`_trip_hard_band_reading`). The
@@ -1826,7 +1936,7 @@ def _trip_hard_band_reading(cl: dict, base_dir: Path | None, gate: str | None = 
     against agree about ownership too, not just about the line."""
     if cl.get("type") != GATED:
         return None
-    reading = _read_gauge(base_dir)
+    reading = _read_gauge(cl, base_dir)
     if reading is None or _reading_predates_claim(cl, reading):
         return None
     _, hard = _gauge_reader.thresholds_for(

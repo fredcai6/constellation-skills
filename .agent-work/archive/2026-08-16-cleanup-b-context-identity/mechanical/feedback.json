@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "feedback",
+  "mechanical": {
+    "run": "cleanup-b-context-identity",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 10,
+    "spine-step": "feedback",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-b-context-identity-feedback@a4c52f75eeab61acc9e5d8548e37f6993b9b52cc",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-b-context-identity",
+    "generated_at": "2026-08-16T15:02:02Z"
+  }
+}

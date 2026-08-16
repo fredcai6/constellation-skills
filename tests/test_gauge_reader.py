@@ -719,5 +719,135 @@ class ProfileInvariantTests(unittest.TestCase):
         self._assert_ordered("_DEFAULT_PROFILE", self.m._DEFAULT_PROFILE)
 
 
+# --- #600: the owner key, normalized and total -------------------------------
+
+# A corpus of REAL `engine_session.session_id` values, harvested by command from
+# this checkout on 2026-08-16 (426 distinct values across every checklist JSON;
+# 89 of them fail the `[A-Za-z0-9_-]{1,64}` allowlist an earlier draft of this
+# change proposed to reject on). The slash-bearing names are not typos and not
+# legacy -- they are current fleet practice, which is exactly why R2 ruled
+# NORMALIZE, NEVER REJECT: rejecting would have taken the governor away from a
+# fifth of the fleet permanently and invisibly, since losing the governor never
+# shows up as a test failure.
+#
+# Pinned as a LITERAL rather than re-harvested at run time on purpose: a test
+# that re-scans the live checkout would change its own corpus every time anyone
+# claimed a lease, and would pass vacuously in a fresh clone.
+_LIVE_SESSION_IDS = (
+    # plain, already-allowlist-clean
+    "admiral-epic-178",
+    "commander-cleanup-b-context-identity",
+    "impl-534-01",
+    "g1-reviewer-01476478",
+    "2fb330a4-dba9-409d-9005-a1342ed2cb19",
+    "86708414-f5d3-40d3-8c9a-2f96d1ccdc14-interrogation",
+    # slash-bearing -- the 89 (current fleet practice)
+    "cartographer/epic-178",
+    "constellation/cleanup-b-context-identity/g1/implementer/attempt-1",
+    "constellation/archive/2026-08-09-epic-418-followon/commander-424/g3fix4/implementer/attempt-1",
+    "constellation/epic-559/a-spine-is-the-job/g1-implement/implementer",
+    "constellation/commander-315-native/g1b-review/reviewer",
+    # a shell-quoting bug that reached the binding store verbatim, live in the
+    # main checkout's store right now
+    "$SID",
+    "$SESSION",
+)
+
+# The two sidecar families the writer already owns. An owner key that
+# normalized to either of these words would make `gauge-<owner>.json` collide
+# with `gauge-skip.json` / `gauge-uncalibrated.json` -- so they are RESERVED.
+_RESERVED = ("skip", "uncalibrated")
+
+
+class OwnerKeyNormalization(unittest.TestCase):
+    """#600 R2: every lease session id must yield a USABLE owner key.
+
+    The key is slug plus hash. The slug is there so a human can read a
+    directory listing and see whose file is whose; the hash is there so the
+    slug's lossiness (case folding, separator collapsing, truncation) can never
+    make two distinct sessions share one file -- which is the whole defect this
+    issue exists to remove, and would be a fine way to reintroduce it."""
+
+    def setUp(self):
+        self.m = load("gauge_reader")
+
+    def _assert_usable(self, owner, source):
+        self.assertIsInstance(owner, str, f"{source!r} yielded no owner key")
+        self.assertTrue(owner, f"{source!r} yielded an empty owner key")
+        self.assertRegex(
+            owner, r"^[a-z0-9_-]{1,64}$",
+            f"{source!r} yielded {owner!r}, which is not safe to interpolate "
+            f"into a filename")
+        self.assertNotIn(
+            owner, _RESERVED,
+            f"{source!r} yielded the reserved sidecar name {owner!r}")
+
+    def test_every_live_session_id_yields_a_usable_owner(self):
+        """The headline: NOT ONE real id is rejected, and no two of them
+        collide."""
+        seen = {}
+        for session_id in _LIVE_SESSION_IDS:
+            with self.subTest(session_id=session_id):
+                owner = self.m.owner_key(session_id)
+                self._assert_usable(owner, session_id)
+                # distinctness, which the slug alone cannot carry: these two
+                # differ only past the slug's truncation point.
+                self.assertNotIn(
+                    owner, seen,
+                    f"{session_id!r} collided with {seen.get(owner)!r} on "
+                    f"owner key {owner!r}")
+                seen[owner] = session_id
+                # the filename the writer and the engine both compose from it
+                name = self.m.gauge_filename(owner)
+                self.assertEqual(name, f"gauge-{owner}.json")
+                self.assertNotIn(name, (self.m.SKIP_FILENAME,
+                                        self.m.UNCALIBRATED_FILENAME))
+
+    def test_ids_differing_only_past_the_slug_truncation_still_differ(self):
+        """The slug truncates at 32 characters and the fleet's real names share
+        long prefixes, so this is the collision the hash exists to prevent --
+        not a hypothetical."""
+        a = "constellation/epic-568-510/g2-repair/commander/attempt-1"
+        b = "constellation/epic-568-510/g3-engine/commander/attempt-1"
+        self.assertNotEqual(self.m.owner_key(a), self.m.owner_key(b))
+
+    def test_an_absent_session_id_yields_no_owner_not_a_crash(self):
+        """R3: no owner means the UNOWNED `gauge.json` -- exactly today's
+        behaviour -- never an exception and never a repaired name. The live
+        binding store in the main checkout carries `engine_session: null`
+        entries right now, so this is a real input, not a defensive stub."""
+        for absent in (None, "", "   ", 17, [], {}):
+            with self.subTest(absent=absent):
+                self.assertIsNone(self.m.owner_key(absent))
+        self.assertEqual(self.m.gauge_filename(None), self.m.GAUGE_FILENAME)
+        self.assertEqual(self.m.GAUGE_FILENAME, "gauge.json")
+
+    def test_the_owner_key_is_stable_across_calls_and_processes(self):
+        """Both sides of a process boundary compute this independently (the
+        hook from the binding entry, the engine from its own lease), so a key
+        that varied per process would silently stop every reading resolving.
+        Pinned against a hand-computed value, not against a re-run of the
+        implementation."""
+        self.assertEqual(self.m.owner_key("eng-1"), "eng-1-cf2640ffe69e")
+        self.assertEqual(
+            self.m.owner_key("commander-cleanup-b-context-identity"),
+            "commander-cleanup-b-context-iden-88c76234484d")
+
+    def test_the_record_owner_is_readable_back_off_the_file(self):
+        """The filename removes the collision; the `owner` field makes a
+        mismatch DETECTABLE if one ever reappears. Both, not either (R1)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "gauge-eng-1-cf2640ffe69e.json"
+            record = dict(FRESH_RECORD)
+            record["owner"] = "eng-1-cf2640ffe69e"
+            path.write_text(json.dumps(record), encoding="utf-8")
+            self.assertEqual(self.m.record_owner(path), "eng-1-cf2640ffe69e")
+            # fail-safe, like every other entry point in this module
+            self.assertIsNone(self.m.record_owner(Path(tmp) / "absent.json"))
+            unowned = Path(tmp) / "gauge.json"
+            unowned.write_text(json.dumps(FRESH_RECORD), encoding="utf-8")
+            self.assertIsNone(self.m.record_owner(unowned))
+
+
 if __name__ == "__main__":
     unittest.main()

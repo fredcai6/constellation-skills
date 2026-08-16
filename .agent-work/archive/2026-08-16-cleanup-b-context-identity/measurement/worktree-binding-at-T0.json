@@ -1,0 +1,11 @@
+{
+  "2271de9b-5c66-4105-9975-166cf4d57b01": {
+    "/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity/.agent-work/cleanup-b-context-identity/spine.json": {
+      "spine": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity/.agent-work/cleanup-b-context-identity/spine.json",
+      "engine_session": "commander-cleanup-b-context-identity",
+      "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity",
+      "claimed_at": "2026-08-16T12:32:23.896279+00:00",
+      "path_source": "payload_cwd"
+    }
+  }
+}

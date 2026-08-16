@@ -106,7 +106,18 @@ SCRIPT_RUNTIME_COMPANIONS: dict[str, tuple[str, ...]] = {
     # inside a bare `try/except Exception: return None`. A split lands the pair
     # where neither can find the other and NOTHING raises -- the hook just stops
     # resolving gauge paths. Co-location is the whole contract here.
-    "gauge_writer_hook.py": ("spine_rail.py",),
+    #
+    # gauge_reader.py joins it for #600: the hook now loads the reader to reach
+    # `owner_key`, the ONE definition of the name a gauge file carries, because
+    # the writer and the engine compute that name in separate processes and must
+    # not drift. Same silent-failure shape as the pair above, but WORSE than a
+    # no-op if it splits: the load fails open to no owner, so the hook would
+    # write the unowned `gauge.json` while an engine holding a lease reads
+    # `gauge-<owner>.json` -- a governor that is dark rather than merely
+    # inert. (`checklist_engine.py` above already carries the same companion for
+    # its own load; both entries are needed, since a bundle may carry either
+    # script without the other.)
+    "gauge_writer_hook.py": ("spine_rail.py", "gauge_reader.py"),
     # run_crew.py: `sys.path.insert(0, <own parent>)` + a plain top-level
     # `import install_constellation` (#539, for `assert_shell_safe_command`).
     # Exactly the #305 mechanism this dict exists to catch -- and it did not,

@@ -1,0 +1,34 @@
+The run is parked correctly. Here's where it landed.
+
+## Verdict
+
+**The measurement is shipped and complete. `#600`'s implementation is blocked on a float. `#500` handed back as a settled design.** No tracked source file changed — this is a measurement-and-design return, not a partial code drop.
+
+## The measurement settled it: candidate 2
+
+`resolve_gauge_path` enumerates candidates for **one** binding key, and the ambiguity guard (`len(gauge_paths) > 1`) is therefore **within-key**. Nothing compares across keys, so two distinct keys sharing one `.agent-work/<work-id>/` each take the *clean* single-candidate branch and both write. The foreign write is **fresh**, so `_reading_predates_claim` returns False — #477/#601's timestamp guard is structurally blind to it, since it can only catch a reading *older* than the claim.
+
+Confirmed twice:
+
+- **Controlled** — `probe_cross_key.py` drives the real `handle_post_tool_use` in a fresh process: an orchestrator's `0.9` overwrote a dispatched agent's `0.02`, no skip flag raised.
+- **Live, on this run** — two harness keys were bound to my own `spine.json`. While I made *no* tool calls, my gauge was rewritten six times by the critic crew (8.7% → 9.9%), and `observed_at` went *backwards*. That crew never claimed a spine: `SessionStart` bind-on-resume bound it. **So the collision isn't limited to orchestrator+subagent — any session starting in a worktree with one active-leased spine gets bound to it.** Nobody had enumerated that route.
+
+## Why I stopped rather than shipping
+
+`decision:identity-not-time` is `@grade: settled/human` and says ownership is decided by **the binding key**. The engine cannot learn its own binding key — and that's measured, not argued: two different harness keys carried the *identical* `engine_session` against the *identical* spine, so even a binding-store lookup comes back ambiguous. Every route needs either a `claim` semantics change (an explicit must-float) or accepting that identity can't replace time. `settled/human` means stop and float.
+
+The cold critic returned 11 findings, all triaged — three high and structural. Two were **factual errors in my own documents**, retracted in place: I'd claimed the design retires #601's timestamp comparison (it doesn't — a relaunch reuses the lease name) and that the sidecars follow the rename for free (they use constants). It also measured that **82 of 395** real session ids fail the allowlist I'd proposed.
+
+## Evidence
+
+Suite **3058 passed / 0 failed**; `a69bbac4` baseline in a pristine worktree **3057 / 0**. Failure-set difference empty. I chased the one-test delta rather than gloss it: `test_spine_lifecycle.py:161` skips outside `<repo>/.worktrees/<slug>` — a property of where the baseline ran, not of any code.
+
+`--here` returns `rc=0`, at open and at close. #549 has **not** landed (checked twice — lane C's branch moved to `cbd18faf`, but that's #599 touching `run_crew.py`, not my path), so no re-measurement is owed.
+
+## Two things worth your attention
+
+**I lived inside the bug.** I crossed HARD at `understand` having read only the four artifacts the wave is about. Over HARD, each gate transition became a two-extra-verb ritual that never once stopped me — a toll, not a gate. Then from 12:46 the governor stopped measuring me at all: it showed 9% while I was at ~22%. Separately, when I briefly moved the work area aside, the writer re-created `gauge.json` *and its parent directory* mid-command — confirming the order's "the workaround does not exist" claim by accident.
+
+**One correction to the order's baseline:** the repo *does* carry `docs/agents/`, and `CLAUDE_PROJECT_DIR` was **unset** here, so the hook bound `path_source: payload_cwd` into the worktree — the #269 hazard didn't bite as described. A validation harness built on that assumption would have tested a world that wasn't there.
+
+Parked at `plan [blocked]`, lease held, 5 triage candidates filed, 40 files committed and **unpushed** — publication is yours. Read `FLOAT_TO_ADMIRAL.md` first; everything else is downstream of how you rule.

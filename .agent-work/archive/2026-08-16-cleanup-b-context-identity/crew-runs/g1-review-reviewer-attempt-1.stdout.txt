@@ -1,0 +1,13 @@
+My survey: `DONE: no open items`, lease released. Deliverable written (27KB). The parent's `spine.json` is byte-identical — I never touched it.
+
+**g1-review is finished. Verdict `APPROVE`**, with one finding carried as a recorded `fail` plus explicit override so it cannot be lost:
+
+- **F1 (medium)** — R4 row 2 is implemented and correct but **untested**; mutation-proved (reverting it leaves all 616 gauge tests green). Filed as `tc1`.
+- All nine checks (a)–(i) pass, verified by driving: R2 total over 482 real ids with 0 failures/0 collisions; R3 both halves; #488 writes with same-owner-ness load-bearing; skip visibly sidecar'd; claim path byte-identical by AST extraction; failure-set difference zero (branch 3104/6/0 vs main 3089/7/0).
+- All three departures adjudicated — 2 confirmed justified by installing and driving the loader, 3 confirmed with a bounded advisory-only residual.
+
+Three things for you to pick up as Commander:
+
+1. **`tc3` is now on its second occurrence.** The `SessionStart`/Stop hook told the g1 implementer *and* me to drive your `execute` gate. Both of us declined; the next crew may not. It's the #600 defect one layer up — ambient inherited context deciding "which run am I in."
+2. **`ADMIRAL_RULING-2` point 1 has a factual slip worth correcting upstream** — #488's case dedupes to one candidate (row 1), not row 2. The required outcome holds and the ruling is satisfied; only the row attribution is wrong.
+3. **`execute` is still yours to drive**, and my exit is what unblocks PID 3430688 to do it. Remaining per ruling 2: `REPLAN_INPUT.json`, retiring `probe_cross_key.py` at `g1-integrate`, then `#500` under R5 only if context genuinely allows.

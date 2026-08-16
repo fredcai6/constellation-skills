@@ -12,8 +12,8 @@ every tool call it:
 
 1. Reads `transcript_path`, `session_id` and `agent_id` from the hook's stdin
    JSON — see "The payload fields this hook reads" below.
-2. Resolves `.agent-work/<work_id>/gauge.json` by looking up this call's
-   **binding key** in `.agent-work/.spine-rail-binding.json` — the binding that
+2. Resolves `.agent-work/<work_id>/gauge-<owner>.json` by looking up this
+   call's **binding key** in `.agent-work/.spine-rail-binding.json` — the binding that
    `scripts/hooks/spine_rail.py`'s own `PostToolUse` and `SessionStart`
    handlers maintain (populated when `checklist_engine.py claim` runs, or
    when a session resumes/compacts onto an unambiguous single active-leased
@@ -23,8 +23,15 @@ every tool call it:
    binding, it does not maintain a second one.** Since #202, one key may
    legitimately hold bindings into more than one spine at once (an
    orchestrator that claims a second spine of its own while the first is
-   still leased); when that happens, this hook writes to **none** of them
-   rather than guessing — see "Skip-on-uncertainty, enumerated" below.
+   still leased); since #600 that is only ambiguous when the candidates
+   cannot all be attributed to ONE owner — see "The reading belongs to an
+   agent, not to a folder" and "Skip-on-uncertainty, enumerated" below.
+
+   `<owner>` is normalized from the binding ENTRY's own `engine_session` —
+   the engine lease name the `claim --session-id X` that created the entry
+   carried. An entry with no usable `engine_session` has no owner and
+   resolves to the plain, UNOWNED `gauge.json`, which is what an engine
+   holding no lease reads.
 3. Parses the tail of the acting agent's own transcript (JSONL) for the
    latest assistant message carrying a `usage` block — the main-chain lines
    of `transcript_path` for a top-level agent, the derived subagent
@@ -32,15 +39,90 @@ every tool call it:
    `input_tokens + cache_creation_input_tokens + cache_read_input_tokens`
    (the "X2 strategic-compact" technique), and normalizes by a per-model
    context-window table to get `fill_fraction`.
-4. Atomically (tmp file + `os.replace`) writes the record to `gauge.json`:
-   the four required fields `schema_version`, `fill_fraction`, `model` and
-   `observed_at`, plus — on a dispatched agent's record only — an optional
-   fifth, `identity_resolution_ms` (#419). A top-level agent's record still
-   carries exactly four. See "The record is four required fields, plus one on
-   a subagent" below.
+4. Atomically (tmp file + `os.replace`) writes the record to
+   `gauge-<owner>.json`: the four required fields `schema_version`,
+   `fill_fraction`, `model` and `observed_at`, plus `owner` whenever the
+   candidate has one (#600), plus — on a dispatched agent's record only —
+   `identity_resolution_ms` (#419). An UNATTRIBUTABLE candidate gets neither
+   extra and its record is byte-identical to a pre-#600 one. See "The record
+   is four required fields, plus one on a subagent" below.
 
 If any step is uncertain, it writes nothing and leaves the existing file to
 age into staleness — see "Skip-on-uncertainty" below.
+
+## The reading belongs to an agent, not to a folder (#600)
+
+The gauge used to be one file per work DIRECTORY. Two agents whose spine files
+sit in one `.agent-work/<work_id>/` therefore wrote to one path and the last one
+won. **Measured**, in a fresh process driving this hook with two distinct binding
+keys bound into one work directory: an orchestrator's `0.9` overwrote a
+dispatched agent's `0.02`, and **nothing noticed** — no skip sidecar, no guard.
+`resolve_gauge_path` enumerates candidates for ONE binding key, so its ambiguity
+guard is WITHIN-key and structurally cannot see across keys; and the overwrite is
+FRESH, so the engine's `observed_at < claimed_at` comparison (#477/#601) cannot
+see it either.
+
+So the record is now named for its owner: `gauge-<owner>.json`, and the record
+also carries an `owner` field. **Both, not either** — the filename REMOVES the
+collision, the field makes a mismatch DETECTABLE if one ever reappears.
+
+**Identity fixes the CONCURRENT case; time fixes the SEQUENTIAL one, and both
+are permanent.** #601's timestamp comparison is not superseded and must not be
+removed: a relaunched agent reuses its predecessor's lease name *by design*, so
+no identity scheme can tell the two legs apart. For the same reason
+`decision:identity-not-time` is **not complete**: an agent holding no lease is
+still unattributable, and closing that needs the *harness* identity passed into
+the engine — out of scope for #600 and stated here so it is not mistaken for
+done.
+
+**#549 does not remove the need for this, and that was measured rather than
+argued.** It is a reasonable guess that lane C's #549 — which stopped
+`decide_stop` rendering a subordinate's next imperative into a shared-session
+Stop-block — had already closed the route into this collision. It had not. The
+clean isolate is `main` at `d7b911a7`, which carries #549 and **not** #600:
+re-running the pre-fix cross-key probe there still reports the orchestrator's
+`0.9` overwriting the dispatched agent's `0.02` at one path, with
+`observed_at > claimed_at` so the #477/#601 guard still does not fire. **#549
+removed one route into the collision; the mechanism was untouched.** Co-located
+sessions collide with no orchestrator/subagent relationship at all, which is why
+keying on identity — rather than pruning one path into it — is what closes this.
+
+**The owner key is defined ONCE, in `scripts/gauge_reader.py`** (`owner_key`,
+`gauge_filename`), and this hook loads that module by path to reach it. It has
+to be one definition because it is computed on **both sides of a process
+boundary** — here from the binding entry's `engine_session`, and in
+`checklist_engine.py` from its own active lease's `session_id`. Those are the
+same string by construction (the entry is parsed from `claim --session-id X`;
+the lease holds that same X), and a single character of drift between the two
+sides would silently stop every reading resolving. `gauge_reader.py` is declared
+a runtime companion of this hook in `install_constellation.py`, and the loader
+looks for it BOTH beside itself (the flat install layout) and one level up (this
+checkout's `scripts/hooks/` + `scripts/` layout).
+
+**Normalize, never reject.** `owner_key` is a slug plus a 12-hex SHA-256 of the
+exact id, and it is TOTAL over every string: 89 of the 426 distinct lease session
+ids in this checkout are slash-bearing, because slash-bearing lease names are
+current fleet practice. Rejecting them would take the governor away from a fifth
+of the fleet permanently and **invisibly** — losing the governor never shows up
+as a test failure. The hash is not decoration: two live lease names here differ
+only at character 28 of 55, so a slug-only key would reintroduce the very
+collision this change removes. `skip` and `uncalibrated` are reserved
+structurally (every key ends in `-` plus 12 hex characters, which neither word
+can have) so an owner can never collide with a sidecar name.
+
+**No owner means today's behaviour, exactly.** A binding entry with no usable
+`engine_session` writes the unowned `gauge.json`, and an engine with no lease
+reads it and trips on it exactly as before. The fail-safe is "no ATTRIBUTABLE
+reading yields no reading"; it is **not** "no lease yields nothing".
+
+**The sidecars stay per-directory and unowned.** `gauge-skip.json` and
+`gauge-uncalibrated.json` are constants on both sides, not derivations of the
+gauge name, and they were left that way deliberately: the ambiguous-binding skip
+is by definition a case with no owner to name, and an uncalibrated model is a
+standing defect in this repo's tables that is equally true for everyone at that
+path. Both are advisory-only and never refuse anything, and both resolve from
+whatever gauge path they are handed via `.with_name(...)` — so they keep working
+unchanged from the owned and unowned paths alike.
 
 ## The record is four required fields, plus one on a subagent
 
@@ -73,6 +155,12 @@ the same code path it took before #419 and its record is byte-identical to
 what it was, which is why the pre-existing tests still pass. So **four fields
 on a top-level agent's `gauge.json`, five on a subagent's, and five is not a
 defect.**
+
+Since #600 an `owner` field rides every record the writer can attribute, so an
+owned top-level record carries five and an owned subagent record six. The four
+REQUIRED fields are unchanged and keep their meaning; `gauge_reader` validates
+their presence and does not reject extras, which is what makes both additions
+free on the reading side. An UNATTRIBUTABLE record still carries exactly four.
 
 ## Wiring it up
 
@@ -365,19 +453,30 @@ to write a sidecar **to**.
 
 **Now flagged (`gauge-skip.json` written):**
 
-- **This binding key is bound to more than one spine** (#202/#261,
-  `decision:gauge-write-skips-on-multiple-bindings`). Before #419 the usual
+- **This binding key is bound to more than one spine that cannot be attributed
+  to ONE owner** (#202/#261/#600,
+  `decision:ambiguity-guard-is-about-attribution`). Before #419 the usual
   cause was two genuinely different top-level agents sharing one `session_id`
   (confirmed live: an Agent-tool-dispatched Commander and its own Admiral),
   which piled both claims under the one bare key. A dispatched agent now keys
   separately, so what is left is one agent holding two spines at once — a
   Commander leasing both its `spine.json` and its `execute.json` is the
-  everyday case. Either way the reading comes from one transcript, so
-  `find_latest_usage` cannot tell which spine the latest usage record belongs
-  to. Writing *that* record to every bound spine ("fan-out") was tried and
-  reverted after live evidence showed it cross-writes one agent's reading into
-  an unrelated agent's work area — a confident wrong record, not silence.
-  `gauge.json` itself still gets no write for **any** of the candidates. But `reason:
+  everyday case.
+
+  **Since #600 that everyday case is no longer ambiguous and is no longer
+  skipped.** The guard asked "whose reading is this?", and the owner in the
+  filename answers it: under ONE owner the candidates are one agent's several
+  spines, the reading is that agent's wherever it lands, and each candidate is
+  written under its own name and cannot overwrite another. Two spine files in
+  one work directory under one owner still collapse to a single file (#488's
+  case, which must keep working). What still skips is a candidate set that
+  cannot be attributed: one with **no owner at all** beside others, or one
+  spanning **two or more different owners**. In both the reading comes from one
+  transcript and `find_latest_usage` cannot tell whose it is, so writing it to
+  every candidate would be the "fan-out" that was tried and reverted after live
+  evidence showed it cross-writes one agent's reading into an unrelated agent's
+  work area — a confident wrong record, not silence.
+  No reading gets written for **any** of the candidates. But `reason:
   "ambiguous-binding"` (with `candidate_count`) IS now written to **every**
   candidate path (fan-out is safe here — a diagnostic fact about why nothing
   was written can never be a misattributed reading, unlike `gauge.json`
