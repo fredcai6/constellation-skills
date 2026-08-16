@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g2-integrate",
+  "mechanical": {
+    "run": "cleanup-e-crew-tooling",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 7,
+    "spine-step": "g2-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-e-crew-tooling-g2-integrate@b04b3902c0700179bf4e5ddc5a47f6ab8c3f7a8c",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-e-crew-tooling",
+    "generated_at": "2026-08-16T16:14:18Z"
+  }
+}

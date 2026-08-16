@@ -1,0 +1,710 @@
+{
+  "work_id": "cleanup-e-crew-tooling",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read your inherited global doctrine (references/global-orchestrator.md and references/global-everyone.md), then docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/CREW_CONTEXT.md (docs/agents/engine-config.json absent -- not required). Confirm the frozen plan's intent and scope against LAUNCH_ORDER.md and MISSION_FRAME.md, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + crew context loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-orchestrator.md, global-everyone.md, ORCHESTRATOR_CONTEXT.md, GLOSSARY.md, CREW_CONTEXT.md already loaded at the parent spine's context gate. LAUNCH_ORDER.md + MISSION_FRAME.md confirmed as frozen intent/scope. commander-core.md + crew-dispatch.md read: dispatch via run_crew.py --backend external + synchronous Agent-tool subagents."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-e0-context-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "e0-context",
+            "why_ref": "w-4"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "#607 -- parent lease heartbeat while blocked: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for g1: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, this gate's anchors block. Dispatch a subagent invoking constellation-implementer with the completed handoff via run_crew.py (never hand-launched); run recover_crews.py first. Wait for and integrate the returned IMPLEMENTER_RESULT: attach g1-implement --type implementer-result --field status=<value>.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "mission frame and plan confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "mission frame and plan confirmed at the parent spine's plan gate"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "owned files only: scripts/run_crew.py, scripts/recover_crews.py, tests/test_crew_launcher.py, new test files for either",
+        "no edit to scripts/checklist_engine.py, scripts/gauge_reader.py, scripts/hooks/gauge_writer_hook.py, scripts/hooks/spine_rail.py, scripts/mcp_spine_server.py, .mcp.json, examples/**, scripts/install_constellation.py, skills/commander/templates/**",
+        "no reaping, expiry, or force-claim of any lease or registry entry (decision:no-reaping)",
+        "every ambiguity resolves toward 'this thing is running' (decision:fail-toward-alive)",
+        "os.kill(pid, 0) is POSIX-only; process_alive's cross-platform seam must not change",
+        "clear __pycache__ before every measurement"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/run_crew.py:846-887 launch_process -- the single blocking subprocess.run to wrap",
+          "scripts/run_crew.py:1357 CliBackend.dispatch, :1403 CliBackend.resume -- the two call sites that block on a live child",
+          "scripts/run_crew.py:59 HEARTBEAT_STALE_SECONDS=28800 (registry-entry heartbeat, unrelated constant, do not confuse with the engine's own lease_stale_seconds=1800 in checklist_engine.py)"
+        ],
+        "capability": [
+          "crew dispatch: a Commander parent blocking on run_crew.py while a child crew runs"
+        ],
+        "constraint": [
+          "decision:no-reaping -- nothing marks an entry/lease abandoned, expires it, or force-claims anything",
+          "decision:fail-toward-alive -- ambiguity resolves toward alive, never toward dead"
+        ],
+        "decision": [
+          "decision:registry-before-staleness -- tried first: staleness is judged entirely inside fenced checklist_engine.py (_is_stale/require_session), which no owned file reads today, so the registry-consultation direction has no seam in owned files without touching the fence. @grade: guess \u00b7 leans g1-implement \u00b7 settle: tried; floating the parent-self-heartbeat alternative per the pre-ruling's own settle clause instead of escalating, since it needs zero checklist_engine.py changes -- this is also fix direction 1 named explicitly in the original GitHub issue #607 ('heartbeat from the launcher rather than from the engine's mutating verbs'), not an invented mechanism",
+          "implementation choice (this run, in-latitude, not floated): a context-managed background thread reads the DISPATCHING process's own ambient os.environ SPINE_FILE/SPINE_SESSION (never the child's derived env), no-ops when either is unset, and every PARENT_HEARTBEAT_INTERVAL_SECONDS=300 (well under the engine's 1800s lease_stale_seconds) calls checklist_engine.load() -> checklist_engine.heartbeat(cl, session_id) -> checklist_engine.save() directly (run_crew.py already `import checklist_engine`, no subprocess/CLI round-trip needed). stop_event.set() + thread.join() happens in a finally around the blocking call, BEFORE control returns to any caller that might issue its own mutating verb against the same spine -- this ordering is load-bearing (prevents the heartbeat thread racing the next mutating call).",
+          "NO self-collision guard (cold-critic finding #2, fixed before dispatch): a first draft skipped heartbeating when the child's env carried the same SPINE_FILE/SPINE_SESSION as the parent's own -- but crew_env()'s documented contract means that IS the common case (a handoff-only dispatch with no --spine inherits the dispatcher's ambient SPINE_FILE/SPINE_SESSION unchanged), so that guard would have disabled the fix for most ordinary crew dispatches, exactly where it matters most. checklist_engine.heartbeat() already refuses a session_id that does not own the lease (:1174), so a child sharing the parent's identity is BY CONSTRUCTION the same owner, not a collision -- heartbeating is correct there, not dangerous. The only residual risk is an ordinary last-writer-wins race on the single last_heartbeat field if the child also happens to mutate that spine concurrently -- bounded (self-heals next 300s tick), and strictly preferable to leaving a live parent reading stale (decision:fail-toward-alive). Run unconditionally whenever the DISPATCHING process's own ambient vars are set."
+        ],
+        "evidence": [
+          "a real checklist_engine.py-backed spine with a lease claimed and its last_heartbeat artificially aged past 1800s, then a real blocking run_crew.py dispatch (interval monkeypatched small) driven in a fresh process, asserting `current`/claim no longer reads stale -- not reasoned about from inside the dispatching session",
+          "no-ambient-vars case: most dispatches have no SPINE_FILE/SPINE_SESSION at all -- assert no thread starts and no behavior changes (honest-null path)",
+          "shared-spine case (cold-critic finding #2): a dispatch with no explicit --spine, so the child's env inherits the SAME SPINE_FILE/SPINE_SESSION as the parent -- assert the heartbeat thread still starts and still advances last_heartbeat (the fix must not silently disable itself in the common case)"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-implement",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "#607 -- parent lease heartbeat while blocked: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff (uncommitted working tree, not git diff main...HEAD), task statement, close criteria, allowed scope, specific exclusions, constraints, this gate's anchors block, IMPLEMENTER_RESULT evidence. Dispatch a subagent invoking constellation-reviewer via run_crew.py. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received, verify-result confirmed fresh+completed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors, plus: no thread-join race (heartbeat thread never outlives the blocking call), no checklist_engine.py/process_alive edits, no-op path genuinely inert"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-review",
+            "why_ref": "w-6"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-3",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-review",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "#607 -- parent lease heartbeat while blocked: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command yourself, then advance (command postcondition re-run by advance, not attest). BLOCK: send the implementer back for rework or raise a blocker. Log any out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT APPROVE received for g1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "clean-env, cache-cleared suite green: find . -name __pycache__ -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_crew_launcher.py",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_crew_launcher.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2",
+          "attested": {
+            "evidence": "e-g1-review-2",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-integrate",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_crew_launcher.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "#525 -- namespaced crew scratch dir: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for g2: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, required evidence, verification commands, authority, this gate's anchors block. Dispatch via run_crew.py; run recover_crews.py first. Wait for and integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-2"
+        }
+      ],
+      "constraints": [
+        "owned files only",
+        "no reaping/expiry/force-claim",
+        "decision:no-silent-truncation -- a genuine collision is a raised error, never a quiet overwrite",
+        "decision:namespace-by-assignment -- reuse the registry's own (work_id, gate, role[, attempt]) key tuple verbatim, invent nothing parallel",
+        "clear __pycache__ before every measurement"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/run_crew.py:230-234 run_log_paths -- the naming convention to mirror; NOTE (cold-critic finding #1) run_log_paths itself omits worktree from its stdout/stderr naming even though next_attempt/active_duplicate key on it -- a pre-existing, narrower asymmetry, out of scope to fix here, flagged as a triage candidate rather than silently also patched",
+          "scripts/run_crew.py:330-377 active_duplicate, :380-390 next_attempt -- BOTH key on the full (work_id, gate, role, worktree) tuple, so attempt numbers are scoped PER WORKTREE, not globally per work_id/gate/role; scratch_dir must use the SAME full tuple or two different worktrees dispatching the same work_id/gate/role can independently reach attempt=1 and collide on one scratch directory -- exactly the bug #525 exists to fix, one field narrower",
+          "scripts/run_crew.py:826-843 crew_cwd -- shows how worktree is normally resolved/joined against root; scratch_dir keys on the RAW worktree string as recorded on the registry entry (matching next_attempt/active_duplicate's own raw-string equality), not a resolved path, for identity consistency with existing dedup semantics",
+          "scripts/run_crew.py:890-968 crew_env/_crew_door_env -- where the child's env is assembled; new env var CREW_SCRATCH_DIR goes here, CLI backend only",
+          "scripts/run_crew.py:1028-1126 build_entry -- where the scratch path is recorded on the registry entry",
+          "scripts/run_crew.py:1357 CliBackend.dispatch (create fresh), :1403 CliBackend.resume (must already exist, reuse not raise -- resume re-enters the SAME attempt, not a new one)"
+        ],
+        "capability": [
+          "crew evidence/scratch isolation between concurrent crews sharing a work area"
+        ],
+        "decision": [
+          "decision:namespace-by-assignment -- scratch_dir(work_id, gate, role, worktree, attempt, root) -> .agent-work/<work_id>/crew-scratch/<gate>-<role>-attempt-<attempt>-<short-stable-hash-of-worktree>/, the FULL (work_id, gate, role, worktree, attempt) tuple next_attempt/active_duplicate actually key on (cold-critic finding #1, fixed before dispatch -- a first draft dropped worktree, contradicting its own cited anchor). Worktree is hashed (not slugged) into the path segment to stay filesystem-safe without inventing an unsafe path-sanitization rule of its own. @grade: guess \u00b7 leans g2-implement \u00b7 settle: confirmed against active_duplicate/next_attempt's actual key fields (both include worktree) before finalizing this gate",
+          "decision:no-silent-truncation -- dispatch reserves the dir via Path.mkdir(parents=True, exist_ok=False); FileExistsError on a FRESH attempt number is the TOCTOU race made visible -- raise CrewLaunchError, never overwrite. resume uses the same path expecting it to already exist (get, not reserve). @grade: settled/measured \u00b7 leans g2-implement",
+          "the new env var is named CREW_SCRATCH_DIR (cold-critic finding #4), set alongside SPINE_FILE/SPINE_SESSION/SPINE_PARENT in _crew_door_env, CLI backend only (door_bound == true)",
+          "consumption gap (honest, not solved): run_crew.py can reserve/expose the namespaced directory but cannot force a dispatched reviewer's own skill to WRITE into it instead of a shared default -- this closes the collision half only; report the consumption half as a triage candidate, do not silently claim it as fully closed"
+        ],
+        "evidence": [
+          "two dispatches under distinct tuples (differ by gate, role, worktree, or attempt) get disjoint directories",
+          "two dispatches sharing work_id/gate/role but DIFFERENT worktrees get disjoint directories even at the same attempt number (cold-critic finding #1's regression test)",
+          "a forced same-tuple collision (identical work_id/gate/role/worktree/attempt) raises CrewLaunchError and never overwrites an existing directory's contents",
+          "the new env var is present in the CLI-backend child's environment and recorded on the registry entry"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g2-implement",
+            "why_ref": "w-4"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "#525 -- namespaced crew scratch dir: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, this gate's anchors block, IMPLEMENTER_RESULT evidence. Dispatch via run_crew.py. Wait for and integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received, verify-result confirmed fresh+completed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-2"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors -- review verifies the dispatch/resume distinction is correct (resume must not raise on its own prior directory) and that the collision path is genuinely exercised by a test, not merely asserted"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g2-review",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "#525 -- namespaced crew scratch dir: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command yourself, then advance. BLOCK: send the implementer back for rework or raise a blocker. Log any out-of-scope finds (e.g. the consumption gap) as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT APPROVE received for g2"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "clean-env, cache-cleared FULL suite green: find . -name __pycache__ -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-2",
+          "attested": {
+            "evidence": "e-g2-review-2",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g2-integrate",
+            "why_ref": "w-6"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    "run_log_paths (scripts/run_crew.py:230-234) omits worktree from its stdout/stderr file naming even though next_attempt/active_duplicate key duplicate-detection on the full (work_id, gate, role, worktree) tuple -- a narrower, pre-existing instance of the same collision shape #525 fixes for scratch dirs, found while scoping g2's tuple, out of this run's bounded scope.",
+    "#525's CREW_SCRATCH_DIR env var closes the collision-avoidance half only: run_crew.py can reserve and expose a namespaced directory but cannot make a dispatched reviewer/implementer's own skill actually write into it instead of a shared default -- wiring the consuming skills (e.g. skills/reviewer/SKILL.md) to read CREW_SCRATCH_DIR is a distinct, unowned-files follow-up.",
+    "map_orient.py's anchor contract (struct:/capability:/decision: id syntax expecting docs/architecture packets) structurally never matches this repo's own generated map/ (code_map module+entity-count index, no anchor ids), so every commander run against this repo reads DEGRADED-UNPARSEABLE regardless of real staleness -- see .agent-work/cleanup-e-crew-tooling/map-orientation.json.",
+    {
+      "id": "tc4",
+      "from": "g1-review",
+      "statement": "checklist_engine.save() appears to be a non-atomic read-modify-write with no file locking. g1's parent-lease-heartbeat fix introduces a new concurrent writer onto a spine file the dispatched child crew may also write to during the same block (the common shared-spine case). At the 300s production interval the collision window is narrow, but it is a new concurrency pattern this fix introduces. Recommend confirming save()'s write is safe under this pattern (atomic rename, or a documented last-write-wins argument for heartbeat-only fields) as a follow-up -- checklist_engine.py is fenced from this run's own scope."
+    }
+  ],
+  "blockers": [],
+  "refusals": 7,
+  "engine_session": {
+    "session_id": "commander-cleanup-e-crew-tooling-execute",
+    "status": "active",
+    "claimed_at": "2026-08-16T15:39:12.846795+00:00",
+    "last_heartbeat": "2026-08-16T16:16:30.205283+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-16T15:39:18.849992+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "IMPLEMENTER_RESULT returned complete; independently verified: git diff shows only scripts/run_crew.py and tests/test_crew_launcher.py changed, the added code matches the handoff's specified mechanism exactly (no self-collision guard, join-before-return, direct checklist_engine calls), tests re-run independently (7/7 ParentLeaseHeartbeatTests pass), and run_crew.py --verify-result confirms the result artifact is fresh and completed.",
+      "mechanical": false,
+      "ts": "2026-08-16T15:51:34.361659+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "REVIEW_RESULT APPROVE, independently verified: reviewer confirmed diff scope, re-read checklist_engine.heartbeat() source directly, ran a genuine mutation test (removed the wraps, confirmed the shared-spine tests fail, restored and confirmed byte-identical diff), and reproduced the suite green independently multiple times. One out-of-scope triage candidate surfaced (concurrent-writer safety on the shared spine file, non-blocking, fenced file).",
+      "mechanical": false,
+      "ts": "2026-08-16T15:56:01.814944+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Verification command re-run by me directly: 188 passed (tests/test_crew_launcher.py, clean-env cache-cleared). REVIEW_RESULT APPROVE referenced by evidence id.",
+      "mechanical": false,
+      "ts": "2026-08-16T15:56:18.761615+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-implement",
+      "why": "IMPLEMENTER_RESULT complete; independently verified: git diff shows only scripts/run_crew.py and tests/test_crew_launcher.py changed, scratch_dir keys on the full 5-field tuple including worktree (the cold-critic's fix), collision detection reserves before build_entry/registry write, resume gets without re-reserving, tests re-run independently (206 passed, up from 188), run_crew.py --verify-result confirms fresh+completed.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:06:00.858458+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-review",
+      "why": "REVIEW_RESULT APPROVE, independently verified: reviewer traced next_attempt's real per-worktree scoping, ran a genuine mutation test stripping worktree from the key (4 tests failed, confirming non-vacuity), traced the actual collision/resume code paths, confirmed scope (only the two expected files), and reproduced 206 passed independently.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:09:22.938169+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-integrate",
+      "why": "Full clean-env cache-cleared suite green: 3129 passed, 6 skipped (map/INDEX.md regenerated after adding new entities -- test_map_tree_freshness now passes). Main baseline re-measured at gate time: main/origin-main unchanged at e36e630b (fresh fetch confirmed), matching this worktree's own pre-change measurement (3104 passed/6 skipped). REVIEW_RESULT APPROVE referenced by evidence id. Both #607 and #525 gates now implemented, reviewed, and integrated.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:16:30.205257+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "g1-implement",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.3232,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-16T15:51:29.109571+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "g1-implement",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3232,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-16T15:51:34.289544+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.3331,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-16T15:55:55.384958+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3331,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-16T15:56:01.742825+00:00"
+    },
+    {
+      "id": "tl-5",
+      "gate": "g1-integrate",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3411,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-16T15:56:10.960025+00:00"
+    },
+    {
+      "id": "tl-6",
+      "gate": "g2-implement",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.3606,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-4",
+      "ts": "2026-08-16T16:06:00.693868+00:00"
+    },
+    {
+      "id": "tl-7",
+      "gate": "g2-implement",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3606,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-4",
+      "ts": "2026-08-16T16:06:00.766492+00:00"
+    },
+    {
+      "id": "tl-8",
+      "gate": "g2-review",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.3691,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-16T16:09:22.722736+00:00"
+    },
+    {
+      "id": "tl-9",
+      "gate": "g2-review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3691,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-16T16:09:22.818902+00:00"
+    },
+    {
+      "id": "tl-10",
+      "gate": "g2-integrate",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.3744,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-16T16:14:18.352672+00:00"
+    },
+    {
+      "id": "tl-11",
+      "gate": "g2-integrate",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3744,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-16T16:14:18.432160+00:00"
+    }
+  ]
+}

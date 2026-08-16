@@ -2,9 +2,9 @@
 
 ## packages
 evals: 12 modules, 54 entities
-scripts: 58 modules, 1211 entities
+scripts: 58 modules, 1214 entities
 skills: 1 modules, 18 entities
-tests: 82 modules, 4725 entities
+tests: 82 modules, 4762 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -29,7 +29,7 @@ tests: 82 modules, 4725 entities
 - [evals.euler-5-smallest-multiple.checks.spine_completed](evals.euler-5-smallest-multiple.checks.spine_completed/INDEX.md) (9 entities, 2 holes): PROCESS check (gating): a constellation ENGINE spine reached a terminal state WITH engine-written provenance -- not merely agent-written JSON (issue #127).
 - [evals.euler-5-smallest-multiple.checks.tests_green](evals.euler-5-smallest-multiple.checks.tests_green/INDEX.md) (3 entities, 3 holes): PROCESS check (gating): tests were WRITTEN and PASS in the workspace.
 
-## scripts (58 modules, 1211 entities)
+## scripts (58 modules, 1214 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -70,7 +70,7 @@ tests: 82 modules, 4725 entities
 - [scripts.prove_docstring_only](scripts.prove_docstring_only/INDEX.md) (3 entities, 1 holes): Decide — not assert — whether a Python file's change is docstring-only.
 - [scripts.query_episodes](scripts.query_episodes/INDEX.md) (22 entities, 7 holes): Deterministic retrieval over the episode store (docs/EPISODE_STORE.md section 8).
 - [scripts.recover_crews](scripts.recover_crews/INDEX.md) (8 entities, 3 holes): Recovery classifier over the durable crew-run registry.
-- [scripts.run_crew](scripts.run_crew/INDEX.md) (62 entities, 11 holes): Safe crew launcher with a durable session-recovery registry.
+- [scripts.run_crew](scripts.run_crew/INDEX.md) (65 entities, 12 holes): Safe crew launcher with a durable session-recovery registry.
 - [scripts.run_skill_eval](scripts.run_skill_eval/INDEX.md) (42 entities, 10 holes): Corpus skill-eval runner — the PURE, agent-free core (#106, gate g2).
 - [scripts.spine_lifecycle](scripts.spine_lifecycle/INDEX.md) (20 entities, 3 holes): Open and close Constellation work in one call each: `open_work` builds a worktree, a branch, a scaffolded work area, and a compiled, origin-stamped spine; `clos
 - [scripts.validate_spine](scripts.validate_spine/INDEX.md) (23 entities, 10 holes): Refuse a spine or spine template the engine cannot read, or that carries a check which cannot fail.
@@ -102,7 +102,7 @@ tests: 82 modules, 4725 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (82 modules, 4725 entities)
+## tests (82 modules, 4762 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -122,7 +122,7 @@ tests: 82 modules, 4725 entities
 - [tests.test_context_determinism](tests.test_context_determinism/INDEX.md) (25 entities, 21 holes): The acceptance test for issue #300: the projection manifest's *content* is identical across environments.
 - [tests.test_context_manifest](tests.test_context_manifest/INDEX.md) (97 entities, 85 holes): Tests for `scripts/context_manifest.py` — the deterministic projection substrate.
 - [tests.test_crew_delivery_addressing](tests.test_crew_delivery_addressing/INDEX.md) (11 entities, 7 holes): Relaunch acceptance test for #507 / #370 / #413 (crew delivery addressing).
-- [tests.test_crew_launcher](tests.test_crew_launcher/INDEX.md) (250 entities, 195 holes): HOLE: no docstring
+- [tests.test_crew_launcher](tests.test_crew_launcher/INDEX.md) (287 entities, 225 holes): HOLE: no docstring
 - [tests.test_crew_worktree_cwd](tests.test_crew_worktree_cwd/INDEX.md) (19 entities, 13 holes): A dispatched crew runs in ITS OWN worktree (issue #568, the g1b delta).
 - [tests.test_curate_corpus](tests.test_curate_corpus/INDEX.md) (40 entities, 23 holes): Golden-fixture suite for scripts/curate_corpus.py.
 - [tests.test_declared_dispatch](tests.test_declared_dispatch/INDEX.md) (14 entities, 14 holes): Tests for scripts/verify_declared_dispatch.py -- the oracle the generator's injected `[[gate.dispatch]]` postcondition (LIFECYCLE_CONTRACT.md section 5) shells 

@@ -1,5 +1,6 @@
 import importlib.util
 import contextlib
+import hashlib
 import io
 import json
 import os
@@ -7,6 +8,8 @@ import shlex
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -3046,6 +3049,574 @@ class RecoverBackendActionTests(unittest.TestCase):
         external resume action via entry_backend inference."""
         lines = self._report_lines(self._resumable_entry(dispatch="external", pid=None))
         self.assertIn("unrecoverable by the wrapper", " ".join(lines).lower())
+
+
+class ParentLeaseHeartbeatTests(unittest.TestCase):
+    """Issue #607: `run_crew.py` blocks foreground on its single `launch(...)`
+    seam and issues no mutating engine verb of its own during that block, so a
+    healthy, merely-blocked parent's own ambient engine-session lease can go
+    stale purely from being blocked. `_parent_lease_heartbeat()` is a
+    context-managed daemon-thread helper, started around the blocking call in
+    both `CliBackend.dispatch` and `CliBackend.resume`, that refreshes the
+    DISPATCHING process's own `SPINE_FILE`/`SPINE_SESSION` lease for exactly
+    the duration of the block. These tests drive it both directly (unit-level:
+    no-op, thread-advances-heartbeat, join-before-return, exception-swallowed)
+    and through the real `CliBackend.dispatch`/`resume` call sites (the
+    shared-spine case a first draft's now-removed self-collision guard would
+    have silently broken)."""
+
+    def _claimed_spine(self, root: Path, session_id: str, name: str = "parent_spine.json") -> Path:
+        """A real `checklist_engine`-shaped spine with a lease actively claimed
+        by `session_id` -- built through the engine's own `claim()`, not a
+        hand-rolled dict, so this is the same shape a real Commander's own
+        ambient spine has."""
+        path = root / name
+        cl = {
+            "work_id": "w", "type": "gated", "items": [], "tasks": {},
+            "consolidation": None, "triage_candidates": [], "blockers": [],
+        }
+        RC.checklist_engine.claim(cl, session_id, "commander", ".", {})
+        RC.checklist_engine.save(path, cl)
+        return path
+
+    def _last_heartbeat(self, spine: Path) -> str:
+        return json.loads(spine.read_text(encoding="utf-8"))["engine_session"]["last_heartbeat"]
+
+    @staticmethod
+    def _wait_until(predicate, *, timeout: float = 3.0, interval: float = 0.01) -> bool:
+        """Poll `predicate` instead of a fixed sleep, so the test only proceeds
+        once the background thread has actually done the thing, whatever the
+        host's real scheduling speed -- a fixed sleep would either flake under
+        load or waste time when the thread is fast. A transient exception (the
+        predicate reads the SAME spine file the heartbeat thread is mid-write
+        to -- `checklist_engine.save` writes plain bytes, non-atomically) is
+        treated as "not yet", not a failure -- only a timeout is."""
+        def _safe() -> bool:
+            try:
+                return bool(predicate())
+            except (OSError, ValueError):
+                return False
+
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if _safe():
+                return True
+            time.sleep(interval)
+        return _safe()
+
+    def _heartbeat_thread_alive(self) -> bool:
+        return any(t.name == RC._PARENT_HEARTBEAT_THREAD_NAME for t in threading.enumerate())
+
+    # -- (a) no-op when ambient vars are unset ---------------------------- #
+    def test_noop_when_ambient_vars_unset(self):
+        with no_ambient_spine_env():
+            with RC._parent_lease_heartbeat(interval=0.01):
+                self.assertFalse(self._heartbeat_thread_alive())
+            self.assertFalse(self._heartbeat_thread_alive())
+
+    def test_noop_when_only_one_ambient_var_set(self):
+        with no_ambient_spine_env():
+            os.environ["SPINE_FILE"] = "/nonexistent/spine.json"
+            try:
+                with RC._parent_lease_heartbeat(interval=0.01):
+                    self.assertFalse(self._heartbeat_thread_alive())
+            finally:
+                os.environ.pop("SPINE_FILE", None)
+
+    # -- (b) thread starts and advances last_heartbeat --------------------- #
+    def test_thread_advances_last_heartbeat_while_active(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            session = "constellation/w/commander"
+            spine = self._claimed_spine(root, session)
+            before = self._last_heartbeat(spine)
+            with no_ambient_spine_env():
+                os.environ["SPINE_FILE"] = str(spine)
+                os.environ["SPINE_SESSION"] = session
+                try:
+                    with RC._parent_lease_heartbeat(interval=0.01):
+                        self.assertTrue(self._heartbeat_thread_alive())
+                        advanced = self._wait_until(
+                            lambda: self._last_heartbeat(spine) != before
+                        )
+                finally:
+                    os.environ.pop("SPINE_FILE", None)
+                    os.environ.pop("SPINE_SESSION", None)
+            self.assertTrue(advanced, "last_heartbeat never advanced while the thread ran")
+            self.assertGreater(self._last_heartbeat(spine), before)
+
+    # -- (c) thread stops (joined) before the context exits ---------------- #
+    def test_thread_is_joined_before_context_manager_returns(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            session = "constellation/w/commander"
+            spine = self._claimed_spine(root, session)
+            with no_ambient_spine_env():
+                os.environ["SPINE_FILE"] = str(spine)
+                os.environ["SPINE_SESSION"] = session
+                try:
+                    with RC._parent_lease_heartbeat(interval=0.01):
+                        self.assertTrue(self._heartbeat_thread_alive())
+                    # `thread.join()` in the helper's `finally` already
+                    # blocked until real thread death -- no sleep needed here.
+                    self.assertFalse(self._heartbeat_thread_alive())
+                finally:
+                    os.environ.pop("SPINE_FILE", None)
+                    os.environ.pop("SPINE_SESSION", None)
+
+    # -- (d) a heartbeat exception never propagates/aborts ------------------ #
+    def test_heartbeat_exception_is_swallowed_not_propagated(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with no_ambient_spine_env():
+                # points at a spine file that will NEVER exist: every tick's
+                # `checklist_engine.load` raises FileNotFoundError.
+                os.environ["SPINE_FILE"] = str(Path(tmp) / "does-not-exist.json")
+                os.environ["SPINE_SESSION"] = "constellation/w/commander"
+                try:
+                    # must not raise, despite every tick failing
+                    with RC._parent_lease_heartbeat(interval=0.01):
+                        self._wait_until(lambda: False, timeout=0.1)  # let a few ticks fail
+                finally:
+                    os.environ.pop("SPINE_FILE", None)
+                    os.environ.pop("SPINE_SESSION", None)
+            # reaching here at all is the assertion: no exception propagated
+
+    # -- (e) shared-spine dispatch: child inherits the SAME ambient pair,
+    #        and the parent's own lease is still heartbeated throughout ----- #
+    def test_dispatch_heartbeats_ambient_lease_in_shared_spine_case(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            session = "constellation/w/commander"
+            spine = self._claimed_spine(root, session)
+            before = self._last_heartbeat(spine)
+
+            handoff = write_handoff(root, "w", "g1", "implementer")
+            result = result_rel("w", "g1", "implementer")
+            observed = {}
+
+            def slow_launch(argv, *, stdin, env, stdout_path, stderr_path, cwd=None):
+                # the child's env carries the SAME SPINE_FILE/SPINE_SESSION as
+                # the parent -- exactly the no-self-collision-guard case.
+                observed["env"] = env
+                Path(stdout_path).parent.mkdir(parents=True, exist_ok=True)
+                Path(stdout_path).write_text("out\n", encoding="utf-8")
+                Path(stderr_path).write_text("err\n", encoding="utf-8")
+                Path(root / result).parent.mkdir(parents=True, exist_ok=True)
+                Path(root / result).write_text("RESULT\n", encoding="utf-8")
+                # block long enough for the tiny-interval heartbeat thread to
+                # tick at least once, polling rather than a blind fixed sleep.
+                self._wait_until(lambda: self._last_heartbeat(spine) != before, timeout=2.0)
+                return 0
+
+            with no_ambient_spine_env():
+                os.environ["SPINE_FILE"] = str(spine)
+                os.environ["SPINE_SESSION"] = session
+                saved_interval = RC.PARENT_HEARTBEAT_INTERVAL_SECONDS
+                RC.PARENT_HEARTBEAT_INTERVAL_SECONDS = 0.01
+                try:
+                    code, entry = RC.launch_crew(
+                        work_id="w", gate="g1", role="implementer",
+                        handoff=handoff, result=result, spine=None,  # no explicit --spine
+                        worktree=".", model=None, launcher="claude", attempt=1,
+                        root=root, entries=[], launch=slow_launch,
+                    )
+                finally:
+                    RC.PARENT_HEARTBEAT_INTERVAL_SECONDS = saved_interval
+                    os.environ.pop("SPINE_FILE", None)
+                    os.environ.pop("SPINE_SESSION", None)
+
+            self.assertEqual(0, code)
+            self.assertEqual("completed", entry["status"])
+            # the child inherited the parent's OWN ambient pair unchanged
+            self.assertEqual(str(spine), observed["env"]["SPINE_FILE"])
+            self.assertEqual(session, observed["env"]["SPINE_SESSION"])
+            # and despite that, the parent's own lease was heartbeated during
+            # the block -- no self-collision guard silently disabled it.
+            self.assertGreater(self._last_heartbeat(spine), before)
+            # the heartbeat thread does not outlive the (now-returned) dispatch
+            self.assertFalse(self._heartbeat_thread_alive())
+
+    # -- resume() is wired the same way as dispatch() ----------------------- #
+    def test_resume_heartbeats_ambient_lease_in_shared_spine_case(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            session = "constellation/w/commander"
+            spine = self._claimed_spine(root, session)
+            before = self._last_heartbeat(spine)
+
+            handoff = write_handoff(root, "w", "g1", "implementer")
+            result = result_rel("w", "g1", "implementer")
+            crew_session = "constellation/w/g1/implementer/attempt-1"
+            stdout, stderr = RC.run_log_paths("w", "g1", "implementer", 1, root)
+            entries = [{
+                "session_name": crew_session, "crew_id": crew_session,
+                "work_id": "w", "gate": "g1", "role": "implementer", "attempt": 1,
+                "worktree": ".", "status": "running", "abandoned": False,
+                "handoff": handoff, "result": result,
+                "stdout": RC._relativize(str(stdout), root),
+                "stderr": RC._relativize(str(stderr), root),
+            }]
+
+            def slow_launch(argv, *, stdin, env, stdout_path, stderr_path, cwd=None):
+                Path(stdout_path).parent.mkdir(parents=True, exist_ok=True)
+                Path(stdout_path).write_text("out\n", encoding="utf-8")
+                Path(stderr_path).write_text("err\n", encoding="utf-8")
+                Path(root / result).parent.mkdir(parents=True, exist_ok=True)
+                Path(root / result).write_text("RESULT\n", encoding="utf-8")
+                self._wait_until(lambda: self._last_heartbeat(spine) != before, timeout=2.0)
+                return 0
+
+            with no_ambient_spine_env():
+                os.environ["SPINE_FILE"] = str(spine)
+                os.environ["SPINE_SESSION"] = session
+                saved_interval = RC.PARENT_HEARTBEAT_INTERVAL_SECONDS
+                RC.PARENT_HEARTBEAT_INTERVAL_SECONDS = 0.01
+                try:
+                    code, entry = RC.CliBackend().resume(
+                        crew_session, root=root, entries=entries, launch=slow_launch,
+                    )
+                finally:
+                    RC.PARENT_HEARTBEAT_INTERVAL_SECONDS = saved_interval
+                    os.environ.pop("SPINE_FILE", None)
+                    os.environ.pop("SPINE_SESSION", None)
+
+            self.assertEqual(0, code)
+            self.assertEqual("completed", entry["status"])
+            self.assertGreater(self._last_heartbeat(spine), before)
+            self.assertFalse(self._heartbeat_thread_alive())
+
+
+class ScratchDirPureFunctionTests(unittest.TestCase):
+    """`scratch_dir()` (issue #525): a namespaced scratch/evidence directory
+    keyed on the FULL `(work_id, gate, role, worktree, attempt)` tuple -- the
+    SAME tuple `active_duplicate`/`next_attempt` use for duplicate-detection/
+    attempt-numbering. `worktree` MUST stay in the key: `next_attempt` scopes
+    attempt numbers PER WORKTREE, so two different worktrees dispatching the
+    same work_id/gate/role can each independently reach attempt=1 -- an
+    earlier draft of this plan omitted `worktree` from the key, which would
+    let those two collide on the identical scratch directory, reintroducing
+    #525 one field narrower. These tests pin that the field is actually load-
+    bearing in the key, not just documented as such."""
+
+    def test_path_shape_matches_gate_role_attempt_wtkey_convention(self):
+        root = Path("/repo")
+        path = RC.scratch_dir("issue-1", "g2", "implementer", ".", 3, root)
+        wtkey = hashlib.sha256(".".encode("utf-8")).hexdigest()[:12]
+        expected = root / ".agent-work" / "issue-1" / "crew-scratch" / f"g2-implementer-attempt-3-{wtkey}"
+        self.assertEqual(expected, path)
+
+    def test_different_gate_yields_disjoint_directory(self):
+        root = Path("/repo")
+        a = RC.scratch_dir("issue-1", "g1", "implementer", ".", 1, root)
+        b = RC.scratch_dir("issue-1", "g2", "implementer", ".", 1, root)
+        self.assertNotEqual(a, b)
+
+    def test_different_role_yields_disjoint_directory(self):
+        root = Path("/repo")
+        a = RC.scratch_dir("issue-1", "g1", "implementer", ".", 1, root)
+        b = RC.scratch_dir("issue-1", "g1", "reviewer", ".", 1, root)
+        self.assertNotEqual(a, b)
+
+    def test_different_attempt_yields_disjoint_directory(self):
+        root = Path("/repo")
+        a = RC.scratch_dir("issue-1", "g1", "implementer", ".", 1, root)
+        b = RC.scratch_dir("issue-1", "g1", "implementer", ".", 2, root)
+        self.assertNotEqual(a, b)
+
+    def test_different_worktree_yields_disjoint_directory_at_the_same_attempt(self):
+        # The exact regression this gate's Close Criteria calls out: two
+        # DIFFERENT worktrees can each independently reach attempt=1 for the
+        # SAME work_id/gate/role (next_attempt scopes attempt numbers PER
+        # WORKTREE) -- omitting `worktree` from the key would collide these
+        # two onto one directory, reintroducing #525 one field narrower.
+        root = Path("/repo")
+        a = RC.scratch_dir("issue-1", "g1", "implementer", "/tree-a", 1, root)
+        b = RC.scratch_dir("issue-1", "g1", "implementer", "/tree-b", 1, root)
+        self.assertNotEqual(a, b)
+
+    def test_worktree_is_hashed_as_the_raw_string_not_resolved(self):
+        # A relative "." and an absolute equivalent of the SAME repo root are
+        # different RAW strings, so they must hash to DIFFERENT scratch
+        # directories -- matching active_duplicate's/next_attempt's own raw-
+        # string equality (`entry.get("worktree") == worktree`), not "fixing"
+        # it into path-equivalence, which is out of scope for this gate.
+        root = Path("/repo")
+        a = RC.scratch_dir("issue-1", "g1", "implementer", ".", 1, root)
+        b = RC.scratch_dir("issue-1", "g1", "implementer", str(root), 1, root)
+        self.assertNotEqual(a, b)
+
+    def test_same_tuple_is_deterministic_and_identical(self):
+        root = Path("/repo")
+        a = RC.scratch_dir("issue-1", "g1", "implementer", ".", 1, root)
+        b = RC.scratch_dir("issue-1", "g1", "implementer", ".", 1, root)
+        self.assertEqual(a, b)
+
+
+class ScratchDirReservationTests(unittest.TestCase):
+    """`CliBackend.dispatch` reserves this dispatch's own scratch directory
+    (issue #525) before the crew is spawned: the directory exists on disk,
+    the CLI-backend child's environment carries `CREW_SCRATCH_DIR` pointing
+    at it, and the registry entry records it -- the collision-AVOIDANCE half
+    of #525 (making a dispatched crew's own skill actually WRITE into it is a
+    distinct, unowned follow-up, out of scope here)."""
+
+    def test_dispatch_creates_the_reserved_directory_on_disk(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g2", "implementer")
+            result = result_rel("issue-1", "g2", "implementer")
+            with fake_launch(RC, 0, write_result_at=root / result):
+                RC.launch_crew(
+                    work_id="issue-1", gate="g2", role="implementer",
+                    handoff=handoff, result=result, worktree=".",
+                    model=None, launcher="claude", attempt=1, root=root, entries=[],
+                )
+            expected = RC.scratch_dir("issue-1", "g2", "implementer", ".", 1, root)
+            self.assertTrue(expected.is_dir())
+
+    def test_cli_backend_child_env_carries_crew_scratch_dir(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g2", "implementer")
+            result = result_rel("issue-1", "g2", "implementer")
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                RC.launch_crew(
+                    work_id="issue-1", gate="g2", role="implementer",
+                    handoff=handoff, result=result, worktree=".",
+                    model=None, launcher="claude", attempt=1, root=root, entries=[],
+                )
+            expected = RC.scratch_dir("issue-1", "g2", "implementer", ".", 1, root)
+            self.assertEqual(str(expected), calls[0]["env"]["CREW_SCRATCH_DIR"])
+
+    def test_registry_entry_records_scratch_dir(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g2", "implementer")
+            result = result_rel("issue-1", "g2", "implementer")
+            with fake_launch(RC, 0, write_result_at=root / result):
+                _, entry = RC.launch_crew(
+                    work_id="issue-1", gate="g2", role="implementer",
+                    handoff=handoff, result=result, worktree=".",
+                    model=None, launcher="claude", attempt=1, root=root, entries=[],
+                )
+            expected = RC.scratch_dir("issue-1", "g2", "implementer", ".", 1, root)
+            self.assertEqual(RC._relativize(str(expected), root), entry["scratch_dir"])
+
+    def test_before_after_two_crews_that_used_to_collide_now_write_disjoint_reserved_paths(self):
+        # BEFORE this gate: run_crew.py reserved no scratch dir at all -- two
+        # concurrent crews sharing one scratch/evidence area under generic
+        # filenames (e.g. "r0.md", "r1.md"...) could silently collide (the
+        # exact #525 failure: a g8 reviewer found r0-r6 finding-files an
+        # EARLIER gate's reviewer had left behind, using the same generic
+        # names it was about to use). The OLD, unreserved scheme gave both
+        # crews below the identical generic scratch path regardless of which
+        # gate/role/attempt/worktree dispatched them:
+        old_scheme_path_for_implementer = "SHARED/scratch"
+        old_scheme_path_for_reviewer = "SHARED/scratch"
+        self.assertEqual(
+            old_scheme_path_for_implementer, old_scheme_path_for_reviewer,
+        )  # <-- the collision this gate exists to fix
+
+        # AFTER this gate: two crews dispatched under DIFFERENT tuples (here:
+        # different roles, same gate/worktree/attempt) each reserve their OWN
+        # namespaced directory -- disjoint, not the shared generic path above.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff_a = write_handoff(root, "issue-1", "g2", "implementer")
+            result_a = result_rel("issue-1", "g2", "implementer")
+            handoff_b = write_handoff(root, "issue-1", "g2", "reviewer")
+            result_b = result_rel("issue-1", "g2", "reviewer")
+            entries: list[dict] = []
+            with fake_launch(RC, 0, write_result_at=root / result_a):
+                _, entry_a = RC.launch_crew(
+                    work_id="issue-1", gate="g2", role="implementer",
+                    handoff=handoff_a, result=result_a, worktree=".",
+                    model=None, launcher="claude", attempt=1, root=root, entries=entries,
+                )
+            with fake_launch(RC, 0, write_result_at=root / result_b):
+                _, entry_b = RC.launch_crew(
+                    work_id="issue-1", gate="g2", role="reviewer",
+                    handoff=handoff_b, result=result_b, worktree=".",
+                    model=None, launcher="claude", attempt=1, root=root, entries=entries,
+                )
+            self.assertNotEqual(entry_a["scratch_dir"], entry_b["scratch_dir"])
+            self.assertTrue((root / entry_a["scratch_dir"]).is_dir())
+            self.assertTrue((root / entry_b["scratch_dir"]).is_dir())
+
+    def test_disjoint_reserved_directories_for_same_gate_role_attempt_different_worktree(self):
+        # The specific regression this gate's Close Criteria calls out: two
+        # DIFFERENT worktrees dispatching the same work_id/gate/role can each
+        # independently reach attempt=1 -- their RESERVED directories must
+        # not collide.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            tree_a = str(root / "tree-a")
+            tree_b = str(root / "tree-b")
+            handoff = write_handoff(root, "issue-1", "g2", "implementer")
+            result = result_rel("issue-1", "g2", "implementer")
+            entries: list[dict] = []
+            with fake_launch(RC, 0, write_result_at=root / result):
+                _, entry_a = RC.launch_crew(
+                    work_id="issue-1", gate="g2", role="implementer",
+                    handoff=handoff, result=result, worktree=tree_a,
+                    model=None, launcher="claude", attempt=1, root=root, entries=entries,
+                )
+            with fake_launch(RC, 0, write_result_at=root / result):
+                _, entry_b = RC.launch_crew(
+                    work_id="issue-1", gate="g2", role="implementer",
+                    handoff=handoff, result=result, worktree=tree_b,
+                    model=None, launcher="claude", attempt=1, root=root, entries=entries,
+                )
+            self.assertNotEqual(entry_a["scratch_dir"], entry_b["scratch_dir"])
+            self.assertTrue((root / entry_a["scratch_dir"]).is_dir())
+            self.assertTrue((root / entry_b["scratch_dir"]).is_dir())
+
+
+class ScratchDirCollisionTests(unittest.TestCase):
+    """`decision:no-silent-truncation`: a genuine collision on the reserved
+    scratch directory -- the SAME `(work_id, gate, role, worktree, attempt)`
+    tuple reserved twice -- is a LOUD `CrewLaunchError`, never a silent
+    overwrite and never a quiet reuse of a directory that was not this exact
+    attempt's own (the exact failure mode #525 was filed over: "the file
+    exists, it parses, it describes someone else's gate")."""
+
+    def test_forced_collision_raises_crew_launch_error_naming_path_and_tuple(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g2", "implementer")
+            result = result_rel("issue-1", "g2", "implementer")
+            scratch = RC.scratch_dir("issue-1", "g2", "implementer", ".", 1, root)
+            scratch.mkdir(parents=True)  # pre-existing reservation -- forces the collision
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                with self.assertRaises(RC.CrewLaunchError) as ctx:
+                    RC.launch_crew(
+                        work_id="issue-1", gate="g2", role="implementer",
+                        handoff=handoff, result=result, worktree=".",
+                        model=None, launcher="claude", attempt=1, root=root, entries=[],
+                    )
+            message = str(ctx.exception)
+            self.assertIn(str(scratch), message)
+            self.assertIn("work_id='issue-1'", message)
+            self.assertIn("gate='g2'", message)
+            self.assertIn("role='implementer'", message)
+            self.assertIn("worktree='.'", message)
+            self.assertIn("attempt=1", message)
+            self.assertIn("#525", message)
+            # never spawned -- the collision is refused before launch() runs
+            self.assertEqual([], calls)
+
+    def test_forced_collision_leaves_no_partial_registry_entry(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g2", "implementer")
+            result = result_rel("issue-1", "g2", "implementer")
+            scratch = RC.scratch_dir("issue-1", "g2", "implementer", ".", 1, root)
+            scratch.mkdir(parents=True)
+            entries: list[dict] = []
+            with fake_launch(RC, 0, write_result_at=root / result):
+                with self.assertRaises(RC.CrewLaunchError):
+                    RC.launch_crew(
+                        work_id="issue-1", gate="g2", role="implementer",
+                        handoff=handoff, result=result, worktree=".",
+                        model=None, launcher="claude", attempt=1, root=root, entries=entries,
+                    )
+            self.assertEqual([], entries)
+            self.assertFalse(RC.registry_path("issue-1", root).exists())
+
+    def test_forced_collision_does_not_disturb_the_pre_existing_directorys_contents(self):
+        # "the file exists, it parses, it describes someone else's gate" --
+        # the exact failure mode #525 was filed over. A collision must never
+        # overwrite whatever evidence is already sitting in the reserved
+        # directory.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g2", "implementer")
+            result = result_rel("issue-1", "g2", "implementer")
+            scratch = RC.scratch_dir("issue-1", "g2", "implementer", ".", 1, root)
+            scratch.mkdir(parents=True)
+            sentinel = scratch / "someone-elses-evidence.md"
+            sentinel.write_text("belongs to a different attempt\n", encoding="utf-8")
+            with fake_launch(RC, 0, write_result_at=root / result):
+                with self.assertRaises(RC.CrewLaunchError):
+                    RC.launch_crew(
+                        work_id="issue-1", gate="g2", role="implementer",
+                        handoff=handoff, result=result, worktree=".",
+                        model=None, launcher="claude", attempt=1, root=root, entries=[],
+                    )
+            self.assertEqual(
+                "belongs to a different attempt\n", sentinel.read_text(encoding="utf-8"),
+            )
+
+
+class ScratchDirResumeTests(unittest.TestCase):
+    """`CliBackend.resume` re-enters the SAME attempt as its original
+    dispatch: it GETS the already-reserved scratch directory (recomputed via
+    `scratch_dir()`, never re-reserved with `mkdir(exist_ok=False)`) -- an
+    existing directory here is expected and correct, not a collision."""
+
+    def test_resume_against_existing_directory_does_not_raise(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g2", "implementer")
+            result = result_rel("issue-1", "g2", "implementer")
+            entries: list[dict] = []
+            with fake_launch(RC, 1):  # nonzero, no result written -> stays resumable
+                RC.launch_crew(
+                    work_id="issue-1", gate="g2", role="implementer",
+                    handoff=handoff, result=result, worktree=".",
+                    model=None, launcher="claude", attempt=1, root=root, entries=entries,
+                )
+            session = entries[0]["session_name"]
+            with fake_launch(RC, 0, write_result_at=root / result):
+                code, entry = RC.CliBackend().resume(session, root=root, entries=entries)
+            # reaching here without a CrewLaunchError is the assertion this
+            # test exists to make; the completion outcome is a sanity check.
+            self.assertEqual(0, code)
+            self.assertEqual("completed", entry["status"])
+
+    def test_resume_env_carries_the_same_reserved_scratch_dir_as_original_dispatch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g2", "implementer")
+            result = result_rel("issue-1", "g2", "implementer")
+            entries: list[dict] = []
+            with fake_launch(RC, 1) as dispatch_calls:
+                RC.launch_crew(
+                    work_id="issue-1", gate="g2", role="implementer",
+                    handoff=handoff, result=result, worktree=".",
+                    model=None, launcher="claude", attempt=1, root=root, entries=entries,
+                )
+            dispatched_scratch = dispatch_calls[0]["env"]["CREW_SCRATCH_DIR"]
+            session = entries[0]["session_name"]
+            with fake_launch(RC, 0, write_result_at=root / result) as resume_calls:
+                RC.CliBackend().resume(session, root=root, entries=entries)
+            self.assertEqual(dispatched_scratch, resume_calls[0]["env"]["CREW_SCRATCH_DIR"])
+
+    def test_resume_of_legacy_entry_without_worktree_key_does_not_crash_and_leaves_scratch_dir_unbound(self):
+        # An entry recorded before `worktree` was threaded onto the registry
+        # has no "worktree" key at all -- `crew_cwd()` already degrades to
+        # `None` for this case (issue #568); `scratch_dir()` cannot recompute
+        # a path with no worktree to hash, so this must degrade to "no
+        # CREW_SCRATCH_DIR bound" rather than raise.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g2", "implementer")
+            result = result_rel("issue-1", "g2", "implementer")
+            session = "constellation/issue-1/g2/implementer/attempt-1"
+            stdout, stderr = RC.run_log_paths("issue-1", "g2", "implementer", 1, root)
+            entries = [{
+                "session_name": session, "crew_id": session,
+                "work_id": "issue-1", "gate": "g2", "role": "implementer", "attempt": 1,
+                "status": "running", "abandoned": False,
+                "handoff": handoff, "result": result,
+                "stdout": RC._relativize(str(stdout), root),
+                "stderr": RC._relativize(str(stderr), root),
+            }]  # deliberately no "worktree" key
+            RC.save_registry(RC.registry_path("issue-1", root), entries)
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                RC.CliBackend().resume(session, root=root, entries=entries)
+            self.assertNotIn("CREW_SCRATCH_DIR", calls[0]["env"])
 
 
 if __name__ == "__main__":

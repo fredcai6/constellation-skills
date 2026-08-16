@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "review",
+  "mechanical": {
+    "run": "cleanup-e-crew-tooling",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 10,
+    "spine-step": "review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-e-crew-tooling-review@a89282334088a47ae53e171599803f3674cb397f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-e-crew-tooling",
+    "generated_at": "2026-08-16T16:21:01Z"
+  }
+}
