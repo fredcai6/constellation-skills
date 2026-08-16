@@ -710,26 +710,88 @@ def _foreign_worktree(data: dict, b: dict) -> bool:
 
 
 def _worktree_from_spine(abs_spine):
-    """The owning worktree for one absolute `.agent-work/<id>/<name>.json`.
+    """The owning worktree for an absolute spine path, or None if none owns it.
+
+    The rule: walk up to the NEAREST `.agent-work` ancestor and return its
+    parent. Arbitrary depth. No `.agent-work` ancestor at all means unowned.
 
     This is deliberately lexical: an absolute claim path remains useful even
     after its checklist is archived, while payload cwd is a launch-time value
-    that can belong to a different linked worktree. Anything outside the exact
-    checklist layout is unowned rather than falling back to cwd.
+    that can belong to a different linked worktree. It answers LOCATION only --
+    where the spine lives -- never "is this mine"; ownership is the lease, and
+    among spines sharing one tree the discriminator is binding-key provenance.
+
+    NEAREST, never outermost: paths of the shape
+    `.agent-work/archive/<epic>/workspace/.agent-work/<id>/spine.json` exist in
+    tree, and that inner segment belongs to a nested SANDBOX project rooted at
+    `workspace/`. Taking the outermost would derive the real repo as the root of
+    a spine that belongs to the sandbox.
+
+    It used to require the exact one-level `.agent-work/<id>/<name>.json` shape
+    and return None for anything deeper -- which made a crew's own plan under
+    `.agent-work/<id>/crew-handoffs/<gate>/PLAN.json`, and every archived spine,
+    read as unowned. Those SHAPE preconditions (`.json` suffix, non-empty work-id
+    segment, exact depth) did not move away: they are now held by
+    `_is_claim_layout`, at the one caller whose strictness is a security
+    property. Only the ABSOLUTE-path precondition stays here, because a relative
+    path's answer would depend on the ambient cwd -- the exact forgeable reading
+    this derivation exists to remove.
+
+    `os.path` rather than `Path`, and `normcase` + `normpath` rather than
+    `realpath`: symlink resolution stays OUTSIDE, so `_is_valid_claim_target`'s
+    second, resolved check can still fail (see its own docstring). Twin of
+    `checklist_engine.worktree_from_spine_path` -- duplicated because this module
+    is stdlib-only by design and may gain no import; `tests/
+    test_worktree_derivation.py` drives both from one shared table of cases so
+    the two cannot drift apart silently.
+
+    NEVER raises.
+    """
+    try:
+        if not isinstance(abs_spine, str) or not os.path.isabs(abs_spine):
+            return None
+        target = os.path.normcase(".agent-work")
+        current = os.path.dirname(os.path.normcase(os.path.normpath(abs_spine)))
+        while True:
+            head, tail = os.path.split(current)
+            if tail == target:
+                return head or None
+            if not head or head == current:
+                return None
+            current = head
+    except Exception:
+        return None
+
+
+def _is_claim_layout(abs_spine) -> bool:
+    """Whether `abs_spine` has the narrow `<worktree>/.agent-work/<work-id>/
+    <name>.json` shape a bindable claim target must have.
+
+    This is the shape half of what `_worktree_from_spine` used to conflate with
+    the location half. Splitting them is the point of the change: location is a
+    property of any path, while THIS is the ownership gate's admission test, and
+    widening the first must not widen the second.
+
+    Deliberately case-SENSITIVE on the `.agent-work` segment, matching what this
+    predicate accepted before the split. `_worktree_from_spine` now folds case
+    (on Windows), so on that platform this is the stricter of the two -- which is
+    correct: the gate is required to accept exactly what it accepted before, and
+    it never accepted `.AGENT-WORK`.
+
+    NEVER raises.
     """
     try:
         if not isinstance(abs_spine, str):
-            return None
+            return False
         spine = Path(abs_spine)
         if not spine.is_absolute() or not spine.name.endswith(".json"):
-            return None
+            return False
         work_id = spine.parent
-        agent_work = work_id.parent
-        if spine.name == ".json" or not work_id.name or agent_work.name != ".agent-work":
-            return None
-        return str(agent_work.parent)
+        if spine.name == ".json" or not work_id.name:
+            return False
+        return work_id.parent.name == ".agent-work"
     except Exception:
-        return None
+        return False
 
 
 # --- PostToolUse: command-token parsing --------------------------------------
@@ -1097,14 +1159,22 @@ def _is_valid_claim_target(abs_spine) -> bool:
     """The rail-owned claim-target validator (#441): a resolved absolute
     target must be lexically/resolve-CONTAINED as
     `<worktree>/.agent-work/<work-id>/<name>.json` AND a currently readable
-    JSON object carrying an `items` list. `_worktree_from_spine` already
-    enforces exactly that containment shape (it returns None for anything
-    outside it), so this composes it with `looks_like_checklist` rather than
-    re-deriving the shape test. Applied to BOTH absolute and relative claim
+    JSON object carrying an `items` list. `_is_claim_layout` enforces exactly
+    that containment shape (it returns False for anything outside it), so this
+    composes it with `looks_like_checklist` rather than re-deriving the shape
+    test. Applied to BOTH absolute and relative claim
     resolution -- rung 0 (an absolute `--file`) is ground truth about WHERE
     the caller means, never about whether that target is a real, current
     checklist. Re-checked inside the locked mutator so a target that vanishes
     between resolution and lock acquisition cannot bind.
+
+    The shape test is `_is_claim_layout`, NOT `_worktree_from_spine`. The two
+    were the same function until the derivation was widened to nearest-ancestor
+    at arbitrary depth; keeping this gate on the derivation would have widened
+    what the rail accepts as a claimable spine along with it, silently turning a
+    change about LOCATION into a change to the OWNERSHIP gate. This admission
+    test accepts exactly what it accepted before that split, and
+    `tests/test_spine_rail.py` pins that both ways.
 
     Symlink-escape guard: the LEXICAL path can satisfy the containment shape
     while a symlink -- the leaf file itself, or an ancestor directory -- walks
@@ -1112,14 +1182,16 @@ def _is_valid_claim_target(abs_spine) -> bool:
     symlink in the chain, so re-running the identical containment check
     against the resolved path catches an escape the lexical check alone would
     miss; a target with no symlinks resolves to itself and this is a no-op.
-    NEVER raises."""
+    This is also why the derivation stays lexical: were it to resolve symlinks
+    itself, both checks would return the same value and the second could never
+    fail. NEVER raises."""
     try:
-        if not _worktree_from_spine(abs_spine):
+        if not _is_claim_layout(abs_spine):
             return False
         if not looks_like_checklist(abs_spine):
             return False
         resolved = str(Path(abs_spine).resolve())
-        return bool(_worktree_from_spine(resolved))
+        return _is_claim_layout(resolved)
     except Exception:
         return False
 

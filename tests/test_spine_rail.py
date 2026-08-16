@@ -871,20 +871,138 @@ def test_foreign_worktree_true_only_on_positive_mismatch():
     assert sr._foreign_worktree({"cwd": "C:/a/same"}, {"worktree": "C:/a/same"}) is False
 
 
-def test_worktree_from_spine_accepts_only_absolute_agent_work_json_layout(tmp_path):
-    worktree = tmp_path / "worktree"
-    spine = worktree / ".agent-work" / "run1" / "checklist.json"
-    assert sr._worktree_from_spine(str(spine)) == str(worktree)
+def _derived_form(path):
+    """A directory in the normalized form `_worktree_from_spine` returns it in.
 
-    malformed = (
-        None,
-        ".agent-work/run1/checklist.json",
-        str(worktree / ".agent-work" / "run1" / "checklist.txt"),
-        str(worktree / ".agent-work" / "checklist.json"),
-        str(worktree / "other" / "run1" / "checklist.json"),
+    Spelled from the predicate the implementation applies -- `normcase` +
+    `normpath` -- never inherited from the platform. `str(tmp_path / ...)`
+    preserves case, while the derivation folds it; on Windows `normcase`
+    lowercases and rewrites separators, so comparing against the raw `str` would
+    fail for EVERY `tmp_path` there, starting at the drive letter. On POSIX
+    `normcase` is the identity, which is exactly why that failure is invisible
+    on this host and has to be constructed rather than observed.
+
+    Same construction as `tests/test_worktree_derivation.py`'s `_expected()`,
+    which is what pins these two files' expectations to one rule.
+    """
+    return os.path.normcase(os.path.normpath(str(path)))
+
+
+def test_worktree_from_spine_walks_to_the_nearest_agent_work_ancestor(tmp_path):
+    """NEW CONTRACT (#609 lane F g1). `_worktree_from_spine` answers LOCATION for
+    any absolute path: nearest `.agent-work` ancestor, take its parent, arbitrary
+    depth; no such ancestor means unowned.
+
+    It used to require the exact one-level `.agent-work/<id>/<name>.json` shape,
+    and the four `.json`-suffix / work-id-segment / depth cases below are the
+    scenario that test forbade -- they are now precisely what this change
+    permits. The narrow shape did not disappear: it moved to `_is_claim_layout`,
+    which is what the ownership gate now uses (see the two tests below).
+
+    The exhaustive cross-implementation table lives in
+    `tests/test_worktree_derivation.py`, which pins this function equal to
+    `checklist_engine.worktree_from_spine_path`. This test covers only what the
+    hook itself must guarantee.
+    """
+    worktree = tmp_path / "worktree"
+
+    # Unchanged: the one-level shape still derives the same answer as before.
+    spine = worktree / ".agent-work" / "run1" / "checklist.json"
+    assert sr._worktree_from_spine(str(spine)) == _derived_form(worktree)
+
+    # NEWLY ACCEPTED -- each returned None before this change.
+    now_owned = (
+        # deeper than one level: a crew's own plan under a Commander's area
+        worktree / ".agent-work" / "run1" / "crew-handoffs" / "g1" / "PLAN.json",
+        # an archived spine, arbitrarily deep
+        worktree / ".agent-work" / "archive" / "ep" / "harvest" / "i" / "spine.json",
+        # depth zero: no work-id segment at all
+        worktree / ".agent-work" / "checklist.json",
+        # not a .json leaf -- suffix is a checklist-shape question, not location
+        worktree / ".agent-work" / "run1" / "checklist.txt",
     )
-    for path in malformed:
-        assert sr._worktree_from_spine(path) is None
+    for path in now_owned:
+        assert sr._worktree_from_spine(str(path)) == _derived_form(worktree), path
+
+    # NEAREST, never outermost: the inner `.agent-work` roots a nested sandbox.
+    sandbox = worktree / ".agent-work" / "archive" / "ep" / "workspace"
+    nested = sandbox / ".agent-work" / "run1" / "spine.json"
+    assert sr._worktree_from_spine(str(nested)) == _derived_form(sandbox)
+
+    # Still unowned -- these did not change.
+    unowned = (
+        None,
+        "",
+        os.path.join(".agent-work", "run1", "checklist.json"),  # relative
+        str(worktree / "other" / "run1" / "checklist.json"),    # no ancestor
+        str(worktree / "not-.agent-work-really" / "checklist.json"),  # substring
+    )
+    for path in unowned:
+        assert sr._worktree_from_spine(path) is None, path
+
+
+def test_is_claim_layout_holds_the_narrow_shape_the_derivation_gave_up(tmp_path):
+    """The shape preconditions moved OUT of `_worktree_from_spine` and landed
+    here, so widening the derivation does not widen the ownership gate."""
+    worktree = tmp_path / "worktree"
+    assert sr._is_claim_layout(str(worktree / ".agent-work" / "run1" / "c.json"))
+
+    # Every path the widened derivation newly OWNS, this still refuses.
+    refused = (
+        None,
+        "",
+        os.path.join(".agent-work", "run1", "c.json"),               # relative
+        str(worktree / ".agent-work" / "run1" / "crew" / "g1" / "PLAN.json"),  # deep
+        str(worktree / ".agent-work" / "archive" / "ep" / "spine.json"),       # deep
+        str(worktree / ".agent-work" / "c.json"),                    # depth zero
+        str(worktree / ".agent-work" / "run1" / "c.txt"),            # not .json
+        str(worktree / ".agent-work" / "run1" / ".json"),            # bare suffix
+        str(worktree / "other" / "run1" / "c.json"),                 # no .agent-work
+    )
+    for path in refused:
+        assert sr._is_claim_layout(path) is False, path
+
+
+def test_is_valid_claim_target_still_rejects_a_symlinked_spine(tmp_path):
+    """The symlink-escape guard must remain able to FAIL.
+
+    `_is_valid_claim_target` checks the given path lexically, then re-checks the
+    RESOLVED path. That second check is only meaningful while the derivation
+    stays lexical -- if it resolved symlinks itself, both checks would see the
+    same path and the guard could never fire. This test is what makes that
+    falsifiable rather than asserted.
+    """
+    worktree = tmp_path / "worktree"
+    (worktree / ".agent-work" / "run1").mkdir(parents=True)
+
+    # A real, valid claim target inside the work area: accepted.
+    good = worktree / ".agent-work" / "run1" / "checklist.json"
+    good.write_text(json.dumps({"items": []}), encoding="utf-8")
+    assert sr._is_valid_claim_target(str(good)) is True
+
+    # The same checklist content living OUTSIDE any `.agent-work`, reached
+    # through a symlink that sits at a valid-looking claim path. The lexical
+    # check passes; the resolved re-check must reject it.
+    outside = tmp_path / "elsewhere" / "checklist.json"
+    outside.parent.mkdir(parents=True)
+    outside.write_text(json.dumps({"items": []}), encoding="utf-8")
+    escaped = worktree / ".agent-work" / "run1" / "escaped.json"
+    try:
+        escaped.symlink_to(outside)
+    except (OSError, NotImplementedError):  # pragma: no cover -- Windows w/o privilege
+        pytest.skip("symlinks unavailable on this host")
+
+    assert sr._is_claim_layout(str(escaped)) is True       # lexically fine...
+    assert sr.looks_like_checklist(str(escaped)) is True   # ...and readable...
+    assert sr._is_valid_claim_target(str(escaped)) is False  # ...but it escapes.
+
+    # An ancestor DIRECTORY symlink escapes the same way.
+    linked_work_area = worktree / ".agent-work" / "run2"
+    try:
+        linked_work_area.symlink_to(tmp_path / "elsewhere", target_is_directory=True)
+    except (OSError, NotImplementedError):  # pragma: no cover
+        pytest.skip("directory symlinks unavailable on this host")
+    assert sr._is_valid_claim_target(str(linked_work_area / "checklist.json")) is False
 
 
 # --- decide_stop -------------------------------------------------------------

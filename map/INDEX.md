@@ -2,9 +2,9 @@
 
 ## packages
 evals: 12 modules, 54 entities
-scripts: 58 modules, 1211 entities
+scripts: 58 modules, 1213 entities
 skills: 1 modules, 18 entities
-tests: 82 modules, 4725 entities
+tests: 83 modules, 4737 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -29,7 +29,7 @@ tests: 82 modules, 4725 entities
 - [evals.euler-5-smallest-multiple.checks.spine_completed](evals.euler-5-smallest-multiple.checks.spine_completed/INDEX.md) (9 entities, 2 holes): PROCESS check (gating): a constellation ENGINE spine reached a terminal state WITH engine-written provenance -- not merely agent-written JSON (issue #127).
 - [evals.euler-5-smallest-multiple.checks.tests_green](evals.euler-5-smallest-multiple.checks.tests_green/INDEX.md) (3 entities, 3 holes): PROCESS check (gating): tests were WRITTEN and PASS in the workspace.
 
-## scripts (58 modules, 1211 entities)
+## scripts (58 modules, 1213 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -42,17 +42,17 @@ tests: 82 modules, 4725 entities
 - [scripts.code_map.render](scripts.code_map.render/INDEX.md) (26 entities, 10 holes): Full-repo derived map -- one page per entity, agent-lean.
 - [scripts.code_map.thresholds](scripts.code_map.thresholds/INDEX.md) (0 entities): The numbers gate `gb` commits, and the one-line action for when each fires.
 
-### scripts.hooks (2 modules, 84 entities)
+### scripts.hooks (2 modules, 85 entities)
 
 - [scripts.hooks.gauge_writer_hook](scripts.hooks.gauge_writer_hook/INDEX.md) (22 entities, 4 holes): gauge_writer_hook.py -- Claude Code PostToolUse hook: Context Governor gauge WRITER (Module 2, write side; issue #180).
-- [scripts.hooks.spine_rail](scripts.hooks.spine_rail/INDEX.md) (62 entities, 21 holes): spine_rail.py -- Claude Code hook suite for the Constellation spine rail.
+- [scripts.hooks.spine_rail](scripts.hooks.spine_rail/INDEX.md) (63 entities, 21 holes): spine_rail.py -- Claude Code hook suite for the Constellation spine rail.
 
 - [scripts.agent_work_root](scripts.agent_work_root/INDEX.md) (6 entities, 1 holes): Resolve the DURABLE `.agent-work` root that survives `git worktree remove`.
 - [scripts.apply_episode_delta](scripts.apply_episode_delta/INDEX.md) (57 entities, 25 holes): Deterministically apply structured episode-delta operations to the episode store.
 - [scripts.build_architecture_map](scripts.build_architecture_map/INDEX.md) (16 entities, 15 holes): HOLE: no docstring
 - [scripts.check_corpus_freshness](scripts.check_corpus_freshness/INDEX.md) (11 entities, 7 holes): Report whether an installed constellation corpus is current with upstream main.
 - [scripts.check_skill_freshness](scripts.check_skill_freshness/INDEX.md) (10 entities, 5 holes): Report template drift for a project against its installed-skill baseline.
-- [scripts.checklist_engine](scripts.checklist_engine/INDEX.md) (110 entities, 25 holes): Workbench checklist engine: work one gated/survey plan through its gates.
+- [scripts.checklist_engine](scripts.checklist_engine/INDEX.md) (111 entities, 25 holes): Workbench checklist engine: work one gated/survey plan through its gates.
 - [scripts.collect_feedback](scripts.collect_feedback/INDEX.md) (38 entities, 15 holes): Sweep consuming projects' CONSTELLATION_FEEDBACK.md exports into one report.
 - [scripts.context_manifest](scripts.context_manifest/INDEX.md) (14 entities): Deterministic projection substrate: what was made available to an agent, and at which revision.
 - [scripts.curate_corpus](scripts.curate_corpus/INDEX.md) (18 entities, 4 holes): Curator MEASUREMENT pass over the skills corpus (mechanical-only, flags-never-gates).
@@ -102,7 +102,7 @@ tests: 82 modules, 4725 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (82 modules, 4725 entities)
+## tests (83 modules, 4737 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -175,7 +175,7 @@ tests: 82 modules, 4725 entities
 - [tests.test_spine_lifecycle](tests.test_spine_lifecycle/INDEX.md) (113 entities, 102 holes): Tests for scripts/spine_lifecycle.py -- open and close Constellation work in one call each.
 - [tests.test_spine_origin_isolation](tests.test_spine_origin_isolation/INDEX.md) (69 entities, 43 holes): Engine-native worktree isolation: the `origin` stamp and the refusal it feeds (#315/#568).
 - [tests.test_spine_provenance_check](tests.test_spine_provenance_check/INDEX.md) (34 entities, 32 holes): Provenance hardening for the eval `spine_completed` process check (issue #127).
-- [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (187 entities, 96 holes): Unit tests for scripts/hooks/spine_rail.py.
+- [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (190 entities, 95 holes): Unit tests for scripts/hooks/spine_rail.py.
 - [tests.test_state_note](tests.test_state_note/INDEX.md) (15 entities, 15 holes): HOLE: no docstring
 - [tests.test_validate_spine](tests.test_validate_spine/INDEX.md) (85 entities, 77 holes): Tests for scripts/validate_spine.py (epic-559/c1-spine-lint, #518, #562).
 - [tests.test_verify_coverage_ledger](tests.test_verify_coverage_ledger/INDEX.md) (12 entities, 12 holes): HOLE: no docstring
@@ -187,5 +187,6 @@ tests: 82 modules, 4725 entities
 - [tests.test_verify_worktree_isolation](tests.test_verify_worktree_isolation/INDEX.md) (40 entities, 39 holes): HOLE: no docstring
 - [tests.test_wire_mcp_interpreter](tests.test_wire_mcp_interpreter/INDEX.md) (16 entities, 16 holes): Tests for scripts/wire_mcp_interpreter.py (M2 job 2, widened M2 g4-repair).
 - [tests.test_work_id_nesting](tests.test_work_id_nesting/INDEX.md) (43 entities, 16 holes): A work-id may NEST, and four tools used to disagree about that.
+- [tests.test_worktree_derivation](tests.test_worktree_derivation/INDEX.md) (9 entities, 1 holes): One shared table of cases, pinning the TWO worktree-derivation copies equal.
 - [tests.test_worktree_precondition_wiring](tests.test_worktree_precondition_wiring/INDEX.md) (15 entities, 13 holes): Deliberate-breakage tests for a worktree-isolation precondition (#329/#422).
 - [tests.test_write_a_skill](tests.test_write_a_skill/INDEX.md) (20 entities, 17 holes): Tests for constellation-write-a-skill's mint RAIL (scripts/verify_skill_registered.py) and the shared skill-goodness criteria seam.
