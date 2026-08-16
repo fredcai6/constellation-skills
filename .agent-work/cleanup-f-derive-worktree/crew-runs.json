@@ -368,7 +368,7 @@
     "gate": "g2",
     "role": "implementer",
     "attempt": 4,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/cleanup-f-derive-worktree/g2/implementer/attempt-4",
     "backend": "cli",
     "door_bound": true,
@@ -381,9 +381,13 @@
     "stdout": ".agent-work/cleanup-f-derive-worktree/crew-runs/g2-implementer-attempt-4.stdout.txt",
     "stderr": ".agent-work/cleanup-f-derive-worktree/crew-runs/g2-implementer-attempt-4.stderr.txt",
     "started_at": "2026-08-16T20:29:12.247332+00:00",
-    "last_heartbeat": "2026-08-16T20:29:12.247332+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-16T20:48:00.785922+00:00",
+    "completed_at": "2026-08-16T20:48:00.785922+00:00",
     "abandoned": false,
-    "model": "opus"
+    "model": "opus",
+    "exit_code": 0,
+    "result_present": true,
+    "result_fresh": true,
+    "verdict_source": "result"
   }
 ]

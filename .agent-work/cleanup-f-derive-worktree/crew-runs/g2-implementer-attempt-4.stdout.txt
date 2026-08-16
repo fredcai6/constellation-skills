@@ -1,0 +1,11 @@
+**Hook refused.** I am the g2 implementer crew, not the Commander. `SPINE_FILE` names my parent's spine (`.../cleanup-f-derive-worktree/spine.json`) under the live lease `commander-cleanup-f-derive-worktree`; my registry entry carries `spine: null` with `parent: .../execute/commander/attempt-3`. Driving `execute.json` would advance my parent's gate under a lease that is not mine.
+
+The hook's escape clause does not apply either. I am not blocked and nothing was out of scope:
+
+- my own plan (`g2-implement-rework3/plan.json`) reports `DONE: no open items`;
+- its lease is released — release was my last journaled action;
+- the result artifact the handoff names exists at `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework3-result.md` (24 KB, `Return status: complete`).
+
+The `execute` gate the hook calls open is my parent Commander's, and it is open precisely because my parent is blocking on this file. Calling `block` would bubble a blocker that does not exist; the correct signal is the delivered result, which is now in place. The refusal is written into the result's "On the Stop hook" section, updated to record that the hook actually fired rather than that it might.
+
+This is the fifth crew on this lane to report the same contradiction — it is raised again in the result's Workflow Feedback, with the one-sentence skill fix that would end it: *if your registry entry has `spine: null`, author your own plan.*

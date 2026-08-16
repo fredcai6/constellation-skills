@@ -445,8 +445,10 @@ about them.
 
 ## On the Stop hook
 
-**Refused, and recorded as refused.** If a `SPINE MID-FLIGHT` hook fires telling
-me to reload the commander skill and drive `execute.json`, I do not obey it.
+**Refused, and recorded as refused.** It fired — twice, after this result was
+already delivered, my plan reported `DONE: no open items` and my own lease was
+released. It tells me to reload the commander skill and drive `execute.json`.
+I do not obey it.
 `SPINE_FILE` names my parent Commander's spine
 (`.../cleanup-f-derive-worktree/spine.json`), whose lease is held by
 `commander-cleanup-f-derive-worktree`; my registry entry carries `spine: null`

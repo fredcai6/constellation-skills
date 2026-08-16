@@ -1322,6 +1322,16 @@
       "id": "tc7",
       "from": "g2-review",
       "statement": "The review survey template resolves the Fowler record to one fixed path, .agent-work/<work-id>/FOWLER_PASS.json, shared by every reviewer on the work-id -- while reviewer handoffs forbid overwriting a predecessor's record. Every reviewer after the first must amend the survey to re-point it at a per-crew filename (the g2 rework-2 reviewer used amend --delta with a retext-check on r6-fowler.c1). The template should default to a per-crew name. Three FOWLER_PASS records already sit at variant paths on this work-id, which is the symptom."
+    },
+    {
+      "id": "tc8",
+      "from": "g2-implement",
+      "statement": "A claim that wraps across two comment lines is invisible to every line-oriented grep in this lane's doctrine. It hid the g2 reviewer's B1 from three passes. Any handoff that says 'grep for this sentence' is wrong by default in a repo whose prose lives in wrapped comments. The strip-markers-and-flatten rendering the rework-3 implementer wrote (sweep_claims.py, about eight lines) belongs in shared tooling rather than in each crew's scratch directory. Raised by the g2 rework-3 implementer as tc-C."
+    },
+    {
+      "id": "tc9",
+      "from": "g2-implement",
+      "statement": "tests/test_worktree_derivation.py's symlink docstring still reasons about origin_worktree_refusal, a predicate deleted in g2: 'A realpath here would also make origin_worktree_refusal impure while its purity test stayed green.' Stale reference to a deleted symbol, not a member of either claim family the rework-3 sweep hunted, and the same class of residue g2 fences to g3 in the two spine_rail files. Route to g3 or #610's wave."
     }
   ],
   "blockers": [],
