@@ -369,8 +369,13 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "in-progress",
-      "status_detail": {},
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "Three rulings outside this Commander's latitude, each a case the launch order reserves for the Admiral. (1) The removed origin comparison WAS the only guard on a leaseless spine -- measured base-vs-tree from a foreign worktree, every mutating verb went REFUSED to exit 0 on a never-claimed or released spine, because require_session returns early with no lease. This blocks g2, implemented and committed but its gate blocked. (2) The fail-closed refusal (g4) refuses 362 of 429 guarded-verb invocations across 125 tests, three in lane-E-fenced tests/test_crew_launcher.py; the obvious narrowing is closed because it reinstates reading the stamp for a decision. (3) The launch order's premise for #315 (g5) is false -- verify_worktree_isolation has two live tracked template carriers, not zero, one a live command-kind precondition, and the shipped Admiral template itself rules that forcing cwd disarms the check and is not superseded by the engine-native guard. g3 is unblocked on merits but the gated plan will not start it while g2-integrate is blocked.",
+        "authority_needed": "admiral-568-cleanup",
+        "next_action": "Read .agent-work/cleanup-f-derive-worktree/FLOAT_TO_ADMIRAL.md. Ruling 1 releases g2 and then g3; Rulings 2 and 3 release g4 and g5. Alternatively amend the plan to move g3 ahead of g2 if the Stop-hook fix is wanted before Ruling 1.",
+        "prior_status": "in-progress"
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -630,7 +635,14 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "execute",
+      "blocker": "Three rulings outside this Commander's latitude, each a case the launch order reserves for the Admiral. (1) The removed origin comparison WAS the only guard on a leaseless spine -- measured base-vs-tree from a foreign worktree, every mutating verb went REFUSED to exit 0 on a never-claimed or released spine, because require_session returns early with no lease. This blocks g2, implemented and committed but its gate blocked. (2) The fail-closed refusal (g4) refuses 362 of 429 guarded-verb invocations across 125 tests, three in lane-E-fenced tests/test_crew_launcher.py; the obvious narrowing is closed because it reinstates reading the stamp for a decision. (3) The launch order's premise for #315 (g5) is false -- verify_worktree_isolation has two live tracked template carriers, not zero, one a live command-kind precondition, and the shipped Admiral template itself rules that forcing cwd disarms the check and is not superseded by the engine-native guard. g3 is unblocked on merits but the gated plan will not start it while g2-integrate is blocked.",
+      "authority_needed": "admiral-568-cleanup",
+      "next_action": "Read .agent-work/cleanup-f-derive-worktree/FLOAT_TO_ADMIRAL.md. Ruling 1 releases g2 and then g3; Rulings 2 and 3 release g4 and g5. Alternatively amend the plan to move g3 ahead of g2 if the Stop-hook fix is wanted before Ruling 1."
+    }
+  ],
   "origin": {
     "work_id": "cleanup-f-derive-worktree",
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
@@ -640,8 +652,8 @@
   "engine_session": {
     "session_id": "commander-cleanup-f-derive-worktree",
     "status": "active",
-    "claimed_at": "2026-08-16T15:49:08.799312+00:00",
-    "last_heartbeat": "2026-08-16T16:22:16.611685+00:00",
+    "claimed_at": "2026-08-16T18:45:47.123894+00:00",
+    "last_heartbeat": "2026-08-16T18:45:47.168708+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
