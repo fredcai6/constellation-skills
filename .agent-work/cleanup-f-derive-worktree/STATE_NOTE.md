@@ -1,20 +1,18 @@
 # Crash-resume state note — cleanup-f-derive-worktree
 
-- **step:** execute · `execute.json` gate `g2-integrate` is **BLOCKED**, bubbled to the Admiral. g1 closed and committed; g3/g4/g5 not started.
-- **slug:** cleanup-f-derive-worktree · branch `cleanup/f-derive-worktree` · worktree `/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree` · HEAD `b8557ff4` (base was `e36e630b`)
+- **step:** execute · leg 2 · `execute.json` gate `g2-integrate` — resuming under `ADMIRAL_RULING-1.md` (R1 accepted: narrow the claim, close g2). Then g3, g4 re-authored to R2, g5 `skip` per R3.
+- **slug:** cleanup-f-derive-worktree · branch `cleanup/f-derive-worktree` · worktree `/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree` · HEAD `73bc4f43` (base `e36e630b`; merging `main` at `e0539903`)
 - **next command:** `py scripts/checklist_engine.py --file .agent-work/cleanup-f-derive-worktree/execute.json current`
-- **pid:** none — foreground; no crew is running
-- **expected artifact:** `.agent-work/cleanup-f-derive-worktree/FLOAT_TO_ADMIRAL.md` — the three rulings this run is waiting on
+- **pid:** none — foreground; no crew running (registry: `execute/commander/attempt-2` is this session; `attempt-1` is the superseded leg 1)
+- **expected artifact:** `.agent-work/cleanup-f-derive-worktree/execute.json` driven to terminal, then the spine's `archive` closeout — this leg's result artifact is `.agent-work/cleanup-f-derive-worktree/crew-handoffs/execute-commander-result.md`
 
-**Read first on resume:** `FLOAT_TO_ADMIRAL.md`, then `LAUNCH_ORDER.md`,
-`PROBLEM_STATEMENT.md`, `MISSION_FRAME.md`, `UNTAKEN_ROADS.md`, and the cold
-critic at `crew-handoffs/plan-plan-critic-result.md`.
+**Read first on resume:** `LAUNCH_ORDER-2.md`, `ADMIRAL_RULING-1.md`,
+`FLOAT_TO_ADMIRAL.md`, then `LAUNCH_ORDER.md`, `PROBLEM_STATEMENT.md`,
+`MISSION_FRAME.md`, `UNTAKEN_ROADS.md`, and the cold critic at
+`crew-handoffs/plan-plan-critic-result.md`.
 
-**Three Admiral rulings are outstanding.** Do not resume g2, g4 or g5 without
-them. **g3 depends on none of them, but the engine will not start it while
-`g2-integrate` is blocked** — a gated plan works in order, and `skip` would be a
-lie (it means overtaken-by-events). Its handoff is written and ready at
-`crew-handoffs/g3-implementer-handoff.md`. Either resolve Ruling 1 and g3 follows,
-or `amend` the plan to move g3 ahead of g2.
+**All three rulings are answered** — nothing is waiting on the Admiral. The
+remaining floats-in-waiting are: any case where "cannot place" genuinely must
+refuse (R2's escape hatch), and publication (the Admiral's, always).
 
-_Updated: 2026-08-16T18:05:00+00:00_
+_Updated: 2026-08-16T18:55:00+00:00_

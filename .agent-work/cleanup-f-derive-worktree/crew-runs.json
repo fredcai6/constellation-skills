@@ -5,7 +5,7 @@
     "gate": "execute",
     "role": "commander",
     "attempt": 1,
-    "status": "running",
+    "status": "blocked",
     "session_name": "constellation/cleanup-f-derive-worktree/execute/commander/attempt-1",
     "backend": "cli",
     "door_bound": true,
@@ -18,10 +18,15 @@
     "stdout": ".agent-work/cleanup-f-derive-worktree/crew-runs/execute-commander-attempt-1.stdout.txt",
     "stderr": ".agent-work/cleanup-f-derive-worktree/crew-runs/execute-commander-attempt-1.stderr.txt",
     "started_at": "2026-08-16T15:48:19.247620+00:00",
-    "last_heartbeat": "2026-08-16T15:48:19.247620+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-16T18:46:25.265245+00:00",
+    "completed_at": "2026-08-16T18:46:25.265245+00:00",
     "abandoned": false,
-    "model": "opus"
+    "model": "opus",
+    "blocked_gate": "execute",
+    "exit_code": 0,
+    "result_present": false,
+    "result_fresh": false,
+    "verdict_source": "blocked_gate"
   },
   {
     "crew_id": "constellation/cleanup-f-derive-worktree/plan/plan-critic/attempt-1",
@@ -216,5 +221,30 @@
     "result_present": true,
     "result_fresh": true,
     "verdict_source": "result"
+  },
+  {
+    "crew_id": "constellation/cleanup-f-derive-worktree/execute/commander/attempt-2",
+    "work_id": "cleanup-f-derive-worktree",
+    "gate": "execute",
+    "role": "commander",
+    "attempt": 2,
+    "status": "running",
+    "session_name": "constellation/cleanup-f-derive-worktree/execute/commander/attempt-2",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 853125,
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
+    "handoff": ".agent-work/cleanup-f-derive-worktree/LAUNCH_ORDER-2.md",
+    "result": null,
+    "spine": ".agent-work/cleanup-f-derive-worktree/spine.json",
+    "parent": "admiral-568-cleanup",
+    "stdout": ".agent-work/cleanup-f-derive-worktree/crew-runs/execute-commander-attempt-2.stdout.txt",
+    "stderr": ".agent-work/cleanup-f-derive-worktree/crew-runs/execute-commander-attempt-2.stderr.txt",
+    "started_at": "2026-08-16T18:48:59.624605+00:00",
+    "last_heartbeat": "2026-08-16T18:48:59.624605+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "model": "opus",
+    "scratch_dir": ".agent-work/cleanup-f-derive-worktree/crew-scratch/execute-commander-attempt-2-b6858d04a495"
   }
 ]

@@ -1,0 +1,43 @@
+Run parked in a clean, resumable blocked state. Here's the return.
+
+---
+
+## Verdict: **blocked, with three measured reasons** — one gate shipped, one held, three not started
+
+I could not park at `archive`. Three of five gates need rulings that the launch order explicitly reserves for you. Full package: `.agent-work/cleanup-f-derive-worktree/FLOAT_TO_ADMIRAL.md`.
+
+| gate | state |
+|---|---|
+| **g1** derivation | **closed, independent APPROVE**, `9ff86f2d` |
+| **g2** retire stamp-and-compare | implemented, committed `b8557ff4`, **gate blocked** |
+| **g3** worktree stops answering "is this mine" | not started — handoff written |
+| **g4** fail-closed refusal | not started |
+| **g5** #315 `cwd` thread | not started |
+
+### The three rulings
+
+**1. The removed comparison *was* the only guard on a leaseless spine.** `require_session` returns early when there's no active lease, so on a never-claimed *or released* spine the origin comparison was the sole refusal. Measured base-vs-tree from a foreign worktree: `start`/`attach` went **REFUSED → exit 0, writing state into a tree the agent isn't standing in**. "The lease was always the guard" holds only where a lease exists. This is precisely what `not-a-weaker-guard` (`settled/human`) says to float.
+
+**2. Fail-closed refuses 362 of 429 guarded-verb invocations** across 125 tests — three in lane-E-fenced `test_crew_launcher.py`. The obvious narrowing ("only when the spine carries a stamp") is closed: it reinstates reading the stamp for a decision.
+
+**3. The order's premise for #315 is false.** `verify_worktree_isolation` has **two** live tracked template carriers, not zero — including a live `command`-kind precondition in `.agent-work/templates/COMMANDER_SPINE.template.json:12`, and `skills/admiral/templates/LAUNCH_ORDER.template.md:43`, whose own lines 45/47 rule that forcing cwd disarms the check and that it is *"distinct from, not superseded by, the engine-native guard."*
+
+### Two pre-rulings revised on measurement (within latitude)
+
+- **`normalize-once` loses its `realpath` half** — derivation is lexical only. Three independent reasons: `test_it_is_pure` reads only the predicate's own `co_names` and isn't transitive; `_is_valid_claim_target`'s symlink-escape guard becomes unfailable with `realpath` inside; and importing `normalize_path` trips the installer's companion guard.
+- **`one-definition-or-a-pinned-equivalence` settle-experiment came back negative both ways** — a definition outside *or* inside `spine_rail.py` needs an entry in the fenced installer. Two copies pinned by a shared case table stands.
+
+### Evidence
+
+`--here` gate: `worktree OK: in /home/.../cleanup-f-derive-worktree`, exit 0. Branch at `b8557ff4`: **3135 passed / 5 skipped / 0 failed**. `main` re-measured at gate time — it moved to `e0539903` under me (lanes A and E landed): **3163 / 7 / 0**. **Failure-set difference: empty both sides.** `IsolationGateSurvivesThroughTheCLI` green throughout. Windows handled by construction, not platform inheritance.
+
+### Two corrections to things I said earlier in this run
+
+- I told you g3 was "runnable now." It isn't — the gated plan refuses to start it while `g2-integrate` is blocked. I didn't `skip` past, since `skip` means overtaken-by-events. Ruling 1 releases it, or you can `amend` to move it ahead.
+- My g1 handoff omitted `map/` from allowed scope, so the implementer correctly stopped rather than regenerate a freshness-tested artifact. That cost a full rework cycle — my defect.
+
+### Worth your attention beyond this lane
+
+The **cold plan critic was the highest-value step by a wide margin** — it BLOCKed a four-gate plan whose only close criterion was a suite that was already green, and two of its findings became Rulings 2 and 3. Separately, the context governor's HARD band fired at **16–31% fill** and refused `start` on *every* gate; this run filed nine `refresh-request` items purely to proceed. Only your launch order's pre-emption paragraph kept the run alive — a Commander without it would hand off on turn one having done nothing.
+
+Four triage candidates recorded (not filed), including that `map/ids.jsonl` is 0 bytes and won't self-heal — the mechanical cause of every Commander run here orienting `DEGRADED-UNPARSEABLE`.

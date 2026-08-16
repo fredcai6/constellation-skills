@@ -652,8 +652,8 @@
   "engine_session": {
     "session_id": "commander-cleanup-f-derive-worktree",
     "status": "active",
-    "claimed_at": "2026-08-16T18:45:47.123894+00:00",
-    "last_heartbeat": "2026-08-16T18:45:47.168708+00:00",
+    "claimed_at": "2026-08-16T19:03:43.784499+00:00",
+    "last_heartbeat": "2026-08-16T19:03:43.784499+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
