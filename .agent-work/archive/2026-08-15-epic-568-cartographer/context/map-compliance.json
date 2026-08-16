@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "map-compliance",
+  "files": [],
+  "repo_rev": {
+    "commit": "0e625e6e98a3cba7de4cec751948e4fad6c997ce"
+  },
+  "run": {
+    "work_id": "epic-568-cartographer",
+    "generated_at": "2026-08-15T01:40:58Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills",
+      "repo": "/home/tommy/projects/constellation-skills",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+Run complete. Final state verified at source.
+
+## Report
+
+**What `spine_status` resolved to:** **`epic-568-510`** — the correct spine. The `--spine` binding held this time, so the demo-spine hazard the order warned about did not materialize. Every mutation went through the MCP door; the CLI fallback was never needed or used.
+
+**Whether `archive` completed:** Yes. `archive -> complete`, and all ten gates are terminal.
+
+**Whether the lease is released:** Yes, and in the mandated order. Sequence: attest `c2`/`c3` → `advance archive` → `release` → `spine_close`. The release is the final journal entry. The claim was a takeover per pre-ruling 2, with `previous_session_id` and `takeover_reason` stamped.
+
+**What archive verification showed:**
+
+| cond | outcome |
+|---|---|
+| `c1` | passes — `verify_episode_captured.py --phase archive` exits 0, 10 episodes tracked by git |
+| `c2` | attested — branch in sync with origin at `bf7953b6` (0 ahead / 0 behind) |
+| `c2b` | passes — PR **#581 MERGED** at `addf98c6`; the gate's own `gh` check exits 0 |
+| `c4` | **passed clean, not waived** — 92 staged text files under `.agent-work/**`, none oversized, no binaries |
+
+No waiver was requested, and no spine state was hand-edited. Working tree is clean; the work area is archived under `.agent-work/archive/2026-08-15-epic-568-510/` and tracked (89 files).
+
+One ordering trap worth your attention: the work-area move had to run through `spine_close` *after* the release. `SPINE_FILE` pointed inside the work area, so moving it by hand first would have relocated `spine.json` out from under the still-bound door — destroying the door needed for the advance and release themselves. `close_work` is built for this: it refuses while the lease is active and moves the spine last.
+
+**Floated:**
+
+1. **Closeout commits `95be07f5` and `7e50af4a` are unpushed.** Pre-ruling `decision:publication-is-done` says "Do not push, open, or modify any PR," and I read that as binding rather than interpreting around a frozen order — the Mission's "the Admiral has cleared that" reads as *you already did the publication*, not *you may now publish*. Nothing is lost: the branch ref lives in the main repo, not the worktree, so both commits survive `git worktree remove`. **Your call whether to push.** It would not disturb PR #581, which is already merged.
+2. **The staged feedback was never harvested.** `.agent-work/CONSTELLATION_FEEDBACK.md` carries **zero** `epic-568-510` entries. Its `FENCE.md` says "harvest this directory before sweeping the worktree," so I committed it to the branch rather than leave it untracked to die with the worktree. I did not write the durable root — it is outside this lane's ownership.
+3. **The inherited HARD advisory was stale.** I picked up a `CONTEXT 22% (>= hard)` banner ordering an immediate close-and-stop. That reading belonged to the dead session — the gauge is per work directory. Claiming the lease re-based it and the engine correctly reported `CONTEXT GAUGE DECLINED` (my own reading: 4%). The #477 mechanism worked, but it is worth recording: an agent that obeyed the inherited banner would have handed off at 4% full and stalled this lane a third time.
+
+**Expect `run_crew.py` to report this run as `failed`.** As your order anticipated, the launcher judges completion by the `--result` artifact at its original path, and archive moved it. I folded the archive findings into that result document at its archived location — writing `FINDINGS-archive.md` would have re-created the very directory this gate archives — and did not move it back.

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "q6-decision-classes",
+  "mechanical": {
+    "run": "epic-568-latitude",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 1,
+    "spine-step": "q6-decision-classes",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-568-latitude-q6-decision-classes@808403065e6291339cf5a9e01584ad7956e2f470",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-568-latitude",
+    "generated_at": "2026-08-12T17:19:03Z"
+  }
+}

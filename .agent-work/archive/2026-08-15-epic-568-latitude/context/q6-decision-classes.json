@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "q6-decision-classes",
+  "files": [],
+  "repo_rev": {
+    "commit": "3e4e07a3ff83227320571ee011186dcd52fa4226"
+  },
+  "run": {
+    "work_id": "epic-568-latitude",
+    "generated_at": "2026-08-12T17:19:03Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills",
+      "repo": "/home/tommy/projects/constellation-skills",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills"
+    }
+  }
+}

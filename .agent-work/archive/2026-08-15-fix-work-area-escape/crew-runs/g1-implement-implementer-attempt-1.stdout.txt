@@ -1,0 +1,21 @@
+The working tree is clean and the result artifact exists. Here's the summary.
+
+## What I did
+
+**Task 1 — fixed the escape.** `episode_capture.manifest_root()` had a fallback (`return base.parent`) that fired whenever the checklist directory didn't end in its work-id, and it silently climbed out of the work area. I reproduced it live and confirmed it's the exact mechanism behind the strays on disk: handing `manifest_root` a worktree root (e.g. `.worktrees/epic-568-510`) with work-id `"probe"` wrote to `.worktrees/probe/context/g1.json`, a sibling of the worktree.
+
+The fix: the fallback now raises `ValueError` unless `base_dir` sits somewhere under an `.agent-work` tree — the one mechanical signature every real work area shares. The nested work-id strip and the legitimate scratch-spine fallback (both pinned by existing tests) are byte-for-byte unchanged.
+
+**Task 2 — fixed the docstring.** `agent_work_root.py`'s `(gitignored, disposable)` claim was false on both counts; corrected it to describe `.agent-work/` as tracked, transportable work in progress.
+
+**Evidence**
+- RED confirmed by stashing the fix and watching the new test actually reproduce the stray write.
+- GREEN: 58 passed across the targeted test files; 251 more passed across the wider episode-capture suite.
+- Full cache-clean suite: **3003 passed, 6 skipped, 0 failed** (baseline was 3000/6/0 — the +3 is exactly the new tests).
+- `map/INDEX.md` regenerated and committed (entity-count deltas only).
+
+**A side effect worth flagging**: the refusal is caught twice by `emit_step_manifest`'s fail-soft wrapping (once for the real write, once when its failure-stub path tries the same resolution), so in this one case the seam now writes *nothing* rather than its usual failure stub — deliberate, since there's no known work area to put even a stub in. Documented in `FINDINGS.md` and covered by a new test.
+
+**Open lead**: couldn't identify what invoked the tooling with placeholder work-ids `s`/`t`/`probe` — the source worktree (`epic-568-510`) no longer exists, and the manifest schema records no pid/argv/session-id to trace it further. Recorded plainly in `FINDINGS.md` rather than guessed at.
+
+Drove the whole run through the workbench checklist engine (own plan, claimed lease, six gates, released at the end). Four local commits total; **fenced from push/PR/merge as instructed — none attempted.**

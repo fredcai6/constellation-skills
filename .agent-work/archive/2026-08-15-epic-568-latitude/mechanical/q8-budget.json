@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "q8-budget",
+  "mechanical": {
+    "run": "epic-568-latitude",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 1,
+    "spine-step": "q8-budget",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-568-latitude-q8-budget@e2d3740e21773778e61ec034eac49ffb6c77d613",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-568-latitude",
+    "generated_at": "2026-08-12T17:20:21Z"
+  }
+}

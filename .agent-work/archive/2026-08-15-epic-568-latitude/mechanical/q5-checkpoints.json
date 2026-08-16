@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "q5-checkpoints",
+  "mechanical": {
+    "run": "epic-568-latitude",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 1,
+    "spine-step": "q5-checkpoints",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-568-latitude-q5-checkpoints@142d6534b48dd3d565d2da556ba2f91172639e51",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-568-latitude",
+    "generated_at": "2026-08-12T17:15:11Z"
+  }
+}

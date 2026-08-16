@@ -1,0 +1,24 @@
+Everything checks out independently. All claims verified against actual repo state. Final summary for the user:
+
+## Summary
+
+Implemented via the constellation-implementer skill, engine-driven through an 11-gate plan (`.agent-work/tc3-worktree-root-owner/IMPLEMENTER_PLAN.json`). Mid-run, the repo's own calibrated context-fill governor hard-tripped (real, deliberate: `claude-sonnet-5` trips at 15% of its 1M-token window), so per doctrine I handed off the remaining gates to a fresh subagent rather than push through degraded. I independently re-verified every one of its claims against the actual repo state before reporting.
+
+**Changed:**
+- `scripts/spine_lifecycle.py::_default_wt_root` now returns `str(root / ".worktrees")` (was the sibling `<root>-wt`), docstring rewritten
+- `scripts/mcp_spine_server.py:664` now calls `spine_lifecycle._default_wt_root(root)` instead of restating the rule inline; stale docstring at `_primary_checkout_for_lifecycle` rewritten
+- `.gitignore` now ignores `.worktrees/`
+- `map/INDEX.md` regenerated
+- New tests: `TestDefaultWtRoot` (spine_lifecycle) and an AST dedup test (mcp_lifecycle)
+
+**Red/green proof:** both TDD gates confirmed — old code failed the new assertions, new code passes them (I re-ran both independently).
+
+**Windows path budget:** worst-case new-layout path = 128 chars vs. the 260 MAX_PATH limit (132-char margin); delta vs. old layout is exactly +8 chars. Safe.
+
+**Cache-clean full suite (I re-ran it myself):** 3000 passed, 6 skipped, 0 failed, vs. baseline main@09747fc6's 2997 passed/0 failed — the +3 are the new tests, 0 regressions.
+
+**Previously-skipping test:** `TestWorktreePathForRealWorktree::test_reproduces_this_runs_real_worktree` now passes (I re-ran it) instead of skipping.
+
+**FINDINGS.md** (`.agent-work/tc3-worktree-root-owner/FINDINGS.md`): the `.worktrees/s`/`t` stray areas refute the "character-by-character work-id" hypothesis — their `work_id` fields are literal single letters, not fragments of a longer id, both rooted at the now-archived `.worktrees/epic-568-510`. A third, previously-unknown stray area `.worktrees/probe` was found in the same family and recorded, untouched. Whether the old sibling layout existed because of the Windows limit is left explicitly unresolved — no evidence found either way.
+
+**Commits:** two local commits on `tc3/worktree-root-owner` (`92169d1b`, `46224399`). Nothing pushed, no PR, no merge — as required. Branch is left committed locally for you.

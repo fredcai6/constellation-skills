@@ -1,0 +1,28 @@
+[
+  {
+    "crew_id": "constellation/tc3-worktree-root-owner/g1-implement/implementer/attempt-1",
+    "work_id": "tc3-worktree-root-owner",
+    "gate": "g1-implement",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "failed",
+    "session_name": "constellation/tc3-worktree-root-owner/g1-implement/implementer/attempt-1",
+    "backend": "cli",
+    "pid": 545372,
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/tc3-worktree-root-owner",
+    "handoff": ".agent-work/tc3-worktree-root-owner/HANDOFF.md",
+    "result": ".agent-work/tc3-worktree-root-owner/IMPLEMENTER_RESULT.md",
+    "spine": null,
+    "parent": "admiral-epic-568",
+    "stdout": ".agent-work/tc3-worktree-root-owner/crew-runs/g1-implement-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/tc3-worktree-root-owner/crew-runs/g1-implement-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-08-15T05:40:32.314006+00:00",
+    "last_heartbeat": "2026-08-15T06:10:23.427685+00:00",
+    "completed_at": "2026-08-15T06:10:23.427685+00:00",
+    "abandoned": false,
+    "model": "claude-sonnet-5",
+    "exit_code": 0,
+    "result_present": false,
+    "result_fresh": false
+  }
+]

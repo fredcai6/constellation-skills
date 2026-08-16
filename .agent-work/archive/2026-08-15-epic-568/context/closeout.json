@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "closeout",
+  "files": [],
+  "repo_rev": {
+    "commit": "85c816e1089a45b0d177e579a3cf513abd9e5227"
+  },
+  "run": {
+    "work_id": "epic-568",
+    "generated_at": "2026-08-15T04:35:52Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills",
+      "repo": "/home/tommy/projects/constellation-skills",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills"
+    }
+  }
+}

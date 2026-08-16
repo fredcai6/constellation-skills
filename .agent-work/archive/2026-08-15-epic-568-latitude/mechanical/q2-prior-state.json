@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "q2-prior-state",
+  "mechanical": {
+    "run": "epic-568-latitude",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 1,
+    "spine-step": "q2-prior-state",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-568-latitude-q2-prior-state@d26f47e47de761e8dd3c3ed2de356395ee3bbf61",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-568-latitude",
+    "generated_at": "2026-08-12T17:05:18Z"
+  }
+}

@@ -1,0 +1,28 @@
+[
+  {
+    "crew_id": "constellation/fix-work-area-escape/g1-implement/implementer/attempt-1",
+    "work_id": "fix-work-area-escape",
+    "gate": "g1-implement",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "completed",
+    "session_name": "constellation/fix-work-area-escape/g1-implement/implementer/attempt-1",
+    "backend": "cli",
+    "pid": 2042329,
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/fix-work-area-escape",
+    "handoff": ".worktrees/fix-work-area-escape/.agent-work/fix-work-area-escape/HANDOFF.md",
+    "result": ".worktrees/fix-work-area-escape/.agent-work/fix-work-area-escape/IMPLEMENTER_RESULT.md",
+    "spine": null,
+    "parent": "human-direct",
+    "stdout": ".agent-work/fix-work-area-escape/crew-runs/g1-implement-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/fix-work-area-escape/crew-runs/g1-implement-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-08-15T14:48:02.732017+00:00",
+    "last_heartbeat": "2026-08-15T15:05:17.808858+00:00",
+    "completed_at": "2026-08-15T15:05:17.808858+00:00",
+    "abandoned": false,
+    "model": "claude-sonnet-5",
+    "exit_code": 0,
+    "result_present": true,
+    "result_fresh": true
+  }
+]

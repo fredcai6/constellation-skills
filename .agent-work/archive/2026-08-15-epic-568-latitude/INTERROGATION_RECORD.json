@@ -1,0 +1,95 @@
+{
+  "goal": "Settle the latitude contract for epic 568 (engine state has an owner) between the Admiral and the human before wave 1.",
+  "mode": "interactive",
+  "questions": [
+    {
+      "id": "q1-scope",
+      "kind": "decision",
+      "question": "How much of epic 568's 31 issues across 7 work packages is this run's scope?",
+      "status": "resolved",
+      "resolution": "Substrate plus the near-mechanical wins: WP1 (#552 #383 #357 #369 #318 #330 #208) + WP2 (#441) + WP5 (#315) + #530 + #510. WP3/WP4/WP6/WP7 deferred to a follow-on with the substrate under them.",
+      "human_answer": "Substrate + the near-mechanical wins."
+    },
+    {
+      "id": "q2-prior-state",
+      "kind": "fact",
+      "question": "What has already landed against these 31 issues, and what does the tree actually look like now?",
+      "status": "resolved",
+      "resolution": "All 31 member issues are OPEN; nothing has partially landed, so the tranche starts clean. Four defects confirmed live in source at their filed locations.",
+      "code_evidence": "gh issue view on all 31 -> every one OPEN. scripts/checklist_engine.py:775-799 _run_check_command calls subprocess.run([shell,'-c',command]) with NO cwd= argument (#315, fail-open confirmed). scripts/hooks/spine_rail.py:83-103 _save_json_map docstring files the lock gap as 'KNOWN, NOT CHASED (#419)' and line 98 builds a shared tmp name path.name+'.tmp' (#441, both gaps as filed). scripts/hooks/spine_rail.py:204-226 session_view merges the bare sid key with every sid#agent key via merged.update(entries) (#549). scripts/agent_work_root.py:110-141 durable_root returns the worktree fallback when _active_epic_lease(main_checkout) is true (#318). Lease scan over git ls-files '*spine.json': 91 tracked spines carry an engine_session, 24 still status=active -- the issue title's '43 on disk' is a different denominator."
+    },
+    {
+      "id": "q3-self-modification",
+      "kind": "decision",
+      "question": "This epic edits the engine that every Commander in the epic is driving. How should that hazard be handled?",
+      "status": "resolved",
+      "resolution": "Serialize engine-core, parallelize the rest. Changes touching scripts/checklist_engine.py, scripts/hooks/spine_rail.py and scripts/agent_work_root.py run one Commander at a time with no concurrent Commander editing those files; backfill scripts, the reaper, doctrine and advisory text, and template edits fan out around them.",
+      "human_answer": "Serialize engine-core, parallelize the rest."
+    },
+    {
+      "id": "q4-ordering",
+      "kind": "decision",
+      "question": "Within the serialized engine-core lane, what goes first? Fixing #315's missing cwd= changes what every relative check in every shipped spine resolves against.",
+      "status": "resolved",
+      "resolution": "#315 first, as wave 1, alone: the cwd-threading fix plus repair of every relative-check fallout across shipped spine templates, before any other engine-core work. Fixing it late would mean everything before it was verified under a check that cannot fail. Wave 1 must enumerate the blast radius by command and state the count, never from memory.",
+      "human_answer": "#315 first, everything verified under it."
+    },
+    {
+      "id": "q5-checkpoints",
+      "kind": "decision",
+      "question": "Checkpoint protocol: where must the Admiral stop and present, and where may it run through?",
+      "status": "resolved",
+      "resolution": "Stop-and-present at every wave boundary; no wave pre-cleared to run through. At each boundary: what merged, what the evidence showed, what the next wave proposes. The human clears the next launch. Plain English by default, technical depth and evidence on demand.",
+      "human_answer": "Stop at every wave boundary."
+    },
+    {
+      "id": "q6-decision-classes",
+      "kind": "decision",
+      "question": "Which decision classes are delegated and which are surfaced? ORCHESTRATOR_CONTEXT.md requires human approval for merges unless pre-approved for the specified work.",
+      "status": "resolved",
+      "resolution": "Merge to main DELEGATED as an explicit pre-approval under the ORCHESTRATOR_CONTEXT carve-out: merge on a green check exit code plus an independent reviewer APPROVE, gating on the exit code, never chaining a merge onto a watch command, every merge logged and visible at the next checkpoint. Issue filing/closing and spend/model tier delegated; architecture, scope change, production defaults and apply-a-lesson surfaced; fix-now triage delegated except inside the three engine-core files; a project-specific class added -- editing an engine-core file outside the serialized lane's current issue is surfaced. Out-of-taxonomy always escalates. The human reviewed the full table as drafted and confirmed it.",
+      "human_answer": "Delegated: I merge green reviewed PRs. Full table confirmed as written at sign-off."
+    },
+    {
+      "id": "q7-permissions",
+      "kind": "decision",
+      "question": "Delegated merge authority needs harness pre-clearance or a recorded fallback; the allowlist currently holds only gh issue *.",
+      "status": "resolved",
+      "resolution": "Pre-clear the merge path before wave 1: gh pr create/view/checks/merge, git push, git branch -d and -D, git worktree remove/prune, drafted and shown to the human before being written into .claude/settings.local.json. Recorded fallback for anything still vetoed: one live approval in the moment, remaining equivalent actions batched to the next checkpoint, logged as ESCALATION.",
+      "human_answer": "Pre-clear the merge path now."
+    },
+    {
+      "id": "q8-budget",
+      "kind": "decision",
+      "question": "Budget and model parameters: how wide may a wave run and at what tier?",
+      "status": "resolved",
+      "resolution": "Engine-core lane: one Commander at a time on Opus. Parallel lane: up to 3-4 concurrent Commanders on Sonnet, escalating to Opus per issue where complexity, ambiguity or risk demands it, tier recorded in each launch order's Budget slot. The usage-limit pool is a wave-sizing input: defer the next wave past a near reset rather than launching into it.",
+      "human_answer": "Narrow serialized core, 3-4 wide parallel."
+    },
+    {
+      "id": "q9-success-shape",
+      "kind": "decision",
+      "question": "What does done look like for this tranche, and is a measured negative an acceptable deliverable?",
+      "status": "resolved",
+      "resolution": "Each in-scope issue closes on a live repro that fails before the fix and passes after. Targeted tests plus the relevant broader suite ride alongside per ORCHESTRATOR_CONTEXT; they do not replace the repro. A defect that does not reproduce, or a fix judged not worth its cost, is a complete successful deliverable when the measurement is stated. Scoped nulls apply: every verdict names what was tested and what was not.",
+      "human_answer": "Live repro before and after, honest null accepted."
+    },
+    {
+      "id": "q10-expiry",
+      "kind": "decision",
+      "question": "When does the contract expire and force a refresh before further dispatch?",
+      "status": "resolved",
+      "resolution": "After wave 1 merges. Wave 1 is the change most likely to reshape the rest of the tranche, so the refresh happens as soon as it lands. No dispatch past that point without a confirmed contract refresh; the plan beyond wave 1 is forecast, not a launch queue, and gets a replan transition at the boundary.",
+      "human_answer": "After wave 1 merge."
+    }
+  ],
+  "signoff": {
+    "by": "Tommy (human at the keyboard, fredcai6@gmail.com)",
+    "statement": "Confirmed as written. Presented the full drafted contract including the items the human had not ruled on directly -- the remainder of the decision-classes table, the added engine-core-outside-lane class, float-up routing, comms, and the #552 denominator pre-ruling graded as a guess -- and the human answered 'Confirmed as written', stating questioning is complete and the understanding is shared."
+  },
+  "consolidated": false,
+  "rail_exception": {
+    "reviewer_cosign": "",
+    "log": ""
+  }
+}

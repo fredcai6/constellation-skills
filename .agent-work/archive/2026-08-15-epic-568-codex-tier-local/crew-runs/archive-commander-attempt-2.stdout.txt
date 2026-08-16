@@ -1,0 +1,39 @@
+`archive` is complete and the lease is released. Final state verified from the archived spine.
+
+## What `spine_status` resolved to
+
+**`epic-568-codex-tier-local`** — not `scratch-mcp-424`. This was the whole point of attempt 2, so I checked it before any mutating call, two independent ways: the status lease line read `constellation/epic-568-codex-tier-local` with `archive [blocked]` active, and `SPINE_FILE` resolved to this worktree's `spine.json`, whose `work_id` is `epic-568-codex-tier-local`. The `cli` backend with `--spine` bound the door as your order predicted. No stop condition fired.
+
+## Did archive complete
+
+Yes. All 10 spine items are `complete`, all 5 archive postconditions `satisfied: true`. Nothing was forced, waived, or hand-edited — `c4` never needed its human waiver because the staged diff was empty.
+
+The blocker dissolved rather than being overridden. It was `blocked` on publication authority; publication had already happened before I started, so `resume` was honest.
+
+## Is the lease released
+
+Yes — `status: released`, and it came **after** the closing advance, never before. The takeover stamped `previous_session_id: constellation/epic-568-codex-tier-local` with a takeover reason, so this is a takeover of the same spine, not a recreation.
+
+Sequence: `claim force` → `resume archive` → `attest c2, c3` → `advance archive` (→ complete) → `release` → `spine_close`.
+
+`spine_close` ran last deliberately. It moves `spine.json` into the archive, and the door resolves `SPINE_FILE` once at import — moving it any earlier would have broken the binding for every call above. Worth noting for the doctrine: the release updated `engine_session.status` but did not append a journal entry, so the final journal entry is the `advance` at seq 61. Ordering is still correct; the imperative's phrase "the release is the final journal entry" doesn't match what the engine actually writes.
+
+## Archive verification
+
+| Cond | Measured | Result |
+|---|---|---|
+| `c1` | `verify_episode_captured.py --phase archive` → exit 0; 3 tracked episodes | pass |
+| `c2` | `HEAD == origin/epic-568-codex-tier-routing == a34cf500` | attested |
+| `c2b` | check run verbatim → exit 0; PR #579 `MERGED` | pass |
+| `c3` | released immediately after the closing advance | met in order |
+| `c4` | staged diff empty; untracked paths under `.agent-work/**`, an allow_glob | pass |
+
+**PR #579 is merged, not open** — `mergedAt 2026-08-14T23:32:12Z`, squash commit `e0c998b6`, which I confirmed is an ancestor of `origin/main`. Cite `e0c998b6` for this work, not `a34cf500`.
+
+Records are at `.agent-work/archive/2026-08-15-epic-568-codex-tier-local/` — `ARCHIVE_RESULT.md` (attempt 2) and `FINDINGS-archive.md`. Attempt 1's refusal is preserved verbatim as `ARCHIVE_RESULT-attempt-1.md` rather than overwritten; its diagnosis was exact and is the reason this run could proceed.
+
+## Floated to you
+
+1. **The archive commit is local and cannot be pushed.** `spine_close` committed the moved work area as `1a314a70` (38 files, all inside the archive dir, nothing swept in). `decision:publication-is-done` forbids pushing and the branch is already squash-merged, so **you decide whether this record reaches `main`** — a cherry-pick onto a fresh branch off `main` is cleaner than pushing an already-merged branch. Durable evidence doesn't depend on it: the three episodes under `episodes/` are tracked and already merged.
+2. **A second work area at the repo root was left alone.** `constellation-skills/.agent-work/epic-568-codex-tier-local/` (holding `crew-runs.json`, written 17:45 today) belongs to the live dispatch launcher in the main checkout, not this worktree. Moving it could have broken a running launcher. It needs a sweep by that checkout's owner.
+3. **The engine stamps the archive directory with the UTC date** (`2026-08-15`), a day ahead of the local date. I corrected the two records in a follow-up commit `31d66ea4` rather than amending, so the SHA the spine's own close record cites stays valid.

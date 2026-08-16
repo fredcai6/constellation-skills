@@ -1,0 +1,33 @@
+Archive complete, lease released. Report per the order's Return Shape:
+
+## What `spine_status` resolved to
+
+**`epic-568-530`** — my own spine, not `scratch-mcp-424` or any demo spine. Confirmed before any mutation: the door reported lease `constellation/epic-568-530` and a digest naming episode `epic-568-530-001`. The `cli` backend with `--spine` bound `SPINE_FILE` correctly, which is exactly what my predecessor could not get.
+
+## Whether `archive` completed
+
+**Yes** — `archive -> complete`, spine now `DONE: no open items`. Lease taken over by forced claim with reason (takeover, not recreation), gate resumed with the cleared-blocker reason, then advanced.
+
+- `c1` (command) — capture gate exits 0, cache-clean: `epic-568-530-001` recorded and git-tracked.
+- `c2` (attested) — head `4ceace75` identical to `origin/epic-568/530-binding`, `0 0` divergence.
+- `c2b` (command) — PR #580 `MERGED`.
+- `c3` (attested) — released as the closing act.
+- `c4` (policy) — nothing staged; **no waiver requested or needed**.
+
+Nothing was pushed, opened, modified, or merged by this session. No spine state hand-edited, no shared config touched.
+
+## Whether the lease is released
+
+**Yes** — `released lease constellation/epic-568-530/archive/commander`, after the closing advance, as the final journaled action.
+
+## What archive verification showed
+
+I reconciled the order's claims at source rather than taking them on report: `origin/epic-568/530-binding` at `4ceace75`; PR #580 `MERGED` at `c23c3d0f`; and both `tests/test_spine_rail.py` and `episodes/active/epic-568-530-001.md` confirmed present on `origin/main` via `git cat-file -e`. The Admiral's rebase and regenerated map were left alone.
+
+Work area moved to `.agent-work/archive/2026-08-14-epic-568-530/`. Result artifact: `ARCHIVE_RESULT.md` there, alongside `FINDINGS-archive.md` (the harness did not refuse that write).
+
+## Floated
+
+**This run's work-area records cannot reach history from my lane.** `.agent-work/` is tracked by policy here (8345 tracked files, prior archived work areas included), but this work area was never tracked at any point. PR #580 was squash-merged, so nothing committed to the branch now reaches `main`; pre-ruling 1 forbids a second publication path; and committing locally would have made `c2` false, forcing either a forbidden push or a false attestation. So the archived directory stays local to this worktree and dies with it. **The durable record survives regardless** — episode `epic-568-530-001` is on `main`, which is the property the archive imperative calls load-bearing. If the work-area records are wanted in history, that is an act for whoever holds publication authority. `FINDINGS-archive.md` F2.
+
+Two smaller findings recorded: F1 closes the carried MCP-door finding (`--spine` is the launch shape that works for resumed spines); F3 notes that the archive imperative's ordering is wrong on one point — the work-area move must follow the release, not precede closeout, because `SPINE_FILE` is an absolute path into the live work area and moving it earlier breaks the door mid-gate. I sequenced the move after release for that reason and said so in the advance rationale.

@@ -1,0 +1,193 @@
+{
+  "work_id": "epic-568-cartographer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "context",
+    "packets",
+    "index-overlays",
+    "map-compliance"
+  ],
+  "tasks": {
+    "context": {
+      "id": "context",
+      "title": "Load map and context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas if present: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and the current map (index + touched packets). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context and current map loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded docs/agents/ORCHESTRATOR_CONTEXT.md and GLOSSARY.md, cartographer references/map-model.md, and the current map: map/INDEX.md + map/ids.jsonl are the only tracked map artifacts (.gitignore:68-70 ignores map/* except those two). No docs/architecture/ tree exists in this repo (never has, per git log --all)."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "packets": {
+      "id": "packets",
+      "title": "Reconcile node packets",
+      "imperative": "Reconcile each touched node packet against the code with evidence; update wording, status/confidence, dependencies, and rationale.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "current map loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Current map loaded and verified: python -m scripts.code_map build --root . rebuilt the tree and left git status clean for the two tracked artifacts (map/INDEX.md, map/ids.jsonl), so the generated map is current at HEAD."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "touched packets reflect current code",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "No curated packet layer exists in this repo; the generated code map is the map. Verified current: rebuild left map/INDEX.md + map/ids.jsonl clean, and the full suite (2997 passed/7 skipped) includes MapTreeFreshnessTests. INDEX.md:75 already reflects wave 1 ('a compiled, origin-stamped spine'). Hand-written docs reconciled against code: docs/CHECKLIST_SCHEMA.md documents begin-instructed and matches checklist_engine.py:1852,1887 where both compliance selectors exclude it."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "index-overlays": {
+      "id": "index-overlays",
+      "title": "Update index and overlays",
+      "imperative": "Update the index and overlays to match the reconciled packets.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "index and overlays consistent with packets",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "No overlays/ or decisions/ tree exists in this repo, so there is nothing to bring into line with packets. The index (map/INDEX.md) is the generated entry point and was verified current by rebuild. No curated index edit was warranted: the epic changed no module's docstring first line except spine_lifecycle's, which INDEX.md:75 already carries."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "map-compliance": {
+      "id": "map-compliance",
+      "title": "Verify map compliance",
+      "imperative": "Verify map compliance. Record unresolved structural questions; flag future work as triage candidates.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map compliant; open structural questions recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Map compliant: the only tracked map artifacts (map/INDEX.md, map/ids.jsonl) rebuild clean at HEAD and the full suite is green (2997 passed, 7 skipped). Six structural findings recorded as triage candidates tc1-tc6; none is a map edit, all are current-truth observations about code the map correctly reflects."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "map-compliance",
+      "statement": "The worktree-isolation gate weakened when worktrees moved inside the repo. checklist_engine.origin_worktree_refusal (scripts/checklist_engine.py:155) admits any cwd via Path.is_relative_to containment. With worktrees nested at <repo>/.worktrees/X, a spine stamped origin.worktree=<primary checkout> now passes from inside EVERY nested worktree; measured directly: cwd=<repo>/.worktrees/epic-568-441 returns no refusal, cwd=<repo>-wt/epic-568-315 is refused. Under the old sibling layout containment could not be satisfied that way. The gate still refuses the reverse direction, so it is now asymmetric."
+    },
+    {
+      "id": "tc2",
+      "from": "map-compliance",
+      "statement": "The .worktrees/ relocation exists only on disk, not in code. scripts/spine_lifecycle.py:154 _default_wt_root still returns <repo>-wt and is the live default for the only production open_work caller; scripts/mcp_spine_server.py:664 hand-duplicates the same rule. So the MCP door still CREATES worktrees at the sibling path. Live evidence of the split: .worktrees/epic-568-codex-tier-routing's spine is stamped origin.worktree=/home/tommy/projects/constellation-skills-wt/epic-568-codex-tier-routing while sitting in .worktrees/. Both layouts are registered simultaneously in git worktree list."
+    },
+    {
+      "id": "tc3",
+      "from": "map-compliance",
+      "statement": "'Where does a worktree live' and 'which worktree owns this spine' have no single owner: twelve independent computations across scripts/, with literal duplication between spine_lifecycle._default_wt_root and mcp_spine_server:664, and two disagreeing answers to spine ownership (spine_rail._worktree_from_spine is lexical, mcp_spine_server._worktree_root_for_lifecycle asks git). Two producers of origin.worktree normalize differently (as_posix vs str(Path)), papered over by os.normcase in the engine."
+    },
+    {
+      "id": "tc4",
+      "from": "map-compliance",
+      "statement": "scripts/spine_lifecycle.py:155-157 _default_wt_root's docstring asserts the sibling <repo>-wt layout as measured truth; the generated map reproduces it verbatim at map/scripts.spine_lifecycle/_default_wt_root.md, so the map asserts a layout most live worktrees no longer follow. scripts/mcp_spine_server.py:572-577 states the same sibling convention as an invariant. Stale docstring, mechanically fresh map."
+    },
+    {
+      "id": "tc5",
+      "from": "map-compliance",
+      "statement": ".worktrees/ is neither tracked nor ignored (git check-ignore exits 1; git status shows '?? .worktrees/'), so live linked worktrees now sit as untracked content inside the primary checkout. Related testability friction: the relocation left stale __pycache__ that fabricated a phantom suite failure during this epic, and tests/test_spine_lifecycle.py:136-160 skips because ROOT.parent is not the -wt sibling, so the default-layout path has no live coverage."
+    },
+    {
+      "id": "tc6",
+      "from": "map-compliance",
+      "statement": "Doctrine reads inconsistently on worktree-isolation evidence: skills/admiral/templates/LAUNCH_ORDER.template.md:43 still instructs each Commander to run verify_worktree_isolation.py --here, while docs/CHECKLIST_SCHEMA.md:124 says the engine gate supersedes that check. Separately, skills/workbench/references/checklist-engine.md (the agent-facing engine reference) documents no worktree-isolation REFUSED behavior at all; only docs/CHECKLIST_SCHEMA.md carries it. And no skill doc says WHERE a worktree should be created."
+    }
+  ],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "cartographer-568-reconcile",
+    "status": "released",
+    "claimed_at": "2026-08-15T01:36:51.470529+00:00",
+    "last_heartbeat": "2026-08-15T01:41:28.113303+00:00",
+    "claimed_by": "cartographer",
+    "worktree": "/home/tommy/projects/constellation-skills",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-15T01:41:32.264204+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "context",
+      "why": "This repo's structural map is ONLY the generated code map: map/INDEX.md plus map/ids.jsonl. There is no curated packet/overlay/decision layer here even though the repo ships scripts/build_architecture_map.py that builds one. So 'reconcile touched packets' collapses onto verifying that the generated module-level index is current for the four epic-568 commits, plus hunting code/docs mismatch in the hand-written docs/ prose that the map does not cover.",
+      "mechanical": false,
+      "ts": "2026-08-15T01:37:18.971481+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "packets",
+      "why": "The epic's net change is faithfully carried by the generated map for run_crew and spine_rail and checklist_engine. The one map/code mismatch is inherited from source: spine_lifecycle._default_wt_root's docstring asserts the sibling <repo>-wt layout, which the map reproduces verbatim, while four of six live worktrees now sit at .worktrees/. The map is mechanically fresh and semantically stale in that one node because its input docstring is stale.",
+      "mechanical": false,
+      "ts": "2026-08-15T01:40:46.998823+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "index-overlays",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-15T01:40:53.733396+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "map-compliance",
+      "why": "The generated map is current for epic 568. The reconcile's real yield is not a map edit but the boundary finding: the epic changed WHERE worktrees live without changing the code that decides where they live, and the isolation gate it added keys on containment, so the undocumented relocation quietly weakened the guarantee the epic was built to establish. Recorded for a future wave, not fixed here.",
+      "mechanical": false,
+      "ts": "2026-08-15T01:41:28.113295+00:00"
+    }
+  ]
+}
