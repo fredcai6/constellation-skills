@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "work_id": "cleanup-g-crew-tier",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-g-crew-tier",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "scripts/run_crew.py",
+      "content_hash": "a48da390944b2c493926fe748552aa409259e4b18a9c000bf43ebad8ce0f3314",
+      "source": "agent-declared"
+    },
+    {
+      "path": "skills/commander/references/crew-dispatch.md",
+      "content_hash": "baf0a370582aab6966f83f786137180eb47d7f8723797afc0499af4e96538d34",
+      "source": "agent-declared"
+    },
+    {
+      "path": "skills/commander/templates/IMPLEMENTER_HANDOFF.template.md",
+      "content_hash": "87a460a8ef6ac1f93cafb8c41f749b0e625c1cfb8338f96c006ced3b800a135a",
+      "source": "agent-declared"
+    },
+    {
+      "path": "skills/commander/templates/REVIEWER_HANDOFF.template.md",
+      "content_hash": "376ed1ccc8db981b371be6fd399e12fdb487ce67c772f38629ecdd28d831ba94",
+      "source": "agent-declared"
+    },
+    {
+      "path": ".agent-work/archive/2026-08-16-cleanup-a-door/LAUNCH_ORDER.md",
+      "content_hash": "284040d950d564c6cf08b1186abc5dd4512014e4d78f9593781c0a4122d3822e",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "the rest of the repo; map/ids.jsonl is empty repo-wide at this baseline (0 authored anchor tags), so no area is anchor-citable via map_orient -- this is a corpus-wide state, not specific to this lane's files (same finding as cleanup-c-liveness-rail, .agent-work/archive/2026-08-16-cleanup-c-liveness-rail/map-orientation.json)"
+  ],
+  "escalation": "not escalated to the Admiral: the launch order's Pre-empted Steps declare triage already done and names the exact seam (build_crew_argv's if model: line, scripts/run_crew.py) plus the owned-files list, so orientation proceeds from those citations and the owned files rather than the map. Noting the repo-wide anchor gap as a triage candidate at the triage step instead.",
+  "emitted_at": "2026-08-16T17:58:03.506738+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

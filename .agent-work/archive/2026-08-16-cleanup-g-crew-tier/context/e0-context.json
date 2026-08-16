@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "e0-context",
+  "files": [],
+  "repo_rev": {
+    "commit": "e05399039d803fce97d36a37536333a0833eacbd"
+  },
+  "run": {
+    "work_id": "cleanup-g-crew-tier",
+    "generated_at": "2026-08-16T18:22:52Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-commander",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-g-crew-tier",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-g-crew-tier"
+    }
+  }
+}

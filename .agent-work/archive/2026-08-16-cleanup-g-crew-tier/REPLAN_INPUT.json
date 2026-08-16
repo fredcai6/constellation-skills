@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "cleanup-g-crew-tier",
+      "spec_path": ".agent-work/cleanup-g-crew-tier/LAUNCH_ORDER.md",
+      "intent_and_why": "A crew's model tier was never a deliberate choice at the seam where every dispatch actually passes through -- run_crew.py's build_crew_argv accepted a None model silently, and reasoning_effort was recorded but never forwarded to the launcher. This makes the choice explicit and mandatory."
+    },
+    "definition_of_done": [
+      "run_crew.py refuses a fresh or relaunched crew dispatch that names no --model, fail closed, no invented default.",
+      "reasoning_effort is forwarded as the launcher's real --effort flag on the cli backend, both dispatch and resume.",
+      "crew-dispatch.md doctrine names the handoff's Suggested Model Tier field as the thing a Commander resolves --model from."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Independent reviewer APPROVE on the code gate; red/green test evidence for the doctrine gate; full clean-env suite green modulo an explicitly reported caller-list residue; main baseline re-measured at gate time.",
+      "sufficient_evidence": "Red/green tests for the refusal, the --effort forwarding (both call sites), and the doctrine connection; a mechanically-derived caller-list enumeration.",
+      "appetite": "One working session, Sonnet 5 tier, mechanical change with pre-ruled direction."
+    },
+    "hard_constraints": [
+      "Fenced: scripts/checklist_engine.py, scripts/hooks/spine_rail.py, scripts/spine_lifecycle.py and their tests (lane F live)",
+      "Fenced: COMMANDER_SPINE.template.json, LAUNCH_ORDER.template.md, fleet-doctrine.md, skills/_shared/**, install_constellation.py (queued #610)",
+      "No crew's effective tier may change as a side effect (decision:do-not-change-what-anything-runs-at)",
+      "#607's parent-lease-heartbeat thread ordering must survive unchanged"
+    ],
+    "fixed_decisions": [
+      "refuse-a-tierless-dispatch (settled/human)",
+      "do-not-change-what-anything-runs-at (settled/human)",
+      "record-the-resolved-tier (settled/measured -- already mechanical via build_entry)",
+      "reasoning-effort-follows-tier (settled/measured -- claude --effort confirmed present)",
+      "relaunch requires explicit --model, no inherit-from-abandoned-entry fallback (Commander ruling, within Inherited Latitude)"
+    ],
+    "current_wave": {
+      "objective": "Ship #611 on cleanup/g-crew-tier, park at archive for the Admiral to merge.",
+      "exit_criteria": [
+        "g1 closed with independent reviewer APPROVE",
+        "g2 closed with self-attested red/green doctrine evidence",
+        "Full clean-env suite green at head modulo the reported caller-list residue",
+        "Main baseline re-measured at gate time, failure-set difference fully explained"
+      ],
+      "issues": [
+        {
+          "id": "611",
+          "title": "Crew model tier is inherited or silently absent, never a deliberate choice",
+          "desired_outcome": "run_crew.py refuses a tierless fresh/relaunch dispatch; reasoning_effort reaches --effort; doctrine names the connection.",
+          "useful_now": "Stops the fleet from reproducing the pre-mission defect (lane A/E baselines showed dispatched crews silently falling back to the machine default) inside its own fix.",
+          "appetite": "Two crew-dispatch gates (g1: implement/review/integrate) plus one reasoning gate (g2: doctrine) plus one reasoning gate (g3: verify).",
+          "acceptance_or_falsification_evidence": "MandatoryModelTests (6 new tests) + 4 flipped --effort tests + doctrine red/green test; both directions proven (refusal fires on fresh/relaunch, does not fire on resume/bare-abandon).",
+          "implementation_latitude": "Refusal wording/exit code; exact relaunch semantics; whether the doctrine field becomes machine-read or stays prose (chose: stays prose, per the pre-ruling's own settle guidance).",
+          "hard_constraints_no_gos": ["No default tier invented anywhere.", "No existing dispatch's effective tier may change."],
+          "local_unknowns": [],
+          "anchors": ["scripts/run_crew.py:1375 CrewSpec.__post_init__", "scripts/run_crew.py:755 build_crew_argv", "skills/commander/references/crew-dispatch.md"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "The two out-of-owned-files test failures (tests/test_crew_worktree_cwd.py, tests/test_work_id_nesting.py) get a mechanical model= reconciliation, either as this mission's own immediate follow-up or via the filed triage candidate.",
+        "why_likely": "It is the same one-line-per-call-site pattern already applied ~27 times in tests/test_crew_launcher.py this run; no design question remains.",
+        "entry_conditions": ["Admiral or a follow-up dispatch picks up triage candidate tc1"]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether any dispatch caller outside this repo's own test suite (e.g. a consuming project's own tooling) constructs a CrewSpec with no model and would now be refused.",
+        "affects": "Blast radius of decision:refuse-a-tierless-dispatch beyond this repo",
+        "settle_by": "Observed in the field the first time a consuming project's own automation calls run_crew.py without --model",
+        "current_evidence": "grep of the live tree in this repo found zero non-test-file callers outside scripts/run_crew.py itself; not evidence about other repos.",
+        "next_probe": "Not this run's scope -- run_crew.py is a bundled skill script, not a published library with an external changelog."
+      }
+    ],
+    "parked_possibilities": [
+      "A controlled vocabulary or explicit --model pointer inside the handoff templates themselves (both plan candidates and the cold critic left this as a named untaken road, per the pre-ruling's settle guidance preferring prose over a parser)."
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "611",
+      "outcome": "CrewSpec.__post_init__ refuses a falsy model (fresh/relaunch only, structurally exempting resume/bare-abandon); build_crew_argv forwards reasoning_effort as --effort on both CliBackend.dispatch and .resume; crew-dispatch.md names the connection. Committed as part of this run's branch.",
+      "evidence": "MandatoryModelTests (6 tests, both directions: refusal fires and does not fire); 4 flipped --effort forwarding tests; test_crew_dispatch_doctrine.py (2 tests, red-then-green, pasted in notes-g.md); independent reviewer APPROVE with full re-derivation of every close criterion, not trust."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "A fresh or relaunched crew dispatch naming no --model is refused; one naming a tier succeeds and the tier lands on the registry entry.",
+      "expected": "CrewLaunchError on missing model; success + entry['model'] set when given.",
+      "observed": "test_crew_spec_refuses_falsy_model_directly, test_fresh_dispatch_with_model_records_it, test_fresh_dispatch_with_no_model_is_refused_and_writes_no_registry_entry, test_abandon_relaunch_with_no_model_is_refused_even_though_one_was_stored, test_resume_needs_no_model_at_all, test_bare_abandon_needs_no_model_at_all -- all pass; independently reproduced by the reviewer via direct source reading (CrewSpec.__post_init__, CliBackend.resume, abandon_crew), not just test trust.",
+      "source": "tests/test_crew_launcher.py::MandatoryModelTests, reproduced independently by the Commander and the reviewer"
+    },
+    {
+      "claim": "reasoning_effort reaches the launcher's real --effort flag on both dispatch and resume, and is absent when not set.",
+      "expected": "--effort <value> present in argv when reasoning_effort is set (both call sites); absent when not set, including a legacy entry with no reasoning_effort key.",
+      "observed": "test_reasoning_effort_is_recorded_and_forwarded_as_effort_flag, test_cli_resume_reads_reasoning_effort_from_registry, test_legacy_resume_without_reasoning_effort_does_not_crash all pass, argv index/value asserted not just membership.",
+      "source": "tests/test_crew_launcher.py::BackendEquivalenceTests, reproduced independently by the Commander and the reviewer"
+    },
+    {
+      "claim": "crew-dispatch.md now connects the Suggested Model Tier handoff field to the --model flag in one sentence, not just co-occurrence.",
+      "expected": "Red before the edit (no --model text at all, matching understand's zero-hits grep); green after (both terms present AND in one connecting sentence).",
+      "observed": "2 failed before, 2 passed after -- pasted in notes-g.md. Self-attested with reviewer-level rigor (this reasoning gate has no independent reviewer).",
+      "source": "tests/test_crew_dispatch_doctrine.py, run twice by the Commander (red then green)"
+    },
+    {
+      "claim": "Full suite green at head modulo the reported caller-list residue; failure-set difference against main (re-measured at gate time) is exactly that residue.",
+      "expected": "No unexplained new failures relative to main.",
+      "observed": "Head: 6 failed, 3166 passed, 6 skipped (CREW_SCRATCH_DIR unset too, beyond the launch order's base recipe -- this Commander's own ambient env var, same false-failure class caught at g1-integrate via amend). Main (e0539903, re-measured via a disposably-named-correctly clone): 3163 passed, 7 skipped, 0 failed -- unchanged from the launch order's dispatch-time baseline. Head's failure-set difference is exactly 6: test_crew_worktree_cwd.py::CrewSpawnCwdTests x4, test_work_id_nesting.py::CrewRegistryAddressingTests x2, all CrewLaunchError('a crew needs an explicit tier...') caused directly by this mission's own refusal, all outside this mission's file ownership, all reported (triage candidate tc1).",
+      "source": "/tmp/g3-head-suite.log, /tmp/g3-main-suite.log (ephemeral; counts and signatures quoted in this run's report and notes-g.md)"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "A first scratch-clone baseline measurement produced a false MapTreeFreshnessTests failure because the clone directory was named g3-main-baseline instead of constellation-skills -- map/INDEX.md's generated header bakes in the repo directory name.",
+      "classification": "evidence_only",
+      "affects": "Any future Commander's baseline-remeasurement method, not this lane's own correctness",
+      "evidence": "Re-cloned into a correctly-named directory (/tmp/g3-baseline-root/constellation-skills); the failure disappeared, 3163 passed / 7 skipped / 0 failed.",
+      "reason": "A check that cannot fail is indistinguishable from one that passed, and the inverse held here too -- a check that fails on a harmless naming artifact reads as a real regression unless caught. Not this lane's file ownership to fix (map_orient.py/code_map are outside file ownership); noted for triage rather than filed as an issue by this run."
+    },
+    {
+      "id": "D1",
+      "signal": "Two test files outside this mission's file ownership (tests/test_crew_worktree_cwd.py: 4 call sites, tests/test_work_id_nesting.py: 2 call sites) call RC.launch_crew/RC.record_external_attempt with model=None and now fail under the new refusal.",
+      "classification": "evidence_only",
+      "affects": "Merge-gate 'local Linux green' bar for this branch specifically (not this lane's correctness)",
+      "evidence": "Independently confirmed by both the implementer and the reviewer via full-suite runs showing the exact CrewLaunchError traceback in each of the 6 tests.",
+      "reason": "Mechanical fix (add model= at each call site, same pattern already applied ~27 times in tests/test_crew_launcher.py this run), not a design question -- filed as triage candidate tc1 in execute.json rather than fixed outside owned files."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "scripts/run_crew.py:1375 CrewSpec.__post_init__",
+      "scripts/run_crew.py:755 build_crew_argv",
+      "scripts/run_crew.py:1092 build_entry",
+      "scripts/run_crew.py:1490 CliBackend",
+      "skills/commander/references/crew-dispatch.md"
+    ],
+    "map_status": "DEGRADED-UNPARSEABLE at baseline e0539903 -- map/ids.jsonl empty repo-wide (zero authored anchor tags exist in the corpus), same corpus-wide finding cleanup-c-liveness-rail independently made. This lane's own generated map/INDEX.md was kept fresh (rebuilt during g1, confirmed fresh again during g3-verify's baseline remeasurement)."
+  }
+}

@@ -617,7 +617,7 @@ class LaunchTests(unittest.TestCase):
                     work_id="issue-1", gate="g1", role="implementer",
                     handoff=".agent-work/issue-1/crew-handoffs/g1-implementer.md",
                     result=result_rel("issue-1", "g1", "implementer"),
-                    worktree=".", model=None, launcher="claude", attempt=1,
+                    worktree=".", model="sonnet", launcher="claude", attempt=1,
                     root=root, entries=[],
                 )
 
@@ -657,7 +657,7 @@ class LaunchTests(unittest.TestCase):
             with fake_launch(RC, 3, write_result_at=root / result):
                 code, entry = RC.launch_crew(
                     work_id="issue-1", gate="g1", role="reviewer",
-                    handoff=handoff, result=result, worktree=".", model=None,
+                    handoff=handoff, result=result, worktree=".", model="sonnet",
                     launcher="claude", attempt=1, root=root, entries=[],
                 )
             self.assertNotEqual(0, code)
@@ -671,7 +671,7 @@ class LaunchTests(unittest.TestCase):
             with fake_launch(RC, 0, write_result_at=None):  # child exits 0 but writes nothing
                 code, entry = RC.launch_crew(
                     work_id="issue-1", gate="g1", role="reviewer",
-                    handoff=handoff, result=result, worktree=".", model=None,
+                    handoff=handoff, result=result, worktree=".", model="sonnet",
                     launcher="claude", attempt=1, root=root, entries=[],
                 )
             self.assertNotEqual(0, code)
@@ -719,6 +719,7 @@ class LaunchTests(unittest.TestCase):
                         "--root", str(root),
                         "--abandon", "constellation/issue-1/g1/reviewer/attempt-1",
                         "--relaunch", "--handoff", handoff, "--result", result,
+                        "--model", "sonnet",
                     ])
             self.assertEqual(0, code)
             reg = RC.load_registry(RC.registry_path("issue-1", root))
@@ -760,6 +761,143 @@ class LaunchTests(unittest.TestCase):
                 code = RC.main(["--root", str(root), "--resume",
                                 "constellation/issue-1/g1/reviewer/attempt-9"])
             self.assertEqual(1, code)
+
+
+class MandatoryModelTests(unittest.TestCase):
+    """decision:refuse-a-tierless-dispatch: `CrewSpec.__post_init__` refuses a
+    falsy `model` for every fresh/relaunch construction, same style as its
+    "needs a job"/"needs a completion contract" invariants immediately above
+    it. No default is ever invented -- fail closed. `--resume` and a bare
+    `--abandon` construct no `CrewSpec` at all (confirmed by reading
+    `CliBackend.resume`/`abandon_crew` directly), so neither is touched by
+    this refusal."""
+
+    def test_crew_spec_refuses_falsy_model_directly(self):
+        with self.assertRaises(RC.CrewLaunchError) as ctx:
+            RC.CrewSpec(
+                work_id="issue-1", gate="g1", role="reviewer",
+                handoff="h.md", result="r.md", worktree=".", attempt=1,
+                model=None,
+            )
+        self.assertIn("explicit tier", str(ctx.exception))
+
+    def test_fresh_dispatch_with_model_records_it(self):
+        """Green half: an explicit --model succeeds and the registry entry
+        carries it (decision:record-the-resolved-tier, already mechanical via
+        `build_entry` -- pinned here through the new mandatory-model seam)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "reviewer")
+            result = result_rel("issue-1", "g1", "reviewer")
+            with fake_launch(RC, 0, write_result_at=root / result):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "reviewer", "--handoff", handoff, "--result", result,
+                        "--model", "sonnet",
+                    ])
+            self.assertEqual(0, code)
+            reg = RC.load_registry(RC.registry_path("issue-1", root))
+            self.assertEqual(1, len(reg))
+            self.assertEqual("sonnet", reg[0]["model"])
+
+    def test_fresh_dispatch_with_no_model_is_refused_and_writes_no_registry_entry(self):
+        """Red half, through the real CLI entrypoint: no --model given -> REFUSED,
+        exit 1, and -- because the refusal fires in `CrewSpec.__post_init__`,
+        BEFORE `CliBackend.dispatch` reserves scratch or writes the running
+        registry entry (issue #525 ordering) -- the registry stays empty, not a
+        half-written `running` record."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "reviewer")
+            result = result_rel("issue-1", "g1", "reviewer")
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                stderr = io.StringIO()
+                with contextlib.redirect_stderr(stderr):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "reviewer", "--handoff", handoff, "--result", result,
+                    ])
+            self.assertEqual(1, code)
+            self.assertIn("REFUSED", stderr.getvalue())
+            self.assertIn("explicit tier", stderr.getvalue())
+            self.assertEqual([], calls)  # nothing spawned
+            self.assertEqual([], RC.load_registry(RC.registry_path("issue-1", root)))
+
+    def test_abandon_relaunch_with_no_model_is_refused_even_though_one_was_stored(self):
+        """RULED, no re-litigation: `--abandon --relaunch` requires an explicit
+        --model -- no inherit-from-`abandoned.get("model")` fallback, unlike
+        `reasoning_effort`'s existing inherit-on-relaunch. A stored `model` on
+        the abandoned entry must NOT quietly satisfy the new requirement."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "reviewer")
+            result = result_rel("issue-1", "g1", "reviewer")
+            entries = [{
+                "session_name": "constellation/issue-1/g1/reviewer/attempt-1",
+                "crew_id": "constellation/issue-1/g1/reviewer/attempt-1",
+                "work_id": "issue-1", "gate": "g1", "role": "reviewer", "attempt": 1,
+                "worktree": ".", "status": "running", "abandoned": False,
+                "handoff": handoff, "result": result, "model": "opus",
+            }]
+            RC.save_registry(RC.registry_path("issue-1", root), entries)
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                stderr = io.StringIO()
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+                    code = RC.main([
+                        "--root", str(root),
+                        "--abandon", "constellation/issue-1/g1/reviewer/attempt-1",
+                        "--relaunch", "--handoff", handoff, "--result", result,
+                    ])
+            self.assertEqual(1, code)
+            self.assertIn("explicit tier", stderr.getvalue())
+            self.assertEqual([], calls)  # nothing spawned for the relaunch attempt
+            reg = RC.load_registry(RC.registry_path("issue-1", root))
+            self.assertEqual(1, len(reg))  # only the abandoned original, no attempt-2
+
+    def test_resume_needs_no_model_at_all(self):
+        """`--resume` constructs no `CrewSpec` (`CliBackend.resume` reads the
+        stored entry directly), so a legacy entry with no `model` key at all
+        must still resume cleanly -- the new refusal does not reach this path."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "reviewer")
+            result = result_rel("issue-1", "g1", "reviewer")
+            session = "constellation/issue-1/g1/reviewer/attempt-1"
+            stdout, stderr = RC.run_log_paths("issue-1", "g1", "reviewer", 1, root)
+            entries = [{
+                "session_name": session, "crew_id": session,
+                "work_id": "issue-1", "gate": "g1", "role": "reviewer", "attempt": 1,
+                "worktree": ".", "status": "running", "abandoned": False,
+                "handoff": handoff, "result": result,
+                "stdout": RC._relativize(str(stdout), root),
+                "stderr": RC._relativize(str(stderr), root),
+            }]  # deliberately no "model" key
+            RC.save_registry(RC.registry_path("issue-1", root), entries)
+            with fake_launch(RC, 0, write_result_at=root / result):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main(["--root", str(root), "--resume", session])
+            self.assertEqual(0, code)
+
+    def test_bare_abandon_needs_no_model_at_all(self):
+        """A bare `--abandon` (no --relaunch) constructs no `CrewSpec` either
+        (`abandon_crew` mutates the stored entry directly) -- must succeed with
+        no --model given."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            entries = [{
+                "session_name": "constellation/issue-1/g1/reviewer/attempt-1",
+                "crew_id": "constellation/issue-1/g1/reviewer/attempt-1",
+                "work_id": "issue-1", "gate": "g1", "role": "reviewer", "attempt": 1,
+                "worktree": ".", "status": "running", "abandoned": False,
+            }]
+            RC.save_registry(RC.registry_path("issue-1", root), entries)
+            with contextlib.redirect_stdout(io.StringIO()):
+                code = RC.main([
+                    "--root", str(root),
+                    "--abandon", "constellation/issue-1/g1/reviewer/attempt-1",
+                ])
+            self.assertEqual(0, code)
 
 
 class EntryLivenessTests(unittest.TestCase):
@@ -904,7 +1042,7 @@ class ParentCliTests(unittest.TestCase):
                 code = RC.main([
                     "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
                     "--role", "reviewer", "--handoff", handoff, "--result", result,
-                    "--parent", "constellation/epic-1/commander",
+                    "--parent", "constellation/epic-1/commander", "--model", "sonnet",
                 ])
             self.assertEqual(0, code)
             reg = RC.load_registry(RC.registry_path("issue-1", root))
@@ -919,6 +1057,7 @@ class ParentCliTests(unittest.TestCase):
                 code = RC.main([
                     "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
                     "--role", "reviewer", "--handoff", handoff, "--result", result,
+                    "--model", "sonnet",
                 ])
             self.assertEqual(0, code)
             reg = RC.load_registry(RC.registry_path("issue-1", root))
@@ -943,6 +1082,7 @@ class ParentCliTests(unittest.TestCase):
                         "--root", str(root),
                         "--abandon", "constellation/issue-1/g1/reviewer/attempt-1",
                         "--relaunch", "--handoff", handoff, "--result", result,
+                        "--model", "sonnet",
                     ])
             self.assertEqual(0, code)
             reg = RC.load_registry(RC.registry_path("issue-1", root))
@@ -953,7 +1093,9 @@ class ParentCliTests(unittest.TestCase):
             )
 
     def test_abandon_relaunch_inherits_stored_reasoning_effort_when_not_reasserted(self):
-        """Recovery keeps metadata even though it never becomes a Claude flag."""
+        """Recovery keeps metadata AND forwards it as the launcher's real
+        `--effort` flag (decision:reasoning-effort-follows-tier) -- the inherited
+        value is not just recorded, it is also what the relaunched child receives."""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             handoff = write_handoff(root, "issue-1", "g1", "reviewer")
@@ -972,11 +1114,14 @@ class ParentCliTests(unittest.TestCase):
                         "--root", str(root),
                         "--abandon", "constellation/issue-1/g1/reviewer/attempt-1",
                         "--relaunch", "--handoff", handoff, "--result", result,
+                        "--model", "sonnet",
                     ])
             self.assertEqual(0, code)
             relaunched = RC.load_registry(RC.registry_path("issue-1", root))[1]
             self.assertEqual("high", relaunched["reasoning_effort"])
-            self.assertNotIn("--reasoning-effort", calls[0]["argv"])
+            argv = calls[0]["argv"]
+            self.assertIn("--effort", argv)
+            self.assertEqual("high", argv[argv.index("--effort") + 1])
 
     def test_abandon_relaunch_legacy_registry_without_reasoning_effort_stays_compatible(self):
         """The optional field is read on relaunch, so an older record may omit it."""
@@ -998,6 +1143,7 @@ class ParentCliTests(unittest.TestCase):
                         "--root", str(root),
                         "--abandon", "constellation/issue-1/g1/reviewer/attempt-1",
                         "--relaunch", "--handoff", handoff, "--result", result,
+                        "--model", "sonnet",
                     ])
             self.assertEqual(0, code)
             relaunched = RC.load_registry(RC.registry_path("issue-1", root))[1]
@@ -1078,7 +1224,7 @@ class DispatchDoorBindingTests(unittest.TestCase):
                 RC.launch_crew(
                     work_id="issue-1", gate="g1", role="implementer",
                     handoff=handoff, result=result, spine=spine_rel,
-                    worktree=".", model=None, launcher="claude", attempt=1,
+                    worktree=".", model="sonnet", launcher="claude", attempt=1,
                     root=root, entries=[],
                 )
             env = calls[0]["env"]
@@ -1102,7 +1248,7 @@ class DispatchDoorBindingTests(unittest.TestCase):
                 RC.launch_crew(
                     work_id="issue-1", gate="g1", role="implementer",
                     handoff=handoff, result=result,
-                    worktree=".", model=None, launcher="claude", attempt=1,
+                    worktree=".", model="sonnet", launcher="claude", attempt=1,
                     root=root, entries=[],
                 )
             env = calls[0]["env"]
@@ -1134,7 +1280,7 @@ class DispatchDoorBindingTests(unittest.TestCase):
                     RC.launch_crew(
                         work_id="child-work", gate="g1", role="reviewer",
                         handoff=handoff, result=result, spine=spine_rel,
-                        worktree=".", model=None, launcher="claude", attempt=1,
+                        worktree=".", model="sonnet", launcher="claude", attempt=1,
                         root=root, entries=[],
                     )
                 env = calls[0]["env"]
@@ -1172,7 +1318,7 @@ class DispatchDoorBindingTests(unittest.TestCase):
                     RC.launch_crew(
                         work_id="issue-1", gate="g1", role="implementer",
                         handoff=handoff, result=result,
-                        worktree=".", model=None, launcher="claude", attempt=1,
+                        worktree=".", model="sonnet", launcher="claude", attempt=1,
                         root=root, entries=[],
                     )
                 env = calls[0]["env"]
@@ -1264,7 +1410,7 @@ class ParentDoorBindingTests(unittest.TestCase):
                 RC.launch_crew(
                     work_id="issue-1", gate="g1", role="implementer",
                     handoff=handoff, result=result, parent="constellation/epic-1/commander",
-                    worktree=".", model=None, launcher="claude", attempt=1,
+                    worktree=".", model="sonnet", launcher="claude", attempt=1,
                     root=root, entries=[],
                 )
             env = calls[0]["env"]
@@ -1283,7 +1429,7 @@ class ParentDoorBindingTests(unittest.TestCase):
                     RC.launch_crew(
                         work_id="issue-1", gate="g1", role="implementer",
                         handoff=handoff, result=result,
-                        worktree=".", model=None, launcher="claude", attempt=1,
+                        worktree=".", model="sonnet", launcher="claude", attempt=1,
                         root=root, entries=[],
                     )
                 env = calls[0]["env"]
@@ -1360,7 +1506,7 @@ class SpineOnlyDispatchTests(unittest.TestCase):
                 exit_code, entry = RC.launch_crew(
                     work_id="issue-1", gate="g1", role="implementer",
                     handoff=None, result=result, spine=spine_rel,
-                    worktree=".", model=None, launcher="claude", attempt=1,
+                    worktree=".", model="sonnet", launcher="claude", attempt=1,
                     root=root, entries=[],
                 )
             self.assertEqual(0, exit_code)
@@ -1379,7 +1525,7 @@ class SpineOnlyDispatchTests(unittest.TestCase):
                 RC.launch_crew(
                     work_id="issue-1", gate="g1", role="implementer",
                     handoff=None, result=result, spine=None,
-                    worktree=".", model=None, launcher="claude", attempt=1,
+                    worktree=".", model="sonnet", launcher="claude", attempt=1,
                     root=root, entries=[],
                 )
 
@@ -1412,6 +1558,7 @@ class SpineOnlyDispatchTests(unittest.TestCase):
                     code = RC.main([
                         "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
                         "--role", "implementer", "--result", result, "--spine", spine_rel,
+                        "--model", "sonnet",
                     ])
             self.assertEqual(0, code)
             self.assertIsNone(RC.load_registry(RC.registry_path("issue-1", root))[0]["handoff"])
@@ -1427,7 +1574,7 @@ class SpineOnlyDispatchTests(unittest.TestCase):
                 RC.launch_crew(
                     work_id="issue-1", gate="g1", role="implementer",
                     handoff=None, result=result, spine=spine_rel,
-                    worktree=".", model=None, launcher="claude", attempt=1,
+                    worktree=".", model="sonnet", launcher="claude", attempt=1,
                     root=root, entries=[],
                 )
             entries = RC.load_registry(RC.registry_path("issue-1", root))
@@ -1451,7 +1598,7 @@ class SpineOnlyDispatchTests(unittest.TestCase):
                 RC.record_external_attempt(
                     work_id="issue-1", gate="g1", role="implementer",
                     handoff=None, result=result, spine=spine_rel,
-                    worktree=".", model=None, attempt=1, root=root, entries=[],
+                    worktree=".", model="sonnet", attempt=1, root=root, entries=[],
                 )
 
 
@@ -1581,7 +1728,7 @@ class SpineOnlyCompletionContractTests(unittest.TestCase):
                 with contextlib.redirect_stdout(io.StringIO()):
                     code = RC.main([
                         "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
-                        "--role", "implementer", "--spine", spine_rel,
+                        "--role", "implementer", "--spine", spine_rel, "--model", "sonnet",
                     ])
             self.assertEqual(0, code)
             entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
@@ -1601,7 +1748,7 @@ class SpineOnlyCompletionContractTests(unittest.TestCase):
                 with contextlib.redirect_stdout(io.StringIO()):
                     code = RC.main([
                         "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
-                        "--role", "implementer", "--spine", spine_rel,
+                        "--role", "implementer", "--spine", spine_rel, "--model", "sonnet",
                     ])
             self.assertEqual(1, code)
             entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
@@ -1618,7 +1765,7 @@ class SpineOnlyCompletionContractTests(unittest.TestCase):
                 with contextlib.redirect_stdout(io.StringIO()):
                     code = RC.main([
                         "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
-                        "--role", "implementer", "--spine", spine_rel,
+                        "--role", "implementer", "--spine", spine_rel, "--model", "sonnet",
                     ])
             self.assertEqual(3, code)
             entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
@@ -1632,7 +1779,7 @@ class SpineOnlyCompletionContractTests(unittest.TestCase):
                 with contextlib.redirect_stdout(io.StringIO()):
                     code = RC.main([
                         "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
-                        "--role", "implementer", "--spine", spine_rel,
+                        "--role", "implementer", "--spine", spine_rel, "--model", "sonnet",
                     ])
             self.assertEqual(1, code)
             entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
@@ -1714,7 +1861,7 @@ class BlockedOutcomeTests(unittest.TestCase):
                     code = RC.main([
                         "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
                         "--role", "implementer", "--spine", spine_rel,
-                        "--parent", "constellation/epic-1/commander",
+                        "--parent", "constellation/epic-1/commander", "--model", "sonnet",
                     ])
             self.assertEqual(0, code)
             entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
@@ -1735,7 +1882,7 @@ class BlockedOutcomeTests(unittest.TestCase):
                 with contextlib.redirect_stdout(out):
                     code = RC.main([
                         "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
-                        "--role", "implementer", "--spine", spine_rel,
+                        "--role", "implementer", "--spine", spine_rel, "--model", "sonnet",
                     ])
             self.assertEqual(0, code)
             entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
@@ -1754,7 +1901,7 @@ class BlockedOutcomeTests(unittest.TestCase):
                 with contextlib.redirect_stdout(io.StringIO()):
                     RC.main([
                         "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
-                        "--role", "implementer", "--spine", spine_rel,
+                        "--role", "implementer", "--spine", spine_rel, "--model", "sonnet",
                     ])
             entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
             self.assertNotEqual("blocked", entry["status"])
@@ -1769,7 +1916,7 @@ class BlockedOutcomeTests(unittest.TestCase):
                 with contextlib.redirect_stdout(io.StringIO()):
                     RC.main([
                         "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
-                        "--role", "implementer", "--spine", spine_rel,
+                        "--role", "implementer", "--spine", spine_rel, "--model", "sonnet",
                     ])
             entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
             self.assertEqual("completed", entry["status"])
@@ -1789,7 +1936,7 @@ class BlockedOutcomeTests(unittest.TestCase):
                     code = RC.main([
                         "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
                         "--role", "implementer", "--handoff", handoff, "--result", result,
-                        "--spine", spine_rel,
+                        "--spine", spine_rel, "--model", "sonnet",
                     ])
             self.assertEqual(0, code)
             entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
@@ -1806,7 +1953,7 @@ class BlockedOutcomeTests(unittest.TestCase):
                 with contextlib.redirect_stdout(io.StringIO()):
                     code = RC.main([
                         "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
-                        "--role", "implementer", "--spine", spine_rel,
+                        "--role", "implementer", "--spine", spine_rel, "--model", "sonnet",
                     ])
             self.assertEqual(0, code)
 
@@ -1935,7 +2082,7 @@ class DoorHijackRealEngineControlTests(unittest.TestCase):
                     RC.launch_crew(
                         work_id="w", gate="g1", role="implementer",
                         handoff=handoff, result=result, spine=str(child_spine),
-                        worktree=".", model=None, launcher="claude", attempt=1,
+                        worktree=".", model="sonnet", launcher="claude", attempt=1,
                         root=root, entries=[],
                     )
                 env = calls[0]["env"]
@@ -1979,7 +2126,7 @@ class ExternalDispatchTests(unittest.TestCase):
                     code = RC.main([
                         "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
                         "--role", "implementer", "--handoff", handoff, "--result", result,
-                        "--dispatch", "external",
+                        "--dispatch", "external", "--model", "sonnet",
                     ])
             self.assertEqual(0, code)
             self.assertEqual([], calls)  # nothing spawned
@@ -2029,7 +2176,7 @@ class ExternalDispatchTests(unittest.TestCase):
                     code = RC.main([
                         "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
                         "--role", "implementer", "--handoff", handoff, "--result", result,
-                        "--backend", "external", "--spine", spine_rel,
+                        "--backend", "external", "--spine", spine_rel, "--model", "sonnet",
                     ])
             self.assertEqual(1, code)
             self.assertEqual([], calls)  # nothing spawned
@@ -2061,7 +2208,7 @@ class ExternalDispatchTests(unittest.TestCase):
             argv = [
                 "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
                 "--role", "implementer", "--handoff", handoff, "--result", result,
-                "--dispatch", "external",
+                "--dispatch", "external", "--model", "sonnet",
             ]
             with contextlib.redirect_stdout(io.StringIO()):
                 self.assertEqual(0, RC.main(argv))
@@ -2079,7 +2226,7 @@ class ExternalDispatchTests(unittest.TestCase):
                 RC.main([
                     "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
                     "--role", "implementer", "--handoff", handoff, "--result", result,
-                    "--dispatch", "external",
+                    "--dispatch", "external", "--model", "sonnet",
                 ])
             # result artifact not written yet -> verify is nonzero, stays running
             with contextlib.redirect_stdout(io.StringIO()):
@@ -2150,7 +2297,7 @@ class ResultFreshnessTests(unittest.TestCase):
                 RC.main([
                     "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
                     "--role", "implementer", "--handoff", handoff, "--result", result,
-                    "--dispatch", "external",
+                    "--dispatch", "external", "--model", "sonnet",
                 ])
             # a leftover result from a PRIOR attempt, older than this dispatch
             entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
@@ -2176,7 +2323,7 @@ class ResultFreshnessTests(unittest.TestCase):
                 RC.main([
                     "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
                     "--role", "implementer", "--handoff", handoff, "--result", result,
-                    "--dispatch", "external",
+                    "--dispatch", "external", "--model", "sonnet",
                 ])
             err = io.StringIO()
             with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
@@ -2199,7 +2346,7 @@ class ResultFreshnessTests(unittest.TestCase):
             with fake_launch(RC, 0, write_result_at=None):
                 code, entry = RC.launch_crew(
                     work_id="issue-1", gate="g1", role="reviewer",
-                    handoff=handoff, result=result, worktree=".", model=None,
+                    handoff=handoff, result=result, worktree=".", model="sonnet",
                     launcher="claude", attempt=1, root=root, entries=[],
                 )
             self.assertNotEqual(0, code)
@@ -2585,7 +2732,7 @@ class BackendEquivalenceTests(unittest.TestCase):
             self.assertEqual(0, code)
             self.assertEqual("sonnet", entry["model"])
 
-    def test_reasoning_effort_is_metadata_only_and_recorded(self):
+    def test_reasoning_effort_is_recorded_and_forwarded_as_effort_flag(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             handoff = write_handoff(root, "issue-1", "g1", "reviewer")
@@ -2600,7 +2747,10 @@ class BackendEquivalenceTests(unittest.TestCase):
                 code, entry = RC.CliBackend().dispatch(spec, root=root, entries=entries)
             self.assertEqual(0, code)
             self.assertEqual("high", entry["reasoning_effort"])
-            self.assertNotIn("--reasoning-effort", calls[0]["argv"])
+            argv = calls[0]["argv"]
+            self.assertNotIn("--reasoning-effort", argv)
+            self.assertIn("--effort", argv)
+            self.assertEqual("high", argv[argv.index("--effort") + 1])
 
     def test_cli_resume_reads_reasoning_effort_from_registry(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -2612,13 +2762,16 @@ class BackendEquivalenceTests(unittest.TestCase):
                 _, entry = RC.CliBackend().dispatch(
                     RC.CrewSpec(
                         work_id="issue-1", gate="g1", role="reviewer", handoff=handoff,
-                        result=result, worktree=".", attempt=1, launcher="claude",
-                        reasoning_effort="low",
+                        result=result, worktree=".", attempt=1, model="sonnet",
+                        launcher="claude", reasoning_effort="low",
                     ), root=root, entries=entries,
                 )
             with fake_launch(RC, 1) as resume_calls:
                 RC.CliBackend().resume(entry["session_name"], root=root, entries=entries)
-            self.assertNotIn("--reasoning-effort", resume_calls[0]["argv"])
+            argv = resume_calls[0]["argv"]
+            self.assertNotIn("--reasoning-effort", argv)
+            self.assertIn("--effort", argv)
+            self.assertEqual("low", argv[argv.index("--effort") + 1])
 
     def test_legacy_resume_without_reasoning_effort_does_not_crash(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -2633,7 +2786,9 @@ class BackendEquivalenceTests(unittest.TestCase):
             entries = [entry]
             with fake_launch(RC, 1) as calls:
                 RC.CliBackend().resume(entry["session_name"], root=root, entries=entries)
-            self.assertNotIn("--reasoning-effort", calls[0]["argv"])
+            argv = calls[0]["argv"]
+            self.assertNotIn("--reasoning-effort", argv)
+            self.assertNotIn("--effort", argv)
 
     def test_cli_dispatch_missing_handoff_refuses_with_launch_wording(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -2642,6 +2797,7 @@ class BackendEquivalenceTests(unittest.TestCase):
                 work_id="issue-1", gate="g1", role="reviewer",
                 handoff=".agent-work/issue-1/crew-handoffs/g1-reviewer.md",
                 result=result_rel("issue-1", "g1", "reviewer"), worktree=".", attempt=1,
+                model="sonnet",
             )
             with self.assertRaises(RC.CrewLaunchError) as ctx:
                 RC.CliBackend().dispatch(spec, root=root, entries=[])
@@ -2674,6 +2830,7 @@ class BackendEquivalenceTests(unittest.TestCase):
                 work_id="issue-1", gate="g1", role="implementer",
                 handoff=".agent-work/issue-1/crew-handoffs/g1-implementer.md",
                 result=result_rel("issue-1", "g1", "implementer"), worktree=".", attempt=1,
+                model="sonnet",
             )
             with self.assertRaises(RC.CrewLaunchError) as ctx:
                 RC.ExternalBackend().dispatch(spec, root=root, entries=[])
@@ -2690,7 +2847,7 @@ class BackendEquivalenceTests(unittest.TestCase):
             result = result_rel("issue-1", "g1", "implementer")
             spec = RC.CrewSpec(
                 work_id="issue-1", gate="g1", role="implementer", handoff=handoff,
-                result=result, worktree=".", attempt=1,
+                result=result, worktree=".", attempt=1, model="sonnet",
             )
             captured = io.StringIO()
             with contextlib.redirect_stderr(captured):
@@ -2711,7 +2868,7 @@ class BackendEquivalenceTests(unittest.TestCase):
             session = "constellation/issue-1/g1/implementer/attempt-1"
             entries = [RC.record_external_attempt(
                 work_id="issue-1", gate="g1", role="implementer", handoff=handoff,
-                result=result, worktree=".", model=None, attempt=1, root=root, entries=[],
+                result=result, worktree=".", model="sonnet", attempt=1, root=root, entries=[],
             )]
             # not written yet -> not fresh, stays running
             fresh_cli, _ = RC.CliBackend().verify(entries, session, root=root)
@@ -2818,6 +2975,7 @@ class BackendFlagRoutingTests(unittest.TestCase):
         return [
             "--root", str(root), "--work-id", work_id, "--gate", gate,
             "--role", role, "--handoff", handoff, "--result", result,
+            "--model", "sonnet",
         ] + extra
 
     def test_backend_cli_spawns_through_the_cli_backend(self):
@@ -3218,7 +3376,7 @@ class ParentLeaseHeartbeatTests(unittest.TestCase):
                     code, entry = RC.launch_crew(
                         work_id="w", gate="g1", role="implementer",
                         handoff=handoff, result=result, spine=None,  # no explicit --spine
-                        worktree=".", model=None, launcher="claude", attempt=1,
+                        worktree=".", model="sonnet", launcher="claude", attempt=1,
                         root=root, entries=[], launch=slow_launch,
                     )
                 finally:
@@ -3370,7 +3528,7 @@ class ScratchDirReservationTests(unittest.TestCase):
                 RC.launch_crew(
                     work_id="issue-1", gate="g2", role="implementer",
                     handoff=handoff, result=result, worktree=".",
-                    model=None, launcher="claude", attempt=1, root=root, entries=[],
+                    model="sonnet", launcher="claude", attempt=1, root=root, entries=[],
                 )
             expected = RC.scratch_dir("issue-1", "g2", "implementer", ".", 1, root)
             self.assertTrue(expected.is_dir())
@@ -3384,7 +3542,7 @@ class ScratchDirReservationTests(unittest.TestCase):
                 RC.launch_crew(
                     work_id="issue-1", gate="g2", role="implementer",
                     handoff=handoff, result=result, worktree=".",
-                    model=None, launcher="claude", attempt=1, root=root, entries=[],
+                    model="sonnet", launcher="claude", attempt=1, root=root, entries=[],
                 )
             expected = RC.scratch_dir("issue-1", "g2", "implementer", ".", 1, root)
             self.assertEqual(str(expected), calls[0]["env"]["CREW_SCRATCH_DIR"])
@@ -3398,7 +3556,7 @@ class ScratchDirReservationTests(unittest.TestCase):
                 _, entry = RC.launch_crew(
                     work_id="issue-1", gate="g2", role="implementer",
                     handoff=handoff, result=result, worktree=".",
-                    model=None, launcher="claude", attempt=1, root=root, entries=[],
+                    model="sonnet", launcher="claude", attempt=1, root=root, entries=[],
                 )
             expected = RC.scratch_dir("issue-1", "g2", "implementer", ".", 1, root)
             self.assertEqual(RC._relativize(str(expected), root), entry["scratch_dir"])
@@ -3432,13 +3590,13 @@ class ScratchDirReservationTests(unittest.TestCase):
                 _, entry_a = RC.launch_crew(
                     work_id="issue-1", gate="g2", role="implementer",
                     handoff=handoff_a, result=result_a, worktree=".",
-                    model=None, launcher="claude", attempt=1, root=root, entries=entries,
+                    model="sonnet", launcher="claude", attempt=1, root=root, entries=entries,
                 )
             with fake_launch(RC, 0, write_result_at=root / result_b):
                 _, entry_b = RC.launch_crew(
                     work_id="issue-1", gate="g2", role="reviewer",
                     handoff=handoff_b, result=result_b, worktree=".",
-                    model=None, launcher="claude", attempt=1, root=root, entries=entries,
+                    model="sonnet", launcher="claude", attempt=1, root=root, entries=entries,
                 )
             self.assertNotEqual(entry_a["scratch_dir"], entry_b["scratch_dir"])
             self.assertTrue((root / entry_a["scratch_dir"]).is_dir())
@@ -3460,13 +3618,13 @@ class ScratchDirReservationTests(unittest.TestCase):
                 _, entry_a = RC.launch_crew(
                     work_id="issue-1", gate="g2", role="implementer",
                     handoff=handoff, result=result, worktree=tree_a,
-                    model=None, launcher="claude", attempt=1, root=root, entries=entries,
+                    model="sonnet", launcher="claude", attempt=1, root=root, entries=entries,
                 )
             with fake_launch(RC, 0, write_result_at=root / result):
                 _, entry_b = RC.launch_crew(
                     work_id="issue-1", gate="g2", role="implementer",
                     handoff=handoff, result=result, worktree=tree_b,
-                    model=None, launcher="claude", attempt=1, root=root, entries=entries,
+                    model="sonnet", launcher="claude", attempt=1, root=root, entries=entries,
                 )
             self.assertNotEqual(entry_a["scratch_dir"], entry_b["scratch_dir"])
             self.assertTrue((root / entry_a["scratch_dir"]).is_dir())
@@ -3493,7 +3651,7 @@ class ScratchDirCollisionTests(unittest.TestCase):
                     RC.launch_crew(
                         work_id="issue-1", gate="g2", role="implementer",
                         handoff=handoff, result=result, worktree=".",
-                        model=None, launcher="claude", attempt=1, root=root, entries=[],
+                        model="sonnet", launcher="claude", attempt=1, root=root, entries=[],
                     )
             message = str(ctx.exception)
             self.assertIn(str(scratch), message)
@@ -3519,7 +3677,7 @@ class ScratchDirCollisionTests(unittest.TestCase):
                     RC.launch_crew(
                         work_id="issue-1", gate="g2", role="implementer",
                         handoff=handoff, result=result, worktree=".",
-                        model=None, launcher="claude", attempt=1, root=root, entries=entries,
+                        model="sonnet", launcher="claude", attempt=1, root=root, entries=entries,
                     )
             self.assertEqual([], entries)
             self.assertFalse(RC.registry_path("issue-1", root).exists())
@@ -3542,7 +3700,7 @@ class ScratchDirCollisionTests(unittest.TestCase):
                     RC.launch_crew(
                         work_id="issue-1", gate="g2", role="implementer",
                         handoff=handoff, result=result, worktree=".",
-                        model=None, launcher="claude", attempt=1, root=root, entries=[],
+                        model="sonnet", launcher="claude", attempt=1, root=root, entries=[],
                     )
             self.assertEqual(
                 "belongs to a different attempt\n", sentinel.read_text(encoding="utf-8"),
@@ -3565,7 +3723,7 @@ class ScratchDirResumeTests(unittest.TestCase):
                 RC.launch_crew(
                     work_id="issue-1", gate="g2", role="implementer",
                     handoff=handoff, result=result, worktree=".",
-                    model=None, launcher="claude", attempt=1, root=root, entries=entries,
+                    model="sonnet", launcher="claude", attempt=1, root=root, entries=entries,
                 )
             session = entries[0]["session_name"]
             with fake_launch(RC, 0, write_result_at=root / result):
@@ -3585,7 +3743,7 @@ class ScratchDirResumeTests(unittest.TestCase):
                 RC.launch_crew(
                     work_id="issue-1", gate="g2", role="implementer",
                     handoff=handoff, result=result, worktree=".",
-                    model=None, launcher="claude", attempt=1, root=root, entries=entries,
+                    model="sonnet", launcher="claude", attempt=1, root=root, entries=entries,
                 )
             dispatched_scratch = dispatch_calls[0]["env"]["CREW_SCRATCH_DIR"]
             session = entries[0]["session_name"]

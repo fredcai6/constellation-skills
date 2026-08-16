@@ -754,7 +754,7 @@ def _parent_clause(parent: str | None) -> str:
 
 def build_crew_argv(
     launcher: str, *, role: str, handoff: str | None, model: str | None, session: str,
-    spine: str | None = None, parent: str | None = None,
+    spine: str | None = None, parent: str | None = None, effort: str | None = None,
 ) -> list[str]:
     """PURE construction of the agent-CLI command line from role/handoff/model.
 
@@ -782,6 +782,11 @@ def build_crew_argv(
     old flag form fails with `unknown option '--session'` on current CLIs), so
     role, session name, and handoff path travel inside the headless `-p` prompt;
     the registry — not the CLI — owns crew identity.
+
+    `effort` is nullable and, when given, forwarded verbatim as the launcher's
+    real `--effort <level>` flag (decision:reasoning-effort-follows-tier) --
+    mirroring `model`'s "only emit when truthy" shape exactly. `None` (the
+    common case) emits nothing, matching today's behavior byte-for-byte.
 
     Always appends `--permission-mode` + `--allowedTools` + `--settings` (M2 job
     1, issue #559 job 4): a dispatch into a worktree with no hand-written
@@ -812,6 +817,8 @@ def build_crew_argv(
     argv: list[str] = [launcher, "-p", prompt]
     if model:
         argv += ["--model", model]
+    if effort:
+        argv += ["--effort", effort]
     argv += ["--permission-mode", DEFAULT_CREW_PERMISSION_MODE]
     argv += ["--settings", crew_settings_json()]
     argv += ["--allowedTools", *CREW_ALLOWED_TOOLS]
@@ -1127,7 +1134,10 @@ def build_entry(
                      `--model`, rather than what it was -- the same field,
                      recorded on one path and lost on the other.
       * `reasoning_effort` — optional launcher metadata, recorded for recovery
-                             and inspection only; it is never emitted as a CLI flag.
+                             and inspection AND forwarded by the cli backend as
+                             the launcher's real `--effort` flag (`build_crew_argv`);
+                             this field's write path here is unaffected by that --
+                             it still just records what was resolved.
       * `handoff`  — nullable (issue #559): recorded as `None` for a spine-only
                      crew, the same "recorded null, not omitted" shape `spine`
                      already uses below.
@@ -1362,6 +1372,12 @@ class CrewSpec:
                 "neither --result nor --spine given (a spine-only dispatch is "
                 "judged on its spine reaching a terminal state instead)"
             )
+        if not self.model:
+            raise CrewLaunchError(
+                "a crew needs an explicit tier: refusing a dispatch with no "
+                "--model given (no default is invented -- decision:refuse-a-"
+                "tierless-dispatch)"
+            )
 
 
 # The thread `_parent_lease_heartbeat` starts is named so tests can assert its
@@ -1543,7 +1559,7 @@ class CliBackend(CrewBackend):
             spec.launcher, role=spec.role,
             handoff=(str(handoff_path) if handoff_path is not None else None),
             model=spec.model, session=entry["session_name"], spine=spec.spine,
-            parent=spec.parent,
+            parent=spec.parent, effort=spec.reasoning_effort,
         )
         env = _crew_door_env(
             work_id=spec.work_id, gate=spec.gate, role=spec.role, spine=spec.spine, root=root,
@@ -1617,6 +1633,7 @@ class CliBackend(CrewBackend):
             session=entry["session_name"],
             spine=entry.get("spine"),
             parent=entry.get("parent"),
+            effort=entry.get("reasoning_effort"),
         )
         env = _crew_door_env(
             work_id=entry["work_id"], gate=entry["gate"], role=entry["role"],

@@ -1,0 +1,126 @@
+{
+  "work_id": "cleanup-g-crew-tier",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-g-crew-tier",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "plan",
+        "context-manifest-ref": "none -- delegated commander run, no context manifest artifact this lane",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/cleanup-g-crew-tier/PLAN_CONVERGENCE.md",
+          ".agent-work/cleanup-g-crew-tier/PLAN_CRITIC_FINDINGS.md",
+          ".agent-work/cleanup-g-crew-tier/execute.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Run plan-alternatives (two candidates under distinct constraints) and a cold plan critic against the converged plan for #611, before cutting execute.json's gates."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The two independently-authored candidates would likely converge on the same refusal seam and scoping, since both were told to read the same source and the mission's pre-rulings were already narrow -- the value of the exercise would be mostly in test-decomposition detail, not seam disagreement."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Both candidates independently converged on the exact same seam (CrewSpec.__post_init__, not build_crew_argv, not argparse required=True) and the exact same resume/bare-abandon exemption reasoning, without having seen each other's work -- strong corroboration of that specific design choice. Where they genuinely differed was gate granularity (2 gates vs 6), and Candidate B surfaced a real unresolved fork the mission's pre-rulings never named: main()'s abandon+relaunch branch has no model-inherit-fallback today, asymmetric with reasoning_effort's existing fallback, and either behavior was equally testable -- this needed an explicit Commander ruling, not just synthesis. The cold critic separately found the converged plan never operationalized the mission's own named 'trap' (naming a tier for every crew the Commander itself dispatches) anywhere in execute.json's gate imperatives, and that g1-integrate's own test-command postcondition was missing the mandatory cache-clear step g3-verify already had."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The relaunch-semantics fork, if left unresolved, would have been silently decided by whichever way the implementer happened to write the guard clause, with no record of it being a deliberate choice. The missing-trap gap, if it had survived to execution, risked the exact failure mode the mission's own 'trap' section warns about by name: a Commander reproducing the tierless-dispatch defect inside its own fix. Both were fixed in the plan/execute.json before any crew was dispatched."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "none -- ruled the relaunch fork directly (relaunch requires explicit --model, no inherit fallback, matching the mission's 'never inherited' wording) and added explicit --model reminders to g1-implement/g1-review's imperatives before opening either gate."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-g-crew-tier",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": "none",
+        "refusals": 8,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": [
+          ".agent-work/cleanup-g-crew-tier/spine.json",
+          ".agent-work/cleanup-g-crew-tier/execute.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Drive execute.json's gates through the CLI engine (the MCP door stays bound to the top-level spine, which a child checklist is not), each gate's command-checked postconditions run for real, not attested."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The gate's own test-command postcondition, authored at plan time from a correct mental model of the launch order's clean-env recipe, would just pass once the implementer's code was correct."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "g1-integrate's command postcondition (tests/test_crew_launcher.py, cache cleared) failed on a correct, reviewer-APPROVEd implementation, because the check's own environment -- this Commander's OWN CREW_SCRATCH_DIR, bound because the Commander is itself a live crew -- leaked into a fake-child-env assertion the implementer's change never touched. Independently confirmed by both the implementer and reviewer via git-stash-on-baseline (fails identically pre-change) before I found the actual mechanism: unsetting CREW_SCRATCH_DIR alongside the launch order's existing SPINE_FILE/SPINE_SESSION/SPINE_PARENT unset made the same command pass clean (212/212). The scratch-clone main-baseline remeasurement hit an analogous but distinct self-inflicted false failure: a clone directory named /tmp/g3-main-baseline (not 'constellation-skills') made the generated map/INDEX.md's own header text disagree with the committed one, reading as a real staleness regression."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Both were false failures that would have blocked a genuinely correct, reviewed change from closing its gate, or produced a false positive in a failure-set-difference comparison against main. The gate-plan fix (g1-integrate) required a formal amend (retext-check) rather than a silent JSON edit, since execute.json's postcondition text is engine-owned once authored; the baseline fix required simply re-cloning into a correctly-named directory. Neither is a code defect in this mission's own change -- both are measurement-environment defects a Commander's own process state can introduce."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "g1-integrate.c1's check command amended via the engine's amend/retext-check verb (authority human, reason recorded) to also unset CREW_SCRATCH_DIR. The main-baseline scratch clone was redone into a directory literally named constellation-skills."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-g-crew-tier",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "plan",
+        "context-manifest-ref": "none",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/cleanup-g-crew-tier/MISSION_FRAME.md",
+          ".agent-work/cleanup-g-crew-tier/map-orientation.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Author a DEGRADED-mode mission frame (no packet map exists) that would pass map_orient.py verify-frame's anchor-resolution check against the hash-pinned substitute paths declared at the context step."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The template's own suggested Decision Anchors syntax (e.g. 'decision:md-decision-is-a-list-item -- ...') was assumed safe to use verbatim, since the template itself shows it as the intended format."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "verify-frame's ANCHOR_RE matches any 'word:identifier' token for seven specific keywords (struct/capability/event/constraint/assumption/claim/decision), and in DEGRADED mode ANY matched anchor is treated as a hard failure ('cannot resolve: this run oriented DEGRADED, so no map was read') regardless of whether the frame also cites valid substitute paths elsewhere. The template's own worked example for Decision Anchors uses exactly this colon-identifier syntax, which would have refused the gate if used verbatim in a degraded-mode frame."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Caught before writing the frame, by reading the check's source rather than trusting the template's example was universally safe. Had it not been caught, the c6 gate would have refused with a confusing 'cannot resolve' message pointing at a decision id that had nothing to do with a real map -- a plausible source of a stuck Commander re-writing the frame repeatedly without understanding why a syntactically-fine decision bullet was failing."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Described decisions in the DEGRADED-mode frame using plain prose (naming the decision by its slug in a sentence) rather than the colon-identifier anchor syntax, and cited only plain file paths as anchors -- matching what verify-frame's degraded-mode branch actually checks against (declared_substitute_paths), not the RESOLVED-mode anchor-id branch the template's example illustrates."
+        }
+      }
+    }
+  ]
+}
