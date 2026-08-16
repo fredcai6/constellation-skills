@@ -1,28 +1,27 @@
 {
   "contract": 1,
-  "step": "r1-handoff",
+  "step": "m4-readme",
   "mechanical": {
-    "run": "cleanup-a-door",
+    "run": "cleanup-a-door-g2-implementer",
     "project": "constellation-skills",
-    "role": "reviewer",
+    "role": "implementer",
     "refusals": 2,
-    "spine-step": "r1-handoff",
+    "spine-step": "m4-readme",
     "rework-count": 0,
     "failed-commands": 0,
     "reopens": 0,
-    "context-manifest-ref": "ctx-cleanup-a-door-r1-handoff@8362b1ec9aa0e9fbbd1cad0a744a0b576e5c6e1f",
+    "context-manifest-ref": "ctx-cleanup-a-door-g2-implementer-m4-readme@3ad1bdc7f5782c817b9ecfdb18049ea11a50a20c",
     "artifact-ref": [
       "examples/mcp-interactive-demo/.gitignore",
       "examples/mcp-interactive-demo/README.md",
       "examples/mcp-interactive-demo/make_demo_spine.py",
       "examples/mcp-interactive-demo/spine.json",
-      "map/INDEX.md",
       "tests/test_shipped_examples_are_portable.py"
     ]
   },
   "refused": [],
   "run": {
-    "work_id": "cleanup-a-door",
-    "generated_at": "2026-08-16T13:48:36Z"
+    "work_id": "cleanup-a-door-g2-implementer",
+    "generated_at": "2026-08-16T13:32:10Z"
   }
 }

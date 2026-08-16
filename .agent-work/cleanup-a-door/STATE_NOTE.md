@@ -1,10 +1,10 @@
 # Crash-resume state note — cleanup-a-door
 
-- **step:** execute · gate g1-review dispatched (#604)
+- **step:** execute · gate g2-review dispatched (#605)
 - **slug:** cleanup-a-door, branch `cleanup/a-door`, worktree `/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door`
 - **next command:** `cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && py scripts/checklist_engine.py --file .agent-work/cleanup-a-door/execute.json current`
 - **pid:** none — foreground; crews dispatch via `scripts/run_crew.py`, whose own PID is recorded per entry in `.agent-work/cleanup-a-door/crew-runs.json`
-- **expected artifact:** `.agent-work/cleanup-a-door/crew-handoffs/g1-reviewer-result.md`
+- **expected artifact:** `.agent-work/cleanup-a-door/crew-handoffs/g2-reviewer-result.md`
 
 Spine lease: `commander-cleanup-a-door` on `.agent-work/cleanup-a-door/spine.json`.
 Resume by re-claiming the same session id (idempotent) — no `--force` needed for a
