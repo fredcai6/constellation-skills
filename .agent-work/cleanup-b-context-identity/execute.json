@@ -291,7 +291,18 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-review",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g1-integrate": {
@@ -430,7 +441,23 @@
     }
   },
   "consolidation": null,
-  "triage_candidates": [],
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-implement",
+      "statement": "A SessionStart/stop hook tells a DISPATCHED CREW to drive its parent Commander's execute gate, because it resolves SPINE_FILE from an inherited environment. Measured by the g1 implementer: its own registry row records spine null, yet the hook named the parent's spine.json and instructed it to load constellation-commander, write STATE_NOTE.md and drive execute.json. Acting on it requires a --force takeover of a live parent's lease and would deadlock the wave -- the engine itself refuses with 'checklist lease is stale; claim it before mutating'. This is the SAME defect as #600 one layer up: a reading, a spine binding, and a hook's notion of which run it is in are all resolved from ambient context a dispatched agent inherits from whoever launched it. #600 fixes the gauge's instance; the hook's instance is untouched."
+    },
+    {
+      "id": "tc2",
+      "from": "g1-implement",
+      "statement": "A Commander blocked on a foreground crew goes lease-stale while perfectly healthy. run_crew.py is blocking by design and a parent waiting on a child issues no mutating verb, so it cannot heartbeat: measured here, last heartbeat 13:20:19Z while blocked 53 minutes on a live crew, and the engine already called that lease stale. Anything that judges liveness by heartbeat -- recover_crews.py, any --force recovery path -- can therefore force-claim a spine out from under a running parent. Worth fixing before a recovery routine does exactly that."
+    },
+    {
+      "id": "tc3",
+      "from": "g1-implement",
+      "statement": "A format-change enumeration and a dependency-change enumeration are different sweeps, and this gate's handoff only commissioned the first. The prescribed Wiring Grep for the literal name gauge.json could not find a dependency expressed as gauge_reader.py, so the installer's runtime-companion declaration was invisible to it; the full suite caught it instead. Left uncaught it would have shipped a DARK governor in every install -- the writer producing gauge.json while a leased engine read gauge-<owner>.json. Future handoffs that change a format should commission both sweeps."
+    }
+  ],
   "blockers": [],
   "why_trail": [
     {
