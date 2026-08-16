@@ -489,13 +489,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Reconciled directly, which is the imperative's own path when no packet map exists -- this repo has no docs/architecture and map/ids.jsonl is empty (DEGRADED). The change touched two structural records and both now reflect it. docs/GAUGE_WRITER_HOOK.md (write side): owner-keyed naming plus the owner field and why BOTH are needed, the single owner_key definition in gauge_reader.py and why it must be one definition across a process boundary, normalize-never-reject with the reserved sidecar names, no-owner-means-today's-behaviour, and the ambiguity guard as a question about ATTRIBUTION -- including the skip-plus-sidecars branch for a candidate spanning two or more owners, which is R4 as AMENDED by ADMIRAL_RULING-2.md. docs/CHECKLIST_SCHEMA.md (read side): which file a leased vs leaseless checklist reads, and the deliberate absence of a fallback to the shared file. Both were folded in by the implementer at 3bc87e93 and verified here rather than taken on trust. This gate ADDED the one durable fact neither carried, at d000837f: the lane C re-measurement (#549 removed a route, not the mechanism, measured on the clean isolate main d7b911a7 which has #549 and not #600), plus an explicit statement that decision:identity-not-time is NOT complete. map/INDEX.md rebuilt; tests/test_code_map.py green (148 passed). Also reverted an unauthorized edit to the FENCED .mcp.json (python3 -> py) found in the tree during this gate."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -522,7 +523,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile is complete: the structural record was reconciled directly (no packet map in this repo) and the lane C re-measurement folded into docs/GAUGE_WRITER_HOOK.md at d000837f."
         }
       ],
       "postconditions": [
@@ -530,7 +532,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "All six candidates routed and recorded in TRIAGE_RECOMMENDATIONS.md, each issue-ready with observations carrying conditions, type (measured, and how) and rev. Sources consumed: execute.json's tc1-tc3, the plan-step tc6, and the g1 reviewer's two NEW candidates. The reviewer numbered its own tc1-tc3 independently of execute.json's, and the sets differ, so all are renumbered T1-T6 with both original labels given. Dispositions: SIX recommend-and-defer, zero fixed-now, zero filed. T1 (R4 row 2 untested, MEDIUM, found by mutation) is recorded as CLEARING all four fix-now rungs and still not fixed, with the reason stated plainly: it surfaced at g1-review and by the time it was routable g1-integrate was closed, so fixing it would have been implementation work outside any gate. It is named as the next leg's first pickup."
         },
         {
           "id": "c2",
@@ -539,17 +542,43 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-2",
+          "attested": {
+            "evidence": "e-triage-2",
+            "note": "Delegated mode: satisfied by a user-decision evidence item citing LAUNCH_ORDER:Inherited Latitude, per the gate's own instruction. The citation records that issue-filing authority was NOT inherited -- the section grants decisions about the attribution scheme, consumption trigger, test structure and whether #500 ships, and names publication among the things that must be floated to the Admiral. Filing on a tracker is publication. ADMIRAL_RULING-2.md confirms the posture on the one candidate it addresses ('I am filing it on the tracker myself; you do not need to'). So the recorded decision is that NO issue is created this run and all six candidates are returned issue-ready for the Admiral. This is a deferral citation, not a filing approval -- none was sought or authorized."
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "triage",
+            "why_ref": "w-6"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-triage-2",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Inherited Latitude",
+            "decision": "no issues filed this run"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -757,7 +786,7 @@
     "session_id": "commander-cleanup-b-context-identity",
     "status": "active",
     "claimed_at": "2026-08-16T14:52:43.039579+00:00",
-    "last_heartbeat": "2026-08-16T14:54:22.657355+00:00",
+    "last_heartbeat": "2026-08-16T14:58:19.786610+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -798,6 +827,20 @@
       "why": "execute.json driven to DONE, no open items. #600 shipped, reviewed APPROVE, integrated with a ZERO failure-set difference against a gate-time-re-measured main (branch 3104/6/0 at ccb8b8d8; main 3089/7/0 at d7b911a7). Both g1-integrate gate-owned jobs done and MEASURED: the probe now asserts the post-fix world and refuses to run on a tree predating it, and the lane C re-measurement on the clean isolate still reproduces CANDIDATE 2, confirming #549 removed a route and not the mechanism. g2-implement-500 took its authored HAND-BACK branch on the engine's own refusal at 17 percent. REPLAN_INPUT.json verifies, carrying #600 completed, #500 open, and ten classified discrepancies -- evidence, none auto-filed. This leg also reproduced tc2 live: the lease went stale while healthy because blocking on a crew issues no mutating verb; re-claimed same-id, never --force.",
       "mechanical": false,
       "ts": "2026-08-16T14:53:46.828185+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "Structural record reconciled directly, per the imperative's no-packet-map path. The design docs already carried #600 including the amended R4 guard; this gate verified that rather than trusting it, added the lane C re-measurement finding so it survives the work area being archived, and stated that identity-not-time remains incomplete. One fenced-file violation (.mcp.json) was caught and reverted here rather than shipped.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:55:55.123772+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "Six candidates routed, none left unrouted, no issue filed without authority. All land on recommend-and-defer because filing is publication and publication must be floated per the launch order; the Admiral has already taken T3's filing himself. The one that matters most for the next leg is T1: R4 row 2 -- write every candidate when 2+ candidates share ONE owner -- is correct by direct drive but untested, proven by a mutation that leaves all 616 gauge tests green. It clears every fix-now rung and was still deferred, because it surfaced after g1-integrate closed and adding code outside a gate is the one thing this run may not do. T2 gained a third occurrence this leg and T3 a second, independent reproduction.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:58:19.786603+00:00"
     }
   ],
   "trip_ledger": [
@@ -822,6 +865,17 @@
       "model": "claude-opus-5",
       "why_ref": "w-5",
       "ts": "2026-08-16T14:54:22.635419+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "triage",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2021,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-16T14:56:12.470388+00:00"
     }
   ]
 }
