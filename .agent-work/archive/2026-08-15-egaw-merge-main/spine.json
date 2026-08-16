@@ -612,13 +612,15 @@
             "kind": "command",
             "command": "python scripts/verify_episode_captured.py egaw-merge-main --store-root episodes --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-4"
         },
         {
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Branch fix/episode-guard-at-write committed and pushed to origin at 1a8fa3e0."
         },
         {
           "id": "c2b",
@@ -627,13 +629,15 @@
             "kind": "command",
             "command": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-5"
         },
         {
           "id": "c3",
           "statement": "engine session lease released",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Lease will be released as the very last action immediately after this closing advance."
         },
         {
           "id": "c4",
@@ -668,22 +672,90 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-6"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py egaw-merge-main --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-3",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py egaw-merge-main --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-6",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -695,16 +767,17 @@
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/episode-guard-at-write",
     "opened_by": "init_work_area"
   },
-  "refusals": 8,
+  "refusals": 9,
   "engine_session": {
     "session_id": "constellation/egaw-merge-main/execute/commander",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-16T03:22:48.400290+00:00",
-    "last_heartbeat": "2026-08-16T03:36:05.932649+00:00",
+    "last_heartbeat": "2026-08-16T03:37:33.298894+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-16T03:37:36.058888+00:00"
   },
   "why_trail": [
     {
@@ -769,6 +842,13 @@
       "why": "Reflected honestly: this run followed the skills/handoffs/checklists closely for the mechanical merge work itself (matched exactly the launch order's predicted single-file conflict, its exact regeneration command, and its exact clean-env suite recipe). The one genuine improvisation was at plan.c6, captured verbatim as episode egaw-merge-main-001 (task-intent/expected-behavior/observed-behavior/impact-cost/workaround). Nothing was ambiguous in the mission itself; the launch order was unusually precise (exact commands, exact expected git merge-tree output). What would have helped: clearer doctrine on when the CLI fallback named in a gate's own imperative text is authorized to be used after the MCP door explicitly refuses the same call for a stated reason -- that gap is now on record for the Admiral. Episode captured and verified: python scripts/verify_episode_captured.py egaw-merge-main --store-root episodes --phase feedback confirmed 1 episode (egaw-merge-main-001) in episodes/active.",
       "mechanical": false,
       "ts": "2026-08-16T03:35:58.360398+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-16T03:37:33.298874+00:00"
     }
   ]
 }
