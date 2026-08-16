@@ -37,10 +37,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "Checks (a)-(f) verified by DRIVING, not reading. (b) R2 TOTAL: 482 real session ids harvested from 5496 JSON files + journals -> 0 failures, 0 key collisions, 111 slash-bearing, literal $SID/$SESSION/'impl-300-g3-$(date' all normalize; None/blank -> unowned gauge.json (absence of owner, not rejection); skip/uncalibrated structurally unreachable (every key ends -<12hex>). (c) R3 BOTH halves against the real engine: leaseless reads unowned gauge.json and trips at 93% hard exactly as today; leased with no owner-keyed file returns None with a shared 0.93 gauge.json sitting right there unread (no fallback); owner-keyed file is read when present. (d) AMENDED per RULING-2: #488 exact shape WRITES, and same-owner-ness is LOAD-BEARING (identical scenario with only the owner strings differing SKIPS) so it pins the same-owner path specifically, not merely two candidates; skip stays VISIBLE - drove the two-owner case and saw gauge-skip.json with reason=ambiguous-binding candidate_count=2 in BOTH dirs. Also drove R4 row 2 (2 distinct dirs, one owner): both candidates written. (e) #601 present and FIRES on owner-keyed files: reading sampled 30m before claimed_at is declined (SILENT advisory, no trip); same file sampled after claimed_at trips at 95%. (f) owner_key/gauge_filename defined ONCE in scripts/gauge_reader.py; hook and engine both delegate, no reimplementation. OBSERVATION (a): the result's blanket claim 'Nothing refuses where it previously permitted' is imprecise. Enumerated the only two refusal consumers (start begin-work guard ~:2073 and advance's require_why at :3419, both gated on _trip_hard_band_reading, both byte-unchanged). Two paths CAN now refuse where they previously permitted: (i) R1 - a leased agent now reads its OWN reading instead of whichever agent wrote last, so a genuine over-hard fill refuses where a foreign low reading used to permit; (ii) R4/#488 - the same-owner multi-candidate case now writes where the count-based skip produced silence, and a restored reading can trip. Both are the ruled-on PURPOSE of the change, not side effects, and neither is a new CLASS of refusal. No new refusal requiring a float.",
       "evidence": [],
       "rework_count": 0
     },
@@ -53,10 +53,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "(i) FENCES HOLD. Whole-file: git diff --name-only 3bc87e93^ 3bc87e93 lists NONE of spine_rail.py, test_spine_rail.py, run_crew.py, mcp_spine_server.py, .mcp.json, episodes/**. Lane C's edits to spine_rail.py/run_crew.py reached the branch through the main merge ccb8b8d8, not this commit. IN-FILE fence (the real risk): checklist_engine.py IS touched (~158 lines) but the CLAIM PATH is untouched - proved by AST-extracting the function bodies at 3bc87e93^ and 3bc87e93 and comparing: claim (110 lines) IDENTICAL, _reading_predates_claim IDENTICAL, _active_lease IDENTICAL, heartbeat IDENTICAL, release IDENTICAL. #601's claimed_at re-stamp survives at :1113. The only claim-related line in the diff is a docstring mention at +128. measurement/probe_cross_key.py untouched, and per the handoff I do NOT flag it as stale. DEPARTURE 2 CONFIRMED JUSTIFIED - verified by installing and driving, not by reading the argument. Ran a real install to /tmp/g1rev-install: destination IS flat (constellation-workbench/scripts/ holds gauge_writer_hook.py, gauge_reader.py and spine_rail.py as SIBLINGS, no hooks/ subdir). Loaded the INSTALLED hook in a fresh process with CLAUDE_PROJECT_DIR unset: _gauge_reader resolves and owner_key('admiral-418') returns admiral-418-d82d1d2fe834. Counterfactual driven: the checkout-only probe (here.parent/gauge_reader.py) does NOT exist in the install, so a loader written only for this checkout's layout would fail open to no owner in EVERY install - writer emitting gauge.json while a leased engine reads gauge-<owner>.json, i.e. a DARK governor. The extension is required, not discretionary. map/INDEX.md likewise FORCED: reverting it to 3bc87e93^ turns tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build RED (1 failed, 147 passed); restored byte-identical and re-confirmed green. All three out-of-scope files were mechanically compelled by in-scope requirements. DEPARTURE 3 CONFIRMED (accept, bounded residual). Drove the cross-read directly: agent B leased, agent A's unowned gauge-skip.json planted in the shared directory. B is shown A's advisory (the accepted residual), but gauge_reader.read(sidecar) is None - a sidecar carries no fill_fraction/model so it can NEVER become a Reading and cannot cause a trip or refusal for any owner. B's own owner-keyed 95% reading still wins over A's sidecar. Cross-read is advisory-only and permit-direction, exactly as declared; already filed as triage candidates 2 and 3.",
       "evidence": [],
       "rework_count": 0
     },
@@ -69,10 +69,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "EVERY piece of claimed evidence re-run and reproduced; the implementer's word taken for nothing. (h) The evidence drives the REAL reader over REAL gauge files: TripGaugeReadingOwnership does NOT patch _read_gauge (the mock.patch.object(E,'_read_gauge') hits in test_checklist_engine.py are a different, pre-existing band-threshold class), its _write_gauge helper writes the acting session's real owner-keyed file and the leaseless test drives through main(). RED reproduced independently: built a detached worktree at 3bc87e93^, confirmed scripts/ byte-for-byte pre-change, copied ONLY the four new test files across -> 16 failed, 1 passed, matching the implementer's reported 16/1 exactly. GREEN at HEAD: 4 passed, 13 subtests passed. Fresh-process demo, byte-identical script (md5 6edb93c35afa3158ea5c4a434d1d6a5b) run in BOTH trees at equal depth: BEFORE = 'VERDICT: COLLISION -- both agents resolve to ONE file, gauge.json', 0.9 destroying 0.02 with no sidecar and no guard; AFTER = 'VERDICT: EACH AGENT KEPT ITS OWN READING', two files each with an owner field matching its own filename and shared gauge.json absent. The defect is measured, not assumed. (g) BLAST RADIUS re-enumerated with the prescribed Wiring Grep verbatim: 23 files / 186 occurrences at HEAD, reproducing the implementer's reconciled figures EXACTLY, and every per-file disposition in their table matches my per-file counts (gauge_writer_hook 25, test_checklist_engine 31, test_gauge_chain 37, test_gauge_writer 20, test_gauge_reader 13, docs 19+1, episodes sum 15, notes sum 8). My first unscoped pass returned 68 files; the extra 45 are map/ per-module packets which .gitignore:73 'map/*' excludes (confirmed via git check-ignore) and which are not deliverables - git grep over tracked files independently returns the same 23. The implementer's correction of the dispatch figure (occurrences vs matching lines) is validated. SUITES: branch HEAD ccb8b8d8 = 3104 passed, 6 skipped, 0 failed (matches the Commander's gate-time re-measurement exactly); main baseline d7b911a7 re-measured by me in a clean detached worktree with __pycache__ cleared = 3089 passed, 7 skipped, 0 failed. FAILURE-SET DIFFERENCE = ZERO (both failure sets empty). Zero failures is the bar and it is met.",
       "evidence": [],
       "rework_count": 0
     },
@@ -85,10 +85,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "fail",
+      "finding": "CONSTRAINTS HONOURED: __pycache__ cleared before every measurement I took (#597); Linux + py 3.12; local Linux treated as the only real signal; #601's timestamp comparison present and firing, and R1's limit correctly STATED not overclaimed - both the result and the commit message say identity-not-time is NOT completed. Fresh-process rule honoured where it decides anything: I validated the installed by-path loader in a fresh process with CLAUDE_PROJECT_DIR UNSET, and it resolves via __file__ rather than the env var, so the claim does not rest on injection. test_gauge_chain_writer_to_trip.py does pin CLAUDE_PROJECT_DIR in its subprocess env, but as a documented and separately-asserted CONTAINMENT fence (#271: an unfenced subprocess resolves project dir to the developer's real checkout), not as proof of harness delivery. _owner_mismatch drives correctly: a 0.97 over-hard record stamped for a foreign owner is DECLINED with a loud CONTEXT GAUGE DECLINED advisory and does not trip - quiet direction, never a new refusal. FAIL REASON - UNTESTED GOVERNOR BRANCH (R4 row 2). '2+ DISTINCT candidates all under ONE owner -> write every candidate' is implemented and I confirmed it works by driving it (two work dirs, one binding key, one engine_session -> both owner-keyed files written, no sidecars). But NOTHING TESTS IT. Mutation proof: replacing 'unattributable = len(targets) > 1 and (None in owners or len(owners) > 1)' with 'unattributable = len(targets) > 1' - i.e. reverting row 2 to the old skip-on-count - leaves ALL 616 gauge tests GREEN (mutation asserted applied, then restored byte-identical, git diff clean). Every existing multi-candidate test uses two DIFFERENT owners (eng-1/eng-2) and so exercises the skip branch; the #488 test covers the same-DIRECTORY case, which dedupes to ONE candidate and never enters the multi-candidate write loop. This is the exact silent-regression shape this subsystem has been burned by three times (#252, #271, #488): a future simplification back to a count check would restore the #488-class dark governor for the multi-directory same-owner case with no failing test anywhere. NOTE for the record: ADMIRAL_RULING-2 point 1 states #488's case 'lands in row 2 - write every candidate'. It does not; same dir + same owner dedupes to a single candidate (row 1). The OUTCOME the Admiral required - it still writes - holds, and the required test is present and same-owner-discriminating, so the ruling is satisfied; only its row attribution is off by one row.",
       "evidence": [],
       "rework_count": 0
     },
@@ -101,10 +101,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "MAP IMPACT NOTES CHECK OUT against the diff and the world. Map is genuinely DEGRADED as claimed: map/ids.jsonl is 0 bytes and docs/architecture/ does not exist, so there are no citable anchor ids and the hash-pinned substitute (docs/GAUGE_WRITER_HOOK.md via map-orientation.json) is the correct entry point. The claimed capability change matches what I drove: a reading is now attributable to an agent; concurrent agents in one work directory no longer clobber; the one-agent-two-spines case gains a reading it used to lose to the ambiguity skip. decision:no-schema-change is correctly reported as STRESSED rather than held - the record gains an owner field, and I verified the additive bargain really holds: gauge_reader.read() accepts a record carrying owner + identity_resolution_ms extras AND still accepts a pre-#600 record with no owner field, so no reader change is forced and old records keep working. Docs match the diff (docs/GAUGE_WRITER_HOOK.md new #600 section and rewritten skip enumeration; docs/CHECKLIST_SCHEMA.md 'Which file' paragraph). map/INDEX.md entity counts are now current and its rebuild was compelled by a red test, not discretionary. Nothing here requires Commander reconciliation beyond the three triage candidates flagged above; the implementer's own four candidates are accurate and I add nothing that contradicts them.",
       "evidence": [],
       "rework_count": 0
     },
@@ -121,7 +121,8 @@
             "kind": "command",
             "command": "python scripts/verify_fowler_pass.py .agent-work/cleanup-b-context-identity/FOWLER_PASS.json"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
         }
       ],
       "constraints": [
@@ -130,26 +131,62 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
-      "evidence": [],
+      "result": "pass",
+      "finding": "Fowler pass recorded at .agent-work/cleanup-b-context-identity/FOWLER_PASS.json; scripts/verify_fowler_pass.py exits 0 (smells=12, flagged=[long-method, duplicated-code, data-clumps], overridden=[primitive-obsession, shotgun-surgery, divergent-change, comments-as-deodorant], absent=[large-class, feature-envy, long-parameter-list, message-chains, speculative-generality]). FLAGGED, all observations not blockers: (1) handle_post_tool_use is 175 lines / 91 non-comment and this change grew it - extracting the attribution decision would also give R4 row 2 the unit-test seam it currently lacks, tying this smell directly to the r4-quality finding; (2) the unowned name is hardcoded three times (gauge_writer_hook.py:205,:209, checklist_engine.py:1420) beside its declared single definition gauge_reader.GAUGE_FILENAME - the same drift hazard the design note argues against, but self-limiting since those literals are only reachable when the reader failed to load, where no owner-keyed read happens either; (3) the (gauge_path, owner) 2-tuple is threaded through five sites and discarded as _owner in three, earning a NamedTuple in a file that already uses a frozen dataclass. OVERRIDDEN with logged standard + reason: primitive-obsession (the owner crosses a process boundary as a filename and JSON field; gauge_reader's portability contract forbids the import and R2 requires a TOTAL normalizer, not a constructor that could reject); shotgun-surgery (the ripple is inherent to a cross-process FILE FORMAT, and the repo's own SCRIPT_RUNTIME_COMPANIONS is the documented mechanism for the coupling - which this change uses); divergent-change (ADMIRAL_RULING-1 governs checklist_engine.py by explicit REGION fence rather than by splitting, and splitting would itself breach that fence; regions verified respected by AST extraction); comments-as-deodorant (global-crew.md 'Agent-facing. Dense by design.'; the comments carry decision provenance that lives nowhere else while the map is DEGRADED, and the code beneath them is short and plainly named). SPECULATIVE-GENERALITY checked specifically rather than waved past: resolve_gauge_path is kept alongside resolve_gauge_targets but retains real current callers and tests, so it is a compatibility view, not an unused seam.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/cleanup-b-context-identity/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
-  "consolidation": null,
-  "triage_candidates": [],
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [
+      "r4-quality: CONSTRAINTS HONOURED: __pycache__ cleared before every measurement I took (#597); Linux + py 3.12; local Linux treated as the only real signal; #601's timestamp comparison present and firing, and R1's limit correctly STATED not overclaimed - both the result and the commit message say identity-not-time is NOT completed. Fresh-process rule honoured where it decides anything: I validated the installed by-path loader in a fresh process with CLAUDE_PROJECT_DIR UNSET, and it resolves via __file__ rather than the env var, so the claim does not rest on injection. test_gauge_chain_writer_to_trip.py does pin CLAUDE_PROJECT_DIR in its subprocess env, but as a documented and separately-asserted CONTAINMENT fence (#271: an unfenced subprocess resolves project dir to the developer's real checkout), not as proof of harness delivery. _owner_mismatch drives correctly: a 0.97 over-hard record stamped for a foreign owner is DECLINED with a loud CONTEXT GAUGE DECLINED advisory and does not trip - quiet direction, never a new refusal. FAIL REASON - UNTESTED GOVERNOR BRANCH (R4 row 2). '2+ DISTINCT candidates all under ONE owner -> write every candidate' is implemented and I confirmed it works by driving it (two work dirs, one binding key, one engine_session -> both owner-keyed files written, no sidecars). But NOTHING TESTS IT. Mutation proof: replacing 'unattributable = len(targets) > 1 and (None in owners or len(owners) > 1)' with 'unattributable = len(targets) > 1' - i.e. reverting row 2 to the old skip-on-count - leaves ALL 616 gauge tests GREEN (mutation asserted applied, then restored byte-identical, git diff clean). Every existing multi-candidate test uses two DIFFERENT owners (eng-1/eng-2) and so exercises the skip branch; the #488 test covers the same-DIRECTORY case, which dedupes to ONE candidate and never enters the multi-candidate write loop. This is the exact silent-regression shape this subsystem has been burned by three times (#252, #271, #488): a future simplification back to a count check would restore the #488-class dark governor for the multi-directory same-owner case with no failing test anywhere. NOTE for the record: ADMIRAL_RULING-2 point 1 states #488's case 'lands in row 2 - write every candidate'. It does not; same dir + same owner dedupes to a single candidate (row 1). The OUTCOME the Admiral required - it still writes - holds, and the required test is present and same-owner-discriminating, so the ruling is satisfied; only its row attribution is off by one row."
+    ],
+    "summary": "APPROVE. #600 does what R1-R4 (as amended by ADMIRAL_RULING-2) require, verified by driving every claim rather than reading it. R2 is TOTAL over 482 real session ids with 0 failures and 0 key collisions; R3 holds on both halves against the real engine; R4-as-amended holds with #488's case writing, same-owner-ness load-bearing, and the skip visibly sidecar'd; #601's timestamp guard is present and fires on owner-keyed files; the claim path is byte-identical by AST extraction; no fenced file is touched. RED (16 failed/1 passed) and GREEN (4 passed) both reproduced independently, the before/after demo reproduces in both directions with a byte-identical script, blast radius reproduces exactly at 23 files/186 occurrences, and the failure-set difference against a re-measured main baseline is ZERO (branch 3104 passed/6 skipped/0 failed vs main 3089 passed/7 skipped/0 failed). All three departures adjudicated: 1 resolved by the Admiral, 2 CONFIRMED JUSTIFIED by installing and driving the loader, 3 CONFIRMED with a bounded advisory-only residual. One fail carried: R4 row 2 is implemented and works but is untested (mutation-proved). Three triage candidates flagged.",
+    "override_reason": "r4-quality is recorded fail for a real finding that does not bar this change: R4 row 2 (2+ distinct candidates under one owner -> write every candidate) has no test, mutation-proved by reverting it to skip-on-count and watching all 616 gauge tests stay green. It is a TEST-COVERAGE gap, not a correctness defect - I drove the branch directly and it behaves exactly as R4 requires. The Admiral's literally required test (R4: pin #488's exact shape and assert the write happens) IS present and I verified it is same-owner-discriminating, so the ruling's own acceptance criterion is met; row 2 is an ADDITIONAL branch I found uncovered. Blocking would cost a rework cycle on a lane that has already ended at a context boundary twice, for a change whose behaviour is verified correct and whose suite is green with a zero failure-set difference. Recording it as a fail rather than softening it to a pass keeps the finding intact, and it is filed as triage candidate tc1 for g1-integrate."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r4-quality",
+      "statement": "Pin R4 row 2 with a test: one binding key, one engine_session, two DISTINCT work directories -> BOTH owner-keyed gauge files written. Today reverting that branch to skip-on-count leaves all 616 gauge tests green (reviewer-verified by mutation), so the #488-class dark-governor regression could return unnoticed for the multi-directory same-owner case."
+    },
+    {
+      "id": "tc2",
+      "from": "r2-scope",
+      "statement": "Sidecars are per-directory and unowned while readings are per-owner, so one owner's gauge-skip.json / gauge-uncalibrated.json advisory can be rendered to a different owner sharing the work directory. Reviewer-verified as advisory-only: gauge_reader.read() on a sidecar returns None, so it can never become a Reading and can never cause a trip or refusal. Bounded residual, widened slightly by #600."
+    },
+    {
+      "id": "tc3",
+      "from": "r1-handoff",
+      "statement": "A SessionStart/stop hook told this reviewer crew to drive its PARENT Commander's execute gate, because it resolves SPINE_FILE from the inherited environment (SPINE_SESSION named constellation/cleanup-b-context-identity/execute/commander). Same defect class as #600 one layer up: ambient inherited context deciding 'which run am I in'. Acting on it would have required a --force takeover of a live parent's lease and deadlocked the wave. Second occurrence - the g1 implementer reported it too."
+    }
+  ],
   "blockers": [],
   "refusals": 2,
   "engine_session": {
     "session_id": "constellation/cleanup-b-context-identity/g1-review/reviewer/attempt-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-16T14:20:15.168862+00:00",
-    "last_heartbeat": "2026-08-16T14:21:36.772804+00:00",
+    "last_heartbeat": "2026-08-16T14:35:31.315943+00:00",
     "claimed_by": "reviewer",
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-16T14:38:18.338640+00:00"
   }
 }

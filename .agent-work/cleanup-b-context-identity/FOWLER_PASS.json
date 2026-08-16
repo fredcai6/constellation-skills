@@ -1,0 +1,92 @@
+{
+  "work_id": "cleanup-b-context-identity",
+  "diff_ref": "commit 3bc87e93 (feat(600): a gauge reading is named for the agent that produced it) -- scripts/gauge_reader.py, scripts/hooks/gauge_writer_hook.py, scripts/checklist_engine.py (gauge/trip region), scripts/install_constellation.py, 5 test files, docs/GAUGE_WRITER_HOOK.md, docs/CHECKLIST_SCHEMA.md, map/INDEX.md",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md, ADMIRAL_RULING-1.md R1-R5, ADMIRAL_RULING-2.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "handle_post_tool_use is 175 lines total / 91 non-comment and this change grew it: it now carries binding resolution, the attribution guard, the subagent-transcript branch, the uncalibrated branch, the no-usable-record branch and the write loop, with four separate `for ... in targets:` fan-out loops. The owner-set computation plus the unattributable predicate is a coherent, independently testable decision that would read better extracted (e.g. `_attribution_verdict(targets) -> str|None`) -- and extracting it would also give R4 row 2 a natural unit-test seam, which is exactly the coverage gap recorded against r4-quality. Observation, not a blocker: every branch is individually correct and driven.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "The changed production code is module-level functions only; no class gained responsibility. The new test class OwnerKeyedGaugePath holds two focused tests and exists solely so the gate's pinned node ids resolve under pytest's default python_classes.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The unowned name is stated in four places: gauge_reader.GAUGE_FILENAME (the declared single definition) plus three hardcoded \"gauge.json\" literals -- gauge_writer_hook.py:205 and :209 (_gauge_filename's reader-absent degradation) and checklist_engine.py:1420 (_gauge_path's reader-absent degradation). The change's own design note argues emphatically that the name must have ONE definition because drift across the process boundary would silently stop every reading resolving; these three literals are that same hazard in miniature. Low severity and self-limiting -- they are only reachable when gauge_reader failed to load, in which case no owner-keyed read happens either, so a drifted literal degrades to today's behaviour rather than to a dark governor. Worth collapsing to a module constant when the file is next touched.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "gauge_writer_hook._owner_key and _gauge_filename delegate to the loaded reader rather than reaching into its internals, and they exist to add the try/except fail-safe the hook needs. That is the adapter idiom the file already uses for _binding_key over _spine_rail, matched deliberately.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "flagged",
+      "finding": "The (gauge_path, owner) pair is now threaded as a bare 2-tuple through resolve_gauge_targets' return, all four fan-out loops in handle_post_tool_use, and the `for path, _owner in ...` unpack inside resolve_gauge_path. It appears often enough, and is discarded via `_owner` often enough, to earn a name. gauge_reader.py already uses a frozen @dataclass for Reading, so a small NamedTuple would match house style rather than introduce a new idiom. Cosmetic; no behavioural risk.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "The owner is a bare `str | None` everywhere rather than an Owner value type, and `None` is overloaded to mean 'no owner' at four different call sites.",
+      "override": {
+        "repo_standard": "gauge_reader.py's stated portability contract (module docstring and the #600 design note: the reader 'ships bundled into every install and still never imports the writer'), plus ADMIRAL_RULING-1 R2's totality requirement and CREW_CONTEXT's 'Record Stores Are Never Hand-Edited' file-format seam.",
+        "reason": "The owner key crosses a process boundary as part of a FILENAME and a JSON field. A value type cannot cross that seam -- the hook loads the reader by path in a bare try/except and degrades to None on any failure, so the contract has to be expressible in primitives that survive both sides. R2 additionally requires the function be TOTAL over every string, which is a property of a normalizer over primitives, not of a constructor that could reject. The standard subordinates the smell: introducing an Owner type here would either add an import the portability seam forbids or reintroduce the rejection R2 explicitly withdrew."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "No production signature in the diff exceeds three parameters (_owner_mismatch_advisory(cl, gauge_path, stamped) is the widest). The engine-side change threads one extra `cl` argument through _gauge_path/_read_gauge/_uncalibrated_advisory/_no_reading_advisory, which widens five signatures by one each -- noted under shotgun-surgery rather than here, since none becomes long.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "overridden",
+      "finding": "Introducing one concept -- 'a reading belongs to an owner' -- required coordinated edits in gauge_reader.py, gauge_writer_hook.py, checklist_engine.py, install_constellation.py, five test files and two docs, and threading `cl` through five engine functions. A single conceptual change rippling across four modules is textbook shotgun surgery.",
+      "override": {
+        "repo_standard": "ADMIRAL_RULING-1 R1 (ship gauge-<owner>.json plus a stamped owner field) and the decision:one-owner-key-definition anchor, together with install_constellation.SCRIPT_RUNTIME_COMPANIONS -- the repo's documented mechanism for declaring exactly this kind of cross-module runtime coupling.",
+        "reason": "The ripple is inherent to the artifact, not to the design: the gauge is a FILE FORMAT written by a harness hook in one process and read by the engine in another, so any change to how that file is named must land on both sides plus the installer that co-locates them. The design minimises the ripple as far as the seam allows by putting the one definition in the reader and having both sides load it rather than reimplement it. The repo has a first-class mechanism (SCRIPT_RUNTIME_COMPANIONS) for making the resulting coupling explicit and test-enforced, and this change uses it -- which is the documented standard governing precisely this situation. Consolidating further would require importing across the portability seam the reader exists to protect."
+      }
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "overridden",
+      "finding": "checklist_engine.py absorbs another change axis (gauge ownership) on top of leases, gates, trips, refresh-requests, consolidation and the CLI -- a module that changes for many unrelated reasons.",
+      "override": {
+        "repo_standard": "ADMIRAL_RULING-1's 'Still fenced' clause -- 'checklist_engine.py stays yours in the gauge, trip and refresh regions only' -- and the reviewer handoff's in-file fence on the claim path.",
+        "reason": "The repo governs this module by explicit REGION discipline rather than by splitting it, and the ruling in force for this wave names the permitted regions. The change stays inside them: I verified by AST extraction that claim, _reading_predates_claim, _active_lease, heartbeat and release are byte-identical across the commit. Splitting the module would itself breach the fence the ruling sets, so the documented standard subordinates the smell for this change. Whether the module should eventually be decomposed is an architecture question for Cartographer/Scout, not a defect in this diff."
+      }
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "No chained navigation introduced. Path(spine_path).parent / _gauge_filename(owner) is a single path composition, and getattr(gauge_path, 'name', gauge_path) in the mismatch advisory is a deliberate fail-safe for a possibly-None path, not a chain.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "Checked specifically, because keeping both resolve_gauge_targets and resolve_gauge_path looks like a candidate. It is not speculative: resolve_gauge_path retains real current callers and tests (verified -- it is exercised by the existing multi-binding and containment tests), so the pair is a compatibility view over existing consumers rather than an unused extension point. record_owner is likewise consumed today by _owner_mismatch. No unused hooks, parameters or abstract seams were added.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "The diff is unusually comment-dense -- roughly half of handle_post_tool_use's added lines are commentary, and gauge_reader.py's new section opens with a ~30-line block comment before any code.",
+      "override": {
+        "repo_standard": "references/global-crew.md 'Agent-facing. Dense by design.' and its instruction to 'Match the surrounding code's naming, labeling, and in-file documentation conventions'; CREW_CONTEXT's Verification Discipline, which turns on knowing WHY a guard exists; and the repo-wide convention of citing issue numbers and recorded dead ends in situ (#202/#261 fan-out, #252, #271, #488, #477/#601).",
+        "reason": "These comments are not covering for unclear code -- the code they sit on is short and plainly named (owner_key is 26 non-comment lines, gauge_filename is 7). They carry decision PROVENANCE that exists nowhere else the reader will look: which ruling authorised a branch, which alternative was measured and reverted, and why a fail-safe degrades in the permit direction. In a repo whose map is DEGRADED (map/ids.jsonl is 0 bytes, docs/architecture/ absent), in-file provenance is the documented substitute entry point, and the surrounding file already reads this way. The standard subordinates the smell. One narrow exception is recorded under long-method: where a comment block explains a decision procedure, extracting that procedure into a named function would let some of the prose become the name."
+      }
+    }
+  ],
+  "rail_exception": null
+}

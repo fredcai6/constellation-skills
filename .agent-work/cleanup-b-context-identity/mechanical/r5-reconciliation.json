@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r5-reconciliation",
+  "mechanical": {
+    "run": "cleanup-b-context-identity",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 2,
+    "spine-step": "r5-reconciliation",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-b-context-identity-r5-reconciliation@0c89645e3c4d61efea912b365a451fca54d20e87",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-b-context-identity",
+    "generated_at": "2026-08-16T14:32:54Z"
+  }
+}

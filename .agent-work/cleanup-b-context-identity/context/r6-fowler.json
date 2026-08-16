@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r6-fowler",
+  "files": [],
+  "repo_rev": {
+    "commit": "e21c41680a991257076aaf955a75eb775f42898b"
+  },
+  "run": {
+    "work_id": "cleanup-b-context-identity",
+    "generated_at": "2026-08-16T14:34:52Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity"
+    }
+  }
+}

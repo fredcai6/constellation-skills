@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4-quality",
+  "mechanical": {
+    "run": "cleanup-b-context-identity",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 2,
+    "spine-step": "r4-quality",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-b-context-identity-r4-quality@a6c34ae36e074c70af72b808e71d87db85dd9f57",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-b-context-identity",
+    "generated_at": "2026-08-16T14:32:10Z"
+  }
+}

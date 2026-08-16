@@ -273,7 +273,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2"
         }
       ],
       "constraints": [],
@@ -287,7 +288,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -298,6 +299,19 @@
           "payload": {
             "seam": "g1-review",
             "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "findings": "4",
+            "blocking": "0",
+            "result_path": ".agent-work/cleanup-b-context-identity/crew-handoffs/g1-reviewer-result.md",
+            "crew": "constellation/cleanup-b-context-identity/g1-review/reviewer/attempt-1"
           },
           "produced_by": "engine",
           "ts": ""
@@ -314,7 +328,8 @@
           "id": "p1",
           "statement": "review verdict returned",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT returned and integrated: verdict APPROVE, attached as e-g1-review-2, crew constellation/cleanup-b-context-identity/g1-review/reviewer/attempt-1 verified fresh (completed) via run_crew.py --verify-result. g1-review advanced to complete."
         }
       ],
       "postconditions": [
@@ -342,7 +357,12 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1",
+          "attested": {
+            "evidence": "e-g1-integrate-1",
+            "note": "Reviewer verdict APPROVE, verified fresh: run_crew.py --verify-result on constellation/cleanup-b-context-identity/g1-review/reviewer/attempt-1 returned 'fresh (completed)'. Four findings, ZERO blocking: F1 MEDIUM (R4 row 2 is an untested branch), F2/F3/F4 LOW observations. The IMPLEMENTER_RESULT was likewise verified fresh at g1-review.p1."
+          }
         },
         {
           "id": "c3",
@@ -362,23 +382,39 @@
           "id": "c4",
           "statement": "the failure-set DIFFERENCE against a main baseline RE-MEASURED at gate time is attested, with BOTH numbers recorded -- c3 measures one side only (critic F7), and the merge gate is a difference, not an absolute",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Failure-set DIFFERENCE is ZERO, with BOTH sides measured at gate time on a cleared cache in a clean env. BRANCH (this worktree, HEAD ccb8b8d8 after merging main): 3104 passed, 6 skipped, 0 failed, 1165 subtests, 126.55s. MAIN baseline (d7b911a7) RE-MEASURED at gate time by the reviewer in a clean detached worktree: 3089 passed, 7 skipped, 0 failed, 1146 subtests, 126.52s. Both failure sets EMPTY and therefore IDENTICAL. Two stale figures are explicitly superseded and must not be reused: 3057 (frozen order, three commits stale) and the 3089 quoted in LAUNCH_ORDER-3.md -- note the freshly measured main happens to land on 3089 too, for a DIFFERENT tree, which is exactly why critic F7 required a difference rather than an absolute. The +15 passed / -1 skipped on the branch is #600's own new coverage."
         },
         {
           "id": "c5",
           "statement": "measurement/probe_cross_key.py updated so the archived artifact no longer misdescribes the fixed world, and the pre-fix output retained as the record of the world it did describe",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "probe_cross_key.py now describes and ASSERTS the post-#600 world, and every measurement artifact says which world it describes. (1) The probe watches the owner-keyed files rather than gauge.json alone, and exits 1 -- naming which invariant broke -- if the shared file is written, if either agent loses its reading, if the fills swap, or if a record is stamped with the wrong owner; 'no collision' is also what a dark governor looks like, so absence alone is not accepted as proof. Post-fix run exits 0: 'EACH AGENT KEPT ITS OWN READING' (probe_cross_key.post-fix.out). (2) The pre-fix output is RETAINED byte-identical, renamed probe_cross_key.pre-fix.out and labelled as the non-reproducible record the design was cut from. (3) On a tree predating #600 the probe REFUSES to run and says so, instead of printing a verdict about the wrong world -- which is precisely what it did before this update, reporting 'VERDICT: NEITHER -- the dispatched agent's write was skipped' when nothing had been skipped and both agents had written to files it was not looking at. (4) measurement/README.md is new and maps every artifact in the directory to the world it describes. Verified in BOTH directions against a real pre-fix worktree at 3bc87e93^, not by argument. That red run also exposed a genuine defect in the probe's own module loader -- it never registered the module in sys.modules, which @dataclass(frozen=True) field resolution needs, and it only ever worked because the post-fix hook loads gauge_reader first as a side effect; fixed, with the reason recorded at the call site."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "findings": "4",
+            "blocking": "0",
+            "result_path": ".agent-work/cleanup-b-context-identity/crew-handoffs/g1-reviewer-result.md",
+            "crew": "constellation/cleanup-b-context-identity/g1-review/reviewer/attempt-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-implement-500": {
@@ -480,6 +516,13 @@
       "why": "Owner-keyed gauge shipped: gauge-<owner>.json plus an owner field, slug-plus-hash normalization that is total, a leaseless checklist unchanged, and the ambiguity guard re-scoped to attribution. One flagged departure from R4's literal wording, taken conservatively and carried up rather than buried: with 2+ candidates under ONE binding key resolving to TWO DISTINCT owners, the crew skips instead of writing every candidate, because one binding key has exactly one transcript, so writing it to both files agent A's fill against agent B -- the #202/#261 fan-out dead end. R4's rationale (the writer could not tell WHOSE reading it held) is satisfied; its literal wording did not anticipate that third branch. The branch behaves exactly as today, so it cannot make the governor louder, and it reverses in one line.",
       "mechanical": false,
       "ts": "2026-08-16T14:06:47.174943+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-review",
+      "why": "APPROVE, and the review is genuinely independent: every check was driven rather than read for, and two claims were tested by mutation. Checks (a)-(i) all PASS as amended by ADMIRAL_RULING-2.md, which was relayed through the handoff rather than by hand-editing this frozen imperative -- so (d)'s superseded clause was verified in its amended form. The two obligations the Admiral held to both hold: #488's same-owner case still WRITES and its test is same-owner-DISCRIMINATING (flip the owner strings and the assertion fails), and the skip stays VISIBLE with sidecar content shown on both runs. R2 is total over 482 real ids with 0 failures and 0 collisions. Failure-set difference is ZERO -- branch 3104/6/0 at ccb8b8d8, main 3089/7/0 re-measured at gate time in a clean detached worktree. Both out-of-scope extensions are CONFIRMED FORCED, not discretionary: the reviewer installed to /tmp/g1rev-install and drove the installed hook with CLAUDE_PROJECT_DIR unset, and reverted map/INDEX.md and watched the freshness guard go red. One MEDIUM finding is carried, not blocking: R4 row 2 (2+ candidates, one owner -> write every candidate) is implemented and correct by direct drive but NOTHING TESTS IT -- proven by reverting the branch to the old skip-on-count rule and watching all 616 gauge tests stay green. That is the silent-governor shape this subsystem has been burned by three times, so it is carried to g1-integrate as a decision rather than filed and forgotten.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:40:29.266295+00:00"
     }
   ],
   "trip_ledger": [

@@ -1,13 +1,43 @@
 #!/usr/bin/env python
-"""Probe: does a SECOND binding key write into the SAME gauge.json?
+"""Probe: do two binding keys sharing one work directory collide?
 
-Settles the #600 open question. Two candidates were offered for how a stale /
-foreign reading survives at the instant of a trip:
+WHICH WORLD THIS DESCRIBES — read this before trusting any output.
+
+  This file now describes the world AFTER #600 (commit 3bc87e93), and it
+  ASSERTS that world: it exits non-zero if the collision comes back.
+
+  `probe_cross_key.pre-fix.out` is the record of the world BEFORE #600. Do not
+  re-run this script and expect that output — it cannot reproduce, because the
+  defect it captured is fixed. It is kept because it is the measurement the
+  design was cut from, not because it is still reproducible.
+
+  `probe_cross_key.post-fix.out` is this script's output at 3bc87e93 and after.
+
+WHAT IT ORIGINALLY SETTLED (#600's open question). Two candidates were offered
+for how a stale / foreign reading survives at the instant of a trip:
 
   candidate 1 — the write is skipped (ambiguous or unresolvable binding) and the
                 stale file survives;
   candidate 2 — another agent's key resolves into the same directory and writes
                 its own fill.
+
+The pre-fix run confirmed CANDIDATE 2, and the decisive detail was that the
+foreign overwrite is FRESH: `observed_at > claimed_at`, so `_reading_predates_
+claim` is False and #477/#601's timestamp guard does not fire. Time cannot see a
+concurrent collision. That is the whole argument for keying on identity.
+
+WHAT IT ASSERTS NOW. The same two keys, the same one work directory. Post-fix
+each agent's reading lands in its OWN `gauge-<owner>.json`, keyed on its binding
+entry's `engine_session`, so neither can overwrite the other and neither can be
+read as the other's. The probe fails if the two agents ever share one file, if
+either loses its reading, or if the fills get swapped.
+
+A note on reading this script's OLD verdict line. Before this update the probe
+watched `gauge.json` only, so post-fix it printed "VERDICT: NEITHER — the
+dispatched agent's write was skipped." That was wrong in a way worth recording:
+nothing was skipped: both agents wrote, to owner-keyed files the probe was not
+looking at. An archived artifact that misdescribes the fixed world is the reason
+this update belongs to `g1-integrate`.
 
 This drives the REAL `handle_post_tool_use` in a fresh process against a real
 binding store, real transcript files and the real payload shapes the harness
@@ -19,7 +49,7 @@ and an agent it dispatched holding `session_id#agent_id`, with both spine files
 under one `.agent-work/<work-id>/`.
 
 Run: py probe_cross_key.py
-Exit 0 always; the verdict is on stdout.
+Exit 0 when the fixed behaviour holds; 1 when it does not.
 """
 from __future__ import annotations
 
@@ -33,11 +63,23 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
 HOOK = REPO / "scripts" / "hooks" / "gauge_writer_hook.py"
+READER = REPO / "scripts" / "gauge_reader.py"
 
 
 def _load(name: str, path: Path):
+    """Load a module by path.
+
+    The `sys.modules` registration is load-bearing, not tidiness: `gauge_reader`
+    declares a `@dataclass(frozen=True)`, and dataclass field resolution looks
+    the owning module up in `sys.modules`. Without this line the load raises
+    `AttributeError: 'NoneType' object has no attribute '__dict__'` -- but only
+    when nothing else registered the module first. Post-fix the hook loads
+    `gauge_reader` itself, which masked the omission; running this probe against
+    the PRE-fix tree, where the hook does not, is what exposed it.
+    """
     spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[name] = mod
     spec.loader.exec_module(mod)
     return mod
 
@@ -76,6 +118,7 @@ def _checklist(path: Path) -> None:
 
 def main() -> int:
     hook = _load("gauge_writer_hook", HOOK)
+    reader = _load("gauge_reader", READER)
 
     tmp = Path(tempfile.mkdtemp(prefix="probe-cross-key-"))
     proj = tmp / "proj"
@@ -124,51 +167,125 @@ def main() -> int:
     payload_orch = {"session_id": session_id,
                     "transcript_path": str(parent_tx), "cwd": str(proj)}
 
+    # Say plainly which world we are standing in, rather than dying obscurely.
+    # `owner_key`/`gauge_filename` arrive WITH #600, so their absence is the
+    # cleanest available signal that this tree predates the fix.
+    if not (hasattr(reader, "owner_key") and hasattr(reader, "gauge_filename")):
+        print("REFUSING TO RUN: this tree PREDATES #600.")
+        print()
+        print(f"  {READER} has no owner_key/gauge_filename, so there are no")
+        print("  owner-keyed gauge files for this probe to assert against.")
+        print()
+        print("  This script describes the world AFTER #600 (commit 3bc87e93).")
+        print("  The pre-fix world is recorded in probe_cross_key.pre-fix.out --")
+        print("  read that artifact rather than re-running this script here.")
+        return 1
+
+    # Post-fix, each agent's reading is keyed on its OWN binding entry's
+    # engine_session -- 'orch-1' and 'sub-1' -- not on the work directory.
+    path_orch = work / reader.gauge_filename(reader.owner_key("orch-1"))
+    path_sub = work / reader.gauge_filename(reader.owner_key("sub-1"))
+
     print(f"work dir            : {work}")
-    print(f"key A (dispatched)  : {session_id}#{agent_id} -> {spine_sub.name}")
-    print(f"key B (orchestrator): {session_id} -> {spine_orch.name}")
-    print(f"both resolve to     : {gauge}")
+    print(f"key A (dispatched)  : {session_id}#{agent_id} -> {spine_sub.name}"
+          f"  (engine_session sub-1)")
+    print(f"key B (orchestrator): {session_id} -> {spine_orch.name}"
+          f"  (engine_session orch-1)")
+    print(f"shared path (pre-fix): {gauge.name}   <- the collision site")
+    print(f"owner-keyed (post-fix): {path_sub.name}")
+    print(f"                        {path_orch.name}")
     print()
+
+    def _load_json(path: Path):
+        return json.loads(path.read_text()) if path.exists() else None
 
     # --- act 1: the dispatched agent's tool call ---------------------------
     hook.handle_post_tool_use(payload_sub, proj)
-    after_sub = json.loads(gauge.read_text()) if gauge.exists() else None
-    print("after DISPATCHED agent's call :", json.dumps(after_sub))
+    print("after DISPATCHED agent's call :")
+    print("    shared     :", json.dumps(_load_json(gauge)))
+    print("    sub-1 own  :", json.dumps(_load_json(path_sub)))
 
     # --- act 2: the orchestrator's own tool call ---------------------------
     hook.handle_post_tool_use(payload_orch, proj)
-    after_orch = json.loads(gauge.read_text()) if gauge.exists() else None
-    print("after ORCHESTRATOR's call     :", json.dumps(after_orch))
+    print("after ORCHESTRATOR's call     :")
+    print("    shared     :", json.dumps(_load_json(gauge)))
+    print("    sub-1 own  :", json.dumps(_load_json(path_sub)))
+    print("    orch-1 own :", json.dumps(_load_json(path_orch)))
 
     skip = gauge.with_name("gauge-skip.json")
     print("gauge-skip.json               :",
           json.loads(skip.read_text()) if skip.exists() else "(none)")
     print()
 
-    # --- verdict -----------------------------------------------------------
+    after_sub = _load_json(path_sub)
+    after_orch = _load_json(path_orch)
+
+    # --- verdict: ASSERT the fixed world -----------------------------------
+    # Pre-fix this printed 'CANDIDATE 2 CONFIRMED' by watching gauge.json alone.
+    # It now asserts that the collision is gone AND that neither reading was
+    # lost -- because "no collision" is also what a dark governor looks like.
+    failures: list[str] = []
+
+    if _load_json(gauge) is not None:
+        failures.append(
+            "the shared gauge.json was written -- the collision site is live again")
     if after_sub is None:
-        print("VERDICT: NEITHER — the dispatched agent's write was skipped.")
-        return 0
+        failures.append(
+            "the dispatched agent kept NO reading -- silent loss, not separation")
     if after_orch is None:
-        print("VERDICT: unexpected — gauge.json disappeared.")
-        return 0
-    sub_fill = after_sub["fill_fraction"]
-    orch_fill = after_orch["fill_fraction"]
-    if orch_fill != sub_fill:
-        print(f"VERDICT: CANDIDATE 2 CONFIRMED. The orchestrator's own fill "
-              f"({orch_fill}) OVERWROTE the dispatched agent's ({sub_fill}) at "
-              f"the same path. Two distinct keys, one gauge file, no guard.")
+        failures.append(
+            "the orchestrator kept NO reading -- silent loss, not separation")
+
+    if not failures:
+        sub_fill = after_sub["fill_fraction"]
+        orch_fill = after_orch["fill_fraction"]
+        # 20_000/900_000 tokens: the dispatched agent's fill must stay the small
+        # one. Swapped fills would mean each agent read the other's transcript.
+        if not sub_fill < orch_fill:
+            failures.append(
+                f"fills are not separated as expected: dispatched={sub_fill} "
+                f"orchestrator={orch_fill} (the dispatched agent's must be smaller)")
+        if after_sub.get("owner") != reader.owner_key("sub-1"):
+            failures.append(
+                f"the dispatched agent's record is stamped "
+                f"{after_sub.get('owner')!r}, not its own owner")
+        if after_orch.get("owner") != reader.owner_key("orch-1"):
+            failures.append(
+                f"the orchestrator's record is stamped "
+                f"{after_orch.get('owner')!r}, not its own owner")
+
+    if failures:
+        print("VERDICT: THE COLLISION IS BACK (or a reading was lost).")
+        for line in failures:
+            print(f"  - {line}")
         print()
-        print("  The overwrite is FRESH, which is the decisive part:")
-        sub_claim = datetime.fromisoformat(binding[f'{session_id}#{agent_id}'][str(spine_sub)]['claimed_at'])
-        obs = datetime.fromisoformat(after_orch["observed_at"].replace("Z", "+00:00"))
-        print(f"    dispatched agent claimed_at : {sub_claim.isoformat()}")
-        print(f"    foreign reading observed_at : {obs.isoformat()}")
-        print(f"    observed_at > claimed_at    : {obs > sub_claim}  "
-              f"-> _reading_predates_claim is False -> #477/#601 guard does NOT fire")
-    else:
-        print(f"VERDICT: CANDIDATE 2 NOT REPRODUCED — both calls wrote the same "
-              f"fill ({orch_fill}).")
+        print("  This probe asserts the world AFTER #600. See the module "
+              "docstring; the pre-fix record is probe_cross_key.pre-fix.out.")
+        return 1
+
+    print(f"VERDICT: EACH AGENT KEPT ITS OWN READING. The orchestrator's fill "
+          f"({after_orch['fill_fraction']}) no longer overwrites the dispatched "
+          f"agent's ({after_sub['fill_fraction']}): two distinct keys, two "
+          f"owner-keyed files, and the shared gauge.json is never written.")
+    print()
+    print("  Each record NAMES its owner, which is what the timestamp guard "
+          "could not do:")
+    print(f"    dispatched agent -> {path_sub.name}  owner={after_sub['owner']}")
+    print(f"    orchestrator     -> {path_orch.name}  owner={after_orch['owner']}")
+    print()
+    print("  Why time alone was never enough (the pre-fix finding, retained):")
+    sub_claim = datetime.fromisoformat(
+        binding[f'{session_id}#{agent_id}'][str(spine_sub)]['claimed_at'])
+    obs = datetime.fromisoformat(after_orch["observed_at"].replace("Z", "+00:00"))
+    print(f"    dispatched agent claimed_at : {sub_claim.isoformat()}")
+    print(f"    orchestrator     observed_at: {obs.isoformat()}")
+    print(f"    observed_at > claimed_at    : {obs > sub_claim}  "
+          f"-> _reading_predates_claim would be False, so #477/#601's guard "
+          f"could NOT have caught this overwrite. Identity can; time could not.")
+    print()
+    print("  NOTE: #601's timestamp comparison is still present and still fires "
+          "on the SEQUENTIAL relaunch case. This probe covers the CONCURRENT "
+          "case only, and decision:identity-not-time is NOT complete.")
     return 0
 
 
