@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "feedback",
+  "mechanical": {
+    "run": "cleanup-c-liveness-rail",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 13,
+    "spine-step": "feedback",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-c-liveness-rail-feedback@dbc3a3b75e083476376d4b43ed8429cbfa3ac79f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-c-liveness-rail",
+    "generated_at": "2026-08-16T13:46:13Z"
+  }
+}

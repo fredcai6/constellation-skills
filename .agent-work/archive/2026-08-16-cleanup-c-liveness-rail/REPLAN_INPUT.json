@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "cleanup-c-liveness-rail",
+      "spec_path": ".agent-work/cleanup-c-liveness-rail/LAUNCH_ORDER.md",
+      "intent_and_why": "Two questions the fleet asks constantly and gets wrong: is anything already running (#599, registry liveness), and whose gate is this (#549, per-agent-key Stop imperative leak)."
+    },
+    "definition_of_done": [
+      "active_duplicate() corroborates liveness via a three-state (active/stale/unknown) query, fail-toward-active, instead of trusting a raw status string.",
+      "decide_stop keeps blocking exactly the same stops, but names the owning session instead of relaying a subordinate's imperative for an entry reachable only through a per-agent key."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Both directions of #599 shown wrong-before/right-after with the real crew-runs.json shape; both halves of #549 (still blocked, reason no longer leaks) proven together, not separately.",
+      "sufficient_evidence": "Independent reviewer APPROVE per gate, adversarial mutation-testing of the load-bearing tests, full clean-env suite green, main baseline re-measured at gate time.",
+      "appetite": "One working session for both issues (#599 first, since it is what makes the next four-Commander wave safe)."
+    },
+    "hard_constraints": [
+      "Fenced: scripts/checklist_engine.py, scripts/gauge_reader.py, scripts/hooks/gauge_writer_hook.py, scripts/mcp_spine_server.py, .mcp.json",
+      "decide_stop must refuse exactly the same stops it refuses today",
+      "No auto-reaping or auto-abandonment as a side effect of a liveness read"
+    ],
+    "fixed_decisions": [
+      "fail-toward-active (settled/human)",
+      "three-states-not-two (settled/measured)",
+      "pidless-means-heartbeat, 8h window (settled/measured, computed from this run's own corpus sweep)",
+      "keep-the-block-drop-the-imperative (settled/human)",
+      "no-abandonment-by-inference (settled/human)"
+    ],
+    "current_wave": {
+      "objective": "Ship #599 and #549 on cleanup/c-liveness-rail, park at archive for the Admiral to merge.",
+      "exit_criteria": [
+        "Both gates closed with independent reviewer APPROVE",
+        "Full clean-env suite green at head",
+        "Main baseline re-measured at gate time, failure-set difference empty",
+        "Admiral notified the moment #549 lands"
+      ],
+      "issues": [
+        {
+          "id": "599",
+          "title": "Registry liveness: active_duplicate() trusts a raw status string",
+          "desired_outcome": "A corroborated-dead entry frees a launch slot; an uncorroborated one still blocks.",
+          "useful_now": "Makes the next four-Commander concurrent wave safe -- doctrine requires asking the registry before every dispatch.",
+          "appetite": "One gate (g1: implement/review/integrate)",
+          "acceptance_or_falsification_evidence": "9 new tests + the real epic-568-441 phantom shape; both directions proven.",
+          "implementation_latitude": "Corroboration window for pid-less entries; shape of the three-state result.",
+          "hard_constraints_no_gos": ["No write path may set abandoned as a side effect of this read."],
+          "local_unknowns": [],
+          "anchors": ["scripts/run_crew.py:253 active_duplicate()", "scripts/run_crew.py:864 process_alive()"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "549",
+          "title": "decide_stop hands an orchestrator its subordinate's gates",
+          "desired_outcome": "Keep the block; drop the imperative for a per-agent-key-only entry.",
+          "useful_now": "Removes a candidate mechanism lane B's #600 is measuring -- B can re-measure rather than reasoning about a stale world.",
+          "appetite": "One gate (g2: implement/review/integrate)",
+          "acceptance_or_falsification_evidence": "Updated composite-key test proves both halves (still blocked, reason owner-named); control test proves the fix is scoped.",
+          "implementation_latitude": "How provenance travels out of session_view; the refusal wording.",
+          "hard_constraints_no_gos": ["decide_session_start must show zero behavior change.", "decide_stop's gating outcome must be byte-identical to before."],
+          "local_unknowns": [],
+          "anchors": ["scripts/hooks/spine_rail.py:515 session_view()", "scripts/hooks/spine_rail.py:1351 decide_stop()"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Lane B (#600) re-measures now that #549 has removed one of its two candidate mechanisms.",
+        "why_likely": "The launch order names this as the one required cross-lane interaction; a durable notification was left in the Admiral's shared work area.",
+        "entry_conditions": ["#549 merged or Lane B pulls cleanup/c-liveness-rail directly"]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether the 8h heartbeat-stale window is right for a genuinely long-running healthy external dispatch this repo hasn't observed yet.",
+        "affects": "#599's entry_liveness corroboration for pid-less entries",
+        "settle_by": "The next time an external crew legitimately runs close to 8h, observe whether it was misread as stale.",
+        "current_evidence": "Corpus sweep: longest healthy completed external run ~3h30m, shortest confirmed phantom ~22h27m; 8h sits well clear of both.",
+        "next_probe": "Add a periodic heartbeat-touch for external entries (out of scope this lane; flagged as a triage candidate) so the window measures true liveness rather than time-since-dispatch."
+      }
+    ],
+    "parked_possibilities": [
+      "A periodic heartbeat-writer for external-backend crew entries",
+      "Extending decide_session_start with the same provenance-aware rendering as decide_stop (not requested by the launch order; same mechanism would compose cleanly if ever needed)"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "599",
+      "outcome": "entry_liveness() (three-bucket, fail-toward-active) added and wired into active_duplicate(); HEARTBEAT_STALE_SECONDS=28800 documented from a corpus sweep. Committed cbd18faf.",
+      "evidence": "9 new tests in tests/test_crew_launcher.py::EntryLivenessTests (both directions on the real epic-568-441 shape); pre-existing test_duplicate_active_lock_is_refused kept green unmodified; independent reviewer APPROVE with an adversarial mutation test proving the tests load-bearing."
+    },
+    {
+      "issue_id": "549",
+      "outcome": "_session_keys/session_view_provenance/_owning_session_reason added; decide_stop's render step branches on ownership, decide_session_start untouched. Committed 915daefa.",
+      "evidence": "Updated test_stop_blocks_on_mid_flight_spine_held_only_under_a_composite_key proves both halves (still blocked, imperative absent, owner named); new control test proves the fix is scoped; independent reviewer APPROVE with two isolated adversarial mutations proving reason AND additionalContext leak-guards both load-bearing."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "active_duplicate() no longer blocks a launch on a corroborated-dead crew, and still blocks on an uncorroborated one.",
+      "expected": "A dead-PID cli entry frees the slot; a live-PID entry still blocks; a real epic-568-441-shaped phantom (external, >8h stale) frees the slot; the same shape within the 8h window still blocks.",
+      "observed": "All four proven in tests/test_crew_launcher.py::EntryLivenessTests (evidence items 1-4), plus the pre-existing test_duplicate_active_lock_is_refused kept green unmodified (bucket-3 regression guard).",
+      "source": "tests/test_crew_launcher.py, reproduced independently by the Commander and again by the reviewer"
+    },
+    {
+      "claim": "decide_stop still blocks exactly the same stops, but no longer relays a subordinate's imperative for a per-agent-key-only entry.",
+      "expected": "The updated composite-key test shows decision=='block' AND the imperative absent from both reason and additionalContext AND the owning key present instead; a control test shows a session's own mid-flight gate is unaffected.",
+      "observed": "Both proven in tests/test_spine_rail.py; reviewer ran two isolated adversarial mutations (one breaking the reason leak-guard, one breaking the additionalContext leak-guard) and confirmed both fail as expected, then cleanly reverted.",
+      "source": "tests/test_spine_rail.py, reproduced independently by the Commander and again by the reviewer"
+    },
+    {
+      "claim": "Full suite green at head; failure-set difference against main (re-measured at gate time) is empty.",
+      "expected": "No new failures relative to main.",
+      "observed": "Head: 3078 passed, 6 skipped, 0 failed. Main (current tip 43c577d4, re-measured via disposable worktree): 3068 passed, 7 skipped, 1 failed (pre-existing map/INDEX.md staleness, unrelated to this lane). Head's failure set is empty.",
+      "source": "/tmp/g3-head-suite.log, /tmp/g3-main-suite.log (ephemeral logs; the pass/fail counts and the one main-side failure signature are the durable record, quoted in this run's report)"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "main's own tip (43c577d4) carries a stale map/INDEX.md, independent of this lane -- lane D's #602/#597/#598 work added entities without rebuilding the map.",
+      "classification": "evidence_only",
+      "affects": "Any lane's merge-gate baseline measurement, not this lane's own correctness",
+      "evidence": "tests/test_code_map.py::MapTreeFreshnessTests fails on a disposable worktree at main tip 43c577d4 with the same 'map/INDEX.md is stale' signature this lane independently hit and fixed (590bf44d) for its own entity additions.",
+      "reason": "Not this lane's file ownership to fix on main; recorded as evidence for the Admiral/triage rather than filed as an issue by this run."
+    },
+    {
+      "id": "D1",
+      "signal": "No live Admiral session was addressable via SendMessage when #549 landed (not present in ListAgents' peer session list).",
+      "classification": "evidence_only",
+      "affects": "The launch order's 'tell the Admiral the moment #549 lands' requirement",
+      "evidence": "ListAgents returned 7 peer sessions, none named/addressable as the Admiral (admiral-568-cleanup). A durable notification was written instead to /home/tommy/projects/constellation-skills/.agent-work/epic-568-cleanup/C-549-LANDED.md.",
+      "reason": "Job-file-not-agent-file doctrine: the durable artifact is the delivery; the live ping is best-effort only and was unavailable this run."
+    },
+    {
+      "id": "D2",
+      "signal": "External-backend crew entries never have their last_heartbeat re-touched after dispatch -- the 8h corroboration window really measures time-since-dispatch, not time-since-last-observed-liveness.",
+      "classification": "later_only",
+      "affects": "The long-term robustness of #599's fix for a genuinely long-running (many-hour) healthy external dispatch",
+      "evidence": "Confirmed by reading run_crew.py's external-backend entry construction: last_heartbeat is set once at dispatch, touched again only by verify()/resume() on completion.",
+      "reason": "Explicitly out of scope for this lane (a new write-path/heartbeat-writer mechanism); named in both IMPLEMENTER_RESULTs as a triage candidate, not built."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "scripts/run_crew.py:253 active_duplicate()",
+      "scripts/run_crew.py:864 process_alive()",
+      "scripts/hooks/spine_rail.py:515 session_view()",
+      "scripts/hooks/spine_rail.py:1351 decide_stop()"
+    ],
+    "map_status": "DEGRADED-UNPARSEABLE at baseline a69bbac4 -- map/ids.jsonl empty repo-wide (zero authored anchor tags exist in the corpus), confirmed corpus-wide and not specific to this lane's files. This lane's own generated map/INDEX.md was kept fresh (590bf44d) against its own entity additions."
+  }
+}

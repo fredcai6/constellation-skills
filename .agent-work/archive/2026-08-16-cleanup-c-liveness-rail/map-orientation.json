@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "work_id": "cleanup-c-liveness-rail",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "scripts/run_crew.py",
+      "content_hash": "2172c23aa0a4aa62405a7c1d6bb7f48dd2de3b314ca8d30070c70e33252471ee",
+      "source": "agent-declared"
+    },
+    {
+      "path": "scripts/hooks/spine_rail.py",
+      "content_hash": "68f5df65c9ac068d7904b062e674355a1ddf59133a6056e4caeef536c345f2d6",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/CREW_CONTEXT.md",
+      "content_hash": "ae350e5230538440ba7f0f832dd479d4a3dcfa79ac75c9c21574d670fe5bbec5",
+      "source": "agent-declared"
+    },
+    {
+      "path": ".agent-work/archive/2026-08-15-triage-candidates/auto-backgrounding-breaks-the-foreground-crew-dispatch-contract.md",
+      "content_hash": "3da2dd1fd8ce718ad25734697c8874308656482519b4b0a36c60f13a1d1828f0",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "the rest of the repo; map/ids.jsonl is empty repo-wide at baseline a69bbac4 (0 authored anchor tags exist in the corpus yet), so no area is anchor-citable via map_orient -- this is a corpus-wide state, not specific to this lane's files"
+  ],
+  "escalation": "not escalated to the Admiral: the launch order's Pre-empted Steps declare triage already done, and #599/#549 both carry file:line mechanism citations directly, so orientation proceeds from those citations plus the two owned files rather than the map. Noting the repo-wide anchor gap as a triage candidate at the triage step instead.",
+  "emitted_at": "2026-08-16T12:33:43.194106+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

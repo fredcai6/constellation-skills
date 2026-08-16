@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g1-integrate",
+  "mechanical": {
+    "run": "cleanup-c-liveness-rail",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 4,
+    "spine-step": "g1-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-c-liveness-rail-g1-integrate@5311e16c1dbfec5cce8e1aec347f5209ca606799",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-c-liveness-rail",
+    "generated_at": "2026-08-16T13:10:02Z"
+  }
+}

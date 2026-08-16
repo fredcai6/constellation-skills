@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "init",
+  "files": [],
+  "repo_rev": {
+    "commit": "a69bbac4504112d13ff7864403e7570c5d191c9f"
+  },
+  "run": {
+    "work_id": "cleanup-c-liveness-rail",
+    "generated_at": "2026-08-16T12:32:16Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail"
+    }
+  }
+}

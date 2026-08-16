@@ -542,6 +542,104 @@ def test_session_view_merges_one_bare_and_two_composite_keys(proj):
     assert sr.session_view({}, sid) == {}
 
 
+# --- _session_keys: the shared seam session_view and session_view_provenance
+# --- both fold over (#549) --------------------------------------------------
+
+def test_session_keys_bare_only():
+    binding = {"sid-1": {"path/a": {}}, "other": {"path/b": {}}}
+    assert sr._session_keys(binding, "sid-1") == ["sid-1"]
+
+
+def test_session_keys_composite_only():
+    binding = {"sid-1#agent-a": {"path/a": {}}, "sid-1#agent-b": {"path/b": {}}}
+    assert sr._session_keys(binding, "sid-1") == ["sid-1#agent-a", "sid-1#agent-b"]
+
+
+def test_session_keys_mixed_preserves_binding_iteration_order():
+    """Bare + composite + decoys (a different session's composite key, and a
+    key that merely starts with sid but lacks the separator) -- order matches
+    the dict's own insertion order, decoys excluded."""
+    binding = {
+        "sid-1#agent-b": {"x": {}},
+        "sid-1": {"y": {}},
+        "other#agent-a": {"z": {}},
+        "sid-1-lookalike": {"w": {}},
+        "sid-1#agent-a": {"v": {}},
+    }
+    assert sr._session_keys(binding, "sid-1") == ["sid-1#agent-b", "sid-1", "sid-1#agent-a"]
+
+
+def test_session_keys_empty_or_none_sid_never_raises():
+    binding = {"sid-1": {"path/a": {}}}
+    assert sr._session_keys(binding, "") == []
+    assert sr._session_keys(binding, None) == []
+    assert sr._session_keys({}, "sid-1") == []
+    assert sr._session_keys(None, "sid-1") == []
+
+
+# --- session_view_provenance: which key sourced each visible path (#549) ----
+
+def test_session_view_provenance_bare_only():
+    binding = {"sid-1": {"path/a": {"spine": "path/a"}}}
+    assert sr.session_view_provenance(binding, "sid-1") == {"path/a": "sid-1"}
+
+
+def test_session_view_provenance_composite_only():
+    binding = {
+        "sid-1#agent-a": {"path/a": {"spine": "path/a"}},
+        "sid-1#agent-b": {"path/b": {"spine": "path/b"}},
+    }
+    owners = sr.session_view_provenance(binding, "sid-1")
+    assert owners == {"path/a": "sid-1#agent-a", "path/b": "sid-1#agent-b"}
+
+
+def test_session_view_provenance_mixed_matches_session_view_keys(proj):
+    """Reuses the same real-claim-writer fixture shape as
+    test_session_view_merges_one_bare_and_two_composite_keys: the provenance
+    map's key set must equal session_view's, and never disagree about what's
+    visible to sid -- both fold over the same _session_keys list."""
+    parent = _real_parent_payloads()[0]
+    sub_a, sub_b = _real_subagent_payloads()
+    sid = parent["session_id"]
+    put_checklist(proj, "run-parent")
+    put_checklist(proj, "run-a")
+    put_checklist(proj, "run-b")
+    sr.handle_post_tool_use(_real_post_tool_use(parent, _claim_cmd("run-parent", "eng-p"), proj), proj)
+    sr.handle_post_tool_use(_real_post_tool_use(sub_a, _claim_cmd("run-a", "eng-a"), proj), proj)
+    sr.handle_post_tool_use(_real_post_tool_use(sub_b, _claim_cmd("run-b", "eng-b"), proj), proj)
+
+    binding = sr.load_binding(proj)
+    key_a = sid + sr.BINDING_KEY_SEP + sub_a["agent_id"]
+    key_b = sid + sr.BINDING_KEY_SEP + sub_b["agent_id"]
+
+    view = sr.session_view(binding, sid)
+    owners = sr.session_view_provenance(binding, sid)
+    assert set(owners.keys()) == set(view.keys())
+    assert owners[_abs_spine(proj, "run-parent")] == sid
+    assert owners[_abs_spine(proj, "run-a")] == key_a
+    assert owners[_abs_spine(proj, "run-b")] == key_b
+
+
+def test_session_view_provenance_last_key_wins_on_path_collision():
+    """Matches session_view's own dict.update overwrite semantics: when two
+    keys in _session_keys order both carry the same path, the later key's
+    owner wins."""
+    binding = {
+        "sid-1": {"shared/path": {"spine": "shared/path"}},
+        "sid-1#agent-a": {"shared/path": {"spine": "shared/path"}},
+    }
+    owners = sr.session_view_provenance(binding, "sid-1")
+    assert owners["shared/path"] == "sid-1#agent-a"
+
+
+def test_session_view_provenance_empty_or_falsy_never_raises():
+    binding = {"sid-1": {"path/a": {"spine": "path/a"}}}
+    assert sr.session_view_provenance(binding, "") == {}
+    assert sr.session_view_provenance(binding, None) == {}
+    assert sr.session_view_provenance({}, "sid-1") == {}
+    assert sr.session_view_provenance(None, "sid-1") == {}
+
+
 def test_stop_blocks_on_mid_flight_spine_held_only_under_a_composite_key(proj):
     """The parent's bare key holds nothing mid-flight; the only mid-flight
     spine is bound under a SUBAGENT's composite key. Before the read routing
@@ -567,9 +665,40 @@ def test_stop_blocks_on_mid_flight_spine_held_only_under_a_composite_key(proj):
 
     out = sr.decide_stop({"session_id": sid, "cwd": str(proj)}, proj)
     assert out["decision"] == "block"
-    assert "g9" in out["reason"]
-    assert "COMPOSITE-MARKER" in out["reason"]
+    owner_key = sid + sr.BINDING_KEY_SEP + sub["agent_id"]
+    # #549: the reason/context must NOT render the sub's own next imperative
+    # into the PARENT's Stop-block -- that reads as an instruction for the
+    # parent to go execute a gate that is not its own to drive. Still blocked
+    # (the #419 fix stays intact), but the owning composite key/agent id
+    # appears instead of the imperative text.
+    assert "COMPOSITE-MARKER" not in out["reason"]
+    assert "COMPOSITE-MARKER" not in out["hookSpecificOutput"]["additionalContext"]
+    assert owner_key in out["reason"]
     # Strikes still accrue under the BARE sid -- the hatch is not fragmented.
+    assert list(sr.load_nudges(proj).keys()) == [sid]
+
+
+def test_stop_bare_sid_owned_mid_flight_still_renders_original_imperative_text(proj):
+    """Control: an ordinary same-session mid-flight entry -- reachable through
+    the BARE sid key, no subordinate involved -- must keep rendering the
+    original imperative-bearing _mid_flight_reason text unchanged. Proves
+    #549's fix is scoped to per-agent-key-only entries, never a blanket
+    reword of every Stop-block."""
+    parent = _real_parent_payloads()[0]
+    sid = parent["session_id"]
+
+    write_spine(proj, make_spine([("g1", "in-progress")], imperatives={"g1": "BARE-MARKER keep going"}),
+                work="run-parent", journal_lines=1)
+    sr.handle_post_tool_use(_real_post_tool_use(parent, _claim_cmd("run-parent", "eng-p"), proj), proj)
+
+    binding = sr.load_binding(proj)
+    assert list(binding.keys()) == [sid]
+
+    out = sr.decide_stop({"session_id": sid, "cwd": str(proj)}, proj)
+    assert out["decision"] == "block"
+    assert "g1" in out["reason"]
+    assert "BARE-MARKER" in out["reason"]
+    assert "BARE-MARKER" in out["hookSpecificOutput"]["additionalContext"]
     assert list(sr.load_nudges(proj).keys()) == [sid]
 
 
@@ -592,6 +721,29 @@ def test_session_start_resumes_from_a_spine_bound_only_under_a_composite_key(pro
     ctx = out["hookSpecificOutput"]["additionalContext"]
     assert "RESUMING" in ctx
     assert "COMPOSITE-RESUME" in ctx
+
+
+def test_session_start_composite_key_entry_still_renders_full_imperative_unchanged(proj):
+    """Regression guard for #549: decide_session_start is the OTHER caller of
+    session_view and is explicitly out of scope for this gate -- its own
+    behavior must not move. Unlike decide_stop, decide_session_start never
+    consults session_view_provenance, so a composite-key-only entry's
+    imperative must still render into additionalContext in full, exactly as
+    before -- no foreign-owner withholding here."""
+    sub = _real_subagent_payloads()[0]
+    sid = sub["session_id"]
+    alt = proj / "altwt2"
+    write_spine(alt, make_spine([("g7", "in-progress")], imperatives={"g7": "REGRESSION-MARKER keep going"}),
+                work="run-sub2")
+    sr.handle_post_tool_use(_real_post_tool_use(sub, _claim_cmd("run-sub2", "eng-s2"), alt), proj)
+
+    binding = sr.load_binding(proj)
+    assert list(binding.keys()) == [sid + sr.BINDING_KEY_SEP + sub["agent_id"]]
+
+    out = sr.decide_session_start({"session_id": sid, "cwd": str(alt), "source": "resume"}, proj)
+    ctx = out["hookSpecificOutput"]["additionalContext"]
+    assert "g7" in ctx
+    assert "REGRESSION-MARKER" in ctx  # imperative NOT withheld here -- decide_stop-only change
 
 
 def test_session_start_bind_on_resume_still_writes_under_the_bare_key(proj):
