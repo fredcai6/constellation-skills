@@ -125,13 +125,43 @@
       "An allowlist-based owner key. Rejected by R2: 82 of 398 real session ids fail it."
     ]
   },
-  "completed_outcomes": [],
+  "completed_outcomes": [
+    {
+      "issue_id": "600",
+      "outcome": "SHIPPED, independently reviewed APPROVE, and integrated. A context reading now belongs to an agent instead of a folder: gauge_reader.py holds the single owner-key definition (owner_key() as slug plus 12-hex SHA-256, total over every string; gauge_filename(); GAUGE_FILENAME; record_owner()); gauge_writer_hook.py loads it by path, writes gauge-<owner>.json and stamps a matching owner field, its ambiguity guard becoming a question about ATTRIBUTION rather than count; checklist_engine.py resolves the same name from its own active lease session_id and, with no lease, reads the unowned gauge.json and trips exactly as today. R4 is implemented as AMENDED by ADMIRAL_RULING-2.md. #601's timestamp comparison survives and still fires on the sequential relaunch case. decision:identity-not-time is explicitly NOT complete -- this wave fixes the concurrent collision only.",
+      "evidence": "commit 3bc87e93 (12 files, +1352/-202); crew-handoffs/g1-implementer-result.md; crew-handoffs/g1-reviewer-result.md (verdict APPROVE, checks (a)-(i) all PASS, 4 findings 0 blocking); g1-integrate closed at commit 35ca31d1 with a ZERO failure-set difference (branch 3104/6/0 at ccb8b8d8; main 3089/7/0 at d7b911a7 re-measured at gate time in a clean detached worktree)"
+    }
+  ],
   "wave_evidence": [
     {
-      "claim": "Gate progress at the time of writing: e0-context, g0-measure and g1-implement are closed; g1-review is in-progress; g1-integrate and g2-implement-500 are pending. Neither issue is COMPLETE, so completed_outcomes is deliberately empty and both 600 and 500 remain open.",
-      "expected": "#600 would be reportable as a completed outcome once its code shipped.",
-      "observed": "The code shipped at 3bc87e93 but the issue is not complete until g1-review returns a verdict and g1-integrate carries an APPROVE. Shipping is the middle of the gate, not its end, so 600 stays in open_current_wave_issue_ids.",
-      "source": ".agent-work/cleanup-b-context-identity/execute.json, read at leg 3 start"
+      "claim": "The wave exits with #600 complete and #500 handed back as a settled design for the third time.",
+      "expected": "Both issues would ship, or #500's status would be a judgement call at the boundary.",
+      "observed": "It was not a judgement call -- the engine refused the gate: 'g2-implement-500: context at 17% is at/over the hard limit, so this is not the moment to BEGIN work here.' The HAND-BACK branch the gate was authored to allow was taken and declared in G2_BOUNDARY_DECLARATION.md before any work started, and g2-implement-500 was closed through the engine's skip verb with that reason recorded. No code shipped for #500; DESIGN_500.md is returned accepted and unchanged.",
+      "source": "G2_BOUNDARY_DECLARATION.md; execute.json's skip entry for g2-implement-500"
+    },
+    {
+      "claim": "The governor this wave built governed the wave that built it.",
+      "expected": "The trip that ends a leg is attributable to the agent it is about.",
+      "observed": "The reading that refused g2-implement-500 -- fill_fraction 0.166613, owner commander-cleanup-b-context-iden-88c76234484d -- came from this leg's OWN owner-keyed gauge file and names its owner in the record. Before 3bc87e93 the same trip would have been unattributable, because three distinct harness keys are bound to this one spine. The boundary declaration is therefore evidence rather than assertion.",
+      "source": "gauge-commander-cleanup-b-context-iden-88c76234484d.json; .agent-work/.spine-rail-binding.json"
+    },
+    {
+      "claim": "Lane C's #549 removed the collision, so #600 may have been unnecessary.",
+      "expected": "Unknown at gate time -- ADMIRAL_NOTE-lane-C-landed.md READ it as removing one route and not the mechanism, and the gate required this be measured rather than assumed either way.",
+      "observed": "Measured on the clean isolate: main at d7b911a7 has #549 and does NOT have #600. The ORIGINAL pre-fix probe run there still prints 'VERDICT: CANDIDATE 2 CONFIRMED' -- the orchestrator's 0.9 fill overwrites the dispatched agent's 0.02 at the same path, and observed_at > claimed_at so the #477/#601 guard still does not fire. The collision reproduces UNCHANGED with #549 present. The Admiral's reading is confirmed by measurement; #600 was still load-bearing after lane C landed.",
+      "source": "measurement/probe_cross_key.lane-c-remeasure.out; measurement/README.md"
+    },
+    {
+      "claim": "A measurement artifact keeps describing the world it measured.",
+      "expected": "The archived probe would stay meaningful after the fix landed.",
+      "observed": "It did the opposite. Watching gauge.json alone, post-fix the probe printed 'VERDICT: NEITHER -- the dispatched agent's write was skipped', when nothing was skipped: both agents wrote, to owner-keyed files it was not looking at. The artifact would have told a future reader that #600 SILENCED the governor. It now asserts the post-fix world, exits non-zero naming which invariant broke (including when a reading is simply LOST, since 'no collision' is also what a dark governor looks like), and REFUSES to run on a tree predating #600 rather than reporting on the wrong world.",
+      "source": "measurement/probe_cross_key.py; probe_cross_key.pre-fix.out and .post-fix.out; measurement/README.md"
+    },
+    {
+      "claim": "Verifying an assertion in both directions costs more than it returns.",
+      "expected": "Running the updated probe against a real pre-fix worktree would merely confirm it refuses.",
+      "observed": "It exposed a genuine defect in the probe's own module loader: it never registered the loaded module in sys.modules, which @dataclass(frozen=True) field resolution needs. It had only ever worked because the POST-fix hook loads gauge_reader first and registers it as a side effect -- so the bug was invisible in exactly the world the probe was written for. Fixed, with the reason recorded at the call site.",
+      "source": "measurement/probe_cross_key.py's _load docstring; the red run against a worktree at 3bc87e93^"
     },
     {
       "claim": "The #600 open question was settled by measurement rather than argument.",
@@ -230,6 +260,46 @@
       "reason": "It is a checker defect, not a frame defect, and the waiver records who accepted it and why. No issue is filed automatically."
     },
     {
+      "id": "D6",
+      "signal": "R4 row 2 -- 2+ distinct candidates all under ONE owner, write EVERY candidate -- is implemented and correct by direct drive, but NOTHING tests it. Proven by mutation, not suspected: reverting the branch to the old skip-on-count rule leaves all 616 gauge tests green.",
+      "classification": "later_only",
+      "affects": "The durability of ADMIRAL_RULING-2.md's first held-to point. A future simplification back to a count check would restore the #488-class dark governor for the multi-directory same-owner case with no failing test anywhere.",
+      "evidence": "g1-reviewer-result.md F1 (MEDIUM). Every existing multi-candidate test uses two DIFFERENT owners and so exercises the SKIP branch; the #488 test covers the same-DIRECTORY case, which dedupes to one candidate and never enters the multi-candidate write loop. The reviewer's mutation was asserted applied and restored byte-identical.",
+      "reason": "It does not block the wave exit: the behaviour is verified correct by direct drive, and the ruling's literally required test -- pin #488's exact shape and assert the write -- is present and same-owner-DISCRIMINATING (flip the owner strings and the assertion fails). Row 2 is an ADDITIONAL uncovered branch, not the ruling's acceptance criterion. It is carried as a triage candidate rather than fixed at an integrate gate, because the Commander does not do the implementer's work. Not auto-filed."
+    },
+    {
+      "id": "D7",
+      "signal": "ADMIRAL_RULING-2.md's row attribution is off by one row: it says #488's case 'lands in row 2 -- write every candidate', but same directory plus same owner DEDUPES to a single candidate and takes the row 1 single-candidate write branch.",
+      "classification": "evidence_only",
+      "affects": "The accuracy of the top governing authority, not its effect.",
+      "evidence": "g1-reviewer-result.md, 'Note for the record'. The OUTCOME the Admiral required -- it still writes -- holds, and the required test is present and discriminating, so the ruling is satisfied as ruled.",
+      "reason": "Recorded rather than filed because nothing behavioural turns on it, but ruling 2 is the top authority for this lane and a future reader tracing 'row 2' would land on the wrong branch. Surfaced to the Admiral for correction at his discretion."
+    },
+    {
+      "id": "D8",
+      "signal": "Both dispatched crews wrote their run packets into a PATH-DOUBLED directory, .agent-work/<work-id>/<work-id>/context/ and /mechanical/, rather than the correct level.",
+      "classification": "later_only",
+      "affects": "Any consumer resolving a crew's packets by path, and archive hygiene -- the doubling would otherwise be committed into the archive as if it were meant.",
+      "evidence": "The implementer's m0-m5 packets (06:28-07:03, leg 2) and the reviewer's r0-r6 packets (07:20-07:34, leg 3) are both in the doubled path, so it is SYSTEMIC and not a one-off. Swept at g1-integrate into the correct level with no name collision -- the Commander's own spine-step packets and the crews' m*/r* packets do not overlap.",
+      "reason": "No evidence was lost and the sweep is mechanical, so it does not block the wave exit. Recorded because two independent crews hit it, which points at the work-root resolution rather than at either crew. Not auto-filed."
+    },
+    {
+      "id": "D9",
+      "signal": "--session-id is required on every mutating engine verb but is omitted from the crew skill walkthrough, and on a survey checklist the advancing verb is record rather than advance -- which the skill's step 3 gets wrong.",
+      "classification": "later_only",
+      "affects": "Every dispatched crew's first mutating call.",
+      "evidence": "The reviewer's Workflow Feedback reports both, and notes the implementer hit the identical --session-id friction. That is two crews in a row losing a cycle to the same gap. This Commander hit it too on its own first resume verb.",
+      "reason": "Pure friction, no correctness impact, and each crew recovered within one refused call. It belongs to a skill-doc pass, not to this wave. Not auto-filed."
+    },
+    {
+      "id": "D10",
+      "signal": "The implementer handoff's evidence standard asked for red-before/green-after and warned about patched readers, injected CLAUDE_PROJECT_DIR and stale bytecode, but never asked whether the NEW branches are themselves covered.",
+      "classification": "later_only",
+      "affects": "How implementer handoffs specify evidence, everywhere -- not just this lane.",
+      "evidence": "The reviewer's Workflow Feedback names it as the gap that let D6 through: 'A line like -- for each behavioural row you implement, show a mutation that turns it red -- would have surfaced F1 at implement time rather than review time.' The single finding in this review sits exactly there.",
+      "reason": "A doctrine improvement to the handoff template, evidenced by the one finding it would have caught. Not a defect in this wave's code, so it is carried rather than repaired here. Not auto-filed."
+    },
+    {
       "id": "D5",
       "signal": "The g1 implementer dispatch is absent from the durable crew registry, though its result artifact exists and the gate is closed and committed.",
       "classification": "evidence_only",
@@ -238,7 +308,7 @@
       "reason": "No work was lost and the gate is sound, so this does not block the wave exit. It is recorded because the registry is the mechanism relaunch safety rests on, and here it was the artifact rather than the registry that carried the signal. Not auto-filed."
     }
   ],
-  "open_current_wave_issue_ids": ["600", "500"],
+  "open_current_wave_issue_ids": ["500"],
   "unlaunched_items": [
     {"id": "identity-not-time-completion", "kind": "forecast"},
     {"id": "liveness-vs-blocked-parent", "kind": "forecast"},

@@ -345,7 +345,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
         },
         {
           "id": "c2",
@@ -376,7 +377,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-3"
         },
         {
           "id": "c4",
@@ -396,7 +398,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -413,6 +415,28 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_gauge_writer.py tests/test_gauge_reader.py tests/test_checklist_engine.py tests/test_gauge_chain_writer_to_trip.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -426,7 +450,8 @@
           "id": "p1",
           "statement": "#600 integrated, so #500 can state what it inherits",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "#600 is integrated: g1-implement committed at 3bc87e93, g1-review returned APPROVE, g1-integrate closed with a ZERO failure-set difference against a gate-time-re-measured main. #500 therefore inherits a settled owner-key definition in gauge_reader.py and an engine that resolves the gauge owner from its own active lease session_id."
         }
       ],
       "postconditions": [
@@ -468,8 +493,10 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "skipped",
+      "status_detail": {
+        "reason": "HAND-BACK branch taken and declared at the boundary in G2_BOUNDARY_DECLARATION.md, before any work started, per this gate's own c1 and ADMIRAL_RULING-1.md's Scope section. The gate is closed WITHOUT shipping code, which is the branch it was authored to allow -- not an abandonment. The engine itself made the decision: 'REFUSED: g2-implement-500: context at 17% is at/over the hard limit, so this is not the moment to BEGIN work here.' The reading is this leg's own owner-keyed gauge (fill_fraction 0.166613, owner commander-cleanup-b-context-iden-88c76234484d) -- attributable only because of the #600 change this same wave shipped. DESIGN_500.md is returned accepted and unchanged; R5 already settled the shape as option (a), so the next leg inherits a settled design and a named authority, not an open question. Authorized by LAUNCH_ORDER-3.md ('An accepted limit reported plainly is worth more to me than a rushed implementation of a design that is already settled') and ADMIRAL_RULING-2.md ('A third hand-back of DESIGN_500.md is an acceptable outcome; running long to avoid it is not')."
+      },
       "result": null,
       "finding": null,
       "evidence": [],
@@ -523,6 +550,13 @@
       "why": "APPROVE, and the review is genuinely independent: every check was driven rather than read for, and two claims were tested by mutation. Checks (a)-(i) all PASS as amended by ADMIRAL_RULING-2.md, which was relayed through the handoff rather than by hand-editing this frozen imperative -- so (d)'s superseded clause was verified in its amended form. The two obligations the Admiral held to both hold: #488's same-owner case still WRITES and its test is same-owner-DISCRIMINATING (flip the owner strings and the assertion fails), and the skip stays VISIBLE with sidecar content shown on both runs. R2 is total over 482 real ids with 0 failures and 0 collisions. Failure-set difference is ZERO -- branch 3104/6/0 at ccb8b8d8, main 3089/7/0 re-measured at gate time in a clean detached worktree. Both out-of-scope extensions are CONFIRMED FORCED, not discretionary: the reviewer installed to /tmp/g1rev-install and drove the installed hook with CLAUDE_PROJECT_DIR unset, and reverted map/INDEX.md and watched the freshness guard go red. One MEDIUM finding is carried, not blocking: R4 row 2 (2+ candidates, one owner -> write every candidate) is implemented and correct by direct drive but NOTHING TESTS IT -- proven by reverting the branch to the old skip-on-count rule and watching all 616 gauge tests stay green. That is the silent-governor shape this subsystem has been burned by three times, so it is carried to g1-integrate as a decision rather than filed and forgotten.",
       "mechanical": false,
       "ts": "2026-08-16T14:40:29.266295+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g1-integrate",
+      "why": "APPROVE integrated with the crew's side-effects verified against the world rather than read for. Both gate-owned jobs are done and both were MEASURED, not argued. Job 1: the probe now asserts the post-#600 world and refuses to run on a tree that predates it, the pre-fix output is retained as the non-reproducible record, and measurement/README.md maps every artifact to its world; proven in both directions against a real worktree at 3bc87e93^, which also surfaced a real sys.modules defect in the probe's own loader. Job 2: main at d7b911a7 isolates #549 without #600, and the original probe still prints CANDIDATE 2 CONFIRMED there -- the collision reproduces unchanged with lane C landed, so #549 removed a route and not the mechanism, confirming ADMIRAL_NOTE-lane-C-landed.md by measurement. Failure-set difference is ZERO against a gate-time-re-measured main. F1 (MEDIUM) is carried deliberately into triage rather than fixed here: R4 row 2 is correct by direct drive but nothing tests it, and the Commander does not do the implementer's work at an integrate gate. Also swept the path-doubled crew packet directory, which both crews hit and is therefore systemic.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:49:46.060162+00:00"
     }
   ],
   "trip_ledger": [
@@ -536,6 +570,17 @@
       "model": "claude-opus-5",
       "why_ref": "w-3",
       "ts": "2026-08-16T14:08:20.112324+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "g2-implement-500",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1687,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-16T14:50:18.741922+00:00"
     }
   ]
 }
