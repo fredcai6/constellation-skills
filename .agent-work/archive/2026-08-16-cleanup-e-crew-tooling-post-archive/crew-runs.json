@@ -1,0 +1,30 @@
+[
+  {
+    "crew_id": "constellation/cleanup-e-crew-tooling/execute/commander/attempt-1",
+    "work_id": "cleanup-e-crew-tooling",
+    "gate": "execute",
+    "role": "commander",
+    "attempt": 1,
+    "status": "completed",
+    "session_name": "constellation/cleanup-e-crew-tooling/execute/commander/attempt-1",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 3823040,
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-e-crew-tooling",
+    "handoff": ".agent-work/cleanup-e-crew-tooling/LAUNCH_ORDER.md",
+    "result": null,
+    "spine": ".agent-work/cleanup-e-crew-tooling/spine.json",
+    "parent": "admiral-568-cleanup",
+    "stdout": ".agent-work/cleanup-e-crew-tooling/crew-runs/execute-commander-attempt-1.stdout.txt",
+    "stderr": ".agent-work/cleanup-e-crew-tooling/crew-runs/execute-commander-attempt-1.stderr.txt",
+    "started_at": "2026-08-16T15:17:16.986723+00:00",
+    "last_heartbeat": "2026-08-16T16:26:45.924741+00:00",
+    "completed_at": "2026-08-16T16:26:45.924741+00:00",
+    "abandoned": false,
+    "model": "sonnet",
+    "exit_code": 0,
+    "result_present": false,
+    "result_fresh": false,
+    "verdict_source": "spine_terminal"
+  }
+]

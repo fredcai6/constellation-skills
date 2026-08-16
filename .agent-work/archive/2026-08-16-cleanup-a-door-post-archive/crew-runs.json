@@ -1,0 +1,30 @@
+[
+  {
+    "crew_id": "constellation/cleanup-a-door/execute/commander/attempt-1",
+    "work_id": "cleanup-a-door",
+    "gate": "execute",
+    "role": "commander",
+    "attempt": 1,
+    "status": "completed",
+    "session_name": "constellation/cleanup-a-door/execute/commander/attempt-1",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 2794078,
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door",
+    "handoff": ".agent-work/cleanup-a-door/LAUNCH_ORDER.md",
+    "result": null,
+    "spine": ".agent-work/cleanup-a-door/spine.json",
+    "parent": "admiral-568-cleanup",
+    "stdout": ".agent-work/cleanup-a-door/crew-runs/execute-commander-attempt-1.stdout.txt",
+    "stderr": ".agent-work/cleanup-a-door/crew-runs/execute-commander-attempt-1.stderr.txt",
+    "started_at": "2026-08-16T12:30:51.107099+00:00",
+    "last_heartbeat": "2026-08-16T16:56:18.205821+00:00",
+    "completed_at": "2026-08-16T16:56:18.205821+00:00",
+    "abandoned": false,
+    "model": "opus",
+    "exit_code": 0,
+    "result_present": false,
+    "result_fresh": false,
+    "verdict_source": "spine_terminal"
+  }
+]
