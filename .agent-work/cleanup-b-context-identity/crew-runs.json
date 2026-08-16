@@ -51,5 +51,30 @@
     "completed_at": null,
     "abandoned": false,
     "model": "opus"
+  },
+  {
+    "crew_id": "constellation/cleanup-b-context-identity/g1/implementer/attempt-1",
+    "work_id": "cleanup-b-context-identity",
+    "gate": "g1",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/cleanup-b-context-identity/g1/implementer/attempt-1",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 3094608,
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity",
+    "handoff": ".agent-work/cleanup-b-context-identity/crew-handoffs/g1-implementer-handoff.md",
+    "result": ".agent-work/cleanup-b-context-identity/crew-handoffs/g1-implementer-result.md",
+    "spine": null,
+    "parent": "commander-cleanup-b-context-identity",
+    "stdout": ".agent-work/cleanup-b-context-identity/crew-runs/g1-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/cleanup-b-context-identity/crew-runs/g1-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-08-16T13:23:23.628652+00:00",
+    "last_heartbeat": "2026-08-16T13:23:23.628652+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "model": "opus",
+    "reasoning_effort": "high"
   }
 ]
