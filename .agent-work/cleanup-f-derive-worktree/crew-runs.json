@@ -86,5 +86,30 @@
     "result_present": false,
     "result_fresh": false,
     "verdict_source": "spine_terminal"
+  },
+  {
+    "crew_id": "constellation/cleanup-f-derive-worktree/execute/commander/attempt-4",
+    "work_id": "cleanup-f-derive-worktree",
+    "gate": "execute",
+    "role": "commander",
+    "attempt": 4,
+    "status": "running",
+    "session_name": "constellation/cleanup-f-derive-worktree/execute/commander/attempt-4",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 1634189,
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
+    "handoff": ".agent-work/cleanup-f-derive-worktree/LAUNCH_ORDER-4.md",
+    "result": null,
+    "spine": ".agent-work/cleanup-f-derive-worktree/spine.json",
+    "parent": "admiral-568-cleanup",
+    "stdout": ".agent-work/cleanup-f-derive-worktree/crew-runs/execute-commander-attempt-4.stdout.txt",
+    "stderr": ".agent-work/cleanup-f-derive-worktree/crew-runs/execute-commander-attempt-4.stderr.txt",
+    "started_at": "2026-08-16T21:20:21.909398+00:00",
+    "last_heartbeat": "2026-08-16T21:20:21.909398+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "model": "opus",
+    "scratch_dir": ".agent-work/cleanup-f-derive-worktree/crew-scratch/execute-commander-attempt-4-b6858d04a495"
   }
 ]

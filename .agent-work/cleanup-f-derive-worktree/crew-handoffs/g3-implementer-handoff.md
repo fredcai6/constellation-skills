@@ -256,15 +256,24 @@ find . -name __pycache__ -type d -prune -exec rm -rf {} + ; \
   py -m pytest -q
 ```
 
-**Baselines the Commander measured on this tree:**
+**Baselines the Commander re-measured on this tree, at the head you are
+branching from (`53c89ba1`), immediately before dispatching you:**
 
 | tree | result |
 |---|---|
-| `main` at `e0539903` | 3163 passed, 7 skipped, 0 failed |
-| this branch, main merged in | 3195 passed, 5 skipped, 0 failed |
+| `main` at `17c2cee5`, isolated clone | 3171 passed, 7 skipped, 0 failed |
+| this branch at `53c89ba1` | **3170 passed, 5 skipped, 0 failed** |
 
-Failure-set difference: **empty on both sides.** Re-measure rather than trusting
-these.
+Failure-set difference: **empty on both sides.** Both were measured with
+`__pycache__` cleared and with `SPINE_FILE`/`SPINE_SESSION`/`SPINE_PARENT`/`CREW_SCRATCH_DIR`
+scrubbed. Re-measure rather than trusting these — but note that **an earlier
+edition of this handoff carried `3195 passed` and `main` at `e0539903`, and both
+of those numbers are stale.** If you measure ~3170 on an unmodified tree, you are
+not looking at a regression.
+
+The targeted check was confirmed red on the empty diff before you were
+dispatched: `-k OwnershipIsBindingKeyNotWorktree` collects nothing and pytest
+exits **5**.
 
 **The `CREW_SCRATCH_DIR` note — read this before you report a red suite.** You are
 launched through `run_crew.py`, which sets `CREW_SCRATCH_DIR` in your environment.
@@ -272,8 +281,9 @@ Lane E's
 `tests/test_crew_launcher.py::ScratchDirResumeTests::test_resume_of_legacy_entry_without_worktree_key_does_not_crash_and_leaves_scratch_dir_unbound`
 asserts the key is **absent** from a resumed child's env but does not scrub it
 from the parent env first — so it fails for **any** agent running the suite from
-inside a crew-launched session. Measured: with the variable set, `1 failed, 3194
-passed`; with `-u CREW_SCRATCH_DIR`, `3195 passed, 5 skipped, 0 failed`. It is
+inside a crew-launched session. Measured on the current tree: with the variable set,
+`1 failed, 3169 passed`; with `-u CREW_SCRATCH_DIR`, `3170 passed, 5 skipped,
+0 failed` (the `3194`/`3195` in an earlier edition were stale). It is
 **ambient-environment contamination, not a regression**, the file is lane E's, and
 it is already recorded as evidence. Scrub it, and do not fix that test.
 
