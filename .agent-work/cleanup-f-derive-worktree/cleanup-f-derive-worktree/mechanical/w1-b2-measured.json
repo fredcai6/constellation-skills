@@ -1,21 +1,21 @@
 {
   "contract": 1,
-  "step": "r0-context",
+  "step": "w1-b2-measured",
   "mechanical": {
     "run": "cleanup-f-derive-worktree",
     "project": "constellation-skills",
     "role": "agent",
     "refusals": 1,
-    "spine-step": "r0-context",
+    "spine-step": "w1-b2-measured",
     "rework-count": 0,
     "failed-commands": 0,
     "reopens": 0,
-    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-r0-context@134355cdfe0b8fb7fa6fdee555c1c1c1ae02bd55",
+    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-w1-b2-measured@ced1d1c507f17c8c6ebaec31ae1672ed4a32260f",
     "artifact-ref": []
   },
   "refused": [],
   "run": {
     "work_id": "cleanup-f-derive-worktree",
-    "generated_at": "2026-08-16T22:55:40Z"
+    "generated_at": "2026-08-16T22:58:20Z"
   }
 }

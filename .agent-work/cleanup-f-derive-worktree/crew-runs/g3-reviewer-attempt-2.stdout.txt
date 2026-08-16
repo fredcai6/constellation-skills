@@ -1,0 +1,12 @@
+**I refuse the hook, and the refusal is recorded** — now twice, in the result artifact's "On the Stop hook" section.
+
+The hook offers `block` or `waive` as the sanctioned honest stop. Both write to `SPINE_FILE`, which I re-verified just now points at **`spine.json` under `engine_session: {session_id: "commander-cleanup-f-derive-worktree", status: "active", claimed_by: "commander"}`** — my parent's spine, under my parent's live lease. `SPINE_SESSION` is `.../execute/commander`, not mine; my `crew-runs.json` entry has `spine: null`. Using either escape hatch would advance or annotate someone else's gate under someone else's lease, so on this dispatch the sanctioned stop *is* the destructive act. A plain recorded refusal is correct, and it is what my handoff instructed and what all three prior crews on this gate did.
+
+My run is complete, and nothing about it is waiting:
+
+- Survey at `g3-review-rework/review.json` — 15 checks, **no pending items**, consolidated `BLOCK`, 7 findings, 3 triage candidates.
+- Result artifact written to `crew-handoffs/g3-reviewer-rework-result.md` — that write was the delivery.
+- My own lease `released` at 23:06:54, after the closing consolidate.
+- `scripts/hooks/spine_rail.py` and `tests/test_spine_rail.py` left byte-identical to what shipped; I wrote nothing to the parent spine.
+
+The second firing is itself worth something to the Admiral, so I logged it rather than just absorbing it: the nudge is not tied to having work left, and it repeats after a complete, honest finish. That is `tc1`'s mechanism, not a signal about my gate — and it is the same recorded finding that my blocker **B4** feeds rather than duplicates. The escalation the gate needs is the Commander's to make: B4 is a fix-and-re-review on `decide_session_start`, and `tc1` still needs the authority decision no crew on this lane can make.

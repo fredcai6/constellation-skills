@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "w1-b2-measured",
+  "files": [],
+  "repo_rev": {
+    "commit": "48377362e10f6d5864906847af970cac3b6e7a22"
+  },
+  "run": {
+    "work_id": "cleanup-f-derive-worktree",
+    "generated_at": "2026-08-16T22:58:20Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree"
+    }
+  }
+}

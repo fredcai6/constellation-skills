@@ -5,7 +5,7 @@
     "run": "cleanup-f-derive-worktree",
     "project": "constellation-skills",
     "role": "agent",
-    "refusals": 2,
+    "refusals": 1,
     "spine-step": "r4-quality",
     "rework-count": 0,
     "failed-commands": 0,
@@ -16,6 +16,6 @@
   "refused": [],
   "run": {
     "work_id": "cleanup-f-derive-worktree",
-    "generated_at": "2026-08-16T21:01:06Z"
+    "generated_at": "2026-08-16T23:03:28Z"
   }
 }

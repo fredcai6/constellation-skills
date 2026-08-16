@@ -1,0 +1,360 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "w1-b2-measured",
+    "w2-unshared-fallback",
+    "w3-rewritten-tests",
+    "w4-b1-guard",
+    "w5-prose",
+    "w6-no-regression",
+    "w7-suite-arithmetic",
+    "w8-own-entries",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), then project deltas: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the rework handoff, the first review's BLOCK, the rework implementer result, the original implementer result, the first reviewer handoff's 12 Close Criteria, and the three-commit diff. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded inherited doctrine (global-crew.md, global-everyone.md), docs/agents/CREW_CONTEXT.md + GLOSSARY.md, the rework handoff, the first review's BLOCK (B1/B2/B3), g3-implementer-rework-result.md, g3-implementer-result.md, and the first reviewer handoff's 12 Close Criteria. Diff read in three parts (999b7663..e3e50a69, e3e50a69..6bba3fd2, 999b7663..6bba3fd2). Verified the working tree's scripts/hooks/spine_rail.py and tests/test_spine_rail.py are byte-identical to 6bba3fd2, so what I measure is what shipped. crew-runs.json entry has spine:null; SPINE_FILE/SPINE_SESSION point at the parent Commander's spine under the parent's live lease, so I authored my own survey and claimed it with my own session id.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "w1-b2-measured": {
+      "id": "w1-b2-measured",
+      "title": "Close Criterion 1 - B2 is actually fixed, measured not read",
+      "imperative": "Re-run the first reviewer's harness at /tmp/g3rev/c4_session_start.py (its six cases are the specification), then GO FURTHER: a session owning several entries, a payload whose agent_id names an agent with no entry, and the interaction with the fallback scan. Build your own instrument first. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "measured, not read"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "SPLIT. B2's own six cases ARE fixed, measured on three pinned arms (999b7663 / e3e50a69 / 6bba3fd2) with my own instrument, written and run BEFORE theirs (/tmp/g3rev2/rev2_instrument.py -> rev2-differential.txt; its own arm guard also asserts the working tree IS 6bba3fd2). Re-ran /tmp/g3rev/c4_session_start.py at 6bba3fd2: case 1 CREW->PARENT (fixed, and the implementer was right that it falls out of the rule), case 2 PARENT, case 3 no context, case 6 PARENT i.e. order-independent. NOTE on that harness: its cases 4 and 5 are UNREADABLE, because its marker test is a substring match and 'CREW-MARKER' is a substring of 'OTHERCREW-MARKER', so both print for a single rendered gate; my instrument used disjoint markers. GOING FURTHER as the criterion demands: A1 a session owning TWO entries with a crew's key leading the merged view -> its OWN gate, never the crew's; A2 first own entry carrying no spine -> the later own gate; A3 first own entry naming an unreadable spine -> still never the crew's; A4b/A4c a payload naming agentB/agentA -> that agent's gate; A4 a payload naming agentZ that owns nothing, and A5/A5b a malformed and an explicitly null agent_id -> nothing handed out FROM THE BINDING. All correct. THE THIRD EXTENSION THE CRITERION NAMES FAILS: the interaction with the fallback scan. Every SessionStart row in the implementer's differential and in all six of its new tests deliberately places its spines OUTSIDE <proj>/.agent-work/*/spine.json so the scan finds nothing. In-tree -- the lane's own topology -- the new withholding is what ROUTES the session into _scan_active_spine's bind-on-resume, and the result is a fail-open path present in neither 999b7663 nor e3e50a69. See blocker B4.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "w2-unshared-fallback": {
+      "id": "w2-unshared-fallback",
+      "title": "Close Criterion 2 - adjudicate the unshared fallback",
+      "imperative": "The comparison is shared via _own_entries; the fallback is not. Independently judge: is there a case where decide_session_start owning none of the visible entries SHOULD still answer with something? Does the split leave the two sites able to drift the way the original asymmetry did? Record pass/fail with a finding, and state your read on the open decision plainly.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "I AGREE WITH THE RULE AND I DISAGREE WITH THE IMPLEMENTATION OF ITS SECOND HALF. Plainly: 'blocking is a spine property at the one site that blocks; selection is a binding-key property at both sites' is right, the rework's predecessor was half right, and the reviewer's formulation should be the one recorded. Sharing the COMPARISON is right and it is genuinely one function now -- both sites call _own_entries and cannot drift on the question 'is this mine'. On the criterion's first question -- is there a case where decide_session_start owning none of the visible entries should still answer with something? -- no, not from the binding, and the asymmetry argument for that is sound: a Stop blocks whatever it renders so it must name a gate, a SessionStart blocks nothing so it need not. On the criterion's second question -- does the split leave the two sites able to drift the way the original asymmetry did? -- YES, and it already has, in this commit. The refinement treats each site's empty-result path as private ('the fallback is each site's own', 'the blind scan below ... is not this rule's business'). It is not private. decide_session_start's fallback is _scan_active_spine's bind-on-resume, which WRITES an entry under the bare sid -- the exact key _own_entries reads as OWN -- so this site's fallback feeds the other site's comparison through the binding store. The two fallbacks are coupled in effect while being uncoupled in code, which is the worst of the two arrangements, and blocker B4 is the measured consequence. The fix does not require unifying the fallbacks: it requires decide_session_start to distinguish 'I have no binding at all' (scan and bind -- the pre-existing #261 path) from 'I have visible bindings but own none of them' (withhold, and do not manufacture one). Both facts are already in hand at that point in the function.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "w3-rewritten-tests": {
+      "id": "w3-rewritten-tests",
+      "title": "Close Criterion 3 - the two rewritten pre-existing tests",
+      "imperative": "Hardest look. test_session_start_resumes_from_a_spine_bound_only_under_a_composite_key and test_session_start_composite_key_entry_still_renders_full_imperative_unchanged were renamed and rewritten. Decide whether they are weakened. Also weigh the rejected alternative (fall back to the leading entry when the session owns none, leaving both tests untouched and case 3 unfixed): are the two genuinely mutually exclusive? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "rewriting a test to match the change it guarded is the most dangerous move in this diff"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "NOT WEAKENED. I read both against their predecessors line by line. (1) test_session_start_reads_through_to_a_composite_key_but_answers_only_its_owner: the old form's only substantive assertion beyond the binding key was that a bare SessionStart came back with COMPOSITE-RESUME in additionalContext -- read-through proved only as a side effect of the resume. The new form asserts #419's read-through DIRECTLY and at the API (session_view(binding, sid) == [sp], and session_view_provenance(binding, sid)[sp] == composite), keeps the _scan_active_spine(proj) == [] guard so only the binding can explain the answer, and ADDS the owner round trip. Strictly more assertions; the single claim it drops is the policy the change reverses. (2) test_session_start_withholds_a_composite_key_imperative_from_the_bare_session: old asserted 'g7' and REGRESSION-MARKER in additionalContext; new asserts out == {} and that neither string appears anywhere in json.dumps(out), i.e. across BOTH rendered fields rather than one. Stronger. THE REJECTED ALTERNATIVE IS GENUINELY MUTUALLY EXCLUSIVE with the fix, checked rather than accepted: both old tests build the first reviewer's case 3 in same-tree form (a subagent claims under sid#agent_id, a bare SessionStart expects to resume from it), so any rule that falls back to the leading entry when the session owns none answers a bare session with another agent's entry, which IS case 3. You cannot keep those two tests green and fix case 3. The implementer flagged the collision rather than burying it and its account of it is accurate. ONE CAVEAT, observation not blocker: the round trip proves the entry is still reachable only for a SessionStart payload carrying agent_id, a shape nothing measured says the harness sends -- the implementer says so itself. So 'the entry did not become unreachable' is true only hypothetically. It is harmless in practice because SessionStart is a per-harness-session event and a subagent never receives one of its own, so nothing that actually happens needs to reach a composite-only entry here -- but the consequence worth recording is that at this site the merged view now returns exactly what binding.get(binding_key(payload)) would return, except for last-key-wins on a path collision.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "w4-b1-guard": {
+      "id": "w4-b1-guard",
+      "title": "Close Criterion 4 - B1's guard cannot pass on a degenerate comparison",
+      "imperative": "Run the differential. Then TRY TO DEFEAT the guard _assert_arms_are_what_they_claim: repoint an arm and confirm it refuses, in both directions. Do not grade it by reading it. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "a guard that only claims to fail is the same defect one level up"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "B1 is fixed at the root and the guard genuinely cannot pass on a degenerate comparison. Ran it: exit 0, header 'BEFORE (999b7663) vs BLOCKED (e3e50a69) vs AFTER (working tree)', and the three rows the first review asked to spot-check now read honestly (S3 BEFORE ALLOWED -> BLOCK own-gate; S4 BEFORE ALLOWED -> BLOCK foreign-owner rendering NOTHING; S8 BEFORE ALLOWED -> BLOCK own-gate). I did NOT grade it by reading it -- four attacks, each run: (1) BASE_REV repointed at e3e50a69 -> REFUSES, exit 1, 'BEFORE lacks _foreign_worktree / BEFORE already has _is_own_entry / BEFORE and BLOCKED are byte-identical'; (2) BLOCKED_REV repointed at 999b7663 -> REFUSES with the three symmetric complaints; (3) BLOCKED_REV repointed at 6bba3fd2 -> REFUSES, 'BLOCKED already has _own_entries / BLOCKED and AFTER are byte-identical'; (4) the AFTER arm made degenerate by reverting the working-tree hook to e3e50a69 -> REFUSES, 'AFTER lacks _own_entries / BLOCKED and AFTER are byte-identical' (hook restored afterwards, git diff --quiet confirms byte-identical). The implementer also chose the hardcoded pin over 'parent of the commit that last touched the hook' for the right reason: that derivation becomes wrong the moment the rework is committed. ONE LIMIT, named not blocking: the guard identifies arms by SYMBOL, so any pre-g3 revision passes as BEFORE -- I pointed BASE_REV at c23c3d0f and it printed happily. It therefore proves 'BEFORE is some revision before g3 touched the hook', not 'BEFORE is 999b7663'. That is the weaker of the two claims but it is not the degenerate class the guard exists to catch, and the pin is a literal in the source. My own independent instrument agrees with this differential on every overlapping row.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "w5-prose": {
+      "id": "w5-prose",
+      "title": "Close Criterion 5 - B3 and the prose generally",
+      "imperative": "Verify the section header claim is now true. Then grep for the CLAIM, not the symbol: read every comment and docstring in the changed regions whole and ask of each SENTENCE whether it is true of the tree as it now stands. Assume there is a fourth false sentence. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "The B3 header claim is now TRUE -- verified at both sites, not inferred from the fix -- and the header was rewritten to state the rule rather than assert the property, which is better than the minimum asked. Five of the six sentences the rework repaired check out. But the criterion told me to assume a fourth false sentence, and there are four, all of one shape. THE PATTERN: every sentence that says 'from the binding' is TRUE, and every sentence that drops that qualifier is FALSE, because the qualifier is exactly what the blind scan defeats. TRUE, precisely scoped: _own_entries' 'it hands out nothing FROM THE BINDING'; _is_own_entry's 'decide_session_start hands out no gate FROM THE BINDING'. FALSE, generalised: (1) spine_rail.py:1735-1741, 'Nothing another agent claimed is ever substituted: this site withholds rather than guessing, which is the fail-safe direction' -- measured false, a session owning none of the visible entries with one in-tree active spine is handed exactly what another agent claimed, and bound to it; (2) the module section header's parenthesis, 'it still falls through to the blind scan below, which reads no binding key and is not this rule's business' -- the scan reads no binding key but WRITES one, under the bare sid, which is this rule's own input, so the disclaimer is the false half; (3) tests/test_spine_rail.py, test_session_start_withholds_when_it_cannot_say_who_is_starting's docstring, 'A session that owns nothing still falls through to _scan_active_spine ... exactly as it did before' -- false: before, a session that owned nothing but could SEE entries did not fall through at all, because the loop took the first visible entry and spine was non-None. The fall-through class is newly widened by this change, which is the opposite of 'exactly as before'; (4) test_session_start_does_not_resume_from_a_crews_binding_it_never_claimed's docstring, 'A session that claimed NOTHING must not be handed a gate' -- true of what the test arranges (spines outside the glob) and false of the code, which hands it one whenever the scan finds exactly one. These are not cosmetic: (1) and (3) are the sentences a reader would rely on to conclude blocker B4 cannot happen.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "w6-no-regression": {
+      "id": "w6-no-regression",
+      "title": "Close Criterion 6 - nothing that passed the first review regressed",
+      "imperative": "Re-check: fail-safe posture at BOTH sites (uncertainty withholds, never relaxes); nudge/3-strike hatch keyed by session id ALONE; #549's two-way rendering intact; stdlib-only import block unchanged; tests/test_worktree_derivation.py unedited and green; the Stop path's rows unchanged from e3e50a69 to 6bba3fd2. Also confirm first-review criteria 1, 2, 5-9, 11, 12 did not regress. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "EVERYTHING THE FIRST REVIEW PASSED SURVIVES PER CALL, AND THE FAIL-SAFE POSTURE REGRESSES ACROSS A PAIR OF CALLS. What holds, each re-measured by me at 6bba3fd2 rather than read: the Stop path's rows are identical e3e50a69 -> 6bba3fd2 on all 13 rows of my own instrument (parent with in-tree crew, crew stopping, own claim from another tree, crew-only, malformed agent_id, agent owning nothing, released lease, no binding, and five garbage-input rows) and on every overlapping row of the implementer's differential; #549's two-way rendering intact (own-gate renders the imperative, foreign-owner withholds it from BOTH reason and additionalContext); the nudge/3-strike hatch still keyed by session id ALONE (single write at spine_rail.py:1629 nudges[sid], both deletes at :1294 and :1430 on sid); the stdlib-only import block byte-identical between e3e50a69 and 6bba3fd2 (md5 of the extracted import lines matches); _entry_mid_flight_view untouched; _same_path still has two real callers (:982, :1123); tests/test_worktree_derivation.py unedited across the WHOLE gate (git diff --name-only empty for both 999b7663..6bba3fd2 and e3e50a69..6bba3fd2) and green at 19 passed; the targeted selector collects 14, not zero (14 passed, 152 deselected, 21 subtests). WHAT REGRESSES: 'fail-safe posture at BOTH sites now -- uncertainty withholds, never relaxes' is false at the SessionStart site once you make two hook calls instead of one. Measured, three arms, same fixture, the only variable being whether a SessionStart precedes the Stop (/tmp/g3rev2/rev2_composite.py): with one in-tree crew spine and a session that owns nothing, OLD and BLOCKED write no binding at the SessionStart and answer the later Stop with foreign-owner and the imperative withheld; 6bba3fd2 writes binding[bare sid] -> the crew's spine at the SessionStart and answers the later Stop with OWN-GATE, rendering 'Next imperative: CREW-MARKER implement the crew gate' in reason AND 'ACTIVE g3 [in-progress] -- CREW-MARKER ...' in additionalContext. That is #549 verbatim, produced by this change. See blocker B4.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "w7-suite-arithmetic": {
+      "id": "w7-suite-arithmetic",
+      "title": "Close Criterion 7 - suite arithmetic reconciles against the diff",
+      "imperative": "Claimed +6 (3177 -> 3183): 6 new methods (8 -> 14), 2 renamed-and-rewritten in place (net zero), NO deletions. Check against the diff rather than accepting it. A quietly deleted test is what this check exists to catch. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Reconciles exactly, checked against the diff rather than accepted. 'def test_' in tests/test_spine_rail.py: 999b7663=153, e3e50a69=160, 6bba3fd2=166, so +6 over the blocked pass. Names REMOVED by the rework are exactly two -- test_session_start_resumes_from_a_spine_bound_only_under_a_composite_key and test_session_start_composite_key_entry_still_renders_full_imperative_unchanged -- and both reappear as the two renamed replacements among the eight added, so the renames are net zero and there are NO deletions. The remaining six added names are the six genuinely new methods, and the class count confirms them independently: OwnershipIsBindingKeyNotWorktree has 8 methods at e3e50a69 and 14 at 6bba3fd2. I re-measured the suite myself at 6bba3fd2 with __pycache__ cleared repo-wide and SPINE_FILE/SPINE_SESSION/SPINE_PARENT/CREW_SCRATCH_DIR scrubbed: 3183 passed, 5 skipped, 1204 subtests passed, exit 0, and the failure distribution derived mechanically is empty (0 lines matching ^FAILED). 3177 + 6 = 3183. Subtests 1192 -> 1204 = +12, matching the claimed 2 (write-order) + 4 (withhold) + 6 (inert location).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "w8-own-entries": {
+      "id": "w8-own-entries",
+      "title": "Close Criterion 8 - _own_entries is correct at both sites",
+      "imperative": "It assumes both candidate sequences carry the abs spine path at element [0]. Confirm that holds for both callers and that the coupling is documented rather than incidental. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Correct at both sites. The precondition ('element [0] is the abs spine path that owners is keyed by') holds, and it holds for a reason I checked rather than assumed: all three binding writers -- _door_claim_mutate (spine_rail.py:1264), _claim_mutate (:1370) and _resume_mutate (:1772) -- write key_bindings[abs_spine] = {'spine': abs_spine, ...}, so the binding KEY and the entry's 'spine' field are the same string by construction. That matters because the two callers pass structurally DIFFERENT things: decide_session_start passes list(sid_bindings.items()), whose [0] IS the dict key, while decide_stop passes _entry_mid_flight_view's tuples, whose [0] is entry.get('spine') -- derived from the entry BODY. They coincide only because of that writer invariant. Consequences if they ever diverged are benign and asymmetric: at decide_session_start owners.get() can never miss, because session_view_provenance is built from the same entries.keys() that session_view merges, so the 'owner_key is None -> read as OWN' branch of _is_own_entry is UNREACHABLE from this site; at decide_stop a miss would read as OWN, which is the documented deliberate direction (preserve pre-#549 rendering rather than invent a foreign owner). DOCUMENTATION GAP, observation not blocker: the docstring describes both callers as passing 'the abs spine path that owners is keyed by' without recording that one of them derives it from the entry body, nor that the identity is a writer invariant rather than a type guarantee. Naming the invariant in the docstring would make the coupling documented rather than incidental. Pre-existing at decide_stop (the pre-extraction expression was owners.get(view[0]) too), so not a regression.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the rework do what the rework handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "The rework did what its handoff asked -- all three blockers answered, nothing else touched -- and it did the hardest parts well: B1 fixed at the root with a guard I could not defeat, B3 fixed and then five more false sentences found by re-reading whole, the two-test collision flagged honestly instead of buried, and the open decision argued rather than asserted. It fails on this review's own numbered criteria 1, 2, 5 and 6, all of which are one defect: the fix's withholding routes a class of sessions into _scan_active_spine's bind-on-resume, which then manufactures the ownership the fix exists to require. The implementer's assumption 'A session that owns nothing still falls through to _scan_active_spine ... My tests are constructed so it cannot manufacture a pass, and I did not touch it' is accurate about the scan's CODE and wrong about its REACH: not touching a path is not the same as not sending more traffic down it.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions (lane A, lane E, #610, templates, checklist_engine.py, no fail-closed refusal, no cwd threading)? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No drift. Non-.agent-work files in the rework commit are exactly three: map/INDEX.md, scripts/hooks/spine_rail.py, tests/test_spine_rail.py -- all inside allowed scope, plus the allowed crew-handoffs/g3-implement*/** paths. Every named exclusion checked mechanically against git diff --name-only over the WHOLE gate (999b7663..6bba3fd2), not just the rework: no lane A file (mcp_spine_server.py, .mcp.json, examples/**, install_constellation.py, skills/commander/templates/**), no lane E file (run_crew.py, recover_crews.py, test_crew_launcher.py), no scripts/verify_worktree_isolation.py, no template of any kind, no scripts/checklist_engine.py. ADMIRAL_RULING-1 R2 and R3 both respected: the rework's diff of the hook adds no new cwd read and no new raise, so no fail-closed refusal and no cwd threading. The stale KeyError-era door claims are the Commander's reconcile step and I do not report them.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Re-measure the Evidence Produced table independently. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Present, reproducible, and it reproduces for me -- with one scope gap that is the blocker rather than an evidence defect. I re-measured the Commander's whole Evidence Produced table at 6bba3fd2: targeted -k OwnershipIsBindingKeyNotWorktree = 14 passed, 152 deselected, 21 subtests (and it collects 14, not zero); tests/test_spine_rail.py + tests/test_worktree_derivation.py = green, derivation 19 passed alone; full suite with __pycache__ cleared and the env scrubbed = 3183 passed, 5 skipped, 1204 subtests, exit 0, 0 lines matching ^FAILED. The reviewer harness cases 2, 3 and 6 do match the correct OLD behaviour, and case 1 is fixed too. The implementer's differential runs, exits 0, prints honest before/after rows, and agrees with my independently written instrument on every overlapping row. THE GAP: every SessionStart row of every instrument on this gate -- the implementer's differential section (5), all six new tests, and the two rewritten ones -- deliberately places its spines outside <proj>/.agent-work/*/spine.json so the blind scan finds nothing. That scoping is stated openly in the differential's own section header and in the withhold test's docstring, so it is honest, not concealed. But it means NO evidence on this gate exercises the in-tree topology, which is the topology this lane actually runs in, and that is exactly where the change regresses. Evidence that cannot reach the defect is the reason a second reviewer had to build a third instrument.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Most inherited rules are met, and one is broken by the change itself. MET, each checked: CREW_CONTEXT Verification Discipline 'a check that cannot fail is indistinguishable from one that passed' -- B1 is fixed at the root and I could not defeat the guard in four attacks; global-everyone 'pin a claim to the revision you read it at' -- the rework pins its actual diff base and says why it differs from the one its handoff named, and all three differential arms are pinned literals; 'assert against behaviour, never against text that describes it' -- the new tests assert which spine was selected via markers carried in the fixture spines' imperatives, which is behaviour, not a description of it; Windows expectations CONSTRUCTED rather than inherited from this Linux host, and the new cases involve no path comparison at all; the class subclasses unittest.TestCase, and I confirmed the selector collects 14 rather than reading a green zero-collection. BROKEN: global-crew.md, Implementation discipline -- 'No hidden fallback; fail visibly.' The new withholding at decide_session_start has exactly a hidden fallback: owning none of the visible entries silently substitutes whatever _scan_active_spine globs up and, on a single match, silently WRITES a binding for it under the bare sid. Nothing is logged, nothing is refused, and the entry it writes is indistinguishable afterwards from one the session claimed itself -- which is what lets it read as OWN at the Stop site. Blocker B4 is that rule broken, and the doctrine names it better than I did. ONE MINOR NOTE, not a blocker: CREW_CONTEXT's 'any guard that loops must assert what it looped over' is honoured by test_session_start_location_data_is_inert_not_load_bearing (assertEqual(len(rows), 6)) but not by test_session_start_withholds_when_it_cannot_say_who_is_starting, whose four-row subTest loop asserts no count.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Verify the implementer's Map Impact notes against the diff and evidence. Record pass/fail; flag a triage candidate if out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Map Impact notes are accurate as written and one of their claims is now false. Verified against the diff: _own_entries added beside _is_own_entry with exactly 2 call sites; decide_session_start gained session_view_provenance + binding_key reads, which it had neither of before; _entry_mid_flight_view, _same_path and _worktree_from_spine unchanged; stdlib-only import block byte-identical; nudges keyed by sid alone; derivation table unedited. map/INDEX.md's counts are consistent with the change rather than hand-written -- scripts 1224 -> 1225 is the single new _own_entries, tests 4843 -> 4850 is +7 = 6 new test methods + the new _parent_and_out_of_tree_crew helper, with the 2 renames net zero (I did not re-run py -m scripts.code_map build, to avoid dirtying the worktree; the arithmetic is the check). THE FALSE CLAIM: 'Constraints honoured: ... fail-safe not fail-open, now demonstrated at BOTH sites'. It is demonstrated at both sites only per single call. Across a SessionStart followed by a Stop it is fail-OPEN at the SessionStart site, measured -- blocker B4. DECISION: the gate's @grade: placeholder decision is genuinely surfaced rather than settled silently, and both the rule and its refinement are argued in the artifacts. My adjudication is on w2: I endorse the rule and reject the refinement's treatment of the fallback as private. This is the one thing the gate hands up to the Admiral and it should go up with the disagreement named. Durable context routes to Triage; no docs/ or contract change is needed, since this gate removes no guard from a leased spine.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards - an override needs a logged standard + reason. Record the pass to .agent-work/cleanup-f-derive-worktree/FOWLER_PASS-g3-reviewer-attempt-2.json (from templates/FOWLER_PASS.template.json) - suffixed per the rework handoff's Survey State Location note, because the template's hardcoded .agent-work/<work-id>/FOWLER_PASS.json collides with five prior reviewers' committed evidence in this work-id. Run scripts/verify_fowler_pass.py on that record (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "py scripts/verify_fowler_pass.py .agent-work/cleanup-f-derive-worktree/FOWLER_PASS-g3-reviewer-attempt-2.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 12 baseline smells rendered a verdict; record at .agent-work/cleanup-f-derive-worktree/FOWLER_PASS-g3-reviewer-attempt-2.json, verifier exits 0. FLAGGED 2, and both tie to a finding rather than decorating the review. long-method: decide_session_start is ~105 lines doing selection, blind scan, bind-on-resume and rendering in one body, and the coupling between its first and third parts IS blocker B4 -- at that length nothing invites a reader to check it, and extracting the bind step would put the missing discriminator on one visible line. comments-as-deodorant: the rework added ~45 comment lines to that function and grew the section header from 4 lines to 19, arguing a property the code does not have; four of those sentences are false and the two that matter are precisely the reassurance a reader would use to conclude B4 cannot happen. OVERRIDDEN 3, each with the standard logged: data-clumps ((owners, own_key) travel together) subordinated to global-crew.md's 'no speculative abstraction' plus the stdlib-only single-file hook; primitive-obsession (bare string binding keys) subordinated to binding_key's single-composer contract, the same standard the first reviewer logged; divergent-change subordinated to the hook shipping as ONE stdlib-only file whose import block the suite pins, which makes a module split the forbidden remedy and intra-file extraction the available one -- already flagged under long-method. ABSENT 7, one of them notable: duplicated-code, because the rework REMOVED the real instance by extracting _own_entries, and decide_stop's apparent re-check at :1643 is load-bearing rather than redundant (checked: with  empty it can still be True for an unattributable entry, so  would change behaviour).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py scripts/verify_fowler_pass.py .agent-work/cleanup-f-derive-worktree/FOWLER_PASS-g3-reviewer-attempt-2.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "command": "py scripts/verify_fowler_pass.py .agent-work/cleanup-f-derive-worktree/FOWLER_PASS-g3-reviewer-attempt-2.json",
+            "exit_code": "0",
+            "output": "fowler pass ok: smells=12, flagged=['long-method', 'comments-as-deodorant'], overridden=['data-clumps', 'primitive-obsession', 'divergent-change']",
+            "cond": "c1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-3",
+          "type": "note",
+          "payload": {
+            "text": "Correction to this item's recorded finding: two backticked tokens were stripped by the shell. The duplicated-code sentence should read: decide_stop's re-check at :1643 is load-bearing rather than redundant -- when the own-entries list is EMPTY and the fallback takes mid_flight[0], _is_own_entry can still return True for an unattributable entry (owner_key None reads as OWN), so replacing the re-check with a bare truthiness test on that list would change behaviour."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "w1-b2-measured: SPLIT. B2's own six cases ARE fixed, measured on three pinned arms (999b7663 / e3e50a69 / 6bba3fd2) with my own instrument, written and run BEFORE theirs (/tmp/g3rev2/rev2_instrument.py -> rev2-differential.txt; its own arm guard also asserts the working tree IS 6bba3fd2). Re-ran /tmp/g3rev/c4_session_start.py at 6bba3fd2: case 1 CREW->PARENT (fixed, and the implementer was right that it falls out of the rule), case 2 PARENT, case 3 no context, case 6 PARENT i.e. order-independent. NOTE on that harness: its cases 4 and 5 are UNREADABLE, because its marker test is a substring match and 'CREW-MARKER' is a substring of 'OTHERCREW-MARKER', so both print for a single rendered gate; my instrument used disjoint markers. GOING FURTHER as the criterion demands: A1 a session owning TWO entries with a crew's key leading the merged view -> its OWN gate, never the crew's; A2 first own entry carrying no spine -> the later own gate; A3 first own entry naming an unreadable spine -> still never the crew's; A4b/A4c a payload naming agentB/agentA -> that agent's gate; A4 a payload naming agentZ that owns nothing, and A5/A5b a malformed and an explicitly null agent_id -> nothing handed out FROM THE BINDING. All correct. THE THIRD EXTENSION THE CRITERION NAMES FAILS: the interaction with the fallback scan. Every SessionStart row in the implementer's differential and in all six of its new tests deliberately places its spines OUTSIDE <proj>/.agent-work/*/spine.json so the scan finds nothing. In-tree -- the lane's own topology -- the new withholding is what ROUTES the session into _scan_active_spine's bind-on-resume, and the result is a fail-open path present in neither 999b7663 nor e3e50a69. See blocker B4.",
+      "w2-unshared-fallback: I AGREE WITH THE RULE AND I DISAGREE WITH THE IMPLEMENTATION OF ITS SECOND HALF. Plainly: 'blocking is a spine property at the one site that blocks; selection is a binding-key property at both sites' is right, the rework's predecessor was half right, and the reviewer's formulation should be the one recorded. Sharing the COMPARISON is right and it is genuinely one function now -- both sites call _own_entries and cannot drift on the question 'is this mine'. On the criterion's first question -- is there a case where decide_session_start owning none of the visible entries should still answer with something? -- no, not from the binding, and the asymmetry argument for that is sound: a Stop blocks whatever it renders so it must name a gate, a SessionStart blocks nothing so it need not. On the criterion's second question -- does the split leave the two sites able to drift the way the original asymmetry did? -- YES, and it already has, in this commit. The refinement treats each site's empty-result path as private ('the fallback is each site's own', 'the blind scan below ... is not this rule's business'). It is not private. decide_session_start's fallback is _scan_active_spine's bind-on-resume, which WRITES an entry under the bare sid -- the exact key _own_entries reads as OWN -- so this site's fallback feeds the other site's comparison through the binding store. The two fallbacks are coupled in effect while being uncoupled in code, which is the worst of the two arrangements, and blocker B4 is the measured consequence. The fix does not require unifying the fallbacks: it requires decide_session_start to distinguish 'I have no binding at all' (scan and bind -- the pre-existing #261 path) from 'I have visible bindings but own none of them' (withhold, and do not manufacture one). Both facts are already in hand at that point in the function.",
+      "w5-prose: The B3 header claim is now TRUE -- verified at both sites, not inferred from the fix -- and the header was rewritten to state the rule rather than assert the property, which is better than the minimum asked. Five of the six sentences the rework repaired check out. But the criterion told me to assume a fourth false sentence, and there are four, all of one shape. THE PATTERN: every sentence that says 'from the binding' is TRUE, and every sentence that drops that qualifier is FALSE, because the qualifier is exactly what the blind scan defeats. TRUE, precisely scoped: _own_entries' 'it hands out nothing FROM THE BINDING'; _is_own_entry's 'decide_session_start hands out no gate FROM THE BINDING'. FALSE, generalised: (1) spine_rail.py:1735-1741, 'Nothing another agent claimed is ever substituted: this site withholds rather than guessing, which is the fail-safe direction' -- measured false, a session owning none of the visible entries with one in-tree active spine is handed exactly what another agent claimed, and bound to it; (2) the module section header's parenthesis, 'it still falls through to the blind scan below, which reads no binding key and is not this rule's business' -- the scan reads no binding key but WRITES one, under the bare sid, which is this rule's own input, so the disclaimer is the false half; (3) tests/test_spine_rail.py, test_session_start_withholds_when_it_cannot_say_who_is_starting's docstring, 'A session that owns nothing still falls through to _scan_active_spine ... exactly as it did before' -- false: before, a session that owned nothing but could SEE entries did not fall through at all, because the loop took the first visible entry and spine was non-None. The fall-through class is newly widened by this change, which is the opposite of 'exactly as before'; (4) test_session_start_does_not_resume_from_a_crews_binding_it_never_claimed's docstring, 'A session that claimed NOTHING must not be handed a gate' -- true of what the test arranges (spines outside the glob) and false of the code, which hands it one whenever the scan finds exactly one. These are not cosmetic: (1) and (3) are the sentences a reader would rely on to conclude blocker B4 cannot happen.",
+      "w6-no-regression: EVERYTHING THE FIRST REVIEW PASSED SURVIVES PER CALL, AND THE FAIL-SAFE POSTURE REGRESSES ACROSS A PAIR OF CALLS. What holds, each re-measured by me at 6bba3fd2 rather than read: the Stop path's rows are identical e3e50a69 -> 6bba3fd2 on all 13 rows of my own instrument (parent with in-tree crew, crew stopping, own claim from another tree, crew-only, malformed agent_id, agent owning nothing, released lease, no binding, and five garbage-input rows) and on every overlapping row of the implementer's differential; #549's two-way rendering intact (own-gate renders the imperative, foreign-owner withholds it from BOTH reason and additionalContext); the nudge/3-strike hatch still keyed by session id ALONE (single write at spine_rail.py:1629 nudges[sid], both deletes at :1294 and :1430 on sid); the stdlib-only import block byte-identical between e3e50a69 and 6bba3fd2 (md5 of the extracted import lines matches); _entry_mid_flight_view untouched; _same_path still has two real callers (:982, :1123); tests/test_worktree_derivation.py unedited across the WHOLE gate (git diff --name-only empty for both 999b7663..6bba3fd2 and e3e50a69..6bba3fd2) and green at 19 passed; the targeted selector collects 14, not zero (14 passed, 152 deselected, 21 subtests). WHAT REGRESSES: 'fail-safe posture at BOTH sites now -- uncertainty withholds, never relaxes' is false at the SessionStart site once you make two hook calls instead of one. Measured, three arms, same fixture, the only variable being whether a SessionStart precedes the Stop (/tmp/g3rev2/rev2_composite.py): with one in-tree crew spine and a session that owns nothing, OLD and BLOCKED write no binding at the SessionStart and answer the later Stop with foreign-owner and the imperative withheld; 6bba3fd2 writes binding[bare sid] -> the crew's spine at the SessionStart and answers the later Stop with OWN-GATE, rendering 'Next imperative: CREW-MARKER implement the crew gate' in reason AND 'ACTIVE g3 [in-progress] -- CREW-MARKER ...' in additionalContext. That is #549 verbatim, produced by this change. See blocker B4.",
+      "r1-handoff: The rework did what its handoff asked -- all three blockers answered, nothing else touched -- and it did the hardest parts well: B1 fixed at the root with a guard I could not defeat, B3 fixed and then five more false sentences found by re-reading whole, the two-test collision flagged honestly instead of buried, and the open decision argued rather than asserted. It fails on this review's own numbered criteria 1, 2, 5 and 6, all of which are one defect: the fix's withholding routes a class of sessions into _scan_active_spine's bind-on-resume, which then manufactures the ownership the fix exists to require. The implementer's assumption 'A session that owns nothing still falls through to _scan_active_spine ... My tests are constructed so it cannot manufacture a pass, and I did not touch it' is accurate about the scan's CODE and wrong about its REACH: not touching a path is not the same as not sending more traffic down it.",
+      "r4-quality: Most inherited rules are met, and one is broken by the change itself. MET, each checked: CREW_CONTEXT Verification Discipline 'a check that cannot fail is indistinguishable from one that passed' -- B1 is fixed at the root and I could not defeat the guard in four attacks; global-everyone 'pin a claim to the revision you read it at' -- the rework pins its actual diff base and says why it differs from the one its handoff named, and all three differential arms are pinned literals; 'assert against behaviour, never against text that describes it' -- the new tests assert which spine was selected via markers carried in the fixture spines' imperatives, which is behaviour, not a description of it; Windows expectations CONSTRUCTED rather than inherited from this Linux host, and the new cases involve no path comparison at all; the class subclasses unittest.TestCase, and I confirmed the selector collects 14 rather than reading a green zero-collection. BROKEN: global-crew.md, Implementation discipline -- 'No hidden fallback; fail visibly.' The new withholding at decide_session_start has exactly a hidden fallback: owning none of the visible entries silently substitutes whatever _scan_active_spine globs up and, on a single match, silently WRITES a binding for it under the bare sid. Nothing is logged, nothing is refused, and the entry it writes is indistinguishable afterwards from one the session claimed itself -- which is what lets it read as OWN at the Stop site. Blocker B4 is that rule broken, and the doctrine names it better than I did. ONE MINOR NOTE, not a blocker: CREW_CONTEXT's 'any guard that loops must assert what it looped over' is honoured by test_session_start_location_data_is_inert_not_load_bearing (assertEqual(len(rows), 6)) but not by test_session_start_withholds_when_it_cannot_say_who_is_starting, whose four-row subTest loop asserts no count.",
+      "r5-reconciliation: Map Impact notes are accurate as written and one of their claims is now false. Verified against the diff: _own_entries added beside _is_own_entry with exactly 2 call sites; decide_session_start gained session_view_provenance + binding_key reads, which it had neither of before; _entry_mid_flight_view, _same_path and _worktree_from_spine unchanged; stdlib-only import block byte-identical; nudges keyed by sid alone; derivation table unedited. map/INDEX.md's counts are consistent with the change rather than hand-written -- scripts 1224 -> 1225 is the single new _own_entries, tests 4843 -> 4850 is +7 = 6 new test methods + the new _parent_and_out_of_tree_crew helper, with the 2 renames net zero (I did not re-run py -m scripts.code_map build, to avoid dirtying the worktree; the arithmetic is the check). THE FALSE CLAIM: 'Constraints honoured: ... fail-safe not fail-open, now demonstrated at BOTH sites'. It is demonstrated at both sites only per single call. Across a SessionStart followed by a Stop it is fail-OPEN at the SessionStart site, measured -- blocker B4. DECISION: the gate's @grade: placeholder decision is genuinely surfaced rather than settled silently, and both the rule and its refinement are argued in the artifacts. My adjudication is on w2: I endorse the rule and reject the refinement's treatment of the fallback as private. This is the one thing the gate hands up to the Admiral and it should go up with the disagreement named. Durable context routes to Triage; no docs/ or contract change is needed, since this gate removes no guard from a leased spine."
+    ],
+    "summary": "BLOCK on one new blocker, B4, measured not read. The rework answers all three of the first review's blockers and answers them well: B1 is fixed at the root with a guard I could not defeat in four attacks, B3's header claim is now true and five further false sentences were found and repaired, and the two rewritten pre-existing tests are NOT weakened -- each asserts #419's read-through directly where the old form only implied it, and the rejected alternative really is mutually exclusive with the fix. B2's own six cases are fixed, order-independent, and hold under the extensions the criteria demanded (a session owning several entries, a payload naming an agent with no entry, malformed and null agent_ids). B4 is what the third extension found: the interaction with the fallback scan. Owning none of the visible entries no longer selects anything, which is right, but it ROUTES the session into _scan_active_spine's bind-on-resume -- a path the rework did not touch and did not need to, because it changed how much traffic reaches it. On a single in-tree active spine that path WRITES a binding under the bare sid, the exact key _own_entries reads as OWN, so the next Stop from that session renders another agent's gate as its own with the imperative in BOTH fields. 999b7663 and e3e50a69 both withhold there; 6bba3fd2 leaks. That is #549 verbatim, produced by the change whose purpose is to end it. Per-call behaviour is clean -- all 13 Stop rows identical e3e50a69 -> 6bba3fd2, suite 3183/5/0 with the arithmetic reconciling to the diff and no deletions -- and the defect is only visible across a PAIR of calls, which is why every instrument on this gate missed it: all of them place their spines outside the scan's glob. The fix does not require unifying the two sites' fallbacks: decide_session_start needs to tell 'I have no binding at all' (scan and bind, the pre-existing #261 path) from 'I have visible bindings and own none of them' (withhold, and do not manufacture one). Both facts are already in hand at that point. On the open decision: I endorse the reviewer's rule over the first implementer's asymmetry, and I reject the refinement's claim that each site's fallback is its own business -- one site's fallback writes what the other site reads as ownership."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "w1-b2-measured",
+      "statement": "tc5 -- session_view_provenance is last-key-wins on a path collision, so when a parent and its own subagent both bind the SAME abs spine path, the parent is no longer the owner of its own entry. Measured on three arms: the parent's SessionStart gets no context and its Stop gets foreign-owner wording with its own imperative withheld. The Stop half pre-exists the rework (e3e50a69 already behaved this way and the first review passed it); the SessionStart half is new at 6bba3fd2, and both are in the WITHHOLDING direction, so this is not a rail relaxation. Recording it because the discriminator -- which of two keys owns a path both claimed -- is a real question this gate's rule does not answer, and the answer is currently whichever key _session_keys happens to list last."
+    },
+    {
+      "id": "tc2",
+      "from": "w4-b1-guard",
+      "statement": "tc6 -- m4_differential.py's _assert_arms_are_what_they_claim identifies each arm by SYMBOL, so it proves 'BEFORE is some revision before g3 touched the hook', not 'BEFORE is 999b7663'. Demonstrated: repointing BASE_REV at c23c3d0f printed a full happy table. It correctly refuses every degenerate direction I could construct, so this is a limit rather than a defect, but pairing the symbol check with a git rev-parse equality on the pinned literal would close the gap for the next reader who inherits this harness."
+    },
+    {
+      "id": "tc3",
+      "from": "w8-own-entries",
+      "statement": "tc7 -- _own_entries' contract says both callers pass a sequence whose element [0] is 'the abs spine path that owners is keyed by', but the two callers get that path from different places: decide_session_start passes the binding dict KEY, decide_stop passes entry.get('spine') from the entry BODY. They coincide only because all three binding writers (_door_claim_mutate, _claim_mutate, _resume_mutate) write key_bindings[abs_spine] = {'spine': abs_spine, ...}. Naming that writer invariant in the docstring would make the coupling documented rather than incidental."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/cleanup-f-derive-worktree/g3/reviewer/attempt-2",
+    "status": "released",
+    "claimed_at": "2026-08-16T22:49:11.464749+00:00",
+    "last_heartbeat": "2026-08-16T23:04:04.216078+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T23:06:54.731464+00:00"
+  }
+}
