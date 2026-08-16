@@ -1,0 +1,13 @@
+I refuse the nudge, and the refusal is now recorded factually in the result artifact rather than as a hypothetical.
+
+**Why it is a refusal and not an honest stop:**
+
+- `SPINE_FILE` is my **parent's** spine — `execute.json`, `engine_session: commander-cleanup-f-derive-worktree`, `status: active`, `claimed_by: commander`. That lease is live and it is not mine.
+- My `crew-runs.json` entry has `spine: null`, `parent: .../execute/commander/attempt-4`.
+- My own plan is at `LEASE released`, no open items, all six steps advanced through the engine.
+
+Driving `execute` would advance someone else's run under someone else's lease. The hook's sanctioned alternatives don't help: `block` and `waive` both **write to that same parent spine**, so taking the "honest stop" path would be the destructive act the refusal exists to avoid. I wrote nothing to `execute.json` — the one new entry there (journal seq 76, `attach` of my `implementer-result`) is `run_crew.py`'s own verification write on the Commander's behalf.
+
+Worth one correction to the framing in my earlier report: this particular nudge did **not** come from a binding of mine. My session holds no binding into `execute.json` at all — the hook keyed on the *parent's* spine state. That's the case this gate never claimed to fix. What the change does fix is the adjacent one: a crew that *has* been bound to its parent's spine no longer gets handed the parent's imperative. The mechanism that creates such a binding in the first place — the SessionStart scan-bind — is triage candidate 1 in the result and needs an authority decision, since binding-key provenance can't reach it.
+
+The deliverable is unchanged and complete: `g3-implementer-result.md`, `Return status: complete`, full suite 3177 passed / 5 skipped / 0 failed.

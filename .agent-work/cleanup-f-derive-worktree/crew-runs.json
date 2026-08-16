@@ -131,12 +131,14 @@
     "stdout": ".agent-work/cleanup-f-derive-worktree/crew-runs/g3-implementer-attempt-1.stdout.txt",
     "stderr": ".agent-work/cleanup-f-derive-worktree/crew-runs/g3-implementer-attempt-1.stderr.txt",
     "started_at": "2026-08-16T21:25:05.257664+00:00",
-    "last_heartbeat": "2026-08-16T21:53:36.494082+00:00",
-    "completed_at": "2026-08-16T21:53:36.494082+00:00",
+    "last_heartbeat": "2026-08-16T21:57:02.826983+00:00",
+    "completed_at": "2026-08-16T21:57:02.826983+00:00",
     "abandoned": false,
     "model": "opus",
     "reasoning_effort": "high",
+    "exit_code": 0,
     "result_present": true,
-    "result_fresh": true
+    "result_fresh": true,
+    "verdict_source": "result"
   }
 ]

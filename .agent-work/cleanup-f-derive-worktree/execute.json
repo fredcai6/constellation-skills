@@ -939,7 +939,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received at crew-handoffs/g3-implementer-result.md, return status complete, verified fresh by run_crew.py --verify-result on constellation/cleanup-f-derive-worktree/g3/implementer/attempt-1."
         }
       ],
       "postconditions": [

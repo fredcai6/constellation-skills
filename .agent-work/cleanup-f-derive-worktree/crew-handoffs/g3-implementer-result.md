@@ -325,15 +325,38 @@ block.
 
 ## On the Stop hook
 
-Recorded as the handoff requires: **if a `SPINE MID-FLIGHT` nudge fires at the
-end of this turn telling me to reload the commander skill and drive
-`execute.json`, I refuse it.** `SPINE_FILE` points at my parent Commander's
-spine, held under my parent's live lease; my own `crew-runs.json` entry has
-`spine: null`. Obeying would mean advancing someone else's gate. The hook's own
-escape hatches (`block`, `waive`) both write to that same parent spine, so the
-sanctioned honest stop is itself the destructive act — hence a plain refusal,
-recorded here. My own plan is driven to done and its lease released; the run is
-complete on my side.
+**It fired, twice, and I refused it.** At the end of my turn the Stop hook
+returned `SPINE MID-FLIGHT: gate execute is still open`, instructing me to
+reload the commander skill and drive `execute.json` gate by gate.
+
+Measured rather than assumed, before refusing:
+
+- `SPINE_FILE` → `.agent-work/cleanup-f-derive-worktree/execute.json`, whose
+  `engine_session` is `commander-cleanup-f-derive-worktree`, `status: active`,
+  `claimed_by: commander` — **my parent's live lease, not mine.**
+- My own `crew-runs.json` entry: `spine: null`, `parent:
+  constellation/cleanup-f-derive-worktree/execute/commander/attempt-4`.
+- My own plan: `LEASE released`, no open items.
+
+So the gate the hook named is not mine to drive, and obeying would advance
+someone else's run under someone else's lease. The hook's own escape hatches
+are no better: `block` and `waive` both **write to that same parent spine**, so
+the sanctioned honest stop is itself the destructive act. Hence a plain refusal,
+recorded here and nowhere else — I wrote nothing to `execute.json`.
+
+This is the sixth instance on this issue, and it is the inverse case the
+Protected Intent describes, so it is worth being precise about what my change
+does and does not touch. The hook keyed on the **spine's** mid-flight state
+here, not on a binding of mine: my session holds no binding into `execute.json`
+(the launcher's own `attach` at journal seq 76 is the Commander's write, not
+mine), so this nudge came from the *parent's* own session state, which this gate
+never claimed to fix. What binding-key provenance now prevents is the adjacent
+failure — a crew that **has** been bound to its parent's spine being handed the
+parent's imperative — and observation 1 above names the remaining mechanism that
+creates such a binding in the first place.
+
+My own plan is driven to done and its lease released; the run is complete on my
+side.
 
 ## Return status
 

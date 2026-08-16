@@ -1,10 +1,10 @@
 # Crash-resume state note — cleanup-f-derive-worktree
 
-- **step:** execute · leg 4 (the closeout leg) · `execute.json` gate **`g3-implement`** is dispatching. g1/g2 CLOSED. After g3: `skip` g4 (R2), `skip` g5 (R3), then reconcile → triage → review → feedback → archive. **Park at `archive`; do NOT merge** — publication is the Admiral's.
-- **slug:** cleanup-f-derive-worktree · branch `cleanup/f-derive-worktree` · worktree `/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree` · HEAD `53c89ba1`
+- **step:** execute · leg 4 (the closeout leg) · **`g3-implement` is CLOSED** (implementer returned `complete`, Commander re-verified). `execute.json` gate **`g3-review`** is dispatching. g1/g2 CLOSED. After g3: `skip` g4 (R2), `skip` g5 (R3), then reconcile → triage → review → feedback → archive. **Park at `archive`; do NOT merge** — publication is the Admiral's.
+- **slug:** cleanup-f-derive-worktree · branch `cleanup/f-derive-worktree` · worktree `/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree` · HEAD `e3e50a69` (g3 implementation committed)
 - **next command:** `env -u CREW_SCRATCH_DIR py scripts/checklist_engine.py --file .agent-work/cleanup-f-derive-worktree/execute.json current`
-- **pid:** commander leg 4 is pid **1634189** (foreground). The g3 implementer crew is dispatched foreground/blocking through `run_crew.py`; its pid is recorded in `crew-runs.json` under `constellation/cleanup-f-derive-worktree/g3/implementer/attempt-1`.
-- **expected artifact:** `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implementer-result.md` for the crew; for this leg, `.agent-work/cleanup-f-derive-worktree/crew-handoffs/execute-commander-result.md`
+- **pid:** commander leg 4 is pid **1634189** (foreground). The g3 reviewer crew is dispatched through `run_crew.py`; its pid is recorded in `crew-runs.json` under `constellation/cleanup-f-derive-worktree/g3/reviewer/attempt-1`.
+- **expected artifact:** `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-reviewer-result.md` for the crew; for this leg, `.agent-work/cleanup-f-derive-worktree/crew-handoffs/execute-commander-result.md`
 
 **Read first on resume:** `LAUNCH_ORDER-4.md`, `ADMIRAL_RULING-3.md`,
 `ADMIRAL_RULING-2.md`, `ADMIRAL_RULING-1.md`, then `LAUNCH_ORDER.md`,
@@ -22,12 +22,21 @@ is not yours to fix, and it goes in when this lane parks.
 
 | tree | result |
 |---|---|
-| this branch at `53c89ba1` | **3170 passed / 5 skipped / 0 failed** |
-| `main` at `17c2cee5`, isolated clone | 3171 / 7 / 0 (leg 3; leg 4 re-measuring) |
+| this branch at `53c89ba1` (pre-g3) | **3170 passed / 5 skipped / 0 failed** |
+| `main` at `17c2cee5`, isolated clone | **3171 / 7 / 0** |
+| this branch at `e3e50a69` (post-g3) | **3177 / 5 / 0** |
 
-Failure-set difference empty in both directions. The g3 targeted check
-(`-k OwnershipIsBindingKeyNotWorktree`) exits **5** on the empty diff, as
-intended — it is red before the work.
+Failure-set difference empty in every direction. The g3 targeted check
+(`-k OwnershipIsBindingKeyNotWorktree`) exited **5** on the empty diff and now
+collects **8 passed** — it was genuinely red before the work.
+
+**A measurement hazard leg 4 hit and cost a re-run:** if you clone the repo to
+measure a baseline, **name the clone directory `constellation-skills`**.
+`tests/test_code_map.py::MapTreeFreshnessTests` compares `map/INDEX.md` against a
+fresh build, and the map's title line derives from the checkout directory name,
+so a clone at `/tmp/anything-else` reports a false red in an otherwise
+byte-identical 29k file. That is the whole of the "1 failed" leg 4 first saw on
+`main`; `main` is clean.
 
 ## What remains after g3
 
