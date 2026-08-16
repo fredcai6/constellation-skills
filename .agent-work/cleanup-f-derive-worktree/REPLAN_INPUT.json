@@ -257,6 +257,18 @@
    "expected": "A net subtraction under scripts/ with no behaviour change",
    "observed": "Held. 68 removed / 13 added under scripts/, every added line a comment; 0 non-comment additions. Measured three ways -- line census, AST top-level-name census, and a refusal-vocabulary count -- rather than by reading the diff.",
    "source": ".agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-no-refusal.txt; commit 84d949eb"
+  },
+  {
+   "claim": "A symbol-level grep is enough to prove a prose repair complete",
+   "expected": "grep for worktree_from_spine_path finds every passage that describes the deleted derivation",
+   "observed": "False, and it cost this gate a third rework. Every grep specified on g2 -- in both handoffs and in the implementer's own checks -- keyed on the symbol name, and the two stale passages in checklist_engine.main() do not contain it. A CLAIM-level sweep found them immediately: the derive family ('the worktree is derived from the spine's own path') and the ownership family ('the lease, which is the actual ownership guard ... as it always was'). A third instance sat in spine_lifecycle.build_origin, carrying both in one parenthesis.",
+   "source": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-reviewer-rework2-result.md, blocker B1 and Workflow Feedback"
+  },
+  {
+   "claim": "Deleting the engine copy removed a duplicate, not a reason and not a behaviour",
+   "expected": "Every rationale recorded in the deleted docstring survives somewhere in the repo, and the rule behaves identically",
+   "observed": "Both held, measured rather than argued. The reviewer checked the deleted docstring sentence by sentence and found every reason still present (NEAREST-not-outermost with its nested-sandbox reason, absolute-input-required, lexical-only with its symlink-escape reason, shape-questions-belong-to-callers, never-raises), with the three genuinely at risk carried onto the case table as the implementer claimed. The 2026-08-16 worktree-is-location ruling citation was checked by count: exactly one occurrence repo-wide before, exactly one after. All 16 cases run through base-engine, base-hook and current-hook agree 16/16 with 0 mismatches.",
+   "source": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-reviewer-rework2-result.md, Adversarial hunt Q1 and Q2"
   }
  ],
  "discrepancies": [
@@ -345,7 +357,7 @@
    "signal": "The g2 rework implementer crew completed and verified its work, then died in its final step with an 'Execution error' before writing its IMPLEMENTER_RESULT, and the clobber destroyed its registry entry -- so the gate's evidence existed only as orphaned files in the tree",
    "classification": "evidence_only",
    "affects": "Crew result durability. A crew's completion contract is a result artifact written last, so a crash anywhere before that write loses the whole write-up even when the implementation and its measurements survive.",
-   "evidence": "crew-runs/g2-implementer-attempt-2.stdout.txt contains only 'Execution error'. g2-implement-rework/plan.json shows m0-m4 complete and m5-result in-progress. g2-implement-rework/m4-full-suite.txt records 3196 passed / 5 skipped / 0 failed. crew-handoffs/g2-implementer-rework-result.md was never written. The registry entry was reconstructed from those artifacts by commander leg 3 and marked abandoned.",
+   "evidence": "crew-runs/g2-implementer-attempt-2.stdout.txt contains only 'Execution error'. g2-implement-rework/plan.json shows m0-m4 complete and m5-result in-progress. g2-implement-rework/m4-full-suite.txt records 3196 passed / 5 skipped / 0 failed. crew-handoffs/g2-implementer-rework-result.md was never written. The registry entry was reconstructed from those artifacts by commander leg 3 and marked abandoned. The successor's write-up was then independently verified: the g2 rework-2 reviewer confirmed every figure labelled MEASURED reproduces in its own hands, every figure labelled RECONSTRUCTED is faithful to its source file, and nothing reconstructed was quietly promoted to first-hand evidence. It also verified at source the successor's claim that rework 1 had an unfinished criterion -- plan.json records m5-result in-progress with both postconditions false. The reconstruct-and-label pattern survived adversarial review.",
    "reason": "Recovered by relaunch rather than repair: the rework-2 handoff asks the successor to write up both reworks as one gate result and to say plainly which half it reconstructed from a dead crew's artifacts rather than measured itself. Worth the replanner's attention as a pattern, not this lane's to fix."
   },
   {

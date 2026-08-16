@@ -1,0 +1,480 @@
+{
+  "work_id": "cleanup-f-derive-worktree-g2-implement-rework3",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-sweep",
+    "m2-repair",
+    "m3-noexec",
+    "m4-suite",
+    "m5-map",
+    "m6-citations",
+    "m7-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the inherited global doctrine (global-crew.md, global-everyone.md), docs/agents/CREW_CONTEXT.md and GLOSSARY.md, the rework-3 handoff, the rework-2 reviewer BLOCK, the rework-2 implementer result, and ADMIRAL_RULING-1 R1 + ADMIRAL_RULING-2 N2. Verify the handoff is complete (task, intent, scope, exclusions, evidence, test mode, stop conditions); block and return if not. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + project deltas + handoff + reviewer BLOCK + both rulings loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-crew.md + global-everyone.md + docs/agents/CREW_CONTEXT.md + GLOSSARY.md + the rework-3 handoff + the rework-2 reviewer BLOCK + the rework-2 implementer result + ADMIRAL_RULING-1 R1 + ADMIRAL_RULING-2 N2 all read. Handoff carries task, protected intent, test mode, close criteria C1-C8, allowed scope, specific exclusions, constraints, map anchors, required evidence, verification commands, authority, stop conditions and return format: complete."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-sweep": {
+      "id": "m1-sweep",
+      "title": "Claim-level sweep, run and reported (C1)",
+      "imperative": "Sweep the whole repo for the CLAIM, not the symbol, over both families: (a) derive-family \u2014 prose saying the engine or the codebase derives a worktree from a spine's path; (b) ownership-guard family \u2014 prose asserting unqualified that the lease is/always was the ownership guard. Record the exact commands, the total hit count, every hit, and a classification per hit (repaired / already correct / fenced-and-reported / unrelated). Write it to g2-implement-rework3/m1-sweep.md and make the sweep re-runnable as g2-implement-rework3/sweep_claims.py, which must print the count it looped over.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: doctrine, project deltas, handoff, reviewer BLOCK and both rulings loaded; handoff verified complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "sweep script runs, prints a non-zero hit count over both families, and the classified report exists",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/sweep_claims.py && test -s .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/m1-sweep.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-sweep-1"
+        }
+      ],
+      "constraints": [
+        "claim-level, not symbol-level",
+        "fenced files are findings to report, never edits"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-sweep-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/sweep_claims.py && test -s .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/m1-sweep.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-repair": {
+      "id": "m2-repair",
+      "title": "Repair every in-scope stale claim (C2, C3, C4)",
+      "imperative": "Repair every in-scope stale hit the sweep found, including the three named in the handoff: checklist_engine.main()'s load-time comment block (derive sentence and ownership sentence) and spine_lifecycle.build_origin's docstring parenthesis. Every repaired ownership passage carries the R1-narrowed shape: accepted widening, leaseless path only (never claimed OR released), unchanged under an active foreign lease, forgeable-is-not-absent \u2014 no hedge. Where a passage states the consumer count, use the canonical reading: two real consumers plus a third withdrawn before it existed. Prove the checker discriminates by running it against the base blobs at 84d949eb (must be RED) as well as the working tree (must be GREEN).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "sweep complete and every hit classified",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Sweep run and reported: 1589 hits, 64 live, 64/64 classified by classify_hits.py, report at g2-implement-rework3/m1-sweep.md."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "checker is red against 84d949eb's blobs and green against the working tree: zero stale in-scope claims, R1 shape present in every repaired ownership passage, checklist_engine header and main() tell one story",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/check_claims_repaired.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-repair-1"
+        },
+        {
+          "id": "c2",
+          "statement": "C3's two passages (module header and main()'s comment block) quoted side by side in m2-one-story.md",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/m2-one-story.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-repair-2"
+        }
+      ],
+      "constraints": [
+        "comment/docstring text only",
+        "no new symbols, no behaviour change",
+        "do not re-decide ADMIRAL_RULING-1 R1 or ADMIRAL_RULING-2 N2"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-repair-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/check_claims_repaired.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-repair-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/m2-one-story.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-noexec": {
+      "id": "m3-noexec",
+      "title": "Zero executable change, pinned to 84d949eb (C5)",
+      "imperative": "Run the handoff's C5 pipeline pinned to the explicit base commit 84d949eb, not HEAD, and capture its output verbatim including when empty. Any printed line that is not comment or docstring text is a stop condition.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "repairs applied",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Repairs applied and green under check_claims_repaired.py."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the C5 pipeline against 84d949eb prints no non-comment, non-docstring added line under scripts/",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/check_no_exec_change.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-noexec-1"
+        }
+      ],
+      "constraints": [
+        "pin the base commit, never HEAD"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-noexec-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/check_no_exec_change.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-suite": {
+      "id": "m4-suite",
+      "title": "Suite green, unmoved from the 3170 baseline (C6)",
+      "imperative": "Clear __pycache__, run the full suite with the documented env scrub, and assert it lands on exactly 3170 passed / 5 skipped / 0 failed. Any movement at all is a stop condition \u2014 investigate before reporting. Capture the raw tail to m4-full-suite.txt.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "repairs applied",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Repairs applied; C5 green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "3170 passed, 5 skipped, 0 failed",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q > .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/m4-full-suite.txt 2>&1 ; tail -3 .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/m4-full-suite.txt ; grep -qE '^3170 passed, 5 skipped' .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/m4-full-suite.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-suite-1"
+        }
+      ],
+      "constraints": [
+        "clear __pycache__ before every measurement",
+        "env -u CREW_SCRATCH_DIR is required inside a crew session"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q > .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/m4-full-suite.txt 2>&1 ; tail -3 .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/m4-full-suite.txt ; grep -qE '^3170 passed, 5 skipped' .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/m4-full-suite.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-map": {
+      "id": "m5-map",
+      "title": "map/INDEX.md fresh (C7)",
+      "imperative": "Rebuild the map and confirm the tree is clean under map/. Regenerate only; never hand-edit map/INDEX.md.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "repairs applied",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Repairs applied; suite green at 3170/5/0."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "code_map build leaves git status --porcelain -- map/ empty",
+          "check": {
+            "kind": "command",
+            "command": "py -m scripts.code_map build --root . > .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/m5-map-build.txt 2>&1 && test -z \"$(git status --porcelain -- map/)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-map-1"
+        }
+      ],
+      "constraints": [
+        "regenerated only, never hand-edited"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-map-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m scripts.code_map build --root . > .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/m5-map-build.txt 2>&1 && test -z \"$(git status --porcelain -- map/)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-citations": {
+      "id": "m6-citations",
+      "title": "Both ruling citations survive, by count (C8)",
+      "imperative": "Verify against 84d949eb that every occurrence of the 2026-08-15 worktree-identity supersession citation survives, and that the single repo-wide citation of the 2026-08-16 worktree-is-location ruling outside .agent-work/ and map/ is still exactly one.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "repairs applied",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Repairs applied; suite green; map fresh."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "supersession citation count unchanged vs 84d949eb; worktree-is-location citation count is exactly 1",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/check_citations.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-citations-1"
+        }
+      ],
+      "constraints": [
+        "pin the base commit, never HEAD"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-citations-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework3/check_citations.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-result": {
+      "id": "m7-result",
+      "title": "Write IMPLEMENTER_RESULT",
+      "imperative": "Write the result to .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework3-result.md in the handoff's return format: completed slice, files changed, test mode satisfied, evidence produced (C1 sweep with commands and counts, C3's two quoted passages, C5's verbatim output), assumptions, stop conditions hit, out-of-scope observations, workflow feedback, the Stop-hook refusal, and `Return status` lowercase on its own line.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all measurements complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "C1-C8 all measured: sweep 1589/64 classified, checker red at base and green on tree, C5 AST-identical, suite 3170/5/0, map clean, citations 6 and 1."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "result artifact exists and carries a lowercase Return status",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework3-result.md && grep -qi '^\\*\\*Return status\\*\\*' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework3-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-result-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m7-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework3-result.md && grep -qi '^\\*\\*Return status\\*\\*' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework3-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "constellation/cleanup-f-derive-worktree/g2/implementer/attempt-4",
+    "status": "released",
+    "claimed_at": "2026-08-16T20:31:12.613536+00:00",
+    "last_heartbeat": "2026-08-16T20:47:16.510764+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T20:47:21.969702+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Rework 3 is a prose-only repair of two claim families that three passes missed because every grep keyed on the deleted symbol name. The derive family must say the engine derives nothing anywhere (ADMIRAL_RULING-2 N2, shipped at 84d949eb); the ownership family must carry ADMIRAL_RULING-1 R1's narrowing \u2014 the lease guards only where a lease exists, the leaseless widening is accepted, forgeable is not absent, and an active foreign lease is unchanged. Three stale passages are named (two in checklist_engine.main()'s load-time comment block, one in spine_lifecycle.build_origin's docstring); the gate turns on whether my sweep finds anything the reviewer's did not.",
+      "mechanical": false,
+      "ts": "2026-08-16T20:31:41.539516+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-sweep",
+      "why": "The claim-level sweep is claim-shaped, not symbol-shaped, and matches across wrapped comment/docstring lines -- which is what hid B1, whose stale sentence breaks after 'derived'. 1589 hits over 10224 tracked files: 64 live, 1525 in the record zone (.agent-work/, episodes/, map/) which is counted and never repaired. Of the 64: 6 hit-lines are the 4 stale claims in 2 files (exactly the three passages the reviewer named -- no fourth), 4 are true claims whose consumer count needs harmonizing, 6 already correct, 19 fenced to g3/lane A, 29 unrelated. classify_hits.py refuses on any unclassified live hit, so 64/64 is mechanical.",
+      "mechanical": false,
+      "ts": "2026-08-16T20:36:45.707700+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-repair",
+      "why": "Four stale claims repaired in two files: main()'s derive sentence and ownership sentence, and build_origin's parenthesis which held one of each. Both repaired ownership passages carry R1 in full -- leaseless only, never claimed or released, WIDENED and accepted, forgeable is not absent, active foreign lease unchanged -- stated, not hedged. The consumer count is now one identical sentence in all four copies that state it: two real consumers (the shape question g2 deleted, #315's cwd thread R3 re-homed) plus a third R2 withdrew before it existed. check_claims_repaired.py extracts six segments by their own anchors so a clause in the header cannot cover for main(), and it runs the same clause set against 84d949eb's blobs: 29 problems there, 0 on the tree.",
+      "mechanical": false,
+      "ts": "2026-08-16T20:40:21.876340+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-noexec",
+      "why": "The pipeline prints 12 lines, every one of them the build_origin docstring -- expected, since a docstring line is not a # line. The stronger property behind it: for both changed files under scripts/, the module AST with every docstring blanked is byte-identical between 84d949eb and the working tree, so no statement, argument or constant moved. Comments never enter an AST, so that comparison isolates exactly the executable content.",
+      "mechanical": false,
+      "ts": "2026-08-16T20:41:06.286086+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-suite",
+      "why": "A prose-only change must not move the suite. Baseline at 84d949eb is 3170 passed / 5 skipped / 0 failed; the check clears __pycache__ first (a cache built in another tree fails test_bytecode_cache_provenance by name) and scrubs SPINE_* and CREW_SCRATCH_DIR, without which lane E's fenced test_crew_launcher case fails on ambient contamination inside a crew session. The map was rebuilt first and left map/ clean, so the freshness test cannot fire.",
+      "mechanical": false,
+      "ts": "2026-08-16T20:43:34.164895+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-map",
+      "why": "A docstring edit can move entity text in the map, so the map is rebuilt rather than assumed fresh. It rebuilds clean: git status --porcelain -- map/ is empty, so this rework moved no map entity -- consistent with a change that touched only comment and docstring prose.",
+      "mechanical": false,
+      "ts": "2026-08-16T20:44:09.818274+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-citations",
+      "why": "Counted against 84d949eb's blobs with comment markers stripped first -- without that the engine header's own citation is invisible, because it wraps after '2026-08-15'. Six supersession occurrences at base, six on the tree, file for file; the 2026-08-16 worktree-is-location citation is still exactly one, in the table docstring, which is why that sentence was left untouched.",
+      "mechanical": false,
+      "ts": "2026-08-16T20:44:36.635063+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-result",
+      "why": "The result carries the three load-bearing pieces the handoff names -- C1's sweep with its commands and counts, C3's two passages quoted side by side (generated from the files, not retyped), and C5's verbatim output with the reason it is non-empty (a docstring line is not a # line) -- plus the confirmatory C6/C7/C8, three triage candidates and the workflow feedback.",
+      "mechanical": false,
+      "ts": "2026-08-16T20:47:16.510755+00:00"
+    }
+  ]
+}

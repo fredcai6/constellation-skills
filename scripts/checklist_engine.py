@@ -96,8 +96,11 @@ TRIP_HARD_GUARDED_VERBS = {"start", "reopen"}
 # only the engine's copy of it is. The rule lives in the stdlib-only hook, as
 # `spine_rail._worktree_from_spine`, and `tests/test_worktree_derivation.py`'s
 # case table is its specification. The engine-side copy was deleted in #609 g2
-# under `ADMIRAL_RULING-2` N2: three sound decisions in a row removed all three
-# of its consumers, and a definition nothing calls is not shipped. It re-lands in
+# under `ADMIRAL_RULING-2` N2: it had TWO consumers -- the shape question inside
+# `origin_worktree_refusal`, deleted by that same gate, and #315's `cwd` thread,
+# re-homed to #610 by `ADMIRAL_RULING-1` R3 -- and a third that
+# `ADMIRAL_RULING-1` R2 withdrew before it ever existed. Three sound decisions
+# in a row, and a definition nothing calls is not shipped. It re-lands in
 # #610's wave together with #315 -- the consumer that threads `cwd` into the
 # engine's check runner -- and re-derives against that same table.
 #
@@ -3496,16 +3499,31 @@ def main(argv: list[str] | None = None) -> int:
     # Nothing stands between `load` and the arming below any more (#609 g2).
     # Every verb used to pay for a git toplevel read here, on the engine's
     # ambient cwd, to feed the retired `origin.worktree` comparison.
-    # Both are gone: the worktree is derived from the spine's own path where it
-    # is needed, so no ambient reading is taken and none can be forged.
+    # Both are gone: THE ENGINE NOW READS NO LOCATION AT ALL, ambient or
+    # derived, so no ambient reading is taken and none can be forged -- not
+    # because the reading moved somewhere cheaper, but because the engine no
+    # longer asks the question anywhere. The lexical rule that derives a
+    # worktree from a spine's path is not retired; it lives in the stdlib-only
+    # hook as `spine_rail._worktree_from_spine`, and the engine holds no copy
+    # of it (module header, above).
     #
     # Nothing is lost by vacating this position. It existed so a refusal could
     # be raised BEFORE dispatch() and returned WITHOUT save() -- main() persists
     # state on the EngineError path for every verb except `current`, so a
     # refusal raised inside dispatch() would write into the very tree it was
     # protecting. With no refusal to raise, there is nothing here to order.
-    # The lease, which is the actual ownership guard, is enforced inside
-    # dispatch() as it always was.
+    #
+    # What dispatch() still enforces is the LEASE -- and the lease is the
+    # ownership guard only WHERE A LEASE EXISTS. `require_session` gates
+    # mutating verbs once an active lease is held and returns early otherwise,
+    # and `_active_lease` reads a RELEASED lease as absent. So on a spine with
+    # NO ACTIVE LEASE -- never claimed, or claimed and since released -- the
+    # retired comparison was the sole refusal, and removing it WIDENED that
+    # path. That widening is ACCEPTED and deliberate: a `cd <worktree> &&`
+    # prefix defeated the comparison, so it was never a boundary -- but a
+    # forgeable guard is not the same as no guard. Under an active lease held
+    # by another session, nothing changed (`ADMIRAL_RULING-1` R1; the module
+    # header above carries the same statement in full).
     #
     # #427: arm `refusals` here, on LOAD, but ONLY for the verb that can
     # itself be the very-first-ever attempt to claim (no `engine_session` at

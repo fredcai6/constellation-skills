@@ -1,0 +1,68 @@
+
+--- derive ---
+docs/CHECKLIST_SCHEMA.md:128: derives a worktree
+docs/GAUGE_WRITER_HOOK.md:566: worktree, claimed_at}}}`), keyed by the resolved absolute spine path rather than a derived
+docs/GAUGE_WRITER_HOOK.md:568: derived worktree
+docs/GAUGE_WRITER_HOOK.md:659: derived** from `git worktree
+docs/GAUGE_WRITER_HOOK.md:661: derived root from an inferred one. Verified live, two-arm, on 2026-08-07: a subagent dispatched into a real worktree
+notes-1.md:41: worktree_isolation.py --here` as a forwarded `cwd=` reproduces the defect byte for byte: `origin.worktree` and the EXPECTED value in th
+notes-1.md:43: derive from the same resolved root at creation, so the comparison becomes `X == X`. Demonstrated by the prior wave (pasted in the launc
+scripts/checklist_engine.py:95: derives a worktree
+scripts/checklist_engine.py:3498: worktree` comparison. Both are gone: the worktree is derived
+scripts/checklist_engine.py:3499: from the spine's own path
+scripts/episode_capture.py:126: derived project name is a plausible* value that silently poisons the one join meant to survive `git worktree
+scripts/hooks/spine_rail.py:1171: worktree_from_spine`. The two were the same function until the derivation
+scripts/mcp_spine_server.py:590: derivation is `_worktree
+scripts/mcp_spine_server.py:593: derivation that could disagree with it. Unresolvable is NOT a failure. A spine outside any worktree
+scripts/mcp_spine_server.py:811: derive from `Path(__file__)` outright. Both derivations return the SAME primary checkout in production -- verified fr
+scripts/mcp_spine_server.py:870: worktree`, the linked worktree, never the repo it was opened from) -- so this is deliberately NOT `_primary_checkout_
+scripts/mcp_spine_server.py:981: worktree path `work_id` derives
+scripts/mcp_spine_server.py:1367: deriving that set a second way. LIFECYCLE_TOOLS = [ { "name": "spine_open", "description": ( "Open Constellation wor
+scripts/spine_lifecycle.py:92: worktree_refusal` used to compare it against its own ambient cwd, and that comparison is retired (#609 -- a spine's wor
+scripts/spine_lifecycle.py:230: worktree or branch is never touched, because the only arguments here are the ones this call itself derived
+scripts/spine_lifecycle.py:231: derived.""" _best_effort_git(["worktree
+tests/test_episode_fields.py:143: derived (or cwd-derived) fallback would silently poison the one join meant to survive worktree
+tests/test_iterative_planning_doctrine.py:1329: derivation is real: run it here, against this checkout, no stub. Proves the `git -C <repo-root> rev-pa
+tests/test_mcp_lifecycle.py:25: derived path (the worktree
+tests/test_mcp_lifecycle.py:236: derives_wt_root_from_default_wt_root_not_an_inline_duplicate(self): """`_spine_open`'s own `wt_root` must come from `
+tests/test_spine_lifecycle.py:144: worktree's own real git state -- confirms the default wt_root convention against the live tree. The work id's last 
+tests/test_spine_lifecycle.py:146: DERIVED from this checkout's own directory name rather than naming one (`worktree
+tests/test_spine_origin_isolation.py:44: derives a worktree
+tests/test_spine_origin_isolation.py:51: derives against that same table. Every fixture is built in a `tempfile.TemporaryDirectory()` -- never against
+tests/test_spine_origin_isolation.py:448: worktree_from_spine_path`, the derivation
+tests/test_spine_rail.py:874: derived_form(path): """A directory in the normalized form `_worktree
+tests/test_spine_rail.py:885: derivation.py`'s `_expected()`, which is what pins these two files' expectations to one rule. """ return os.path.normcas
+tests/test_spine_rail.py:903: derivation.py`, which pins this function equal to `checklist_engine.worktree
+tests/test_spine_rail.py:904: worktree_from_spine_path`. This test covers only what the hook itself must guarantee. """ worktree = tmp_path / "worktre
+tests/test_spine_rail.py:909: derives the same answer as before. spine = worktree
+tests/test_spine_rail.py:911: derived_form(worktree
+tests/test_spine_rail.py:925: derived_form(worktree
+tests/test_spine_rail.py:930: derived_form(sandbox) Still unowned -- these did not change. unowned = ( None, "", os.path.join(".agent-work", "run1", "
+tests/test_spine_rail.py:944: derivation_gave_up(tmp_path): """The shape preconditions moved OUT of `_worktree
+tests/test_spine_rail.py:945: worktree_from_spine` and landed here, so widening the derivation
+tests/test_spine_rail.py:946: derivation does not widen the ownership gate.""" worktree
+tests/test_spine_rail.py:947: worktree = tmp_path / "worktree" assert sr._is_claim_layout(str(worktree / ".agent-work" / "run1" / "c.json")) Every pat
+tests/test_spine_rail.py:950: derivation newly OWNS, this still refuses. refused = ( None, "", os.path.join(".agent-work", "run1", "c.json"), # relati
+tests/test_spine_rail.py:1917: worktrees -- both persist as distinct entries. This is the case a 'worktree' key (even a correctly-derived
+tests/test_spine_rail.py:1918: derived one) would ALSO collide if both spines happened to share a worktree
+tests/test_spine_rail.py:2654: worktree`. Both are ASSERTED below, because a test that hands the hook the very root it claims the hook derives
+tests/test_spine_rail.py:2656: derives is a test that cannot fail (#432, #446). The only way to the answer is `git worktree
+tests/test_worktree_derivation.py:1: derivation rule, and drives it. 609 lane F, gates g1-g2. A spine's owning worktree
+tests/test_worktree_derivation.py:112: derived worktree
+tests/test_worktree_derivation.py:268: derivation resolved symlinks itself, both checks would return the same value and the second could never fail. A
+tests/test_worktree_derivation.py:270: worktree_refusal` impure while its purity test -- which reads only that predicate's own `__code__.co_names`, an
+tests/test_worktree_derivation.py:274: derive = IMPLEMENTATIONS[impl_name] real = tmp_path / "real-worktree
+
+--- ownership ---
+docs/superpowers/plans/2026-06-24-lease-owner-liveness.md:15: lease is still refused with an ownership
+docs/superpowers/plans/2026-06-24-lease-owner-liveness.md:147: lease is stale, or an ownership
+scripts/checklist_engine.py:106: ownership is the LEASE
+scripts/checklist_engine.py:982: lease is stale, or an ownership
+scripts/checklist_engine.py:3507: ownership guard
+scripts/checklist_engine.py:3508: as it always was
+scripts/hooks/spine_rail.py:721: ownership is the lease
+scripts/install_constellation.py:546: as it always was
+scripts/spine_lifecycle.py:94: ownership is the lease
+tests/test_install_constellation.py:4067: as it always was
+tests/test_spine_origin_isolation.py:27: ownership is the LEASE
+tests/test_worktree_derivation.py:8: ownership is the lease

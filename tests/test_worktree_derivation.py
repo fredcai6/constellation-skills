@@ -12,9 +12,11 @@ There is ONE lexical rule and ONE implementation of it:
 `scripts/hooks/spine_rail.py:_worktree_from_spine`, in the stdlib-only hook.
 
 The engine-side twin, `checklist_engine.worktree_from_spine_path`, was DELETED in
-#609 g2 under `ADMIRAL_RULING-2` N2. It had two consumers when it was written;
-three sound decisions in a row took all of them away, and a definition nothing
-calls is not shipped. It RE-LANDS in #610's wave together with #315 -- the
+#609 g2 under `ADMIRAL_RULING-2` N2: it had TWO consumers -- the shape question
+inside `origin_worktree_refusal`, deleted by that same gate, and #315's `cwd`
+thread, re-homed to #610 by `ADMIRAL_RULING-1` R3 -- and a third that
+`ADMIRAL_RULING-1` R2 withdrew before it ever existed. Three sound decisions in
+a row, and a definition nothing calls is not shipped. It RE-LANDS in #610's wave together with #315 -- the
 consumer that threads `cwd` into the engine's check runner -- which is why this
 table stays whole and stays here: #315 re-derives against THESE CASES rather than
 from scratch, and the two copies are pinned equal again by re-adding "engine" to

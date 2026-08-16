@@ -1312,6 +1312,16 @@
       "id": "tc5",
       "from": "g2-implement",
       "statement": "A crew's completion contract is a result artifact written LAST, so a crash anywhere before that write loses the entire write-up even when the implementation and every measurement survive on disk. The g2 rework-1 implementer finished and verified its work (3196 passed / 5 skipped / 0 failed) and died in its final step; its result had to be reconstructed by a successor from its plan.json and evidence files. Worth considering whether a crew should checkpoint a partial result artifact as it goes, the way it already checkpoints evidence."
+    },
+    {
+      "id": "tc6",
+      "from": "g2-review",
+      "statement": "An evidence script pinned to HEAD stops reproducing the moment the Commander commits the gate, as check_no_refusal_added.py demonstrated: it diffs the working tree against HEAD, so after the commit working-tree == HEAD and its assertions pass vacuously while its exit code goes red. This lane commits as gates close (the #617 mitigation), so HEAD moves under delivered evidence. Crew evidence scripts should pin an explicit base commit. Raised by the g2 rework-2 reviewer as tc-C."
+    },
+    {
+      "id": "tc7",
+      "from": "g2-review",
+      "statement": "The review survey template resolves the Fowler record to one fixed path, .agent-work/<work-id>/FOWLER_PASS.json, shared by every reviewer on the work-id -- while reviewer handoffs forbid overwriting a predecessor's record. Every reviewer after the first must amend the survey to re-point it at a per-crew filename (the g2 rework-2 reviewer used amend --delta with a retext-check on r6-fowler.c1). The template should default to a per-crew name. Three FOWLER_PASS records already sit at variant paths on this work-id, which is the symptom."
     }
   ],
   "blockers": [],

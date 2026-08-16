@@ -45,8 +45,11 @@ The lexical rule that derives a worktree from a spine's path is NOT retired --
 only the engine's copy of it is. The rule lives in the stdlib-only hook, as
 `spine_rail._worktree_from_spine`, and `tests/test_worktree_derivation.py`'s
 case table is its specification. The engine-side copy was deleted in #609 g2
-under `ADMIRAL_RULING-2` N2: three sound decisions in a row removed all three of
-its consumers, and a definition nothing calls is not shipped. It re-lands in
+under `ADMIRAL_RULING-2` N2: it had TWO consumers -- the shape question inside
+`origin_worktree_refusal`, deleted by that same gate, and #315's `cwd` thread,
+re-homed to #610 by `ADMIRAL_RULING-1` R3 -- and a third that
+`ADMIRAL_RULING-1` R2 withdrew before it ever existed. Three sound decisions in
+a row, and a definition nothing calls is not shipped. It re-lands in
 #610's wave together with #315 -- the consumer that threads `cwd` into the
 engine's check runner -- and re-derives against that same table.
 

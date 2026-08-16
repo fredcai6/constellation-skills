@@ -90,8 +90,18 @@ def build_origin(
     This is PROVENANCE and nothing else. `worktree` in particular is written
     here and read by nothing that decides anything: the engine's
     `origin_worktree_refusal` used to compare it against its own ambient cwd,
-    and that comparison is retired (#609 -- a spine's worktree is derived from
-    its path, and ownership is the lease). Keep writing it accurately anyway,
+    and that comparison is retired (#609 g2). The engine now reads no location
+    at all, ambient or derived: the lexical rule that derives a worktree from a
+    spine's path lives only in the stdlib-only hook, as
+    `spine_rail._worktree_from_spine`. Ownership is the lease, but only where a
+    lease is actually held -- on a spine with no active lease, never claimed or
+    claimed and since released, that comparison was the sole refusal, so
+    removing it WIDENED the leaseless path. The widening is accepted and
+    deliberate: a `cd <worktree> &&` prefix defeated the comparison, so it was
+    never a boundary, but a forgeable guard is not the same as no guard. Under
+    an active lease held by another session, nothing changed
+    (`ADMIRAL_RULING-1` R1; `checklist_engine`'s module header carries the full
+    statement). Keep writing it accurately anyway,
     because a human or a reconciler reading a spine afterwards has no other
     record of where it came from. `tests/test_spine_origin_isolation.py` pins
     both halves of that pairing."""

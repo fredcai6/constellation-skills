@@ -1,0 +1,13 @@
+2026-08-15 worktree-identity supersession citation (outside ('.agent-work/', 'map/')):
+  docs/CHECKLIST_SCHEMA.md: 84d949eb=1 tree=1  ok
+  episodes/active/tc6-doctrine-001.md: 84d949eb=1 tree=1  ok
+  scripts/checklist_engine.py: 84d949eb=1 tree=1  ok
+  tests/test_explorer_templates.py: 84d949eb=1 tree=1  ok
+  tests/test_spine_origin_isolation.py: 84d949eb=2 tree=2  ok
+  totals: 84d949eb=6 tree=6
+
+2026-08-16 worktree-is-location citation (outside ('.agent-work/', 'map/')):
+  tests/test_worktree_derivation.py: 84d949eb=1 tree=1
+  totals: 84d949eb=1 tree=1
+
+OK: every supersession citation survives, and worktree-is-location is still exactly one.

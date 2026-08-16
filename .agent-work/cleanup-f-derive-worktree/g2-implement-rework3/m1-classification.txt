@@ -1,0 +1,136 @@
+live-zone hits classified: 64/64
+record-zone hits (dated records, never repaired): {'derive': 1451, 'ownership': 74}
+
+--- derive ---
+docs/CHECKLIST_SCHEMA.md:128
+    [correct claim, consumer count harmonized] origin section: same true sentence; count sentence harmonized
+docs/GAUGE_WRITER_HOOK.md:566
+    [unrelated to either family] gauge binding keyed by spine path rather than a derived worktree
+docs/GAUGE_WRITER_HOOK.md:568
+    [unrelated to either family] same paragraph
+docs/GAUGE_WRITER_HOOK.md:659
+    [unrelated to either family] the gauge hook's worktree root, derived from `git worktree list`
+docs/GAUGE_WRITER_HOOK.md:661
+    [unrelated to either family] same paragraph
+notes-1.md:41
+    [unrelated to either family] another run's working notes (commander-315-native), a dated record of the #315 defect
+notes-1.md:43
+    [unrelated to either family] same notes
+scripts/checklist_engine.py:95
+    [correct claim, consumer count harmonized] module header: the rule is not retired, only the engine's copy — true; count sentence harmonized
+scripts/checklist_engine.py:3498
+    [stale -> repaired] main() load-time block: 'the worktree is derived from the spine's own path where it is needed' — the engine derives nothing anywhere
+scripts/checklist_engine.py:3499
+    [stale -> repaired] same sentence, second line of the wrap
+scripts/episode_capture.py:126
+    [unrelated to either family] a derived project name, not a worktree
+scripts/hooks/spine_rail.py:1171
+    [fenced (g3 / lane A) -> reported, not edited] g3: '_is_claim_layout ... until the derivation was widened' — the hook's own history
+scripts/mcp_spine_server.py:590
+    [unrelated to either family] lane A; the door's own `_worktree_root_for_lifecycle`, a git call, not this rule
+scripts/mcp_spine_server.py:593
+    [unrelated to either family] lane A; same paragraph
+scripts/mcp_spine_server.py:811
+    [unrelated to either family] lane A; primary-checkout derivation
+scripts/mcp_spine_server.py:870
+    [unrelated to either family] lane A; same
+scripts/mcp_spine_server.py:981
+    [unrelated to either family] lane A; work_id derived from a worktree path
+scripts/mcp_spine_server.py:1367
+    [unrelated to either family] lane A; tool-list derivation
+scripts/spine_lifecycle.py:92
+    [stale -> repaired] build_origin docstring: '(#609 -- a spine's worktree is derived from its path, and ownership is the lease)' — both families in one parenthesis
+scripts/spine_lifecycle.py:230
+    [unrelated to either family] `git worktree` arguments this call itself derived
+scripts/spine_lifecycle.py:231
+    [unrelated to either family] same sentence
+tests/test_episode_fields.py:143
+    [unrelated to either family] derived project name again
+tests/test_iterative_planning_doctrine.py:1329
+    [unrelated to either family] a `git rev-parse` fragment in a shipped command
+tests/test_mcp_lifecycle.py:25
+    [unrelated to either family] lane A; the door's derived path
+tests/test_mcp_lifecycle.py:236
+    [unrelated to either family] lane A; `_default_wt_root`
+tests/test_spine_lifecycle.py:144
+    [unrelated to either family] work-id segment derived from a directory name
+tests/test_spine_lifecycle.py:146
+    [unrelated to either family] same test
+tests/test_spine_origin_isolation.py:44
+    [correct claim, consumer count harmonized] module docstring: same true sentence; count sentence harmonized
+tests/test_spine_origin_isolation.py:51
+    [already correct] 're-derives against that same table' — the hook's rule, true
+tests/test_spine_origin_isolation.py:448
+    [already correct] records that the derivation was deleted and why the anchor moved — true
+tests/test_spine_rail.py:874
+    [fenced (g3 / lane A) -> reported, not edited] g3: the hook's derivation tests, incl. two stale references to the deleted engine twin
+tests/test_spine_rail.py:885
+    [fenced (g3 / lane A) -> reported, not edited] g3: the hook's derivation tests, incl. two stale references to the deleted engine twin
+tests/test_spine_rail.py:903
+    [fenced (g3 / lane A) -> reported, not edited] g3: the hook's derivation tests, incl. two stale references to the deleted engine twin
+tests/test_spine_rail.py:904
+    [fenced (g3 / lane A) -> reported, not edited] g3: the hook's derivation tests, incl. two stale references to the deleted engine twin
+tests/test_spine_rail.py:909
+    [fenced (g3 / lane A) -> reported, not edited] g3: the hook's derivation tests, incl. two stale references to the deleted engine twin
+tests/test_spine_rail.py:911
+    [fenced (g3 / lane A) -> reported, not edited] g3: the hook's derivation tests, incl. two stale references to the deleted engine twin
+tests/test_spine_rail.py:925
+    [fenced (g3 / lane A) -> reported, not edited] g3: the hook's derivation tests, incl. two stale references to the deleted engine twin
+tests/test_spine_rail.py:930
+    [fenced (g3 / lane A) -> reported, not edited] g3: the hook's derivation tests, incl. two stale references to the deleted engine twin
+tests/test_spine_rail.py:944
+    [fenced (g3 / lane A) -> reported, not edited] g3: the hook's derivation tests, incl. two stale references to the deleted engine twin
+tests/test_spine_rail.py:945
+    [fenced (g3 / lane A) -> reported, not edited] g3: the hook's derivation tests, incl. two stale references to the deleted engine twin
+tests/test_spine_rail.py:946
+    [fenced (g3 / lane A) -> reported, not edited] g3: the hook's derivation tests, incl. two stale references to the deleted engine twin
+tests/test_spine_rail.py:947
+    [fenced (g3 / lane A) -> reported, not edited] g3: the hook's derivation tests, incl. two stale references to the deleted engine twin
+tests/test_spine_rail.py:950
+    [fenced (g3 / lane A) -> reported, not edited] g3: the hook's derivation tests, incl. two stale references to the deleted engine twin
+tests/test_spine_rail.py:1917
+    [fenced (g3 / lane A) -> reported, not edited] g3: the hook's derivation tests, incl. two stale references to the deleted engine twin
+tests/test_spine_rail.py:1918
+    [fenced (g3 / lane A) -> reported, not edited] g3: the hook's derivation tests, incl. two stale references to the deleted engine twin
+tests/test_spine_rail.py:2654
+    [fenced (g3 / lane A) -> reported, not edited] g3: the hook's derivation tests, incl. two stale references to the deleted engine twin
+tests/test_spine_rail.py:2656
+    [fenced (g3 / lane A) -> reported, not edited] g3: the hook's derivation tests, incl. two stale references to the deleted engine twin
+tests/test_worktree_derivation.py:1
+    [correct claim, consumer count harmonized] table docstring: one rule, one implementation in the hook — true; count sentence harmonized to the same wording
+tests/test_worktree_derivation.py:112
+    [already correct] _expected()'s docstring: 'a derived worktree, in the normalized form the rule returns' — about the table, not the engine
+tests/test_worktree_derivation.py:268
+    [unrelated to either family] symlink-escape reasoning; names the retired predicate — reported as tc-A, outside both families
+tests/test_worktree_derivation.py:270
+    [unrelated to either family] same docstring
+tests/test_worktree_derivation.py:274
+    [unrelated to either family] test body, `derive = IMPLEMENTATIONS[impl_name]`
+
+--- ownership ---
+docs/superpowers/plans/2026-06-24-lease-owner-liveness.md:15
+    [unrelated to either family] a plan doc on lease liveness
+docs/superpowers/plans/2026-06-24-lease-owner-liveness.md:147
+    [unrelated to either family] same doc
+scripts/checklist_engine.py:106
+    [already correct] module header: 'ownership is the LEASE, but only where one is actually held' — R1-narrowed
+scripts/checklist_engine.py:982
+    [unrelated to either family] require_session's docstring on which refusal instruction is printed
+scripts/checklist_engine.py:3507
+    [stale -> repaired] main(): 'The lease, which is the actual ownership guard, is enforced inside dispatch()' — unqualified, the claim R1 narrowed
+scripts/checklist_engine.py:3508
+    [stale -> repaired] same sentence: 'as it always was'
+scripts/hooks/spine_rail.py:721
+    [fenced (g3 / lane A) -> reported, not edited] g3: the same worktree-is-location frame in the hook's docstring
+scripts/install_constellation.py:546
+    [unrelated to either family] 'main() stays as pure as it always was' — lane A, different subject
+scripts/spine_lifecycle.py:94
+    [stale -> repaired] build_origin: 'and ownership is the lease' — unqualified
+tests/test_install_constellation.py:4067
+    [unrelated to either family] the same sentence in its test
+tests/test_spine_origin_isolation.py:27
+    [already correct] module docstring: same R1-narrowed sentence
+tests/test_worktree_derivation.py:8
+    [already correct] the 2026-08-16 worktree-is-location frame: what the DERIVATION answers, not the guard-removal claim; carries the single repo-wide citation of that ruling (C8) and is left exactly as it stands
+
+class totals: {'correct claim, consumer count harmonized': 4, 'unrelated to either family': 29, 'stale -> repaired': 6, 'fenced (g3 / lane A) -> reported, not edited': 19, 'already correct': 6}

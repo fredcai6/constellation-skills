@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-repair",
+  "mechanical": {
+    "run": "cleanup-f-derive-worktree-g2-implement-rework3",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 4,
+    "spine-step": "m2-repair",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-g2-implement-rework3-m2-repair@37d23e93de6277fd3cd8ebb81d88d5c4fa0b973d",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-f-derive-worktree-g2-implement-rework3",
+    "generated_at": "2026-08-16T20:37:24Z"
+  }
+}
