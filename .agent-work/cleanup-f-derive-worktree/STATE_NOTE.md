@@ -11,8 +11,10 @@
 critic at `crew-handoffs/plan-plan-critic-result.md`.
 
 **Three Admiral rulings are outstanding.** Do not resume g2, g4 or g5 without
-them. **g3 (the Stop hook stops using the worktree for ownership) depends on none
-of them and is runnable now** — its handoff is not yet written; the gate plan
-imperative in `execute.json` carries the full task.
+them. **g3 depends on none of them, but the engine will not start it while
+`g2-integrate` is blocked** — a gated plan works in order, and `skip` would be a
+lie (it means overtaken-by-events). Its handoff is written and ready at
+`crew-handoffs/g3-implementer-handoff.md`. Either resolve Ruling 1 and g3 follows,
+or `amend` the plan to move g3 ahead of g2.
 
 _Updated: 2026-08-16T18:05:00+00:00_

@@ -636,7 +636,7 @@
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
     "opened_by": "init_work_area"
   },
-  "refusals": 8,
+  "refusals": 9,
   "engine_session": {
     "session_id": "commander-cleanup-f-derive-worktree",
     "status": "active",

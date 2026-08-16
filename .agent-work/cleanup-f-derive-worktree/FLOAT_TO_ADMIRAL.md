@@ -198,10 +198,22 @@ EXIT=0
   copies pinned equal by a shared case table, as the ruling's second branch
   provides. Regraded `settled/measured`.
 
-**g3 is runnable now** and depends on none of the three rulings. If you want it
-before you rule, say so and I will run it; I stopped at this boundary because
-three of five gates are blocked on you and my context budget is better spent on a
-precise float than on a half-run gate.
+**g3 depends on none of the three rulings, but the engine will not let it run
+until g2 is resolved.** I wrote its implementer handoff and tried to start it; the
+gated plan refused — `g3-implement is not the active gate; start 'g2-integrate'
+first`. That is the engine being correct: a gated checklist works in order, and
+`g2-integrate` is `blocked`, not `complete`. I did **not** `skip` it to get past,
+because `skip` means overtaken-by-events and this is not that.
+
+So the ordering I chose at plan time now couples an independent gate to a blocked
+one. Two ways out, both yours:
+
+- **Rule 1, and g3 follows automatically** once g2-integrate closes. Simplest.
+- **Authorize an `amend`** that moves g3 ahead of g2 in the frozen plan, if you
+  want the Stop-hook fix before you rule on the leaseless question.
+
+Its handoff is written and ready at
+`.agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implementer-handoff.md`.
 
 ## Triage candidates recorded (not filed — no filing authority sought)
 
