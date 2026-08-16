@@ -637,13 +637,15 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py cleanup-c-liveness-rail --store-root episodes --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-5"
         },
         {
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Branch cleanup/c-liveness-rail committed (a43350e2) and pushed to origin."
         },
         {
           "id": "c2b",
@@ -652,13 +654,15 @@
             "kind": "command",
             "command": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-6"
         },
         {
           "id": "c3",
           "statement": "engine session lease released",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Lease will be released as the immediately-following action after this advance closes -- the very last action of this run."
         },
         {
           "id": "c4",
@@ -693,18 +697,19 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-7"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -715,6 +720,72 @@
           "payload": {
             "seam": "archive",
             "why_ref": "w-9"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py cleanup-c-liveness-rail --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-4",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py cleanup-c-liveness-rail --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-6",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-7",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
           },
           "produced_by": "engine",
           "ts": ""
@@ -731,16 +802,17 @@
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-c-liveness-rail",
     "opened_by": "init_work_area"
   },
-  "refusals": 14,
+  "refusals": 17,
   "engine_session": {
     "session_id": "constellation/cleanup-c-liveness-rail/execute/commander",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-16T12:32:08.977968+00:00",
-    "last_heartbeat": "2026-08-16T13:46:33.354824+00:00",
+    "last_heartbeat": "2026-08-16T13:49:06.908752+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-16T13:49:10.055385+00:00"
   },
   "why_trail": [
     {
@@ -805,6 +877,13 @@
       "why": "4 episodes captured (cleanup-c-liveness-rail-001..004) recording distinct observed events: cold-critic caught a real precedent contradiction + missing third bucket before implementation; the HARD-band refresh-request dance recurred at every one of 11 gate boundaries with the documented recipe working every time; the map-freshness check correctly caught both this lane's own staleness and an unrelated pre-existing staleness on main; the implementer's forced Python-semantics deviation on entry_liveness's default-value signature. Workflow Feedback harvested at g1-integrate and g2-integrate: both handoffs were unusually complete; one handoff gap noted (literal signature text not valid Python at the specified position).",
       "mechanical": false,
       "ts": "2026-08-16T13:46:17.764847+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "Work area archived, episodes captured and tracked, branch pushed, PR #606 opened and OPEN, staged diff clean. Releasing the lease as the final action next.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:49:06.908737+00:00"
     }
   ],
   "trip_ledger": [
