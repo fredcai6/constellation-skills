@@ -1,0 +1,260 @@
+{
+  "work_id": "cleanup-a-door",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-a-door",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/cleanup-a-door/execute.json",
+        "refusals": 12,
+        "reopens": 3,
+        "rework-count": 3,
+        "failed-commands": 4,
+        "artifact-ref": [
+          ".agent-work/cleanup-a-door/crew-handoffs/g3-final-review-result.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Sweep the blast radius of the #603 change for prose that the change had made false, after a review found four surviving invalidated claims."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "Setting ALLOWED_SCOPE to the rework's editable file would scope the sweep to the work being checked, and a report of zero live in-scope hits would mean the change stranded nothing."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The sweep reported LIVE IN-SCOPE HITS: 0 while its own output also listed six live out-of-scope hits, four of which were one sentence in the changed module's own docstring. The number was accurate and measured the wrong set: ALLOWED_SCOPE is edit permission, not blast radius, so the instrument found the surviving claims and its classification filed them out of the headline."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "A third review round and a third rework on a gate whose behaviour had been correct and green since the first attempt; the cap of three reworks was reached on documentation truth alone."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "An independent AST-aware sweep was run over the whole source tree, keyed to the identifiers the change touched, and each of its 4 hits was inspected by hand rather than left to a classifier: 3 turned out to be text quoting the old phrasing precisely to mark that it had changed, and 1 was genuine and sat in a fenced file."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "A sweep that reports a count filtered by which files the agent may edit answers 'did I leave a mess I was allowed to clean up' rather than 'what did my change invalidate'."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "medium",
+          "statement": "Blast radius and edit permission were two different sets in this run, and the sweep reported the second under a heading that read as the first."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-a-door",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/cleanup-a-door/execute.json",
+        "refusals": 12,
+        "reopens": 3,
+        "rework-count": 3,
+        "failed-commands": 4,
+        "artifact-ref": [
+          ".agent-work/cleanup-a-door/crew-handoffs/g3-rereview-result.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Confirm no prose still asserted that spine_open re-reads SPINE_FILE fresh, after removing that read."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "git grep -F 're-read fresh' across the tree would find every surviving instance of the phrase."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The grep returned 0 files tree-wide while a whitespace-normalized sweep returned 1: the surviving instance is assembled from two adjacent string literals, '...re-read ' + 'fresh)...', so the phrase exists on no single line and a line-oriented tool cannot see it. It sat in a test's failure message, where a future debugger would have acted on it."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "One full review-and-rework round, and the miss happened inside the sweep that had just been added to enforce the blast-radius rule."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The sweep was rewritten to parse AST string constants, which join implicit concatenation, together with comment runs, and to whitespace-collapse both before matching; the surviving instance then appeared."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "Implicit string concatenation makes a message's source text and its runtime value different strings; line-based search reads the source text."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "medium",
+          "statement": "A message's source text and its runtime value are different strings once implicit concatenation is involved, and the line-based search read the source text."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-a-door",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/cleanup-a-door/execute.json",
+        "refusals": 12,
+        "reopens": 3,
+        "rework-count": 3,
+        "failed-commands": 4,
+        "artifact-ref": [
+          ".agent-work/cleanup-a-door/crew-handoffs/g3-reviewer-result.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Rebuild map/INDEX.md after adding a new test module, as the freshness gate requires."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "Running code_map build and committing the result would leave the map fresh and the suite green."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The rebuild ran eight minutes before the new test file was staged. code_map enumerates via git ls-files, so it counted 83 test modules, wrote an index matching that, and its own freshness guard passed. Staging the file made it tracked and the same guard went red at 84. The trap fired twice in one run, at g1 and again at g3; a gate in between repaired the first instance incidentally, which hid it."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "A review round returned BLOCK on a red suite for a gate whose behaviour was correct, and the bisect to attribute it cost seven revision checkouts."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The rework staged every file first, rebuilt the map last, and committed after that, and the freshness guard then stayed green."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "A rebuild run against a partially-staged tree is self-consistent, so the guard confirms the rebuild rather than the corpus."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "medium",
+          "statement": "The closeout order determined whether the guard saw the real corpus; the rebuild happened while the tree was only partly staged."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-a-door",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "plan",
+        "context-manifest-ref": ".agent-work/cleanup-a-door/execute.json",
+        "refusals": 12,
+        "reopens": 3,
+        "rework-count": 3,
+        "failed-commands": 4,
+        "artifact-ref": [
+          ".agent-work/cleanup-a-door/crew-handoffs/plan-critic-result.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Freeze a three-gate plan for the door cleanup, built from the launch order's pre-rulings and a direct read of the server."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A cold critic reading only the mission frame, the plan and the source would confirm the plan or find refinements."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The critic returned four blocking findings, each independently reproducible: a second hard os.environ['SPINE_FILE'] read sitting on spine_open's own path, so the plan as written could not reach its exit criterion; open_work returning three binding values, so binding one leaves the engine refusing claim; .mcp.json's ${SPINE_FILE:-} expanding to empty rather than unset, a failure world the plan had not described and the one production takes; and both integrate postconditions passing on the defective tree, measured."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The plan would have shipped a change that refused correctly and still could not bind, with two gate postconditions that could not discriminate. Catching it cost one dispatch before any implementation."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Every load-bearing critic claim was reproduced independently before any of it was acted on, and the plan was then revised: the gate order was reversed, two gates gained a required pre-fix-failing regression test, and three committed assertions the change would break were budgeted into the last gate."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "A plan authored from a frozen order inherits the order's blind spots, and its author cannot see them by re-reading it."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "medium",
+          "statement": "The critic saw what the plan's own author could not, because the author had inherited the same blind spots from the frozen order."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-a-door",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/cleanup-a-door/execute.json",
+        "refusals": 12,
+        "reopens": 3,
+        "rework-count": 3,
+        "failed-commands": 4,
+        "artifact-ref": [
+          ".agent-work/cleanup-a-door/LAUNCH_ORDER.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Drive a ten-step commander spine to a terminal archive under a launch order."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The engine's context band would restrict work only when context was genuinely spent."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The HARD band tripped on the first start verb of the execute step, at 22% of a 1M window with roughly 780K left, and then on nearly every subsequent start and reopen: e0-context, three g3 reopens, three g3-review starts, reconcile, triage, review and feedback. The band is an absolute 150K cap, which loading the skill, its references, the templates and the order already exceeds."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Eleven extra refusal-and-attach round trips. Without the launch order's explicit pre-ruling that arriving over HARD is not a stop condition, the correct-looking response at each trip was to advance and hand off, which the order names as producing an infinite handoff chain with no deliverable."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "A refresh-request was attached against the current why-record before each start verb, which is the release path the engine and the launch order both name, and the run then continued rather than handing off."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "An absolute token cap does not scale with the model's window, so on a large-window model it reads as exhausted at the moment a role finishes loading its own doctrine."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "medium",
+          "statement": "The band is an absolute token count rather than a fraction of the window, so a large-window model reads as exhausted once a role has finished loading its own doctrine."
+        }
+      ]
+    }
+  ]
+}

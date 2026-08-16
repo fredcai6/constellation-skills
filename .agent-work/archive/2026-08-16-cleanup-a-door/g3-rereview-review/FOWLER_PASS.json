@@ -1,0 +1,95 @@
+{
+  "work_id": "cleanup-a-door",
+  "diff_ref": "gate g3, both commits: a69bbac4..HEAD (4e1f22cb the door change, 359d93df the docs/map rework). Re-review attempt 2. The rework alone is docstrings + one README paragraph + a generated index, so the smell-testable substance is 4e1f22cb's 425-line change to scripts/mcp_spine_server.py; the pass is run over the gate's whole change rather than the rework slice, and the two verdicts the rework actually moved are called out in their findings.",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "The functions this gate adds have 2-6 line bodies under long docstrings: _spine_from_env, _engine_from_env, _telemetry_path, the three accessors, _bind_process_to (4 statements). Docstring volume is not method length. The one genuinely long function in the module, call_tool, is a pre-existing dispatcher this gate did not restructure -- it gained one guard line at :1712.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "The server module adds no classes. The classes added are unittest.TestCase suites in the four test modules, which are grouped by the invariant they pin and are of ordinary size.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "_calllog, _start_marker and _rejectionlog are three near-identical one-line wrappers over _telemetry_path, differing only in an env-var name and a filename.",
+      "override": {
+        "repo_standard": "global-everyone.md 'One canonical path; no speculative abstraction' plus its deep-module vocabulary's deletion test ('delete the module in imagination: if complexity vanishes it was a pass-through; if it reappears across N callers it was earning its keep').",
+        "reason": "This is the de-duplicated form, not the duplicated one -- 4e1f22cb extracted the shared override-then-derive logic into the single _telemetry_path and left three named seams over it. Applying the deletion test: removing the wrappers pushes two magic strings (SPINE_CALLLOG, mcp_calls.jsonl) to every call site and deletes the per-channel contract each docstring records -- why that channel exists and who reads it. Complexity reappears across callers, so the wrappers earn their keep. The residual repetition is a naming layer over one canonical implementation, which is what the standard asks for."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "flagged",
+      "finding": "_rebind_refusal (:909) calls checklist_engine._active_lease -- a private, underscore-prefixed function in another module -- to decide whether this process holds a live lease. The module is more interested in the engine's internals than its own state. Its own docstring gives the honest defence (reusing the engine's reading stops this from drifting from the engine's own reading of its own field), and that defence is right today, which is why this is an observation rather than a blocker. It is still the smell: the correct end state is a public engine accessor, and the trigger is a third caller. The implementer raised this themselves and my predecessor agreed; I reproduce it independently and reach the same verdict. Not caused by the rework.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "overridden",
+      "finding": "spine_file and session travel together as a pair: through _bind_process_to(spine_file, session), as the module globals SPINE and SESSION, and as the SPINE_FILE/SPINE_SESSION env pair the binder writes. A classic two-element clump that a caller must never split.",
+      "override": {
+        "repo_standard": "The module's own ruled invariant, recorded at :880-882 and inherited as decision:one-spine-per-process-stands (@grade: settled/human): 'A door that cannot claim is not bound, so bound here means both' -- reinforced by the module-wide AST pin in tests/test_mcp_lifecycle.py, which asserts the set of assignments to exactly the names SPINE and SESSION is {module scope, the one named binder}.",
+        "reason": "Introducing the obvious Identity value object is the refactoring that would break this gate's principal guard. The pin is expressible only because the two identity roots are two named module globals an AST walk can enumerate; behind an object the assignments become attribute stores the pin is structurally blind to -- precisely the 'second, quieter rebind site' the pin exists to catch. The clump is also only two elements and has exactly one producer, so the parameter object would buy nothing while costing the guard. A settled/human decision is not mine to unsettle on a style judgment."
+      }
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "Refusals are modelled as str | None (None means allowed, a string is the refusal text) across _unbound_refusal, _rebind_refusal and the pre-existing _identity_violation; _bind_process_to takes two plain strings rather than typed Path/SessionId values.",
+      "override": {
+        "repo_standard": "global-crew.md: 'Match the surrounding code's naming, labeling, and in-file documentation conventions -- the project's specific conventions are the local delta.'",
+        "reason": "str | None is the module's established refusal idiom, set by the pre-existing and explicitly FENCED _identity_violation. The new guards adopting it is the convention-matching the standard requires; a typed Result introduced for the two new guards alone would leave the module with two refusal protocols and would force a change to the fenced function to unify them, which the handoff forbids. The primitive is also carrying exactly one bit plus a message here, not a domain concept with invariants worth enforcing."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "No function this gate adds or changes exceeds three parameters. _telemetry_path takes 2, _bind_process_to 2, and _resolve_confined takes 3 with the last two keyword-only (value, *, join_relative_to, bound_dir=None) -- keyword-only being the readability remedy the smell asks for, applied already.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "The smell was present in the code this gate INHERITED and the gate cured it: four separate import-time derivations (CALLLOG, START_MARKER, REJECTIONLOG and _resolve_confined's bound_dir default) each had to be found and changed to make binding late. 4e1f22cb collapsed the shared rule into the single _telemetry_path, so the next change to how telemetry resolves is one edit rather than four. I verified the cure rather than assuming it: an AST scan finds zero function default arguments referencing SPINE/SESSION/ENGINE at HEAD.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "overridden",
+      "finding": "scripts/mcp_spine_server.py changes for several unrelated reasons -- JSON-RPC protocol, telemetry side-channels, identity binding, and lifecycle -- and this gate added a fourth concern (bind-on-open) to a module already carrying the other three.",
+      "override": {
+        "repo_standard": "The module's own documented 'Zero dependencies' contract (module docstring, cited again at _rejectionlog:245) plus the shipping constraint verified at .gitignore:73 and _engine_from_env:169 -- the door ships as ONE script installed beside checklist_engine.py, and its engine fallback is derived from that co-location.",
+        "reason": "Splitting the module along its concerns is not a free refactoring here; it is a change to how the door is installed and how it finds its engine. The single-file shape is what lets _engine_from_env answer 'where is the engine' with no new environment variable and no cwd read -- which is itself one of this gate's fixes. The concerns are genuinely co-located by a documented deployment decision, not by drift."
+      }
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "The longest chains added are Path(__file__).resolve().parent / 'checklist_engine.py' and SPINE.parent / beside_the_spine. These are idiomatic pathlib on a single value object, not a caller walking a graph of domain objects to reach a distant one, which is what the smell names.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "overridden",
+      "finding": "BINDS_WITHOUT_A_BOUND_SPINE (:1414) is a hand-maintained set with exactly one member, {'spine_open'}, consulted once at :1712 to decide which tools may run unbound.",
+      "override": {
+        "repo_standard": "CREW_CONTEXT.md Verification Discipline: 'Define a guard by its consumer's behaviour, not by a hand-maintained list. A list of characters, filenames or call sites drifts from the predicate the code actually applies, and the gap is silent.'",
+        "reason": "I log this as a genuine tension, because the standard here argues AGAINST the code rather than for it, and dismissing that silently is the failure this rail exists to stop. It subordinates on the standard's own stated rationale, which is that the drift is SILENT. That precondition does not hold: a tool wrongly omitted from the set is visibly REFUSED on every unbound call, and tests/test_mcp_door_unbound.py asserts the refusal surface over the door's own declared tool list rather than a second copy of this set, so an omission fails loudly in both the product and the suite. A one-member set naming a policy is also more readable than the per-tool attribute that would replace it. If the set ever grows past two members without the predicate moving onto the tools themselves, the tension should be re-raised. Independently reached; my predecessor logged the same tension."
+      }
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "flagged",
+      "finding": "This is the verdict the rework moved, and it does not move all the way to clean. The module's house style is very heavy explanatory docstrings, and matching it is what global-crew.md asks for, so volume alone is not the finding. The finding is prose that has DRIFTED from the code it explains -- the failure mode this smell actually names -- in a repo whose own standard (CREW_CONTEXT.md) says 'docstrings are hand-authored and none is checked against what runs'. My predecessor flagged three instances; 359d93df fixed all three and I verified each against the AST rather than against the text. One in-scope instance SURVIVES, and neither the implementer's sweep nor my predecessor's found it: tests/test_mcp_lifecycle.py:201 still tells a future debugger that _spine_open acts on 'SPINE_FILE/SPINE_PARENT re-read fresh', when the measured truth at HEAD is SPINE_PARENT once and SPINE_FILE zero times -- removing that read IS the #603 fix. It hid because the phrase is split across two adjacent string literals, so the line-oriented grep that swept for it returns 0 files tree-wide. The structural point stands: in a module where prose carries this much of the design, nothing checks the prose, and this gate has now stranded four separate claims in two passes.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

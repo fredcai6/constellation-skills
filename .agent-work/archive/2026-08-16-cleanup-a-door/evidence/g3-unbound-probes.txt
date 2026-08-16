@@ -1,0 +1,53 @@
+# g3 POST-FIX: the five unbound-class inputs, measured by subprocess probe
+# 2026-08-16T07:07:49-07:00, __pycache__ cleared (#597)
+
+## handoff verification command 1: --unbound (SPINE_FILE genuinely REMOVED)
+SPINE_FILE=(unset)
+TOOL=spine_status
+RESULT: {"content": [{"type": "text", "text": "REFUSED: no spine is bound to this door, so there is nothing for this tool to act on. Call `spine_open` to mint a spine and bind this process to it, or relaunch this door with SPINE_FILE set to an existing spine file."}], "isError": true}
+STDERR: (none)
+EXIT 0
+
+## handoff verification command 2: SPINE_FILE="" (what ${SPINE_FILE:-} expands to)
+SPINE_FILE=
+TOOL=spine_status
+RESULT: {"content": [{"type": "text", "text": "REFUSED: no spine is bound to this door, so there is nothing for this tool to act on. Call `spine_open` to mint a spine and bind this process to it, or relaunch this door with SPINE_FILE set to an existing spine file."}], "isError": true}
+STDERR: (none)
+EXIT 0
+
+## the whole tool surface, one unbound door, one process
+tools declared: 11 -> ['spine_status', 'spine_lease', 'spine_start', 'spine_advance', 'spine_evidence', 'spine_halt', 'spine_survey_result', 'spine_capture', 'spine_amend', 'spine_open', 'spine_close']
+  spine_status           REFUSED (unbound)
+  spine_lease            REFUSED (unbound)
+  spine_start            REFUSED (unbound)
+  spine_advance          REFUSED (unbound)
+  spine_evidence         REFUSED (unbound)
+  spine_halt             REFUSED (unbound)
+  spine_survey_result    REFUSED (unbound)
+  spine_capture          REFUSED (unbound)
+  spine_amend            REFUSED (unbound)
+  spine_open             reached its own logic: tool error: missing or unknown 'SPINE_FILE'
+  spine_close            REFUSED (unbound)
+
+REFUSED 10 of 11 tools; 1 not refused.
+server exit code 0 (0 = alive through every call, clean shutdown on EOF)
+stderr: (none)
+
+## the other three spellings of the same class (named, but no spine there)
+### missing path
+RESULT: {"content": [{"type": "text", "text": "REFUSED: this door was pointed at '/tmp/tmp.OXPGJduNNr/no-such-spine.json', but no file exists at that path -- so no spine is bound that this tool could act on. Call `spine_open` to mint a spine and rebind this process to it, or relaunch this door with SPINE_FILE set to an existing spine file."}], "isError": true}
+STDERR: (none)
+EXIT 0
+### a directory
+RESULT: {"content": [{"type": "text", "text": "REFUSED: this door was pointed at '/tmp/tmp.OXPGJduNNr', but that path is a directory, not a spine file -- so no spine is bound that this tool could act on. Call `spine_open` to mint a spine and rebind this process to it, or relaunch this door with SPINE_FILE set to an existing spine file."}], "isError": true}
+STDERR: (none)
+EXIT 0
+### an unreadable file (chmod 000)
+RESULT: {"content": [{"type": "text", "text": "REFUSED: this door was pointed at '/tmp/tmp.OXPGJduNNr/locked.json', but that file cannot be read (PermissionError) -- so no spine is bound that this tool could act on. Call `spine_open` to mint a spine and rebind this process to it, or relaunch this door with SPINE_FILE set to an existing spine file."}], "isError": true}
+STDERR: (none)
+EXIT 0
+
+## SPINE_ENGINE unset (was a KeyError at :145, also at import)
+RESULT: {"content": [{"type": "text", "text": "REFUSED: no spine is bound to this door, so there is nothing for this tool to act on. Call `spine_open` to mint a spine and bind this process to it, or relaunch this door with SPINE_FILE set to an existing spine file."}], "isError": true}
+STDERR: (none)
+EXIT 0

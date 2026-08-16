@@ -1,0 +1,522 @@
+{
+  "work_id": "cleanup-a-door-g3-rework-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-blast-radius",
+    "m2-docs",
+    "m3-map",
+    "m4-suite",
+    "m5-commit",
+    "m6-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load crew doctrine and the g3 rework handoff; verify it is complete",
+      "imperative": "Read references/global-everyone.md and the rework handoff at .agent-work/cleanup-a-door/crew-handoffs/g3-rework-implementer-handoff.md, plus the ground truth it names: scripts/mcp_spine_server.py (:684-718 _log_rejection, :786-870 the two lifecycle-root derivations, :957-976 _spine_open), examples/mcp-interactive-demo/README.md:64-71, and commit 4e1f22cb's own diff. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Do NOT re-litigate the approved functional work. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew doctrine + rework handoff loaded; handoff complete (task, intent, scope, exclusions, evidence, test mode, stop conditions all present)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Handoff complete. Present: Gate (g3 rework, not a fresh gate); What is already done (do not redo); Blocker 1 (stale map/INDEX.md, mechanism + measured remedy); Blocker 2 (three stranded doc references, tabled); Close criteria; Allowed scope; Specific exclusions; Constraints; Map anchors; Deliverable path check; Required evidence (load-bearing + confirmatory); Wiring grep; Verification commands; Suggested model tier; Authority; Stop conditions; Return format. Test mode is not a named section but is unambiguous: this rework is documentation plus a generated index, so it is test-after -- the existing suite is the check, and 'any behaviour change' is an explicit stop condition, which forecloses TDD. Ground truth read: mcp_spine_server.py :236-275 (_start_marker/_rejectionlog/_report_dropped_telemetry/_log), :600-660 (_standing_in_the_bound_spines_worktree, run_engine), :660-718 (_log_rejection), :786-870 (_primary_checkout_for_lifecycle and _worktree_root_for_lifecycle -- the fallback is a fallback, SPINE.parent when bound, Path(__file__) when not), :930-976 (_spine_open); examples/mcp-interactive-demo/README.md:50-71; git show 4e1f22cb --stat and its removed-identifier lines; notes-a.md:1-45. No block: nothing in the handoff is missing."
+        }
+      ],
+      "constraints": [
+        "read scripts/checklist_engine.py, scripts/hooks/**, scripts/run_crew.py, scripts/gauge_reader.py -- never modify (lanes B and C run concurrently)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-blast-radius": {
+      "id": "m1-blast-radius",
+      "title": "Enumerate by command every identifier 4e1f22cb renamed or deleted, and every reference left behind",
+      "imperative": "By command, never by memory: extract from `git show 4e1f22cb` every module-level constant, function and test method the commit removed, then sweep the whole tracked tree for surviving references to each. State the COUNT of stranded references found, and classify each one (live doc reference to fix / historical record correctly pinned to a pre-fix revision / generated map page). The handoff's table names three -- confirm whether there is a fourth. Capture the command and its full output to .agent-work/cleanup-a-door/evidence/g3-rework-blast-radius.txt. Attest c1 with the count; c2 checks the evidence file exists.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: doctrine and handoff read, handoff verified complete, ground truth read at file:line."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the removed-identifier list is derived by command from the commit itself, and the BEFORE count of stranded references is stated with each one classified",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Removed-identifier list derived by command from the commit, not from the handoff: git show 4e1f22cb -U0 | grep '^-' filtered for def/class/CONSTANT= yields CALLLOG, ENGINE, REJECTIONLOG, SPINE, START_MARKER, test_mcp_json_referenced_spine_file_exists_and_loads, test_removed_spine_directory_still_runs. ENGINE and SPINE survive as module globals (re-bound, not removed), so the stranded set is over the other five plus the mechanism claim 're-read fresh' the commit invalidated without renaming anything. BEFORE count: FOUR stranded references, all documentation. Three are the handoff's table (mcp_spine_server.py:685 REJECTIONLOG; :962-963 'ambient SPINE_FILE, re-read fresh'; README.md:69 the renamed test). The FOURTH is scripts/hooks/spine_rail.py:1081, which quotes the deleted 'SPINE = Path(os.environ[\"SPINE_FILE\"]).resolve()' as the door's existing contract -- a doc reference, so not the stop condition, but fenced to lanes B and C by the handoff's exclusions; flagged as a triage candidate, not touched. NOT stranded and deliberately left: notes-a.md:12,15,35 (dated lane-A notes headed 'Base a69bbac4', describing the pre-fix defect at pre-fix line numbers) and all of .agent-work/** (run artifacts, each true when written). Also measured: .gitignore:73 ignores map/* except INDEX.md and ids.jsonl, so the two map/scripts.mcp_spine_server/ pages the handoff asks me to commit are not tracked files at all -- only map/INDEX.md is committable."
+        },
+        {
+          "id": "c2",
+          "statement": "the sweep command and its output are captured as evidence",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/cleanup-a-door/evidence/g3-rework-blast-radius.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-blast-radius-1"
+        }
+      ],
+      "constraints": [
+        "a reference inside a dated record pinned to a pre-fix revision is not stranded -- do not rewrite history",
+        "if the sweep finds something that is NOT a doc reference, that is a stop condition: block and return"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-blast-radius-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/cleanup-a-door/evidence/g3-rework-blast-radius.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-docs": {
+      "id": "m2-docs",
+      "title": "Reword every stranded doc reference to name what the code now does",
+      "imperative": "Fix each stranded reference m1 confirmed: scripts/mcp_spine_server.py:685 (`REJECTIONLOG`, now the `_rejectionlog()` derivation), :962-963 (the `_primary_checkout_for_lifecycle` parenthetical -- no longer 'ambient SPINE_FILE, re-read fresh'), examples/mcp-interactive-demo/README.md:69 (the renamed test), plus any fourth m1 found. DOCSTRINGS AND COMMENTS ONLY in the server -- no behaviour change whatsoever. Do not hand-edit map/. c1 is the zero-stranded-reference sweep; c2 re-runs the door's own test files to prove nothing moved.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the stranded-reference set is enumerated and classified",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-blast-radius complete: four stranded references enumerated by command and classified; three in scope, one fenced and flagged."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no stranded reference to a removed identifier survives in the two hand-edited files",
+          "check": {
+            "kind": "command",
+            "command": "! grep -nw 'REJECTIONLOG\\|CALLLOG\\|START_MARKER\\|test_mcp_json_referenced_spine_file_exists_and_loads\\|test_removed_spine_directory_still_runs' scripts/mcp_spine_server.py examples/mcp-interactive-demo/README.md && ! grep -n 're-read fresh' scripts/mcp_spine_server.py examples/mcp-interactive-demo/README.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-docs-3"
+        },
+        {
+          "id": "c2",
+          "statement": "the door's own behaviour is unchanged: its four test modules still pass",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_mcp_door_unbound.py tests/test_mcp_lifecycle.py tests/test_mcp_identity.py tests/test_mcp_spine_server.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-docs-4"
+        }
+      ],
+      "constraints": [
+        "scripts/mcp_spine_server.py: docstrings and comments only, no behaviour change",
+        "examples/mcp-interactive-demo/README.md: the stranded test name only",
+        "map/** is generated -- never hand-edited"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-docs-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -n 'REJECTIONLOG\\|CALLLOG\\|START_MARKER\\|re-read fresh\\|test_mcp_json_referenced_spine_file_exists_and_loads\\|test_removed_spine_directory_still_runs' scripts/mcp_spine_server.py examples/mcp-interactive-demo/README.md",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-docs-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_mcp_door_unbound.py tests/test_mcp_lifecycle.py tests/test_mcp_identity.py tests/test_mcp_spine_server.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-docs-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -nw 'REJECTIONLOG\\|CALLLOG\\|START_MARKER\\|test_mcp_json_referenced_spine_file_exists_and_loads\\|test_removed_spine_directory_still_runs' scripts/mcp_spine_server.py examples/mcp-interactive-demo/README.md && ! grep -n 're-read fresh' scripts/mcp_spine_server.py examples/mcp-interactive-demo/README.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-docs-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_mcp_door_unbound.py tests/test_mcp_lifecycle.py tests/test_mcp_identity.py tests/test_mcp_spine_server.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-map": {
+      "id": "m3-map",
+      "title": "Stage first, then rebuild the map, so the freshness guard sees the staged tree",
+      "imperative": "Blocker 1's whole lesson, in this order: stage the doc edits FIRST (`git add` the allowed paths), THEN run `py -m scripts.code_map build --root .`, so the rebuild enumerates the same tracked set the guard will. A rebuild run while a file is still untracked passes its own guard and goes red at commit -- that trap has now fired twice in this run. c1 is the freshness guard itself.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the doc edits are in and the door's tests pass",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-docs complete: the word-bounded sweep is clean and the door's four test modules pass under the engine's own check."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map/INDEX.md and map/ are fresh against the staged tree -- the freshness guard passes",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_code_map.py -k MapTreeFreshness"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-map-1"
+        }
+      ],
+      "constraints": [
+        "order of operations: stage -> rebuild map -> commit",
+        "map/** is generated -- never hand-edited"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-map-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_code_map.py -k MapTreeFreshness",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-suite": {
+      "id": "m4-suite",
+      "title": "The full clean-env suite is green",
+      "imperative": "Clear __pycache__ (`find . -name __pycache__ -type d -not -path './.git/*' -exec rm -rf {} +`, issue #597), then run `env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q` to completion IN THIS TURN -- poll, never idle. Capture the transcript to .agent-work/cleanup-a-door/evidence/g3-rework-full-suite.txt and state the count. c1 is the suite itself; c2 checks the transcript exists.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the map is fresh against the staged tree",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3-map complete: staged first, rebuilt second; map/INDEX.md 3 insertions 2 deletions, and the MapTreeFreshness guard passes under the engine's own check."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the full clean-env suite is fully green",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-suite-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the suite transcript is captured with its count",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/cleanup-a-door/evidence/g3-rework-full-suite.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-suite-2"
+        }
+      ],
+      "constraints": [
+        "clear __pycache__ before measuring (#597)",
+        "run to completion in-context; never end the turn waiting"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-suite-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/cleanup-a-door/evidence/g3-rework-full-suite.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-commit": {
+      "id": "m5-commit",
+      "title": "Commit the rework: docs plus the generated map pages, nothing else",
+      "imperative": "Commit only the allowed paths -- map/**, scripts/mcp_spine_server.py, examples/mcp-interactive-demo/README.md. Capture `git diff --stat` for the rework commit to .agent-work/cleanup-a-door/evidence/g3-rework-diffstat.txt and re-run the blast-radius sweep to state the AFTER count. c1 proves the working tree is clean for the deliverable paths (i.e. they are committed); c2 checks the diffstat evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the full suite is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4-suite complete: 3093 passed, 6 skipped, 1153 subtests, exit 0, verified again by the engine's own check."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the deliverable paths are committed -- no uncommitted change remains in them",
+          "check": {
+            "kind": "command",
+            "command": "git diff --quiet HEAD -- map scripts/mcp_spine_server.py examples/mcp-interactive-demo/README.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-commit-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the rework commit's diffstat is captured and the AFTER stranded-reference count is stated",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/cleanup-a-door/evidence/g3-rework-diffstat.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-commit-2"
+        }
+      ],
+      "constraints": [
+        "commit only the three allowed path groups; nothing about 4e1f22cb's behaviour changes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-commit-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "git diff --quiet HEAD -- map scripts/mcp_spine_server.py examples/mcp-interactive-demo/README.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-commit-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/cleanup-a-door/evidence/g3-rework-diffstat.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-evidence": {
+      "id": "m6-evidence",
+      "title": "Write IMPLEMENTER_RESULT -- the write is the delivery",
+      "imperative": "Write .agent-work/cleanup-a-door/crew-handoffs/g3-rework-implementer-result.md from templates/IMPLEMENTER_RESULT.template.md: lowercase Return status, the load-bearing evidence (full-suite count; blast-radius command with its before/after counts), the confirmatory diffstat, Workflow Feedback, Map Impact, and any triage candidates. Attest c1; c2 checks the artifact exists.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the rework is committed and all evidence is captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m5-commit complete: 359d93df committed, AFTER count zero in scope, diffstat and sweep evidence captured."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the result carries every required evidence item with its measured numbers, plus Workflow Feedback and Map Impact",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Result written with every required item measured, not asserted: load-bearing 1 = full clean-env suite 3093 passed / 6 skipped / 1153 subtests, exit 0, transcript at evidence/g3-rework-full-suite.txt; load-bearing 2 = the blast-radius command derived from the commit itself, BEFORE 4 / AFTER 0 in scope with 1 fenced, full output at evidence/g3-rework-blast-radius.txt; confirmatory 3 = git show --stat 359d93df, 3 files 13+/9-, map/INDEX.md 3 insertions 2 deletions matching the reviewer's measurement, at evidence/g3-rework-diffstat.txt. Workflow Feedback filled with four run-specific items (the map/** ignore contradiction in the Deliverable path check, the missing rename targets, the bound-spine-belongs-to-my-parent gap in the crew skill, and the absent Test mode field). Map Impact filled from the inbound anchors. Triage candidate tc1 carried. Return status lowercase complete."
+        },
+        {
+          "id": "c2",
+          "statement": "the result artifact exists at the path the handoff names",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/cleanup-a-door/crew-handoffs/g3-rework-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-evidence-1"
+        }
+      ],
+      "constraints": [
+        "write per constellation-how-to-talk: clear, concise, grounded, one name per thing"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/cleanup-a-door/crew-handoffs/g3-rework-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m1-blast-radius",
+      "statement": "scripts/hooks/spine_rail.py:1081 -- _handle_door_lease's docstring quotes 'SPINE = Path(os.environ[SPINE_FILE]).resolve()' as scripts/mcp_spine_server.py's existing contract. Commit 4e1f22cb deleted that exact line. Two things are now wrong, the second substantive rather than cosmetic: the expression no longer exists, and after bind-on-open the door's binding can change at runtime, so SPINE_FILE in the hook process's environment is no longer guaranteed to name the spine the door is currently bound to. Found by this rework's blast-radius sweep as the fourth stranded reference; NOT fixed because scripts/hooks/** is fenced to lanes B and C by the g3 handoff's own exclusions."
+    }
+  ],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/cleanup-a-door/g3-rework/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-16T14:56:58.436141+00:00",
+    "last_heartbeat": "2026-08-16T15:07:37.070599+00:00",
+    "claimed_by": "implementer",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T15:07:41.322306+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "The rework is documentation-only by construction, and that shapes everything after it. Blocker 1 is not a map defect: code_map enumerates via git ls-files, so a rebuild run while a new test file is still untracked counts one module short and passes its own guard -- the fix is ordering (stage, then rebuild, then commit), not content. Blocker 2's three references are stranded by 4e1f22cb's own renames: REJECTIONLOG became the _rejectionlog() derivation, and _primary_checkout_for_lifecycle no longer reads ambient SPINE_FILE -- it reads SPINE.parent when bound and falls back to this script's own location when not. Both are docstring claims about mechanism that the mechanism no longer matches.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:57:26.198942+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-blast-radius",
+      "why": "The sweep found a fourth, and it changes what this rework can deliver. scripts/hooks/spine_rail.py:1081 quotes the deleted SPINE assignment as the door's live contract -- a doc reference, so not a stop condition, but inside the lane-B/C fence, so it leaves as a triage candidate rather than a fix. The sweep also measured something the handoff assumed wrongly: map/* is gitignored except INDEX.md and ids.jsonl, so 'regenerate the two map/scripts.mcp_spine_server/ pages' cannot appear in the commit -- those pages are untracked build output. The committable half of blocker 1 is map/INDEX.md alone, which is exactly what the freshness guard reads.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:58:52.262151+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-docs",
+      "why": "All three in-scope references now name the mechanism that runs. The second was the one that mattered: _spine_open's docstring claimed its repo root came from an ambient SPINE_FILE re-read, but the whole point of the g3 fix is that _primary_checkout_for_lifecycle reads NO environment -- SPINE.parent when bound, this script's own location when not -- and it is precisely the unbound case spine_open exists to serve, so the old sentence contradicted the tool's reason for existing. README:69 also carried a present-tense claim that .mcp.json points at the demo spine, falsified by the same commit emptying the default; corrected in the same sentence as the renamed test. The first attempt at c1 also taught something worth keeping: a blast-radius grep for a removed identifier MUST be word-bounded, or it flags the surviving environment-variable names that embed it.",
+      "mechanical": false,
+      "ts": "2026-08-16T15:00:47.790881+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-map",
+      "why": "The rebuild is 3 insertions, 2 deletions to map/INDEX.md -- exactly what the reviewer measured at this commit, which confirms the diagnosis rather than merely agreeing with it: the map was only ever short by the one test module that was still untracked when the last build ran. I also checked whether the trap can fire a third time from what is on disk right now: five untracked .py probe scripts sit under .agent-work/cleanup-a-door/g3-review/, but scripts/code_map/discovery.py:16 excludes the .agent-work/ prefix from the mappable corpus outright, so committing them cannot move the count. The trap needs an untracked .py OUTSIDE .agent-work/, and there is none.",
+      "mechanical": false,
+      "ts": "2026-08-16T15:01:18.305242+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-suite",
+      "why": "Fully green: 3093 passed, 6 skipped, 1153 subtests, exit 0, after clearing __pycache__. Blocker 1 is closed and closed for the right reason -- the only failure the previous attempt carried was MapTreeFreshness, and it went green from a map rebuild alone, with no test edited and no behaviour touched. That is the evidence that the red was an ordering artefact rather than a defect in 4e1f22cb's substance.",
+      "mechanical": false,
+      "ts": "2026-08-16T15:05:46.624982+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-commit",
+      "why": "Committed as 359d93df: 3 files, 13 insertions, 9 deletions -- one README paragraph, two docstrings, and the generated map index, which is the whole shape a documentation rework should have. AFTER count on the in-scope surface is ZERO. One stranded reference survives on purpose: scripts/hooks/spine_rail.py:1081, inside the lane-B/C fence, carried out as triage candidate tc1 rather than silently fixed or silently dropped.",
+      "mechanical": false,
+      "ts": "2026-08-16T15:06:15.151009+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-evidence",
+      "why": "The delivery is the result file, and it carries the two things a reviewer cannot reconstruct from the diff: that blocker 1 went green from a map rebuild alone -- no test edited, no behaviour touched, which is what proves the previous red was an ordering artefact rather than a defect in 4e1f22cb -- and that the blast-radius sweep found a FOURTH stranded reference the handoff did not know about, sitting inside the lane-B/C fence. That fourth is the one judgment call this gate carried: it is a docstring, so it is not the 'not a doc reference' stop condition, and it is fenced, so fixing it would breach scope. It leaves as triage candidate tc1, named and routed rather than silently fixed or silently dropped.",
+      "mechanical": false,
+      "ts": "2026-08-16T15:07:37.070592+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-16T15:00:34.008899+00:00",
+      "reason": "My own check predicate was wrong, not the tree. c1 grepped for the removed identifiers WITHOUT -w, so it matched the live environment-variable names SPINE_CALLLOG (:212,:235) and SPINE_START_MARKER (:212,:243) -- overrides this change deliberately preserves. Word-bounded, the tree is already clean. The handoff gives me the shape of the blast-radius command, so correcting my own predicate is inside my authority; the corrected check is strictly the one I should have written.",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m2-docs.c1"
+      ]
+    }
+  ]
+}

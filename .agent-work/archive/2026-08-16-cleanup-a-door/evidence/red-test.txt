@@ -1,0 +1,212 @@
+# RED -- tests/test_mcp_door_telemetry.py (FINAL, 7 tests) on the UNFIXED tree
+# measured 2026-08-16T06:03:46-07:00
+# scripts/mcp_spine_server.py restored to its PRE-FIX blob: git checkout b9135f1b -- scripts/mcp_spine_server.py
+# revert asserted, not assumed: grep -c _report_dropped_telemetry -> 0, and git diff --stat HEAD is non-empty.
+#   (An earlier attempt used 'git checkout --', which after the fix commit restores the FIXED file and
+#    silently measured a green tree. Naming the pre-fix commit is what makes this measurement real.)
+
+$ find . -name __pycache__ -type d ... -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_mcp_door_telemetry.py
+FFF.F.F                                                                  [100%]
+=================================== FAILURES ===================================
+_ TelemetryNeverFatalTests.test_an_unwritable_call_log_does_not_suppress_the_start_marker _
+
+self = <test_mcp_door_telemetry.TelemetryNeverFatalTests testMethod=test_an_unwritable_call_log_does_not_suppress_the_start_marker>
+
+    def test_an_unwritable_call_log_does_not_suppress_the_start_marker(self):
+        """The two writes are guarded SEPARATELY, and this is the test that says
+        so. One `try` around the whole of `_log` would pass every other test in
+        this file: it survives, and it answers. What it would NOT do is reach the
+        second write after the first raised -- the marker would silently stop
+        being written the moment the call log became unwritable, which is one
+        side-channel taking out the other."""
+        marker = self.root / "mcp_server_started"
+        run = drive_door(self.spine, calllog=self.root / "gone" / "mcp_calls.jsonl",
+                         start_marker=marker)
+>       self._assert_door_survived(run)
+
+tests/test_mcp_door_telemetry.py:218: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_mcp_door_telemetry.py:158: in _assert_door_survived
+    self.assertIsNotNone(
+E   AssertionError: unexpectedly None : the door never answered the call; exit 1, stderr:
+E   Traceback (most recent call last):
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1380, in <module>
+E       main()
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1359, in main
+E       result = call_tool(nm, call_args)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1066, in call_tool
+E       return as_result(run_engine("current", mutating=False))
+E                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 461, in run_engine
+E       _log(rec)
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 181, in _log
+E       with CALLLOG.open("a", encoding="utf-8") as fh:
+E            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+E       return io.open(self, mode, buffering, encoding, errors, newline)
+E              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/tmp09_9cjzr/gone/mcp_calls.jsonl'
+___ TelemetryNeverFatalTests.test_call_log_that_is_a_directory_is_not_fatal ____
+
+self = <test_mcp_door_telemetry.TelemetryNeverFatalTests testMethod=test_call_log_that_is_a_directory_is_not_fatal>
+
+    def test_call_log_that_is_a_directory_is_not_fatal(self):
+        """A second OSError shade: the destination exists but is not a file."""
+        blocked = self.root / "mcp_calls.jsonl"
+        blocked.mkdir()
+        run = drive_door(self.spine, calllog=blocked,
+                         start_marker=self.root / "mcp_server_started")
+>       self._assert_door_survived(run)
+
+tests/test_mcp_door_telemetry.py:197: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_mcp_door_telemetry.py:158: in _assert_door_survived
+    self.assertIsNotNone(
+E   AssertionError: unexpectedly None : the door never answered the call; exit 1, stderr:
+E   Traceback (most recent call last):
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1380, in <module>
+E       main()
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1359, in main
+E       result = call_tool(nm, call_args)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1066, in call_tool
+E       return as_result(run_engine("current", mutating=False))
+E                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 461, in run_engine
+E       _log(rec)
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 181, in _log
+E       with CALLLOG.open("a", encoding="utf-8") as fh:
+E            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+E       return io.open(self, mode, buffering, encoding, errors, newline)
+E              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   IsADirectoryError: [Errno 21] Is a directory: '/tmp/tmp8c2bbu4w/mcp_calls.jsonl'
+_ TelemetryNeverFatalTests.test_call_log_under_a_missing_directory_is_not_fatal _
+
+self = <test_mcp_door_telemetry.TelemetryNeverFatalTests testMethod=test_call_log_under_a_missing_directory_is_not_fatal>
+
+    def test_call_log_under_a_missing_directory_is_not_fatal(self):
+        """The reproduction from issue #604: the bound spine's directory is gone,
+        so the call log beside it cannot be opened."""
+        gone = self.root / "gone"
+        run = drive_door(self.spine, calllog=gone / "mcp_calls.jsonl",
+                         start_marker=gone / "mcp_server_started")
+>       self._assert_door_survived(run)
+
+tests/test_mcp_door_telemetry.py:189: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_mcp_door_telemetry.py:158: in _assert_door_survived
+    self.assertIsNotNone(
+E   AssertionError: unexpectedly None : the door never answered the call; exit 1, stderr:
+E   Traceback (most recent call last):
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1380, in <module>
+E       main()
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1359, in main
+E       result = call_tool(nm, call_args)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1066, in call_tool
+E       return as_result(run_engine("current", mutating=False))
+E                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 461, in run_engine
+E       _log(rec)
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 181, in _log
+E       with CALLLOG.open("a", encoding="utf-8") as fh:
+E            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+E       return io.open(self, mode, buffering, encoding, errors, newline)
+E              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/tmpd7bkqy44/gone/mcp_calls.jsonl'
+_ TelemetryNeverFatalTests.test_start_marker_alone_being_unwritable_is_not_fatal _
+
+self = <test_mcp_door_telemetry.TelemetryNeverFatalTests testMethod=test_start_marker_alone_being_unwritable_is_not_fatal>
+
+    def test_start_marker_alone_being_unwritable_is_not_fatal(self):
+        """The second write in `_log` is guarded independently of the first: here
+        the call log is perfectly writable and only the marker is not."""
+        run = drive_door(self.spine, calllog=self.root / "mcp_calls.jsonl",
+                         start_marker=self.root / "gone" / "mcp_server_started")
+>       self._assert_door_survived(run)
+
+tests/test_mcp_door_telemetry.py:204: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_mcp_door_telemetry.py:158: in _assert_door_survived
+    self.assertIsNotNone(
+E   AssertionError: unexpectedly None : the door never answered the call; exit 1, stderr:
+E   Traceback (most recent call last):
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1380, in <module>
+E       main()
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1359, in main
+E       result = call_tool(nm, call_args)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1066, in call_tool
+E       return as_result(run_engine("current", mutating=False))
+E                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 461, in run_engine
+E       _log(rec)
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 184, in _log
+E       START_MARKER.write_text(f"started for {SPINE}\n", encoding="utf-8")
+E     File "/usr/lib/python3.12/pathlib.py", line 1049, in write_text
+E       with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+E            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+E       return io.open(self, mode, buffering, encoding, errors, newline)
+E              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/tmpbumsqxtx/gone/mcp_server_started'
+____ TelemetryNeverFatalTests.test_the_dropped_record_is_reported_on_stderr ____
+
+self = <test_mcp_door_telemetry.TelemetryNeverFatalTests testMethod=test_the_dropped_record_is_reported_on_stderr>
+
+    def test_the_dropped_record_is_reported_on_stderr(self):
+        """Never a silent drop. `_log_rejection`'s principle, applied here: fail
+        loud, every occurrence."""
+        gone = self.root / "gone"
+        run = drive_door(self.spine, calllog=gone / "mcp_calls.jsonl",
+                         start_marker=gone / "mcp_server_started")
+>       self._assert_door_survived(run)
+
+tests/test_mcp_door_telemetry.py:229: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_mcp_door_telemetry.py:158: in _assert_door_survived
+    self.assertIsNotNone(
+E   AssertionError: unexpectedly None : the door never answered the call; exit 1, stderr:
+E   Traceback (most recent call last):
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1380, in <module>
+E       main()
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1359, in main
+E       result = call_tool(nm, call_args)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1066, in call_tool
+E       return as_result(run_engine("current", mutating=False))
+E                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 461, in run_engine
+E       _log(rec)
+E     File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 181, in _log
+E       with CALLLOG.open("a", encoding="utf-8") as fh:
+E            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+E       return io.open(self, mode, buffering, encoding, errors, newline)
+E              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/tmp3iog3k34/gone/mcp_calls.jsonl'
+=========================== short test summary info ============================
+FAILED tests/test_mcp_door_telemetry.py::TelemetryNeverFatalTests::test_an_unwritable_call_log_does_not_suppress_the_start_marker
+FAILED tests/test_mcp_door_telemetry.py::TelemetryNeverFatalTests::test_call_log_that_is_a_directory_is_not_fatal
+FAILED tests/test_mcp_door_telemetry.py::TelemetryNeverFatalTests::test_call_log_under_a_missing_directory_is_not_fatal
+FAILED tests/test_mcp_door_telemetry.py::TelemetryNeverFatalTests::test_start_marker_alone_being_unwritable_is_not_fatal
+FAILED tests/test_mcp_door_telemetry.py::TelemetryNeverFatalTests::test_the_dropped_record_is_reported_on_stderr
+5 failed, 2 passed in 0.34s
+EXIT 1
+
+# =====================================================================
+# SEPARATE-GUARD MUTATION CHECK, measured 2026-08-16T06:04:00-07:00 against the FIXED tree.
+# Collapse the two independent guards into ONE try around _log's body and
+# re-run: the split must be defended by a check that can fail, not by the
+# docstring that describes it.
+
+# mutation applied and asserted: two guards -> one shared guard
+
+tests/test_mcp_door_telemetry.py:232: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_mcp_door_telemetry.py::TelemetryNeverFatalTests::test_an_unwritable_call_log_does_not_suppress_the_start_marker
+FAILED tests/test_mcp_door_telemetry.py::TelemetryNeverFatalTests::test_the_dropped_record_is_reported_on_stderr
+2 failed, 5 passed in 0.33s

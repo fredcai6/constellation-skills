@@ -293,8 +293,11 @@ every shipped template (`tests/test_mcp_imperative_equivalence.py`, 61 gates acr
 enumerated by walking the tree so a template added later is covered automatically).
 
 **Identity rides the environment, not a generated file.** The server binds `SPINE_FILE`,
-`SPINE_ENGINE` and `SPINE_SESSION` at launch from its environment, deliberately **not** as tool
-arguments, so a model cannot point the door at another spine or another identity mid-conversation.
+`SPINE_ENGINE` and `SPINE_SESSION` from its environment when it launches, and — since issue #603 —
+again when a successful `spine_open` binds the process to the spine it just minted
+(`_bind_process_to`, `decision:bind-on-open-over-new-verb`). Neither moment is a tool argument:
+a model still cannot point the door at another spine or another identity mid-conversation, and
+`_rebind_refusal` blocks the swap while the process holds an active lease.
 The committed project-scope `.mcp.json` uses `${VAR:-default}` expansion, so each dispatch supplies
 its own values and each gets its own server instance and its own reading. This is measured, not
 assumed: two `claude -p` dispatches from one directory through one committed config, differing only

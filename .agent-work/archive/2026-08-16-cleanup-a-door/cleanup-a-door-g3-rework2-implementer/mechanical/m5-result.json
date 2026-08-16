@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-result",
+  "mechanical": {
+    "run": "cleanup-a-door-g3-rework2-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m5-result",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-a-door-g3-rework2-implementer-m5-result@e492da62a5156bebf7361b823472d0f967ac3d29",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-a-door-g3-rework2-implementer",
+    "generated_at": "2026-08-16T15:41:54Z"
+  }
+}

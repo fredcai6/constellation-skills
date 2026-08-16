@@ -1,0 +1,20 @@
+# g3 rework 2 — m0-context: what _spine_open actually reads (AST, not memory)
+# host: Python 3.12.3, commit 359d93df
+
+$ py - <<AST  (see command body below)
+
+_spine_open  (lines 957-1031)
+  os.environ accesses: 1 at lines [1020]
+  literal 'SPINE_PARENT' at line 1020: '"SPINE_PARENT"'
+  literal 'SPINE_FILE' at line 1030: '"SPINE_FILE"'
+  literal 'SPINE_SESSION' at line 1030: '"SPINE_SESSION"'
+
+_primary_checkout_for_lifecycle  (lines 786-850)
+  os.environ accesses: 0 at lines []
+
+line 1030 in context:
+  1027:     # (`decision:bind-on-open-over-new-verb`). Both identity roots, from
+  1028:     # `open_work`'s own return value -- binding the spine without the session
+  1029:     # produces a door that cannot `claim`, which is not a bound door.
+  1030:     _bind_process_to(opened["SPINE_FILE"], opened["SPINE_SESSION"])
+  1031:     return _lifecycle_result(opened)

@@ -1,0 +1,92 @@
+{
+  "work_id": "cleanup-a-door",
+  "diff_ref": "gate g3, final review attempt 4, at 5a626351. This attempt's own slice (176103ac..5a626351 = 176133ac..5a626351) is docstrings, comments and one deleted test-setup line, which is not smell-testable alone, so the pass is rendered over the gate's whole change (a69bbac4..5a626351 restricted to scripts/mcp_spine_server.py, .mcp.json and the five touched test modules) and judged independently from my own reading of the source, not inherited from the three prior passes. Prior record for this path preserved in git history.",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "Read every function this gate adds. _spine_from_env and _engine_from_env are 2-4 statements; _telemetry_path and its three accessors are one-liners; _bind_process_to is 5 statements (mcp_spine_server.py:913-917); _unbound_refusal and _rebind_refusal are flat guard sequences that return early. _spine_open (968-1042) is the longest at ~30 statements but is a linear validate-then-act sequence, never nested past one level, each block returning its own _tool_error. The module's genuinely long function is call_tool, a pre-existing if-chain dispatcher this gate did not touch.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "scripts/mcp_spine_server.py defines no classes at all and this gate adds none. The classes added are unittest.TestCase suites, each scoped to one pinned invariant (IdentityGuardSurvivesARebindTests, SpineOpenNeverBindsIdentityTests, SpineOpenContainmentTests), all of ordinary size.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "Two repetitions. (1) _calllog, _start_marker and _rejectionlog are three one-line wrappers over _telemetry_path differing only in an env-var name and a filename. (2) _HOW_TO_BIND and _HOW_TO_REBIND are near-identical two-line constants.",
+      "override": {
+        "repo_standard": "references/global-everyone.md, Universal posture: 'One canonical path; no speculative abstraction' and 'Fail visibly rather than emit plausible wrong output'; plus its deep-module deletion test ('if complexity reappears across N callers it was earning its keep').",
+        "reason": "(1) This IS the de-duplicated form, not the smell: the shared override-then-derive logic lives once in _telemetry_path, and the three wrappers are named seams over it. Deleting them pushes two magic strings per channel back to every call site and drops each channel's recorded contract, so complexity reappears across callers -- the deletion test says they earn their keep. (2) Merging the two refusal texts would undo the fix. _unbound_refusal's docstring records why they must stay apart: an unbound door has no path to name, so one message that promises to name a path is unsatisfiable there and invites a fabricated path. I reproduced that distinction as a fact of the code, not just the prose -- the unbound branch names no path, the named-but-unusable branch does. Merging re-merges the two refusal classes whose separation is what #603 bought."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "The added functions act on their own module's state. _primary_checkout_for_lifecycle reaches out to git via _git_rev_parse and to spine_lifecycle._default_wt_root, but those are the owning modules for those questions and are called rather than reimplemented -- and tests/test_mcp_lifecycle.py:236 pins that _spine_open must call _default_wt_root rather than restate the worktree-location rule inline.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "overridden",
+      "finding": "SPINE_FILE and SPINE_SESSION travel together as a pair through at least four surfaces: .mcp.json's env block, open_work's return dict, _bind_process_to's two parameters, and the os.environ pair it writes. A textbook clump would ask for one Identity value object.",
+      "override": {
+        "repo_standard": "references/global-crew.md, 'Make the minimal change that satisfies the handoff; no speculative abstraction' and 'explicit contracts at meaningful boundaries'; references/global-everyone.md deep-module vocabulary, 'One adapter = a hypothetical seam; two = a real one'.",
+        "reason": "The pair is already funnelled through exactly one named binder, _bind_process_to, whose own docstring makes 'both roots, never one' the contract -- and that contract is load-bearing, since binding the spine without the session yields a door that cannot claim, which is the specific defect #603 exists to fix. So the de-clumping move has effectively been made: the binder IS the parameter object's role. Introducing a further Identity type would be a new abstraction with one construction site and one consumer -- a hypothetical seam by the two-adapter rule -- and would cross the env-string boundary where the values are literally environment strings."
+      }
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "_bind_process_to(spine_file: str, session: str) takes plain strings in a module that otherwise types spine paths as Path (SPINE: Path | None), and immediately does Path(spine_file).resolve() on one of them.",
+      "override": {
+        "repo_standard": "references/global-crew.md, 'Match the surrounding code's naming, labeling, and in-file documentation conventions' and 'Make the minimal change that satisfies the handoff'.",
+        "reason": "This is the one boundary where the values genuinely ARE environment strings: they arrive as strings from open_work's return dict and depart as strings into os.environ, and the function's docstring records the narrowness as deliberate. Typing the parameter as Path would force a Path->str->Path round trip at both ends of a five-line function and buy no invariant that Path(...).resolve() on the next line does not already establish."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "No function this gate adds exceeds three parameters. _bind_process_to takes 2, _telemetry_path takes 2, _report_dropped_telemetry takes 3, _spine_from_env / _engine_from_env / _unbound_refusal / _rebind_refusal / _primary_checkout_for_lifecycle take none.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "The gate's real design smell, and it is evidenced by the gate's own blocker history rather than by taste. ONE fact -- when and how the door acquires identity -- is restated as unchecked prose across many sites. Measured, not estimated: an AST-and-comment sweep over scripts/ tests/ docs/ examples/ for prose co-mentioning binding and spine_open/_bind_process_to returns 23 distinct sites (12 in scripts/mcp_spine_server.py, 9 across four test modules, 2 in docs/CHECKLIST_ENGINE_DESIGN.md); that count is an upper bound because it also catches refusal-message text and test names, and the tighter set of true restatements a prior reviewer identified is about seven. Either way the consequence is measured: THREE of this gate's four rework cycles were a restatement that had drifted from the code (blocker 2, the pin's failure message; blocker 3, four further claims; and my own r5 finding on docs/CHECKLIST_ENGINE_DESIGN.md, a fourth). Only two of these sites are mechanically tied to the code (the AST pins in tests/test_mcp_lifecycle.py); the rest can drift silently, and repeatedly have. Already filed as a triage candidate by a prior reviewer and acknowledged in the handoff as a design change beyond this gate -- I concur it is out of scope to fix here, and record it flagged rather than overridden because no repo standard sanctions it: CREW_CONTEXT.md's own verification discipline ('assert against behaviour, never against text that describes it') points the other way.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "scripts/mcp_spine_server.py changed for exactly one reason in this gate -- how the door acquires and refuses identity. The telemetry accessors it also touched are the same concern (a destination derived from the bound spine), not a second axis of change.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "No caller walks a chain of intermediaries. The longest expressions are Path(...).resolve().parent and common.resolve().parent inside _primary_checkout_for_lifecycle -- pathlib value operations on one object, not a chain that couples the caller to a graph of collaborators.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "_telemetry_path(env_var, beside_the_spine) is the only generalization added, and it has three real callers today (_calllog, _start_marker, _rejectionlog), so it is extracted from duplication rather than anticipating it. BINDS_WITHOUT_A_BOUND_SPINE is a one-element set, which reads speculative, but it is the live predicate the unbound-refusal branch tests against and naming it is what makes that exemption greppable rather than an inline string compare. No unused hook, parameter or abstract seam was added.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "scripts/mcp_spine_server.py's module docstring is 143 lines and several added function docstrings run 30-60 lines, far past what a reader needs to call them. On its face that is prose compensating for code.",
+      "override": {
+        "repo_standard": "references/global-everyone.md, 'Keep Constellation context and architecture docs current when their meaning changes' and the deep-module definition of an interface as 'everything a caller must know to use the module: invariants, ordering, error modes'; docs/agents/CREW_CONTEXT.md, which is itself written in this register.",
+        "reason": "These docstrings are not explaining unclear code -- I read the code they sit on and it is short and plain. They record decisions, measured negatives and rejected alternatives (why the fallback in _primary_checkout_for_lifecycle is a fallback and not a replacement, why the two refusal texts differ, why _log's catch is OSError and not Exception), which is exactly what this repo's documented convention puts in a docstring rather than in a lost commit message. The real cost of this density is drift, and drift is recorded under shotgun-surgery above rather than double-counted here."
+      }
+    }
+  ],
+  "rail_exception": null
+}

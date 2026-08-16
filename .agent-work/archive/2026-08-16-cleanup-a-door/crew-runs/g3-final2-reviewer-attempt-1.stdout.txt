@@ -1,0 +1,11 @@
+No orphan scratch — my sweep and AST helper scripts live in `/tmp`, and everything I wrote is under the issue workbench.
+
+**On the `execute` gate the hook is pointing at: that one is not mine, and I'm deliberately not touching it.**
+
+- `SPINE_FILE` in my environment names the **Commander's** `execute` spine — that's how a dispatched crew is wired, so the Stop hook is reading my parent's open gate, not an unfinished checklist of my own.
+- Its lease is held by `commander-cleanup-a-door`. Advancing it would mean seizing my parent's active lease and then dispatching crews and closing gates on my parent's behalf. A crew driving its parent's spine is exactly the failure the lease exists to prevent.
+- I also won't call `block` on it. Nothing about `execute` is blocked — the g3 review it was waiting on is done and approved. Marking it blocked would bubble a false blocker to the Admiral and stall a run that is ready to continue.
+
+My dispatch was "read the handoff, execute it exactly; the run is complete when the result artifact exists." It exists, the survey behind it was driven gate by gate through the engine, and the lease was released last. That is a crew's terminal state.
+
+**What the Commander picks up:** verdict `APPROVE` at `5a626351`, with three things worth acting on before closing g3 — the Admiral float should name **three** cross-lane sites (`tests/test_spine_rail.py:2698` is the missing one), `docs/CHECKLIST_ENGINE_DESIGN.md:295-298` carries a recorded non-blocking `fail` filed as `tc1`, and the "`:194` byte-identical" phrasing in the addendum doesn't reproduce against `a69bbac4` (the positive control does; the pin's message changed at `176133ac`, which was its own sanctioned fix).

@@ -1,0 +1,12 @@
+# g3 rework 2 — m1: the corrected failure message RENDERED from the shipped test, not hand-copied.
+# The real test method is run with SOURCE monkeypatched to a leaky _spine_open, so the
+# assertion that emits the message is the one in tests/test_mcp_lifecycle.py at HEAD+edit.
+
+Lists differ: [] != ['SESSION', 'SPINE', 'run_engine']
+
+Second list contains 3 additional elements.
+First extra element 0:
+'SESSION'
+
+- []
++ ['SESSION', 'SPINE', 'run_engine'] : _spine_open's own source now references ['SESSION', 'SPINE', 'run_engine'] -- spine_open must act purely on server-launch-time state (SPINE_PARENT re-read fresh from the environment, and the repo root from _primary_checkout_for_lifecycle, which reads no environment at all) and never on the identity THIS door happens to be bound to, or a call meant to open unrelated work could be redirected onto the bound spine

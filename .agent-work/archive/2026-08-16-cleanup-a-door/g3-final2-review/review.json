@@ -1,0 +1,192 @@
+{
+  "work_id": "cleanup-a-door",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded: reviewer global-crew.md + global-everyone.md, docs/agents/CREW_CONTEXT.md, the g3 reviewer handoff incl. all four addenda (REWORK-3 is authoritative), git diff 176133ac..5a626351 (5 files), and the three prior REVIEW_RESULTs. Scope for this attempt: the five REWORK-3 items at 5a626351.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "REWORK-3 items 1,3,4,5 satisfied at 5a626351; item 2 satisfied only in part and carried as the r5 finding. Item 1 (four claims corrected), checked against the AST, not neighbouring prose: (a) mcp_spine_server.py:30-38 -- 'the one place SPINE and SESSION are assigned outside module scope' is exact: an ast.walk over the whole module finds assignments to those two names at exactly 4 sites, lines 201/202 (module scope) and 914/915 inside _bind_process_to, which is the only 'global SPINE, SESSION' declaration (line 913). (b) mcp_spine_server.py:131-143 -- _spine_open's own source references none of SPINE/SESSION/run_engine (ast Name set checked), calls _primary_checkout_for_lifecycle at :1012, and that helper's Name set is {Path, SPINE, __file__, _git_rev_parse, anchor, common} with zero os/environ nodes, so 'reads no environment at all' is literally true; its body at :857 anchors on SPINE.parent when bound and Path(__file__) when not, exactly as claimed. SPINE_FILE is read from the environment ZERO times in _spine_open -- its only os.environ node is os.environ.get('SPINE_PARENT') at :1031, and the sole 'SPINE_FILE' literal is the subscript opened['SPINE_FILE'] at :1041 on open_work's return value. (c) test_mcp_lifecycle.py:335-341 -- comment and the os.environ['SPINE_FILE'] write are both gone; inertness proved by running SpineOpenContainmentTests under three different ambient SPINE_FILE values (unset, /nonexistent/poison/spine.json, a real unrelated spine): 3 passed each time. (d) test_mcp_adoption.py:98-105 and :169-181 -- both import-time claims verified against source: 'SPINE: Path | None = _spine_from_env()' and 'sys.path.insert(0, str(ENGINE.parent))' are present at module scope. (e) test_mcp_identity.py:551's quoted sentence is a verbatim whitespace-normalized substring of the live module docstring.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git diff 176133ac..5a626351 --stat touches exactly 5 files: docs/CHECKLIST_ENGINE_DESIGN.md (7 lines), scripts/mcp_spine_server.py (27), tests/test_mcp_adoption.py (23), tests/test_mcp_identity.py (22), tests/test_mcp_lifecycle.py (6 deletions). Every hunk in scripts/mcp_spine_server.py falls inside the module docstring, which spans lines 2-144; the test-file hunks are docstrings and comments except the single deleted os.environ['SPINE_FILE'] setup line at what is now test_mcp_lifecycle.py:335. No executable statement was added, and the one deleted statement is proved inert above. So REWORK-3 item 3 holds: no behaviour changed. Fenced paths: git diff --name-only a69bbac4..5a626351 matched none of scripts/checklist_engine.py, scripts/run_crew.py, scripts/gauge_reader.py, scripts/hooks/** -- the implementer read scripts/run_crew.py:468-471 and scripts/hooks/spine_rail.py and correctly did not touch either. docs/CHECKLIST_ENGINE_DESIGN.md is outside the handoff's enumerated nine-file list but inside the blast radius, and the addendum records the Commander accepting it; its content is the r5 finding, its presence is not a scope violation.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "REWORK-3 item 5 reproduced independently: __pycache__ cleared (find . -name __pycache__ -type d -not -path './.git/*' -exec rm -rf {} +), then env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q at 5a626351 (git rev-parse HEAD = 5a6263510c532cdd5464d1867f5a9c8db7aa13e5, working tree clean for scripts/tests/docs/examples/map/.mcp.json) -> '3093 passed, 6 skipped, 1153 subtests passed in 128.40s', exit 0. Exactly the Commander's number. Evidence saved to .agent-work/cleanup-a-door/evidence/g3-final2-suite.txt. Targeted re-runs: tests/test_mcp_lifecycle.py::SpineOpenContainmentTests -> 3 passed under each of three ambient SPINE_FILE values. Per the addendum I did not re-derive the six unbound-class refusals, bind-on-open through to claim, the pre-fix red suite, the module-wide assignment pin's mutated control, IdentityGuardSurvivesARebindTests, the env overrides, the lease-held rebind refusal, unset SPINE_ENGINE, or map/ freshness -- three prior reviews reproduced them and this attempt is scoped to what changed since.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "REWORK-3 item 4, my own sweep, run in two passes; script kept at /tmp/sweep.py and reproduced below. Method: for .py files parse the AST and take every ast.Constant str (Python already CONCATENATES implicitly-joined adjacent literals into ONE Constant, which is exactly the hole that hid blocker 2) plus every tokenize.COMMENT; for .md/.json/.txt take the whole file; whitespace-normalize each unit with re.sub(r'\\\\s+',' ',u) before matching, so a claim wrapped across source lines still matches. Identifier list taken by command, not memory: git diff a69bbac4..4e1f22cb -- scripts/mcp_spine_server.py | grep -E '^[-+](def |[A-Z_]+ *[:=])' -> deleted CALLLOG, START_MARKER, REJECTIONLOG; changed contract on SPINE and ENGINE; plus the .mcp.json demo default. PASS 1 over scripts/ tests/ examples/ docs/: 207 files, 36 raw hits, every one read by hand. PASS 2 added the pattern pass 1 MISSED -- prose that quotes the deleted module-scope code form, os.environ[\"SPINE_(FILE|ENGINE)\"] and SPINE = Path(os.environ...) -- which I found by noticing scripts/hooks/spine_rail.py:1081 was a real invalidated claim my first pattern set did not match; 198 files, 7 hits. COUNT: LIVE IN-SCOPE INVALIDATED CLAIMS = 0. Classification of every hit: 4 texts frame the old form HISTORICALLY or quote it to mark that it changed, and are correct not stale (mcp_spine_server.py:157 'this used to be', :798 'this used to read', :879 quoting 'bound at server-launch time' is now 'bound at launch OR at spine_open', test_mcp_identity.py:494 'this used to read ... at import'); ~14 KeyError hits are unrelated subjects (the engine's own missing-items KeyError, crew-resume legacy entries, template drift) ; mcp_spine_server.py:732 and test_mcp_identity.py:1048 both describe call_tool's 'raise KeyError(name)' on an unknown tool name, which is the LAST statement of call_tool and still live -- a false positive of my own classifier, not a stale claim; test_install_constellation.py:4021 and test_wire_mcp_interpreter.py:42 carry the old demo-default string but only as arbitrary FIXTURE data for interpreter-placeholder rewriting, asserting nothing about the shipped .mcp.json; examples/mcp-interactive-demo/README.md:10 keeps the demo path only as the explicit SPINE_FILE=... launch line the dropped default now makes necessary, and its own opening paragraph says '.mcp.json no longer defaults to it'; test_mcp_identity.py:861's 'moving SPINE_FILE in the environment cannot move where the door points' is still true, since _unbound_refusal reads the module global SPINE per call and never re-reads the env; test_mcp_lifecycle.py:200's corrected message is accurate (SPINE_PARENT is genuinely re-read fresh at :1031 and is genuinely untouched by _bind_process_to, so it is still server-launch-time state). Constraint compliance: __pycache__ cleared before every measurement (#597); every suite run used env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "REWORK-3 item 2 asks one question about docs/CHECKLIST_ENGINE_DESIGN.md -- is the new text accurate. Two clauses of the new sentence at :295-298 are not. It reads: 'The server binds SPINE_FILE, SPINE_ENGINE and SPINE_SESSION from its environment when it launches, and -- since issue #603 -- again when a successful spine_open binds the process to the spine it just minted (_bind_process_to ...)'. Against the AST, _bind_process_to's entire body is: global SPINE, SESSION / SPINE = Path(spine_file).resolve() / SESSION = session / os.environ['SPINE_FILE'] = str(SPINE) / os.environ['SPINE_SESSION'] = session (mcp_spine_server.py:913-917). So (a) SPINE_ENGINE is NOT among what is bound 'again' -- ENGINE is derived once at module scope by _engine_from_env() and _bind_process_to never touches it or the SPINE_ENGINE variable; the sentence enumerates three where the second moment binds two. (b) 'binds ... from its environment ... and again when spine_open' has the direction backwards for the second moment: those two values come from open_work's RETURN VALUE (_spine_open:1041 passes opened['SPINE_FILE'], opened['SPINE_SESSION']) and are WRITTEN INTO the environment, not read from it. The load-bearing half of the paragraph is accurate and I verified it: there really are two binding moments, _bind_process_to really is the second, neither is a tool argument, and _rebind_refusal really does block the swap while a lease is held. This is the same defect class as blocker 2 -- prose that does not describe the code that runs -- at materially lower severity: it is design-doc narrative rather than a test-failure message a future debugger would act on, and the fix is a two-word edit. Recorded fail so the finding survives; carried past consolidation by an explicit override rather than downgraded, and filed as a triage candidate.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/cleanup-a-door/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/cleanup-a-door/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/cleanup-a-door/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass rendered independently over the gate's whole change at 5a626351 and written to .agent-work/cleanup-a-door/FOWLER_PASS.json; scripts/verify_fowler_pass.py exits 0 (smells=12, flagged=['shotgun-surgery'], overridden=['duplicated-code','data-clumps','primitive-obsession','comments-as-deodorant'], each override carrying its standard and reason). One smell flagged: shotgun-surgery. It is not a taste call -- one fact, when the door acquires identity, is restated as unchecked prose across 23 sites by measured sweep (12 in mcp_spine_server.py, 9 across four test modules, 2 in docs/CHECKLIST_ENGINE_DESIGN.md; upper bound, since it also catches refusal text and test names), and THREE of this gate's four rework cycles were one of those restatements drifting from the code, my own r5 finding being the fourth instance. Only two sites are mechanically tied to the code by AST pins; the rest can drift silently and repeatedly have. Already a triage candidate and acknowledged in the handoff as beyond this gate -- I concur it is out of scope to fix here, and record it flagged rather than overridden because no repo standard sanctions it; CREW_CONTEXT.md's 'assert against behaviour, never against text that describes it' points the other way.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/cleanup-a-door/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [
+      "r5-reconciliation: REWORK-3 item 2 asks one question about docs/CHECKLIST_ENGINE_DESIGN.md -- is the new text accurate. Two clauses of the new sentence at :295-298 are not. It reads: 'The server binds SPINE_FILE, SPINE_ENGINE and SPINE_SESSION from its environment when it launches, and -- since issue #603 -- again when a successful spine_open binds the process to the spine it just minted (_bind_process_to ...)'. Against the AST, _bind_process_to's entire body is: global SPINE, SESSION / SPINE = Path(spine_file).resolve() / SESSION = session / os.environ['SPINE_FILE'] = str(SPINE) / os.environ['SPINE_SESSION'] = session (mcp_spine_server.py:913-917). So (a) SPINE_ENGINE is NOT among what is bound 'again' -- ENGINE is derived once at module scope by _engine_from_env() and _bind_process_to never touches it or the SPINE_ENGINE variable; the sentence enumerates three where the second moment binds two. (b) 'binds ... from its environment ... and again when spine_open' has the direction backwards for the second moment: those two values come from open_work's RETURN VALUE (_spine_open:1041 passes opened['SPINE_FILE'], opened['SPINE_SESSION']) and are WRITTEN INTO the environment, not read from it. The load-bearing half of the paragraph is accurate and I verified it: there really are two binding moments, _bind_process_to really is the second, neither is a tool argument, and _rebind_refusal really does block the swap while a lease is held. This is the same defect class as blocker 2 -- prose that does not describe the code that runs -- at materially lower severity: it is design-doc narrative rather than a test-failure message a future debugger would act on, and the fix is a two-word edit. Recorded fail so the finding survives; carried past consolidation by an explicit override rather than downgraded, and filed as a triage candidate."
+    ],
+    "summary": "APPROVE at 5a626351. All five REWORK-3 items verified independently: the four corrected claims check out against the AST (not neighbouring prose); the rework changed no behaviour and the one deleted test-setup line is proved inert by running the affected test under three ambient SPINE_FILE values; my own two-pass AST-aware blast-radius sweep finds ZERO live in-scope invalidated claims; the clean-env suite reproduces the Commander's exact 3093 passed / 6 skipped / 1153 subtests / 0 failed. One recorded fail carried by override, not downgraded: docs/CHECKLIST_ENGINE_DESIGN.md:295-298 over-states the spine_open binding moment on two counts. Three triage candidates, one of which materially completes the Admiral float.",
+    "override_reason": "The single fail is one sentence of design-doc narrative, not behaviour, not a test pin, and not text a debugger would act on: it enumerates SPINE_ENGINE among the values rebound at spine_open (only SPINE_FILE/SPINE_SESSION are) and describes the direction of that binding backwards. Everything #603 actually asked for -- fail closed on all five unbound inputs, bind on open through to a successful claim, the fenced identity guard intact -- is verified and green, across four reviews. Blocking a fourth time on a two-word prose scope slip, when the rework cap is reached and a further BLOCK escalates to the Admiral, would be disproportionate to the defect. The finding is preserved verbatim as a recorded fail and filed as triage candidate tc1 so it cannot be lost."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "docs/CHECKLIST_ENGINE_DESIGN.md:295-298 over-states the spine_open binding moment: it enumerates SPINE_ENGINE among the values rebound (only SPINE_FILE/SPINE_SESSION are, per _bind_process_to at mcp_spine_server.py:913-917) and says they are bound 'from its environment' at that moment when they in fact come from open_work's return value and are written INTO the environment. Two-word class of fix."
+    },
+    {
+      "id": "tc2",
+      "from": "r4-quality",
+      "statement": "A THIRD site restates the door-binding contract that #603 invalidated, beyond the two the Commander is floating to the Admiral: tests/test_spine_rail.py:2698-2699 comments 'The MCP door ... reads SPINE_FILE/SPINE_SESSION from its OWN environment (scripts/mcp_spine_server.py: SPINE = Path(os.environ[\"SPINE_FILE\"]).resolve())'. That is the same quoted, now-deleted module-scope form as scripts/hooks/spine_rail.py:1081, in the same lane's test file. The Admiral float should name three cross-lane sites, not two: scripts/run_crew.py:468-471, scripts/hooks/spine_rail.py:1081, tests/test_spine_rail.py:2698. My pass-1 sweep missed all three; only a pattern matching the quoted CODE FORM found them."
+    },
+    {
+      "id": "tc3",
+      "from": "r2-scope",
+      "statement": "tests/test_mcp_lifecycle.py:335 and :343-346 are now dead scaffolding: saved_spine_file is captured and restored in the finally, but 5a626351 deleted the only statement in the try block that wrote os.environ['SPINE_FILE']. Harmless, and arguably defensible as a guard should _spine_open ever reach _bind_process_to from this test, but it is the residue of the deleted line and the addendum's 'the comment AND the inert write deleted together' did not account for it."
+    }
+  ],
+  "blockers": [],
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "constellation/cleanup-a-door/g3-final2/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-16T16:32:42.905090+00:00",
+    "last_heartbeat": "2026-08-16T16:42:18.686571+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T16:44:18.167223+00:00"
+  }
+}

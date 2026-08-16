@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "work_id": "cleanup-a-door",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "70fc98d8194a28f9f8fc2be73e8455ba556e15b81e9b28fdd82eeb11883b6b10",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/GLOSSARY.md",
+      "content_hash": "574e9ef4f494522653ea8d62cb58a1138f5bf385a17e95a75629bccd3c0340ee",
+      "source": "agent-declared"
+    },
+    {
+      "path": "map/INDEX.md",
+      "content_hash": "ba031fe32eab95807c06e02c2383a77422a9e0f2571450a4c54cd4572cd7effe",
+      "source": "agent-declared"
+    },
+    {
+      "path": "README.md",
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb",
+      "source": "known-fallback"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "The MCP door (scripts/mcp_spine_server.py), .mcp.json, and examples/mcp-interactive-demo/ have no citable map anchor: map/ids.jsonl is tracked but EMPTY (0 bytes), so map_orient cannot resolve any anchor id even though map/INDEX.md carries 27KB of generated per-package structure. The whole repo is anchor-unciteable, not just this lane's area."
+  ],
+  "escalation": "To the Admiral (admiral-568-cleanup): map/ids.jsonl is empty in the tracked tree at base a69bbac4, so map-orientation degrades for EVERY commander in this repo and the plan step's verify-frame anchor gate cannot be satisfied by any frame. Out of this lane's file ownership (map/ is not mine this wave). Filed as a triage candidate; not fixed here.",
+  "emitted_at": "2026-08-16T12:32:23.626466+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

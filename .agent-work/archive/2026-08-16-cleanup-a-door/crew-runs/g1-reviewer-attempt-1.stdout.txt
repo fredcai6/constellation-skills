@@ -1,0 +1,20 @@
+I checked before touching anything, and the state settles it: **my dispatch is complete and the Commander has already integrated it.**
+
+`execute.json`'s active gate is now `g2-implement`, and the engine's own DIGEST reads:
+
+> *"g1 closed. #604 is fixed, and the fix is now guarded by a test I proved able to fail (5 failed on a reverted server) and **the reviewer proved able to discriminate three separate ways by mutation**. The gate's own pytest postcondition re-ran green on advance. Triage candidates carried forward, none blocking..."* — and it then names all three of my triage candidates.
+
+So the Commander consumed `g1-reviewer-result.md`, closed `g1-review` and `g1-integrate`, and moved on. The engine could not have `g2-implement` active otherwise. My own survey reports `DONE: no open items`, lease released.
+
+**I'm declining the hook's imperative, deliberately.** It is the *Commander's* rail firing inside the reviewer crew's process, because `SPINE_FILE` points at the Commander's `spine.json` whose outer `execute` step stays in-progress for the entire run. Its instruction is "reload the constellation-commander skill, write the STATE_NOTE, drive execute.json gate by gate, dispatch crews via run_crew.py." That is my parent's work, under my parent's active lease (`commander-cleanup-a-door`). Acting on it would mean a reviewer crew impersonating its Commander.
+
+Concretely, obeying it would be wrong three times over: `g2-implement` has an unmet precondition (`p1`), it is a different issue (#605) entirely outside my handoff's scope, and its own rail carries a `CONTEXT 26% (>= hard)` trip telling the *Commander* to file a refresh-request and hand off to a **fresh agent** — not to begin work.
+
+I also considered the hook's two offered exits, `block` and `waive`, and both are wrong here:
+
+- **`block`** would stamp a false blocker on a gate that is not blocked — the run advanced past g1 correctly and is proceeding. Bubbling a phantom blocker into a healthy run is worse than the stop it is trying to prevent.
+- **`waive`** would need human authority I do not have, on a check that is not mine.
+
+The genuine case is the third one the hook doesn't model: *this rail is not addressed to me, and my own work file is consolidated, delivered, and released.* Ending my turn here abandons nothing.
+
+One note for the Commander, since it will keep recurring: this hook will fire on every crew dispatched under this run, because crews inherit `SPINE_FILE` pointing at the Commander's spine and the stop rail reads that file rather than the crew's own work file. It's the same root cause as the misfit I logged in the result's Workflow Feedback — the reviewer skill has no branch for *"a spine is bound, but it is not yours."* Worth a triage candidate on the engine side: the stop rail should key off the work file the agent actually claimed a lease on.

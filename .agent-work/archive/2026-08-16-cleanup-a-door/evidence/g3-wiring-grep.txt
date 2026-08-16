@@ -1,0 +1,59 @@
+# g3 WIRING GREP (required). Every new symbol, with call sites OUTSIDE its own
+# definition and OUTSIDE any self-test, and the COUNT. Zero external call sites
+# is a stop condition -- a binder nothing calls is the shipped-inert failure.
+# 2026-08-16T07:26:20-07:00
+
+_spine_from_env
+  external call sites in scripts/mcp_spine_server.py: 1
+    :190   in <module scope>                     SPINE: Path | None = _spine_from_env()
+
+_engine_from_env
+  external call sites in scripts/mcp_spine_server.py: 1
+    :189   in <module scope>                     ENGINE = _engine_from_env()
+
+_telemetry_path
+  external call sites in scripts/mcp_spine_server.py: 3
+    :235   in _calllog                           return _telemetry_path("SPINE_CALLLOG", "mcp_calls.jsonl")
+    :243   in _start_marker                      return _telemetry_path("SPINE_START_MARKER", "mcp_server_started")
+    :255   in _rejectionlog                      return _telemetry_path("SPINE_REJECTION_LOG", "mcp_rejections.jsonl")
+
+_calllog
+  external call sites in scripts/mcp_spine_server.py: 1
+    :296   in _log                               calllog, start_marker = _calllog(), _start_marker()
+
+_start_marker
+  external call sites in scripts/mcp_spine_server.py: 1
+    :296   in _log                               calllog, start_marker = _calllog(), _start_marker()
+
+_rejectionlog
+  external call sites in scripts/mcp_spine_server.py: 1
+    :703   in _log_rejection                     destination = _rejectionlog()
+
+_unbound_refusal
+  external call sites in scripts/mcp_spine_server.py: 3
+    :646   in run_engine                         refusal = _unbound_refusal()
+    :932   in _rebind_refusal                    if spine is None or not SESSION or _unbound_refusal() is not None:
+    :1710  in main                               unbound = None if nm in BINDS_WITHOUT_A_BOUND_SPINE else _unbound_refusal(
+
+_bind_process_to
+  external call sites in scripts/mcp_spine_server.py: 1
+    :1028  in _spine_open                        _bind_process_to(opened["SPINE_FILE"], opened["SPINE_SESSION"])
+
+_rebind_refusal
+  external call sites in scripts/mcp_spine_server.py: 1
+    :994   in _spine_open                        blocked = _rebind_refusal()
+
+BINDS_WITHOUT_A_BOUND_SPINE
+  external call sites in scripts/mcp_spine_server.py: 1
+    :1710  in main                               unbound = None if nm in BINDS_WITHOUT_A_BOUND_SPINE else _unbound_refusal(
+
+_HOW_TO_BIND
+  external call sites in scripts/mcp_spine_server.py: 1
+    :413   in _unbound_refusal                   f"to act on. {_HOW_TO_BIND}"
+
+_HOW_TO_REBIND
+  external call sites in scripts/mcp_spine_server.py: 1
+    :428   in _unbound_refusal                   f"bound that this tool could act on. {_HOW_TO_REBIND}"
+
+## And the new tests that exercise them (not counted above -- self-tests are excluded by the rule):
+  test references: 11

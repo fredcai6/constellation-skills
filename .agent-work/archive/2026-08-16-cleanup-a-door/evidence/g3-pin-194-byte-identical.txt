@@ -1,0 +1,16 @@
+# g3: tests/test_mcp_lifecycle.py:194 and its positive control -- BYTE-IDENTICAL check
+# baseline 408e6d26 (the gate's start), 2026-08-16T07:14:44-07:00
+
+## Every changed line in test_mcp_lifecycle.py that touches the guarded region:
+  (none -- the guarded region has no added or removed lines)
+
+## The three guarded objects, extracted from BOTH trees and compared byte for byte:
+  IDENTICAL    BANNED_IDENTIFIERS  (55 bytes)
+  IDENTICAL    _referenced_names  (168 bytes)
+  IDENTICAL    test_spine_open_never_references_spine_session_or_run_engine  (637 bytes)
+  IDENTICAL    test_the_spine_open_identity_pin_can_fail  (872 bytes)
+  IDENTICAL    SpineOpenNeverBindsIdentityTests  (3748 bytes)
+
+## And it still passes, unweakened:
+....                                                                     [100%]
+4 passed in 0.02s

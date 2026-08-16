@@ -1,0 +1,12 @@
+# Driving this demo makes the engine write its per-run state next to the spine
+# file it was pointed at -- which, for the shipped demo, is this tracked
+# directory. Those side-cars are scratch from someone trying the demo, not
+# content this example ships, and they embed the driver's own absolute paths.
+#
+# This is a deliberate exception to the root .gitignore's "engine journals are
+# NOT excluded" rule. That rule protects the tamper-evident audit trail of a
+# real run under .agent-work/. This spine is a throwaway fixture with no run
+# history to preserve: `python make_demo_spine.py` resets it from scratch.
+spine.json.journal
+context/
+mechanical/

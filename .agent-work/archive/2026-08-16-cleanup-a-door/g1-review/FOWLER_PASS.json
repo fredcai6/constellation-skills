@@ -1,0 +1,83 @@
+{
+  "work_id": "cleanup-a-door",
+  "diff_ref": "commit 0060dc08 (gate g1, issue #604) -- scripts/mcp_spine_server.py +43/-4 (one hunk: new _report_dropped_telemetry, _log guarded) and tests/test_mcp_door_telemetry.py (new, 262 lines). NOTE: the handoff names 8b1d3208; the server file is byte-identical between the two and HEAD only adds one test.",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, skills/constellation-reviewer/references/global-crew.md, skills/constellation-reviewer/references/global-everyone.md, and scripts/mcp_spine_server.py's own module docstring",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "_log is 26 lines, 15 of them docstring -- 11 lines of code doing two guarded writes. _report_dropped_telemetry is 12 lines, 6 of them docstring. The longest new test method is 14 lines. Nothing here is long by any reading.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "The diff adds one module-private function and no class, and expands no responsibility -- it makes one existing function safer. scripts/mcp_spine_server.py is 1415 lines, which is large, but that predates this change and the change does not push it toward doing a second job. Flagging a pre-existing module size under a diff-scoped pass would be stretching the smell rather than using it. The new test module's two classes (DoorRun, 3 methods; TelemetryNeverFatalTests, 7 tests + 2 helpers) are both small and cohesive.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The new _report_dropped_telemetry body (:187-191) and the existing inline stderr block inside _log_rejection (:530-534) are the same five lines modulo one label: sys.stderr.write of an f-string reading '<PREFIX>: could not write to {target} ({type(exc).__name__}: {exc}). Lost record: {lost}', then sys.stderr.flush(). Only the prefix differs -- 'TELEMETRY WRITE FAILED' vs 'REJECTION CAPTURE FAILED'. The implementer named this itself, describing the new helper as reusing _log_rejection's shape, and it reused the shape by copying it rather than by extracting it. One _report_lost_record(kind, target, exc, lost) would carry both, and the two lost-record diagnostics would then be guaranteed to stay the same shape as each other, which is what a diagnosis reading either one wants. NOT a blocker and NOT in g1's scope: it is two occurrences, Fowler's rule of three says two is a watch rather than a refactor, and collapsing them would edit _log_rejection, which g1 was not asked to touch. Raised as an observation for the Commander.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "_report_dropped_telemetry touches only its own three parameters and sys.stderr. It reaches into no other object's data.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "(target, exc, lost) travels together in exactly one signature. A clump needs the same group recurring across several signatures; the second conceptual occurrence is the inline block already counted under duplicated-code, and counting it twice would inflate the pass rather than sharpen it.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "The types are the right ones, not stand-ins: target is a Path, exc is an OSError, and lost is deliberately a str because _log serialises the record once at :209 and hands the SAME string to both the file write and the drop report -- so what gets reported is byte-identical to what would have been written. Passing the dict instead would re-serialise and could diverge.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "Three parameters, each load-bearing and none boolean.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "The opposite: the whole server-side fix is a single diff hunk (@@ -177,11 +177,46 @@) inside one function's neighbourhood. run_engine's call site did not have to move, which is the evidence the change was made at the right place.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "_log is being changed for one reason -- the durability of telemetry writes -- which is the reason it exists to have. No unrelated concern was folded in.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "No chained navigation in the diff. type(exc).__name__ is a single attribute read, not a chain through intermediaries.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "The helper is parameterised on (target, exc, lost) and has two real call sites -- both guards in _log. Two adapters make a real seam rather than a hypothetical one, per the inherited deep-module vocabulary. Nothing is generalised for a caller that does not exist: no hook, no config flag, no unused branch.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "The ratio alone looks like the smell: _log's docstring is 15 lines against 11 lines of code, and the new helper's is 6 against 5. On the usual reading that is prose compensating for code that does not explain itself.",
+      "override": {
+        "repo_standard": "skills/constellation-reviewer/references/global-crew.md, Implementation discipline: 'Match the surrounding code's naming, labeling, and in-file documentation conventions -- the project's specific conventions are the local delta.' The surrounding convention in this module is uniform and unmistakable: _log_rejection, _write_amend_delta, _git_rev_parse, _resolve_confined, _utf8_stdio and the 60-line module docstring all carry long why-first docstrings, several of which end in an explicit 'do not simplify this back' instruction.",
+        "reason": "The docstrings are not restating the code -- every line of them carries something unreadable FROM the code: why the catch is OSError and deliberately not bare Exception, why the two writes are guarded separately rather than by one try, why the report goes to stderr and never stdout (main() puts JSON-RPC on stdout), and the issue #604 history that makes the guard necessary at all. Strip them and the next reader has no way to recover any of it, which is the test that separates deodorant from rationale. Matching the module's documented convention wins over the ratio."
+      }
+    }
+  ],
+  "rail_exception": null
+}

@@ -1,0 +1,35 @@
+# g3 evidence #4: the module-wide assignment pin's MUTATED POSITIVE CONTROL
+# 2026-08-16T07:14:29-07:00
+
+## Mutation applied to the REAL scripts/mcp_spine_server.py:
+##   a second rebind site, _quietly_retarget_the_session, doing 'global SESSION; SESSION = ...'
+## This is the regression the _spine_open-scoped ban at tests/test_mcp_lifecycle.py:194
+## structurally CANNOT see, because it walks one function's subtree.
+
+### the NEW module-wide pin (must go RED):
+
+    def test_spine_and_session_are_assigned_only_at_module_scope_and_by_the_one_binder(self):
+        found = _assignments_to(SOURCE, IDENTITY_GLOBALS)
+        for name in sorted(IDENTITY_GLOBALS):
+            scopes = found[name]
+            self.assertIn("<module>", scopes, f"{name} is no longer bound at import")
+            self.assertIn(THE_ONE_BINDER, scopes,
+                          f"{name} is not assigned by {THE_ONE_BINDER} -- the binder is inert")
+>           self.assertEqual(
+                {"<module>", THE_ONE_BINDER}, set(scopes),
+                f"{name} is assigned somewhere other than module scope and {THE_ONE_BINDER}: "
+                f"{sorted(set(scopes) - {'<module>', THE_ONE_BINDER})}. One spine per process "
+                f"survives only while exactly one named function can move this door's identity; "
+                f"route the new rebind through {THE_ONE_BINDER} instead of adding a second site.",
+            )
+E           AssertionError: Items in the second set but not the first:
+E           '_quietly_retarget_the_session' : SESSION is assigned somewhere other than module scope and _bind_process_to: ['_quietly_retarget_the_session']. One spine per process survives only while exactly one named function can move this door's identity; route the new rebind through _bind_process_to instead of adding a second site.
+
+tests/test_mcp_lifecycle.py:574: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_mcp_lifecycle.py::OneBinderPinTests::test_spine_and_session_are_assigned_only_at_module_scope_and_by_the_one_binder
+1 failed, 2 passed in 0.03s
+
+### the pre-existing :194 ban under the SAME mutation (stays green -- it cannot see this):
+....                                                                     [100%]
+4 passed in 0.02s

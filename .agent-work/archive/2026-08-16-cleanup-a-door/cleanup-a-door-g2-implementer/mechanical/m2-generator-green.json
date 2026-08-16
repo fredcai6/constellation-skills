@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-generator-green",
+  "mechanical": {
+    "run": "cleanup-a-door-g2-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m2-generator-green",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-a-door-g2-implementer-m2-generator-green@f70e4dd8c7fdbdb0259bcf7c028b638a350a5098",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-a-door-g2-implementer",
+    "generated_at": "2026-08-16T13:26:13Z"
+  }
+}

@@ -1,0 +1,187 @@
+# Blast-radius sweep for commit 4e1f22cb -- BEFORE the rework
+# revision: 4e1f22cb890c80514235030b504481faccad5dbb
+
+## Step 1 -- the identifiers the commit REMOVED, derived from the commit, not from memory
+$ git show 4e1f22cb -U0 | grep -E "^-" | grep -oE "^-\s*(def [_a-zA-Z0-9]+|class [_a-zA-Z0-9]+|[A-Z][A-Z0-9_]{2,} *=)" | sed -E "s/^-\s*(def |class )?//; s/ *=$//" | sort -u
+CALLLOG
+ENGINE
+REJECTIONLOG
+SPINE
+START_MARKER
+test_mcp_json_referenced_spine_file_exists_and_loads
+test_removed_spine_directory_still_runs
+
+## Step 2 -- which of those are GONE from the tree today (SPINE and ENGINE survive as module globals, re-bound rather than removed)
+CALLLOG                                              defined-now: NO -- removed
+ENGINE                                               defined-now: scripts/mcp_spine_server.py:189:ENGINE = _engine_from_env()
+REJECTIONLOG                                         defined-now: NO -- removed
+SPINE                                                defined-now: scripts/hooks/spine_rail.py:1081:    existing contract (`SPINE = Path(os.environ["SPINE_FILE"]).resolve()`),
+START_MARKER                                         defined-now: NO -- removed
+test_mcp_json_referenced_spine_file_exists_and_loads defined-now: NO -- removed
+test_removed_spine_directory_still_runs              defined-now: NO -- removed
+
+## Step 3 -- every surviving reference to a REMOVED identifier, whole tracked tree
+$ git grep -n -w -E "CALLLOG|REJECTIONLOG|START_MARKER|test_mcp_json_referenced_spine_file_exists_and_loads|test_removed_spine_directory_still_runs"
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/crew-handoffs/g2-implement-implementer-result.md:17:- `scripts/mcp_spine_server.py` — `REJECTIONLOG` path, `_log_rejection()`, `_tool_error()`
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/evidence/g2-friction-capture/seed_rejections.py:27:REJECTIONLOG = HERE / "mcp_rejections.jsonl"
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/evidence/g2-friction-capture/seed_rejections.py:28:CALLLOG = HERE / "mcp_calls.jsonl"
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/evidence/g2-friction-capture/seed_rejections.py:29:START_MARKER = HERE / "mcp_server_started"
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/evidence/g2-friction-capture/seed_rejections.py:58:        env["SPINE_CALLLOG"] = str(CALLLOG)
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/evidence/g2-friction-capture/seed_rejections.py:59:        env["SPINE_START_MARKER"] = str(START_MARKER)
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/evidence/g2-friction-capture/seed_rejections.py:60:        env["SPINE_REJECTION_LOG"] = str(REJECTIONLOG)
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/evidence/g2-friction-capture/seed_rejections.py:91:    if REJECTIONLOG.exists():
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/evidence/g2-friction-capture/seed_rejections.py:92:        REJECTIONLOG.unlink()
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/evidence/g2-friction-capture/seed_rejections.py:93:    if CALLLOG.exists():
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/evidence/g2-friction-capture/seed_rejections.py:94:        CALLLOG.unlink()
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/evidence/g2-friction-capture/seed_rejections.py:119:    if REJECTIONLOG.exists():
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/evidence/g2-friction-capture/seed_rejections.py:120:        text = REJECTIONLOG.read_text(encoding="utf-8")
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/g2-implement-IMPLEMENTER_PLAN.json:354:      "why": "Implemented door-own rejection capture inside scripts/mcp_spine_server.py. Because call_tool()'s existing choke-point pin (tests/test_mcp_identity.py::IdentityBindingPinTests) restricts every return in that function to literally as_result(run_engine(...)) or _tool_error(...), I first tried a separate _reject() wrapper and it broke that pin (14 offenders) -- so I folded the logging into _tool_error itself via optional tool=/rejection_class= kwargs instead of adding a new call shape, which keeps the pin's AST check satisfied while giving every in-scope rejection its own JSONL record. REJECTIONLOG defaults beside the spine (SPINE_REJECTION_LOG env override), one record per call to _log_rejection with a write-failure path that writes a fresh stderr line on every occurrence, never batched. python -m pytest -q tests/test_mcp_friction_capture.py tests/test_mcp_spine_server.py tests/test_mcp_identity.py tests/test_mcp_imperative_equivalence.py -> 55 passed. Full suite: 2282 passed, 1 skipped, 1 failed (map/INDEX.md staleness, expected and deferred to the guards step). git diff against scripts/checklist_engine.py is empty. Demo script still 12/12.",
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/g2-review/fowler-pass.json:3:  "diff_ref": "commit ef4b13c1 (e2b8f04e..ef4b13c1) -- scripts/mcp_spine_server.py (REJECTIONLOG, _log_rejection, _tool_error extended with optional tool=/rejection_class=, all 15 in-scope call sites), tests/test_mcp_friction_capture.py (new, 7 tests)",
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/g2-review/fowler-pass.json:33:      "finding": "_log_rejection operates only on its own parameters and the module-level REJECTIONLOG; it reaches into no other object's internals.",
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/g2-review/fowler-pass.json:75:      "finding": "No chained accessor calls introduced; REJECTIONLOG.open(...) is a single call on a module-level Path.",
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/g2-review/fowler-pass.json:81:      "finding": "REJECTIONLOG follows the exact existing CALLLOG/START_MARKER optional-env-var-with-default pattern already in the file; no new abstraction, hook, or unused generality is introduced for a hypothetical future need.",
+.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/commander-f2/g2-review/review.json:91:      "finding": "Handoff constraints checked one by one: python -m pytest used exclusively throughout this review (never python3). No command piped into head/tail with its exit code read -- every output redirected to a scratchpad file, exit captured via echo EXIT:$?. No backticks or command-looking text placed inside any engine finding/summary string I authored (checked by grepping this survey file; the one backtick hit is pre-existing r6-fowler template imperative text, not mine). episodes/ untouched by me; confirmed via git diff that the implementer's own episode write went only through apply_episode_delta.py (delta file + CLI created-episode message), never a hand-edit. Every file write in the diff (REJECTIONLOG.open in _log_rejection, spine.json writes in the test file and seed_rejections.py) passes encoding='utf-8', newline='\\n' explicitly. Work stayed in this worktree; the one detached worktree I created for A/B testing map staleness across commits (scripts/checklist_engine.py unrelated, read-only comparison) was removed via git worktree remove --force immediately after use, confirmed by git worktree list showing no extra entries.",
+.agent-work/cleanup-a-door/FOWLER_PASS.json:17:    {"smell": "comments-as-deodorant", "verdict": "flagged", "finding": "The house style here is heavy explanatory docstrings (the pre-existing _identity_violation is the same), and matching it is what CREW_CONTEXT.md asks for -- so volume alone is not the finding. The finding is that three of these docstrings have now DRIFTED from the code they explain, which is the failure mode this smell actually names, in a repo whose own standard says 'docstrings are hand-authored and none is checked against what runs': (1) _log_rejection:685 still says it appends to REJECTIONLOG, an identifier this same commit deleted; (2) _spine_open:962-963 still says the root comes from 'ambient SPINE_FILE, re-read fresh', which is precisely the os.environ read this commit removed; (3) examples/mcp-interactive-demo/README.md:69 still cites test_mcp_json_referenced_spine_file_exists_and_loads, renamed by this same commit. Where prose carries this much of the design, drifting prose is a defect in the design record, not a cosmetic issue. Reported in full under r4-quality.", "override": null}
+.agent-work/cleanup-a-door/MISSION_FRAME.md:32:- `scripts/mcp_spine_server.py:162,167,177` — `CALLLOG`, `START_MARKER`, `REJECTIONLOG`,
+.agent-work/cleanup-a-door/MISSION_FRAME.md:77:  `CALLLOG`, `START_MARKER`, `REJECTIONLOG` and `_resolve_confined`'s `bound_dir` default
+.agent-work/cleanup-a-door/crew-handoffs/g1-implementer-handoff.md:15:- `_log` (`scripts/mcp_spine_server.py:180-184`) opens `CALLLOG` with no guard, and writes
+.agent-work/cleanup-a-door/crew-handoffs/g1-implementer-handoff.md:16:  `START_MARKER` in the same function, also unguarded.
+.agent-work/cleanup-a-door/crew-handoffs/g1-implementer-handoff.md:68:- **Preserve the environment overrides.** `CALLLOG`, `START_MARKER` and `REJECTIONLOG`
+.agent-work/cleanup-a-door/crew-handoffs/g1-implementer-handoff.md:80:- Do not "fix" the start-marker semantics while you are in there. `START_MARKER` is written
+.agent-work/cleanup-a-door/crew-handoffs/g1-implementer-result.md:21:| `:181` | `CALLLOG.open("a")` in `_log` | **unguarded — mine** |
+.agent-work/cleanup-a-door/crew-handoffs/g1-implementer-result.md:22:| `:184` | `START_MARKER.write_text` in `_log` | **unguarded — mine** |
+.agent-work/cleanup-a-door/crew-handoffs/g1-implementer-result.md:23:| `:492` | `REJECTIONLOG.open("a")` in `_log_rejection` | already guarded, `try/except OSError` at `:494` |
+.agent-work/cleanup-a-door/crew-handoffs/g1-implementer-result.md:201:`grep -rn "mcp_calls\|START_MARKER\|SPINE_CALLLOG" docs/ skills/` returns **zero** hits —
+.agent-work/cleanup-a-door/crew-handoffs/g1-implementer-result.md:213:214:        _report_dropped_telemetry(CALLLOG, exc, line)
+.agent-work/cleanup-a-door/crew-handoffs/g1-implementer-result.md:214:219:        _report_dropped_telemetry(START_MARKER, exc, f"start marker for {SPINE}")
+.agent-work/cleanup-a-door/crew-handoffs/g1-reviewer-handoff.md:14:`CALLLOG` and `START_MARKER` unguarded; `run_engine` calls `_log(rec)` at `:461` outside
+.agent-work/cleanup-a-door/crew-handoffs/g1-reviewer-result.md:48:| a | `:211-212` `CALLLOG` append | telemetry | yes — `except OSError` `:213` |
+.agent-work/cleanup-a-door/crew-handoffs/g1-reviewer-result.md:49:| b | `:217` `START_MARKER.write_text` | telemetry | yes — `except OSError` `:218` |
+.agent-work/cleanup-a-door/crew-handoffs/g1-reviewer-result.md:50:| c | `:527-528` `REJECTIONLOG` append | telemetry | yes — `except OSError` `:529` (pre-existing, #541) |
+.agent-work/cleanup-a-door/crew-handoffs/g2-implementer-handoff.md:75:  (`test_mcp_json_referenced_spine_file_exists_and_loads`) **still passes.** It asserts
+.agent-work/cleanup-a-door/crew-handoffs/g2-implementer-result.md:184:- `env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_mcp_spine_server.py tests/test_wire_mcp_interpreter.py tests/test_install_constellation.py` → **237 passed, 505 subtests**. `test_mcp_json_referenced_spine_file_exists_and_loads` passes **unchanged** — no reconciliation was needed, because (b) keeps the spine committed.
+.agent-work/cleanup-a-door/crew-handoffs/g2-reviewer-result.md:152:`test_mcp_json_referenced_spine_file_exists_and_loads`, unchanged.
+.agent-work/cleanup-a-door/crew-handoffs/g3-implementer-handoff.md:54:| `:162` | `CALLLOG` |
+.agent-work/cleanup-a-door/crew-handoffs/g3-implementer-handoff.md:55:| `:167` | `START_MARKER` |
+.agent-work/cleanup-a-door/crew-handoffs/g3-implementer-handoff.md:56:| `:177` | `REJECTIONLOG` |
+.agent-work/cleanup-a-door/crew-handoffs/g3-implementer-handoff.md:181:- **Answer what `CALLLOG` / `START_MARKER` / `REJECTIONLOG` ARE when nothing is bound.**
+.agent-work/cleanup-a-door/crew-handoffs/plan-critic-result.md:298:`_log` opens `CALLLOG` under a nonexistent `SPINE.parent`, raising `FileNotFoundError`,
+.agent-work/cleanup-a-door/crew-handoffs/plan-critic-result.md:300:one #603 needs: with no binding there is no `SPINE.parent` to derive `CALLLOG` from at all,
+.agent-work/cleanup-a-door/crew-handoffs/plan-critic-result.md:303:`CALLLOG`/`START_MARKER`/`REJECTIONLOG` when nothing is bound" — a question the plan's
+.agent-work/cleanup-a-door/crew-handoffs/plan-critic-result.md:371:  L162  CALLLOG      = ... str(SPINE.parent / "mcp_calls.jsonl")
+.agent-work/cleanup-a-door/crew-handoffs/plan-critic-result.md:372:  L167  START_MARKER = ... str(SPINE.parent / "mcp_server_started")
+.agent-work/cleanup-a-door/crew-handoffs/plan-critic-result.md:373:  L177  REJECTIONLOG = ... str(SPINE.parent / "mcp_rejections.jsonl")
+.agent-work/cleanup-a-door/crew-plans/g1-implementer-plan.json:23:          "satisfied_by": "Handoff complete: task, protected intent, test mode, close criteria, allowed scope, exclusions, constraints, map anchors, required evidence, stop conditions, return format all present. Doctrine read: global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md. Enumeration confirmed by an independent ast.walk pass over scripts/mcp_spine_server.py, not from memory: FOUR filesystem write call sites -- :181 CALLLOG.open('a') and :184 START_MARKER.write_text, both inside _log and both UNGUARDED (mine); :492 REJECTIONLOG.open('a'), already guarded by try/except OSError at :494; :535 path.write_text in _write_amend_delta, guarded at its call site :1289-1294. Remaining ast hits are StringIO/sys.stderr/sys.stdout writes, not filesystem. _log has exactly ONE call site, :461, outside run_engine's own try/except at :445-458."
+.agent-work/cleanup-a-door/crew-plans/g1-implementer-plan.json:39:      "imperative": "TDD, red first: write the regression test that drives the real door as a subprocess with an unwritable CALLLOG/START_MARKER and asserts the call is answered and the process survives. Observe it FAIL on the unfixed tree and capture that failure to .agent-work/cleanup-a-door/evidence/red-test.txt -- demonstrate it, never assert it. Then guard both telemetry writes in _log against OSError, reporting the dropped record on stderr in _log_rejection's shape. Clear __pycache__ before every measurement.",
+.agent-work/cleanup-a-door/crew-plans/g1-implementer-plan.json:73:        "do not change START_MARKER semantics: still written on first successful engine call",
+.agent-work/cleanup-a-door/evidence/red-test.txt:44:E       with CALLLOG.open("a", encoding="utf-8") as fh:
+.agent-work/cleanup-a-door/evidence/red-test.txt:79:E       with CALLLOG.open("a", encoding="utf-8") as fh:
+.agent-work/cleanup-a-door/evidence/red-test.txt:114:E       with CALLLOG.open("a", encoding="utf-8") as fh:
+.agent-work/cleanup-a-door/evidence/red-test.txt:148:E       START_MARKER.write_text(f"started for {SPINE}\n", encoding="utf-8")
+.agent-work/cleanup-a-door/evidence/red-test.txt:185:E       with CALLLOG.open("a", encoding="utf-8") as fh:
+.agent-work/cleanup-a-door/execute.json:56:      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for gate g1 and dispatch constellation-implementer through scripts/run_crew.py. TASK: make the door's telemetry writes incapable of failing a tool call or the server process. `_log` (scripts/mcp_spine_server.py:180) opens CALLLOG unguarded and `run_engine` calls it at :461 OUTSIDE its own try/except; main() catches only KeyError at :1355/:1360, so any OSError from the log write unwinds the whole process. START_MARKER.write_text (:184) has the same exposure. The fix shape ALREADY EXISTS in this module -- `_log_rejection` (:472) wraps its write, reports the loss to stderr, and never raises; reuse that shape rather than inventing a second one. Catch OSError (covering FileNotFoundError, PermissionError, IsADirectoryError), not bare Exception. stderr is safe: stdout is the JSON-RPC channel (main() writes protocol to sys.stdout only, :1367/:1375). SECOND DELIVERABLE, and it is not optional (critic finding 4, measured): a COMMITTED REGRESSION TEST that FAILS on the pre-fix tree and passes after -- a subprocess whose exit code is asserted with the telemetry path pointed at an unwritable location. Demonstrate it failing on the pre-fix tree; do not assert that it would. Without it this gate's pytest postcondition passes identically on the healthy and the defective tree (measured: 89 passed on the UNFIXED tree) and #604 can return the day after merge. Integrate the returned IMPLEMENTER_RESULT: `attach g1-implement --type implementer-result --field status=<verbatim lowercase Return status>`.",
+.agent-work/cleanup-a-door/execute.json:311:        "tests/test_mcp_spine_server.py:588 (test_mcp_json_referenced_spine_file_exists_and_loads) asserts the .mcp.json default resolves to a real loadable spine. It must STILL PASS at the end of this gate -- if candidate (a) removes the shipped spine file, this gate must reconcile that test, and say so.",
+.agent-work/cleanup-a-door/execute.json:507:      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for gate g3 and dispatch constellation-implementer through scripts/run_crew.py. This is the run's hardest gate. TWO changes that compose. (A) FAIL CLOSED. Treat UNSET, EMPTY, non-existent, non-file and unreadable as ONE 'unbound' class, and make every tool answer a refusal instead of a demo answer, a crash, or silence. Three distinct failure worlds are MEASURED on the current tree, and the naive fix only addresses one: SPINE_FILE unset -> EXIT 1, KeyError at :146, server dies AT IMPORT, client sees 'Connection closed'; SPINE_FILE='' -> Path('').resolve() is the CWD, server starts and answers `IsADirectoryError: Is a directory: <repo root>`, EXIT 0; SPINE_FILE=<missing path> -> #604's crash before g1. The empty case is the one PRODUCTION WILL TAKE: .mcp.json's form is `${SPINE_FILE:-<default>}` and tests/test_mcp_spine_server.py:574 pins that the key is present, so dropping the default yields `${SPINE_FILE:-}`, which expands to EMPTY, not unset. Also make ENGINE (:145, SPINE_ENGINE) fail closed in the same motion -- measured: unset SPINE_ENGINE is a KeyError at import too, and a session with no SPINE_FILE very likely has no SPINE_ENGINE either. Refusal wording splits (critic finding 10): an UNBOUND refusal cannot name a path that does not exist -- say 'no spine is bound; call spine_open (or set SPINE_FILE)'; a MISSING/UNREADABLE refusal names the path AND says how to rebind. (B) BIND ON OPEN, per decision:bind-on-open-over-new-verb. THE MEASURED COST, established -- do not rediscover: four import-time derivations of SPINE must become late-bound -- CALLLOG (:162), START_MARKER (:167), REJECTIONLOG (:177), and _resolve_confined's `bound_dir: Path = SPINE.parent` DEFAULT ARGUMENT (:188), evaluated once at import and the subtlest of the four. An independent AST pass confirmed there is no fifth. But TWO further roots the four-item list excludes, both proved by the critic: (i) `_primary_checkout_for_lifecycle` (:593) does its OWN hard `os.environ['SPINE_FILE']` read, and _spine_open calls it at :657 inside `except (OSError, RuntimeError)`, which does NOT catch KeyError -- so after (A) lands, an unbound session calling spine_open gets `tool error: missing or unknown 'SPINE_FILE'`, and the exit criterion is NOT reached. PREFERRED ANSWER, and it is this gate's to confirm or reject with reasons: derive the primary checkout from the SERVER SCRIPT'S OWN LOCATION (Path(__file__).resolve()), then `git rev-parse --git-common-dir` from there -- it needs no new env var, no ambient cwd read, and does not reintroduce what :568-592 argues against. If that does not hold, STOP and report rather than adding a fourth ambient input. (ii) `open_work` returns THREE binding values (spine_lifecycle.py:334-340: SPINE_FILE, SPINE_SESSION, SPINE_PARENT). Binding SPINE alone leaves SESSION empty, run_engine then omits --session-id (:442), and checklist_engine.py:1073 refuses `claim requires a non-empty --session-id` -- so the bound session cannot drive anything. REBIND SESSION from open_work's returned SPINE_SESSION too. RULED for this gate: a rebind is REFUSED while this process still holds an active lease on the current spine -- that preserves one-spine-per-process and prevents orphaning a lease; implement and test that refusal. THE PIN (critic finding 7, and its correction to the earlier framing): tests/test_mcp_lifecycle.py:194's identifier ban is over _spine_open's OWN source, so a module-level binder that _spine_open calls leaves it passing UNWEAKENED -- its letter and its spirit both survive. So KEEP :194 AND ITS POSITIVE CONTROL BYTE-IDENTICAL and ADD a new, strictly stronger assertion: an AST pin over the WHOLE MODULE that the set of assignments to SPINE and to SESSION is exactly {module scope, the one named binder}, with its own mutated positive control. That catches the real regression -- a second, quieter rebind site -- which a _spine_open-scoped ban cannot see. Do NOT rewrite :194 into a softer intent-shaped statement. Integrate the returned IMPLEMENTER_RESULT: `attach g3-implement --type implementer-result --field status=<verbatim lowercase Return status>`.",
+.agent-work/cleanup-a-door/execute.json:642:      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer through scripts/run_crew.py. Verify independently, ALL against a REAL SUBPROCESS you launch: (1) each of UNSET, EMPTY, MISSING-PATH, NON-FILE and UNREADABLE SPINE_FILE makes the server START and every tool return a refusal -- enumerate the tools you called and STATE THE COUNT, and test EMPTY first since that is what `${SPINE_FILE:-}` actually produces; (2) an unbound refusal does not fabricate a path, and a missing/unreadable one names it; (3) spine_open on an unbound door binds it AND a real MUTATING verb (claim) then succeeds -- paste the transcript; claim succeeding is what proves SESSION was rebound, not just SPINE; (4) _identity_violation STILL refuses an argv naming a different spine AFTER a rebind -- test it, do not assume it; this is the guard that must not have been weakened; (5) all four import-time SPINE derivations follow the rebind -- name CALLLOG, START_MARKER, REJECTIONLOG and _resolve_confined's bound_dir individually and state which you verified -- and the three env overrides still work; (6) tests/test_mcp_lifecycle.py:194 and its positive control are BYTE-IDENTICAL to pre-change (diff them), and a NEW module-wide assignment pin exists whose own mutated positive control fails; (7) a rebind while a lease is held is refused; (8) the new regression test genuinely FAILS pre-fix -- check it out and run it; (9) unset SPINE_ENGINE no longer kills the server at import; (10) README.md's now-false opening sentence was corrected. Report ANY weakened guard as BLOCK.",
+.agent-work/cleanup-a-door/g1-review/review.json:91:      "finding": "CRITERION 4 -- MY OWN COUNT: FOUR filesystem writes in the module, confirming the two prior passes. Enumerated mechanically, not by eye: an ast.walk over scripts/mcp_spine_server.py for every write-capable call site returns 12, which classify as 4 filesystem writes and 8 non-filesystem. The four: (a) :211-212 CALLLOG append, telemetry, guarded except OSError :213; (b) :217 START_MARKER.write_text, telemetry, guarded except OSError :218; (c) :527-528 REJECTIONLOG append in _log_rejection, telemetry, guarded except OSError :529 (pre-existing, issue #541); (d) :570 path.write_text in _write_amend_delta. The eight non-filesystem: :187 and :530 sys.stderr, :1402 and :1410 sys.stdout (the JSON-RPC channel), :485 and :493 err.write into an io.StringIO buffer (:479, in-memory, cannot raise OSError), and :212/:528 which are the fh.write halves of (a) and (c). So NO telemetry write anywhere in the module remains unguarded -- three of three. The fourth, (d), is deliberately NOT telemetry and correctly not best-effort: it materialises the delta the engine must then read, so it must fail the call. It is unguarded at the write site but its sole call site (:1324-1330, verified sole by grep) catches OSError and returns _tool_error('spine_amend: could not write delta file: ...'). I did not take that on reading: probing spine_amend against the missing directory returns isError:true with that exact message at EXIT 0, and probing an unknown tool -- the only path that reaches _log_rejection -- returns isError:true at EXIT 0 with 'REJECTION CAPTURE FAILED' on stderr. All four write paths are non-fatal, and the implementer's own tests exercise only (a) and (b), so (c) and (d) rest on my probes. HANDOFF CONSTRAINTS all honoured: __pycache__ cleared before every measurement (worktree and both temp trees); every validation ran against a subprocess I launched, never this session's own door; the suite ran with env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -> 96 passed, 10 subtests passed. OBSERVATION, not a blocker, out of gate scope: docs/agents/CREW_CONTEXT.md 'Writing Files On Windows' requires encoding='utf-8', newline='\\n' on EVERY write. _log_rejection at :527 passes newline='\\n'; the two _log writes at :211 and :217 pass encoding only, so on Windows mcp_calls.jsonl and mcp_server_started get CRLF while mcp_rejections.jsonl gets LF. This is PRE-EXISTING -- the diff wrapped those two calls in guards without altering their arguments, and introduced no new file write -- so it is not a regression and does not bar g1. Flagged as a triage candidate.",
+.agent-work/cleanup-a-door/g1-review/review.json:163:      "statement": "scripts/mcp_spine_server.py:211,217 -- _log's two telemetry writes pass encoding='utf-8' but not newline='\\n', so on Windows the call log and start marker get CRLF while _log_rejection's REJECTIONLOG (:527) gets LF. Pre-existing, not introduced by #604; violates docs/agents/CREW_CONTEXT.md 'Writing Files On Windows'."
+.agent-work/cleanup-a-door/g2-review/review.json:75:      "finding": "Every claim in IMPLEMENTER_RESULT reproduced at its source, none taken on the report's word. Full suite: 3072 passed, 6 skipped, 1149 subtests -- exactly the implementer's number. Handoff suite: 244 passed, 508 subtests -- exactly the Commander's number. C5 test_mcp_json_referenced_spine_file_exists_and_loads passes (1 passed). C8 map freshness: 2 passed (tests/test_code_map.py -k freshness). C6: ran the README's regeneration command verbatim from the repo root -- exit 0, output byte-identical (md5 unchanged), and it also works from /tmp because HERE resolves from __file__, so the doc'd command is not cwd-dependent. C9: the generator has an external call site at tests/test_shipped_examples_are_portable.py:100 (load_demo_generator, used by 2 tests) plus the README:13 CLI invocation I ran; no --self-test path exists in the file (grep exit 1). Every measurement taken after clearing __pycache__.",
+.agent-work/cleanup-a-door/spine.json:667:      "why": "Three defects confirmed against source, none already shipped. Bind-on-open's real cost is NOT the identity guard but four import-time derivations of SPINE (CALLLOG, START_MARKER, REJECTIONLOG, and _resolve_confined's bound_dir DEFAULT ARGUMENT) that a rebind would strand; _identity_violation's semantics stay untouched. Two AST pins in test_mcp_lifecycle.py fix where the rebind may sit. Gate 4's 'door-detection change' is undefined in the order and absent from the repo -- floated, gates 1-3 proceed.",
+examples/mcp-interactive-demo/README.md:69:`test_mcp_json_referenced_spine_file_exists_and_loads` caught it immediately, which is what that test
+notes-a.md:12:**#604 — telemetry is fatal.** `_log()` (`scripts/mcp_spine_server.py:180`) opens `CALLLOG`
+notes-a.md:15:unwinds the whole process. `START_MARKER.write_text` (`:184`) has the same exposure. The
+notes-a.md:35:- `CALLLOG` (`:162`), `START_MARKER` (`:167`), `REJECTIONLOG` (`:177`)
+scripts/mcp_spine_server.py:685:    """Append ONE record for a door-own rejection to REJECTIONLOG -- never raises.
+
+## Step 4 -- the mechanism claim the commit invalidated without renaming anything
+$ git grep -n "re-read fresh"
+.agent-work/cleanup-a-door/FOWLER_PASS.json:17:    {"smell": "comments-as-deodorant", "verdict": "flagged", "finding": "The house style here is heavy explanatory docstrings (the pre-existing _identity_violation is the same), and matching it is what CREW_CONTEXT.md asks for -- so volume alone is not the finding. The finding is that three of these docstrings have now DRIFTED from the code they explain, which is the failure mode this smell actually names, in a repo whose own standard says 'docstrings are hand-authored and none is checked against what runs': (1) _log_rejection:685 still says it appends to REJECTIONLOG, an identifier this same commit deleted; (2) _spine_open:962-963 still says the root comes from 'ambient SPINE_FILE, re-read fresh', which is precisely the os.environ read this commit removed; (3) examples/mcp-interactive-demo/README.md:69 still cites test_mcp_json_referenced_spine_file_exists_and_loads, renamed by this same commit. Where prose carries this much of the design, drifting prose is a defect in the design record, not a cosmetic issue. Reported in full under r4-quality.", "override": null}
+scripts/mcp_spine_server.py:963:    `SPINE_FILE`, re-read fresh), and `parent` comes from `SPINE_PARENT` (the
+
+## Step 5 -- the commit also removed the EXPRESSION that derived SPINE/ENGINE; sweep for prose quoting the old form
+$ git grep -n "os.environ\[.SPINE_FILE.\]\|os.environ\[.SPINE_ENGINE.\]" -- ":!.agent-work"
+episodes/active/epic-559_c2-generate-the-spine-006.md:36:- statement: The door binds exactly one file at import time -- `SPINE = Path(os.environ['SPINE_FILE']).resolve()` in mcp_spine_server.py -- and exposes no per-call spine addressing on any of its nine tools, while the Commander spine's own `execute` step requires driving a second checklist. No door verb can name it. The four unresolvable `<engine>` tokens the launch order flags in the orchestrator-tier templates are the same defect's symptom; no token substitution reaches this.
+episodes/retired/epic-559-c2-generate-the-spine-006.md:36:- statement: The door binds exactly one file at import time -- `SPINE = Path(os.environ['SPINE_FILE']).resolve()` in mcp_spine_server.py -- and exposes no per-call spine addressing on any of its nine tools, while the Commander spine's own `execute` step requires driving a second checklist. No door verb can name it. The four unresolvable `<engine>` tokens the launch order flags in the orchestrator-tier templates are the same defect's symptom; no token substitution reaches this.
+notes-a.md:20:`SPINE = Path(os.environ["SPINE_FILE"]).resolve()` at `:146` is import-time. Worse for
+scripts/hooks/spine_rail.py:1081:    existing contract (`SPINE = Path(os.environ["SPINE_FILE"]).resolve()`),
+scripts/mcp_spine_server.py:151:    * **unset** -- this used to be `os.environ["SPINE_FILE"]`, a `KeyError` at
+scripts/mcp_spine_server.py:790:    This used to read `os.environ["SPINE_FILE"]` unconditionally, so that
+scripts/mcp_spine_server.py:905:    os.environ["SPINE_FILE"] = str(SPINE)
+tests/test_crew_launcher.py:523:        os.environ["SPINE_FILE"] = str(spine_file)
+tests/test_crew_launcher.py:524:        os.environ["SPINE_ENGINE"] = str(ROOT / "scripts" / "checklist_engine.py")
+tests/test_crew_launcher.py:918:            os.environ["SPINE_FILE"] = "/parent/own.json"
+tests/test_crew_launcher.py:996:                os.environ["SPINE_FILE"] = "/explicit/caller-bound.json"
+tests/test_crew_launcher.py:1035:                os.environ["SPINE_FILE"] = "/admiral/EPIC_SPINE.json"
+tests/test_crew_launcher.py:1799:                os.environ["SPINE_FILE"] = str(dispatcher_spine)
+tests/test_mcp_adoption.py:178:    os.environ["SPINE_FILE"] = str(spine_file)
+tests/test_mcp_adoption.py:179:    os.environ["SPINE_ENGINE"] = str(ROOT / "scripts" / "checklist_engine.py")
+tests/test_mcp_identity.py:497:        #603). This used to read `os.environ["SPINE_FILE"]` at import, so the
+tests/test_mcp_identity.py:863:        os.environ["SPINE_FILE"] = str(other)
+tests/test_mcp_identity.py:874:                os.environ["SPINE_FILE"] = saved
+tests/test_mcp_lifecycle.py:339:        os.environ["SPINE_FILE"] = str(bound_spine)
+tests/test_mcp_lifecycle.py:350:                os.environ["SPINE_FILE"] = saved_spine_file
+
+## Step 6 -- what map/ actually tracks (the per-module pages are gitignored; only INDEX.md and ids.jsonl are committed)
+$ git ls-files map/ ; git check-ignore -v map/scripts.mcp_spine_server/_log_rejection.md
+map/INDEX.md
+map/ids.jsonl
+.gitignore:73:map/*	map/scripts.mcp_spine_server/_log_rejection.md
+
+## Verdict -- BEFORE count
+FOUR stranded references, all of them documentation. The handoff's table named three.
+
+LIVE and in scope -- fixed by this rework:
+  1. scripts/mcp_spine_server.py:685   `_log_rejection` says it appends to REJECTIONLOG,
+                                       deleted by this same commit; the destination is now
+                                       `_rejectionlog()`, which can be None.
+  2. scripts/mcp_spine_server.py:962-3 `_spine_open` says the root comes from
+                                       `_primary_checkout_for_lifecycle` "(ambient SPINE_FILE,
+                                       re-read fresh)". That function no longer reads
+                                       os.environ at all: :846 reads SPINE.parent when bound
+                                       and falls back to Path(__file__) when not.
+  3. examples/mcp-interactive-demo/README.md:69
+                                       cites test_mcp_json_referenced_spine_file_exists_and_loads,
+                                       renamed by this commit to
+                                       test_mcp_json_spine_file_is_overridable_and_any_default_loads.
+
+LIVE and OUT of scope -- the fourth, reported not fixed:
+  4. scripts/hooks/spine_rail.py:1081  `_handle_door_lease` quotes
+                                       `SPINE = Path(os.environ["SPINE_FILE"]).resolve()` as
+                                       mcp_spine_server.py's "existing contract". That exact
+                                       line is one of the lines this commit deleted. It is a
+                                       docstring, so it is not the "something that is not a doc
+                                       reference" stop condition -- but scripts/hooks/** is
+                                       fenced to lanes B and C by the handoff's own exclusions.
+                                       Returned as a triage candidate, not touched.
+
+NOT stranded -- dated records, correctly pinned to a pre-fix revision, deliberately left alone:
+  - notes-a.md:12,15,35  the commander's lane-A notes, headed "Base a69bbac4" and describing
+                         the pre-fix defect at pre-fix line numbers. Rewriting it would
+                         falsify the record.
+  - .agent-work/** (archive, handoffs, results, plans, evidence, execute.json, spine.json)
+                         run artifacts, each a statement about the tree as it stood when
+                         written.
+
+NOT stranded -- generated, and not tracked:
+  - map/scripts.mcp_spine_server/*.md  regenerated from the docstrings; .gitignore:73 ignores
+                                       map/* except INDEX.md and ids.jsonl, so the two pages
+                                       the handoff names are not committable artifacts. Only
+                                       map/INDEX.md is.
+
+==================== AFTER the rework -- 359d93df ====================
+$ git grep -nw -E "CALLLOG|REJECTIONLOG|START_MARKER|test_mcp_json_referenced_spine_file_exists_and_loads|test_removed_spine_directory_still_runs" -- ":!.agent-work" ":!notes-a.md"
+exit=1  (1 = no match)
+
+$ git grep -n "re-read fresh" -- ":!.agent-work"
+exit=1  (1 = no match)
+
+$ git grep -n "os.environ\[.SPINE_FILE.\]" -- scripts/
+scripts/hooks/spine_rail.py:1081:    existing contract (`SPINE = Path(os.environ["SPINE_FILE"]).resolve()`),
+scripts/mcp_spine_server.py:151:    * **unset** -- this used to be `os.environ["SPINE_FILE"]`, a `KeyError` at
+scripts/mcp_spine_server.py:790:    This used to read `os.environ["SPINE_FILE"]` unconditionally, so that
+scripts/mcp_spine_server.py:905:    os.environ["SPINE_FILE"] = str(SPINE)
+
+AFTER count: ONE stranded reference remains -- scripts/hooks/spine_rail.py:1081, fenced
+to lanes B and C by the handoff's exclusions and returned as triage candidate tc1.
+The three in scope are zero. Dated records (notes-a.md, .agent-work/**) untouched by
+design.

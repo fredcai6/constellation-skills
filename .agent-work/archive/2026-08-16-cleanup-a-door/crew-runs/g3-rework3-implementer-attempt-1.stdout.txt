@@ -1,0 +1,18 @@
+My run is complete and correctly closed. The stop hook is misfiring on a binding mismatch, not catching an abandoned run.
+
+**What the hook saw vs. what is true:**
+
+| | |
+|---|---|
+| Hook read | `SPINE_FILE` → `spine.json`, gate `execute` open |
+| Whose that is | The **Commander's** spine; lease `commander-cleanup-a-door`, `claimed_by: commander` |
+| My work file | `crew-plans/g3-rework3-implementer-plan.json` — 9/9 items `complete`, `DONE: no open items`, lease **released** |
+| My deliverable | `g3-rework3-implementer-result.md`, 24 KB, `Return status: complete` |
+
+A dispatched crew's door is bound to its parent's `SPINE_FILE` — that is by design, and it is why the hook attributed the Commander's open gate to me. `execute` closes when the Commander reviews my return; that is their gate and their lease.
+
+**I deliberately did not take either action the hook offered.** Driving `execute` would be a takeover of my parent's lease (the engine would refuse it regardless). Calling `block` on it would stamp the Commander's own gate as blocked because a crew's turn ended — manufacturing a false blocker out of the hook's misattribution. Neither is a compliant move for a crew that has finished its work; the honest state is "done", and the engine already records it.
+
+I recorded the mismatch in the result's Workflow Feedback, since I am the only one positioned to have seen it: the hook cannot presently distinguish *"this agent abandoned its run"* from *"this agent is a crew whose door is bound to its parent's spine"*. Telling a finished crew "do not end your turn" leaves it no compliant action — separating those two cases needs the crew's own work file rather than `SPINE_FILE`. I re-verified afterward that the m8 postcondition still holds and that the parent spine is unchanged by me.
+
+Nothing is outstanding on my side. The seven corrections are committed at `5a626351`, the suite matches the baseline exactly, and the two live claims in fenced files plus the three scope departures are flagged at the top of the result for the Commander to rule on.

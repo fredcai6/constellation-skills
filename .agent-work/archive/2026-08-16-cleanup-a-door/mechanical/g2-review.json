@@ -1,0 +1,29 @@
+{
+  "contract": 1,
+  "step": "g2-review",
+  "mechanical": {
+    "run": "cleanup-a-door",
+    "project": "constellation-skills",
+    "spine-step": "g2-review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-a-door-g2-review@915a6f06cbfdec7a1a9a0259ae861d743c67fc79",
+    "artifact-ref": [
+      "examples/mcp-interactive-demo/.gitignore",
+      "examples/mcp-interactive-demo/README.md",
+      "examples/mcp-interactive-demo/make_demo_spine.py",
+      "examples/mcp-interactive-demo/spine.json",
+      "map/INDEX.md",
+      "tests/test_shipped_examples_are_portable.py"
+    ]
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "cleanup-a-door",
+    "generated_at": "2026-08-16T13:38:41Z"
+  }
+}

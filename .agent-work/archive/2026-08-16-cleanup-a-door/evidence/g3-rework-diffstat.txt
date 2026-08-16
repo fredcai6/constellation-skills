@@ -1,0 +1,68 @@
+# The rework commit -- 359d93df
+$ git show --stat 359d93df
+    index. Full clean-env suite: 3093 passed, 6 skipped, 1153 subtests.
+    
+    Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+
+ examples/mcp-interactive-demo/README.md | 9 +++++----
+ map/INDEX.md                            | 5 +++--
+ scripts/mcp_spine_server.py             | 8 +++++---
+ 3 files changed, 13 insertions(+), 9 deletions(-)
+
+$ git show 359d93df -- scripts/mcp_spine_server.py   # docstrings only, no behaviour
+commit 359d93df581e71ef3f579b8e7e42952be3f5bdcb
+Author: Tommy <fredcai6@gmail.com>
+Date:   Sun Aug 16 08:05:58 2026 -0700
+
+    docs(603): three doc references now name the mechanism that runs
+    
+    Commit 4e1f22cb renamed or deleted five identifiers and left three references
+    behind, all of them prose about how the door works.
+    
+    `_log_rejection` still said it appends to `REJECTIONLOG`, a module constant that
+    same commit deleted; the destination is now the `_rejectionlog()` derivation,
+    which returns None when nothing is bound. `_spine_open` still said its repo root
+    comes from an ambient `SPINE_FILE`, re-read fresh -- precisely the `os.environ`
+    read the fix removed, and a claim that contradicted the tool's reason for
+    existing, since `spine_open` is the one tool an UNBOUND door must serve.
+    `_primary_checkout_for_lifecycle` reads no environment at all: the bound spine's
+    own checkout when there is one, this script's own location when there is not.
+    The demo README cited a test renamed by the same commit, and called the demo
+    spine a fixture `.mcp.json` "points at" when #603 emptied that default.
+    
+    `map/INDEX.md` is rebuilt in the same commit. Its staleness was never a map
+    defect: `code_map` enumerates through `git ls-files`, so the previous rebuild ran
+    eight minutes before the new test file was staged, counted 83 modules and passed
+    its own guard. Stage first, rebuild the map last, then commit.
+    
+    Behaviour is untouched -- docstrings, one README paragraph, and a generated
+    index. Full clean-env suite: 3093 passed, 6 skipped, 1153 subtests.
+    
+    Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+
+diff --git a/scripts/mcp_spine_server.py b/scripts/mcp_spine_server.py
+index 9d899b16..0e4e9db5 100644
+--- a/scripts/mcp_spine_server.py
++++ b/scripts/mcp_spine_server.py
+@@ -682,7 +682,7 @@ def as_result(rec: dict) -> dict:
+ 
+ 
+ def _log_rejection(tool: str, rejection_class: str, detail: str) -> None:
+-    """Append ONE record for a door-own rejection to REJECTIONLOG -- never raises.
++    """Append ONE record for a door-own rejection to `_rejectionlog()` -- never raises.
+ 
+     Carries what a diagnosis needs: `tool` (which tool was called), `class` (which
+     of the three in-scope rejection shapes this is), `detail` (the door's own
+@@ -959,8 +959,10 @@ def _spine_open(args: dict) -> dict:
+     or `run_engine` -- checked by `tests/test_mcp_lifecycle.py`, with a
+     mutated positive control proving that check can fail. It acts on a spine
+     that does not exist yet, so nothing here may presuppose one is bound: the
+-    repo root comes from `_primary_checkout_for_lifecycle` (ambient
+-    `SPINE_FILE`, re-read fresh), and `parent` comes from `SPINE_PARENT` (the
++    repo root comes from `_primary_checkout_for_lifecycle`, which reads no
++    environment at all -- the bound spine's own checkout when there is one,
++    THIS SCRIPT's own location when there is not, which is the unbound case
++    this tool exists to serve -- and `parent` comes from `SPINE_PARENT` (the
+     dispatching session this door's own process was launched under -- a
+     DIFFERENT env var from `SPINE_SESSION`/`SESSION`, never read elsewhere in
+     this module).

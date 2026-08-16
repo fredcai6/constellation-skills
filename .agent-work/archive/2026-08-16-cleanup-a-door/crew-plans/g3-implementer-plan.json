@@ -1,0 +1,571 @@
+{
+  "work_id": "cleanup-a-door-g3-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-red",
+    "m2-fail-closed",
+    "m3-bind-on-open",
+    "m4-pins",
+    "m5-reconcile",
+    "m6-evidence"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context; settle the primary-checkout derivation",
+      "imperative": "Read inherited crew doctrine and the g3 handoff, and the ground truth it names: scripts/mcp_spine_server.py (:145-147, :162, :167, :177, :188, :236-363, :593, :622-736), scripts/spine_lifecycle.py:334-340, scripts/checklist_engine.py:1073 and _active_lease (read only), .mcp.json, tests/test_mcp_lifecycle.py:63-71,102-103,137,194, tests/test_mcp_spine_server.py:574,588, tests/test_wire_mcp_interpreter.py:42, tests/test_install_constellation.py:4021, examples/mcp-interactive-demo/README.md, and .agent-work/cleanup-a-door/evidence/pre-fix-probes.txt. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Settle the one derivation the handoff hands me to confirm or reject: how the primary checkout is derived when unbound. Attest c1 and c2.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff loaded; handoff complete (task, intent, scope, exclusions, evidence, test mode, stop conditions all present)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Handoff complete. Present: Gate, Task (A fail-closed + B bind-on-open), Protected intent, Close criteria, Allowed scope, Specific exclusions, Constraints, Map anchors, Deliverable path check, Required evidence, Wiring grep, Verification commands, Authority, Stop conditions, Return format. Test mode is not a named section but is unambiguous from Required evidence #3 and the close criterion 'a COMMITTED regression test fails on the pre-fix tree': TDD red-then-green for the unbound regression test, test-after for the rest. Ground truth read: mcp_spine_server.py in full (145-147,162,167,177,188,236-398,457-553,579-772,1092-1140,1330-1415), spine_lifecycle.py:320-345, checklist_engine.py:871-900/1002-1200 (read only), .mcp.json, tests/test_mcp_lifecycle.py:63-71,85-230, tests/test_mcp_spine_server.py:566-612, tests/test_wire_mcp_interpreter.py:36-45, tests/test_install_constellation.py:4014-4045, evidence/pre-fix-probes.txt. No block."
+        },
+        {
+          "id": "c2",
+          "statement": "the primary-checkout-when-unbound derivation is confirmed or rejected, with a measured reason recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "CONFIRMED the handoff's preferred answer: derive the primary checkout from the server script's own location. Measured just now, both directions agree: git rev-parse --git-common-dir with cwd=<linked worktree>/scripts gives /home/tommy/projects/constellation-skills/.git -> primary /home/tommy/projects/constellation-skills; with cwd=<primary>/scripts it gives the relative '../.git' -> the same primary after the explicit join. The incumbent derivation (cwd = the bound spine's dir) returns the SAME answer on this tree, so this is a like-for-like substitution of the input, not a change of the answer. It needs no new environment variable, reads no ambient cwd, and keeps the explicit-cwd discipline :579-601 argues for. It is also strictly MORE available than the incumbent: it answers when nothing is bound at all, which is exactly the case that made _primary_checkout_for_lifecycle raise KeyError on spine_open's own path. One accepted narrowing, recorded: a door script living OUTSIDE any git checkout while bound to a spine INSIDE one would now fail to resolve -- but .mcp.json addresses the server as the project-relative scripts/mcp_spine_server.py, so the server always runs from within the checkout it serves, and the failure is a clean refusal through :657's existing except (OSError, RuntimeError), not a crash."
+        }
+      ],
+      "constraints": [
+        "read scripts/checklist_engine.py, scripts/hooks/**, scripts/run_crew.py, scripts/gauge_reader.py -- never modify (lanes B and C run concurrently)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-red": {
+      "id": "m1-red",
+      "title": "RED: a committed regression test that fails on the pre-fix tree",
+      "imperative": "Write tests/test_mcp_door_unbound.py: launch scripts/mcp_spine_server.py as a SUBPROCESS with the environment under test and assert the door's REFUSAL TEXT, not merely a non-crash. Cover all five unbound-class SPINE_FILE inputs (unset, empty, missing path, a directory, unreadable) plus unset SPINE_ENGINE. Observe it FAIL on the current (pre-fix) tree and capture that transcript to .agent-work/cleanup-a-door/evidence/g3-red-test.txt. Clear __pycache__ before measuring (#597). Attest c1 with the observed failure summary; c2 checks the evidence file exists.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: tests/test_mcp_door_unbound.py written and OBSERVED FAILING on the pre-fix tree -- manual attest, check MUST be null so the engine does not run the by-design-failing test",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed: 9 failed, 0 passed on the pre-fix tree at 408e6d26, __pycache__ cleared first. Every failure has the same root: the server dies at import with KeyError: 'SPINE_FILE' (mcp_spine_server.py:146) or, in the empty/missing/directory/unreadable cases, answers a raw exception instead of a refusal. Cases covered: SPINE_FILE unset, empty, whitespace-only, missing path, a directory, unreadable (chmod 000); SPINE_ENGINE unset; the whole 11-tool surface enumerated from the door's own tools/list; and stdout purity. The stdout-purity test was strengthened after a first run passed it VACUOUSLY -- a dead door writes no stdout, so a loop over its lines asserts nothing; it now asserts both calls were answered first, and is red for the right reason. Transcript: .agent-work/cleanup-a-door/evidence/g3-red-test.txt"
+        },
+        {
+          "id": "c2",
+          "statement": "the red transcript is captured as evidence",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && test -s .agent-work/cleanup-a-door/evidence/g3-red-test.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-red-1"
+        }
+      ],
+      "constraints": [
+        "validate by launching the server as a subprocess, never by reasoning about this session's own connection",
+        "clear __pycache__ before every measurement"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-red-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && test -s .agent-work/cleanup-a-door/evidence/g3-red-test.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-fail-closed": {
+      "id": "m2-fail-closed",
+      "title": "GREEN (A): one unbound class, every tool refuses, server alive",
+      "imperative": "In scripts/mcp_spine_server.py make unset/empty/missing/non-file/unreadable SPINE_FILE one single unbound class that every tool answers with a refusal, with the server process alive. Make SPINE_ENGINE unset stop killing the server at import. Make the four import-time SPINE derivations late-bound (CALLLOG :162, START_MARKER :167, REJECTIONLOG :177, _resolve_confined's bound_dir default arg :188) and answer explicitly what the three telemetry paths ARE when nothing is bound, without discarding the SPINE_CALLLOG/SPINE_START_MARKER/SPINE_REJECTION_LOG env overrides. Refusal wording splits: unbound names no path and says how to bind; missing/unreadable/not-a-file names the path and says how to rebind. Run the new test green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the red test exists and was observed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-red complete: 9 tests red on the pre-fix tree"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the unbound regression test passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && find . -name __pycache__ -type d -not -path './.git/*' -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_mcp_door_unbound.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fail-closed-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the existing door suites still pass -- telemetry, identity, cwd, friction capture, server",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_mcp_door_telemetry.py tests/test_mcp_identity.py tests/test_mcp_door_engine_cwd.py tests/test_mcp_friction_capture.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fail-closed-2"
+        },
+        {
+          "id": "c3",
+          "statement": "all five unbound-class inputs refuse with the server alive, measured by subprocess probe, and the refusing tool count is stated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "MEASURED by subprocess probe, evidence/g3-unbound-probes.txt. All five unbound-class inputs refuse with the server ALIVE (exit 0, stderr empty, no traceback): SPINE_FILE unset; SPINE_FILE empty (the case a shell's ${SPINE_FILE:-} actually produces -- it no longer binds the cwd); a missing path; a directory; an unreadable file (chmod 000). SPINE_ENGINE unset also now refuses instead of dying at :145. TOOL COUNT: the door declares 11 tools and REFUSED 10 of 11 in one process, one call each, with valid required arguments so what was measured is the unbound refusal and not a missing-argument complaint: spine_status, spine_lease, spine_start, spine_advance, spine_evidence, spine_halt, spine_survey_result, spine_capture, spine_amend, spine_close. The 11th, spine_open, is exempt BY DESIGN (BINDS_WITHOUT_A_BOUND_SPINE) because it is the way out of the unbound state. It does not yet work: it answers 'tool error: missing or unknown SPINE_FILE' -- the KeyError from _primary_checkout_for_lifecycle's os.environ read, which _spine_open's except (OSError, RuntimeError) does not catch. Exactly the blocking gap the handoff named; m3 owns it."
+        }
+      ],
+      "constraints": [
+        "_identity_violation's SEMANTICS are FENCED",
+        "do not add a tool that takes a spine path per call",
+        "allowed scope: scripts/mcp_spine_server.py, .mcp.json, tests/test_mcp_*.py, tests/test_wire_mcp_interpreter.py, tests/test_install_constellation.py:4021 only, examples/mcp-interactive-demo/README.md opening sentence only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-fail-closed-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && find . -name __pycache__ -type d -not -path './.git/*' -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_mcp_door_unbound.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-fail-closed-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_mcp_door_telemetry.py tests/test_mcp_identity.py tests/test_mcp_door_engine_cwd.py tests/test_mcp_friction_capture.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-bind-on-open": {
+      "id": "m3-bind-on-open",
+      "title": "GREEN (B): spine_open binds this process, and claim then succeeds",
+      "imperative": "Let a successful spine_open bind THIS process to the spine it just minted, per decision:bind-on-open-over-new-verb. Rebind SPINE and SESSION together from open_work's returned SPINE_FILE and SPINE_SESSION -- SESSION alone is why claim refuses (checklist_engine.py:1073). Fix _primary_checkout_for_lifecycle's hard os.environ['SPINE_FILE'] read (:593), which is on spine_open's own path and raises KeyError that :657's except (OSError, RuntimeError) does not catch. Refuse a rebind while THIS process holds an active lease on the current spine. Produce the probe transcript that is this gate's whole point: unbound door refuses by name, spine_open binds it, claim succeeds.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the fail-closed slice is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-fail-closed complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the bind-on-open tests pass, including the lease-held rebind refusal",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && find . -name __pycache__ -type d -not -path './.git/*' -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_mcp_door_unbound.py tests/test_mcp_lifecycle.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-bind-on-open-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the end-to-end probe transcript exists: unbound refusal -> spine_open binds -> claim SUCCEEDS (a transcript that stops at spine_status does not satisfy this)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && test -s .agent-work/cleanup-a-door/evidence/g3-bind-on-open-probe.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-bind-on-open-2"
+        }
+      ],
+      "constraints": [
+        "one spine per process: bind-on-open changes WHEN the binding is decided, never HOW MANY are live",
+        "if bind-on-open cannot be reached without weakening _identity_violation, STOP and report -- that measured finding IS the deliverable",
+        "if the server-script-location derivation for the primary checkout does not hold and the only alternative is a fourth ambient input, STOP and report"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-bind-on-open-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && find . -name __pycache__ -type d -not -path './.git/*' -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_mcp_door_unbound.py tests/test_mcp_lifecycle.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-bind-on-open-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && test -s .agent-work/cleanup-a-door/evidence/g3-bind-on-open-probe.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-pins": {
+      "id": "m4-pins",
+      "title": "Guards: :194 byte-identical, plus a stronger module-wide assignment pin",
+      "imperative": "Keep tests/test_mcp_lifecycle.py's _spine_open identifier ban and its positive control BYTE-IDENTICAL -- prove it with a diff. ADD a strictly stronger assertion: an AST pin over the WHOLE module that the set of assignments to SPINE and to SESSION is exactly {module scope, the one named binder}, with its own MUTATED POSITIVE CONTROL proving the pin can fail. Test that _identity_violation still refuses an argv naming a different spine AFTER a rebind. Capture the positive control failing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "bind-on-open is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the :194 ban and its positive control are byte-identical to the pre-fix tree",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && git diff 408e6d26 -- tests/test_mcp_lifecycle.py | grep -E '^[-+].*(_spine_open_never_references|the_spine_open_identity_pin_can_fail|BANNED_IDENTIFIERS)' && exit 1 || exit 0"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-pins-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the module-wide assignment pin passes on the real module and its mutated positive control is demonstrated failing",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_mcp_lifecycle.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-pins-2"
+        },
+        {
+          "id": "c3",
+          "statement": "_identity_violation still refuses a foreign spine after a rebind -- tested, not assumed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "TESTED, not assumed: tests/test_mcp_lifecycle.py::IdentityGuardSurvivesARebindTests, five tests. After _bind_process_to moves the door to a second spine, _identity_violation (a) still refuses a FOREIGN --file, and the refusal names the NEW bound spine -- proving the guard followed the rebind rather than being frozen at the old one; (b) still refuses a foreign --session-id, naming the new session; (c) refuses the ORIGINAL spine too, so a rebind is a MOVE and not an addition -- one spine per process is preserved in the direction that actually matters; and (d) ACCEPTS the newly bound spine, which is what keeps (a) from passing vacuously through a guard that simply refused everything. _identity_violation's source is unchanged: git diff shows no edit to it."
+        }
+      ],
+      "constraints": [
+        "do not soften :194 into an intent-shaped statement; ADD, never rewrite",
+        "changing which spine is bound is sanctioned; changing how many are live, or weakening the refusal, floats to the Admiral"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-pins-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && git diff 408e6d26 -- tests/test_mcp_lifecycle.py | grep -E '^[-+].*(_spine_open_never_references|the_spine_open_identity_pin_can_fail|BANNED_IDENTIFIERS)' && exit 1 || exit 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-pins-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_mcp_lifecycle.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-reconcile": {
+      "id": "m5-reconcile",
+      "title": "Drop the demo default; reconcile every assertion it breaks; correct the README",
+      "imperative": "Drop .mcp.json's demo SPINE_FILE default so an unbound session lands on a refusal instead of a demo spine. Reconcile each broken assertion DELIBERATELY and say what was done: tests/test_mcp_spine_server.py:588 gets a stated REPLACEMENT INVARIANT (do not simply delete the guard that caught this class of defect before), and the two literal-string sites are reconciled or measured not to break. Correct examples/mcp-interactive-demo/README.md's opening sentence, which this change makes false. Run the full clean-env suite.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "guards are in place and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4-pins complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the full clean-env suite is green",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && find . -name __pycache__ -type d -not -path './.git/*' -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-reconcile-1"
+        },
+        {
+          "id": "c2",
+          "statement": ".mcp.json no longer names the demo spine as its default",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && ! grep -q 'examples/mcp-interactive-demo/spine.json' .mcp.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-reconcile-2"
+        },
+        {
+          "id": "c3",
+          "statement": "each of the three named assertions is reconciled deliberately, with the replacement invariant for :588 stated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "MEASURED, and the handoff's prediction was right about ONE of the three, not three. (1) tests/test_mcp_spine_server.py:588 DID break, as predicted. Reconciled, not deleted: it is the guard that caught this class of defect before, so it keeps its protection under a stated REPLACEMENT INVARIANT -- 'the ${SPINE_FILE:-<default>} form must hold, AND IF A DEFAULT IS PRESENT it must resolve to a real, loadable spine.' The predicate is extracted as _default_spine_problem so a NEW positive control can feed it the four ways the original guard earned its keep (not the ${VAR:-} form; a default that is not there; a default that is not loadable JSON; a JSON file with no 'type'), each asserted to still be caught. Without that control the conditional would rot into a vacuous pass the moment its condition went false -- which is exactly what it just did. (2) tests/test_wire_mcp_interpreter.py:42 and (3) tests/test_install_constellation.py:4021 did NOT break, and cannot: both are self-contained FIXTURE writers (write_mcp_config / _write_mcp_config) that construct a .mcp.json in a temp directory and assert on interpreter rewriting; neither ever reads the repo's committed .mcp.json (test_install_constellation.py:4035,4040 say so explicitly). Measured: with the default dropped, both files pass untouched -- 236 passed, 1 failed across all three, the one being :588. I left them alone; editing a literal that no invariant depends on would be churn, and test_install_constellation.py's allowed scope was that literal only. Reported rather than silently skipped."
+        },
+        {
+          "id": "c4",
+          "statement": "the README's opening sentence is corrected",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "examples/mcp-interactive-demo/README.md's opening sentence -- 'This is the checklist the project-scope .mcp.json points at' -- became false with this change and is corrected. It now says the door no longer defaults to this demo, names issue #603 and the refusal behaviour, and gives the concrete replacement invocation (SPINE_FILE=examples/mcp-interactive-demo/spine.json claude) so the demo remains usable rather than merely described. Scope respected: only the opening paragraph changed; the throwaway-fixture/regeneration sections below it are untouched."
+        }
+      ],
+      "constraints": [
+        "examples/mcp-interactive-demo/README.md -- ONLY its opening sentence",
+        "tests/test_install_constellation.py -- ONLY the .mcp.json literal-string assertion",
+        "install_constellation.py and COMMANDER_SPINE.template.json doctrine/prose are FENCED"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-reconcile-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && find . -name __pycache__ -type d -not -path './.git/*' -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-reconcile-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && ! grep -q 'examples/mcp-interactive-demo/spine.json' .mcp.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-evidence": {
+      "id": "m6-evidence",
+      "title": "Wiring grep, confirmatory evidence, and the result artifact",
+      "imperative": "Run the REQUIRED wiring grep: name every new symbol (the binder, the fail-closed check, any helper) and show a call site outside its own definition and outside any self-test, WITH THE COUNT. Zero external call sites is a stop condition. Confirm the three env overrides still work. Run `py -m scripts.code_map build --root .` if any entity was added or renamed, and commit it. Commit the change. Write the full IMPLEMENTER_RESULT to .agent-work/cleanup-a-door/crew-handoffs/g3-implementer-result.md -- that write IS the delivery.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the full suite is green and every assertion reconciled",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m5-reconcile complete; full clean-env suite green (3093 passed, 0 failed)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every new symbol has at least one call site outside its own definition and outside any self-test, with the count recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "WIRING GREP RUN, counts in evidence/g3-wiring-grep.txt, computed by AST over scripts/mcp_spine_server.py with each symbol's OWN body excluded so a self-reference cannot count. Twelve new symbols, ZERO with zero external call sites: _spine_from_env 1 (:190 module scope), _engine_from_env 1 (:189), _telemetry_path 3 (_calllog :235, _start_marker :243, _rejectionlog :255), _calllog 1 (_log :296), _start_marker 1 (_log :296), _rejectionlog 1 (_log_rejection :703), _unbound_refusal 3 (run_engine :646, _rebind_refusal :932, main :1710), _bind_process_to 1 (_spine_open :1028), _rebind_refusal 1 (_spine_open :994), BINDS_WITHOUT_A_BOUND_SPINE 1 (main :1710), _HOW_TO_BIND 1, _HOW_TO_REBIND 1. The two that mattered most for the shipped-inert risk are the binder and the refusal, and both are called from production paths: _bind_process_to from _spine_open, _unbound_refusal from main's dispatch AND run_engine. Plus 11 references from tests. Stop condition not hit."
+        },
+        {
+          "id": "c2",
+          "statement": "the three env overrides (SPINE_CALLLOG, SPINE_START_MARKER, SPINE_REJECTION_LOG) still work",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "MEASURED live, evidence/g3-env-overrides.txt: a door launched with SPINE_CALLLOG, SPINE_START_MARKER and SPINE_REJECTION_LOG all pointed at a directory AWAY from the spine wrote each file at its override and left nothing beside the spine (honoured True / leaked False, all three), server exit 0. This is the exact hazard the handoff named -- a naive recompute-from-SPINE.parent late-binding would have silently discarded all three, and tests/test_mcp_lifecycle.py:102-103 plus four other suites depend on them. _telemetry_path reads the override FIRST and only falls back to SPINE.parent, returning None when neither is available."
+        },
+        {
+          "id": "c3",
+          "statement": "the IMPLEMENTER_RESULT artifact exists at the handoff's named path",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && test -s .agent-work/cleanup-a-door/crew-handoffs/g3-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-evidence-1"
+        },
+        {
+          "id": "c4",
+          "statement": "the work is committed and the tree is clean of unintended changes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && git diff --quiet -- scripts .mcp.json tests examples"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-evidence-2"
+        }
+      ],
+      "constraints": [
+        "Return status must be one of complete | partial | blocked | out-of-scope | failed, lowercase"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && test -s .agent-work/cleanup-a-door/crew-handoffs/g3-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-evidence-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && git diff --quiet -- scripts .mcp.json tests examples",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/cleanup-a-door/g3/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-16T13:59:26.229423+00:00",
+    "last_heartbeat": "2026-08-16T14:28:52.851783+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T14:28:59.100744+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff is complete and the one derivation it handed me to settle is confirmed by measurement: the server script's own location resolves to the same primary checkout the incumbent SPINE_FILE-based derivation returns, while also answering when nothing is bound. The shape of the work is now fixed: SPINE and SESSION become late-bound module state with a single named binder; the three telemetry paths become functions that keep their env overrides and answer None when unbound; _primary_checkout_for_lifecycle stops reading os.environ.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:59:58.102975+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-red",
+      "why": "The regression test is committed-ready and demonstrably fails on the defective tree for the right reason, so the fix that follows cannot pass it by accident. Writing it first also settled the refusal CONTRACT the implementation must now meet: two message shapes (unbound names no path and points at spine_open; bound-but-unusable names the path and says how to rebind), 10 of 11 tools refusing, and spine_open reachable as the single escape hatch.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:02:44.064206+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-fail-closed",
+      "why": "Fail-closed landed as one class with two messages. The design call I owned -- where the check sits -- resolved to the tools/call dispatch in main(), ahead of every per-tool required-argument check, so an unbound door answers the question the caller actually has rather than a downstream complaint about an argument that would not have helped; run_engine asks the SAME predicate again as defense in depth for the pass-through path, which also removes the '--file None' argv that would otherwise be constructed. Three committed tests encoded the OLD fail-open mechanism and were reconciled deliberately, each keeping its claim and changing only its mechanism: test_mcp_door_engine_cwd's removed-spine-directory test now asserts a refusal that never reaches the engine while still proving the process neither moves nor dies, and the two DC3 controls in test_mcp_identity now assert a REFUSAL rather than a crash -- strictly more evidence for DC3, since a crash proves only the absence of an answer while a refusal proves the door was reachable, had no identity, and did not read the parent's.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:08:25.539967+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-bind-on-open",
+      "why": "Bind-on-open reached WITHOUT weakening _identity_violation -- the stop condition did not fire. The guard compares against SPINE at call time, so moving the binding left it strictly intact, and four new tests measure that rather than assume it. Both identity roots move together: claim succeeding in the transcript is what proves SESSION was rebound, not just SPINE. The rebind is refused while this process holds an active lease, checked BEFORE open_work so a refusal never leaves a real branch and worktree behind. ONE departure from the handoff's preferred answer, forced by measurement and not by preference: deriving the primary checkout from Path(__file__) OUTRIGHT is wrong, because it silently redirects spine_open into whichever checkout the SCRIPT lives in. Measured -- under the outright replacement, tests/test_mcp_lifecycle.py FullStdioRoundTripTests created the branch and worktree 'roundtrip-work' in the developer's REAL checkout and still passed, because spine_close tidied up after itself. I removed that worktree and branch and verified the repo is clean. The correct shape is bound-spine-first with the script's location as the FALLBACK when nothing is bound: identical answers in production (measured both ways), unchanged isolation for every existing caller, and it still answers the case the old form could not answer at all. This is not the fourth ambient input the stop condition guards against -- no new environment variable, no cwd read -- so I proceeded rather than stopping, and recorded it here and in the function's own docstring.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:15:31.283710+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-pins",
+      "why": "The :194 ban survives byte-identical -- verified by extracting BANNED_IDENTIFIERS, _referenced_names, both test methods and the whole enclosing class from the 408e6d26 tree and from this one and comparing them byte for byte, all five IDENTICAL, and it still passes. The new module-wide pin is strictly stronger and demonstrably capable of failing: mutating the REAL server with a second rebind site (_quietly_retarget_the_session doing 'global SESSION; SESSION = ...') turns the new pin RED while the :194 ban stays GREEN under the identical mutation -- which is the concrete demonstration that a function-scoped ban structurally cannot see a second rebind site elsewhere in the module, and therefore that adding rather than rewriting was the right call. The detector counts AnnAssign, AugAssign, walrus, for/with/except targets and not just ast.Assign, because enumerating one assignment shape is the same shape-guessing this repo's identity guards were defeated by six times. Source restored byte-identical after the mutation.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:15:31.742786+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-reconcile",
+      "why": "The demo default is gone, so an interactive session that sets nothing now lands on a refusal that names spine_open rather than on a demo spine's answers presented as its own. The full clean-env suite is green -- 3093 passed, 6 skipped, 1153 subtests, 0 failed. One extra reconciliation the handoff did not list but its constraints did anticipate: map/INDEX.md went stale because this gate adds entities (_spine_from_env, _engine_from_env, _telemetry_path, _calllog, _start_marker, _rejectionlog, _unbound_refusal, _bind_process_to, _rebind_refusal), so I rebuilt it with py -m scripts.code_map build --root . and it is committed with the change.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:26:07.049218+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-evidence",
+      "why": "Every new symbol is wired to a production call site -- the shipped-inert failure this gate could not afford did not happen, and the two that carry the gate's whole meaning (_bind_process_to from _spine_open, _unbound_refusal from main's dispatch and run_engine) are the best-wired of the twelve. The three telemetry overrides survive the late-binding, measured live rather than reasoned about. The change is committed as 4e1f22cb with the rebuilt code map, the working tree is clean of source changes, and the IMPLEMENTER_RESULT is written to the path the handoff names -- left uncommitted, per the handoff's Deliverable path check marking everything under .agent-work/ local-only.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:28:52.851768+00:00"
+    }
+  ]
+}

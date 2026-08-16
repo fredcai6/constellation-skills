@@ -1,0 +1,583 @@
+{
+  "work_id": "cleanup-a-door-g3-rework3-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-anchor",
+    "m2-binding",
+    "m3-inert-write",
+    "m4-adoption",
+    "m5-sweep",
+    "m6-suite",
+    "m7-commit",
+    "m8-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the handoff is complete",
+      "imperative": "Read the inherited doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), then the project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, then the handoff at .agent-work/cleanup-a-door/crew-handoffs/g3-rework3-implementer-handoff.md and the four named anchors. Verify the handoff carries task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, return format; block if incomplete. Measure the four claimed defects against HEAD before touching anything -- a correction written from the handoff's description rather than from the code is how the previous three attempts failed. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + crew context + glossary + handoff loaded; handoff complete; all four claimed defects independently reproduced at HEAD",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Doctrine (global-crew.md, global-everyone.md), docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, and the handoff all read. Handoff complete: task, intent, allowed scope, specific exclusions, required evidence, stop conditions, return format all present (test mode is not a named field -- the required-evidence list implies inspection/test-after, since the close criteria forbid behaviour change; recorded as a handoff gap). All four defects reproduced at HEAD independently of the handoff's description: (1) scripts/mcp_spine_server.py:129-131 says spine_open derives its checkout 'fresh off SPINE_FILE ... rather than the module's own SPINE binding', while :846 reads 'anchor = SPINE.parent if SPINE is not None else Path(__file__).resolve().parent' -- SPINE_FILE never, SPINE always when bound; both halves inverted. (2) :30 still says 'bound at server-launch time from the environment', which :892 in _bind_process_to already records must become 'bound at launch OR at spine_open'. (3) tests/test_mcp_lifecycle.py:335-339 claims _spine_open RE-READS SPINE_FILE at call time and never the bound SPINE; _spine_open's own AST reads os.environ once, for SPINE_PARENT, and takes its root from _primary_checkout_for_lifecycle. (4) tests/test_mcp_adoption.py:101-103 claims import raises KeyError without both vars; measured with both unset: IMPORT OK, SPINE = None, SESSION = '', ENGINE resolved. No stop condition fires: all four are text, plus one dead test-setup line."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-anchor": {
+      "id": "m1-anchor",
+      "title": "Finding 1: the module docstring's checkout-anchor claim, corrected to the anchor that runs",
+      "imperative": "scripts/mcp_spine_server.py:129-131 says _spine_open derives its primary checkout 'fresh off SPINE_FILE (ambient, server-launch-time state) rather than the module's own SPINE binding'. Both halves are backwards at HEAD: _primary_checkout_for_lifecycle anchors on SPINE.parent when SPINE is bound and falls back to the module's own directory, and reads SPINE_FILE never. Rewrite that sentence to describe the anchor that actually runs, keeping the surrounding point that _spine_open must not be redirected onto the bound spine. Docstring text only -- no behaviour change.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded, handoff complete, defects reproduced",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: context loaded, handoff verified complete, all four defects reproduced at HEAD."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "before/after captured; the new wording names the anchor _primary_checkout_for_lifecycle actually uses, measured from the AST rather than copied from the handoff",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "BEFORE (scripts/mcp_spine_server.py:127-132): '`spine_open` never references `SPINE`, `SESSION` or `run_engine` (checked ...), deriving the primary checkout it opens work from fresh off `SPINE_FILE` (ambient, server-launch-time state) rather than the module's own `SPINE` binding'. AFTER: '... never references `SPINE`, `SESSION` or `run_engine` in its OWN source (checked ...), taking the primary checkout it opens work from `_primary_checkout_for_lifecycle` instead. That helper reads no environment at all -- not `SPINE_FILE`, not anything: it anchors on the BOUND spine's own directory when there is one, and on THIS SCRIPT's own when there is not. The identifier ban is on `_spine_open`'s own source, which that helper is not, so what the ban buys is that no ARGUMENT on the call can redirect the open onto the bound spine -- never that the bound spine is invisible to the tool.' The wording is measured, not copied: the AST reports anchor = 'SPINE.parent if SPINE is not None else Path(__file__).resolve().parent' and zero SPINE_FILE references in the helper's executable body. The surrounding point the handoff said to keep is kept, and sharpened -- the old text made the ban sound like 'the bound spine is never consulted', which is what let the inverted sentence look plausible for three attempts; the real property is that no ARGUMENT can redirect the open."
+        },
+        {
+          "id": "c2",
+          "statement": "the docstring no longer asserts a SPINE_FILE-derived checkout, the code it describes still reads SPINE_FILE zero times, and the lifecycle+identity suites are green",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && python3 .agent-work/cleanup-a-door/evidence/g3-rework3-anchor-check.py && python3 -m pytest tests/test_mcp_lifecycle.py tests/test_mcp_identity.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-anchor-1"
+        }
+      ],
+      "constraints": [
+        "docstrings and comments only in scripts/mcp_spine_server.py",
+        "do not touch _identity_violation, tests/test_mcp_lifecycle.py:194 or its positive control"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-anchor-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && python3 .agent-work/cleanup-a-door/evidence/g3-rework3-anchor-check.py && python3 -m pytest tests/test_mcp_lifecycle.py tests/test_mcp_identity.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-binding": {
+      "id": "m2-binding",
+      "title": "Finding 2: 'bound at server-launch time' becomes 'bound at launch OR at spine_open', at :30 and at its quoted copy",
+      "imperative": "scripts/mcp_spine_server.py:30 still says ambient state is bound at server-launch time from the environment. _bind_process_to's own docstring at :868 already records that this must now read 'bound at launch OR at spine_open' and that nothing may be left describing the previous spine. Make :30 say that. tests/test_mcp_identity.py:547 quotes the stale sentence as the seam's definition -- prose in a class docstring, not an assertion -- so update that quote too and stop the propagation. Text only.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "finding 1 corrected and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-anchor complete: the anchor claim is corrected and its check plus the lifecycle/identity suites are green (49 passed, 10 subtests)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "before/after captured for both :30 and tests/test_mcp_identity.py:547; both now describe binding at launch or at spine_open",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "BEFORE scripts/mcp_spine_server.py:30: 'Ambient state is bound at server-launch time from the environment, NOT exposed as tool arguments (so a model cannot point the door at a different spine or identity mid-conversation):'. AFTER: 'Ambient state is bound at launch OR at `spine_open` -- at launch from the environment, and thereafter by `_bind_process_to`, the one place `SPINE` and `SESSION` are assigned outside module scope, when a successful `spine_open` binds this process to the spine it just minted (`decision:bind-on-open-over-new-verb`, issue #603). What did NOT change is that neither is ever exposed as a tool argument, so a model still cannot point the door at a different spine or identity mid-conversation, and `_rebind_refusal` still blocks the swap while this process holds an active lease -- one spine per process stands. The values:' -- the wording _bind_process_to:892 prescribes, plus the two invariants that survived, so the correction does not read as a loosening it is not. BEFORE tests/test_mcp_identity.py:547: quotes 'Ambient state is bound at server-launch time from the environment ... that is the seam identity rides on.' AFTER: quotes the corrected sentence and then says WHICH half is this class's seam -- the launch-from-the-environment half -- with a parenthetical that the spine_open half binds a process that had no spine, and does not deliver a parent's identity to a child, which is what DC3 measures. Prose only; no assertion touched (identity suite 31 passed, 10 subtests)."
+        },
+        {
+          "id": "c2",
+          "statement": "no launch-time-only binding claim survives in either file, and the identity suite is green",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && python3 .agent-work/cleanup-a-door/evidence/g3-rework3-binding-check.py && python3 -m pytest tests/test_mcp_identity.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-binding-1"
+        }
+      ],
+      "constraints": [
+        "tests/test_mcp_identity.py: the quoted stale sentence at :547 only",
+        "no assertion changes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-binding-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && python3 .agent-work/cleanup-a-door/evidence/g3-rework3-binding-check.py && python3 -m pytest tests/test_mcp_identity.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-inert-write": {
+      "id": "m3-inert-write",
+      "title": "Finding 3: delete the inverted comment together with the inert os.environ write it justifies",
+      "imperative": "tests/test_mcp_lifecycle.py:335-341 carries a comment claiming _spine_open deliberately re-reads SPINE_FILE from the environment at call time and never the module's bound SPINE. Both clauses are false at HEAD and the second is exactly inverted. The comment exists to justify the os.environ['SPINE_FILE'] = ... write at :341. Prove the write inert first -- remove it, observe the test still pass -- then delete comment and write together and observe the test pass again. If the write turns out NOT to be inert, stop and report: that is a declared stop condition.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "findings 1 and 2 corrected and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-anchor and m2-binding both complete, both checks green with demonstrated controls, identity+lifecycle suites green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the write is proven inert by measurement (test observed passing with it removed) before the deletion is made permanent",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "INERTNESS PROVEN BEFORE THE DELETION, and proven harder than 'remove it and see'. I replaced the write with os.environ.pop('SPINE_FILE', None) -- actively REMOVING the variable rather than merely not setting it -- with a Python-level assert that the substitution matched exactly once (a sed that matches nothing leaves a green suite that reads like a passing guard). Under that probe: pytest -k escape -> 1 passed; whole file -> 18 passed. So the test passes not just without the stale value but with SPINE_FILE absent entirely, which is the stronger claim and matches the fact that _spine_open's only environment read is os.environ.get('SPINE_PARENT'). Restored from a byte-copy and confirmed git diff empty for that file before making the real edit. THEN deleted the 5-line comment and the write at :341 together; lifecycle suite 18 passed again. The stop condition 'the write turns out NOT to be inert' did not fire."
+        },
+        {
+          "id": "c2",
+          "statement": "comment and write are both gone and the lifecycle suite is green",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && python3 .agent-work/cleanup-a-door/evidence/g3-rework3-inert-check.py && python3 -m pytest tests/test_mcp_lifecycle.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-inert-write-1"
+        }
+      ],
+      "constraints": [
+        "the one deleted os.environ write is the ONLY permitted non-text change",
+        "tests/test_mcp_lifecycle.py:194 and its positive control stay byte-identical"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-inert-write-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && python3 .agent-work/cleanup-a-door/evidence/g3-rework3-inert-check.py && python3 -m pytest tests/test_mcp_lifecycle.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-adoption": {
+      "id": "m4-adoption",
+      "title": "Finding 4: correct the import-time KeyError rationale that #603 falsified",
+      "imperative": "tests/test_mcp_adoption.py:98-102 justifies hand-typing the tool names by claiming mcp_spine_server reads SPINE_FILE/SPINE_ENGINE at import time and raises KeyError without both set, citing the module docstring as authority. Measure it: importing with both variables removed succeeds and leaves SPINE = None. Correct the rationale only -- the practice it defends is still fine. The citation is finding 1 propagating, so the corrected text must stand on its own measurement.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "finding 1 corrected, so the cited authority is true",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-anchor complete: the module docstring no longer carries the SPINE_FILE-derived-checkout claim this rationale cites as its authority."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "before/after captured; the new rationale is backed by an observed import with both variables unset",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "BEFORE tests/test_mcp_adoption.py:101-104: 'Hand-typed here on purpose, not imported at module scope -- mcp_spine_server reads SPINE_FILE/SPINE_ENGINE from the environment at IMPORT time and raises KeyError without both set (its own module docstring says so), so importing it here would make collecting this file itself require a bound spine.' AFTER: 'Hand-typed here on purpose, not imported at module scope -- because importing mcp_spine_server is not side-effect-free. At module scope the door binds SPINE and SESSION from whatever the AMBIENT environment happens to hold, and it does sys.path.insert(0, ENGINE.parent) in the importing process. Either at COLLECTION time would tie this file's collection to the collecting shell's environment, before any test could supply a scratch one. (An unbound door has been a first-class state since issue #603: with neither variable named, the module-scope binding is simply SPINE = None.)' The replacement rationale is measured, not asserted: predicate C reads the door's module-scope statements from the AST and confirms both side effects really are there -- SPINE/SESSION assigned from the environment, and sys.path.insert(0, str(ENGINE.parent)) -- so the new reason is not a second wrong reason. Predicate A re-measures the import live in a clean subprocess each run: with SPINE_FILE and SPINE_ENGINE both removed, import succeeds and SPINE = None. A FIFTH instance of the same claim was found and corrected at :172-179 (see the advance why)."
+        },
+        {
+          "id": "c2",
+          "statement": "no import-time KeyError claim survives, the measured import still succeeds with both variables unset, and the adoption suite is green",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && python3 .agent-work/cleanup-a-door/evidence/g3-rework3-adoption-check.py && python3 -m pytest tests/test_mcp_adoption.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-adoption-1"
+        }
+      ],
+      "constraints": [
+        "rationale text only; the hand-typed tool names stay"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-adoption-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && python3 .agent-work/cleanup-a-door/evidence/g3-rework3-adoption-check.py && python3 -m pytest tests/test_mcp_adoption.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-sweep": {
+      "id": "m5-sweep",
+      "title": "Blast-radius sweep scoped to what the change invalidated, not to what I may edit",
+      "imperative": "The previous sweep reported zero by scoping itself to the rework's edit permission. Scope this one to the blast radius: every artifact asserting something about what #603 changed, regardless of whether it is editable. Parse AST string constants (the parser joins implicit concatenation) and comment runs, whitespace-collapse them, and search on the identifiers this change touched -- SPINE_FILE, SPINE_ENGINE, SPINE, SESSION, spine_open, _primary_checkout_for_lifecycle, KeyError, 'import time', 'launch time' -- not on remembered phrasings. Assert the scanned count is non-zero so an empty sweep cannot report clean. Then READ every hit; do not let a classifier file them out of view. Report total scanned, live invalidated claims (must be 0 across scripts/, tests/, examples/, docs/), and the hits read and dismissed with why. A live claim in a fenced file is reported, not fixed.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all four corrections are in",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All four handoff-named corrections are in, plus a fifth instance found at tests/test_mcp_adoption.py:172-179. Each has a check with a demonstrated control."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "sweep is AST-aware and identifier-driven, states total scanned, and every hit was read by me rather than sorted by the classifier",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "COMMAND: py .agent-work/cleanup-a-door/evidence/g3-rework3-sweep.py [--controls|--assert-clean]. Full report at evidence/g3-rework3-sweep-report.txt (1807 lines); every tier-2 source fragment dumped to evidence/g3-rework3-tier2-source.txt. TOTALS: 10178 tracked files listed, 9971 with readable prose SCANNED, 207254 prose fragments scanned, tier 1 (mentions any touched identifier) 2689, tier 2 (must be read) 1109 of which 271 in the source tree, classified 128, classified-and-in-source-tree 21. The loop asserts what it looped over: scanned_files, scanned_frags and tier1 are all asserted non-zero, so an extractor that silently returns nothing dies instead of reporting clean. AST-AWARE AND IDENTIFIER-DRIVEN: prose comes from AST string constants (implicit concatenation already joined by the parser, which is what defeats blocker 2) plus comment RUNS joined across consecutive lines, everything whitespace-collapsed; triggers are the identifiers #603 touched, not remembered phrasings. TIER 2 IS A UNION of the distinctive-identifier trigger and the claim-class trigger because --controls proved neither alone catches all six known claims: findings 2 and 2b name no distinctive identifier at all. All 6 controls pass. EVERY ONE OF THE 21 CLASSIFIED SOURCE HITS WAS READ BY ME and carries a written disposition in the REVIEWED ledger -- 6 accurate (past-tense records of what #603 fixed; rewriting them would erase the history), 13 unrelated (the class predicates are deliberately broad: companion imports, 3.14 dataclasses, an eval fixture), 2 live-fenced. I also read the wider 271-fragment source dump, which is how I found the 7th instance in docs/CHECKLIST_ENGINE_DESIGN.md that NO predicate classified."
+        },
+        {
+          "id": "c2",
+          "statement": "the sweep evidence file exists and records 0 live invalidated claims in scripts/, tests/, examples/, docs/",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && python3 .agent-work/cleanup-a-door/evidence/g3-rework3-sweep.py --assert-clean"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-sweep-1"
+        }
+      ],
+      "constraints": [
+        "fenced files are reported, never edited"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-sweep-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && python3 .agent-work/cleanup-a-door/evidence/g3-rework3-sweep.py --assert-clean",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-suite": {
+      "id": "m6-suite",
+      "title": "Full clean-env suite green, with the count",
+      "imperative": "Clear __pycache__ first (#597), then run the full suite in a clean environment and record passed/skipped/subtests/failed. Compare against the 176133ac baseline of 3093 passed, 6 skipped, 1153 subtests, 0 failed: this rework changes no behaviour, so a drop of exactly one test-setup line and no assertion should leave the counts intact.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "sweep clean",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Sweep clean: 0 live invalidated claims in non-fenced source files; 2 reported in fenced files; controls all pass."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "counts recorded and compared to the 176133ac baseline",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "__pycache__ cleared first (#597), then env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u SPINE_ENGINE py -m pytest -q. RESULT: 3093 passed, 6 skipped, 1153 subtests passed, 0 failed, in 128.48s. IDENTICAL to the 176133ac baseline on every one of the four counts. That identity is the evidence for 'no behaviour change': the diff deletes one test-setup line and touches no assertion, so an unchanged total is exactly what a text-only rework should produce -- a changed count would have meant I had done something I was not asked to do."
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green in a clean environment with cleared __pycache__",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u SPINE_ENGINE python3 -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-suite-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u SPINE_ENGINE python3 -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-commit": {
+      "id": "m7-commit",
+      "title": "Commit the four corrections",
+      "imperative": "Commit all four files. The deliverable-path check requires the change committed and git check-ignore to exit 1 for each. Verify the diff is docstrings, comments, and exactly one deleted test-setup line -- no behaviour, no assertion changes -- before committing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "suite green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Full clean-env suite green at the 176133ac baseline counts."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "git diff --stat captured; the diff is text plus one deleted os.environ line and nothing else",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "git diff --stat (vs 176133ac): docs/CHECKLIST_ENGINE_DESIGN.md 7 +++++--, scripts/mcp_spine_server.py 27 +++++++++++++++++++--------, tests/test_mcp_adoption.py 23 +++++++++++++++--------, tests/test_mcp_identity.py 22 +++++++++++++++-------, tests/test_mcp_lifecycle.py 6 ------ | 5 files changed, 54 insertions(+), 31 deletions(-). PROVEN TEXT-ONLY BY AST, not by reading the diff: for each of the four .py files I parsed HEAD and the working tree, stripped every docstring, blanked every string constant to '<str>' (comments never reach the AST at all) and unparsed both, so two matching skeletons can differ only in prose. Three files came back IDENTICAL. tests/test_mcp_lifecycle.py came back with exactly ONE changed executable line: -        os.environ['<str>'] = str(bound_spine). TOTAL executable lines changed across the four files: 1, asserted. The fifth file is Markdown. Separately, lines 183-300 of tests/test_mcp_lifecycle.py -- the spine_open identity pin at :194 and its positive control -- diff empty against HEAD, byte-for-byte identical as the handoff fences them. Committed as 5a626351; all five files are tracked and git check-ignore exits 1 for each."
+        },
+        {
+          "id": "c2",
+          "statement": "the four files are committed and tracked (check-ignore exits 1 for each)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && git diff --quiet -- scripts/mcp_spine_server.py tests/test_mcp_lifecycle.py tests/test_mcp_adoption.py tests/test_mcp_identity.py && for f in scripts/mcp_spine_server.py tests/test_mcp_lifecycle.py tests/test_mcp_adoption.py tests/test_mcp_identity.py; do git check-ignore -q \"$f\" && exit 1; git ls-files --error-unmatch \"$f\" >/dev/null || exit 1; done"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-commit-1"
+        }
+      ],
+      "constraints": [
+        "no map/ rebuild expected; if one becomes necessary, stage first, rebuild last, then commit"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m7-commit-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && git diff --quiet -- scripts/mcp_spine_server.py tests/test_mcp_lifecycle.py tests/test_mcp_adoption.py tests/test_mcp_identity.py && for f in scripts/mcp_spine_server.py tests/test_mcp_lifecycle.py tests/test_mcp_adoption.py tests/test_mcp_identity.py; do git check-ignore -q \"$f\" && exit 1; git ls-files --error-unmatch \"$f\" >/dev/null || exit 1; done",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m8-result": {
+      "id": "m8-result",
+      "title": "Write the IMPLEMENTER_RESULT artifact",
+      "imperative": "Write .agent-work/cleanup-a-door/crew-handoffs/g3-rework3-implementer-result.md from templates/IMPLEMENTER_RESULT.template.md, carrying all five required evidence items: before/after for each of the four corrections, the inertness proof, the blast-radius sweep with its command and counts, the full clean-env suite count, and git diff --stat. Fill Workflow Feedback honestly.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "committed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Committed as 5a626351; all five files tracked and not ignored."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the result artifact exists and carries all five required evidence items",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && test -s .agent-work/cleanup-a-door/crew-handoffs/g3-rework3-implementer-result.md && grep -q 'Return status' .agent-work/cleanup-a-door/crew-handoffs/g3-rework3-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m8-result-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m8-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && test -s .agent-work/cleanup-a-door/crew-handoffs/g3-rework3-implementer-result.md && grep -q 'Return status' .agent-work/cleanup-a-door/crew-handoffs/g3-rework3-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m5-sweep",
+      "statement": "scripts/run_crew.py:468-471 carries a LIVE instance of the #603-invalidated rationale: 'that module reads SPINE_FILE and SPINE_ENGINE straight out of the environment at import time (raises KeyError if either is unset) so importing it here would make importing run_crew itself require a bound spine'. Measured false -- import with both unset succeeds and leaves SPINE = None. Identical class to g3 finding 4, and the practice it defends (hand-typing the mcp__spine__* names) is still fine; only the stated reason is void. scripts/run_crew.py is on this rework's fenced list, so it was reported and NOT fixed."
+    },
+    {
+      "id": "tc2",
+      "from": "m5-sweep",
+      "statement": "tests/test_mcp_lifecycle.py:200 -- the spine_open identity pin's failure message says spine_open 'must act purely on server-launch-time state'. Since bind-on-open (#603), the SPINE that _primary_checkout_for_lifecycle anchors on need not date from launch, so the phrase is loose; the parenthetical immediately after it names exactly what is read and IS correct, and rework 2 already corrected this text at 176133ac. :194 and its positive control are fenced byte-identical by three reviews, so this is reported for a reviewer to rule on, not touched."
+    },
+    {
+      "id": "tc3",
+      "from": "m3-inert-write",
+      "statement": "tests/test_mcp_lifecycle.py:335 and :343-346 -- residual dead scaffolding. The save 'saved_spine_file = os.environ.get(\"SPINE_FILE\")' and the four-line restore in the finally exist ONLY to protect the os.environ write this gate deleted; they are now a no-op that saves a value and hands the same value back. Left in place because the close criterion says 'one deleted test-setup line' and the stop conditions forbid any logic change beyond that single write. Cheap to remove under an explicit instruction."
+    },
+    {
+      "id": "tc4",
+      "from": "m5-sweep",
+      "statement": "docs/agents/CREW_CONTEXT.md's Python Invocation section pins 'python3 has no pytest installed' to a 2026-08-10 measurement on this host. Measured today: python3 and py BOTH report pytest 9.1.1. The pin is correctly dated, which is what made the staleness noticeable, but the section reads as current guidance and a crew following it literally would avoid a working interpreter."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/cleanup-a-door/g3-rework3/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-16T16:02:27.946961+00:00",
+    "last_heartbeat": "2026-08-16T16:28:28.288197+00:00",
+    "claimed_by": "implementer",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T16:28:39.443878+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "The handoff's four claims are now my own measurements, and one of them changed how I will scope the work. Findings 1, 2 and 4 are pure prose. Finding 3 is prose plus one line, and the line has a tail: :341's write is bracketed by a save at :340 and a restore at :349-352 that exist ONLY to protect that write. The handoff's close criterion says 'one deleted test-setup line', so the save/restore stays and becomes a no-op that saves and restores the same value -- harmless, but residual dead scaffolding I will report rather than silently widen scope to remove. The other thing I measured that the handoff did not: docs/agents/CREW_CONTEXT.md says python3 has no pytest on this host (measured 2026-08-10); today python3 and py both report pytest 9.1.1, so my check commands can use python3 -- but I confirmed that by running it rather than assuming, because a wrong interpreter reads as a silently green suite.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:03:53.811256+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-anchor",
+      "why": "The correction is now tied to the code by a check rather than by my reading of it: g3-rework3-anchor-check.py asserts from the AST that the helper's executable body reads SPINE_FILE zero times, that its anchor expression names SPINE, and that the module docstring carries no surviving SPINE_FILE-derived-checkout claim while naming the helper the code calls. The check demonstrably fails -- --demo-control runs predicate C against the exact pre-change sentence and flags 'primary checkout it opens work from fresh off `SPINE_FILE'. One thing I had to fix in the check itself is worth recording: assertion A first went red on the HELPER'S OWN DOCSTRING, which narrates the os.environ read #603 deleted. Prose about a deleted read is not a read, so A now scans the executable body only -- the same distinction this whole rework is about, met once more inside my own instrument.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:05:31.144273+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-binding",
+      "why": "The correction landed, but the control is the real finding of this gate. My first predicate B reported the corrected files clean AND reported the pre-change sentences clean -- because its negative lookahead alternative 'OR at' matched unanchored inside 'point the d[oor at] a different spine', so every stale claim in that neighbourhood was excused. Word-boundary-anchoring the alternatives fixed it, and the control now flags both pre-change sentences by name. This is the third time in this gate's history that an instrument reported zero without being able to report anything else, so I am treating 'run the predicate against the exact text it was written to catch' as mandatory for the sweep in m5-sweep too, not merely good practice.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:07:11.722698+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-inert-write",
+      "why": "Deleting the write exposed something the handoff's line-accounting did not: the write was bracketed by 'saved_spine_file = os.environ.get(...)' above it and a four-line restore in the finally below, and those exist ONLY to protect the write I just removed. They are now a no-op that saves a value and hands the same value back. I did NOT remove them. The handoff's close criterion says 'one deleted test-setup line' and its stop conditions forbid any logic change beyond that single write, and removing executable lines is a logic change however provably null -- so the compliant move is to leave them and report them, not to widen scope on my own judgment. This is the same class as the finding the handoff itself is built on (dead scaffolding surviving because nobody enumerated what a change invalidated), one layer deeper, and it is the reviewer's call, not mine. My own check had to learn the distinction too: predicate B initially flagged the restore, so it now separates a setup write of a computed value from a teardown restore of a saved one, and the control proves it still catches the deleted line while ignoring the restore beside it.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:09:18.119704+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-adoption",
+      "why": "Two things happened here that the handoff did not anticipate, and both are the handoff's own thesis biting. FIRST: the handoff said four claims; there are FIVE. tests/test_mcp_adoption.py:172-179, the docstring of _load_mcp_spine_server, carries the identical falsified claim ('reads those from the environment at IMPORT time and raises KeyError without both SPINE_FILE/SPINE_ENGINE set'). My check found it because it scans the whole file rather than the line range I was pointed at. I corrected it. That is a departure from the literal allowed scope, which names ':98-102' in this file -- I made it deliberately: the file is in scope and is NOT on the fenced list, the close criterion demands 0 live invalidated claims in the source tree, and 'scoped my sweep to my edit permission instead of the blast radius' is the exact mistake this rework exists to correct. Fixing four of five and reporting the fifth would reproduce it. SECOND: my first correction restated the false claim in order to retract it ('the reason this used to give ... is void'), and my own predicate flagged it. I could have taught the predicate to excuse retractions; I reworded instead. A sweep that understands negation is a sweep that can be talked out of a finding, and being talked out of findings is how the last two attempts reported zero. The file is now clean of the claim outright, not clean modulo an exemption.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:11:53.274057+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-sweep",
+      "why": "The sweep found three more instances beyond the handoff's four, and HOW each was found is the finding. #5 (tests/test_mcp_adoption.py:172) came from scanning the whole file instead of the line range I was pointed at. #6 (tests/test_mcp_identity.py:18) came from the claim-class predicate: it says 'binds its ambient state ... at server-launch time', which my narrower m2 check could not match, so a phrasing-based trigger caught what an identifier-based one missed. #7 (docs/CHECKLIST_ENGINE_DESIGN.md:295) matched NO predicate at all -- 'at launch from its environment' -- and I found it only by reading the 271-fragment source dump by hand. That is the handoff's instruction 'READ the hits, do not trust the classifier' paying for itself, and it means the honest description of this sweep is 'an instrument that narrows 207254 fragments to 271 a person can read', never 'an instrument that decides'. Accordingly --assert-clean's exit code comes from a per-hit ledger I wrote by reading, not from a predicate, and a hit absent from that ledger REFUSES rather than passes -- so tomorrow's new claim cannot slip through by not being listed. TWO LIVE CLAIMS SURVIVE, both in FENCED files, both reported and untouched per the stop condition: scripts/run_crew.py:468-471 carries finding 4's exact falsified rationale, and tests/test_mcp_lifecycle.py:200's pin message says 'purely on server-launch-time state', which bind-on-open makes loose. This exposes a real conflict in the handoff for the reviewer to rule on: the close criterion demands 0 live invalidated claims in scripts/, but scripts/run_crew.py is both in scripts/ and fenced. I read that as '0 in non-fenced source files, fenced ones reported' -- the handoff itself fences spine_rail.py's known claim the same way -- and I have stated the interpretation rather than quietly picking one.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:20:18.928611+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-suite",
+      "why": "The suite matching the 176133ac baseline on all four counts -- 3093 passed, 6 skipped, 1153 subtests, 0 failed -- is what closes the 'no behaviour change' claim, and it is worth naming why it is the right evidence rather than a formality. A text-only rework that moved a count would mean an assertion had changed underneath me; a count that matches means the one line I deleted really was dead, which is the same fact the m3 probe measured from the other direction. Two independent routes to the same conclusion.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:25:00.741696+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-commit",
+      "why": "I did not verify 'no behaviour change' by reading the diff, because reading a diff is exactly the judgment that has been wrong three times on this gate. I verified it by construction: strip docstrings, blank every string constant, unparse, compare. Comments never reach the AST, so anything surviving that comparison is real code. The answer was one line, and it was the line I meant to delete. That check is worth more than my assurance, and unlike my assurance it can be re-run by the reviewer. Note the diff spans FIVE files, not the four the handoff named -- docs/CHECKLIST_ENGINE_DESIGN.md is the seventh instance, in a directory the close criterion covers but the allowed-scope list omits. I have flagged every scope departure in the result rather than letting the commit be the first time anyone learns of it.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:25:59.652554+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m8-result",
+      "why": "The result artifact leads with the three scope departures rather than burying them, because that is the single thing a reviewer of a FINAL rework most needs to decide, and each reverts independently since none touches code. The run's real conclusion is finding 7: docs/CHECKLIST_ENGINE_DESIGN.md:295 matched no predicate I wrote and was found only by reading the 271-fragment dump by hand. That makes the honest claim about this sweep 'an instrument that narrows 207254 fragments to 271 a person can read', never 'an instrument that decides' -- and it is why --assert-clean's exit code comes from a ledger I wrote by reading, with absence-from-ledger as a refusal. Four triage candidates recorded, including the two live claims fenced from me.",
+      "mechanical": false,
+      "ts": "2026-08-16T16:28:28.288182+00:00"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+Reviewer crew run complete.
+
+**Verdict: `BLOCK`** — one defect, docs and dead test scaffolding only, no behaviour.
+
+Items 1, 2, 3 and 5 of the rework-2 addendum reproduce exactly. Item 4 does not: running the Commander's own sweep script at HEAD prints **10 invalidated-claim hits, 6 of them LIVE**. The reported `0` is its `LIVE IN-SCOPE` line, and the script defines in-scope as `ALLOWED_SCOPE = ("tests/test_mcp_lifecycle.py",)` — the rework's edit permission, not the change's blast radius. Four invalidated claims survive, two of them in `scripts/mcp_spine_server.py`'s own module docstring; one of those (`:30`) is the exact correction `_bind_process_to`'s docstring at `:868` wrote down and did not make.
+
+The through-line worth the Commander's attention: this gate's last two blockers were both a real measurement read at the wrong scope — blocker 1's `map` rebuild passed its own guard because `git ls-files` didn't yet see the new file; this one's sweep returned 0 because in-scope meant edit permission. Neither was careless. Both were exact answers to a slightly different question than the one being asked.
+
+Delivered to `.agent-work/cleanup-a-door/crew-handoffs/g3-final-review-result.md`, alongside both preserved prior BLOCKs. Survey consolidated and lease released; the tracked tree is clean.

@@ -1,0 +1,13 @@
+**The stop hook is misfiring on me, and I did not act on it.** Verified read-only, not asserted:
+
+- **My work file is done.** `crew-plans/g3-rework-implementer-plan.json` → `DONE: no open items`, `LEASE released`. All 7 items driven through the engine.
+- **The deliverable exists.** `crew-handoffs/g3-rework-implementer-result.md`, 13 KB, `Return status: complete`.
+- **The open `execute` gate is not mine.** `LEASE active: commander-cleanup-a-door (by commander)` — that's my parent. My session is `constellation/cleanup-a-door/g3-rework/implementer/attempt-1`.
+
+The hook keys on `SPINE_FILE`, which for a dispatched crew points at the **Commander's** `spine.json`, not the crew's own plan. So it read my parent's in-progress gate and told me to load `constellation-commander`, rewrite `STATE_NOTE.md`, and drive `execute.json` gate by gate. A crew doing that would be seizing its Commander's run — the exact thing the lease exists to prevent. I ran no mutating verb against `spine.json`; `current` on both files is how I established which was which.
+
+Nor is this an honest `block`: I have nothing open to block on, so calling `block` on my own finished plan would be a false signal, and `block`/`waive` on the parent's spine isn't mine to call.
+
+The one action available was to make sure this reaches you, so I appended it to the result's Workflow Feedback, next to the related gap I'd already flagged: the crew skill's two branches ("a spine is bound for you" / "nothing is bound") don't cover *"a spine is bound, but it belongs to your parent"* — and the hook has the same blind spot. It will fire on every crew you dispatch. Teaching it to compare the bound spine's lease holder against the calling session before declaring a crew mid-flight would fix both.
+
+The g3 rework itself is unchanged and complete: commit `359d93df`, suite **3093 passed / 6 skipped / 1153 subtests**, stranded references **4 before → 0 in scope**, with `scripts/hooks/spine_rail.py:1081` carried out as triage candidate `tc1`.
