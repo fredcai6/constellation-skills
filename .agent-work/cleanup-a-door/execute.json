@@ -1,0 +1,184 @@
+{
+  "work_id": "cleanup-a-door",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement", "g1-review", "g1-integrate",
+    "g2-implement", "g2-review", "g2-integrate",
+    "g3-implement", "g3-review", "g3-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read the inherited global doctrine (references/global-orchestrator.md, references/global-everyone.md), then this repo's deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/CREW_CONTEXT.md. There are no Cartographer packets and map/ids.jsonl is empty -- the substitute set is hash-pinned in .agent-work/cleanup-a-door/map-orientation.json. Confirm the frozen plan's intent and scope against LAUNCH_ORDER.md, MISSION_FRAME.md, and the cold plan critic's ten findings at .agent-work/cleanup-a-door/crew-handoffs/plan-critic-result.md -- this plan is the POST-critic revision and every gate below carries findings the critic proved. Then attest c1.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "orchestrator context + glossary + crew context loaded; plan intent and scope confirmed against the launch order, mission frame, and the critic's findings", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "#604 telemetry-never-fatal: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for gate g1 and dispatch constellation-implementer through scripts/run_crew.py. TASK: make the door's telemetry writes incapable of failing a tool call or the server process. `_log` (scripts/mcp_spine_server.py:180) opens CALLLOG unguarded and `run_engine` calls it at :461 OUTSIDE its own try/except; main() catches only KeyError at :1355/:1360, so any OSError from the log write unwinds the whole process. START_MARKER.write_text (:184) has the same exposure. The fix shape ALREADY EXISTS in this module -- `_log_rejection` (:472) wraps its write, reports the loss to stderr, and never raises; reuse that shape rather than inventing a second one. Catch OSError (covering FileNotFoundError, PermissionError, IsADirectoryError), not bare Exception. stderr is safe: stdout is the JSON-RPC channel (main() writes protocol to sys.stdout only, :1367/:1375). SECOND DELIVERABLE, and it is not optional (critic finding 4, measured): a COMMITTED REGRESSION TEST that FAILS on the pre-fix tree and passes after -- a subprocess whose exit code is asserted with the telemetry path pointed at an unwritable location. Demonstrate it failing on the pre-fix tree; do not assert that it would. Without it this gate's pytest postcondition passes identically on the healthy and the defective tree (measured: 89 passed on the UNFIXED tree) and #604 can return the day after merge. Integrate the returned IMPLEMENTER_RESULT: `attach g1-implement --type implementer-result --field status=<verbatim lowercase Return status>`.",
+      "preconditions": [{"id": "p1", "statement": "execution context loaded", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)", "check": {"kind": "artifact", "evidence_type": "implementer-result", "match": {"status": "complete"}}, "satisfied": false}],
+      "constraints": [
+        "Do NOT change _identity_violation's semantics (fenced -- floats to the Admiral).",
+        "Do NOT touch scripts/checklist_engine.py, scripts/hooks/**, scripts/run_crew.py, scripts/gauge_reader.py (lanes B and C own them, running concurrently).",
+        "A swallowed telemetry failure must still be VISIBLE on stderr. A silent drop recreates, one level down, the invisible-diagnosable-event defect this fixes.",
+        "PRESERVE the SPINE_CALLLOG / SPINE_START_MARKER / SPINE_REJECTION_LOG environment overrides (:162/:167/:177). tests/test_mcp_lifecycle.py:102-103 relies on them.",
+        "Test by launching the server as a SUBPROCESS with the environment under test -- never by reasoning about this session's own door. A working probe is at .agent-work/cleanup-a-door/door_probe.py; pre-fix output is at .agent-work/cleanup-a-door/evidence/pre-fix-probes.txt."
+      ],
+      "anchors": {
+        "structural": ["scripts/mcp_spine_server.py:180-184 _log", "scripts/mcp_spine_server.py:441-462 run_engine", "scripts/mcp_spine_server.py:472-499 _log_rejection (the shape to reuse)", "scripts/mcp_spine_server.py:1322-1377 main()"],
+        "capability": ["door telemetry: the call log and start marker"],
+        "constraint": ["constraint:stdout-is-the-protocol-channel -- diagnostics go to stderr only", "constraint:env-overrides-for-log-paths-must-survive"],
+        "decision": ["decision:telemetry-never-fatal -- the call log is diagnostic; a failed write drops the record and continues, never fails the call @grade: settled/measured · leans g1-implement"],
+        "evidence": ["claim:604-kills-the-server -- REPRODUCED pre-fix at a69bbac4: EXIT 1, traceback through _log(rec) at :461. Must be shown not reproduced, with the exit code, after."],
+        "confidence_flags": ["map/ids.jsonl empty -- no map anchor ids exist; substitutes hash-pinned in map-orientation.json (tc1)"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "#604 telemetry-never-fatal: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer through scripts/run_crew.py. Verify independently: (1) the crash reproduces on the pre-fix tree and does NOT after, both with process exit codes captured from a real subprocess; (2) the guard catches OSError, not bare Exception; (3) the loss is reported on stderr, not silently dropped; (4) NO telemetry write anywhere in the module remains unguarded -- enumerate every filesystem write in the module and state the count (a guard that loops must assert what it looped over; the critic counted four: :181, :184, :492, :535); (5) stdout stays pure JSON-RPC; (6) the new regression test GENUINELY FAILS on the pre-fix tree -- check it out and run it, do not accept the claim; (7) the SPINE_CALLLOG/SPINE_START_MARKER/SPINE_REJECTION_LOG env overrides still work.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g1", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g1-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "#604 telemetry-never-fatal: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the probe yourself and confirm the IMPLEMENTER_RESULT is fresh (scripts/run_crew.py --verify-result), then advance. BLOCK: return for rework. Harvest Workflow Feedback into the run's lesson pool. Log out-of-scope finds as triage candidates.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g1", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "a bound-but-missing spine directory no longer kills the door, PROVEN BY A TEST THAT FAILS PRE-FIX; the MCP suite passes", "check": {"kind": "command", "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_mcp_spine_server.py tests/test_mcp_identity.py tests/test_mcp_lifecycle.py tests/test_mcp_door_engine_cwd.py tests/test_mcp_friction_capture.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "#605 usable shipped demo: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for gate g2 and dispatch constellation-implementer through scripts/run_crew.py. GATE ORDER NOTE: this gate runs BEFORE the #603 binding gate, reversing the launch order's presentation sequence. Reason, from critic finding 8 and adopted deliberately: g3 removes .mcp.json's demo default, so demo-first means the shipped default never points at a broken file at ANY commit, and g3 then owns the README sentence its own change falsifies. TASK: examples/mcp-interactive-demo/spine.json is tracked, ships to every install, and carries six absolute paths (lines 20/28/78/86/109/117) into /home/tommy/projects/constellation-skills-wt/f-424 -- a worktree deleted during the epic-418-followon closeout, on one machine, which never existed anywhere else. MEASURED CONSTRAINT THAT OVERRIDES THE ISSUE'S OWN FIX DIRECTION (critic finding 6, verified): #605 and decision:demo-spine-is-generated-not-hand-fixed both say 'paths relative to the example directory'. That CANNOT WORK -- checklist_engine.py:883 runs command checks with `subprocess.run([shell, '-c', command])` and NO cwd, so a relative path resolves against whatever directory the driving process happens to stand in (through the door: the bound spine's git toplevel; from the CLI: the user's cwd). Relative-to-the-example-directory resolves correctly from essentially nowhere. The surviving generator, which already recorded this reasoning, is at .agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-plans/scratch-mcp/make_scratch_spine.py ('Command-check paths are ABSOLUTE (the engine runs command checks with no cwd)'). So settle HOW a shipped spine addresses its own files before writing one. Two candidates, pick one and say why: (a) ship the GENERATOR and generate the spine into a scratch/tmp directory at demo time, shipping no machine-specific spine at all; (b) ship a spine whose check text is self-locating so it needs no ambient cwd. Honor decision:demo-spine-is-generated-not-hand-fixed -- do NOT hand-edit the six strings. ALSO: say where the demo's `<arm>/workspace/` writes land; regenerating under examples/ would dirty a tracked directory. THEN add the guard #605 asks for: a real test in the suite that keeps a machine-specific absolute path out of a shipped example. It MUST FAIL on the current file -- demonstrate that, do not assert it. Integrate the returned IMPLEMENTER_RESULT: `attach g2-implement --type implementer-result --field status=<verbatim lowercase Return status>`.",
+      "preconditions": [{"id": "p1", "statement": "g1 integrated -- telemetry can no longer kill the door, so driving the demo through a real server is survivable", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)", "check": {"kind": "artifact", "evidence_type": "implementer-result", "match": {"status": "complete"}}, "satisfied": false}],
+      "constraints": [
+        "The guard must be able to fail. Demonstrate it failing on the pre-fix file -- a check whose output is identical in the healthy and the defective world cannot discriminate.",
+        "Scope the guard to SHIPPED examples. Do not make it sweep paths the repo legitimately carries (installed absolute skill paths in .agent-work spines, tests/ fixtures).",
+        "examples/mcp-interactive-demo/README.md is IN SCOPE for this gate: its regeneration command points at .agent-work/epic-418-followon/... which no longer exists (the generator moved to .agent-work/archive/2026-08-09-epic-418-followon/...). A dead relative path is not caught by an absolute-path guard. Do NOT change its opening 'this is the checklist the project-scope .mcp.json points at' sentence -- that is still true until g3, and g3 owns it.",
+        "Do NOT touch .mcp.json (g3 owns it), scripts/mcp_spine_server.py (g1 and g3 own it), scripts/checklist_engine.py, scripts/hooks/**, scripts/run_crew.py, scripts/gauge_reader.py.",
+        "tests/test_mcp_spine_server.py:588 (test_mcp_json_referenced_spine_file_exists_and_loads) asserts the .mcp.json default resolves to a real loadable spine. It must STILL PASS at the end of this gate -- if candidate (a) removes the shipped spine file, this gate must reconcile that test, and say so.",
+        "If you add or rename an entity, run `py -m scripts.code_map build --root .` and commit the result, or the freshness test fails on a file you did not think you touched."
+      ],
+      "anchors": {
+        "structural": ["examples/mcp-interactive-demo/spine.json:20,28,78,86,109,117", "examples/mcp-interactive-demo/README.md", "scripts/checklist_engine.py:883 (READ ONLY -- why relative paths cannot work)", ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-plans/scratch-mcp/make_scratch_spine.py (the surviving generator)", "tests/test_mcp_spine_server.py:588"],
+        "capability": ["shipped example: must run where it is installed, on any machine"],
+        "constraint": ["constraint:shipped-content-must-not-carry-machine-specific-absolute-paths", "constraint:engine-runs-command-checks-with-no-cwd -- measured, checklist_engine.py:883"],
+        "decision": [
+          "decision:demo-spine-is-generated-not-hand-fixed -- produce it from the example's own directory so it cannot drift back @grade: guess · leans g2-implement · settle: whichever is smaller once the example's build is read",
+          "decision pressure: how-a-shipped-spine-addresses-its-own-files -- relative-to-example is measurably unworkable; generator-at-demo-time vs self-locating check text is this gate's call, to be stated with its reason"
+        ],
+        "evidence": ["claim:605-demo-unusable -- drive the demo from at least TWO different cwds, one of which is neither the repo root nor the example directory (critic finding 6: driving cwd is the load-bearing variable, not generation directory)"],
+        "confidence_flags": []
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "#605 usable shipped demo: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer through scripts/run_crew.py. Verify independently: (1) no absolute or machine-specific path remains anywhere under examples/ -- enumerate by command and STATE THE COUNT; (2) the demo actually DRIVES from at least two different working directories, one of which is neither the repo root nor the example directory -- run it, paste both transcripts (the driving cwd is the variable that matters, not where the spine was generated); (3) the new guard FAILS on the pre-fix content -- check it out and run it, do not accept the claim -- and passes on the new; (4) the guard is not vacuous: it must assert what it looped over, and it must not pass on an empty set; (5) README.md's regeneration command points at a path that EXISTS; (6) tests/test_mcp_spine_server.py:588 still passes; (7) map/INDEX.md freshness still passes.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g2", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g2-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "#605 usable shipped demo: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: drive the demo from a foreign cwd yourself and confirm the IMPLEMENTER_RESULT is fresh, then advance. BLOCK: return for rework. Harvest Workflow Feedback. Log out-of-scope finds as triage candidates.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g2", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "the demo drives from a cwd it was not generated in, the machine-specific-path guard is green and provably able to fail, and the example/installer/wiring suites pass", "check": {"kind": "command", "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_mcp_spine_server.py tests/test_wire_mcp_interpreter.py tests/test_install_constellation.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "#603 fail-closed and bind-on-open: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for gate g3 and dispatch constellation-implementer through scripts/run_crew.py. This is the run's hardest gate. TWO changes that compose. (A) FAIL CLOSED. Treat UNSET, EMPTY, non-existent, non-file and unreadable as ONE 'unbound' class, and make every tool answer a refusal instead of a demo answer, a crash, or silence. Three distinct failure worlds are MEASURED on the current tree, and the naive fix only addresses one: SPINE_FILE unset -> EXIT 1, KeyError at :146, server dies AT IMPORT, client sees 'Connection closed'; SPINE_FILE='' -> Path('').resolve() is the CWD, server starts and answers `IsADirectoryError: Is a directory: <repo root>`, EXIT 0; SPINE_FILE=<missing path> -> #604's crash before g1. The empty case is the one PRODUCTION WILL TAKE: .mcp.json's form is `${SPINE_FILE:-<default>}` and tests/test_mcp_spine_server.py:574 pins that the key is present, so dropping the default yields `${SPINE_FILE:-}`, which expands to EMPTY, not unset. Also make ENGINE (:145, SPINE_ENGINE) fail closed in the same motion -- measured: unset SPINE_ENGINE is a KeyError at import too, and a session with no SPINE_FILE very likely has no SPINE_ENGINE either. Refusal wording splits (critic finding 10): an UNBOUND refusal cannot name a path that does not exist -- say 'no spine is bound; call spine_open (or set SPINE_FILE)'; a MISSING/UNREADABLE refusal names the path AND says how to rebind. (B) BIND ON OPEN, per decision:bind-on-open-over-new-verb. THE MEASURED COST, established -- do not rediscover: four import-time derivations of SPINE must become late-bound -- CALLLOG (:162), START_MARKER (:167), REJECTIONLOG (:177), and _resolve_confined's `bound_dir: Path = SPINE.parent` DEFAULT ARGUMENT (:188), evaluated once at import and the subtlest of the four. An independent AST pass confirmed there is no fifth. But TWO further roots the four-item list excludes, both proved by the critic: (i) `_primary_checkout_for_lifecycle` (:593) does its OWN hard `os.environ['SPINE_FILE']` read, and _spine_open calls it at :657 inside `except (OSError, RuntimeError)`, which does NOT catch KeyError -- so after (A) lands, an unbound session calling spine_open gets `tool error: missing or unknown 'SPINE_FILE'`, and the exit criterion is NOT reached. PREFERRED ANSWER, and it is this gate's to confirm or reject with reasons: derive the primary checkout from the SERVER SCRIPT'S OWN LOCATION (Path(__file__).resolve()), then `git rev-parse --git-common-dir` from there -- it needs no new env var, no ambient cwd read, and does not reintroduce what :568-592 argues against. If that does not hold, STOP and report rather than adding a fourth ambient input. (ii) `open_work` returns THREE binding values (spine_lifecycle.py:334-340: SPINE_FILE, SPINE_SESSION, SPINE_PARENT). Binding SPINE alone leaves SESSION empty, run_engine then omits --session-id (:442), and checklist_engine.py:1073 refuses `claim requires a non-empty --session-id` -- so the bound session cannot drive anything. REBIND SESSION from open_work's returned SPINE_SESSION too. RULED for this gate: a rebind is REFUSED while this process still holds an active lease on the current spine -- that preserves one-spine-per-process and prevents orphaning a lease; implement and test that refusal. THE PIN (critic finding 7, and its correction to the earlier framing): tests/test_mcp_lifecycle.py:194's identifier ban is over _spine_open's OWN source, so a module-level binder that _spine_open calls leaves it passing UNWEAKENED -- its letter and its spirit both survive. So KEEP :194 AND ITS POSITIVE CONTROL BYTE-IDENTICAL and ADD a new, strictly stronger assertion: an AST pin over the WHOLE MODULE that the set of assignments to SPINE and to SESSION is exactly {module scope, the one named binder}, with its own mutated positive control. That catches the real regression -- a second, quieter rebind site -- which a _spine_open-scoped ban cannot see. Do NOT rewrite :194 into a softer intent-shaped statement. Integrate the returned IMPLEMENTER_RESULT: `attach g3-implement --type implementer-result --field status=<verbatim lowercase Return status>`.",
+      "preconditions": [{"id": "p1", "statement": "g1 and g2 integrated -- telemetry is non-fatal (so an unbound probe is survivable) and the demo is usable (so removing .mcp.json's default never leaves the shipped default pointing at a broken file)", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)", "check": {"kind": "artifact", "evidence_type": "implementer-result", "match": {"status": "complete"}}, "satisfied": false}],
+      "constraints": [
+        "_identity_violation's SEMANTICS are FENCED. It must keep refusing any argv naming a spine other than the bound one. It compares against SPINE at CALL time (:310), so it survives a rebind by construction -- changing WHICH spine is bound is sanctioned; changing HOW MANY are live, or weakening the refusal, is not and floats to the Admiral.",
+        "STOP CONDITION (Honest-Null Clause): if bind-on-open cannot be reached without weakening _identity_violation, that measured finding IS the deliverable. Report it and stop. Do NOT ship a weakened guard.",
+        "Do NOT add a tool that takes a spine path per call -- the order rules it out and it would undo the guard.",
+        "THREE COMMITTED ASSERTIONS BREAK when the demo default is dropped; budget for all three and reconcile them deliberately: tests/test_mcp_spine_server.py:588 (the default must resolve to a real loadable spine -- this is the guard that CAUGHT this class of defect before, so state its REPLACEMENT invariant, most likely 'IF a default is present it must resolve to a loadable spine', rather than deleting it), tests/test_wire_mcp_interpreter.py:42, and tests/test_install_constellation.py:4021 (both pin the literal default string).",
+        "examples/mcp-interactive-demo/README.md's opening sentence -- 'This is the checklist the project-scope .mcp.json points at' -- becomes FALSE with this change. This gate owns correcting it.",
+        "PRESERVE the SPINE_CALLLOG / SPINE_START_MARKER / SPINE_REJECTION_LOG env overrides. A naive 'recompute from SPINE.parent' late-binding silently discards them, and tests/test_mcp_lifecycle.py:102-103 relies on them. Also answer what those three paths ARE when nothing is bound -- g1's guard is scoped to OSError and will NOT catch an AttributeError/TypeError on None.",
+        "Do NOT touch scripts/checklist_engine.py, scripts/hooks/**, scripts/run_crew.py, scripts/gauge_reader.py.",
+        "Do NOT touch scripts/install_constellation.py's or skills/commander/templates/COMMANDER_SPINE.template.json's DOCTRINE -- the order's 'door-detection change' is undefined and floated to the Admiral, not invented here. Reconciling test_install_constellation.py:4021's literal-string assertion is a different thing and IS in scope.",
+        "REQUIRED, not optional (critic finding 4): a COMMITTED REGRESSION TEST that fails pre-fix -- an unbound subprocess whose refusal TEXT is asserted. Without it this gate's pytest postcondition passes identically on the healthy and defective tree.",
+        "Validate by launching the server as a SUBPROCESS with the environment under test. Probe at .agent-work/cleanup-a-door/door_probe.py (supports --unbound, which genuinely REMOVES the var rather than emptying it); pre-fix output at .agent-work/cleanup-a-door/evidence/pre-fix-probes.txt."
+      ],
+      "anchors": {
+        "structural": ["scripts/mcp_spine_server.py:145-147 import-time env reads (SPINE and ENGINE)", "scripts/mcp_spine_server.py:162,167,177 SPINE-derived log paths", "scripts/mcp_spine_server.py:188 _resolve_confined bound_dir default arg", "scripts/mcp_spine_server.py:236-363 _identity_violation (FENCED)", "scripts/mcp_spine_server.py:593 _primary_checkout_for_lifecycle's own os.environ read", "scripts/mcp_spine_server.py:622-736 _spine_open/_spine_close/call_lifecycle_tool", "scripts/spine_lifecycle.py:334-340 open_work's three return values", "scripts/checklist_engine.py:1073 claim requires a non-empty session (READ ONLY)", ".mcp.json", "tests/test_mcp_lifecycle.py:137,194", "tests/test_mcp_spine_server.py:574,588", "tests/test_wire_mcp_interpreter.py:42", "tests/test_install_constellation.py:4021", "examples/mcp-interactive-demo/README.md"],
+        "capability": ["door identity acquisition: import-time-only -> import-time-or-bind-on-open", "door refusal surface when unbound/empty/missing/unreadable"],
+        "constraint": ["constraint:identity-is-not-a-per-call-argument", "constraint:one-door-one-spine-per-process", "constraint:stdout-is-the-protocol-channel"],
+        "decision": [
+          "decision:one-spine-per-process-stands -- bind-on-open changes WHEN the binding is decided, never HOW MANY are live at once; a rebind while a lease is held is REFUSED @grade: settled/human · leans g3-implement,g3-review",
+          "decision:fail-closed-beats-fail-open -- unbound/empty/missing/unreadable yields a refusal; unbound says how to bind, missing names the path @grade: settled/measured · leans g3-implement",
+          "decision:bind-on-open-over-new-verb -- bind inside spine_open rather than add spine_bind @grade: guess · leans g3-implement · settle: attempt the spine_open binding first and report what it costs",
+          "decision pressure: what-is-the-primary-checkout-when-unbound -- preferred answer is the server script's own location; reject with reasons or stop, do not add a fourth ambient input",
+          "decision pressure: add-a-module-wide-assignment-pin-rather-than-rewrite-194"
+        ],
+        "evidence": ["claim:603-fails-open -- probe transcript showing an unbound door REFUSING, then spine_open BINDING it, then a real mutating verb (claim) SUCCEEDING, which is what proves SESSION was rebound too"],
+        "confidence_flags": ["map/ids.jsonl empty -- no map anchor ids (tc1)"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "#603 fail-closed and bind-on-open: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer through scripts/run_crew.py. Verify independently, ALL against a REAL SUBPROCESS you launch: (1) each of UNSET, EMPTY, MISSING-PATH, NON-FILE and UNREADABLE SPINE_FILE makes the server START and every tool return a refusal -- enumerate the tools you called and STATE THE COUNT, and test EMPTY first since that is what `${SPINE_FILE:-}` actually produces; (2) an unbound refusal does not fabricate a path, and a missing/unreadable one names it; (3) spine_open on an unbound door binds it AND a real MUTATING verb (claim) then succeeds -- paste the transcript; claim succeeding is what proves SESSION was rebound, not just SPINE; (4) _identity_violation STILL refuses an argv naming a different spine AFTER a rebind -- test it, do not assume it; this is the guard that must not have been weakened; (5) all four import-time SPINE derivations follow the rebind -- name CALLLOG, START_MARKER, REJECTIONLOG and _resolve_confined's bound_dir individually and state which you verified -- and the three env overrides still work; (6) tests/test_mcp_lifecycle.py:194 and its positive control are BYTE-IDENTICAL to pre-change (diff them), and a NEW module-wide assignment pin exists whose own mutated positive control fails; (7) a rebind while a lease is held is refused; (8) the new regression test genuinely FAILS pre-fix -- check it out and run it; (9) unset SPINE_ENGINE no longer kills the server at import; (10) README.md's now-false opening sentence was corrected. Report ANY weakened guard as BLOCK.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g3", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g3-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "#603 fail-closed and bind-on-open: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the unbound-refuses / open-binds / claim-succeeds probe yourself and confirm the IMPLEMENTER_RESULT is fresh (scripts/run_crew.py --verify-result), then advance -- this gate's command postcondition is the FULL clean-env suite and is also the run's published-head measurement. BLOCK: return for rework, or raise a blocker if the guard cannot be preserved -- an honest null is a complete deliverable here. Harvest Workflow Feedback. Log out-of-scope finds as triage candidates.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g3", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "an unbound door refuses, spine_open binds it, a mutating verb then succeeds, the identity guard still refuses a foreign spine, and the FULL clean-env Linux suite passes at this head", "check": {"kind": "command", "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}
