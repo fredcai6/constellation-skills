@@ -1,0 +1,4 @@
+{"ops": [
+ {"op":"retext-check","id":"m4-verify","which":"postconditions","cond":"c4",
+  "command":"py -m scripts.code_map build > /dev/null 2>&1; git diff -- map/ > .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-map-diff.txt; py -m scripts.code_map build > /dev/null 2>&1; git diff -- map/ > .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-map-diff-2.txt; diff .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-map-diff.txt .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-map-diff-2.txt && git diff --stat -- map/"}
+]}

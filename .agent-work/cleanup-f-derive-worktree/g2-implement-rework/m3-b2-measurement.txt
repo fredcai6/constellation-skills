@@ -1,0 +1,74 @@
+scripts/checklist_engine.py sha256 BEFORE: aa5b2902639f4772f395c9189629f63fa6c5849bffcb0be806ae272947b0c44e
+
+==========================================================================
+UNMUTATED — nothing reads the stamp, so every row is accepted
+==========================================================================
+
+--- the spine's OWN worktree (the cwd the shipped test never drove)
+    the spine's own worktree           exit=0 refused=False
+    a foreign tree                     exit=0 refused=False
+    a sibling sharing a name prefix    exit=0 refused=False
+    not a path at all                  exit=0 refused=False
+    an empty string                    exit=0 refused=False
+    a number                           exit=0 refused=False
+    worktree key absent                exit=0 refused=False
+    a Windows-shaped path              exit=0 refused=False
+    the same path, wrong case          exit=0 refused=False
+
+--- a FOREIGN cwd (the only kind the shipped test drove from)
+    the spine's own worktree           exit=0 refused=False
+    a foreign tree                     exit=0 refused=False
+    a sibling sharing a name prefix    exit=0 refused=False
+    not a path at all                  exit=0 refused=False
+    an empty string                    exit=0 refused=False
+    a number                           exit=0 refused=False
+    worktree key absent                exit=0 refused=False
+    a Windows-shaped path              exit=0 refused=False
+    the same path, wrong case          exit=0 refused=False
+
+UNMUTATED test file (incl. the added self.worktree call): rc=0 | 14 passed, 27 subtests passed in 0.35s
+
+mutation anchor occurrences: 1
+MUTATION APPLIED (asserted, not assumed): True  sha256=3a0e1500f5b2e001d8148dfddee393fc4c07519c00b88aa74817a5a1015b3ac8
+
+==========================================================================
+MUTATED — a stamp-reading refusal: normcase(stored) != normcase(cwd)
+==========================================================================
+
+--- the spine's OWN worktree (the cwd the shipped test never drove)
+    the spine's own worktree           exit=0 refused=False
+    a foreign tree                     exit=1 refused=True
+    a sibling sharing a name prefix    exit=1 refused=True
+    not a path at all                  exit=1 refused=True
+    an empty string                    exit=0 refused=False
+    a number                           exit=1 refused=True
+    worktree key absent                exit=0 refused=False
+    a Windows-shaped path              exit=1 refused=True
+    the same path, wrong case          exit=1 refused=True
+
+--- a FOREIGN cwd (the only kind the shipped test drove from)
+    the spine's own worktree           exit=1 refused=True
+    a foreign tree                     exit=1 refused=True
+    a sibling sharing a name prefix    exit=1 refused=True
+    not a path at all                  exit=1 refused=True
+    an empty string                    exit=0 refused=False
+    a number                           exit=1 refused=True
+    worktree key absent                exit=0 refused=False
+    a Windows-shaped path              exit=1 refused=True
+    the same path, wrong case          exit=1 refused=True
+
+--- B2, the finding, stated as a measurement
+    from the spine's OWN worktree: 'the same path, wrong case' separates = True   ((0, False) vs (1, True))
+    from a FOREIGN cwd:            'the same path, wrong case' separates = False   ((1, True) vs (1, True))
+    from a FOREIGN cwd, the 7 rows carrying a stamp collapse to: {(1, True)}
+    (not read by the mutant at all, so inert from both cwds: {'an empty string': (0, False), 'worktree key absent': (0, False)})
+
+MUTATED test file: rc=1 | 12 failed, 12 passed, 17 subtests passed in 0.26s
+    the ADDED test is named in the mutated failure output: True
+
+scripts/checklist_engine.py sha256 AFTER RESTORE: aa5b2902639f4772f395c9189629f63fa6c5849bffcb0be806ae272947b0c44e
+RESTORED BYTE-IDENTICAL: True
+
+RESTORED test file: rc=0 | 14 passed, 27 subtests passed in 0.34s
+
+B2 MEASURED: the rows are inert from a foreign cwd and discriminate from the spine's own worktree; the added call is green unmutated and red under the mutant; tree restored byte-identical.

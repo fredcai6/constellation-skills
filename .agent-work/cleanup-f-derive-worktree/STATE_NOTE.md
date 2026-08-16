@@ -1,18 +1,24 @@
 # Crash-resume state note — cleanup-f-derive-worktree
 
-- **step:** execute · leg 2 · `execute.json` gate `g2-integrate` — resuming under `ADMIRAL_RULING-1.md` (R1 accepted: narrow the claim, close g2). Then g3, g4 re-authored to R2, g5 `skip` per R3.
-- **slug:** cleanup-f-derive-worktree · branch `cleanup/f-derive-worktree` · worktree `/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree` · HEAD `73bc4f43` (base `e36e630b`; merging `main` at `e0539903`)
+- **step:** execute · leg 3 · `execute.json` gate `g2-implement` (rework 2) — under `ADMIRAL_RULING-2.md`: N2 road 1, delete the engine-side `worktree_from_spine_path`; then g3, `skip` g4 (R2) and g5 (R3).
+- **slug:** cleanup-f-derive-worktree · branch `cleanup/f-derive-worktree` · worktree `/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree` · HEAD `7756fc37` (merging `main` at `17c2cee5`)
 - **next command:** `py scripts/checklist_engine.py --file .agent-work/cleanup-f-derive-worktree/execute.json current`
-- **pid:** none — foreground; no crew running (registry: `execute/commander/attempt-2` is this session; `attempt-1` is the superseded leg 1)
+- **pid:** none — foreground; no crew running
 - **expected artifact:** `.agent-work/cleanup-f-derive-worktree/execute.json` driven to terminal, then the spine's `archive` closeout — this leg's result artifact is `.agent-work/cleanup-f-derive-worktree/crew-handoffs/execute-commander-result.md`
 
-**Read first on resume:** `LAUNCH_ORDER-2.md`, `ADMIRAL_RULING-1.md`,
-`FLOAT_TO_ADMIRAL.md`, then `LAUNCH_ORDER.md`, `PROBLEM_STATEMENT.md`,
-`MISSION_FRAME.md`, `UNTAKEN_ROADS.md`, and the cold critic at
-`crew-handoffs/plan-plan-critic-result.md`.
+**Read first on resume:** `LAUNCH_ORDER-3.md`, `ADMIRAL_RULING-2.md`,
+`ADMIRAL_RULING-1.md`, `FLOAT_TO_ADMIRAL-2.md`, then `LAUNCH_ORDER.md`,
+`PROBLEM_STATEMENT.md`, `MISSION_FRAME.md`, `UNTAKEN_ROADS.md`.
 
-**All three rulings are answered** — nothing is waiting on the Admiral. The
-remaining floats-in-waiting are: any case where "cannot place" genuinely must
-refuse (R2's escape hatch), and publication (the Admiral's, always).
+**State on entry to leg 3.** The g2 rework implementer (attempt-2) completed its
+m0–m4 (suite 3196 passed / 5 skipped / 0 failed) and died in `m5-result` with an
+`Execution error` before writing `crew-handoffs/g2-implementer-rework-result.md`.
+Its work is in the tree (`docs/CHECKLIST_SCHEMA.md`,
+`scripts/checklist_engine.py`, `tests/test_spine_origin_isolation.py`); its
+evidence is under `g2-implement-rework/`. Its registry entry was destroyed by the
+parent launcher's clobber (#617) and restored by union-merge from `HEAD`.
 
-_Updated: 2026-08-16T18:55:00+00:00_
+**Nothing is waiting on the Admiral.** Floats-in-waiting: any case where "cannot
+place" genuinely must refuse (R2's escape hatch), and publication (always theirs).
+
+_Updated: 2026-08-16T19:35:00+00:00_

@@ -91,10 +91,23 @@ TRIP_HARD_GUARDED_VERBS = {"start", "reopen"}
 # path` below), so there is no second value that can disagree with the first and
 # no ambient reading a check command could forge by `cd`-ing first.
 #
-# Nothing was left unguarded by that removal. The comparison answered "where am
-# I", never "is this mine": ownership is the LEASE, and was already. This
-# supersedes the 2026-08-15 worktree-identity ruling, which settled how the two
-# sides of the comparison should be resolved -- a question that no longer exists.
+# Nothing was left unguarded by that removal WHEREVER A LEASE EXISTS -- and the
+# leaseless path was WIDENED. The comparison answered "where am I", never "is
+# this mine": ownership is the LEASE, but only where one is actually held.
+# `require_session` gates mutating verbs only once an active lease exists and
+# returns early otherwise, and `_active_lease` reads a RELEASED lease as absent.
+# So on a spine with NO ACTIVE LEASE -- never claimed, or claimed and since
+# released -- this comparison was the sole refusal, and the engine now asserts
+# nothing about location. Measured from a foreign worktree: `start` and `attach`
+# on a never-claimed spine, and `start` after a release, went from refused to
+# accepted, WRITING STATE INTO A TREE THE AGENT IS NOT STANDING IN. Under an
+# active lease held by another session, nothing changed.
+#
+# That widening is ACCEPTED and deliberate, not a no-op. A `cd <worktree> &&`
+# prefix defeated the comparison, so it was never a boundary -- but a forgeable
+# guard is not the same as no guard. This supersedes the 2026-08-15
+# worktree-identity ruling, which settled how the two sides of the comparison
+# should be resolved -- a question that no longer exists.
 #
 # `origin.worktree` is still WRITTEN, by `spine_lifecycle.build_origin` and
 # `init_work_area.instantiate_spine`. It is provenance -- what a human or a

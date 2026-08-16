@@ -1,0 +1,6 @@
+files changed under scripts/ vs HEAD: 1 -> ['scripts/checklist_engine.py']
+  scripts/checklist_engine.py: executable AST identical (docstrings stripped) = True
+
+reviewer's grep on THIS rework's diff (vs HEAD): 0 surviving lines
+
+OK: zero executable change under scripts/ — comment and docstring prose only.

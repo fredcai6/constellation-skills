@@ -1,0 +1,8 @@
+{"ops": [
+ {"op":"retext-check","id":"m4-verify","which":"postconditions","cond":"c1",
+  "command":"py .agent-work/cleanup-f-derive-worktree/g2-implement-rework/check_no_executable_change.py"},
+ {"op":"retext-check","id":"m4-verify","which":"postconditions","cond":"c3",
+  "command":"find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q > .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-full-suite.txt 2>&1; rc=$?; tail -3 .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-full-suite.txt; exit $rc"},
+ {"op":"retext-check","id":"m4-verify","which":"postconditions","cond":"c4",
+  "command":"py -m scripts.code_map build > .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-map-build.txt 2>&1; git status --porcelain -- map/ | tee .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-map-status.txt; test -z \"$(git status --porcelain -- map/)\""}
+]}

@@ -1,0 +1,32 @@
+Required Evidence 1 - the leaseless mechanism, read at source.
+scripts/checklist_engine.py :: require_session (symbol, not line-pinned)
+Extracted mechanically from the working tree, not retyped:
+
+    if verb not in MUTATING_VERBS:
+        return
+    lease = _active_lease(cl)
+    if lease is None:
+        return  # no lease claimed: legacy behavior, no session needed
+
+Enclosing signature: def require_session(cl: dict, verb: str, session_id: str | None, config: dict) -> None:
+991:def _active_lease(cl: dict) -> dict | None:
+992-    """The lease iff it is present and `status: active`; else None. A released
+993-    lease does not gate mutation."""
+994-    sess = cl.get("engine_session")
+995-    if isinstance(sess, dict) and sess.get("status") == "active":
+996-        return sess
+997-    return None
+998-
+999-
+1000-def _refresh_owner_heartbeat(cl: dict, session_id: str | None) -> None:
+1001-    """Stamp liveness: if `session_id` owns the active lease, advance its
+1002-    `last_heartbeat` to now. No-op when there is no active lease, a different
+1003-    session owns it, or `session_id` is falsy. Called after every mutating verb
+=== MUTATING_VERBS ===
+70:MUTATING_VERBS = {
+71-    "start", "advance", "record", "consolidate", "skip", "block",
+72-    "resume", "reopen", "append", "attest", "waive", "attach", "flag-candidate",
+73-    "amend",
+74-}
+75-
+76-

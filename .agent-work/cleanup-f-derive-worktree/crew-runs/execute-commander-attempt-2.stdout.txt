@@ -1,0 +1,19 @@
+Leg 2 is underway. Status while the g2 rework crew finishes:
+
+**Done**
+- Skill reloaded (p1), `STATE_NOTE.md` rewritten (p2), lease re-claimed as `commander-cleanup-f-derive-worktree` without `--force`.
+- Merged `main` at `e0539903`; `map/INDEX.md` conflict resolved by regenerating, never hand-merged.
+- Baselines re-measured myself: **main 3163 / 7 skipped / 0 failed** (matches your figure exactly), **this branch 3195 / 5 / 0**. Failure-set difference empty both sides; the skip delta is fully accounted for.
+- `g2-integrate` resumed and `g2-implement` reopened under R1. Rework crew running: prose narrowed in all three committed files, B2 fixed as a new named test.
+
+**Three findings, in `FLOAT_TO_ADMIRAL-2.md` — none of them blocks me**
+
+1. **`run_crew.py` destroys the crew registry of every child it launches.** It loads the registry once, blocks in `launch()` for the child's whole run, then writes its stale list back on exit. Your relaunch of this lane wiped 6 completed crew records; `recover_crews.py` reported 2 crews where the commit has 8. I restored them from git. It is lane E's file and it is live in every lane you dispatch — the repair is to re-load after `launch()` returns.
+
+2. **R2 and R3 together leave g4 empty.** R2's ruled behaviour — unowned path yields no worktree, no refusal — is already exactly what g1 shipped, pinned for both copies by the shared case table. I'm marking g4 `skip` (genuinely overtaken by events, not dressed-up work). Overrule if you want more.
+
+3. **The engine-side derivation now has zero production callers.** All three planned consumers went away for independently sound reasons: g2 deleted the degenerate predicate, R3 re-homed #315, R2 withdrew the refusal. I'm shipping it **provisioned** — kept, pinned equal to the live hook copy, and named as awaiting #610 — because that's the only road that contradicts no ruling and hides nothing. Reversible in one file; the merge call is yours.
+
+**One correction:** `spine_rail.py:1081` and `test_spine_rail.py:2698` don't contain `KeyError` at any line, at either commit. The substance is real though — I found it by symbol: both files still quote the door's old contract as `SPINE = Path(os.environ["SPINE_FILE"]).resolve()`. I'll fix those two at `reconcile` as ordered.
+
+Remaining: close g2, run g3, skip g4/g5, then reconcile → triage → review → feedback → archive. I'll park at `archive` and not merge.

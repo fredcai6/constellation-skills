@@ -1,0 +1,498 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-mechanism",
+    "m2-prose",
+    "m3-b2",
+    "m4-verify",
+    "m5-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the handoff is complete",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), project deltas (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md), the rework handoff, ADMIRAL_RULING-1 R1, the g2 reviewer result (B1/B2) and the predecessor implementer result. Verify the handoff carries task, intent, allowed scope, exclusions, required evidence, test mode, stop conditions, return format. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + ruling R1 + reviewer B1/B2 loaded; handoff complete on all eight fields",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-crew.md + global-everyone.md + docs/agents/CREW_CONTEXT.md + GLOSSARY.md read; rework handoff, ADMIRAL_RULING-1 R1, g2-reviewer-result B1/B2, predecessor g2-implementer-result read. Handoff complete: task, protected intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, return format all present."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-mechanism": {
+      "id": "m1-mechanism",
+      "title": "Confirm the leaseless mechanism at source before writing any claim about it",
+      "imperative": "Read require_session in scripts/checklist_engine.py with your own eyes. Confirm the `if lease is None: return` early return and its enclosing `if verb not in MUTATING_VERBS: return` condition. Capture the exact quote as Required Evidence item 1. If what you read contradicts the handoff's account, STOP and report it as a finding rather than writing around it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the `lease is None` early return is present in require_session and reachable for mutating verbs; quote captured to g2-implement-rework/m1-mechanism.txt",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m1-mechanism.txt && py -c \"import re,sys; s=open('scripts/checklist_engine.py').read().split('def require_session',1)[1].split('\\ndef ',1)[0]; sys.exit(0 if 'if lease is None:' in s and 'if verb not in MUTATING_VERBS:' in s else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-mechanism-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the mechanism as read AGREES with the handoff (no stop condition); attested",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "AGREES. require_session returns early for every MUTATING_VERB when _active_lease(cl) is None; _active_lease's own docstring states a released lease does not gate mutation. So never-claimed AND released both reach the early return. No stop condition."
+        }
+      ],
+      "constraints": [
+        "The narrowed claim must be true, not merely softer.",
+        "Prefer symbol names over file:line in new prose."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-mechanism-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m1-mechanism.txt && py -c \"import re,sys; s=open('scripts/checklist_engine.py').read().split('def require_session',1)[1].split('\\ndef ',1)[0]; sys.exit(0 if 'if lease is None:' in s and 'if verb not in MUTATING_VERBS:' in s else 1)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-prose": {
+      "id": "m2-prose",
+      "title": "C1+C2+C3+C6 \u2014 narrow the false claim in all three copies, identically",
+      "imperative": "Rewrite the claim in docs/CHECKLIST_SCHEMA.md ('Removing it removed no guard.'), the scripts/checklist_engine.py module header ('Nothing was left unguarded by that removal.') and the tests/test_spine_origin_isolation.py module docstring ('Nothing was left unguarded by removing it'). Each must state: the lease is the ownership guard WHEREVER A LEASE EXISTS; on a spine with no active lease (never-claimed or released) the engine now asserts nothing about location, deliberately; a forgeable guard is not the same as no guard; this is an accepted WIDENING on the leaseless path, not a no-op. Under an active lease nothing changed. Keep the derivation rationale and the 2026-08-15 supersession citation in all three. checklist_engine.py is COMMENT TEXT ONLY \u2014 zero executable line changes. Test-after: the postcondition is the mechanical agreement check.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 mechanism confirmed at source",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 mechanism confirmed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all three copies carry the narrowed claim (shared load-bearing phrases present in each) and the three falsified sentences are gone",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework/check_three_copies.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-prose-1"
+        }
+      ],
+      "constraints": [
+        "scripts/checklist_engine.py: comment/docstring text only, no executable line changes.",
+        "Do not unsettle decision:not-a-weaker-guard \u2014 transcribe the Admiral's amendment, do not re-decide it.",
+        "Supersession citation of the 2026-08-15 ruling stays in all three places."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-prose-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework/check_three_copies.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-b2": {
+      "id": "m3-b2",
+      "title": "C5 \u2014 make the inert rows discriminate, and prove it by measurement",
+      "imperative": "Add self._assert_one_answer_for_every_stamp(self.worktree) alongside the existing self.foreign and self.nogit calls in tests/test_spine_origin_isolation.py. Prove B2 by measurement under the reviewer's stamp-reading mutant (normcase(stored) != normcase(cwd) -> refuse) driving `start`: from the spine's own worktree the wrong-case row separates (exit 0 vs exit 1) while from a foreign cwd every row refuses identically. Assert each mutation actually applied before running it. Show the added call passes unmutated and that the mutant goes red. Restore the tree byte-identical afterwards and prove it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 prose landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 prose landed, three copies agree"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the worktree call is present and the changed test file is green unmutated",
+          "check": {
+            "kind": "command",
+            "command": "grep -q '_assert_one_answer_for_every_stamp(self.worktree)' tests/test_spine_origin_isolation.py && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_origin_isolation.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-b2-1"
+        },
+        {
+          "id": "c2",
+          "statement": "measured before/after recorded: mutation-applied assertion, own-worktree separation, foreign-cwd non-separation, mutant red, tree restored byte-identical",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework/measure_b2.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-b2-2"
+        }
+      ],
+      "constraints": [
+        "tests/test_spine_origin_isolation.py: docstring plus this one-liner only.",
+        "Restore the tree byte-identical after every mutation."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-b2-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q '_assert_one_answer_for_every_stamp(self.worktree)' tests/test_spine_origin_isolation.py && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_origin_isolation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-b2-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework/measure_b2.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-verify": {
+      "id": "m4-verify",
+      "title": "C7 \u2014 zero executable additions under scripts/, targeted check, full suite, map",
+      "imperative": "Run the handoff's Verification Commands. Prove zero executable additions under scripts/ against base 9ff86f2d. Run the targeted gate check, the whole changed test file, and the full suite with cache cleared and a clean env INCLUDING -u CREW_SCRATCH_DIR (lane E's test fails for any crew-launched agent otherwise \u2014 documented ambient contamination, do not fix it). Compare against the Commander's baseline 3195 passed / 5 skipped / 0 failed. Run py -m scripts.code_map build and state whether map/ is byte-identical.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 test change landed and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 landed, test file green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "zero executable additions under scripts/ in this gate's diff vs 9ff86f2d \u2014 docstring/comment prose only",
+          "check": {
+            "kind": "command",
+            "command": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework/check_no_executable_change.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verify-5"
+        },
+        {
+          "id": "c2",
+          "statement": "targeted gate check green \u2014 both halves red on an empty diff",
+          "check": {
+            "kind": "command",
+            "command": "! git grep -q 'rev-parse --show-toplevel' -- scripts/checklist_engine.py && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_origin_isolation.py -k provenance"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verify-6"
+        },
+        {
+          "id": "c3",
+          "statement": "full suite green, cache cleared, clean env; counts and failure set recorded",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q > .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-full-suite.txt 2>&1; rc=$?; tail -3 .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-full-suite.txt; exit $rc"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verify-7"
+        },
+        {
+          "id": "c4",
+          "statement": "map/ byte-identical after py -m scripts.code_map build (this rework changes no entities), or the diff stated",
+          "check": {
+            "kind": "command",
+            "command": "py -m scripts.code_map build > /dev/null 2>&1; git diff -- map/ > .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-map-diff.txt; py -m scripts.code_map build > /dev/null 2>&1; git diff -- map/ > .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-map-diff-2.txt; diff .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-map-diff.txt .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-map-diff-2.txt && git diff --stat -- map/"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verify-8"
+        }
+      ],
+      "constraints": [
+        "Do NOT fix tests/test_crew_launcher.py \u2014 lane E's file, ambient CREW_SCRATCH_DIR contamination, already recorded as evidence."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework/check_no_executable_change.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! git grep -q 'rev-parse --show-toplevel' -- scripts/checklist_engine.py && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_origin_isolation.py -k provenance",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-verify-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q > .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-full-suite.txt 2>&1; rc=$?; tail -3 .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-full-suite.txt; exit $rc",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-verify-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m scripts.code_map build > .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-map-build.txt 2>&1; git status --porcelain -- map/ | tee .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-map-status.txt; test -z \"$(git status --porcelain -- map/)\"",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-verify-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py .agent-work/cleanup-f-derive-worktree/g2-implement-rework/check_no_executable_change.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-verify-6",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! git grep -q 'rev-parse --show-toplevel' -- scripts/checklist_engine.py && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_origin_isolation.py -k provenance",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-verify-7",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q > .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-full-suite.txt 2>&1; rc=$?; tail -3 .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-full-suite.txt; exit $rc",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-verify-8",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m scripts.code_map build > /dev/null 2>&1; git diff -- map/ > .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-map-diff.txt; py -m scripts.code_map build > /dev/null 2>&1; git diff -- map/ > .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-map-diff-2.txt; diff .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-map-diff.txt .agent-work/cleanup-f-derive-worktree/g2-implement-rework/m4-map-diff-2.txt && git diff --stat -- map/",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-result": {
+      "id": "m5-result",
+      "title": "C4 + delivery \u2014 amend the behaviour-delta sentence and write IMPLEMENTER_RESULT",
+      "imperative": "In crew-handoffs/g2-implementer-result.md restate the behaviour-delta sentence as measured: every mutating verb (not just claim), on any spine with no active lease (never-claimed or released), and unlike claim these verbs write state into a tree the agent is not standing in. Mark it as a rework amendment rather than silently rewriting history. Then write the full IMPLEMENTER_RESULT to crew-handoffs/g2-implementer-rework-result.md with a lowercase Return status. That write is the delivery.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 verification complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 verification complete: 3196 passed, 5 skipped, 0 failed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the predecessor result's behaviour-delta sentence is amended and visibly marked as a rework amendment",
+          "check": {
+            "kind": "command",
+            "command": "grep -qi 'rework amendment' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-result.md && grep -qi 'every mutating verb' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-result.md"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT written to the handoff-named path with a lowercase Return status",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework-result.md && grep -qE '^\\*\\*Return status\\*\\*: (complete|partial|blocked|out-of-scope|failed)$' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework-result.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Return status must be lowercase \u2014 the Commander matches on exact case."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "constellation/cleanup-f-derive-worktree/g2/implementer/attempt-2",
+    "status": "active",
+    "claimed_at": "2026-08-16T19:10:13.647882+00:00",
+    "last_heartbeat": "2026-08-16T19:26:48.744676+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Rework, not re-implementation: g2's code landed at b8557ff4 and is approved. Four artifacts assert 'removing it removed no guard'; the reviewer measured that false on the leaseless path. Admiral R1 accepts the widening and orders the CLAIM narrowed, not the code. My job is four prose repairs plus B2's one-line test fix, with zero executable change under scripts/.",
+      "mechanical": false,
+      "ts": "2026-08-16T19:10:44.073836+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-mechanism",
+      "why": "Mechanism verified at source and it matches the handoff exactly. require_session gates only MUTATING_VERBS and returns early when _active_lease is None; _active_lease treats a RELEASED lease as absent, so never-claimed and released are the same path. MUTATING_VERBS includes start/advance/record/attest/attach \u2014 all state writers. The narrowed claim can therefore be made true without any code change.",
+      "mechanical": false,
+      "ts": "2026-08-16T19:11:08.307882+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-prose",
+      "why": "All three copies now narrow the claim identically: the lease guards wherever a lease exists; on a spine with no active lease (never claimed, or claimed and since released) the engine asserts nothing about location; the mutating verbs write state into a foreign tree; under an active lease nothing changed; a forgeable guard is not the same as no guard; the widening is accepted, not a no-op. docs/CHECKLIST_SCHEMA.md's next paragraph ('Nothing checks at engine level') now agrees with the one above it instead of contradicting it. The C6 drift check is proven red against b8557ff4.",
+      "mechanical": false,
+      "ts": "2026-08-16T19:13:36.457675+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-b2",
+      "why": "B2 repaired and measured. Added the self.worktree call as its own test method, matching the class's one-method-per-cwd shape: 13 tests/18 subtests -> 14/27. Measured under the reviewer's stamp-reading mutant, with the mutation asserted applied: from the spine's own worktree the wrong-case row separates (exit 0 vs exit 1); from a foreign cwd all 7 stamp-carrying rows refuse identically, so the case row discriminated nothing there. Mutant turns the file red (12 failed) and names the added test; engine restored byte-identical by sha256; file green again.",
+      "mechanical": false,
+      "ts": "2026-08-16T19:16:31.258143+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-verify",
+      "why": "Verification sweep. Zero executable change under scripts/ proven by AST comparison with docstrings stripped, demonstrated red against one added executable line. Targeted gate check green. Full suite cache-cleared with CREW_SCRATCH_DIR scrubbed. map/ is NOT byte-identical: C5's added test method takes tests.test_spine_origin_isolation from 31 to 32 entities, so the map was regenerated per the Map Anchors conditional and is asserted settled under a repeat build.",
+      "mechanical": false,
+      "ts": "2026-08-16T19:25:13.147007+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-16T19:16:24.090029+00:00",
+      "reason": "My original c2 check was one that cannot fail: its clauses were separated by ';' so only 'test ! -e scripts/checklist_engine.py.orig' decided the exit, and that file never existed. Replace it with the measurement harness itself, which asserts the mutation applied, reproduces the own-worktree vs foreign-cwd separation, requires the mutant to go red naming the added test, and verifies the engine is restored byte-identical by sha256. The handoff gives the implementer authority over how the B2 measurement is structured.",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m3-b2.c2"
+      ]
+    },
+    {
+      "ts": "2026-08-16T19:18:02.245881+00:00",
+      "reason": "Three authoring fixes. c1: the handoff's grep uses base 9ff86f2d, which since the 6a4035d2 merge of main also sweeps up lanes A and E, so it no longer isolates this lane; and its filter strips # comments but not docstring bodies, making it a shape argument. Replaced with an AST comparison against HEAD that strips docstrings and proves executable content is unchanged \u2014 demonstrated red against one added executable line. c3: used bash-only PIPESTATUS, which the engine runs under a POSIX shell. c4: was convoluted and could pass wrongly; replaced with an empty git status --porcelain over map/, which catches modified AND untracked output.",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m4-verify.c1",
+        "retext-check m4-verify.c3",
+        "retext-check m4-verify.c4"
+      ]
+    },
+    {
+      "ts": "2026-08-16T19:22:51.777597+00:00",
+      "reason": "The handoff expected map/ byte-identical because it judged this rework changes no entities. C5 \u2014 which the handoff itself mandates \u2014 adds a test method, so tests.test_spine_origin_isolation goes 31 -> 32 entities and the totals 4822 -> 4823. The Map Anchors rule 'regenerate only if entities change' therefore fires, and tests/test_code_map.py::MapTreeFreshnessTests requires the regeneration or the suite is red. The correct assertion is not 'unchanged' but 'settled': a fresh build is idempotent, so the second build reproduces the first exactly.",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m4-verify.c4"
+      ]
+    }
+  ]
+}

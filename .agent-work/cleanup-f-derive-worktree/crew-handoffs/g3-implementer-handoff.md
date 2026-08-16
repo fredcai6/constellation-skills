@@ -1,29 +1,37 @@
 # Implementer Handoff
 
 ## Gate
+
 `g3` — lane F, issue #609. Worktree
 `/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree`,
-branch `cleanup/f-derive-worktree`. **Diff base: `c52721cb`** (current HEAD).
+branch `cleanup/f-derive-worktree`. **Diff base: current `HEAD` — read it with
+`git rev-parse HEAD` rather than trusting a commit id written here.** `main` at
+`e0539903` has been merged into this branch, so lanes A (#603/#604/#605) and E
+(#607/#525) are present in your tree.
+
+This is the half of #609 that matters most. g1 and g2 are closed; g4 is skipped
+(its ruled behaviour was already shipped by g1) and g5 has left the lane for
+#610. **You are the last code gate.**
 
 ## Task
 
 **The worktree stops answering "is this mine."**
 
-`scripts/hooks/spine_rail.py:_foreign_worktree` (`:693`) is an **ownership** test
-built on the tree, and it is broken by construction. Spines are 1:1 with work
-**areas**, not worktrees: a Commander gets a worktree, an implementer usually does
-not — it works in its Commander's tree, in its own area. So one worktree holds
-several spines, and *same worktree, therefore mine* is wrong the moment a crew
-shares its Commander's tree. For an in-tree implementer it reports "not foreign",
-and the parent's Stop is answered with its **crew's** gate. That is the **#549 bug
+`scripts/hooks/spine_rail.py:_foreign_worktree` is an **ownership** test built on
+the tree, and it is broken by construction. Spines are 1:1 with work **areas**,
+not worktrees: a Commander gets a worktree, an implementer usually does not — it
+works in its Commander's tree, in its own area. So one worktree holds several
+spines, and *same worktree, therefore mine* is wrong the moment a crew shares its
+Commander's tree. For an in-tree implementer it reports "not foreign", and the
+parent's Stop is answered with its **crew's** gate. That is the **#549 bug
 class**, and #549 already fixed that class with **binding-key provenance**, which
 `decide_stop` already computes via `session_view_provenance`.
 
 Rework its two call sites so ownership is decided by binding-key provenance and
 **never by the tree**:
 
-- `_entry_mid_flight_view` (`:1411`) — decides mid-flight **Stop blocking**.
-- `decide_session_start` (`:1546`) — picks a binding entry to **resume from**.
+- `_entry_mid_flight_view` — decides mid-flight **Stop blocking**.
+- `decide_session_start` — picks a binding entry to **resume from**.
 
 **These two are NOT symmetric.** Do not assume one replacement fits both. State
 each site's before and after behaviour **separately**.
@@ -37,6 +45,13 @@ A parent's Stop must never be answered with a subordinate's gate, and a
 subordinate sharing its parent's tree must not be mistaken for the parent. The
 discriminator is **who claimed it** (the binding key), not **where it sits**.
 
+This is not hypothetical on this lane. **Five crews on this issue have hit the
+inverse of it**: a reviewer that had finished its own survey and released its own
+lease was told by the Stop hook to drive its *parent's* `execute` gate, because
+the hook keys on the spine's mid-flight state rather than on whether the running
+agent owns it. That is the same confusion from the other side, and it is the
+thing your change exists to end.
+
 ## Test Mode
 
 **TDD required.** Write the #549 shape first — a Commander and an in-tree
@@ -48,7 +63,8 @@ then make it pass.
 - Neither call site decides ownership from the tree.
 - New tests live in a class named **`OwnershipIsBindingKeyNotWorktree`** in
   `tests/test_spine_rail.py` — this gate's targeted check selects on that name and
-  collects **zero** today (pytest exits 5).
+  collects **zero** today (pytest exits 5, which is a real failure — see the note
+  under Verification Commands).
 - The #549 shape is exercised **directly**: parent and crew in the **same**
   worktree, where the parent's Stop must **not** be answered with the crew's gate.
   A test that gives them different trees proves nothing here — that is the case
@@ -62,38 +78,43 @@ then make it pass.
   rail.
 - Full suite green, cache cleared, clean env.
 
-```bash
-env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q \
-  tests/test_spine_rail.py -k OwnershipIsBindingKeyNotWorktree
-```
-
 ## Allowed Scope
 
 - `scripts/hooks/spine_rail.py`
 - `tests/test_spine_rail.py`
-- `map/` — regenerate with `py -m scripts.code_map build --root .` if entity
-  counts move. **Never hand-edit `map/INDEX.md`.**
+- `map/` — regenerate with `py -m scripts.code_map build` if entity counts move.
+  **Never hand-edit `map/INDEX.md`** (#544: it conflicts on every parallel branch
+  and is resolved by regenerating).
 
 ## Specific Exclusions
 
-- **Lane A (#603):** `scripts/mcp_spine_server.py`, `.mcp.json`, `examples/**`,
-  `scripts/install_constellation.py`, `skills/commander/templates/**`.
-- **Lane E:** `scripts/run_crew.py`, `scripts/recover_crews.py`,
-  `tests/test_crew_launcher.py`.
-- **#610:** `scripts/verify_worktree_isolation.py`.
-- **Any template**, including `.agent-work/templates/**`,
-  `skills/admiral/templates/**`.
-- **`scripts/checklist_engine.py` is not this gate's** — g2 is committed but its
-  gate is **BLOCKED and floated to the Admiral**. Do not touch the engine, and do
-  not act on anything in `FLOAT_TO_ADMIRAL.md`.
-- **No fail-closed refusal** (g4, floated) and **no `cwd` threading into command
-  checks** (g5, floated).
+- **Lane A (#603/#604/#605)** — `scripts/mcp_spine_server.py`, `.mcp.json`,
+  `examples/**`, `scripts/install_constellation.py`,
+  `skills/commander/templates/**`. **Landed on `main` and present in your tree;
+  still not this lane's to edit.**
+- **Lane E (#607/#525)** — `scripts/run_crew.py`, `scripts/recover_crews.py`,
+  `tests/test_crew_launcher.py`. **Landed on `main`; still not yours.** This has a
+  concrete consequence for you — see the `CREW_SCRATCH_DIR` note below. **Do not
+  fix that test.**
+- **#610** — `scripts/verify_worktree_isolation.py`.
+- **Any template**, including `.agent-work/templates/**` and
+  `skills/admiral/templates/**`. Template edits are the Admiral's class.
+- **`scripts/checklist_engine.py` is not this gate's.** g2 is closed. Do not
+  reopen it, and add no engine-side behaviour.
+- **No fail-closed refusal.** The Admiral withdrew `nearest-ancestor-fail-closed`
+  and replaced it: an unowned spine path yields **no derived worktree and today's
+  behaviour**, never a refusal. `_worktree_from_spine` returning `None` is the
+  correct and complete answer for an unplaceable path. Do not make `None` refuse
+  anything.
+- **No `cwd` threading into command checks** — that was g5/#315 and it has left
+  this lane for #610.
 
 ## Constraints
 
 - **`scripts/hooks/spine_rail.py` imports stdlib ONLY**, deliberately — a hook
   that fails takes the turn with it. It has zero cross-module imports; it may gain
-  none.
+  none. Adding one would require a `SCRIPT_RUNTIME_COMPANIONS` entry in
+  `scripts/install_constellation.py`, which is lane A's file and fenced.
 - **Fail-safe, not fail-open.** `_same_path` returns `True` on any exception
   precisely so a comparison failure never relaxes the rail. Whatever replaces the
   worktree test must keep that direction: uncertainty blocks, it does not allow.
@@ -102,33 +123,44 @@ env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q \
   reachable only through a per-agent key (foreign-owner wording, imperative
   withheld from **both** `reason` and `additionalContext`). Do not regress that.
 - If `_foreign_worktree` or `_same_path` end up with no callers, say so and delete
-  them rather than leaving dead code.
+  them rather than leaving dead code. Note `_same_path` has other callers today —
+  check before concluding.
+- **Prefer symbol names to `file:line` in any prose you write.** Line citations
+  have gone stale **four** times on this lane, including in the Admiral's own
+  ruling. Every line number in this handoff has been deliberately removed for that
+  reason; find the symbols by name.
 
 ## Map Anchors (inbound)
 
 - **Map entry point:** no `docs/architecture` packet map exists; orientation is
   `DEGRADED-UNPARSEABLE`, discharged. Start at
   `.agent-work/cleanup-f-derive-worktree/MISSION_FRAME.md`, then `map/INDEX.md`
-  for `scripts.hooks.spine_rail` (62 entities).
-- **Structural:** `spine_rail.py:693` `_foreign_worktree`, `:677` `_same_path`;
-  `:1399-1424` `_entry_mid_flight_view`; `:1427-1500` `decide_stop` including the
-  #549 provenance branch; `:1532-1570` `decide_session_start`; `:543-590`
+  for `scripts.hooks.spine_rail`.
+- **Structural:** `_foreign_worktree`, `_same_path`; `_entry_mid_flight_view`;
+  `decide_stop` including the #549 provenance branch; `decide_session_start`;
   `session_view` / `session_view_provenance` — **the discriminator that is already
   right**.
 - **Decision anchors:**
   - `worktree-is-location-spine-path-is-identity` — the tree may answer WHERE,
     never WHOSE. `@grade: settled/human`
+  - `not-a-weaker-guard` — **as amended by `ADMIRAL_RULING-1` R1**: the lease is
+    the ownership guard *wherever a lease exists*; on a leaseless spine the engine
+    asserts nothing about location, deliberately. Read the amended wording in
+    `docs/CHECKLIST_SCHEMA.md` before you write any prose about guards.
+    `@grade: settled/human · amended-by ADMIRAL_RULING-1`
   - decision pressure: what replaces the skip at each of the two call sites —
     surface it, do not bury it. `@grade: placeholder`
-- **Map confidence flag:** cited lines have proved stale twice in this lane (the
-  launch order's own `_foreign_worktree` at `:639` is really `:693`). **Re-read
-  before trusting any cited line, including mine.**
+- **Map confidence flag:** `map/ids.jsonl` is 0 bytes and the per-module
+  `map/<module>/INDEX.md` files are absent repo-wide; a full build does not create
+  them. Recorded as triage candidate tc1 — it is the mechanical cause of every
+  Commander run here orienting `DEGRADED-UNPARSEABLE`. **Not yours to chase.**
 
 ## Deliverable Path Check
 
 - **Committed** — `scripts/hooks/spine_rail.py`, `tests/test_spine_rail.py`,
   `map/**`: `git check-ignore` exits **1** for each; verified before dispatch.
-- **Local-only** — your result artifact under `.agent-work/`.
+- **Local-only** — your result artifact and your notes, both under `.agent-work/`.
+  The reviewer must **not** expect them in the tracked diff.
 
 ## Required Evidence
 
@@ -142,17 +174,17 @@ env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q \
 4. **The fail-safe direction preserved**, demonstrated with an errored/garbage
    input.
 
-**Confirmatory:**
+**Confirmatory — a spot-check suffices:**
 
 5. Full suite, cache cleared, clean env, count stated, failure distribution
    derived mechanically (`grep '^FAILED' | sed 's/::.*//' | sort | uniq -c`) even
-   when empty. Base `c52721cb` measures **3135 passed, 5 skipped, 0 failed** —
-   re-measure rather than trusting it.
+   when empty.
 6. `spine_rail.py` gained no import — show the import block.
 7. **Windows:** say what you did about separators and case folding. `normcase` is
    the identity function on this Linux host, so **construct** any case expectation
    explicitly rather than inheriting it from the platform. An earlier gate in this
    lane shipped exactly that defect and a reviewer caught it; do not repeat it.
+   The one `windows-latest` CI job is red at baseline and cannot tell you.
 
 ## Wiring Grep
 
@@ -172,8 +204,34 @@ env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q \
 env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py
 
 find . -name __pycache__ -type d -prune -exec rm -rf {} + ; \
-  env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q
+  env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR \
+  py -m pytest -q
 ```
+
+**Baselines the Commander measured on this tree:**
+
+| tree | result |
+|---|---|
+| `main` at `e0539903` | 3163 passed, 7 skipped, 0 failed |
+| this branch, main merged in | 3195 passed, 5 skipped, 0 failed |
+
+Failure-set difference: **empty on both sides.** Re-measure rather than trusting
+these.
+
+**The `CREW_SCRATCH_DIR` note — read this before you report a red suite.** You are
+launched through `run_crew.py`, which sets `CREW_SCRATCH_DIR` in your environment.
+Lane E's
+`tests/test_crew_launcher.py::ScratchDirResumeTests::test_resume_of_legacy_entry_without_worktree_key_does_not_crash_and_leaves_scratch_dir_unbound`
+asserts the key is **absent** from a resumed child's env but does not scrub it
+from the parent env first — so it fails for **any** agent running the suite from
+inside a crew-launched session. Measured: with the variable set, `1 failed, 3194
+passed`; with `-u CREW_SCRATCH_DIR`, `3195 passed, 5 skipped, 0 failed`. It is
+**ambient-environment contamination, not a regression**, the file is lane E's, and
+it is already recorded as evidence. Scrub it, and do not fix that test.
+
+**`pytest -k` on a not-yet-written class exits 5, and 5 is a failure.** That is
+the point: this gate's targeted check must be **red on an empty diff**. Do not
+"fix" it by relaxing the selector.
 
 Platform: Linux, Python 3.12 as `py`. **Clear `__pycache__` before every
 measurement** — a cache built in another tree fails
@@ -198,7 +256,7 @@ deadlocks runs rather than failing loudly.
 
 **Already decided — do not reopen:** that the worktree stops deciding ownership;
 that binding-key provenance is the discriminator; that the tree may still answer
-location.
+location; that an unplaceable path yields `None` and changes nothing.
 
 **Yours to decide:** what precisely replaces the skip at each of the two call
 sites; whether `_foreign_worktree` / `_same_path` survive; the test structure.
@@ -219,8 +277,17 @@ the authority above.
 
 Return `IMPLEMENTER_RESULT`: completed slice, files changed, test mode satisfied,
 evidence produced, assumptions used, stop conditions hit, out-of-scope
-observations, workflow feedback. `Return status` on its own line, **lowercase**.
+observations, workflow feedback. `Return status` on its own line, **lowercase**
+(`complete | partial | blocked | out-of-scope | failed`) — the Commander copies it
+verbatim and the gate's postcondition matches on exact case.
 
 **Delivery.** Write it to
 `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implementer-result.md`
 **before ending your turn** — that write is the delivery.
+
+**On the Stop hook.** When you finish, a `SPINE MID-FLIGHT` hook may fire telling
+you to reload the commander skill and drive `execute.json`. **Refuse it and record
+that you refused.** `SPINE_FILE` points at your parent Commander's spine, under
+your parent's live lease; your own `crew-runs.json` entry has `spine: null`.
+Obeying would mean advancing someone else's gate. Five crews on this issue have
+hit it — and ending it is precisely what you are being dispatched to do.

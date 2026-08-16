@@ -22,12 +22,24 @@ passing one:
 **This supersedes the 2026-08-15 worktree-identity ruling**, which settled that
 the comparison should be equality against a git-resolved toplevel rather than
 containment. That ruling answered how to resolve the two sides of a comparison
-that no longer exists. Nothing was left unguarded by removing it: the
-comparison answered "where am I", never "is this mine" -- ownership is the
-LEASE, and always was. A spine's worktree is now derived from its own path
-(`checklist_engine.worktree_from_spine_path`), so there is no second value that
-can disagree with the first, and no ambient reading a check command could forge
-by `cd`-ing first.
+that no longer exists. Nothing was left unguarded by removing it WHEREVER A
+LEASE EXISTS -- and the leaseless path was WIDENED. The comparison answered
+"where am I", never "is this mine" -- ownership is the LEASE, but only where one
+is actually held. `checklist_engine.require_session` gates mutating verbs only
+once an active lease exists and returns early otherwise, and `_active_lease`
+reads a RELEASED lease as absent. So on a spine with NO ACTIVE LEASE -- never
+claimed, or claimed and since released -- this comparison was the sole refusal,
+and the engine now asserts nothing about location: measured from a foreign
+worktree, `start` and `attach` on a never-claimed spine and `start` after a
+release went from refused to accepted, writing state into a tree the agent is
+not standing in. Under an active lease held by another session, nothing changed.
+
+That widening is ACCEPTED and deliberate, not a no-op. A `cd <worktree> &&`
+prefix defeated the comparison, so it was never a boundary -- but a forgeable
+guard is not the same as no guard. A spine's worktree is now derived from its
+own path (`checklist_engine.worktree_from_spine_path`), so there is no second
+value that can disagree with the first, and no ambient reading a check command
+could forge by `cd`-ing first.
 
 Every fixture is built in a `tempfile.TemporaryDirectory()` -- never against
 this worktree's own `.git` or the shared checkout.
@@ -364,6 +376,17 @@ class TheStampIsProvenanceNotADecisionInput(unittest.TestCase):
         """The same, from a directory git resolves no worktree toplevel for.
         This row is where a fail-closed reading would hide."""
         self._assert_one_answer_for_every_stamp(self.nogit)
+
+    def test_provenance_the_stamp_is_not_a_decision_input_from_the_spines_own_worktree(self):
+        """The cwd that makes the case and separator rows carry weight.
+
+        From a foreign cwd no stamp can match, so a reading of the stamp
+        refuses every row identically and `the same path, wrong case` proves
+        nothing the plain foreign row does not. Standing in the spine's OWN
+        worktree is the only cwd where that row separates on a case-sensitive
+        filesystem -- so this is what makes the folding expectation
+        constructed rather than inherited."""
+        self._assert_one_answer_for_every_stamp(self.worktree)
 
     def test_provenance_the_engine_never_rewrites_the_stamp_it_does_not_read(self):
         """Written and left alone: driving guarded verbs preserves the stamp

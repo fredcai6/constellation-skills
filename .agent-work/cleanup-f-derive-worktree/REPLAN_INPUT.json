@@ -167,7 +167,18 @@
       "Teaching map_orient.py to cite scripts/code_map's id scheme so this repo reads RESOLVED instead of DEGRADED"
     ]
   },
-  "completed_outcomes": [],
+  "completed_outcomes": [
+    {
+      "issue_id": "g1",
+      "outcome": "One lexical derivation rule, defined twice and pinned equal by a shared case table",
+      "evidence": "Committed 9ff86f2d, independent APPROVE. checklist_engine.worktree_from_spine_path and spine_rail._worktree_from_spine both driven from tests/test_worktree_derivation.py's shared table, including no-agent-work-ancestor-at-all-is-unowned -> None and hostile-input -> None never raises. Suite 3159 passed / 0 failed at the time."
+    },
+    {
+      "issue_id": "g2",
+      "outcome": "Stamp-and-compare retired: origin_worktree_refusal, its two verb sets and the per-guarded-verb git rev-parse --show-toplevel are gone; origin.worktree is written as provenance and read by nothing for a decision",
+      "evidence": "Committed b8557ff4; reworked under ADMIRAL_RULING-1 R1 (see D5). Reviewer verified by command that no rev-parse --show-toplevel remains in checklist_engine.py and that origin has exactly 2 references under scripts/, both writes; the provenance pin was mutation-tested in both directions."
+    }
+  ],
   "wave_evidence": [
     {
       "claim": "The whole-suite postcondition is a close criterion for each gate",
@@ -198,6 +209,30 @@
       "expected": "validate_spine's falsifiable-zero-collected rule holds",
       "observed": "pytest exits 5 on no-tests-collected and 4 on a missing file, so such a check fails; the rule is a false positive",
       "source": "measured directly at e36e630b"
+    },
+    {
+      "claim": "The lease is and always was the ownership guard, so removing the origin comparison removed no guard (pre-ruling not-a-weaker-guard, settled/human)",
+      "expected": "no behaviour delta on any guarded verb",
+      "observed": "True only where a lease exists. require_session returns early when _active_lease is None, and a RELEASED lease reads as absent -- so on a leaseless spine the comparison was the sole refusal. Measured base-vs-tree from a foreign worktree: never-claimed start and attach, and start after release, all went REFUSED -> exit 0, writing state into a tree the agent is not standing in. Under an active lease held by another session: refused before and after, unchanged.",
+      "source": "independent g2 reviewer, base engine extracted from 9ff86f2d vs working tree, same fixture; mechanism re-read at source by the Admiral and by the Commander"
+    },
+    {
+      "claim": "main is at e0539903 with a 3163/7/0 baseline (ADMIRAL_RULING-1)",
+      "expected": "3163 passed, 7 skipped, 0 failed",
+      "observed": "Reproduced exactly in a detached worktree at e0539903: 3163 passed, 7 skipped, 0 failed. This branch with main merged in at 6a4035d2: 3195 passed, 5 skipped, 0 failed. Failure-set difference EMPTY on both sides. Skip delta fully accounted: one of main's 7 is location-conditional (test_spine_lifecycle skips outside .worktrees) and one is the Windows-only case-fold skip in the test_spine_origin_isolation scenario g2 retired.",
+      "source": "Commander, cache cleared, clean env, both trees"
+    },
+    {
+      "claim": "run_crew.py maintains a durable crew registry that recover_crews.py can trust after a parent-session loss",
+      "expected": "the registry accumulates every attempt; recovery reports the true history",
+      "observed": "The parent launcher loads the registry ONCE before spawning, blocks in launch() for the child's entire run, then writes its stale in-memory list back on child exit. Six completed crew records (plan critic, 2x g1 implementer, 2x g1 reviewer, g2 implementer, g2 reviewer) were destroyed when the Admiral relaunched this lane; recover_crews.py then reported 2 crews where the committed registry has 8. Restored from git at 7756fc37.",
+      "source": "Commander: registry diff against git HEAD, plus CliBackend.dispatch read at source in scripts/run_crew.py"
+    },
+    {
+      "claim": "g4's re-authored shape (ADMIRAL_RULING-1 R2: an unowned spine path yields no derived worktree and today's behaviour, no refusal) is work this lane must implement",
+      "expected": "a gate's worth of change",
+      "observed": "Already shipped by g1 in full. worktree_from_spine_path returns None for a path with no .agent-work ancestor, never raises, and refuses nothing; the case is pinned for BOTH copies by tests/test_worktree_derivation.py. g4's only distinguishing content was the refusal R2 withdrew, so the gate is empty.",
+      "source": "Commander: function read at source, plus the shared case table's no-agent-work-ancestor-at-all-is-unowned and hostile-input rows"
     }
   ],
   "discrepancies": [
@@ -240,11 +275,49 @@
       "affects": "nothing",
       "evidence": "the function is at :693 at e36e630b; every other cited line in the order and the frame was re-verified correct",
       "reason": "Stale citation, corrected in the frame. No planning consequence."
+    },
+    {
+      "id": "D5",
+      "signal": "The pre-ruling not-a-weaker-guard was false as written; the leaseless path was genuinely widened",
+      "classification": "evidence_only",
+      "affects": "g2's shipped prose in three files and the anchor's own wording; the underlying finding outlives this lane",
+      "evidence": "The g2 reviewer's base-vs-tree differential table, reproduced above in wave_evidence; require_session's lease is None early return read at source by three parties independently",
+      "reason": "RULED by ADMIRAL_RULING-1 R1: the widening is accepted, the claim is narrowed rather than the code. Rework applied in g2 (three prose copies plus the result artifact) and independently re-reviewed. The Admiral is filing the underlying finding -- a leaseless spine has no ownership guard of any kind -- as its own tracker issue, since it predates #609. Not filed by this lane."
+    },
+    {
+      "id": "D6",
+      "signal": "run_crew.py's parent launcher destroys the crew registry of every child it launches",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Every lane the Admiral dispatches. recover_crews.py is the durable signal the commander skill mandates consulting before each dispatch, and after a relaunch it reports a fabricated-clean history that invites duplicate dispatch.",
+      "evidence": "Six records lost and restored on this lane; CliBackend.dispatch's read-modify-write across the whole child run, read at source. Window is the entire child run, so loss is systematic rather than occasional.",
+      "reason": "Lane E's file, fenced by this lane's order and outside #609's ownership. Floated to the Admiral in FLOAT_TO_ADMIRAL-2.md N1 as evidence with a named repair (re-load the registry after launch() returns and update by session name). NOT filed -- no filing authority sought."
+    },
+    {
+      "id": "D7",
+      "signal": "R2 and R3 together leave g4 empty and the engine-side derivation with no production caller",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "What #609's engine half actually ships, and the merge decision on an inert symbol",
+      "evidence": "grep -rn worktree_from_spine_path --include=*.py scripts/ returns exactly one hit, its own definition. Its three planned consumers each went away for an independently sound reason: g2 deleted the degenerate predicate that held the shape question, R3 re-homed #315 to #610, and R2 withdrew the refusal.",
+      "reason": "Floated in FLOAT_TO_ADMIRAL-2.md N2. Proceeding under the stated assumption that the definition ships PROVISIONED -- kept, pinned equal to the live hook copy by the shared case table, and named as awaiting #610's consumer -- because that is the only road that contradicts no ruling and hides nothing. Reversible in one file. g4 marked skip (overtaken by events) rather than dressed as work."
+    },
+    {
+      "id": "D8",
+      "signal": "A lane-E test is not hermetic: it fails for any agent running the suite from inside a crew-launched session",
+      "classification": "later_only",
+      "affects": "Every gate's whole-suite postcondition on every lane dispatched through run_crew.py",
+      "evidence": "tests/test_crew_launcher.py::ScratchDirResumeTests::test_resume_of_legacy_entry_without_worktree_key_does_not_crash_and_leaves_scratch_dir_unbound asserts CREW_SCRATCH_DIR is absent from a resumed child's env but does not scrub it from the parent env first. With the variable set: 1 failed, 3194 passed. With -u CREW_SCRATCH_DIR: 3195 passed, 5 skipped, 0 failed.",
+      "reason": "Ambient-environment contamination, not a regression in this lane. The file is lane E's and landed on main. This lane scrubs the variable in its own measurements and says so in every handoff; the repair belongs to whoever owns crew tooling next."
+    },
+    {
+      "id": "D9",
+      "signal": "Line-number citations have gone stale four times on this lane, most recently in the Admiral's own ruling",
+      "classification": "evidence_only",
+      "affects": "Handoff and ruling accuracy across the fleet",
+      "evidence": "ADMIRAL_RULING-1 cites scripts/hooks/spine_rail.py:1081 and tests/test_spine_rail.py:2698 as carrying a falsified KeyError claim; neither file contains the string KeyError at any line, at either the pre-merge or post-merge commit. The substance IS real and was found by symbol: spine_rail.py's _door_binding docstring and test_spine_rail.py's door-path comment both still quote the door's old contract as SPINE = Path(os.environ[\"SPINE_FILE\"]).resolve(), which lane A replaced with os.environ.get(...).strip() returning None and refusing by name. Earlier instances: the launch order's _foreign_worktree at :639 (really :693), CHECKLIST_SCHEMA.md's :3411-3444, and the g2 handoff's :3573-3578 (really :3638-3643).",
+      "reason": "Symbol names would have been correct in all four. This lane now writes handoffs with line numbers deliberately removed. The two real carriers are repaired under reconcile as the Admiral ordered."
     }
   ],
   "open_current_wave_issue_ids": [
-    "g1",
-    "g2",
     "g3"
   ],
   "unlaunched_items": [
