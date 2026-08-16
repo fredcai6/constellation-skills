@@ -1087,10 +1087,34 @@ def claim(
         and not force
     ):
         existing["last_heartbeat"] = now
+        # #601: `claimed_at` MOVES here too, and this is the whole fix. A
+        # relaunched agent reuses its predecessor's session name, so it lands on
+        # this branch -- and until now the branch refreshed only the heartbeat,
+        # leaving `claimed_at` pinned at the FIRST leg's claim. The reading the
+        # successor inherits is then `observed_at > claimed_at`, so
+        # `_reading_is_pre_claim` reads it as owned and the #477 guard sits there
+        # doing nothing on precisely the case it exists for. Measured live: leg 2
+        # told "18% (>= hard), stand down" on turn one, having done nothing, with
+        # `--force` (which skips this branch and rewrites the block below) the
+        # only way to make a relaunch work.
+        #
+        # A claim is a claim: whoever is standing here now took the lease now.
+        # The cost is one call's worth of enforcement -- readings older than this
+        # moment are declined until the writer samples again, which it does on
+        # the next tool call -- and that direction is fail-safe (no reading means
+        # no trip) by the same rule the rest of this subsystem follows.
+        #
+        # The residual, stated rather than hidden: because ownership is measured
+        # in TIME, `claim` is now a one-call governor deferral -- an agent over
+        # the line can re-claim and get one unguarded verb before the next sample
+        # lands. It is journaled, so it is auditable rather than silent, and the
+        # real fix is to measure ownership by IDENTITY instead (#600), which
+        # retires this whole timestamp comparison.
+        existing["claimed_at"] = now
         existing["claimed_by"] = claimed_by or existing.get("claimed_by")
         if worktree is not None:
             existing["worktree"] = worktree
-        return f"resumed lease {session_id} (heartbeat refreshed)"
+        return f"resumed lease {session_id} (heartbeat refreshed, claim re-stamped)"
 
     blocking = (
         existing

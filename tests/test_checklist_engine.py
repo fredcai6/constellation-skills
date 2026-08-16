@@ -4753,6 +4753,75 @@ class TripGaugeReadingOwnership(unittest.TestCase):
                          "--session-id", self.SESSION])
             self.assertEqual(rc, 1)
 
+    # --- #601: the relaunch the guard exists for must actually reach it ---- #
+    # The guard above is correct and was, in production, unreachable: a
+    # relaunched agent reuses its session name, lands on claim()'s idempotent
+    # same-session branch, and that branch refreshed only `last_heartbeat`. With
+    # `claimed_at` pinned at leg 1's claim, leg 1's reading is `observed_at >
+    # claimed_at` -- owned -- and every test above passes while the live loop
+    # they describe keeps running. These two drive the relaunch itself.
+    def test_a_relaunch_reclaim_restamps_claimed_at(self):
+        """The mechanism, at the unit: re-claiming a lease you already hold moves
+        `claimed_at`, not just the heartbeat."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            self._claim(f)
+            cl = E.load(f)
+            # Backdate the claim so the assertion is about the re-stamp and not
+            # about two wall-clock reads landing in the same second.
+            stale = _old_ts(30)
+            cl["engine_session"]["claimed_at"] = stale
+            cl["engine_session"]["last_heartbeat"] = stale
+            msg = E.claim(cl, self.SESSION, "agent", ".", {})
+            self.assertIn("resumed lease", msg)
+            self.assertGreater(
+                E._parse_ts(cl["engine_session"]["claimed_at"]),
+                E._parse_ts(stale))
+
+    def test_leg_ones_reading_stops_refusing_leg_two_after_its_own_reclaim(self):
+        """THE #601 CASE, end to end through `main()`. Leg 1 claims and its
+        gauge sample lands AFTER that claim -- an honest self-measured reading
+        over the hard line, which correctly refuses leg 1. Leg 2 relaunches into
+        the same spine under the same session name and re-claims. That sample is
+        now pre-claim, so it is declined and leg 2 may begin its gate.
+
+        Without the re-stamp this is the observed production failure: leg 2 is
+        refused on turn one by a number it did not produce, files a
+        refresh-request, stands down, and the next leg inherits the same state.
+        """
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            self._claim(f)
+            # Leg 1 ran half an hour ago. Backdating its lease is what makes the
+            # relaunch real: leg 2's re-claim happens NOW, so leg 1's sample --
+            # honestly self-measured one second after leg 1 claimed -- is on the
+            # far side of it. Sampling relative to a fresh claim instead would
+            # put the reading in the future and prove nothing.
+            cl = E.load(f)
+            leg1_claim = E._parse_ts(_old_ts(30))
+            cl["engine_session"]["claimed_at"] = leg1_claim.isoformat()
+            cl["engine_session"]["last_heartbeat"] = leg1_claim.isoformat()
+            E.save(f, cl)
+            self._write_gauge(d, self._over_hard(),
+                              (leg1_claim + timedelta(seconds=1)).isoformat())
+
+            import contextlib, io
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                rc = E.main(["--file", str(f), "start", "g2",
+                             "--session-id", self.SESSION])
+            self.assertEqual(rc, 1, "leg 1's own reading must still refuse leg 1")
+
+            # Leg 2: same session name, so this is the idempotent branch.
+            rc = E.main(["--file", str(f), "claim",
+                         "--session-id", self.SESSION, "--claimed-by", "agent"])
+            self.assertEqual(rc, 0)
+
+            rc = E.main(["--file", str(f), "start", "g2",
+                         "--session-id", self.SESSION])
+            self.assertEqual(rc, 0)
+            self.assertEqual(E.load(f)["tasks"]["g2"]["status"], "in-progress")
+
     # --- fail OPEN: no provenance means today's behaviour, exactly --------- #
     def test_no_lease_at_all_behaves_exactly_as_today(self):
         """Every gauge.json in the wild predates this guard and most checklists
