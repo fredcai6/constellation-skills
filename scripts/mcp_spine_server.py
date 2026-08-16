@@ -177,11 +177,46 @@ START_MARKER = Path(os.environ.get("SPINE_START_MARKER", str(SPINE.parent / "mcp
 REJECTIONLOG = Path(os.environ.get("SPINE_REJECTION_LOG", str(SPINE.parent / "mcp_rejections.jsonl")))
 
 
+def _report_dropped_telemetry(target: Path, exc: OSError, lost: str) -> None:
+    """Report one telemetry write this door could not make -- never raises.
+
+    Same shape and same principle as `_log_rejection` below: **fail loud, every
+    occurrence** -- no batching, no once-per-run flag, no silent drop. `stderr`,
+    never `stdout`, because `main()` writes the JSON-RPC protocol to `stdout` and
+    a diagnostic there would corrupt the transport."""
+    sys.stderr.write(
+        f"TELEMETRY WRITE FAILED: could not write to {target} "
+        f"({type(exc).__name__}: {exc}). Lost record: {lost}\n"
+    )
+    sys.stderr.flush()
+
+
 def _log(rec: dict) -> None:
-    with CALLLOG.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
-    if not START_MARKER.exists():
-        START_MARKER.write_text(f"started for {SPINE}\n", encoding="utf-8")
+    """Append one call record, and write the start marker on first success.
+
+    Both writes are guarded, and guarded SEPARATELY: these are two independent
+    side-channels, so one destination being unwritable must not suppress the
+    other. The catch is `OSError` -- covering `FileNotFoundError` (issue #604: the
+    bound spine's directory is gone), `PermissionError` and `IsADirectoryError` --
+    and deliberately not bare `Exception`, which would swallow programming errors
+    in this module and hide them behind a telemetry message.
+
+    **A diagnostic side-channel must never take down the thing it observes.**
+    Before issue #604 neither write was guarded, `run_engine` called this OUTSIDE
+    its own try/except (`:461`), and `main()` caught only `KeyError` -- so an
+    unwritable call log killed the whole server and the client saw only a closed
+    connection."""
+    line = json.dumps(rec, ensure_ascii=False)
+    try:
+        with CALLLOG.open("a", encoding="utf-8") as fh:
+            fh.write(line + "\n")
+    except OSError as exc:
+        _report_dropped_telemetry(CALLLOG, exc, line)
+    try:
+        if not START_MARKER.exists():
+            START_MARKER.write_text(f"started for {SPINE}\n", encoding="utf-8")
+    except OSError as exc:
+        _report_dropped_telemetry(START_MARKER, exc, f"start marker for {SPINE}")
 
 
 def _resolve_confined(
