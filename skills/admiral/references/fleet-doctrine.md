@@ -123,9 +123,12 @@ do not trust the flag; provision the worktree yourself before a parallel wave:
    main checkout, and **log that command and its outcome in the ADMIRAL_LOG** — a
    provisioned worktree is a material fleet action.
 2. Hand each Commander its **absolute** worktree path in the LAUNCH_ORDER
-   `## Workspace` field, with the instruction to run
-   `python <admiral-skill-dir>/scripts/verify_worktree_isolation.py --here <path>` as its first step and
-   paste the result into its return report.
+   `## Workspace` field, with the instruction to **`cd` into that path first** and
+   then run `python <admiral-skill-dir>/scripts/verify_worktree_isolation.py --here <path>`
+   as its first step, pasting the result into its return report. The `cd` is load-bearing:
+   `--here` asserts about the directory the Commander is standing in, so running it
+   before arrival fails with `fatal: not a git repository` — a true rc=1 for a reason
+   that has nothing to do with isolation.
 3. Gate the wave: `python <admiral-skill-dir>/scripts/verify_worktree_isolation.py <path1> <path2> ...`
    must exit 0 (every path a real, registered worktree, distinct from each other
    and from the main checkout) before you launch. A non-zero exit means isolation
