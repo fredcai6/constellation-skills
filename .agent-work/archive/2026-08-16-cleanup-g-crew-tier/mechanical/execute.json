@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "execute",
+  "mechanical": {
+    "run": "cleanup-g-crew-tier",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 7,
+    "spine-step": "execute",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-g-crew-tier-execute@88815ac32b1b2c1634fce7dfebf27c4d74377941",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-g-crew-tier",
+    "generated_at": "2026-08-16T18:22:33Z"
+  }
+}

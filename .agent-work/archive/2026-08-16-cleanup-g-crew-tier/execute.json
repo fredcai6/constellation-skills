@@ -1,0 +1,616 @@
+{
+  "work_id": "cleanup-g-crew-tier",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-doctrine",
+    "g3-verify"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope (MISSION_FRAME.md, execute.json just authored) is still in this context after any compaction/reload. No new context to load beyond what plan already resolved -- attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed in context",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Plan intent/scope (execute.json, MISSION_FRAME.md, PLAN_CONVERGENCE.md) confirmed in context after skill reload."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-e0-context-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "e0-context",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Refuse tierless dispatch; forward reasoning_effort as --effort",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate, per the converged plan in PLAN_CONVERGENCE.md (read it first -- it resolves several sub-decisions below, do not re-derive them). Refusal seam: add ONE guard clause to CrewSpec.__post_init__ (scripts/run_crew.py:1350-1364, alongside its two existing invariant checks, same style, same CrewLaunchError/exit-1/REFUSED: shape) refusing a falsy self.model, fail closed, no invented default (decision:refuse-a-tierless-dispatch). Do NOT put the check in build_crew_argv or make --model required=True at the argparse layer (build_parser) -- both were independently rejected by both plan candidates: --resume and a bare --abandon legitimately pass no --model and must stay legal at the parser layer, and --resume/CliBackend.resume never construct a CrewSpec at all (it reads entry.get(\"model\") off the registry dict), so the seam already exempts it by construction. RULED (do not re-litigate): --abandon --relaunch requires an explicit --model with NO fallback to abandoned.get(\"model\") -- this is intentionally asymmetric with reasoning_effort's existing inherit-on-relaunch fallback (main() line ~2071, args.reasoning_effort or abandoned.get(...)), which stays untouched (decision:do-not-change-what-anything-runs-at). Add a test proving the refusal fires before CliBackend.dispatch reserves scratch/writes the running registry entry (issue #525 ordering) -- assert no half-written entry results from a refused fresh launch. Effort wiring: add `effort: str | None = None` to build_crew_argv, `if effort: argv += [\"--effort\", effort]` mirroring the existing model line (813-814); thread `effort=spec.reasoning_effort` from CliBackend.dispatch (~1542) and `effort=entry.get(\"reasoning_effort\")` from CliBackend.resume (~1612) -- both call sites, a resume that silently drops effort reproduces the exact defect this mission fixes. Confirm build_entry's existing `if model: entry[\"model\"] = model` / `if reasoning_effort: entry[\"reasoning_effort\"] = reasoning_effort` already satisfies decision:record-the-resolved-tier and decision:reasoning-effort-follows-tier's recording half once model is mandatory -- pin with a test, do not re-implement. Flip the pre-mission-contract tests that currently assert `assertNotIn(\"--reasoning-effort\", ...)` (test_reasoning_effort_is_metadata_only_and_recorded ~2588, test_cli_resume_reads_reasoning_effort_from_registry ~2605, test_legacy_resume_without_reasoning_effort_does_not_crash ~2623, test_abandon_relaunch_inherits_stored_reasoning_effort_when_not_reasserted ~955) to assert `--effort <value>` IS present when reasoning_effort is set (both dispatch and resume) and absent when it is not (including the legacy-entry-with-no-field case) -- correct their docstrings, they currently describe the pre-mission contract as a guarantee. Add test_crewspec_refuses_missing_model and a green companion test_crewspec_accepts_explicit_model (pure CrewSpec construction, no main()/argparse/subprocess). Add a registry-entry-direct assertion test (dispatch with both model+reasoning_effort set, assert on entry[\"model\"]/entry[\"reasoning_effort\"] directly, not via argv) covering both fresh dispatch and the relaunch path's NEW attempt entry. Caller-list survey (deliverable, not optional): after the refusal lands, run the full suite once, enumerate every failure whose message contains the refusal text, classify each as (a) a test in tests/test_crew_launcher.py needing an explicit model= -- fix directly, this file is owned -- or (b) a caller outside owned files -- report, do not fix. Report the full list verbatim in IMPLEMENTER_RESULT even if empty (both plan candidates' independent greps found zero non-test-file callers, but re-verify, don't trust the candidates). Two of the four flip-tests (at least test_cli_resume_reads_reasoning_effort_from_registry ~2605) construct CrewSpec(...) with no model= at all -- once the refusal lands they need an explicit model= added directly, in the SAME edit as their --effort assertion flip, not left for the later caller-list survey to independently rediscover. THE TRAP: when you (the Commander) dispatch this gate's own implementer crew via run_crew.py, pass --model explicitly (this run's tier, sonnet) -- this is the mission's own named trap (naming a tier for every crew dispatched, from the first dispatch, before the refusal you're building makes it mandatory). Anchors below.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan approved, mission frame produced",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Plan approved, mission frame produced (MISSION_FRAME.md, PLAN_CONVERGENCE.md)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-2"
+        }
+      ],
+      "constraints": [
+        "Files you own only: scripts/run_crew.py, tests/test_crew_launcher.py (crew-dispatch.md and the handoff templates are g2, not this gate).",
+        "Fenced, never touch: scripts/checklist_engine.py, scripts/hooks/spine_rail.py, scripts/spine_lifecycle.py and their tests (lane F live).",
+        "Fenced, never touch: skills/commander/templates/COMMANDER_SPINE.template.json, skills/admiral/templates/LAUNCH_ORDER.template.md, skills/admiral/references/fleet-doctrine.md, skills/_shared/**, scripts/install_constellation.py (belong to queued #610).",
+        "Do not disturb #607's parent-lease-heartbeat thread start/stop/join ordering in run_crew.py.",
+        "No crew's effective tier may change as a side effect (decision:do-not-change-what-anything-runs-at) -- this makes the choice explicit, it does not repick tiers.",
+        "Do not edit any file outside the two owned above to fix a caller found in the enumeration -- report it instead."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/run_crew.py -- build_crew_argv (~755-818, the bare `if model:` line at 813-814)",
+          "scripts/run_crew.py -- CliBackend.dispatch/.resume (~1490-1638, the two build_crew_argv call sites)",
+          "scripts/run_crew.py -- CrewSpec (~1337-1364), build_entry (~1092-1199, the `if model:`/`if reasoning_effort:` recording), main() (~1974-2109, the two CrewSpec construction sites for fresh launch and abandon+relaunch)"
+        ],
+        "capability": [
+          "crew dispatch tier selection -- the seam every implementer/reviewer launch passes through"
+        ],
+        "constraint": [
+          "fenced: scripts/checklist_engine.py, scripts/hooks/spine_rail.py, scripts/spine_lifecycle.py (lane F live)",
+          "fenced: COMMANDER_SPINE.template.json, LAUNCH_ORDER.template.md, fleet-doctrine.md, skills/_shared/**, install_constellation.py (queued #610)",
+          "#607 parent-lease-heartbeat thread ordering must survive unchanged"
+        ],
+        "decision": [
+          "decision:refuse-a-tierless-dispatch -- run_crew.py refuses a fresh/relaunch dispatch naming no tier, fail closed, no invented default; report legitimately-tierless callers instead of silently exempting them. @grade: settled/human \u00b7 leans g1-implement,g1-review \u00b7 settle: n/a, ruled",
+          "decision:do-not-change-what-anything-runs-at -- explicit choice only, no side-effect retiering. @grade: settled/human \u00b7 leans g1-implement,g1-review",
+          "decision:record-the-resolved-tier -- resolved tier lands on the registry entry (already mechanical via build_entry once model is mandatory -- confirm, do not re-implement). @grade: settled/measured \u00b7 leans g1-implement",
+          "decision:reasoning-effort-follows-tier -- forward reasoning_effort as the launcher's real --effort flag on the cli backend (confirmed present at understand: `claude --effort <low|medium|high|xhigh|max>`). @grade: settled/measured \u00b7 leans g1-implement,g1-review",
+          "decision pressure: exact refusal wording/exit code -- Commander's latitude, not the implementer's; use the existing CrewLaunchError/REFUSED shape rather than inventing a new one"
+        ],
+        "evidence": [
+          "claim: build_crew_argv's only tier-forwarding today is the bare `if model:` line -- re-confirm at current line numbers before editing",
+          "claim: reasoning_effort reaches the registry entry but never the subprocess argv on cli -- re-confirm by reading build_crew_argv's full parameter list before editing"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-implement",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Refuse tierless dispatch; forward reasoning_effort as --effort: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, the inbound anchors, and the evidence from IMPLEMENTER_RESULT (including the reported caller list). Specifically verify: the refusal is fail-closed with no invented default; --resume/--verify-result are correctly left alone (they replay an existing entry, not a fresh dispatch); --effort forwards on BOTH dispatch and resume for the cli backend; the caller-list enumeration is complete (independently grep the live tree for CrewSpec( and run_crew.py invocations, not just trust the implementer's list); no fenced or out-of-ownership file was touched; #607's heartbeat thread ordering is untouched; the full test suite (env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q, cache cleared first) is green. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received: e-g1-implement-2, status complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-review",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Refuse tierless dispatch; forward reasoning_effort as --effort: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's side-effects against the world yourself (re-run the pasted test evidence, confirm it reproduces; grep for the `if model:`/`--effort` changes directly in the diff) before advancing -- a command-kind postcondition here is satisfied by `advance`, which re-runs the check, NOT by `attest`. BLOCK: send the implementer back for rework or raise a blocker if unresolvable. Log any out-of-scope finds (including caller-list entries outside your ownership) as triage candidates via spine_capture flag-candidate. Harvest the crew's Workflow Feedback into the run's lesson pool. THE TRAP: when you dispatch this gate's own reviewer crew via run_crew.py, pass --model explicitly (this run's tier, sonnet) -- do not inherit or default one, even before g1-implement's refusal has landed.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received: e-g1-review-2, verdict APPROVE."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "targeted test_crew_launcher.py suite green (cache cleared first -- launch order's standing instruction, every measurement)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-g-crew-tier && find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_crew_launcher.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-4"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2",
+          "attested": {
+            "evidence": "e-g1-review-2",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-integrate",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-g-crew-tier && find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_crew_launcher.py",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-g-crew-tier && find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_crew_launcher.py",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-g-crew-tier && find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_crew_launcher.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-doctrine": {
+      "id": "g2-doctrine",
+      "title": "Make the Suggested Model Tier field load-bearing in dispatch doctrine",
+      "imperative": "REASONING GATE, no crew -- deliverable is doctrine prose in a file this Commander already holds full context for (skills/commander/references/crew-dispatch.md), and the change is small and pre-ruled (decision:suggested-tier-becomes-load-bearing settles it stays prose, not a parser). Before editing, follow the repo's own established pattern for a doctrine-text change (tests/test_crew_delivery_addressing.py:230-243): add a small test class reading crew-dispatch.md directly off disk asserting it names '--model' and 'Suggested Model Tier'; run it now, against the unedited file, and paste the failure (verified red) into notes-g.md -- this is the run's own red/green evidence for c1/c2, not a grep run once at write time and never checked again. Then add a section (or extend an existing one) instructing: before calling run_crew.py, read the handoff's own \"Suggested Model Tier\" field (IMPLEMENTER_HANDOFF.template.md:94 / REVIEWER_HANDOFF.template.md:60) and pass the resolved tier via --model; run_crew.py now refuses a dispatch that names none. State plainly that this doctrine file previously said nothing about model at all (verified at understand: zero hits). Re-run the test (green) and paste that too. The two machine postconditions (c1/c2) only check that '--model' and 'Suggested Model Tier' each appear SOMEWHERE in the file -- co-occurrence, not connection. Since this is a no-crew reasoning gate (no independent reviewer, unlike g1), you are sole author and sole grader: write the actual connecting sentence (the Suggested Model Tier field IS the thing you resolve --model from) in one place, not two unrelated mentions, and say in your attestation note specifically which sentence does the connecting -- self-attest with the same rigor a reviewer would apply, not the minimum the grep checks demand.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 (refusal + --effort forwarding) complete, so the doctrine describes real, shipped behavior",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 complete: refusal + --effort forwarding shipped and reviewed APPROVE, so doctrine now describes real behavior."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew-dispatch.md mentions --model (pointer-name-present): the doctrine now names the exact flag a Commander must pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-g-crew-tier && grep -q -- '--model' skills/commander/references/crew-dispatch.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-doctrine-2"
+        },
+        {
+          "id": "c2",
+          "statement": "crew-dispatch.md names the Suggested Model Tier field as the thing a Commander decides FROM, connecting the handoff template field to the actual dispatch call",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-g-crew-tier && grep -qi 'Suggested Model Tier' skills/commander/references/crew-dispatch.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-doctrine-3"
+        }
+      ],
+      "constraints": [
+        "Prose only; no code change here (that is g1). Do not repick tiers for any existing dispatch site."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-doctrine-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g2-doctrine",
+            "why_ref": "w-4"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-doctrine-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-g-crew-tier && grep -q -- '--model' skills/commander/references/crew-dispatch.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-doctrine-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-g-crew-tier && grep -qi 'Suggested Model Tier' skills/commander/references/crew-dispatch.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-verify": {
+      "id": "g3-verify",
+      "title": "Full-suite evidence and main baseline",
+      "imperative": "REASONING GATE, no crew (deliverable is verification evidence this Commander already has full context for). Clear __pycache__ repo-wide, then run the full clean-env suite at this lane's published head: find . -name __pycache__ -type d -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q. If tests/test_code_map.py's map-tree-freshness tests fail (map/INDEX.md and map/ids.jsonl are generated and freshness-tested per Inherited Context -- this mission's new build_crew_argv parameter, tests, and doctrine section are plausible entity-count changes), regenerate via `py -m scripts.code_map build` and commit the result -- never hand-merge it -- then re-run the suite. Re-measure the SAME suite against a fresh main baseline (re-check main's current tip; the launch order's dispatch-time baseline was e0539903, 3163 passed/7 skipped/0 failed, but lane F may have landed under this run -- do not assume it is unchanged) in a scratch clone or worktree that does not disturb this branch's working tree. State the failure-set DIFFERENCE (not just counts) between this lane's head and the re-measured baseline. State what was NOT tested (Windows -- CI is the only Windows signal and is red at baseline per Inherited Context). Attest c1 and c2 with the pasted evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 and g2 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 and g2 both complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full clean-env cache-cleared suite passed at this lane's head, output pasted as evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Full clean-env, cache-cleared suite at published head: find . -name __pycache__ -type d -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q -> 6 failed, 3166 passed, 6 skipped, 1172 subtests passed in 130.22s. (CREW_SCRATCH_DIR unset too, beyond the launch order's base recipe -- this Commander's own ambient env var, same false-failure class caught and fixed at g1-integrate via amend.) The 6 failures are exactly the reported caller-list residue (test_crew_worktree_cwd.py x4, test_work_id_nesting.py x2, CrewLaunchError('a crew needs an explicit tier...') traceback in each) -- filed as triage candidate tc1, not a regression. map/INDEX.md rebuilt during g1 and confirmed fresh (MapTreeFreshnessTests passed in this run). Windows NOT tested: CI is the only Windows signal and is red at baseline per Inherited Context."
+        },
+        {
+          "id": "c2",
+          "statement": "main baseline re-measured at gate time; failure-set difference against this lane's head stated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "main re-measured fresh at gate time in a disposable clone (correctly named constellation-skills to avoid the map-header false-failure a differently-named clone dir produces) at e0539903 (unchanged from launch-order dispatch-time baseline -- lane F has not landed): 3163 passed, 7 skipped, 0 failed, 125.81s. Failure-set difference: this lane's head adds exactly 6 new failures (test_crew_worktree_cwd.py::CrewSpawnCwdTests x4, test_work_id_nesting.py::CrewRegistryAddressingTests x2), all caused by decision:refuse-a-tierless-dispatch firing on their model=None call sites, all outside this mission's file ownership, all reported (triage candidate tc1). No other failure-set delta. Head also adds 2 new passing tests (test_crew_dispatch_doctrine.py) and fixes 0 baseline failures (baseline had none to fix)."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-verify-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g3-verify",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-integrate",
+      "statement": "Two test files outside this mission's file ownership (tests/test_crew_worktree_cwd.py: 4 call sites, tests/test_work_id_nesting.py: 2 call sites) call RC.launch_crew/RC.record_external_attempt with model=None and now fail under decision:refuse-a-tierless-dispatch. Mechanical fix (add an explicit model= kwarg, same pattern already applied ~27 times in tests/test_crew_launcher.py this gate) -- not a design question. Independently confirmed by both implementer and reviewer."
+    }
+  ],
+  "blockers": [],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "e0-context",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2876,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-16T18:22:52.356890+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "g1-implement",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.3003,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-1",
+      "ts": "2026-08-16T18:24:03.205442+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "g1-implement",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3003,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-1",
+      "ts": "2026-08-16T18:24:07.027871+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.3427,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-16T18:45:27.778319+00:00"
+    },
+    {
+      "id": "tl-5",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3507,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-16T18:45:33.079201+00:00"
+    },
+    {
+      "id": "tl-6",
+      "gate": "g1-integrate",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.3622,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-16T18:57:16.631308+00:00"
+    },
+    {
+      "id": "tl-7",
+      "gate": "g1-integrate",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3635,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-16T18:57:21.184287+00:00"
+    },
+    {
+      "id": "tl-8",
+      "gate": "g2-doctrine",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.3876,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-4",
+      "ts": "2026-08-16T18:58:48.255634+00:00"
+    },
+    {
+      "id": "tl-9",
+      "gate": "g2-doctrine",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3898,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-4",
+      "ts": "2026-08-16T18:58:54.275145+00:00"
+    },
+    {
+      "id": "tl-10",
+      "gate": "g3-verify",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.3978,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-16T18:59:34.722582+00:00"
+    },
+    {
+      "id": "tl-11",
+      "gate": "g3-verify",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3978,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-16T18:59:37.934346+00:00"
+    }
+  ],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Execute step's context confirmed: plan frozen in execute.json/MISSION_FRAME.md/PLAN_CONVERGENCE.md, converged after plan-alternatives + cold critic triage. Proceeding gate by gate per LAUNCH_ORDER's explicit HARD-band override (attach refresh-request, then continue working -- not an instruction to hand off).",
+      "mechanical": false,
+      "ts": "2026-08-16T18:23:00.056634+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Refusal seam (CrewSpec.__post_init__) and --effort forwarding (both CliBackend call sites) landed exactly per handoff Authority. Independently re-verified: diff scoped to owned files only, refusal/effort code present at cited lines, targeted suite reproduces implementer's pasted evidence (211 passed, 1 pre-existing environmental failure). Caller-list survey complete: two out-of-owned-files test files (test_crew_worktree_cwd.py x4, test_work_id_nesting.py x2) need the same mechanical fix -- reported, not silently patched.",
+      "mechanical": false,
+      "ts": "2026-08-16T18:44:24.094946+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Independent reviewer reproduced every close criterion against live source (not trusted from IMPLEMENTER_RESULT): refusal scoping structurally confirmed unreachable from resume/bare-abandon, #525 ordering confirmed structurally impossible to violate, --effort forwarding symmetric, no scope drift, full-suite evidence reproduces exactly (7 failed/3163 passed, same ids), caller-list re-derived independently and found one additional file (test_crew_delivery_addressing.py) already compliant so not a gap. Fowler pass 12 smells checked, 1 non-blocking flag (shotgun-surgery, mechanical test fixups only). APPROVE, 0 blockers.",
+      "mechanical": false,
+      "ts": "2026-08-16T18:57:02.255611+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "REVIEW_RESULT APPROVE (e-g1-review-2), 0 blockers. Own re-verification: grepped diff directly for the refusal guard and --effort wiring at all 4 call sites, matches claim. c1 corrected via amend (CREW_SCRATCH_DIR leak, not a code defect) then re-run: 212 passed, 0 failed. Out-of-scope caller-list finding logged as triage candidate tc1.",
+      "mechanical": false,
+      "ts": "2026-08-16T18:58:27.631091+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-doctrine",
+      "why": "Red/green test evidence in notes-g.md: 2 failed before the edit (--model absent entirely, matching understand's zero-hits grep), 2 passed after. New 'Name a tier' section connects the Suggested Model Tier field to --model in one sentence, states the refusal, covers --effort/--reasoning-effort, scopes away from resume/bare-abandon. Self-attested with reviewer-level rigor since this reasoning gate has no independent reviewer.",
+      "mechanical": false,
+      "ts": "2026-08-16T18:59:28.558158+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g3-verify",
+      "why": "Full suite green at head modulo the exactly-expected caller-list residue (6 failures, both out-of-owned-files, all decision:refuse-a-tierless-dispatch firing as designed). Main baseline re-measured fresh, unchanged, 0 failures. Failure-set difference stated and fully explained. Windows explicitly named as not-tested. execute.json's gate plan is complete.",
+      "mechanical": false,
+      "ts": "2026-08-16T19:06:55.313371+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-16T18:58:22.655576+00:00",
+      "reason": "g1-integrate.c1's original command (env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_crew_launcher.py) inherits this Commander's OWN ambient CREW_SCRATCH_DIR into the fake-child-env assertion of ScratchDirResumeTests::test_resume_of_legacy_entry_without_worktree_key_does_not_crash_and_leaves_scratch_dir_unbound, causing a false failure unrelated to g1's actual change. Confirmed via git-stash-on-baseline by both implementer and reviewer (fails identically pre-change) and by unsetting CREW_SCRATCH_DIR myself (212 passed, 0 failed). Not a code defect -- a gate-plan measurement gap: my own commander session's env variable was never in the clean-env unset list. Correcting the check text to unset it too.",
+      "authority": "human",
+      "ops": [
+        "retext-check g1-integrate.c1"
+      ]
+    }
+  ]
+}
