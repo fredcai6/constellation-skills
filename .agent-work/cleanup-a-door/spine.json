@@ -307,7 +307,8 @@
           "id": "p1",
           "statement": "plan approved; context headroom ensured and commander skill reloaded into this context",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "plan complete and approved (e-plan-1); constellation-commander-delegated reloaded into this context and confirmed active; context headroom relies on harness auto-compaction, which is the sanctioned path where no compaction command is exposed"
         },
         {
           "id": "p2",
@@ -316,7 +317,8 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_state_note.py cleanup-a-door"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-2"
         }
       ],
       "postconditions": [
@@ -360,11 +362,33 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "execute",
+            "why_ref": "w-4"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_state_note.py cleanup-a-door",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "reconcile": {
@@ -611,12 +635,12 @@
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door",
     "opened_by": "init_work_area"
   },
-  "refusals": 3,
+  "refusals": 4,
   "engine_session": {
     "session_id": "commander-cleanup-a-door",
     "status": "active",
     "claimed_at": "2026-08-16T12:31:35.996339+00:00",
-    "last_heartbeat": "2026-08-16T12:51:31.668217+00:00",
+    "last_heartbeat": "2026-08-16T12:52:16.736020+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -650,6 +674,30 @@
       "why": "Plan frozen AFTER a cold critic materially reshaped it. Three crew gates: g1 #604 telemetry-never-fatal, g2 #605 usable shipped demo, g3 #603 fail-closed + bind-on-open. Two declared departures from the order, both measured: gate order reversed so the shipped default never points at a broken file at any commit, and #605's own 'relative paths' fix direction overridden because checklist_engine.py:883 runs command checks with no cwd. The critic proved four blocking gaps I had missed -- a second hard os.environ read at :593 on spine_open's own path, SESSION being a second identity root that claim refuses without, empty-string being the failure world production actually takes, and both integrate postconditions passing on the defective tree. All independently verified before acting. c6 waived: no frame can pass verify-frame in this repo.",
       "mechanical": false,
       "ts": "2026-08-16T12:51:31.668207+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "execute",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.2227,
+      "hard": 0.12,
+      "model": "claude-opus-5",
+      "why_ref": "w-4",
+      "ts": "2026-08-16T12:51:56.149336+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "execute",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2261,
+      "hard": 0.12,
+      "model": "claude-opus-5",
+      "why_ref": "w-4",
+      "ts": "2026-08-16T12:52:16.699698+00:00"
     }
   ]
 }
