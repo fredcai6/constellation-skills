@@ -2,9 +2,9 @@
 
 ## packages
 evals: 12 modules, 54 entities
-scripts: 58 modules, 1213 entities
+scripts: 58 modules, 1212 entities
 skills: 1 modules, 18 entities
-tests: 83 modules, 4737 entities
+tests: 83 modules, 4699 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -29,7 +29,7 @@ tests: 83 modules, 4737 entities
 - [evals.euler-5-smallest-multiple.checks.spine_completed](evals.euler-5-smallest-multiple.checks.spine_completed/INDEX.md) (9 entities, 2 holes): PROCESS check (gating): a constellation ENGINE spine reached a terminal state WITH engine-written provenance -- not merely agent-written JSON (issue #127).
 - [evals.euler-5-smallest-multiple.checks.tests_green](evals.euler-5-smallest-multiple.checks.tests_green/INDEX.md) (3 entities, 3 holes): PROCESS check (gating): tests were WRITTEN and PASS in the workspace.
 
-## scripts (58 modules, 1213 entities)
+## scripts (58 modules, 1212 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -52,7 +52,7 @@ tests: 83 modules, 4737 entities
 - [scripts.build_architecture_map](scripts.build_architecture_map/INDEX.md) (16 entities, 15 holes): HOLE: no docstring
 - [scripts.check_corpus_freshness](scripts.check_corpus_freshness/INDEX.md) (11 entities, 7 holes): Report whether an installed constellation corpus is current with upstream main.
 - [scripts.check_skill_freshness](scripts.check_skill_freshness/INDEX.md) (10 entities, 5 holes): Report template drift for a project against its installed-skill baseline.
-- [scripts.checklist_engine](scripts.checklist_engine/INDEX.md) (111 entities, 25 holes): Workbench checklist engine: work one gated/survey plan through its gates.
+- [scripts.checklist_engine](scripts.checklist_engine/INDEX.md) (110 entities, 25 holes): Workbench checklist engine: work one gated/survey plan through its gates.
 - [scripts.collect_feedback](scripts.collect_feedback/INDEX.md) (38 entities, 15 holes): Sweep consuming projects' CONSTELLATION_FEEDBACK.md exports into one report.
 - [scripts.context_manifest](scripts.context_manifest/INDEX.md) (14 entities): Deterministic projection substrate: what was made available to an agent, and at which revision.
 - [scripts.curate_corpus](scripts.curate_corpus/INDEX.md) (18 entities, 4 holes): Curator MEASUREMENT pass over the skills corpus (mechanical-only, flags-never-gates).
@@ -102,7 +102,7 @@ tests: 83 modules, 4737 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (83 modules, 4737 entities)
+## tests (83 modules, 4699 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -173,7 +173,7 @@ tests: 83 modules, 4737 entities
 - [tests.test_shipped_check_commands_resolve](tests.test_shipped_check_commands_resolve/INDEX.md) (14 entities, 10 holes): Every shipped command check must actually run after instantiation (epic-559/b-instructions-to-checks, rework r3).
 - [tests.test_shipped_template_gates_satisfiable](tests.test_shipped_template_gates_satisfiable/INDEX.md) (8 entities, 7 holes): Prove the shipped EXECUTE_PLAN.template.json's g1-implement gate is actually satisfiable by a real drive of the real engine (epic-559/b-instructions-to-checks, 
 - [tests.test_spine_lifecycle](tests.test_spine_lifecycle/INDEX.md) (113 entities, 102 holes): Tests for scripts/spine_lifecycle.py -- open and close Constellation work in one call each.
-- [tests.test_spine_origin_isolation](tests.test_spine_origin_isolation/INDEX.md) (69 entities, 43 holes): Engine-native worktree isolation: the `origin` stamp and the refusal it feeds (#315/#568).
+- [tests.test_spine_origin_isolation](tests.test_spine_origin_isolation/INDEX.md) (31 entities, 17 holes): The `origin` stamp is PROVENANCE: written, and read by nothing (#315/#568/#609).
 - [tests.test_spine_provenance_check](tests.test_spine_provenance_check/INDEX.md) (34 entities, 32 holes): Provenance hardening for the eval `spine_completed` process check (issue #127).
 - [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (190 entities, 95 holes): Unit tests for scripts/hooks/spine_rail.py.
 - [tests.test_state_note](tests.test_state_note/INDEX.md) (15 entities, 15 holes): HOLE: no docstring

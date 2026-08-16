@@ -1,32 +1,33 @@
-"""Engine-native worktree isolation: the `origin` stamp and the refusal it feeds (#315/#568).
+"""The `origin` stamp is PROVENANCE: written, and read by nothing (#315/#568/#609).
 
-Three things are asserted here, each with a failing side as well as a passing one:
+Stamp-and-compare is retired. This file used to assert that
+`checklist_engine.origin_worktree_refusal` compared `origin.worktree` against a
+worktree toplevel the engine resolved from its own ambient cwd, and refused
+every guarded verb when the two disagreed. That predicate, the two verb sets
+that fed it and the per-verb `git rev-parse --show-toplevel` behind it are all
+gone (#609 g2), so the scenarios that tested them are gone with them.
 
-  1. `init_work_area.instantiate_spine` stamps a top-level `origin` block when
-     it writes a spine, so a spine carries its own repo reference from creation.
-  2. `checklist_engine.origin_worktree_refusal` is a pure refusal-or-`None`
-     predicate over that stamp: guarded verbs refuse unless the cwd -- resolved
-     by the call site to its git worktree toplevel -- EQUALS the stored
-     worktree (2026-08-15 worktree-identity ruling), an unresolvable cwd
-     (`None`) fails closed, every other shape falls back to the pre-change
-     behaviour, and no shape raises.
-  3. `main()` reaches the predicate for real -- a guarded verb driven from a
-     foreign cwd returns non-zero and leaves the spine byte-identical, while
-     `current` still works from anywhere. The call-site fixtures are real git
-     repos, so the git-toplevel resolution is exercised, not simulated: a
-     subdirectory of the right worktree resolves to that worktree and passes.
+Two things are asserted here now, each with a failing side as well as a
+passing one:
 
-These tests exist because `tests/test_worktree_precondition_wiring.py` cannot
-carry this: every fixture in that file builds an `origin`-LESS spine by hand,
-so it is green by construction under this change and is evidence for the
-fallback branch only.
+  1. The stamp is still WRITTEN. `init_work_area.instantiate_spine` stamps a
+     top-level `origin` block when it writes a spine, and
+     `spine_lifecycle.build_origin` builds the fuller one -- so a spine still
+     carries its own repo reference from creation.
+  2. The stamp is read by NOTHING that decides anything. The differential in
+     `TheStampIsProvenanceNotADecisionInput` drives the same guarded verbs
+     against the same spine differing only in `origin.worktree`, from a cwd
+     that is not the spine's worktree, and demands one answer for all of them.
 
-**What this guard does NOT do.** It does not survive a forwarded cwd. The
-engine reads its own `Path.cwd()`, and a check command authored as
-`cd <origin.worktree> && ...` still satisfies it. The property gained is
-coverage (every verb on every spine, not only where a check was wired into a
-template), unbypassability from the spine's own text, and an expected side that
-comes from the creation-time stamp rather than a literal inside a check.
+**This supersedes the 2026-08-15 worktree-identity ruling**, which settled that
+the comparison should be equality against a git-resolved toplevel rather than
+containment. That ruling answered how to resolve the two sides of a comparison
+that no longer exists. Nothing was left unguarded by removing it: the
+comparison answered "where am I", never "is this mine" -- ownership is the
+LEASE, and always was. A spine's worktree is now derived from its own path
+(`checklist_engine.worktree_from_spine_path`), so there is no second value that
+can disagree with the first, and no ambient reading a check command could forge
+by `cd`-ing first.
 
 Every fixture is built in a `tempfile.TemporaryDirectory()` -- never against
 this worktree's own `.git` or the shared checkout.
@@ -167,244 +168,7 @@ class StampsOriginAtInstantiation(unittest.TestCase):
 
 
 # --------------------------------------------------------------------------- #
-# 2. The read side: the pure predicate
-# --------------------------------------------------------------------------- #
-
-
-def _spine_with_origin(worktree: str) -> dict:
-    return {
-        "work_id": "w1", "type": "gated", "items": [], "tasks": {},
-        "origin": {"work_id": "w1", "worktree": worktree, "opened_by": "init_work_area"},
-    }
-
-
-class GuardedVerbScope(unittest.TestCase):
-    """The guarded set is data, derived from `MUTATING_VERBS` so a verb added
-    there is guarded automatically -- asserted for membership AND non-membership."""
-
-    def setUp(self):
-        self.E = _load_engine()
-
-    def test_guarded_is_the_mutating_set_plus_claim_and_heartbeat(self):
-        self.assertEqual(
-            self.E.ORIGIN_GUARDED_VERBS,
-            self.E.MUTATING_VERBS | {"claim", "heartbeat"},
-        )
-        # Membership: `heartbeat` is guarded because it WRITES; `claim` takes the
-        # lease. Both are lease verbs, so neither rides in on MUTATING_VERBS.
-        for verb in ("claim", "heartbeat", "start", "advance", "attest", "attach", "amend"):
-            self.assertIn(verb, self.E.ORIGIN_GUARDED_VERBS)
-        # Non-membership: `current` is the only genuinely read-only verb, and
-        # doctrine has an invoker read a subordinate's `current` cross-tree.
-        # `release` is the single recovery escape hatch -- a lease on a spine
-        # whose worktree was removed at closeout must stay clearable.
-        for verb in ("current", "release"):
-            self.assertNotIn(verb, self.E.ORIGIN_GUARDED_VERBS)
-            self.assertIn(verb, self.E.ORIGIN_EXEMPT_VERBS)
-
-    def test_the_two_sets_partition_every_verb_the_parser_accepts(self):
-        """Enumerated from the live parser, not a hand-kept list: a new verb
-        must be classified deliberately rather than defaulting to unguarded."""
-        import contextlib
-        import io
-        import re
-
-        err = io.StringIO()
-        with contextlib.redirect_stderr(err), self.assertRaises(SystemExit):
-            self.E.parse_args(["--file", "x", "zzz-not-a-verb"])
-        choices = re.search(r"\{([a-z,\-]+)\}", err.getvalue())
-        self.assertIsNotNone(choices, f"could not read the verb list from {err.getvalue()!r}")
-        verbs = set(choices.group(1).split(","))
-
-        self.assertGreaterEqual(len(verbs), 18, f"only enumerated {sorted(verbs)}")
-        self.assertEqual(verbs, self.E.ORIGIN_GUARDED_VERBS | self.E.ORIGIN_EXEMPT_VERBS)
-        self.assertEqual(self.E.ORIGIN_GUARDED_VERBS & self.E.ORIGIN_EXEMPT_VERBS, set())
-
-
-class OriginRefusalPredicate(unittest.TestCase):
-    """`origin_worktree_refusal` refuses a guarded verb whose cwd is not the
-    stored worktree itself -- equality, not containment -- and stays silent
-    everywhere else. The cwd it sees is a git worktree toplevel, resolved by
-    the one call site in `main()`."""
-
-    def setUp(self):
-        self.E = _load_engine()
-
-    def test_the_worktree_root_itself_passes(self):
-        spine = _spine_with_origin("/w/repo")
-        self.assertIsNone(self.E.origin_worktree_refusal(spine, cwd="/w/repo", verb="claim"))
-
-    def test_a_subdirectory_of_the_worktree_is_refused_at_the_predicate(self):
-        """Equality, not containment (2026-08-15 worktree-identity ruling):
-        containment let a primary-stamped spine pass from a worktree nested
-        under the primary (`NestedWorktreeRegression`). The predicate never
-        sees a raw subdirectory -- `main()` resolves the cwd to its git
-        worktree toplevel first -- so a subdirectory path reaching it IS a
-        foreign tree. The real property "a subdirectory of my own worktree is
-        allowed" lives at the call-site level now:
-        `RefusesAGuardedVerbFromAForeignTree.
-        test_the_same_verb_from_a_subdirectory_of_the_worktree_succeeds`,
-        against a real git repo."""
-        spine = _spine_with_origin("/w/repo")
-        for sub in ("/w/repo/scripts", "/w/repo/.agent-work/w1", "/w/repo/a/b/c"):
-            self.assertIsNotNone(
-                self.E.origin_worktree_refusal(spine, cwd=sub, verb="start"), sub
-            )
-
-    def test_a_foreign_tree_refuses_and_names_both_sides(self):
-        spine = _spine_with_origin("/w/repo")
-        reason = self.E.origin_worktree_refusal(spine, cwd="/w/other", verb="advance")
-        self.assertIsInstance(reason, str)
-        self.assertIn("/w/repo", reason)
-        self.assertIn("/w/other", reason)
-
-    def test_a_sibling_sharing_a_name_prefix_is_not_inside(self):
-        """`/w/repo-2` is not `/w/repo`. A `startswith` comparison would say it
-        is inside; path equality trivially says it is not -- kept as the pin
-        against ever regressing to a string-prefix comparison."""
-        spine = _spine_with_origin("/w/repo")
-        self.assertIsNotNone(self.E.origin_worktree_refusal(spine, cwd="/w/repo-2", verb="start"))
-        self.assertIsNotNone(
-            self.E.origin_worktree_refusal(spine, cwd="/w/repo-2/scripts", verb="start")
-        )
-
-    def test_the_parent_of_the_worktree_refuses(self):
-        spine = _spine_with_origin("/w/repo")
-        self.assertIsNotNone(self.E.origin_worktree_refusal(spine, cwd="/w", verb="start"))
-
-    def test_an_exempt_verb_never_refuses_even_from_a_foreign_tree(self):
-        spine = _spine_with_origin("/w/repo")
-        for verb in sorted(self.E.ORIGIN_EXEMPT_VERBS):
-            self.assertIsNone(
-                self.E.origin_worktree_refusal(spine, cwd="/w/other", verb=verb), verb
-            )
-
-    def test_every_guarded_verb_refuses_from_a_foreign_tree(self):
-        spine = _spine_with_origin("/w/repo")
-        checked = 0
-        for verb in sorted(self.E.ORIGIN_GUARDED_VERBS):
-            self.assertIsNotNone(
-                self.E.origin_worktree_refusal(spine, cwd="/w/other", verb=verb), verb
-            )
-            checked += 1
-        self.assertEqual(checked, len(self.E.ORIGIN_GUARDED_VERBS))
-        self.assertGreaterEqual(checked, 16)
-
-    def test_it_is_pure(self):
-        """No filesystem, no clock, no subprocess, no ambient cwd read: the
-        impure half lives at the one call site in `main()`. Read off the
-        compiled code object -- every global and attribute name the function
-        actually references -- rather than off its source text, which would
-        also match the docstring describing what it does not do."""
-        names = set(self.E.origin_worktree_refusal.__code__.co_names)
-        self.assertIn("ORIGIN_GUARDED_VERBS", names)  # the loop asserted what it looked at
-        for forbidden in ("cwd", "getcwd", "subprocess", "run", "open", "exists",
-                          "resolve", "read_text", "write_text", "datetime", "time",
-                          "_now", "save", "load"):
-            self.assertNotIn(forbidden, names, f"{forbidden} referenced by a pure predicate")
-
-    @unittest.skipUnless(os.name == "nt", "case folding is a Windows property")
-    def test_case_and_separator_folding_on_windows(self):
-        """The two producers normalize differently: `spine_lifecycle` stores
-        `str(Path(worktree))` (native separators) and `init_work_area` stores
-        `as_posix()`. `os.path.normcase` folds both. The cwd is the root
-        itself (equality semantics) -- folding is the property, not
-        containment."""
-        spine = _spine_with_origin("C:/w/repo")
-        self.assertIsNone(
-            self.E.origin_worktree_refusal(spine, cwd="C:\\W\\REPO", verb="start")
-        )
-
-
-class OriginRefusalFailClosed(unittest.TestCase):
-    """`cwd=None` means the call site could not resolve any git worktree
-    toplevel for the engine's cwd. For a spine carrying a valid stamp that
-    fails CLOSED by intent (ruling part 3) -- under containment an
-    unresolvable cwd failed closed only by accident. The shape fallbacks stay
-    senior to it: an origin-less or malformed spine is still drivable, and
-    nothing raises."""
-
-    def setUp(self):
-        self.E = _load_engine()
-
-    def test_an_origin_carrying_spine_refuses_when_no_toplevel_resolved(self):
-        spine = _spine_with_origin("/w/repo")
-        reason = self.E.origin_worktree_refusal(spine, cwd=None, verb="start")
-        self.assertIsInstance(reason, str)
-        self.assertIn("/w/repo", reason)
-
-    def test_every_guarded_verb_fails_closed(self):
-        spine = _spine_with_origin("/w/repo")
-        for verb in sorted(self.E.ORIGIN_GUARDED_VERBS):
-            self.assertIsNotNone(
-                self.E.origin_worktree_refusal(spine, cwd=None, verb=verb), verb
-            )
-
-    def test_an_exempt_verb_still_passes_with_no_toplevel(self):
-        spine = _spine_with_origin("/w/repo")
-        for verb in sorted(self.E.ORIGIN_EXEMPT_VERBS):
-            self.assertIsNone(
-                self.E.origin_worktree_refusal(spine, cwd=None, verb=verb), verb
-            )
-
-    def test_malformed_origins_still_fall_back_open_with_no_toplevel(self):
-        """The fallback branches sit ABOVE the fail-closed branch: a spine the
-        stamp never reached (or reached malformed) keeps the pre-change
-        drivable-from-anywhere behaviour even when the cwd resolves to
-        nothing, and none of the shapes raises."""
-        base = {"work_id": "w1", "type": "gated", "items": [], "tasks": {}}
-        shapes = ({}, {"origin": None}, {"origin": "/w/repo"}, {"origin": {}},
-                  {"origin": {"worktree": ""}}, {"origin": {"worktree": None}})
-        for extra in shapes:
-            with self.subTest(shape=extra):
-                self.assertIsNone(
-                    self.E.origin_worktree_refusal({**base, **extra}, cwd=None, verb="start")
-                )
-
-
-class OriginRefusalFallback(unittest.TestCase):
-    """Every origin-less / malformed-origin shape takes the pre-change behaviour
-    and none raises. `scripts/validate_spine.py` guards none of them, so the
-    engine handles every shape itself."""
-
-    def setUp(self):
-        self.E = _load_engine()
-
-    def test_every_malformed_shape_falls_back_without_raising(self):
-        base = {"work_id": "w1", "type": "gated", "items": [], "tasks": {}}
-        shapes = {
-            "origin absent": {},
-            "origin null": {"origin": None},
-            "origin is a string": {"origin": "/w/repo"},
-            "origin is a list": {"origin": ["/w/repo"]},
-            "origin is empty": {"origin": {}},
-            "worktree absent": {"origin": {"work_id": "w1", "opened_by": "x"}},
-            "worktree empty": {"origin": {"worktree": ""}},
-            "worktree is null": {"origin": {"worktree": None}},
-            "worktree is a number": {"origin": {"worktree": 7}},
-            "worktree is a list": {"origin": {"worktree": ["/w/repo"]}},
-        }
-        checked = 0
-        for name, extra in shapes.items():
-            with self.subTest(shape=name):
-                spine = {**base, **extra}
-                self.assertIsNone(
-                    self.E.origin_worktree_refusal(spine, cwd="/w/somewhere-else", verb="start"),
-                    f"{name} did not fall back",
-                )
-                checked += 1
-        self.assertEqual(checked, len(shapes))
-        self.assertGreaterEqual(checked, 10)
-
-    def test_a_string_origin_would_raise_a_naive_get(self):
-        """Pins why the string/list shapes are in the table: `.get` on them
-        raises `AttributeError`, which `main()` does not catch."""
-        with self.assertRaises(AttributeError):
-            "/w/repo".get("worktree")  # noqa: B018 - the defect being guarded
-
-
-# --------------------------------------------------------------------------- #
-# 3. The call site: main() reaches the predicate, and refuses without writing
+# 2. Shared fixture helper
 # --------------------------------------------------------------------------- #
 
 
@@ -418,13 +182,57 @@ def _git_in(cwd: Path, *args: str) -> None:
     )
 
 
-class _SpineOnDisk(unittest.TestCase):
-    """A real spine carrying `origin`, plus a foreign tree to stand in. BOTH
-    are real, distinct git repos (siblings), so the pass-path assertions
-    (same worktree, same subdirectory) and the foreign-tree refusals exercise
-    `main()`'s real git-toplevel resolution rather than silently falling into
-    the fail-closed no-toplevel path. `nogit` is the one deliberately
-    unresolvable stand-in, for the fail-closed test."""
+# --------------------------------------------------------------------------- #
+# 3. Provenance: the stamp is WRITTEN, and read by NOTHING for a decision
+# --------------------------------------------------------------------------- #
+
+
+_ABSENT = object()
+
+# Varied deliberately across a real path, a foreign path, and every shape a
+# comparison would have had to handle. If ANY decision anywhere reads
+# `origin.worktree`, at least one of these rows has to behave differently from
+# the others -- that is the whole discriminating power of the table.
+_STAMPS: dict[str, object] = {
+    "the spine's own worktree": None,  # filled in with the real path at run time
+    "a foreign tree": "/nonexistent/some/other/tree",
+    "a sibling sharing a name prefix": None,  # filled in: <worktree>-2
+    "not a path at all": "not-a-path",
+    "an empty string": "",
+    "a number": 7,
+    "worktree key absent": _ABSENT,
+    # Separators and case, constructed EXPLICITLY rather than inherited from
+    # the platform. `os.path.normcase` is the identity function on POSIX, so a
+    # folding expectation written against the host would assert nothing here.
+    # The retired comparison needed the fold because the two producers
+    # normalize differently -- `spine_lifecycle` stores `str(Path(worktree))`
+    # (native separators), `init_work_area` stores `as_posix()`. Nothing
+    # compares the stamp now, so a backslashed, drive-lettered, wrong-cased
+    # value must be exactly as inert as every other row, on every platform.
+    "a Windows-shaped path": "C:\\W\\REPO",
+    "the same path, wrong case": None,  # filled in: the worktree, upper-cased
+}
+
+
+class TheStampIsProvenanceNotADecisionInput(unittest.TestCase):
+    """`origin.worktree` keeps being WRITTEN, and is read by NOTHING that makes
+    a decision (#609 g2, superseding the 2026-08-15 worktree-identity ruling).
+
+    The pairing has two halves and this class fails if either breaks:
+
+      * **Written** -- both producers still stamp it, so the provenance a human
+        or a reconciler reads is still there.
+      * **Never a decision input** -- the engine's behaviour is IDENTICAL for
+        every value of it. The table below drives the same guarded verbs
+        against the same spine differing ONLY in that one field, from a cwd
+        that is not the spine's worktree, and demands one answer. A decision
+        that read the stamp could not give the same answer to "my own
+        worktree" and "/nonexistent/some/other/tree", so re-introducing one
+        turns this red.
+
+    Why the differential rather than a source scan: a scan for the string
+    `origin` finds prose and provenance reads and cannot tell a decision from a
+    display. Behaviour can."""
 
     def setUp(self):
         self.E = _load_engine()
@@ -439,17 +247,30 @@ class _SpineOnDisk(unittest.TestCase):
         _git_in(self.worktree, "init", "-q")
         _git_in(self.foreign, "init", "-q")
         self.spine_path = self.worktree / ".agent-work" / "w1" / "spine.json"
-        self._write_spine(self.worktree.as_posix())
         self._cwd = os.getcwd()
 
     def tearDown(self):
         os.chdir(self._cwd)
         self.tmp.cleanup()
 
-    def _write_spine(self, worktree: str) -> None:
+    def _stamps(self) -> dict:
+        """The table with its two run-time paths filled in. The sibling row is
+        `<worktree>-2`: unequal to the worktree under any comparison, but equal
+        under a string-prefix one, so it also pins that a prefix comparison was
+        not left behind."""
+        table = dict(_STAMPS)
+        table["the spine's own worktree"] = self.worktree.as_posix()
+        table["a sibling sharing a name prefix"] = self.worktree.as_posix() + "-2"
+        table["the same path, wrong case"] = self.worktree.as_posix().upper()
+        return table
+
+    def _write_spine(self, stamp) -> None:
+        origin = {"work_id": "w1", "opened_by": "init_work_area"}
+        if stamp is not _ABSENT:
+            origin["worktree"] = stamp
         self.spine_path.write_text(json.dumps({
             "work_id": "w1", "type": "gated", "items": ["g1"],
-            "origin": {"work_id": "w1", "worktree": worktree, "opened_by": "init_work_area"},
+            "origin": origin,
             "tasks": {"g1": {
                 "id": "g1", "title": "g1", "imperative": "do g1",
                 "preconditions": [], "postconditions": [],
@@ -459,232 +280,142 @@ class _SpineOnDisk(unittest.TestCase):
             }},
             "consolidation": None, "triage_candidates": [], "blockers": [],
         }, indent=2), encoding="utf-8")
+        journal = self.spine_path.parent / "spine.json.journal"
+        if journal.exists():
+            journal.unlink()
 
-    def _digest(self) -> str:
-        import hashlib
+    def _observable(self, stamp, cwd: Path) -> dict:
+        """Drive three guarded verbs -- the lease verb, a state verb and the
+        write-only verb -- from `cwd` and return everything an agent could
+        observe: the exit codes, whether anything was refused, and the state
+        that landed. Timestamps are excluded on purpose; they differ between
+        two identical runs and would drown the signal."""
+        import contextlib
+        import io
 
-        return hashlib.sha256(self.spine_path.read_bytes()).hexdigest()
-
-    def _main_from(self, cwd: Path, argv: list[str]) -> int:
-        """Run the engine IN-PROCESS from `cwd` -- the `mcp_spine_server.py`
-        shape: it calls `checklist_engine.main(argv)` directly and never
-        chdirs, so the guard reads that process's cwd."""
+        self._write_spine(stamp)
+        codes, refused = [], []
         os.chdir(cwd)
         try:
-            return self.E.main(["--file", str(self.spine_path), *argv])
+            for argv in (
+                ["claim", "--session-id", "s1", "--claimed-by", "implementer", "--worktree", "."],
+                ["start", "g1", "--session-id", "s1"],
+                ["heartbeat", "--session-id", "s1"],
+            ):
+                err = io.StringIO()
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+                    codes.append(self.E.main(["--file", str(self.spine_path), *argv]))
+                refused.append("REFUSED:" in err.getvalue())
         finally:
             os.chdir(self._cwd)
+        state = json.loads(self.spine_path.read_text(encoding="utf-8"))
+        return {
+            "codes": codes,
+            "refused": refused,
+            "gate status": state["tasks"]["g1"]["status"],
+            "lease": (state.get("engine_session") or {}).get("status"),
+        }
 
+    def _assert_one_answer_for_every_stamp(self, cwd: Path) -> None:
+        table = self._stamps()
+        answers = {name: self._observable(stamp, cwd) for name, stamp in table.items()}
+        first = answers["the spine's own worktree"]
+        for name, answer in answers.items():
+            with self.subTest(stamp=name):
+                self.assertEqual(
+                    first, answer,
+                    f"{name!r} behaved differently from the spine's own worktree: "
+                    f"something reads origin.worktree for a decision",
+                )
+        # A table that collapsed to one row would pass vacuously.
+        self.assertGreaterEqual(len(answers), 9)
+        # And the one answer must be the WORKING one: a table where every row
+        # is refused identically would also be "identical".
+        self.assertEqual([0, 0, 0], first["codes"], "every stamp was refused, not accepted")
+        self.assertEqual([False, False, False], first["refused"])
+        self.assertEqual("in-progress", first["gate status"])
+        self.assertEqual("active", first["lease"])
 
-class RefusesAGuardedVerbFromAForeignTree(_SpineOnDisk):
-
-    def test_claim_from_a_foreign_tree_is_refused_and_writes_nothing(self):
-        before = self._digest()
-        code = self._main_from(self.foreign, [
-            "claim", "--session-id", "s1", "--claimed-by", "commander", "--worktree", ".",
-        ])
-        self.assertEqual(code, 1)
-        # The spine is byte-identical: the refusal must not take main()'s
-        # EngineError path, which calls save() into the very tree it protects.
-        self.assertEqual(self._digest(), before)
-        self.assertIsNone(
-            json.loads(self.spine_path.read_text(encoding="utf-8")).get("engine_session")
+    def test_provenance_the_stamp_is_written_by_both_producers(self):
+        """Half one. `init_work_area.instantiate_spine` and
+        `spine_lifecycle.build_origin` both still put a worktree in the spine.
+        Delete either stamp and this goes red."""
+        lifecycle = _load("spine_lifecycle_provenance_test", ROOT / "scripts" / "spine_lifecycle.py")
+        built = lifecycle.build_origin(
+            "issue-7", branch="b", worktree="/w/repo", base="sha",
+            opened_at="2026-01-01T00:00:00+00:00", parent="unknown",
         )
+        self.assertEqual("/w/repo", built.get("worktree"))
 
-    def test_start_from_a_foreign_tree_is_refused_and_writes_nothing(self):
-        before = self._digest()
-        self.assertEqual(self._main_from(self.foreign, ["start", "g1"]), 1)
-        self.assertEqual(self._digest(), before)
+        init_work_area = _load_init_work_area()
+        out = init_work_area.instantiate_spine(
+            self.worktree, "issue-7", COMMANDER_TEMPLATE, skill_dir=ROOT.as_posix()
+        )
+        stamped = json.loads(out.read_text(encoding="utf-8"))["origin"]
+        self.assertEqual(self.worktree.resolve().as_posix(), stamped.get("worktree"))
+
+    def test_provenance_the_stamp_is_not_a_decision_input_from_a_foreign_tree(self):
+        """Half two, at its most discriminating: a cwd that is a real git
+        worktree and is NOT the spine's. Any decision reading the stamp has to
+        separate these rows."""
+        self._assert_one_answer_for_every_stamp(self.foreign)
+
+    def test_provenance_the_stamp_is_not_a_decision_input_with_no_git_toplevel(self):
+        """The same, from a directory git resolves no worktree toplevel for.
+        This row is where a fail-closed reading would hide."""
+        self._assert_one_answer_for_every_stamp(self.nogit)
+
+    def test_provenance_the_engine_never_rewrites_the_stamp_it_does_not_read(self):
+        """Written and left alone: driving guarded verbs preserves the stamp
+        byte-for-byte, so the provenance survives the run that ignores it."""
+        stamp = "/nonexistent/some/other/tree"
+        self._observable(stamp, self.foreign)
+        origin = json.loads(self.spine_path.read_text(encoding="utf-8"))["origin"]
         self.assertEqual(
-            json.loads(self.spine_path.read_text(encoding="utf-8"))["tasks"]["g1"]["status"],
-            "pending",
-        )
-
-    def test_no_journal_sidecar_is_written_by_a_refusal(self):
-        self._main_from(self.foreign, ["start", "g1"])
-        self.assertFalse((self.spine_path.parent / "spine.json.journal").exists())
-
-    def test_the_refusal_names_both_trees_on_stderr(self):
-        import contextlib
-        import io
-
-        err = io.StringIO()
-        with contextlib.redirect_stderr(err):
-            self._main_from(self.foreign, ["start", "g1"])
-        message = err.getvalue()
-        self.assertIn("REFUSED:", message)
-        self.assertIn(self.worktree.as_posix(), message)
-        self.assertIn(self.foreign.as_posix(), message)
-
-    def test_the_same_verb_from_the_worktree_itself_succeeds(self):
-        """The pass side, so the refusal above is a signal and not a gate that
-        never opens."""
-        self.assertEqual(self._main_from(self.worktree, [
-            "claim", "--session-id", "s1", "--claimed-by", "commander", "--worktree", ".",
-        ]), 0)
-        session = json.loads(self.spine_path.read_text(encoding="utf-8"))["engine_session"]
-        self.assertEqual(session["status"], "active")
-
-    def test_the_same_verb_from_a_subdirectory_of_the_worktree_succeeds(self):
-        """THE home of the subdirectory-is-allowed property (2026-08-15
-        worktree-identity ruling: it moved up from the pure predicate, where
-        it was a containment assertion over synthetic paths). Against a real
-        git repo, `main()` resolves the subdirectory to its worktree toplevel,
-        and equality holds -- git buys what containment used to."""
-        self.assertEqual(self._main_from(self.spine_path.parent, [
-            "claim", "--session-id", "s1", "--claimed-by", "commander", "--worktree", ".",
-        ]), 0)
-
-    def test_fail_closed_a_cwd_with_no_git_toplevel_is_refused_without_raising(self):
-        """An origin-carrying spine driven from a cwd where git resolves no
-        worktree toplevel at all (a plain non-git tempdir): refused, exit 1,
-        nothing written, no exception (ruling part 3 -- fail closed by intent,
-        not by containment accident)."""
-        import contextlib
-        import io
-
-        before = self._digest()
-        err = io.StringIO()
-        with contextlib.redirect_stderr(err):
-            code = self._main_from(self.nogit, ["start", "g1"])
-        self.assertEqual(code, 1)
-        self.assertEqual(self._digest(), before)
-        self.assertIn("REFUSED:", err.getvalue())
-        self.assertIn("no git worktree toplevel", err.getvalue())
-
-    def test_an_origin_less_spine_is_still_drivable_from_anywhere(self):
-        """The fallback, end to end: every spine created before the stamp
-        existed looks like this and must keep working."""
-        data = json.loads(self.spine_path.read_text(encoding="utf-8"))
-        data.pop("origin")
-        self.spine_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
-        self.assertEqual(self._main_from(self.foreign, ["start", "g1"]), 0)
-
-
-class TheInProcessMcpDoorShape(_SpineOnDisk):
-    """`scripts/mcp_spine_server.py` calls `checklist_engine.main(argv)`
-    in-process and never chdirs, so the guard reads the MCP server process's
-    cwd. Commander ruling: the guard applies to that caller with no exemption,
-    no env override and no bypass. `current` stays exempt, so `spine_status`
-    keeps working cross-tree -- the read path the door is most used for."""
-
-    def test_a_guarded_verb_is_refused_in_process_from_a_foreign_cwd(self):
-        before = self._digest()
-        os.chdir(self.foreign)
-        try:
-            code = self.E.main(["--file", str(self.spine_path), "start", "g1"])
-        finally:
-            os.chdir(self._cwd)
-        self.assertEqual(code, 1)
-        self.assertEqual(self._digest(), before)
-
-    def test_current_is_permitted_in_process_from_the_same_foreign_cwd(self):
-        os.chdir(self.foreign)
-        try:
-            code = self.E.main(["--file", str(self.spine_path), "current"])
-        finally:
-            os.chdir(self._cwd)
-        self.assertEqual(code, 0)
-
-    def test_release_is_permitted_in_process_from_a_foreign_cwd(self):
-        """The recovery escape hatch: a lease on a spine whose worktree was
-        removed at closeout must stay clearable."""
-        self.assertEqual(self._main_from(self.worktree, [
-            "claim", "--session-id", "s1", "--claimed-by", "commander", "--worktree", ".",
-        ]), 0)
-        self.assertEqual(
-            self._main_from(self.foreign, ["release", "--session-id", "s1"]), 0
+            {"work_id": "w1", "opened_by": "init_work_area", "worktree": stamp}, origin
         )
 
 
-class NestedWorktreeRegression(unittest.TestCase):
-    """A spine stamped to a PRIMARY checkout is NOT drivable from inside a
-    worktree nested under it (`<primary>/.worktrees/<slug>` -- the default
-    layout since #585). Containment said the nested tree was "inside" the
-    primary and allowed it; worktree identity is what git says it is, and git
-    says a linked worktree is its own toplevel (2026-08-15 worktree-identity
-    ruling). Real repos, real `git worktree add` -- the ruling's measured
-    scenario, kept permanently."""
+class TheEngineTakesNoAmbientReading(unittest.TestCase):
+    """The successor to `test_it_is_pure`, which asserted that the retired
+    predicate referenced no impure name and was explicitly NOT transitive: it
+    read only that one function's `__code__.co_names`, so impurity in a callee
+    went unnoticed and the guarantee was inherited rather than made.
 
-    def setUp(self):
-        self.E = _load_engine()
-        self.tmp = tempfile.TemporaryDirectory()
-        base = Path(self.tmp.name).resolve()
-        self.primary = base / "primary"
-        self.primary.mkdir()
-        _git_in(self.primary, "init", "-q")
-        # `worktree add` needs a commit to branch from.
-        _git_in(self.primary, "commit", "--allow-empty", "-q", "-m", "seed")
-        self.nested = self.primary / ".worktrees" / "slug"
-        _git_in(self.primary, "worktree", "add", "-q", "-b", "slug", str(self.nested))
-        (self.primary / ".agent-work" / "w1").mkdir(parents=True)
-        self.spine_path = self.primary / ".agent-work" / "w1" / "spine.json"
-        self.spine_path.write_text(json.dumps({
-            "work_id": "w1", "type": "gated", "items": ["g1"],
-            "origin": {"work_id": "w1", "worktree": self.primary.as_posix(),
-                       "opened_by": "init_work_area"},
-            "tasks": {"g1": {
-                "id": "g1", "title": "g1", "imperative": "do g1",
-                "preconditions": [], "postconditions": [],
-                "constraints": [], "directives": None, "child_checklist": None,
-                "status": "pending", "status_detail": {}, "result": None,
-                "finding": None, "evidence": [], "rework_count": 0,
-            }},
-            "consolidation": None, "triage_candidates": [], "blockers": [],
-        }, indent=2), encoding="utf-8")
-        self._cwd = os.getcwd()
+    There is no predicate to keep pure now. The property worth keeping is the
+    one purity was in service of -- the engine takes NO ambient reading to
+    decide whether a verb may run -- and it is asserted here directly, twice
+    and by different means, neither of them inherited:
 
-    def tearDown(self):
-        os.chdir(self._cwd)
-        self.tmp.cleanup()
+      * structurally, `main()` resolves no cwd and calls no retired predicate;
+      * behaviourally, `TheStampIsProvenanceNotADecisionInput` gets one answer
+        from three different working directories, which is what "no ambient
+        reading" means where anyone can observe it.
 
-    def _digest(self) -> str:
-        import hashlib
+    The structural half is deliberately a source assertion. `main()` is large
+    and legitimately touches `Path`, so a `co_names` scan over it would be
+    noise; the two names below are exactly the two that were removed."""
 
-        return hashlib.sha256(self.spine_path.read_bytes()).hexdigest()
+    def _main_body(self) -> str:
+        return ENGINE_SCRIPT.read_text(encoding="utf-8").split("\ndef main(", 1)[1]
 
-    def test_a_guarded_verb_from_inside_a_nested_worktree_is_refused(self):
-        import contextlib
-        import io
+    def test_main_resolves_no_ambient_cwd(self):
+        self.assertNotIn("Path.cwd()", self._main_body())
 
-        before = self._digest()
-        err = io.StringIO()
-        os.chdir(self.nested)
-        try:
-            with contextlib.redirect_stderr(err):
-                code = self.E.main(["--file", str(self.spine_path), "start", "g1"])
-        finally:
-            os.chdir(self._cwd)
-        self.assertEqual(code, 1)
-        self.assertEqual(self._digest(), before)
-        self.assertIn("REFUSED:", err.getvalue())
-        self.assertIn(self.primary.as_posix(), err.getvalue())
-
-    def test_a_subdirectory_of_the_nested_worktree_is_also_refused(self):
-        sub = self.nested / ".agent-work"
-        sub.mkdir()
-        os.chdir(sub)
-        try:
-            code = self.E.main(["--file", str(self.spine_path), "start", "g1"])
-        finally:
-            os.chdir(self._cwd)
-        self.assertEqual(code, 1)
-
-
-class TheGuardIsReachedFromExactlyOneSite(unittest.TestCase):
-    """Shipped-inert is the failure mode this pins: a read side never called
-    from `main()` reports green while doing nothing."""
-
-    def test_main_calls_the_predicate_exactly_once(self):
+    def test_the_engine_runs_no_git_toplevel_read(self):
         source = ENGINE_SCRIPT.read_text(encoding="utf-8")
-        body = source.split("\ndef main(", 1)[1]
-        self.assertEqual(body.count("origin_worktree_refusal("), 1)
+        self.assertNotIn("--show-toplevel", source)
 
-    def test_the_call_site_is_before_dispatch(self):
-        body = ENGINE_SCRIPT.read_text(encoding="utf-8").split("\ndef main(", 1)[1]
-        self.assertLess(
-            body.index("origin_worktree_refusal("), body.index("dispatch(cl, args")
-        )
+    def test_the_retired_predicate_and_its_verb_sets_are_gone(self):
+        """Named so a re-introduction is a deliberate act with a red test to
+        answer for, not a quiet re-landing. `worktree_from_spine_path` is the
+        derivation that replaced them and must still be there -- a test that
+        only asserted absence would also pass on an empty file."""
+        source = ENGINE_SCRIPT.read_text(encoding="utf-8")
+        for gone in ("def origin_worktree_refusal(", "ORIGIN_GUARDED_VERBS =",
+                     "ORIGIN_EXEMPT_VERBS ="):
+            self.assertNotIn(gone, source, f"{gone!r} came back")
+        self.assertIn("def worktree_from_spine_path(", source)
 
 
 if __name__ == "__main__":

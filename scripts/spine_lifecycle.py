@@ -85,7 +85,16 @@ def build_origin(
 ) -> dict:
     """The top-level `origin` block (LIFECYCLE_CONTRACT.md section 3). `parent` is
     the dispatching session, or the literal `"unknown"` -- the caller's job to
-    resolve, never guessed here."""
+    resolve, never guessed here.
+
+    This is PROVENANCE and nothing else. `worktree` in particular is written
+    here and read by nothing that decides anything: the engine's
+    `origin_worktree_refusal` used to compare it against its own ambient cwd,
+    and that comparison is retired (#609 -- a spine's worktree is derived from
+    its path, and ownership is the lease). Keep writing it accurately anyway,
+    because a human or a reconciler reading a spine afterwards has no other
+    record of where it came from. `tests/test_spine_origin_isolation.py` pins
+    both halves of that pairing."""
     return {
         "work_id": work_id,
         "branch": branch,

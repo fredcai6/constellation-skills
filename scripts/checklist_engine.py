@@ -83,100 +83,24 @@ MUTATING_VERBS = {
 TRIP_HARD_GUARDED_VERBS = {"start", "reopen"}
 
 
-# Engine-native worktree isolation (#315/#568): which verbs may not be driven
-# against a spine from outside the worktree that spine was created in.
+# Stamp-and-compare is RETIRED (#609 g2). `origin.worktree` used to be compared,
+# on every mutating verb, against a worktree toplevel the engine resolved from
+# its own ambient cwd; `origin_worktree_refusal` and the two verb sets that fed
+# it are gone, along with the per-verb `git rev-parse` that supplied the other
+# side. A spine's worktree is now DERIVED from its path (`worktree_from_spine_
+# path` below), so there is no second value that can disagree with the first and
+# no ambient reading a check command could forge by `cd`-ing first.
 #
-# GUARDED is derived from MUTATING_VERBS, so a verb added to that set is guarded
-# automatically, plus the two lease verbs that are not in it: `claim` takes the
-# lease, and `heartbeat` is guarded because it WRITES.
+# Nothing was left unguarded by that removal. The comparison answered "where am
+# I", never "is this mine": ownership is the LEASE, and was already. This
+# supersedes the 2026-08-15 worktree-identity ruling, which settled how the two
+# sides of the comparison should be resolved -- a question that no longer exists.
 #
-# EXEMPT is deliberate and short. `current` is the only genuinely read-only verb,
-# and inherited doctrine has an invoker read a subordinate's `current` cross-tree
-# to see a REFRESH REQUESTED line. `release` is the single recovery escape hatch:
-# a lease on a spine whose worktree was removed at closeout must stay clearable,
-# and a non-owner `release` already demands `--force --reason` on the record.
-ORIGIN_EXEMPT_VERBS = {"current", "release"}
-ORIGIN_GUARDED_VERBS = MUTATING_VERBS | {"claim", "heartbeat"}
-
-
-def origin_worktree_refusal(spine: dict, *, cwd: str | None, verb: str) -> str | None:
-    """`None` when `verb` may be driven against `spine` from `cwd`, else the
-    refusal message naming both sides -- the refusal-or-`None` shape this repo
-    already uses for `spine_lifecycle.closeout_refusal`.
-
-    An agent must not drive a spine's state from a tree that is not the spine's
-    own. This is the read side of that rule; the expected value is the
-    `origin.worktree` stamped into the spine when `init_work_area` (or
-    `spine_lifecycle.open_work`) created it.
-
-    Pure -- no filesystem, no clock, no subprocess, no ambient cwd read. The
-    impure half is the single call site in `main()`, which resolves the engine's
-    OWN cwd to its git worktree toplevel (`git rev-parse --show-toplevel`) and
-    passes that -- or `None` when no toplevel resolves, which this predicate
-    treats as fail-closed for an origin-carrying spine (2026-08-15
-    worktree-identity ruling, part 3). Symlink resolution stays outside on both
-    sides: the stored value was resolved when the spine was written, the cwd
-    value by git at that caller.
-
-    What this delivers, exactly:
-
-    - Coverage -- it applies to every guarded verb on every spine carrying
-      `origin`, not only where a command check was wired into a template.
-    - Unbypassability from the spine -- a spine's own text cannot switch it off,
-      because the check is no longer in the spine.
-    - An independent expected side -- stamped at creation, not a literal inside
-      a check a spine author can edit.
-
-    It does NOT make the comparison unforgeable. The engine reads its ambient
-    cwd, so a check command authored as `cd <origin.worktree> && ...` still
-    satisfies it. That claim was withdrawn deliberately; do not restate it.
-
-    Equality, not containment: worktree identity is what git says it is
-    (2026-08-15 worktree-identity ruling). Containment (`is_relative_to`) broke
-    when #585 nested worktrees at `<root>/.worktrees/<slug>` -- every worktree
-    became literally inside the primary checkout path, so a primary-stamped
-    spine passed from inside any of them. The call site's git-toplevel
-    resolution is what keeps subdirectory work working: toplevel resolved from
-    `<worktree>/scripts` IS `<worktree>`, so equality holds without any
-    containment logic here. A sibling sharing a name prefix (`/w/repo-2`
-    against `/w/repo`) is unequal, as before.
-
-    Every other shape falls back to the pre-change behaviour and none raises:
-    `origin` absent, null, a string, a list, or empty; `worktree` absent, empty,
-    or not a string. `scripts/validate_spine.py` guards none of them, so the
-    fallback is the engine's own job.
-    """
-    if verb not in ORIGIN_GUARDED_VERBS:
-        return None
-    origin = spine.get("origin")
-    if not isinstance(origin, dict):
-        return None
-    stored = origin.get("worktree")
-    if not isinstance(stored, str) or not stored:
-        return None
-    # Fail closed: a spine that carries a valid stamp is only drivable from a
-    # cwd git recognizes as a worktree. Ordered AFTER the shape fallbacks above
-    # so an origin-less/malformed spine stays drivable from anywhere, exactly
-    # as before.
-    if cwd is None:
-        return (
-            f"{verb} refused: this spine belongs to the worktree {stored}, but "
-            f"no git worktree toplevel could be resolved for the engine's "
-            f"current directory. Run the verb from inside that worktree."
-        )
-    # `normcase` folds case and separators on Windows, where the two producers
-    # disagree for the same directory: `spine_lifecycle` stores
-    # `str(Path(worktree))` (native separators), `init_work_area` stores
-    # `as_posix()`. It is the identity function on POSIX.
-    root = Path(os.path.normcase(stored))
-    here = Path(os.path.normcase(cwd))
-    if here == root:
-        return None
-    return (
-        f"{verb} refused: this spine belongs to the worktree {stored}, but the "
-        f"engine is running in {cwd}. Run the verb from that worktree, or from a "
-        f"directory inside it."
-    )
+# `origin.worktree` is still WRITTEN, by `spine_lifecycle.build_origin` and
+# `init_work_area.instantiate_spine`. It is provenance -- what a human or a
+# reconciler reads to see where a spine came from -- and nothing reads it to
+# decide anything. `tests/test_spine_origin_isolation.py` pins both halves of
+# that pairing and goes red if either one breaks.
 
 
 # The work-area directory every spine lives under. Compared after `normcase`,
@@ -204,16 +128,16 @@ def worktree_from_spine_path(spine_path) -> str | None:
     `workspace/`. Taking the outermost `.agent-work` would derive the real repo as
     the root of a spine that belongs to the sandbox.
 
-    LEXICAL ONLY -- `normcase` + `normpath`, never `realpath`. Three separate
-    things depend on symlink resolution staying outside this function:
-    `origin_worktree_refusal` must stay pure and its purity test reads only that
-    predicate's own `__code__.co_names` (not transitive, so a `realpath` in a
-    callee would go unnoticed); `spine_rail._is_valid_claim_target` checks
-    lexically and then re-checks the RESOLVED path as a symlink-escape guard,
-    which resolving here would make unfailable; and importing
-    `verify_worktree_isolation.normalize_path` would add an undeclared runtime
-    sibling. The idiom is therefore inlined, as `agent_work_root._normalize`
-    already inlines its own.
+    LEXICAL ONLY -- `normcase` + `normpath`, never `realpath`. Two things depend
+    on symlink resolution staying outside this function:
+    `spine_rail._is_valid_claim_target` checks lexically and then re-checks the
+    RESOLVED path as a symlink-escape guard, which resolving here would make
+    unfailable; and importing `verify_worktree_isolation.normalize_path` would
+    add an undeclared runtime sibling. The idiom is therefore inlined, as
+    `agent_work_root._normalize` already inlines its own. (A third reason was
+    recorded when this was written -- keeping `origin_worktree_refusal` pure
+    under a non-transitive purity test -- and retired with that predicate in
+    #609 g2. The remaining two are enough on their own.)
 
     Absolute input is required: a relative path's answer would depend on the
     ambient cwd, which is exactly the forgeable reading this derivation exists to
@@ -3611,36 +3535,20 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     path = Path(args.file)
     cl = load(path)
-    # Engine-native worktree isolation (#315/#568). The ONE call site of the pure
-    # predicate above, and the only impure half of it: the engine reads its OWN
-    # cwd here. It must never forward a cwd into a subprocess check -- feeding the
-    # stored root to `verify_worktree_isolation.py --here` makes the comparison
-    # X == X, because both sides then derive from the same resolved root.
+    # Nothing stands between `load` and the arming below any more (#609 g2).
+    # Every verb used to pay for a git toplevel read here, on the engine's
+    # ambient cwd, to feed the retired `origin.worktree` comparison.
+    # Both are gone: the worktree is derived from the spine's own path where it
+    # is needed, so no ambient reading is taken and none can be forged.
     #
-    # It sits BEFORE dispatch() and returns without save(), deliberately. main()
-    # persists state on the EngineError path for every verb except `current`, so a
-    # refusal raised INSIDE dispatch() would write into the very tree the guard
-    # protects, and would clobber a concurrent legitimate writer holding a spine
-    # loaded before the refusal. Presentation still matches that path: the
-    # check-failure rail first, the operative REFUSED line last, exit 1.
+    # Nothing is lost by vacating this position. It existed so a refusal could
+    # be raised BEFORE dispatch() and returned WITHOUT save() -- main() persists
+    # state on the EngineError path for every verb except `current`, so a
+    # refusal raised inside dispatch() would write into the very tree it was
+    # protecting. With no refusal to raise, there is nothing here to order.
+    # The lease, which is the actual ownership guard, is enforced inside
+    # dispatch() as it always was.
     #
-    # `engine_cwd`, never `base_dir`: base_dir is the gauge path base and the
-    # --from-child base, and overloading it breaks both.
-    #
-    # The cwd is resolved to its git worktree TOPLEVEL before the predicate
-    # sees it (2026-08-15 worktree-identity ruling): git reports a linked
-    # worktree as its own toplevel, never the primary checkout it nests under,
-    # which is what makes the predicate's equality comparison correct -- and
-    # what keeps subdirectory work working, since a subdirectory resolves to
-    # its own worktree's root. No toplevel (non-git cwd, or git itself failing)
-    # resolves to None, which the predicate fails closed for origin-carrying
-    # spines and ignores for the rest.
-    toplevel = _git(["rev-parse", "--show-toplevel"], base_dir=Path.cwd())
-    engine_cwd = (toplevel.stdout.strip() or None) if toplevel.returncode == 0 else None
-    origin_refusal = origin_worktree_refusal(cl, cwd=engine_cwd, verb=args.verb)
-    if origin_refusal is not None:
-        print(f"{_rail_prefix('check-failure', cl)}REFUSED: {origin_refusal}", file=sys.stderr)
-        return 1
     # #427: arm `refusals` here, on LOAD, but ONLY for the verb that can
     # itself be the very-first-ever attempt to claim (no `engine_session` at
     # all, ever -- release() leaves the record in place with status
