@@ -43,6 +43,21 @@ The wrapper is backend-pluggable behind one result contract (see `docs/superpowe
 
 Select with `--backend {auto,cli,external}` (auto-detects: CLI on PATH → `cli`, else `external`); the `--dispatch {spawn,external}` form also works and an explicit choice always wins. In the Constellation Agent-tool harness there is no headless `claude` CLI, so dispatch the implementer/reviewer as synchronous Agent-tool subagents via `--dispatch external` (or `--backend external`) + `--verify-result`; do not re-derive a hand-rolled workaround.
 
+## Name a tier: the handoff's Suggested Model Tier field is what you resolve --model from
+
+`run_crew.py` refuses a fresh or relaunched dispatch that names no tier at all (`CrewSpec.__post_init__`,
+`decision:refuse-a-tierless-dispatch`) — never inherited from the dispatching process, never
+defaulted. This file used to say nothing about model; it does now, because the place a tier is
+deliberated (the handoff) and the place it takes effect (this dispatch) were disconnected until
+this doctrine named the link explicitly. Every handoff's own **Suggested Model Tier** field
+(`IMPLEMENTER_HANDOFF.template.md:94`, `REVIEWER_HANDOFF.template.md:60`) is the thing you resolve
+`--model` from before calling `run_crew.py` — read it, decide the tier it implies, and pass
+`run_crew.py --model <tier>` explicitly on that dispatch, not after. If the suggestion names a
+reason tied to reasoning depth ("stronger — concurrency correctness rewards careful reasoning"),
+also pass `--reasoning-effort <level>`, which the `cli` backend forwards to the launcher's own
+`--effort` flag. `--resume` and a bare `--abandon` construct no `CrewSpec` and so need no `--model`
+at all — the refusal, and this instruction, apply only to a fresh or relaunched dispatch.
+
 ## Crew recovery
 
 External recovery is out-of-band: `SendMessage` to the crew's `agentId` to resume it in place, else `--abandon … --relaunch`. Key the recovery decision to `recover_crews.py`'s state vocabulary:

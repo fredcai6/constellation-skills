@@ -94,7 +94,7 @@ class CrewSpawnCwdTests(unittest.TestCase):
                 RC.launch_crew(
                     work_id="issue-1", gate="g1", role="implementer",
                     handoff=handoff, result=result, worktree=defaults.worktree,
-                    model=None, launcher="claude", attempt=1,
+                    model="sonnet", launcher="claude", attempt=1,
                     root=defaults.root, entries=[],
                 )
 
@@ -139,7 +139,7 @@ class CrewSpawnCwdTests(unittest.TestCase):
                 RC.launch_crew(
                     work_id="issue-1", gate="g1", role="implementer",
                     handoff=handoff, result=result, worktree=str(worktree),
-                    model=None, launcher="claude", attempt=1, root=root, entries=[],
+                    model="sonnet", launcher="claude", attempt=1, root=root, entries=[],
                 )
             self.assertEqual(1, len(calls))
             self.assertEqual(worktree, Path(calls[0]["cwd"]),
@@ -155,7 +155,7 @@ class CrewSpawnCwdTests(unittest.TestCase):
                 RC.launch_crew(
                     work_id="issue-1", gate="g1", role="implementer",
                     handoff=handoff, result=result, worktree="sub",
-                    model=None, launcher="claude", attempt=1, root=root, entries=[],
+                    model="sonnet", launcher="claude", attempt=1, root=root, entries=[],
                 )
             self.assertEqual(root / "sub", Path(calls[0]["cwd"]))
 
@@ -216,7 +216,7 @@ class CrewSpawnCwdTests(unittest.TestCase):
                 _code, entry = RC.launch_crew(
                     work_id="issue-1", gate="g1", role="implementer",
                     handoff=handoff, result=result, worktree=str(worktree),
-                    model=None, launcher="claude", attempt=1, root=root, entries=[],
+                    model="sonnet", launcher="claude", attempt=1, root=root, entries=[],
                 )
             self.assertEqual(Path(entry["worktree"]), Path(calls[0]["cwd"]))
 

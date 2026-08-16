@@ -1,0 +1,179 @@
+{
+  "work_id": "cleanup-g-crew-tier",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md + global-everyone.md (constellation-reviewer skill), docs/agents/CREW_CONTEXT.md + GLOSSARY.md, the g1-review REVIEWER_HANDOFF, the g1-implement IMPLEMENTER_HANDOFF + IMPLEMENTER_RESULT, and the full working-tree diff (scripts/run_crew.py, tests/test_crew_launcher.py, map/INDEX.md).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Handoff fully satisfied, independently reproduced. (1) CrewSpec.__post_init__ (run_crew.py:1375-1380) raises CrewLaunchError('a crew needs an explicit tier...') on falsy model, third check after the existing job/completion-contract checks -- read directly, matches style exactly. (2) Refusal scoping confirmed by reading, not trusting: launch_crew (1790) and record_external_attempt (1856) both construct CrewSpec before calling backend.dispatch; main()'s fresh-launch (2109) and --abandon --relaunch (2085) branches likewise construct CrewSpec before backend.dispatch is called. CliBackend.resume (1580-1636) and abandon_crew (1873-1882) read entries directly and construct no CrewSpec -- confirmed by reading both functions in full, refusal cannot fire there. (3) --abandon --relaunch (main() ~2085-2091) passes model=args.model with NO fallback to abandoned.get('model') -- confirmed by reading the literal call; reasoning_effort on the same call DOES fall back (args.reasoning_effort or abandoned.get('reasoning_effort')), the required asymmetry. (4) Ordering: launch_crew constructs CrewSpec (line 1790, raises here on falsy model) BEFORE calling CliBackend().dispatch (line 1795); inside dispatch, scratch.mkdir/registry write happens at 1532-1555, strictly after spec construction succeeded -- refusal is structurally impossible to reach after scratch reservation. (5) --effort forwarding: build_crew_argv gained effort: str|None=None (755-757), emits ['--effort', effort] only when truthy (819-820), mirroring the model line exactly. CliBackend.dispatch (1562) passes effort=spec.reasoning_effort; CliBackend.resume (1636) passes effort=entry.get('reasoning_effort') -- both call sites confirmed in the diff. (6) build_entry's write path (if reasoning_effort: entry['reasoning_effort']=reasoning_effort, line 1205-1206) is byte-identical to before; only its docstring (1136-1140) was corrected -- confirmed no new write path added. (7) --model stays optional at argparse: build_parser has p.add_argument('--model') with no required=True (line 1906) -- confirmed by reading. (8) claude --effort <level> confirmed present on the installed CLI via 'claude --help' myself. All close criteria met.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No scope drift. git status --porcelain shows exactly 3 tracked-file modifications (scripts/run_crew.py, tests/test_crew_launcher.py, map/INDEX.md) and zero untracked additions -- matches the handoff's claim of no untracked files. Both allowed-scope files stay within their named functions: run_crew.py touches only CrewSpec.__post_init__, build_crew_argv, CliBackend.dispatch/resume, and build_entry's docstring (confirmed by reading the full diff, 20 insertions/3 deletions); test_crew_launcher.py's changes are entirely model=None->model='sonnet' reconciliation plus the new MandatoryModelTests class (6 tests, confirmed by direct line count) plus the 4 named --effort flip tests -- SessionNameTests (17 direct build_crew_argv calls) and BuildEntryTests::test_falsy_model_is_not_stored are confirmed ABSENT from the diff (grepped the diff text directly), matching the claim they were correctly left untouched. map/INDEX.md: confirmed genuinely mechanical -- re-ran 'python -m scripts.code_map build --root .' myself and the regenerated file produced ZERO further diff against the committed one; diff is limited to entity counts (tests: 4848->4855, test_crew_launcher: 287->294 entities/225->226 holes), scripts section (58 modules/1224 entities) unchanged, consistent with no new top-level entities in run_crew.py. tests/test_code_map.py::MapTreeFreshnessTests passes (2 passed) against the current map. Exclusions confirmed untouched: git status/diff shows nothing for skills/commander/references/crew-dispatch.md, the two handoff templates, scripts/checklist_engine.py, scripts/hooks/spine_rail.py, scripts/spine_lifecycle.py (+ their tests), skills/commander/templates/COMMANDER_SPINE.template.json, skills/admiral/templates/LAUNCH_ORDER.template.md, skills/admiral/references/fleet-doctrine.md, skills/_shared/**, scripts/install_constellation.py. #607's _parent_lease_heartbeat: grepped scripts/run_crew.py, all 4 references (definition + 2 call sites + naming comment) are unchanged context lines in the diff, not touched.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Required evidence reproduced independently, not trusted. tests/test_crew_launcher.py alone: 'env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_crew_launcher.py' -> 211 passed, 1 failed (ScratchDirResumeTests::test_resume_of_legacy_entry_without_worktree_key_...), exact match to the claim. Confirmed pre-existing/environmental via git stash: stashed my own working tree, reran that single test on the UNMODIFIED baseline, it fails identically (CREW_SCRATCH_DIR leaks from this crew's own ambient env into the fake child env dict) -- popped the stash back cleanly afterward, git status confirms all 3 files restored. Full clean-env suite: 'find . -name __pycache__ -type d -exec rm -rf {} +' then the exact env -u ... pytest -q command -> 7 failed, 3163 passed, 6 skipped, 1172 subtests passed in 128.28s -- byte-for-byte the same 7 test ids and the same 7/3163/6 counts as IMPLEMENTER_RESULT claims. The 6 non-launcher failures (4x test_crew_worktree_cwd.py, 2x test_work_id_nesting.py) show the exact CrewLaunchError('a crew needs an explicit tier...') traceback in my own run output, confirming they are genuinely caused by the new refusal, not a different regression, and that this is the deliberate/expected caller-list deliverable (Constraints section explicitly expects exactly these 6). Caller-list survey re-derived independently: 'grep -rln CrewSpec\\(|record_external_attempt\\(|\\.launch_crew\\( --include=*.py .' (excluding .agent-work/archive) returns 5 files -- scripts/run_crew.py, tests/test_crew_launcher.py, tests/test_crew_delivery_addressing.py, tests/test_crew_worktree_cwd.py, tests/test_work_id_nesting.py. The 4th file was NOT named in IMPLEMENTER_RESULT's caller-list enumeration; inspected it directly (line 150-154) and its one record_external_attempt call already passes model='sonnet' explicitly, so it needed no fix and correctly falls outside the scoped claim ('every call site whose scenario the new mandatory --model invalidated') -- not an omission, verified by reading the call site myself, and this file is absent from the 7 FAILED test ids in my own full-suite run. The implementer's narrower, separately-stated claim ('no PRODUCTION/non-test caller outside scripts/run_crew.py constructs CrewSpec...') is also independently true -- all 4 non-scripts/run_crew.py hits are test files. build_crew_argv( wiring grep: 22 non-archive matches, matching the claimed count. claude --effort <level> confirmed present via 'claude --help' myself, matching Stop-condition evidence. All required evidence reproduces; nothing rests on an unverified claim.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Meets inherited rules and the handoff's own constraints. CREW_CONTEXT 'a check that cannot fail is indistinguishable from one that passed': MandatoryModelTests pairs a direct red (test_crew_spec_refuses_falsy_model_directly, test_fresh_dispatch_with_no_model_is_refused_...) with a direct green (test_fresh_dispatch_with_model_records_it) for the same seam, and I independently reran both -- they pass now and I confirmed the red half genuinely raises CrewLaunchError via my own suite run's traceback. 'Assert against behaviour, never text': the flipped --effort tests assert argv[argv.index('--effort')+1] == the value and assertNotIn for the absent case, not a message-string grep; the refusal tests assert exit code + empty registry + REFUSED substring, not just message text. Handoff Constraints: CrewLaunchError/exit-1/'REFUSED: {exc}' -- confirmed pre-existing class (line 100), no new exception type; exit path is the pre-existing 'except CrewLaunchError as exc: print(f\"REFUSED: {exc}\"...); return 1' wrapping main(), untouched. No invented default anywhere -- the refusal raises rather than substituting a value; grepped for any new 'or \"sonnet\"'/'or DEFAULT_MODEL' style fallback in the diff, found none. ExternalBackend gets no argv/subprocess change -- confirmed by reading ExternalBackend.dispatch (1671-1717) in full: it calls build_entry only, never build_crew_argv, exactly as the handoff specifies ('out of scope by construction'). --model stays optional at argparse (confirmed above). Naming/doc conventions matched: the new refusal message follows the same 'a crew needs a X: refusing a dispatch with no --Y given' template as its two siblings; the effort docstring addition matches build_crew_argv's existing per-parameter docstring style.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No divergence Commander must reconcile. Map is DEGRADED-UNPARSEABLE per both handoffs (no packet map); the three decision anchors (decision:refuse-a-tierless-dispatch, decision:do-not-change-what-anything-runs-at, decision:reasoning-effort-follows-tier) are all graded settled/human or settled/measured, leaning g1-implement,g1-review -- the implementation is faithful to each: fail-closed with no invented default (r1-handoff evidence), no crew's effective --model tier changed as a side effect (only the two explicitly-scoped behaviors changed: the new refusal, and --effort forwarding, which was itself the second explicitly-authorized half of this same task, not an incidental side effect), and --effort is confirmed present on the real installed CLI. map/INDEX.md regeneration is the mechanical code-map index, not the architecture map, and is independently confirmed reproducible (zero further diff on rebuild) -- correctly not an architecture-significant change. Real, out-of-scope work found and captured, not silently absorbed: flagged as triage candidate tc1 (6 tests across 2 out-of-owned-files needing mechanical model= reconciliation), consistent with the implementer's own Out-of-scope observations section -- this is genuinely a follow-up mechanical pass, not a design question requiring Commander adjudication before this gate can close.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/cleanup-g-crew-tier/g1-review/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/cleanup-g-crew-tier/g1-review/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/cleanup-g-crew-tier/g1-review/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded at .agent-work/cleanup-g-crew-tier/g1-review/FOWLER_PASS.json; verify_fowler_pass.py exits 0 (smells=12, flagged=['shotgun-surgery'], overridden=['long-parameter-list']). Ten smells absent -- no production code duplication, feature envy, data clumps, primitive obsession, divergent change, message chains, speculative generality, or comments-as-deodorant introduced by this diff; CrewSpec's three guard clauses are idiomatic repeated shape testing genuinely distinct invariants, not logic duplication. One overridden with a logged standard: long-parameter-list on build_crew_argv (7->8 keyword-only params) -- overridden per the function's own docstring naming it a pure 1:1 metadata-to-CLI-flag mapping, where a parameter object would hide the mapping rather than clarify it, and the new effort param mirrors model's existing shape exactly per the handoff's own instruction. One flagged, non-blocking: shotgun-surgery -- tightening CrewSpec's --model precondition required ~27 mechanical test-file edits plus 6 more in two out-of-owned test modules (already captured as triage candidate tc1), confined to test fixtures exercising the constructor directly, not production coupling; the implementer used a precise line-targeted script (named in Workflow Feedback as a reusable pattern) rather than a blanket edit to avoid corrupting tests that must not gain model=.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/cleanup-g-crew-tier/g1-review/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. All six close criteria independently reproduced against the live source, not trusted from the implementer's claims. CrewSpec.__post_init__ raises CrewLaunchError on falsy model as a third invariant check, same style, placed immediately after the two existing checks. Refusal scoping confirmed by reading CliBackend.resume and abandon_crew directly: neither constructs a CrewSpec, so the refusal structurally cannot fire on --resume or a bare --abandon. --abandon --relaunch requires an explicit --model with no fallback to abandoned.get('model'), confirmed by reading the literal call (main() ~2085-2091), correctly asymmetric with reasoning_effort's untouched inherit-on-relaunch fallback. Ordering: launch_crew constructs CrewSpec (raising here on falsy model) strictly before CliBackend.dispatch reserves scratch/writes the registry -- read the call graph directly, not inferred from a passing test. --effort forwards symmetrically on both CliBackend.dispatch (spec.reasoning_effort) and .resume (entry.get('reasoning_effort')), mirroring the model line exactly; confirmed present on the installed claude CLI myself. build_entry's write path is unchanged (only its docstring was corrected). --model stays optional at argparse (no required=True). map/INDEX.md's regeneration is genuinely mechanical: rebuilding it myself produced zero further diff. Full clean-env suite reproduces exactly: 7 failed / 3163 passed / 6 skipped, byte-identical to the claim; the lone tests/test_crew_launcher.py failure is confirmed pre-existing/environmental via my own git-stash rerun on the unmodified baseline, and the other 6 (tests/test_crew_worktree_cwd.py x4, tests/test_work_id_nesting.py x2) are confirmed genuinely caused by the new refusal and are the deliberate, correctly-reported caller-list deliverable. Caller-list survey independently re-derived: found one caller (tests/test_crew_delivery_addressing.py) the implementer's enumeration did not name, but it already passed model='sonnet' pre-change so needed no fix -- not an omission, verified by reading the call site. No fenced/excluded file touched (confirmed via git status/diff); #607's heartbeat thread untouched. Fowler pass: 10 smells absent, long-parameter-list overridden against build_crew_argv's own documented 1:1 argv-mapping design, shotgun-surgery flagged non-blocking (test-fixture fan-out from a deliberate precondition tightening, not production coupling) -- both logged, rail passes (verify_fowler_pass.py exit 0). One triage candidate captured (tc1): the 6 out-of-owned-files test failures need the same mechanical model= reconciliation as a follow-up pass."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "tests/test_crew_worktree_cwd.py (4 tests) and tests/test_work_id_nesting.py (2 tests) call RC.launch_crew/RC.record_external_attempt with model=None and now fail with CrewLaunchError post decision:refuse-a-tierless-dispatch. Both are out of this gate's owned files (scripts/run_crew.py, tests/test_crew_launcher.py) so the implementer correctly did not touch them (handoff exclusion). Independently confirmed by my own full-suite run: exactly these 6 tests fail, with the CrewLaunchError traceback naming the new refusal as cause. Mechanical follow-up needed: add an explicit model= (e.g. \"sonnet\") at each of the 6 call sites -- same reconciliation pattern already applied across tests/test_crew_launcher.py in this gate, not a design question."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/cleanup-g-crew-tier/g1-review/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-16T18:52:27.754186+00:00",
+    "last_heartbeat": "2026-08-16T18:55:41.033004+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T18:56:48.863293+00:00"
+  }
+}

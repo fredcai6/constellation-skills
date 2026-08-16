@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g2-doctrine",
+  "mechanical": {
+    "run": "cleanup-g-crew-tier",
+    "project": "constellation-skills",
+    "spine-step": "g2-doctrine",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-g-crew-tier-g2-doctrine@ee679126f01a0b0e92c1ed7892ff1c4a85546d63",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "cleanup-g-crew-tier",
+    "generated_at": "2026-08-16T18:58:54Z"
+  }
+}
