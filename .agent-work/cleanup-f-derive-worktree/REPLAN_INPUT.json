@@ -1,424 +1,474 @@
 {
- "schema_version": 1,
- "current_plan": {
   "schema_version": 1,
-  "epic": {
-   "title": "One spine, one worktree: derive it from the spine path and retire the stamp-and-compare",
-   "spec_path": ".agent-work/cleanup-f-derive-worktree/LAUNCH_ORDER.md",
-   "intent_and_why": "A spine's worktree is derived from its path. Nothing stamps it for a decision, nothing compares it, nothing reads an ambient cwd to find it -- so there is no second source of truth that can disagree with the first."
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "One spine, one worktree: derive it from the spine path and retire the stamp-and-compare",
+      "spec_path": ".agent-work/cleanup-f-derive-worktree/LAUNCH_ORDER.md",
+      "intent_and_why": "A spine's worktree is derived from its path. Nothing stamps it for a decision, nothing compares it, nothing reads an ambient cwd to find it -- so there is no second source of truth that can disagree with the first."
+    },
+    "definition_of_done": [
+      "One pure lexical derivation function, nearest .agent-work ancestor, arbitrary depth, unowned when there is none.",
+      "origin_worktree_refusal stops comparing and the per-guarded-verb git rev-parse --show-toplevel is gone.",
+      "origin.worktree is still written as provenance and read by nothing for a decision, pinned by a test.",
+      "The worktree stops answering 'is this mine' in the Stop hook; binding-key provenance is the discriminator.",
+      "#315: command-kind checks run with cwd = the derived worktree."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Subtractive change to engine identity with a silent failure mode; targeted automated tests plus the relevant broader suite",
+      "sufficient_evidence": "Local Linux green, independent APPROVE, failure-set difference against a main baseline re-measured at gate time",
+      "appetite": "One working session"
+    },
+    "hard_constraints": [
+      "Lane A fenced: scripts/mcp_spine_server.py, .mcp.json, examples/**, scripts/install_constellation.py, skills/commander/templates/**",
+      "Lane E fenced: scripts/run_crew.py, scripts/recover_crews.py, tests/test_crew_launcher.py",
+      "scripts/verify_worktree_isolation.py is #610's, not this lane's",
+      "Any template edit must be floated to the Admiral",
+      "scripts/hooks/spine_rail.py imports stdlib only",
+      "Do not merge; park at archive"
+    ],
+    "fixed_decisions": [
+      "derivation-authoritative-stamp-becomes-provenance (settled/human)",
+      "worktree-is-location-spine-path-is-identity (settled/human)",
+      "nearest-ancestor-fail-closed (settled/human)",
+      "not-a-weaker-guard (settled/human)",
+      "normalize-once REVISED to lexical-only this run on three contradicting measurements (was settled/measured, re-provenanced settled/measured)",
+      "one-definition-or-a-pinned-equivalence SETTLED by measurement this run: two copies plus a shared case table"
+    ],
+    "current_wave": {
+      "objective": "Land derivation, the retirement, and the ownership-not-tree hook change; float the two gates whose premises failed.",
+      "exit_criteria": [
+        "g1, g2, g3 closed with an independent APPROVE and a targeted check that is red on an empty diff",
+        "g4 and g5 authored and scoped but NOT launched, each floated to the Admiral with a measured reason"
+      ],
+      "issues": [
+        {
+          "id": "g1",
+          "title": "Derivation: one lexical rule, two pinned-equal implementations",
+          "desired_outcome": "A pure lexical derivation, defined twice and pinned equal by a shared case table.",
+          "useful_now": "Every other gate consumes it.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "tests/test_worktree_derivation.py passes by name; it does not exist today, so the check is red on an empty diff.",
+          "implementation_latitude": "Which shape preconditions live in the function versus at its callers.",
+          "hard_constraints_no_gos": [
+            "no realpath inside the derivation",
+            "no new import in spine_rail.py"
+          ],
+          "local_unknowns": [
+            "how many of _worktree_from_spine's five call sites change behaviour"
+          ],
+          "anchors": [
+            "scripts/hooks/spine_rail.py:712",
+            "scripts/checklist_engine.py"
+          ],
+          "type": "AFK",
+          "blocks": [
+            "g2",
+            "g3"
+          ]
+        },
+        {
+          "id": "g2",
+          "title": "Retire stamp-and-compare",
+          "desired_outcome": "The comparison and the ambient git read are gone; the stamp is written and read by nothing.",
+          "useful_now": "It is the launch order's headline retirement.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "No rev-parse --show-toplevel in checklist_engine.py, and a provenance-only test passes by name (exits 5 today).",
+          "implementation_latitude": "Whether the degenerate predicate is deleted or kept as a seam.",
+          "hard_constraints_no_gos": [
+            "adds no fail-closed refusal -- that is g4 and it is floated"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/checklist_engine.py:102-179",
+            "scripts/checklist_engine.py:3573-3578"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "g3",
+          "title": "The worktree stops answering 'is this mine'",
+          "desired_outcome": "Ownership at both Stop-hook call sites is decided by binding-key provenance, never by the tree.",
+          "useful_now": "It closes the #549 bug class at its root.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "tests/test_spine_rail.py -k OwnershipIsBindingKeyNotWorktree passes by name (exits 5 today).",
+          "implementation_latitude": "What replaces the skip at each of the two asymmetric call sites.",
+          "hard_constraints_no_gos": [
+            "the nudge/3-strike escape hatch stays keyed by session id alone"
+          ],
+          "local_unknowns": [
+            "what newly blocks once the skip is removed"
+          ],
+          "anchors": [
+            "scripts/hooks/spine_rail.py:693"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "FLOATED: #315 -- command checks run in the derived worktree",
+        "why_likely": "authored and scoped, but held: its premise or its scope is floated to the Admiral",
+        "entry_conditions": [
+          "Not started -- awaiting an Admiral ruling"
+        ]
+      },
+      {
+        "outcome": "FLOATED: fail-closed refusal for an unowned spine path",
+        "why_likely": "authored and scoped, but held: its premise or its scope is floated to the Admiral",
+        "entry_conditions": [
+          "Not started -- awaiting an Admiral ruling"
+        ]
+      },
+      {
+        "outcome": "#610 provisions the worktree and the work area, closing derivation's misplaced-birth limit",
+        "why_likely": "It is the named provisioning half of #609",
+        "entry_conditions": [
+          "this lane lands"
+        ]
+      },
+      {
+        "outcome": "run_crew.py derives --worktree from --spine",
+        "why_likely": "The launch order names it as a real cleanup that follows lane E",
+        "entry_conditions": [
+          "lane E lands",
+          "this lane's derivation is available"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "The scope of the fail-closed refusal",
+        "affects": "g4, and whether nearest-ancestor-fail-closed ships whole",
+        "settle_by": "an Admiral ruling",
+        "current_evidence": "362 of 429 guarded-verb invocations refused, across 125 tests, 3 of them in a lane-E-fenced file",
+        "next_probe": "reproduce the dynamic probe and produce a per-file disposition of all 125"
+      },
+      {
+        "unknown": "Whether threading cwd into command checks disarms a shipping check",
+        "affects": "g5, and the launch order's stated premise",
+        "settle_by": "an Admiral ruling",
+        "current_evidence": "two live tracked template carriers of verify_worktree_isolation, one of them a command-kind precondition, against the order's claim of zero occurrences",
+        "next_probe": "instantiate a spine through init_work_area.py and read which COMMANDER_SPINE template file actually resolved"
+      },
+      {
+        "unknown": "Windows separator and case-fold behaviour of the derivation",
+        "affects": "every gate",
+        "settle_by": "a Windows host or an explicit case-folding test that does not rely on the platform",
+        "current_evidence": "this host is Linux, where os.path.normcase is the identity function; the one windows-latest CI job is red at baseline",
+        "next_probe": "construct the fold explicitly in the shared case table rather than relying on the platform"
+      }
+    ],
+    "parked_possibilities": [
+      "Retiring verify_worktree_isolation.py --here as a launch-order step (#610)",
+      "Teaching map_orient.py to cite scripts/code_map's id scheme so this repo reads RESOLVED instead of DEGRADED"
+    ]
   },
-  "definition_of_done": [
-   "One pure lexical derivation function, nearest .agent-work ancestor, arbitrary depth, unowned when there is none.",
-   "origin_worktree_refusal stops comparing and the per-guarded-verb git rev-parse --show-toplevel is gone.",
-   "origin.worktree is still written as provenance and read by nothing for a decision, pinned by a test.",
-   "The worktree stops answering 'is this mine' in the Stop hook; binding-key provenance is the discriminator.",
-   "#315: command-kind checks run with cwd = the derived worktree."
-  ],
-  "good_enough": {
-   "mandatory_quality": "Subtractive change to engine identity with a silent failure mode; targeted automated tests plus the relevant broader suite",
-   "sufficient_evidence": "Local Linux green, independent APPROVE, failure-set difference against a main baseline re-measured at gate time",
-   "appetite": "One working session"
-  },
-  "hard_constraints": [
-   "Lane A fenced: scripts/mcp_spine_server.py, .mcp.json, examples/**, scripts/install_constellation.py, skills/commander/templates/**",
-   "Lane E fenced: scripts/run_crew.py, scripts/recover_crews.py, tests/test_crew_launcher.py",
-   "scripts/verify_worktree_isolation.py is #610's, not this lane's",
-   "Any template edit must be floated to the Admiral",
-   "scripts/hooks/spine_rail.py imports stdlib only",
-   "Do not merge; park at archive"
-  ],
-  "fixed_decisions": [
-   "derivation-authoritative-stamp-becomes-provenance (settled/human)",
-   "worktree-is-location-spine-path-is-identity (settled/human)",
-   "nearest-ancestor-fail-closed (settled/human)",
-   "not-a-weaker-guard (settled/human)",
-   "normalize-once REVISED to lexical-only this run on three contradicting measurements (was settled/measured, re-provenanced settled/measured)",
-   "one-definition-or-a-pinned-equivalence SETTLED by measurement this run: two copies plus a shared case table"
-  ],
-  "current_wave": {
-   "objective": "Land derivation, the retirement, and the ownership-not-tree hook change; float the two gates whose premises failed.",
-   "exit_criteria": [
-    "g1, g2, g3 closed with an independent APPROVE and a targeted check that is red on an empty diff",
-    "g4 and g5 authored and scoped but NOT launched, each floated to the Admiral with a measured reason"
-   ],
-   "issues": [
+  "completed_outcomes": [
     {
-     "id": "g1",
-     "title": "Derivation: one lexical rule, two pinned-equal implementations",
-     "desired_outcome": "A pure lexical derivation, defined twice and pinned equal by a shared case table.",
-     "useful_now": "Every other gate consumes it.",
-     "appetite": "One gate",
-     "acceptance_or_falsification_evidence": "tests/test_worktree_derivation.py passes by name; it does not exist today, so the check is red on an empty diff.",
-     "implementation_latitude": "Which shape preconditions live in the function versus at its callers.",
-     "hard_constraints_no_gos": [
-      "no realpath inside the derivation",
-      "no new import in spine_rail.py"
-     ],
-     "local_unknowns": [
-      "how many of _worktree_from_spine's five call sites change behaviour"
-     ],
-     "anchors": [
-      "scripts/hooks/spine_rail.py:712",
-      "scripts/checklist_engine.py"
-     ],
-     "type": "AFK",
-     "blocks": [
-      "g2",
-      "g3"
-     ]
+      "issue_id": "g1",
+      "outcome": "One lexical derivation rule, defined twice and pinned equal by a shared case table",
+      "evidence": "Committed 9ff86f2d, independent APPROVE. checklist_engine.worktree_from_spine_path and spine_rail._worktree_from_spine both driven from tests/test_worktree_derivation.py's shared table, including no-agent-work-ancestor-at-all-is-unowned -> None and hostile-input -> None never raises. Suite 3159 passed / 0 failed at the time."
     },
     {
-     "id": "g2",
-     "title": "Retire stamp-and-compare",
-     "desired_outcome": "The comparison and the ambient git read are gone; the stamp is written and read by nothing.",
-     "useful_now": "It is the launch order's headline retirement.",
-     "appetite": "One gate",
-     "acceptance_or_falsification_evidence": "No rev-parse --show-toplevel in checklist_engine.py, and a provenance-only test passes by name (exits 5 today).",
-     "implementation_latitude": "Whether the degenerate predicate is deleted or kept as a seam.",
-     "hard_constraints_no_gos": [
-      "adds no fail-closed refusal -- that is g4 and it is floated"
-     ],
-     "local_unknowns": [],
-     "anchors": [
-      "scripts/checklist_engine.py:102-179",
-      "scripts/checklist_engine.py:3573-3578"
-     ],
-     "type": "AFK",
-     "blocks": []
-    },
-    {
-     "id": "g3",
-     "title": "The worktree stops answering 'is this mine'",
-     "desired_outcome": "Ownership at both Stop-hook call sites is decided by binding-key provenance, never by the tree.",
-     "useful_now": "It closes the #549 bug class at its root.",
-     "appetite": "One gate",
-     "acceptance_or_falsification_evidence": "tests/test_spine_rail.py -k OwnershipIsBindingKeyNotWorktree passes by name (exits 5 today).",
-     "implementation_latitude": "What replaces the skip at each of the two asymmetric call sites.",
-     "hard_constraints_no_gos": [
-      "the nudge/3-strike escape hatch stays keyed by session id alone"
-     ],
-     "local_unknowns": [
-      "what newly blocks once the skip is removed"
-     ],
-     "anchors": [
-      "scripts/hooks/spine_rail.py:693"
-     ],
-     "type": "AFK",
-     "blocks": []
+      "issue_id": "g2",
+      "outcome": "Stamp-and-compare retired: origin_worktree_refusal, its two verb sets and the per-guarded-verb git rev-parse --show-toplevel are gone; origin.worktree is written as provenance and read by nothing for a decision FINAL SHAPE after ADMIRAL_RULING-2 N2: the engine-side worktree_from_spine_path and the AGENT_WORK_DIR constant it was the sole user of are deleted too, so the engine now reads no location at all -- neither ambient nor derived. The shared case table survives whole, re-scoped to spine_rail._worktree_from_spine as the rule's specification for #315 to re-derive against; test_the_two_copies_agree goes with the second copy, since a drift test over one implementation cannot fail. CLOSED with an independent APPROVE on the third review dispatch, after two correct BLOCKs. Final state: the engine reads no location at all, ambient or derived; the retired mechanism's prose is repaired across five files, swept by CLAIM rather than by symbol.",
+      "evidence": "Committed b8557ff4; reworked under ADMIRAL_RULING-1 R1 (see D5). Reviewer verified by command that no rev-parse --show-toplevel remains in checklist_engine.py and that origin has exactly 2 references under scripts/, both writes; the provenance pin was mutation-tested in both directions. Rework 2 (commit 84d949eb): pure deletion under scripts/ -- 68 lines removed, 13 added and all comments; top-level names 122 -> 120 removing exactly {AGENT_WORK_DIR, worktree_from_spine_path} with no other top-level node changed; refusal vocabulary unchanged (REFUSED 8, raise EngineError 82, sys.exit 1). Suite 3204 -> 3170 passed / 5 skipped / 0 failed, the fall of 34 accounted for as collection (16 engine-parametrized cases, the 16-case drift test, 2 engine-only singletons) and cross-checked against whole-suite collection totals (3209 - 34 = 3175) so 'another file also lost tests' is excluded rather than assumed. Gate close: targeted check green (no rev-parse --show-toplevel in checklist_engine.py, and the provenance test passes by name -- 5 passed, 9 deselected); full suite on the committed tree 3170 passed / 5 skipped / 0 failed with subtests back to 1183; main at 17c2cee5 re-measured independently in an isolated clone at 3171 / 7 / 0; failure-set difference empty in both directions."
     }
-   ]
-  },
-  "wave_forecast": [
-   {
-    "outcome": "FLOATED: #315 -- command checks run in the derived worktree",
-    "why_likely": "authored and scoped, but held: its premise or its scope is floated to the Admiral",
-    "entry_conditions": [
-     "Not started -- awaiting an Admiral ruling"
-    ]
-   },
-   {
-    "outcome": "FLOATED: fail-closed refusal for an unowned spine path",
-    "why_likely": "authored and scoped, but held: its premise or its scope is floated to the Admiral",
-    "entry_conditions": [
-     "Not started -- awaiting an Admiral ruling"
-    ]
-   },
-   {
-    "outcome": "#610 provisions the worktree and the work area, closing derivation's misplaced-birth limit",
-    "why_likely": "It is the named provisioning half of #609",
-    "entry_conditions": [
-     "this lane lands"
-    ]
-   },
-   {
-    "outcome": "run_crew.py derives --worktree from --spine",
-    "why_likely": "The launch order names it as a real cleanup that follows lane E",
-    "entry_conditions": [
-     "lane E lands",
-     "this lane's derivation is available"
-    ]
-   }
   ],
-  "uncertainty_register": [
-   {
-    "unknown": "The scope of the fail-closed refusal",
-    "affects": "g4, and whether nearest-ancestor-fail-closed ships whole",
-    "settle_by": "an Admiral ruling",
-    "current_evidence": "362 of 429 guarded-verb invocations refused, across 125 tests, 3 of them in a lane-E-fenced file",
-    "next_probe": "reproduce the dynamic probe and produce a per-file disposition of all 125"
-   },
-   {
-    "unknown": "Whether threading cwd into command checks disarms a shipping check",
-    "affects": "g5, and the launch order's stated premise",
-    "settle_by": "an Admiral ruling",
-    "current_evidence": "two live tracked template carriers of verify_worktree_isolation, one of them a command-kind precondition, against the order's claim of zero occurrences",
-    "next_probe": "instantiate a spine through init_work_area.py and read which COMMANDER_SPINE template file actually resolved"
-   },
-   {
-    "unknown": "Windows separator and case-fold behaviour of the derivation",
-    "affects": "every gate",
-    "settle_by": "a Windows host or an explicit case-folding test that does not rely on the platform",
-    "current_evidence": "this host is Linux, where os.path.normcase is the identity function; the one windows-latest CI job is red at baseline",
-    "next_probe": "construct the fold explicitly in the shared case table rather than relying on the platform"
-   }
+  "wave_evidence": [
+    {
+      "claim": "The whole-suite postcondition is a close criterion for each gate",
+      "expected": "a gate that did nothing would fail its own check",
+      "observed": "the suite is green at baseline (3104 passed, 6 skipped, 123.69s at e36e630b), so every gate's suite check passed on zero work; each gate now also carries a targeted check measured red today (exit 4 or 5)",
+      "source": "cold plan critic measurement, reproduced by the Commander"
+    },
+    {
+      "claim": "verify_worktree_isolation ships in no template or spec, so threading cwd disarms nothing that ships",
+      "expected": "zero occurrences in any template",
+      "observed": "two live tracked non-archive template carriers: .agent-work/templates/COMMANDER_SPINE.template.json:12 (a command-kind precondition) and skills/admiral/templates/LAUNCH_ORDER.template.md:43, whose own lines 45 and 47 rule that forcing cwd disarms the check and that it is not superseded by the engine-native guard",
+      "source": "git grep and direct read at e36e630b, verified by the Commander"
+    },
+    {
+      "claim": "Fail-closed on an unowned spine path is a small change",
+      "expected": "few or no existing fixtures affected",
+      "observed": "362 of 429 guarded-verb invocations refused, across 125 tests in 7 files, 3 of them in the lane-E-fenced tests/test_crew_launcher.py; the three fenced ones were independently confirmed to build spines with no .agent-work ancestor and drive guarded verbs",
+      "source": "dynamic suite probe by the cold critic; the fenced three re-verified by the Commander"
+    },
+    {
+      "claim": "The derivation should normalize with realpath plus normcase",
+      "expected": "one normalize definition reused from verify_worktree_isolation",
+      "observed": "realpath inside the derivation would make the refusal predicate impure while its co_names purity test stayed green, would make the hook's symlink-escape guard unfailable, and reusing normalize_path would trip an exact-set-equality companion guard needing a fenced installer edit",
+      "source": "cold plan critic, three independent lines of evidence"
+    },
+    {
+      "claim": "A pytest -k selector that collects zero tests can never fail",
+      "expected": "validate_spine's falsifiable-zero-collected rule holds",
+      "observed": "pytest exits 5 on no-tests-collected and 4 on a missing file, so such a check fails; the rule is a false positive",
+      "source": "measured directly at e36e630b"
+    },
+    {
+      "claim": "The lease is and always was the ownership guard, so removing the origin comparison removed no guard (pre-ruling not-a-weaker-guard, settled/human)",
+      "expected": "no behaviour delta on any guarded verb",
+      "observed": "True only where a lease exists. require_session returns early when _active_lease is None, and a RELEASED lease reads as absent -- so on a leaseless spine the comparison was the sole refusal. Measured base-vs-tree from a foreign worktree: never-claimed start and attach, and start after release, all went REFUSED -> exit 0, writing state into a tree the agent is not standing in. Under an active lease held by another session: refused before and after, unchanged.",
+      "source": "independent g2 reviewer, base engine extracted from 9ff86f2d vs working tree, same fixture; mechanism re-read at source by the Admiral and by the Commander"
+    },
+    {
+      "claim": "main is at e0539903 with a 3163/7/0 baseline (ADMIRAL_RULING-1)",
+      "expected": "3163 passed, 7 skipped, 0 failed",
+      "observed": "Reproduced exactly in a detached worktree at e0539903: 3163 passed, 7 skipped, 0 failed. This branch with main merged in at 6a4035d2: 3195 passed, 5 skipped, 0 failed. Failure-set difference EMPTY on both sides. Skip delta fully accounted: one of main's 7 is location-conditional (test_spine_lifecycle skips outside .worktrees) and one is the Windows-only case-fold skip in the test_spine_origin_isolation scenario g2 retired.",
+      "source": "Commander, cache cleared, clean env, both trees"
+    },
+    {
+      "claim": "run_crew.py maintains a durable crew registry that recover_crews.py can trust after a parent-session loss",
+      "expected": "the registry accumulates every attempt; recovery reports the true history",
+      "observed": "The parent launcher loads the registry ONCE before spawning, blocks in launch() for the child's entire run, then writes its stale in-memory list back on child exit. Six completed crew records (plan critic, 2x g1 implementer, 2x g1 reviewer, g2 implementer, g2 reviewer) were destroyed when the Admiral relaunched this lane; recover_crews.py then reported 2 crews where the committed registry has 8. Restored from git at 7756fc37.",
+      "source": "Commander: registry diff against git HEAD, plus CliBackend.dispatch read at source in scripts/run_crew.py"
+    },
+    {
+      "claim": "g4's re-authored shape (ADMIRAL_RULING-1 R2: an unowned spine path yields no derived worktree and today's behaviour, no refusal) is work this lane must implement",
+      "expected": "a gate's worth of change",
+      "observed": "Already shipped by g1 in full. worktree_from_spine_path returns None for a path with no .agent-work ancestor, never raises, and refuses nothing; the case is pinned for BOTH copies by tests/test_worktree_derivation.py. g4's only distinguishing content was the refusal R2 withdrew, so the gate is empty.",
+      "source": "Commander: function read at source, plus the shared case table's no-agent-work-ancestor-at-all-is-unowned and hostile-input rows"
+    },
+    {
+      "claim": "main is at 17c2cee5 with a 3171 passed / 7 skipped / 0 failed baseline (ADMIRAL_RULING-2)",
+      "expected": "This branch, with 17c2cee5 merged, is green with no failure the base does not also have",
+      "observed": "3204 passed, 5 skipped, 0 failed on this branch after merging 17c2cee5. Failure set empty, so the difference against the stated base is empty. The two extra skips on the base are not reproduced here and were not independently re-measured: the base figure is the Admiral's, cited not verified. RE-MEASURED INDEPENDENTLY, no longer cited: main at 17c2cee5, cloned to an isolated /tmp checkout, gives 3171 passed / 7 skipped / 0 failed -- the Admiral's figure exactly. One caveat that is behaviour, not a defect: the first run in a clone named main-baseline-609 showed 1 failed / 3170 passed, because tests/test_code_map.py::MapTreeFreshnessTests compares the committed map title, and code_map.render.repo_name derives that title from the git common dir's parent precisely so a worktree is titled after its repository rather than its branch directory. A clone into a differently-named directory IS a differently-named repository, so the test was right and the clone was wrong. Re-run in a clone named constellation-skills: 148 passed. The two skips this branch does not reproduce remain unexplained and are not this lane's.",
+      "source": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q, after find . -name __pycache__ -prune -exec rm -rf, at commit cb77ff4d"
+    },
+    {
+      "claim": "The map conflicts on every parallel branch and is resolved by regenerating, never by hand (#544)",
+      "expected": "Merging main conflicts only on generated counts in map/INDEX.md and a rebuild settles it",
+      "observed": "Exactly that. The merge of 17c2cee5 conflicted on two hunks of map/INDEX.md, both entity counts. py -m scripts.code_map build --root . produced the union: 87 test modules (this lane adds tests/test_worktree_derivation) and spine_rail at 63 entities (this lane adds _worktree_from_spine).",
+      "source": "git merge main; py -m scripts.code_map build --root .; commits 0313189c and cb77ff4d"
+    },
+    {
+      "claim": "The door raises KeyError when SPINE_FILE is unset (as still stated in spine_rail.py and tests/test_spine_rail.py)",
+      "expected": "The claim is stale: the door refuses by name as of e3b5a1c8",
+      "observed": "Stale, and more so than the claim states. scripts/mcp_spine_server._spine_from_env collapses THREE readings of 'nothing named' into None -- unset (the old module-scope KeyError at import, which killed the server before it could refuse and showed the client only 'Connection closed'), empty (the case production actually takes, since .mcp.json's ${SPINE_FILE:-} expands to an empty string and Path('').resolve() is the process cwd), and whitespace. Whether the named path is a readable spine is asked per call by _unbound_refusal, not once at import, because a spine's directory can be removed while the process runs (#603, #604).",
+      "source": "scripts/mcp_spine_server.py:_spine_from_env docstring; grep for KeyError across scripts/hooks/spine_rail.py and tests/test_spine_rail.py returns nothing"
+    },
+    {
+      "claim": "Deleting the engine-side copy should shrink the diff, not grow it (ADMIRAL_RULING-2)",
+      "expected": "A net subtraction under scripts/ with no behaviour change",
+      "observed": "Held. 68 removed / 13 added under scripts/, every added line a comment; 0 non-comment additions. Measured three ways -- line census, AST top-level-name census, and a refusal-vocabulary count -- rather than by reading the diff.",
+      "source": ".agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-no-refusal.txt; commit 84d949eb"
+    },
+    {
+      "claim": "A symbol-level grep is enough to prove a prose repair complete",
+      "expected": "grep for worktree_from_spine_path finds every passage that describes the deleted derivation",
+      "observed": "False, and it cost this gate a third rework. Every grep specified on g2 -- in both handoffs and in the implementer's own checks -- keyed on the symbol name, and the two stale passages in checklist_engine.main() do not contain it. A CLAIM-level sweep found them immediately: the derive family ('the worktree is derived from the spine's own path') and the ownership family ('the lease, which is the actual ownership guard ... as it always was'). A third instance sat in spine_lifecycle.build_origin, carrying both in one parenthesis.",
+      "source": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-reviewer-rework2-result.md, blocker B1 and Workflow Feedback"
+    },
+    {
+      "claim": "Deleting the engine copy removed a duplicate, not a reason and not a behaviour",
+      "expected": "Every rationale recorded in the deleted docstring survives somewhere in the repo, and the rule behaves identically",
+      "observed": "Both held, measured rather than argued. The reviewer checked the deleted docstring sentence by sentence and found every reason still present (NEAREST-not-outermost with its nested-sandbox reason, absolute-input-required, lexical-only with its symlink-escape reason, shape-questions-belong-to-callers, never-raises), with the three genuinely at risk carried onto the case table as the implementer claimed. The 2026-08-16 worktree-is-location ruling citation was checked by count: exactly one occurrence repo-wide before, exactly one after. All 16 cases run through base-engine, base-hook and current-hook agree 16/16 with 0 mismatches.",
+      "source": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-reviewer-rework2-result.md, Adversarial hunt Q1 and Q2"
+    },
+    {
+      "claim": "A prose repair can be proven complete by a line-oriented grep for the changed sentence",
+      "expected": "Quoting the stale sentence and grepping for it finds every copy",
+      "observed": "False by construction in this repo, and it hid B1 through three passes. Prose lives in wrapped comments, so a claim spanning two lines matches no line-oriented pattern. The rework-3 implementer's fix was to strip comment markers and flatten before matching -- eight lines -- which turned an invisible defect into 64 classified hits. The same rendering also hid one of the six ruling citations from the obvious verification command.",
+      "source": ".agent-work/cleanup-f-derive-worktree/g2-implement-rework3/sweep_claims.py and m1-classification.txt; g2-reviewer-rework2-result.md Workflow Feedback"
+    },
+    {
+      "claim": "The plan's targeted checks are red on an empty diff, so a gate cannot pass on zero work",
+      "expected": "g3's -k OwnershipIsBindingKeyNotWorktree selector collects nothing and pytest exits 5 before the work, and collects the class after",
+      "observed": "exit 5 with 153 deselected before; 8 passed, 152 deselected after. The check discriminated as designed.",
+      "source": "Commander measured both ends himself, before dispatch and after integration"
+    },
+    {
+      "claim": "The two g3 call sites are not symmetric and one replacement will not fit both",
+      "expected": "an implementer told this would still be tempted to apply one rule twice",
+      "observed": "it held: _entry_mid_flight_view lost ownership entirely and pushed it up into decide_stop's RENDERING decision, while decide_session_start needed no replacement at all because SessionStart carries no agent_id. The plan's insistence on stating each site separately is what surfaced that they answer different questions.",
+      "source": "IMPLEMENTER_RESULT plus the differential harness at crew-handoffs/g3-implement/m4_differential.py"
+    },
+    {
+      "claim": "An isolated-clone baseline measures the commit, not the checkout",
+      "expected": "cloning main at 17c2cee5 into any temp directory reproduces leg 3's 3171/7/0",
+      "observed": "it did not -- 1 failed / 3170 passed, the failure being tests/test_code_map.py::MapTreeFreshnessTests, because map/INDEX.md's title line derives from the CHECKOUT DIRECTORY NAME. Re-cloning into a directory named constellation-skills reproduced 3171/7/0 exactly. The measurement is sensitive to the directory it is taken in.",
+      "source": "Commander, two clones, same commit, differing only in directory name"
+    }
   ],
-  "parked_possibilities": [
-   "Retiring verify_worktree_isolation.py --here as a launch-order step (#610)",
-   "Teaching map_orient.py to cite scripts/code_map's id scheme so this repo reads RESOLVED instead of DEGRADED"
-  ]
- },
- "completed_outcomes": [
-  {
-   "issue_id": "g1",
-   "outcome": "One lexical derivation rule, defined twice and pinned equal by a shared case table",
-   "evidence": "Committed 9ff86f2d, independent APPROVE. checklist_engine.worktree_from_spine_path and spine_rail._worktree_from_spine both driven from tests/test_worktree_derivation.py's shared table, including no-agent-work-ancestor-at-all-is-unowned -> None and hostile-input -> None never raises. Suite 3159 passed / 0 failed at the time."
-  },
-  {
-   "issue_id": "g2",
-   "outcome": "Stamp-and-compare retired: origin_worktree_refusal, its two verb sets and the per-guarded-verb git rev-parse --show-toplevel are gone; origin.worktree is written as provenance and read by nothing for a decision FINAL SHAPE after ADMIRAL_RULING-2 N2: the engine-side worktree_from_spine_path and the AGENT_WORK_DIR constant it was the sole user of are deleted too, so the engine now reads no location at all -- neither ambient nor derived. The shared case table survives whole, re-scoped to spine_rail._worktree_from_spine as the rule's specification for #315 to re-derive against; test_the_two_copies_agree goes with the second copy, since a drift test over one implementation cannot fail. CLOSED with an independent APPROVE on the third review dispatch, after two correct BLOCKs. Final state: the engine reads no location at all, ambient or derived; the retired mechanism's prose is repaired across five files, swept by CLAIM rather than by symbol.",
-   "evidence": "Committed b8557ff4; reworked under ADMIRAL_RULING-1 R1 (see D5). Reviewer verified by command that no rev-parse --show-toplevel remains in checklist_engine.py and that origin has exactly 2 references under scripts/, both writes; the provenance pin was mutation-tested in both directions. Rework 2 (commit 84d949eb): pure deletion under scripts/ -- 68 lines removed, 13 added and all comments; top-level names 122 -> 120 removing exactly {AGENT_WORK_DIR, worktree_from_spine_path} with no other top-level node changed; refusal vocabulary unchanged (REFUSED 8, raise EngineError 82, sys.exit 1). Suite 3204 -> 3170 passed / 5 skipped / 0 failed, the fall of 34 accounted for as collection (16 engine-parametrized cases, the 16-case drift test, 2 engine-only singletons) and cross-checked against whole-suite collection totals (3209 - 34 = 3175) so 'another file also lost tests' is excluded rather than assumed. Gate close: targeted check green (no rev-parse --show-toplevel in checklist_engine.py, and the provenance test passes by name -- 5 passed, 9 deselected); full suite on the committed tree 3170 passed / 5 skipped / 0 failed with subtests back to 1183; main at 17c2cee5 re-measured independently in an isolated clone at 3171 / 7 / 0; failure-set difference empty in both directions."
-  }
- ],
- "wave_evidence": [
-  {
-   "claim": "The whole-suite postcondition is a close criterion for each gate",
-   "expected": "a gate that did nothing would fail its own check",
-   "observed": "the suite is green at baseline (3104 passed, 6 skipped, 123.69s at e36e630b), so every gate's suite check passed on zero work; each gate now also carries a targeted check measured red today (exit 4 or 5)",
-   "source": "cold plan critic measurement, reproduced by the Commander"
-  },
-  {
-   "claim": "verify_worktree_isolation ships in no template or spec, so threading cwd disarms nothing that ships",
-   "expected": "zero occurrences in any template",
-   "observed": "two live tracked non-archive template carriers: .agent-work/templates/COMMANDER_SPINE.template.json:12 (a command-kind precondition) and skills/admiral/templates/LAUNCH_ORDER.template.md:43, whose own lines 45 and 47 rule that forcing cwd disarms the check and that it is not superseded by the engine-native guard",
-   "source": "git grep and direct read at e36e630b, verified by the Commander"
-  },
-  {
-   "claim": "Fail-closed on an unowned spine path is a small change",
-   "expected": "few or no existing fixtures affected",
-   "observed": "362 of 429 guarded-verb invocations refused, across 125 tests in 7 files, 3 of them in the lane-E-fenced tests/test_crew_launcher.py; the three fenced ones were independently confirmed to build spines with no .agent-work ancestor and drive guarded verbs",
-   "source": "dynamic suite probe by the cold critic; the fenced three re-verified by the Commander"
-  },
-  {
-   "claim": "The derivation should normalize with realpath plus normcase",
-   "expected": "one normalize definition reused from verify_worktree_isolation",
-   "observed": "realpath inside the derivation would make the refusal predicate impure while its co_names purity test stayed green, would make the hook's symlink-escape guard unfailable, and reusing normalize_path would trip an exact-set-equality companion guard needing a fenced installer edit",
-   "source": "cold plan critic, three independent lines of evidence"
-  },
-  {
-   "claim": "A pytest -k selector that collects zero tests can never fail",
-   "expected": "validate_spine's falsifiable-zero-collected rule holds",
-   "observed": "pytest exits 5 on no-tests-collected and 4 on a missing file, so such a check fails; the rule is a false positive",
-   "source": "measured directly at e36e630b"
-  },
-  {
-   "claim": "The lease is and always was the ownership guard, so removing the origin comparison removed no guard (pre-ruling not-a-weaker-guard, settled/human)",
-   "expected": "no behaviour delta on any guarded verb",
-   "observed": "True only where a lease exists. require_session returns early when _active_lease is None, and a RELEASED lease reads as absent -- so on a leaseless spine the comparison was the sole refusal. Measured base-vs-tree from a foreign worktree: never-claimed start and attach, and start after release, all went REFUSED -> exit 0, writing state into a tree the agent is not standing in. Under an active lease held by another session: refused before and after, unchanged.",
-   "source": "independent g2 reviewer, base engine extracted from 9ff86f2d vs working tree, same fixture; mechanism re-read at source by the Admiral and by the Commander"
-  },
-  {
-   "claim": "main is at e0539903 with a 3163/7/0 baseline (ADMIRAL_RULING-1)",
-   "expected": "3163 passed, 7 skipped, 0 failed",
-   "observed": "Reproduced exactly in a detached worktree at e0539903: 3163 passed, 7 skipped, 0 failed. This branch with main merged in at 6a4035d2: 3195 passed, 5 skipped, 0 failed. Failure-set difference EMPTY on both sides. Skip delta fully accounted: one of main's 7 is location-conditional (test_spine_lifecycle skips outside .worktrees) and one is the Windows-only case-fold skip in the test_spine_origin_isolation scenario g2 retired.",
-   "source": "Commander, cache cleared, clean env, both trees"
-  },
-  {
-   "claim": "run_crew.py maintains a durable crew registry that recover_crews.py can trust after a parent-session loss",
-   "expected": "the registry accumulates every attempt; recovery reports the true history",
-   "observed": "The parent launcher loads the registry ONCE before spawning, blocks in launch() for the child's entire run, then writes its stale in-memory list back on child exit. Six completed crew records (plan critic, 2x g1 implementer, 2x g1 reviewer, g2 implementer, g2 reviewer) were destroyed when the Admiral relaunched this lane; recover_crews.py then reported 2 crews where the committed registry has 8. Restored from git at 7756fc37.",
-   "source": "Commander: registry diff against git HEAD, plus CliBackend.dispatch read at source in scripts/run_crew.py"
-  },
-  {
-   "claim": "g4's re-authored shape (ADMIRAL_RULING-1 R2: an unowned spine path yields no derived worktree and today's behaviour, no refusal) is work this lane must implement",
-   "expected": "a gate's worth of change",
-   "observed": "Already shipped by g1 in full. worktree_from_spine_path returns None for a path with no .agent-work ancestor, never raises, and refuses nothing; the case is pinned for BOTH copies by tests/test_worktree_derivation.py. g4's only distinguishing content was the refusal R2 withdrew, so the gate is empty.",
-   "source": "Commander: function read at source, plus the shared case table's no-agent-work-ancestor-at-all-is-unowned and hostile-input rows"
-  },
-  {
-   "claim": "main is at 17c2cee5 with a 3171 passed / 7 skipped / 0 failed baseline (ADMIRAL_RULING-2)",
-   "expected": "This branch, with 17c2cee5 merged, is green with no failure the base does not also have",
-   "observed": "3204 passed, 5 skipped, 0 failed on this branch after merging 17c2cee5. Failure set empty, so the difference against the stated base is empty. The two extra skips on the base are not reproduced here and were not independently re-measured: the base figure is the Admiral's, cited not verified. RE-MEASURED INDEPENDENTLY, no longer cited: main at 17c2cee5, cloned to an isolated /tmp checkout, gives 3171 passed / 7 skipped / 0 failed -- the Admiral's figure exactly. One caveat that is behaviour, not a defect: the first run in a clone named main-baseline-609 showed 1 failed / 3170 passed, because tests/test_code_map.py::MapTreeFreshnessTests compares the committed map title, and code_map.render.repo_name derives that title from the git common dir's parent precisely so a worktree is titled after its repository rather than its branch directory. A clone into a differently-named directory IS a differently-named repository, so the test was right and the clone was wrong. Re-run in a clone named constellation-skills: 148 passed. The two skips this branch does not reproduce remain unexplained and are not this lane's.",
-   "source": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q, after find . -name __pycache__ -prune -exec rm -rf, at commit cb77ff4d"
-  },
-  {
-   "claim": "The map conflicts on every parallel branch and is resolved by regenerating, never by hand (#544)",
-   "expected": "Merging main conflicts only on generated counts in map/INDEX.md and a rebuild settles it",
-   "observed": "Exactly that. The merge of 17c2cee5 conflicted on two hunks of map/INDEX.md, both entity counts. py -m scripts.code_map build --root . produced the union: 87 test modules (this lane adds tests/test_worktree_derivation) and spine_rail at 63 entities (this lane adds _worktree_from_spine).",
-   "source": "git merge main; py -m scripts.code_map build --root .; commits 0313189c and cb77ff4d"
-  },
-  {
-   "claim": "The door raises KeyError when SPINE_FILE is unset (as still stated in spine_rail.py and tests/test_spine_rail.py)",
-   "expected": "The claim is stale: the door refuses by name as of e3b5a1c8",
-   "observed": "Stale, and more so than the claim states. scripts/mcp_spine_server._spine_from_env collapses THREE readings of 'nothing named' into None -- unset (the old module-scope KeyError at import, which killed the server before it could refuse and showed the client only 'Connection closed'), empty (the case production actually takes, since .mcp.json's ${SPINE_FILE:-} expands to an empty string and Path('').resolve() is the process cwd), and whitespace. Whether the named path is a readable spine is asked per call by _unbound_refusal, not once at import, because a spine's directory can be removed while the process runs (#603, #604).",
-   "source": "scripts/mcp_spine_server.py:_spine_from_env docstring; grep for KeyError across scripts/hooks/spine_rail.py and tests/test_spine_rail.py returns nothing"
-  },
-  {
-   "claim": "Deleting the engine-side copy should shrink the diff, not grow it (ADMIRAL_RULING-2)",
-   "expected": "A net subtraction under scripts/ with no behaviour change",
-   "observed": "Held. 68 removed / 13 added under scripts/, every added line a comment; 0 non-comment additions. Measured three ways -- line census, AST top-level-name census, and a refusal-vocabulary count -- rather than by reading the diff.",
-   "source": ".agent-work/cleanup-f-derive-worktree/g2-implement-rework2/m6-no-refusal.txt; commit 84d949eb"
-  },
-  {
-   "claim": "A symbol-level grep is enough to prove a prose repair complete",
-   "expected": "grep for worktree_from_spine_path finds every passage that describes the deleted derivation",
-   "observed": "False, and it cost this gate a third rework. Every grep specified on g2 -- in both handoffs and in the implementer's own checks -- keyed on the symbol name, and the two stale passages in checklist_engine.main() do not contain it. A CLAIM-level sweep found them immediately: the derive family ('the worktree is derived from the spine's own path') and the ownership family ('the lease, which is the actual ownership guard ... as it always was'). A third instance sat in spine_lifecycle.build_origin, carrying both in one parenthesis.",
-   "source": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-reviewer-rework2-result.md, blocker B1 and Workflow Feedback"
-  },
-  {
-   "claim": "Deleting the engine copy removed a duplicate, not a reason and not a behaviour",
-   "expected": "Every rationale recorded in the deleted docstring survives somewhere in the repo, and the rule behaves identically",
-   "observed": "Both held, measured rather than argued. The reviewer checked the deleted docstring sentence by sentence and found every reason still present (NEAREST-not-outermost with its nested-sandbox reason, absolute-input-required, lexical-only with its symlink-escape reason, shape-questions-belong-to-callers, never-raises), with the three genuinely at risk carried onto the case table as the implementer claimed. The 2026-08-16 worktree-is-location ruling citation was checked by count: exactly one occurrence repo-wide before, exactly one after. All 16 cases run through base-engine, base-hook and current-hook agree 16/16 with 0 mismatches.",
-   "source": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-reviewer-rework2-result.md, Adversarial hunt Q1 and Q2"
-  },
-  {
-   "claim": "A prose repair can be proven complete by a line-oriented grep for the changed sentence",
-   "expected": "Quoting the stale sentence and grepping for it finds every copy",
-   "observed": "False by construction in this repo, and it hid B1 through three passes. Prose lives in wrapped comments, so a claim spanning two lines matches no line-oriented pattern. The rework-3 implementer's fix was to strip comment markers and flatten before matching -- eight lines -- which turned an invisible defect into 64 classified hits. The same rendering also hid one of the six ruling citations from the obvious verification command.",
-   "source": ".agent-work/cleanup-f-derive-worktree/g2-implement-rework3/sweep_claims.py and m1-classification.txt; g2-reviewer-rework2-result.md Workflow Feedback"
-  }
- ],
- "discrepancies": [
-  {
-   "id": "D0",
-   "signal": "g4's fail-closed refusal must break three tests in a file it is fenced from editing, while its own postcondition demands a green suite",
-   "classification": "blocks_current_wave_exit",
-   "affects": "g4, and the completeness of nearest-ancestor-fail-closed",
-   "evidence": "362/429 guarded-verb invocations refused; 125 tests; 3 in tests/test_crew_launcher.py (lane E)",
-   "reason": "The ruling is graded settled/human, so narrowing it is not this lane's; the obvious narrowing is closed because it reinstates reading the stamp for a decision. Floated, not filed."
-  },
-  {
-   "id": "D1",
-   "signal": "The launch order's zero-occurrences premise for verify_worktree_isolation is false, and shipped doctrine rules that forcing cwd disarms the check",
-   "classification": "blocks_current_wave_exit",
-   "affects": "g5, and the absorbed #315",
-   "evidence": ".agent-work/templates/COMMANDER_SPINE.template.json:12 and skills/admiral/templates/LAUNCH_ORDER.template.md:43-47",
-   "reason": "A premise failure in the frozen order is the Admiral's to rule on, not this lane's to work around. Floated, not filed."
-  },
-  {
-   "id": "D2",
-   "signal": "normalize-once's realpath half is contradicted by three independent measurements",
-   "classification": "invalidates_forecast_or_decomposition",
-   "affects": "g1 and g2's shape",
-   "evidence": "co_names non-transitivity; the symlink-escape guard at _is_valid_claim_target; the installer companion guard's exact set equality",
-   "reason": "The decision is graded settled/measured, which sanctions revisiting on a contradicting measurement. Revised in place and re-provenanced."
-  },
-  {
-   "id": "D3",
-   "signal": "validate_spine.py's falsifiable-zero-collected rule flags a pytest -k check that does in fact fail (exit 5)",
-   "classification": "evidence_only",
-   "affects": "nothing in this wave; the checks were kept",
-   "evidence": "measured exit codes 4 (missing file) and 5 (no match) at e36e630b",
-   "reason": "Recorded as a triage candidate for whoever owns validate_spine.py; no issue filed by this run."
-  },
-  {
-   "id": "D4",
-   "signal": "The launch order's line number for _foreign_worktree (spine_rail.py:639)",
-   "classification": "drop",
-   "affects": "nothing",
-   "evidence": "the function is at :693 at e36e630b; every other cited line in the order and the frame was re-verified correct",
-   "reason": "Stale citation, corrected in the frame. No planning consequence."
-  },
-  {
-   "id": "D5",
-   "signal": "The pre-ruling not-a-weaker-guard was false as written; the leaseless path was genuinely widened",
-   "classification": "evidence_only",
-   "affects": "g2's shipped prose in three files and the anchor's own wording; the underlying finding outlives this lane",
-   "evidence": "The g2 reviewer's base-vs-tree differential table, reproduced above in wave_evidence; require_session's lease is None early return read at source by three parties independently",
-   "reason": "RULED by ADMIRAL_RULING-1 R1: the widening is accepted, the claim is narrowed rather than the code. Rework applied in g2 (three prose copies plus the result artifact) and independently re-reviewed. The Admiral is filing the underlying finding -- a leaseless spine has no ownership guard of any kind -- as its own tracker issue, since it predates #609. Not filed by this lane."
-  },
-  {
-   "id": "D6",
-   "signal": "run_crew.py's parent launcher destroys the crew registry of every child it launches",
-   "classification": "invalidates_forecast_or_decomposition",
-   "affects": "Every lane the Admiral dispatches. recover_crews.py is the durable signal the commander skill mandates consulting before each dispatch, and after a relaunch it reports a fabricated-clean history that invites duplicate dispatch.",
-   "evidence": "Six records lost and restored on this lane; CliBackend.dispatch's read-modify-write across the whole child run, read at source. Window is the entire child run, so loss is systematic rather than occasional. RULED: filed as #617, with one correction to the Commander's attribution -- the post-launch save_registry is present at e36e630b, before lane E touched the file, so the defect is long-standing and there is no revert to reach for. Not this lane's to fix. RECURRED on leg 3: the registry was clobbered a second time between legs, down to 3 entries from the committed 9, and restored again by union-merging HEAD over the working copy (commit 52df9e8f). The Admiral verified the mechanism independently across five completed lanes; thirteen crew records were destroyed on lane A alone.",
-   "reason": "Lane E's file, fenced by this lane's order and outside #609's ownership. Floated to the Admiral in FLOAT_TO_ADMIRAL-2.md N1 as evidence with a named repair (re-load the registry after launch() returns and update by session name). NOT filed -- no filing authority sought."
-  },
-  {
-   "id": "D7",
-   "signal": "R2 and R3 together leave g4 empty and the engine-side derivation with no production caller",
-   "classification": "invalidates_forecast_or_decomposition",
-   "affects": "What #609's engine half actually ships, and the merge decision on an inert symbol",
-   "evidence": "grep -rn worktree_from_spine_path --include=*.py scripts/ returns exactly one hit, its own definition. Its three planned consumers each went away for an independently sound reason: g2 deleted the degenerate predicate that held the shape question, R3 re-homed #315 to #610, and R2 withdrew the refusal. RULED: ADMIRAL_RULING-2 N2 took road 1 and ordered the engine-side copy deleted, overruling the Commander's road 3 (ship it provisioned and say so). The reasoning recorded there: the two-copy design was justified by two consumers, so with one live consumer there is one live implementation and no equivalence left to pin; #315 re-adds the definition WITH its consumer in #610's wave, against the surviving case table. g4's skip stands with R2 as its reason.",
-   "reason": "Floated in FLOAT_TO_ADMIRAL-2.md N2. Proceeding under the stated assumption that the definition ships PROVISIONED -- kept, pinned equal to the live hook copy by the shared case table, and named as awaiting #610's consumer -- because that is the only road that contradicts no ruling and hides nothing. Reversible in one file. g4 marked skip (overtaken by events) rather than dressed as work."
-  },
-  {
-   "id": "D8",
-   "signal": "A lane-E test is not hermetic: it fails for any agent running the suite from inside a crew-launched session",
-   "classification": "later_only",
-   "affects": "Every gate's whole-suite postcondition on every lane dispatched through run_crew.py",
-   "evidence": "tests/test_crew_launcher.py::ScratchDirResumeTests::test_resume_of_legacy_entry_without_worktree_key_does_not_crash_and_leaves_scratch_dir_unbound asserts CREW_SCRATCH_DIR is absent from a resumed child's env but does not scrub it from the parent env first. With the variable set: 1 failed, 3194 passed. With -u CREW_SCRATCH_DIR: 3195 passed, 5 skipped, 0 failed.",
-   "reason": "Ambient-environment contamination, not a regression in this lane. The file is lane E's and landed on main. This lane scrubs the variable in its own measurements and says so in every handoff; the repair belongs to whoever owns crew tooling next."
-  },
-  {
-   "id": "D9",
-   "signal": "Line-number citations have gone stale four times on this lane, most recently in the Admiral's own ruling",
-   "classification": "evidence_only",
-   "affects": "Handoff and ruling accuracy across the fleet",
-   "evidence": "ADMIRAL_RULING-1 cites scripts/hooks/spine_rail.py:1081 and tests/test_spine_rail.py:2698 as carrying a falsified KeyError claim; neither file contains the string KeyError at any line, at either the pre-merge or post-merge commit. The substance IS real and was found by symbol: spine_rail.py's _door_binding docstring and test_spine_rail.py's door-path comment both still quote the door's old contract as SPINE = Path(os.environ[\"SPINE_FILE\"]).resolve(), which lane A replaced with os.environ.get(...).strip() returning None and refusing by name. Earlier instances: the launch order's _foreign_worktree at :639 (really :693), CHECKLIST_SCHEMA.md's :3411-3444, and the g2 handoff's :3573-3578 (really :3638-3643). FIFTH occurrence, in ADMIRAL_RULING-2's own sequence item 6: it cites the stale KeyError claims at scripts/hooks/spine_rail.py:1081 and tests/test_spine_rail.py:2698. Neither line contains the claim, and neither file contains the string 'KeyError' at all. The claim is real and the files are right -- it is at spine_rail.py:1206 (the _handle_door_lease docstring citing the door's 'existing contract (SPINE = Path(os.environ[\"SPINE_FILE\"]).resolve())') and at tests/test_spine_rail.py:2968 (the same citation in the door-path section header). Found by symbol/string search, not by line.",
-   "reason": "Symbol names would have been correct in all four. This lane now writes handoffs with line numbers deliberately removed. The two real carriers are repaired under reconcile as the Admiral ordered."
-  },
-  {
-   "id": "D10",
-   "signal": "The g2 rework implementer crew completed and verified its work, then died in its final step with an 'Execution error' before writing its IMPLEMENTER_RESULT, and the clobber destroyed its registry entry -- so the gate's evidence existed only as orphaned files in the tree",
-   "classification": "evidence_only",
-   "affects": "Crew result durability. A crew's completion contract is a result artifact written last, so a crash anywhere before that write loses the whole write-up even when the implementation and its measurements survive.",
-   "evidence": "crew-runs/g2-implementer-attempt-2.stdout.txt contains only 'Execution error'. g2-implement-rework/plan.json shows m0-m4 complete and m5-result in-progress. g2-implement-rework/m4-full-suite.txt records 3196 passed / 5 skipped / 0 failed. crew-handoffs/g2-implementer-rework-result.md was never written. The registry entry was reconstructed from those artifacts by commander leg 3 and marked abandoned. The successor's write-up was then independently verified: the g2 rework-2 reviewer confirmed every figure labelled MEASURED reproduces in its own hands, every figure labelled RECONSTRUCTED is faithful to its source file, and nothing reconstructed was quietly promoted to first-hand evidence. It also verified at source the successor's claim that rework 1 had an unfinished criterion -- plan.json records m5-result in-progress with both postconditions false. The reconstruct-and-label pattern survived adversarial review.",
-   "reason": "Recovered by relaunch rather than repair: the rework-2 handoff asks the successor to write up both reworks as one gate result and to say plainly which half it reconstructed from a dead crew's artifacts rather than measured itself. Worth the replanner's attention as a pattern, not this lane's to fix."
-  },
-  {
-   "id": "D11",
-   "signal": "Two handoffs on this lane told their crews that .agent-work/ is gitignored and that artifacts under it are intentionally absent from the tracked diff. It is not ignored -- git check-ignore exits 1 -- and this lane's .agent-work/ tree is committed.",
-   "classification": "evidence_only",
-   "affects": "The Deliverable Path Check section of the implementer and reviewer handoff templates, which asks for a Committed/Local-only classification and is where the confusion landed.",
-   "evidence": "git check-ignore .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework2-result.md exits 1 (not ignored). The lane's own .agent-work/ files appear in git status as untracked-then-committed, e.g. across 52df9e8f. The g2 reviewer-rework handoff and the g3 implementer handoff both carry the false claim.",
-   "reason": "Untracked was read as ignored. Harmless here -- nothing was lost -- but it teaches a reviewer to expect an artifact to be absent from the diff when it should in fact be committed. Corrected in the g2 rework-2 handoff, which states the correction explicitly rather than silently fixing it."
-  }
- ],
- "open_current_wave_issue_ids": [
-  "g3"
- ],
- "unlaunched_items": [
-  {
-   "id": "g4",
-   "kind": "issue"
-  },
-  {
-   "id": "g5",
-   "kind": "issue"
-  },
-  {
-   "id": "610-provisioning",
-   "kind": "forecast"
-  },
-  {
-   "id": "run-crew-derives-worktree",
-   "kind": "forecast"
-  },
-  {
-   "id": "fail-closed-scope",
-   "kind": "uncertainty"
-  },
-  {
-   "id": "cwd-thread-premise",
-   "kind": "uncertainty"
-  },
-  {
-   "id": "windows-case-fold",
-   "kind": "uncertainty"
-  },
-  {
-   "id": "map-orient-code-map-ids",
-   "kind": "parked"
-  }
- ],
- "repo_state": {
-  "anchors": [
-   "scripts/checklist_engine.py",
-   "scripts/hooks/spine_rail.py",
-   "scripts/spine_lifecycle.py",
-   "scripts/verify_worktree_isolation.py"
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "g4's fail-closed refusal must break three tests in a file it is fenced from editing, while its own postcondition demands a green suite",
+      "classification": "blocks_current_wave_exit",
+      "affects": "g4, and the completeness of nearest-ancestor-fail-closed",
+      "evidence": "362/429 guarded-verb invocations refused; 125 tests; 3 in tests/test_crew_launcher.py (lane E)",
+      "reason": "The ruling is graded settled/human, so narrowing it is not this lane's; the obvious narrowing is closed because it reinstates reading the stamp for a decision. Floated, not filed."
+    },
+    {
+      "id": "D1",
+      "signal": "The launch order's zero-occurrences premise for verify_worktree_isolation is false, and shipped doctrine rules that forcing cwd disarms the check",
+      "classification": "blocks_current_wave_exit",
+      "affects": "g5, and the absorbed #315",
+      "evidence": ".agent-work/templates/COMMANDER_SPINE.template.json:12 and skills/admiral/templates/LAUNCH_ORDER.template.md:43-47",
+      "reason": "A premise failure in the frozen order is the Admiral's to rule on, not this lane's to work around. Floated, not filed."
+    },
+    {
+      "id": "D2",
+      "signal": "normalize-once's realpath half is contradicted by three independent measurements",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "g1 and g2's shape",
+      "evidence": "co_names non-transitivity; the symlink-escape guard at _is_valid_claim_target; the installer companion guard's exact set equality",
+      "reason": "The decision is graded settled/measured, which sanctions revisiting on a contradicting measurement. Revised in place and re-provenanced."
+    },
+    {
+      "id": "D3",
+      "signal": "validate_spine.py's falsifiable-zero-collected rule flags a pytest -k check that does in fact fail (exit 5)",
+      "classification": "evidence_only",
+      "affects": "nothing in this wave; the checks were kept",
+      "evidence": "measured exit codes 4 (missing file) and 5 (no match) at e36e630b",
+      "reason": "Recorded as a triage candidate for whoever owns validate_spine.py; no issue filed by this run."
+    },
+    {
+      "id": "D4",
+      "signal": "The launch order's line number for _foreign_worktree (spine_rail.py:639)",
+      "classification": "drop",
+      "affects": "nothing",
+      "evidence": "the function is at :693 at e36e630b; every other cited line in the order and the frame was re-verified correct",
+      "reason": "Stale citation, corrected in the frame. No planning consequence."
+    },
+    {
+      "id": "D5",
+      "signal": "The pre-ruling not-a-weaker-guard was false as written; the leaseless path was genuinely widened",
+      "classification": "evidence_only",
+      "affects": "g2's shipped prose in three files and the anchor's own wording; the underlying finding outlives this lane",
+      "evidence": "The g2 reviewer's base-vs-tree differential table, reproduced above in wave_evidence; require_session's lease is None early return read at source by three parties independently",
+      "reason": "RULED by ADMIRAL_RULING-1 R1: the widening is accepted, the claim is narrowed rather than the code. Rework applied in g2 (three prose copies plus the result artifact) and independently re-reviewed. The Admiral is filing the underlying finding -- a leaseless spine has no ownership guard of any kind -- as its own tracker issue, since it predates #609. Not filed by this lane."
+    },
+    {
+      "id": "D6",
+      "signal": "run_crew.py's parent launcher destroys the crew registry of every child it launches",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Every lane the Admiral dispatches. recover_crews.py is the durable signal the commander skill mandates consulting before each dispatch, and after a relaunch it reports a fabricated-clean history that invites duplicate dispatch.",
+      "evidence": "Six records lost and restored on this lane; CliBackend.dispatch's read-modify-write across the whole child run, read at source. Window is the entire child run, so loss is systematic rather than occasional. RULED: filed as #617, with one correction to the Commander's attribution -- the post-launch save_registry is present at e36e630b, before lane E touched the file, so the defect is long-standing and there is no revert to reach for. Not this lane's to fix. RECURRED on leg 3: the registry was clobbered a second time between legs, down to 3 entries from the committed 9, and restored again by union-merging HEAD over the working copy (commit 52df9e8f). The Admiral verified the mechanism independently across five completed lanes; thirteen crew records were destroyed on lane A alone.",
+      "reason": "Lane E's file, fenced by this lane's order and outside #609's ownership. Floated to the Admiral in FLOAT_TO_ADMIRAL-2.md N1 as evidence with a named repair (re-load the registry after launch() returns and update by session name). NOT filed -- no filing authority sought."
+    },
+    {
+      "id": "D7",
+      "signal": "R2 and R3 together leave g4 empty and the engine-side derivation with no production caller",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "What #609's engine half actually ships, and the merge decision on an inert symbol",
+      "evidence": "grep -rn worktree_from_spine_path --include=*.py scripts/ returns exactly one hit, its own definition. Its three planned consumers each went away for an independently sound reason: g2 deleted the degenerate predicate that held the shape question, R3 re-homed #315 to #610, and R2 withdrew the refusal. RULED: ADMIRAL_RULING-2 N2 took road 1 and ordered the engine-side copy deleted, overruling the Commander's road 3 (ship it provisioned and say so). The reasoning recorded there: the two-copy design was justified by two consumers, so with one live consumer there is one live implementation and no equivalence left to pin; #315 re-adds the definition WITH its consumer in #610's wave, against the surviving case table. g4's skip stands with R2 as its reason.",
+      "reason": "Floated in FLOAT_TO_ADMIRAL-2.md N2. Proceeding under the stated assumption that the definition ships PROVISIONED -- kept, pinned equal to the live hook copy by the shared case table, and named as awaiting #610's consumer -- because that is the only road that contradicts no ruling and hides nothing. Reversible in one file. g4 marked skip (overtaken by events) rather than dressed as work."
+    },
+    {
+      "id": "D8",
+      "signal": "A lane-E test is not hermetic: it fails for any agent running the suite from inside a crew-launched session",
+      "classification": "later_only",
+      "affects": "Every gate's whole-suite postcondition on every lane dispatched through run_crew.py",
+      "evidence": "tests/test_crew_launcher.py::ScratchDirResumeTests::test_resume_of_legacy_entry_without_worktree_key_does_not_crash_and_leaves_scratch_dir_unbound asserts CREW_SCRATCH_DIR is absent from a resumed child's env but does not scrub it from the parent env first. With the variable set: 1 failed, 3194 passed. With -u CREW_SCRATCH_DIR: 3195 passed, 5 skipped, 0 failed.",
+      "reason": "Ambient-environment contamination, not a regression in this lane. The file is lane E's and landed on main. This lane scrubs the variable in its own measurements and says so in every handoff; the repair belongs to whoever owns crew tooling next."
+    },
+    {
+      "id": "D9",
+      "signal": "Line-number citations have gone stale four times on this lane, most recently in the Admiral's own ruling",
+      "classification": "evidence_only",
+      "affects": "Handoff and ruling accuracy across the fleet",
+      "evidence": "ADMIRAL_RULING-1 cites scripts/hooks/spine_rail.py:1081 and tests/test_spine_rail.py:2698 as carrying a falsified KeyError claim; neither file contains the string KeyError at any line, at either the pre-merge or post-merge commit. The substance IS real and was found by symbol: spine_rail.py's _door_binding docstring and test_spine_rail.py's door-path comment both still quote the door's old contract as SPINE = Path(os.environ[\"SPINE_FILE\"]).resolve(), which lane A replaced with os.environ.get(...).strip() returning None and refusing by name. Earlier instances: the launch order's _foreign_worktree at :639 (really :693), CHECKLIST_SCHEMA.md's :3411-3444, and the g2 handoff's :3573-3578 (really :3638-3643). FIFTH occurrence, in ADMIRAL_RULING-2's own sequence item 6: it cites the stale KeyError claims at scripts/hooks/spine_rail.py:1081 and tests/test_spine_rail.py:2698. Neither line contains the claim, and neither file contains the string 'KeyError' at all. The claim is real and the files are right -- it is at spine_rail.py:1206 (the _handle_door_lease docstring citing the door's 'existing contract (SPINE = Path(os.environ[\"SPINE_FILE\"]).resolve())') and at tests/test_spine_rail.py:2968 (the same citation in the door-path section header). Found by symbol/string search, not by line.",
+      "reason": "Symbol names would have been correct in all four. This lane now writes handoffs with line numbers deliberately removed. The two real carriers are repaired under reconcile as the Admiral ordered."
+    },
+    {
+      "id": "D10",
+      "signal": "The g2 rework implementer crew completed and verified its work, then died in its final step with an 'Execution error' before writing its IMPLEMENTER_RESULT, and the clobber destroyed its registry entry -- so the gate's evidence existed only as orphaned files in the tree",
+      "classification": "evidence_only",
+      "affects": "Crew result durability. A crew's completion contract is a result artifact written last, so a crash anywhere before that write loses the whole write-up even when the implementation and its measurements survive.",
+      "evidence": "crew-runs/g2-implementer-attempt-2.stdout.txt contains only 'Execution error'. g2-implement-rework/plan.json shows m0-m4 complete and m5-result in-progress. g2-implement-rework/m4-full-suite.txt records 3196 passed / 5 skipped / 0 failed. crew-handoffs/g2-implementer-rework-result.md was never written. The registry entry was reconstructed from those artifacts by commander leg 3 and marked abandoned. The successor's write-up was then independently verified: the g2 rework-2 reviewer confirmed every figure labelled MEASURED reproduces in its own hands, every figure labelled RECONSTRUCTED is faithful to its source file, and nothing reconstructed was quietly promoted to first-hand evidence. It also verified at source the successor's claim that rework 1 had an unfinished criterion -- plan.json records m5-result in-progress with both postconditions false. The reconstruct-and-label pattern survived adversarial review.",
+      "reason": "Recovered by relaunch rather than repair: the rework-2 handoff asks the successor to write up both reworks as one gate result and to say plainly which half it reconstructed from a dead crew's artifacts rather than measured itself. Worth the replanner's attention as a pattern, not this lane's to fix."
+    },
+    {
+      "id": "D11",
+      "signal": "Two handoffs on this lane told their crews that .agent-work/ is gitignored and that artifacts under it are intentionally absent from the tracked diff. It is not ignored -- git check-ignore exits 1 -- and this lane's .agent-work/ tree is committed.",
+      "classification": "evidence_only",
+      "affects": "The Deliverable Path Check section of the implementer and reviewer handoff templates, which asks for a Committed/Local-only classification and is where the confusion landed.",
+      "evidence": "git check-ignore .agent-work/cleanup-f-derive-worktree/crew-handoffs/g2-implementer-rework2-result.md exits 1 (not ignored). The lane's own .agent-work/ files appear in git status as untracked-then-committed, e.g. across 52df9e8f. The g2 reviewer-rework handoff and the g3 implementer handoff both carry the false claim.",
+      "reason": "Untracked was read as ignored. Harmless here -- nothing was lost -- but it teaches a reviewer to expect an artifact to be absent from the diff when it should in fact be committed. Corrected in the g2 rework-2 handoff, which states the correction explicitly rather than silently fixing it."
+    },
+    {
+      "id": "D12",
+      "signal": "SessionStart's scan-bind writes a binding for an unbound session onto the single active-leased spine it finds, which is how six crews on this lane were handed their parent Commander's gate",
+      "classification": "later_only",
+      "affects": "scripts/hooks/spine_rail.py's decide_session_start scan-bind path (_scan_active_spine), and every crew dispatched through run_crew.py under a parent that holds a live engine lease.",
+      "evidence": "Returned by the g3 implementer and observed live in its own session: a run_crew.py-launched crew has its own session_id and no binding, so decide_session_start falls through to _scan_active_spine, finds exactly one active-leased spine -- its parent's -- and writes a binding for it, after which the crew's own Stop is answered with the parent's execute gate. Binding-key provenance cannot reach it because there is no binding key yet at scan time; the discriminator would have to be the engine lease's owner.",
+      "reason": "This is the mechanism behind the failure the g3 Protected Intent describes, and g3's fix genuinely cannot reach it -- by provenance the scan-written binding IS the crew's. It touches the scan-bind path rather than the two call sites g3 owned, and changing it needs an authority decision. Recorded as a triage candidate for the return, not filed."
+    },
+    {
+      "id": "D13",
+      "signal": "tests/test_code_map.py::MapTreeFreshnessTests is sensitive to the checkout directory name, so any isolated-clone baseline taken outside a directory named constellation-skills reports a false red",
+      "classification": "evidence_only",
+      "affects": "Any baseline measurement taken in a fresh clone -- Commander gate closes, Admiral adjudication, and the regression floor a reviewer reproduces.",
+      "evidence": "main at 17c2cee5 cloned to /tmp/lanef-main-baseline-4 measured 1 failed / 3170 passed / 7 skipped; the same commit cloned to a directory named constellation-skills measured 3171 / 7 / 0. The diff is the map's title line -- '# lanef-main-baseline-4 map' against '# constellation-skills map' -- in an otherwise byte-identical 29k file.",
+      "reason": "Costs a full suite re-run to anyone who takes a baseline the obvious way, and reads as a real regression until you look at the assertion. Recorded so the next lane names its clone directory rather than rediscovering this."
+    },
+    {
+      "id": "D14",
+      "signal": "The g3 handoff's Wiring Grep demanded zero repo-wide references to worktree_from_spine_path, which is not achievable and should not be",
+      "classification": "evidence_only",
+      "affects": "The Wiring Grep section of the implementer handoff template as this lane filled it, and any check whose scope is stated more broadly than the Close Criteria it is meant to serve.",
+      "evidence": "The implementer measured two surviving references outside its allowed scope -- tests/test_worktree_derivation.py's header (which it was forbidden to edit, and which is where the accurate account of the deletion lives) and tests/test_spine_origin_isolation.py's docstring -- and both are TRUE prose recording the deletion rather than stale claims. The same handoff's Close Criteria stated the check correctly, scoped to the two files, and that form was satisfied at 0/0.",
+      "reason": "A Commander-authored check contradicted its own Close Criteria in the same document. It cost nothing because the implementer measured rather than obeyed, but a less careful crew would have been driven outside its scope to satisfy it. Feeds the feedback step."
+    },
+    {
+      "id": "D15",
+      "signal": "A close criterion mandating a non-Test* class name is unsatisfiable-in-silence in a repo that ships no pytest config",
+      "classification": "evidence_only",
+      "affects": "The gN-implement gate imperative's close-criteria wording where it mandates a test class name, and the targeted-check design that reads a zero-collected selector as red.",
+      "evidence": "The gate required the new tests in a class named OwnershipIsBindingKeyNotWorktree. With no pytest config in this repo, a plain class of that name is not collected at all -- the selector would report success while collecting zero. It works only because the implementer made it subclass unittest.TestCase, which the gate never said.",
+      "reason": "The gate's targeted check was designed to be red on an empty diff and green after; a silently-zero-collected class would read as still-red rather than as a defect, so the failure mode is confusing rather than dangerous. Worth stating in the criterion next time. Feeds the feedback step."
+    }
   ],
-  "map_status": "DEGRADED-UNPARSEABLE: no docs/architecture packet map; map/ids.jsonl is empty and map/INDEX.md carries no citable anchor ids. Discharged with four hash-pinned substitutes."
- }
+  "open_current_wave_issue_ids": [
+    "g3"
+  ],
+  "unlaunched_items": [
+    {
+      "id": "g4",
+      "kind": "issue"
+    },
+    {
+      "id": "g5",
+      "kind": "issue"
+    },
+    {
+      "id": "610-provisioning",
+      "kind": "forecast"
+    },
+    {
+      "id": "run-crew-derives-worktree",
+      "kind": "forecast"
+    },
+    {
+      "id": "fail-closed-scope",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "cwd-thread-premise",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "windows-case-fold",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "map-orient-code-map-ids",
+      "kind": "parked"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/hooks/spine_rail.py",
+      "scripts/spine_lifecycle.py",
+      "scripts/verify_worktree_isolation.py"
+    ],
+    "map_status": "DEGRADED-UNPARSEABLE: no docs/architecture packet map; map/ids.jsonl is empty and map/INDEX.md carries no citable anchor ids. Discharged with four hash-pinned substitutes."
+  }
 }
