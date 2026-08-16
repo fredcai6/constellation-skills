@@ -64,8 +64,9 @@ regeneration command above.
 ## Why it lives here and not under `.agent-work/`
 
 It used to sit in issue #424's own work area. That is exactly wrong for a fixture the **committed**
-`.mcp.json` points at: when the run archived, the work area moved and the shipped default resolved to
+`.mcp.json` pointed at: when the run archived, the work area moved and the shipped default resolved to
 a path that no longer existed. `tests/test_mcp_spine_server.py`'s
-`test_mcp_json_referenced_spine_file_exists_and_loads` caught it immediately, which is what that test
-is for. A default the shipped config depends on belongs somewhere stable and tracked, with no
-lifecycle of its own.
+`test_mcp_json_spine_file_is_overridable_and_any_default_loads` caught it immediately, which is what
+that test is for — since issue #603 the default is empty, and the test still holds any default that
+reappears to the same standard. A default the shipped config depends on belongs somewhere stable and
+tracked, with no lifecycle of its own.

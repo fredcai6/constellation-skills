@@ -682,7 +682,7 @@ def as_result(rec: dict) -> dict:
 
 
 def _log_rejection(tool: str, rejection_class: str, detail: str) -> None:
-    """Append ONE record for a door-own rejection to REJECTIONLOG -- never raises.
+    """Append ONE record for a door-own rejection to `_rejectionlog()` -- never raises.
 
     Carries what a diagnosis needs: `tool` (which tool was called), `class` (which
     of the three in-scope rejection shapes this is), `detail` (the door's own
@@ -959,8 +959,10 @@ def _spine_open(args: dict) -> dict:
     or `run_engine` -- checked by `tests/test_mcp_lifecycle.py`, with a
     mutated positive control proving that check can fail. It acts on a spine
     that does not exist yet, so nothing here may presuppose one is bound: the
-    repo root comes from `_primary_checkout_for_lifecycle` (ambient
-    `SPINE_FILE`, re-read fresh), and `parent` comes from `SPINE_PARENT` (the
+    repo root comes from `_primary_checkout_for_lifecycle`, which reads no
+    environment at all -- the bound spine's own checkout when there is one,
+    THIS SCRIPT's own location when there is not, which is the unbound case
+    this tool exists to serve -- and `parent` comes from `SPINE_PARENT` (the
     dispatching session this door's own process was launched under -- a
     DIFFERENT env var from `SPINE_SESSION`/`SESSION`, never read elsewhere in
     this module).

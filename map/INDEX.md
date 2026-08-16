@@ -5,7 +5,7 @@ evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
 scripts: 58 modules, 1207 entities
 skills: 1 modules, 18 entities
-tests: 83 modules, 4710 entities
+tests: 84 modules, 4743 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -109,7 +109,7 @@ tests: 83 modules, 4710 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (83 modules, 4710 entities)
+## tests (84 modules, 4743 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -163,6 +163,7 @@ tests: 83 modules, 4710 entities
 - [tests.test_mcp_adoption](tests.test_mcp_adoption/INDEX.md) (72 entities, 36 holes): Adoption gate for the MCP door (issue #542 criterion 1, epic-418-followon g4a).
 - [tests.test_mcp_door_engine_cwd](tests.test_mcp_door_engine_cwd/INDEX.md) (24 entities, 15 holes): The door stands in the bound spine's own worktree for an engine call (issue #568, the g1b delta).
 - [tests.test_mcp_door_telemetry](tests.test_mcp_door_telemetry/INDEX.md) (18 entities, 4 holes): The MCP door's telemetry writes must never fail a call or kill the server (issue #604, cleanup-a-door gate g1).
+- [tests.test_mcp_door_unbound](tests.test_mcp_door_unbound/INDEX.md) (33 entities, 20 holes): The MCP door must fail CLOSED when nothing usable is bound (issue #603, cleanup-a-door gate g3).
 - [tests.test_mcp_friction_capture](tests.test_mcp_friction_capture/INDEX.md) (23 entities, 12 holes): Tests for the MCP door's own rejection capture (issue #541, epic-418-followon wave 2, gate g2).
 - [tests.test_mcp_identity](tests.test_mcp_identity/INDEX.md) (65 entities, 23 holes): DC2 (separation) and DC3 (inheritance fails closed) acceptance tests for the MCP front door (issue #424, workstream F, gate g3).
 - [tests.test_mcp_imperative_equivalence](tests.test_mcp_imperative_equivalence/INDEX.md) (23 entities, 12 holes): DC4 acceptance test for the MCP front door (issue #424, workstream F, gate g2): the CLI projection and the MCP tool result carry the SAME imperative text for EV
