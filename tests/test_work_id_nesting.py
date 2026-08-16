@@ -77,7 +77,7 @@ def _record_external(root: Path, work_id: str, gate="g2", role="reviewer"):
     result = f".agent-work/{work_id}/{gate}-review/RESULT.md"
     return RC.record_external_attempt(
         work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
-        worktree=".", model=None, attempt=1, root=root,
+        worktree=".", model="sonnet", attempt=1, root=root,
         entries=RC.load_registry(RC.registry_path(work_id, root)),
     )
 
