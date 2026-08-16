@@ -1,0 +1,215 @@
+{
+  "work_id": "cleanup-e-crew-tooling",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-e-crew-tooling",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "context",
+        "context-manifest-ref": "none",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/cleanup-e-crew-tooling/map-orientation.json",
+          "map/INDEX.md",
+          "map/ids.jsonl"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Ran map_orient.py orient against this repo (constellation-skills) at the context step, before any source read, per the map-first imperative."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Expected either RESOLVED (a citable map) or a genuinely stale/degraded map reflecting real drift since the last code_map build."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Result was DEGRADED-UNPARSEABLE for a reason unrelated to staleness: map/ids.jsonl was 0 lines even immediately after a fresh py -m scripts.code_map build (build output itself reported ids: 0), and map/INDEX.md's module/entity-count prose contains no struct:/capability:/decision: anchor tokens at all -- the ANCHOR_RE map_orient.py scans for structurally cannot match this repo's own generated map format. Discharged via the tool's own --substitute/--unmapped/--escalation path (README.md, map/INDEX.md, docs/agents/*.md as substitutes)."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Roughly 15 minutes spent reading map_orient.py's source (scan_anchors, ANCHOR_RE, candidate probing order) to understand why DEGRADED fired, before the discharge command could be constructed correctly. The mission frame at the plan step then had to deliberately avoid decision:/struct:-style tags (the launch order's own Pre-Rulings use that exact syntax) to avoid tripping verify-frame's DEGRADED-mode anchor rejection."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Cited the frozen LAUNCH_ORDER.md's decisions in the mission frame as plain prose (\"Decision registry-before-staleness\", space not colon) rather than the struct:/decision: anchor syntax, and cited the declared substitute paths (README.md, map/INDEX.md) as plain path tokens instead -- verify-frame passed once the anchor-syntax collision was avoided."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "map_orient.py's anchor contract was built for docs/architecture packet maps (struct:/capability:/decision: id syntax); this repo's own generated map/ (scripts/code_map, module+entity-count prose) was never meant to speak that syntax, so the DEGRADED reading may be a structural mismatch between two tools rather than a staleness signal at all -- flagged as triage candidate tc3 for a human/Admiral decision."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-e-crew-tooling",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "plan",
+        "context-manifest-ref": "none",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/cleanup-e-crew-tooling/MISSION_FRAME.md",
+          ".agent-work/cleanup-e-crew-tooling/execute.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Ran two parallel plan-alternative candidates (minimal-diff vs. defense-in-depth constraints) then one cold plan critic with no authoring context, per design-it-twice + critical-spec-review doctrine, before freezing execute.json."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Expected the cold critic to either confirm the converged plan or surface stylistic/minor gaps, given both independent candidates had already converged on the same #607/#525 mechanisms."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The cold critic found two real, load-bearing defects the converged plan shared with both candidates: (1) g2's scratch_dir key tuple dropped worktree even though the plan's own cited anchor (next_attempt/active_duplicate) keys duplicate-detection on the full 4-field tuple including worktree -- would have let two worktrees collide at the same attempt number, reintroducing #525 one field narrower; (2) g1's self-collision guard (skip heartbeating when child's spine equals parent's ambient spine) would have disabled the fix for the common no-explicit---spine dispatch, since crew_env() inherits the parent's ambient SPINE_FILE/SPINE_SESSION unchanged in that case by documented design. Both findings survived independent re-verification during implementation and review (two separate crews each independently traced next_attempt's real scoping and checklist_engine.heartbeat()'s real ownership check from source, not from the plan's restatement of them)."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Both findings were fixed in execute.json before any implementer was dispatched, at zero rework cost to the crews -- both g1 and g2 implemented the corrected design on the first attempt, and both reviewers independently confirmed the corrected design (including running their own mutation tests: g2's reviewer temporarily stripped worktree from the key and confirmed 4 tests failed). Had either gap shipped, the eventual defect would have been the exact hazard #607/#525 were filed to close, discovered later and at higher cost."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "none -- both findings were incorporated directly into execute.json's anchors before dispatch."
+        }
+      },
+      "diagnosis": []
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-e-crew-tooling",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute:g2-integrate",
+        "context-manifest-ref": "none",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": [
+          "map/INDEX.md",
+          "tests/test_code_map.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Ran the full clean-env, cache-cleared suite at g2-integrate, expecting it green after both g1 and g2 were independently reviewed APPROVE."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Expected the full suite to pass at the same rate as the pre-change baseline (3104 passed / 6 skipped), since neither gate's own targeted test file (tests/test_crew_launcher.py) had failed."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "One failure: MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build. The two gates' new functions and tests (scratch_dir, _parent_lease_heartbeat, and 25 new test methods) had changed scripts/run_crew.py's and tests/test_crew_launcher.py's entity counts, which map/INDEX.md (committed, generated by scripts/code_map) no longer matched. This was anticipated in LAUNCH_ORDER.md's own Inherited Context section (\"map/INDEX.md is generated and freshness-tested -- rebuild and commit if entities change\") but the exact trigger point (a full-suite gate, not the targeted test-file gate) was not obvious until it fired."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One extra full-suite run (about 2 minutes) after regenerating the map: py -m scripts.code_map build --root . took under 3 seconds and fixed it cleanly, with no code change needed."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Ran py -m scripts.code_map build --root ., confirmed MapTreeFreshnessTests passed in isolation, then re-ran the full suite (3129 passed, 6 skipped, 0 failed)."
+        }
+      },
+      "diagnosis": []
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-e-crew-tooling",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": "none",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/cleanup-e-crew-tooling/crew-handoffs/g1-implementer-result.md",
+          ".agent-work/cleanup-e-crew-tooling/crew-handoffs/g1-reviewer-result.md",
+          ".agent-work/cleanup-e-crew-tooling/crew-handoffs/g2-reviewer-result.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Dispatched implementer and reviewer crews via run_crew.py --backend external (a headless claude CLI happened to exist on PATH, but crew-dispatch.md's Constellation Agent-tool harness guidance directs external + synchronous Agent-tool subagents), then independently re-verified every claimed result myself before integrating (diff scope, independent test re-runs, run_crew.py --verify-result) rather than trusting the returned IMPLEMENTER_RESULT/REVIEW_RESULT text at face value."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Expected reviewers to read the diff and the implementer's own claims and render a verdict from that."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Both independent reviewers went further than reading the diff: each ran a live mutation test (temporarily removing the fix under review, confirming the specific tests written to catch it actually failed, then restoring and confirming a byte-identical diff) as the strongest available evidence that the new tests were not vacuous. Neither reviewer was explicitly instructed to do this by their handoff -- both reached it via the handoff's more general instruction to check whether any test 'passes vacuously'."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "This caught nothing wrong in either gate (both mutation tests confirmed the fixes and their tests were genuinely load-bearing), but it is exactly the check that would have caught #525's plan-time worktree-key gap had it survived to implementation, since a vacuous test on that specific regression would have passed review with no fix at all."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "none -- both reviewers' g1-reviewer-result.md and g2-reviewer-result.md workflow-feedback sections independently suggested making an explicit sabotage-and-restore pass a standard requested step for concurrency/collision-correctness reviews specifically, since it was the single highest-signal check either of them ran."
+        }
+      },
+      "diagnosis": []
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-e-crew-tooling",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": "none",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": []
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Advanced g2-integrate, whose command postcondition re-runs the full test suite (roughly 2 minutes)."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Expected the advance call to complete synchronously within the tool's default timeout, as every prior advance in this run had."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The harness auto-backgrounded the advance call after its 120-second default timeout, since the wrapped full-suite command took about 125 seconds. This matched crew-dispatch.md's documented warning almost exactly (\"the full suite ... takes on the order of two minutes, which is enough to trigger it\"), including for a direct engine advance call, not only a crew dispatch."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "No lost work: the backgrounded command was polled to completion in a foreground until-loop against its own output file rather than ending the turn to wait for a notification, per crew-dispatch.md's explicit recipe, and it completed successfully (g2-integrate -> complete) about 20 seconds after being backgrounded."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Polled the backgrounded command's output file with a foreground until-loop (grep for a completion marker, sleep 5) rather than relying on a background-task notification to resume the turn."
+        }
+      },
+      "diagnosis": []
+    }
+  ]
+}

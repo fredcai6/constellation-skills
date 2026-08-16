@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "work_id": "cleanup-e-crew-tooling",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-e-crew-tooling",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "README.md",
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb",
+      "source": "known-fallback"
+    },
+    {
+      "path": "map/INDEX.md",
+      "content_hash": "910ffe7acd6228848f8e82f8ebbab5ee935541d9a2ad1ee0eda0ad67677ec63f",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "70fc98d8194a28f9f8fc2be73e8455ba556e15b81e9b28fdd82eeb11883b6b10",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/GLOSSARY.md",
+      "content_hash": "574e9ef4f494522653ea8d62cb58a1138f5bf385a17e95a75629bccd3c0340ee",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/CREW_CONTEXT.md",
+      "content_hash": "ae350e5230538440ba7f0f832dd479d4a3dcfa79ac75c9c21574d670fe5bbec5",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "map/ids.jsonl is empty at HEAD (0 lines) even after a fresh 'py -m scripts.code_map build' (ids:0 in build output) -- this repo's own code-derived map (map/INDEX.md) uses module/entity-count prose, not the struct:/capability:/decision: anchor micro-language map_orient.py's ANCHOR_RE expects, so no candidate in the fixed fallback order is ever citable here; read map/INDEX.md's scripts.run_crew and scripts.recover_crews entries directly as the closest structural description of the owned files instead"
+  ],
+  "escalation": "Admiral: map_orient.py's anchor contract (struct:/capability:/decision: id syntax, docs/architecture packets) does not match this repo's own generated map/ (code_map module+entity-count index, no anchor ids) -- every run against this repo will read DEGRADED-UNPARSEABLE for that reason alone, independent of any real staleness. Flagging as a triage candidate; not blocking this run, which has a mission-frame reviewable without map anchors.",
+  "emitted_at": "2026-08-16T15:19:28.218021+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

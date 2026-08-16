@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "cleanup-e-crew-tooling",
+      "spec_path": "LAUNCH_ORDER.md",
+      "intent_and_why": "Two defects in crew tooling, same file, same subsystem, both about a crew's run being legible to everyone else while it happens: #607 (a blocked-but-healthy parent going lease-stale) and #525 (concurrent crews colliding on shared scratch evidence)."
+    },
+    "definition_of_done": [
+      "A blocked parent that used to read stale no longer does, driven through the real registry and staleness path.",
+      "Two crews whose evidence used to collide no longer do, plus a loud error surface when a collision is genuinely forced."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Independent-reviewer APPROVE per gate, full clean-env cache-cleared suite green",
+      "sufficient_evidence": "Real fresh-process integration checks against the real checklist engine and registry, not reasoned about from inside the authoring session",
+      "appetite": "One working session, two bounded gates"
+    },
+    "hard_constraints": [
+      "No edit to scripts/checklist_engine.py, scripts/gauge_reader.py, scripts/hooks/gauge_writer_hook.py, scripts/hooks/spine_rail.py, scripts/mcp_spine_server.py, .mcp.json, examples/**, scripts/install_constellation.py, skills/commander/templates/**",
+      "No reaping, expiry, or force-claim of any lease or registry entry",
+      "Every ambiguity resolves toward this thing is running (fail-toward-alive)"
+    ],
+    "fixed_decisions": [
+      "decision:no-reaping",
+      "decision:fail-toward-alive",
+      "decision:namespace-by-assignment",
+      "decision:no-silent-truncation"
+    ],
+    "current_wave": {
+      "objective": "Fix #607 (parent lease heartbeat while blocked) and #525 (namespaced crew scratch directory), owned-files only, no fenced-file edits.",
+      "exit_criteria": [
+        "g1 (#607) implemented, reviewed APPROVE, integrated with a real fresh-process staleness demonstration.",
+        "g2 (#525) implemented, reviewed APPROVE, integrated with a real forced-collision demonstration.",
+        "Full clean-env cache-cleared suite green at published head."
+      ],
+      "issues": [
+        {
+          "id": "A",
+          "title": "#607 -- parent lease heartbeat while blocked",
+          "desired_outcome": "A Commander blocked foreground on run_crew.py never reads as engine-lease-stale purely from being blocked.",
+          "useful_now": "Prevents a force-claim of a spine out from under a running parent -- the exact collision the lease exists to prevent.",
+          "appetite": "One gate (implement/review/integrate)",
+          "acceptance_or_falsification_evidence": "A real checklist_engine.py-backed lease aged past staleness, then a real blocking run_crew.py dispatch, confirmed non-stale afterward in a fresh process.",
+          "implementation_latitude": "Mechanism chosen: parent-self-heartbeat via checklist_engine.load/heartbeat/save, no self-collision guard, join-before-return ordering.",
+          "hard_constraints_no_gos": ["scripts/checklist_engine.py stays untouched"],
+          "local_unknowns": [],
+          "anchors": ["scripts/run_crew.py:846-887", "scripts/run_crew.py:1357", "scripts/run_crew.py:1403"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "B",
+          "title": "#525 -- namespaced crew scratch directory",
+          "desired_outcome": "Concurrent crews' evidence/scratch paths no longer collide under generic names; a genuine collision raises rather than silently overwriting.",
+          "useful_now": "The prior loss was invisible (file exists, parses, describes someone else's gate) -- this makes a collision loud instead.",
+          "appetite": "One gate (implement/review/integrate)",
+          "acceptance_or_falsification_evidence": "Two dispatches under distinct tuples get disjoint directories; a forced identical-tuple collision raises CrewLaunchError.",
+          "implementation_latitude": "Mechanism chosen: scratch_dir() keyed on the full (work_id, gate, role, worktree, attempt) registry tuple, raw-string worktree hash, dispatch-reserves/resume-gets.",
+          "hard_constraints_no_gos": ["run_log_paths itself stays untouched (a related, narrower, pre-existing asymmetry, out of this gate's scope)"],
+          "local_unknowns": [],
+          "anchors": ["scripts/run_crew.py:230-234", "scripts/run_crew.py:330-390", "scripts/run_crew.py:1357", "scripts/run_crew.py:1403"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Follow-up: wire dispatched-crew skills (e.g. skills/reviewer/SKILL.md) to actually write into CREW_SCRATCH_DIR",
+        "why_likely": "g2 closes the collision-avoidance half only; the consumption half is a distinct, unowned-files change",
+        "entry_conditions": ["A human/Admiral authorizes the skill-file edit"]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether checklist_engine.save()'s non-atomic write is safe under the new concurrent-writer pattern g1 introduces (parent heartbeat thread + child crew both writing the same shared spine file)",
+        "affects": "Long-term robustness of the #607 fix at scale, not its correctness as measured this run",
+        "settle_by": "A follow-up triage issue against checklist_engine.py (fenced, out of this run's latitude to fix)",
+        "current_evidence": "Reviewer's mutation testing found no observed corruption at the 300s production interval; the risk is structural, not reproduced",
+        "next_probe": "Stress test checklist_engine.save() under concurrent writers, or add atomic-rename write semantics"
+      }
+    ],
+    "parked_possibilities": [
+      "A lease reaper (#552) -- explicitly out of this run's latitude",
+      "An explicit blocked-on-child lease state, instead of a heartbeat -- one of #607's three named fix directions, not chosen"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "A",
+      "outcome": "Implemented, reviewed (APPROVE), integrated. 7 new tests (ParentLeaseHeartbeatTests). Real fresh-process integration check: an artificially-aged lease read as genuinely stale before the fix (reclaimed stale lease, exit 0) and non-stale after a real blocking dispatch ran with the heartbeat active (REFUSED: checklist already owned by active session, exit 1).",
+      "evidence": "tests/test_crew_launcher.py -k ParentLeaseHeartbeat: 7 passed. Full tests/test_crew_launcher.py: 188 passed. Reviewer's independent mutation test: removed the wraps, confirmed the shared-spine tests fail, restored, confirmed byte-identical diff."
+    },
+    {
+      "issue_id": "B",
+      "outcome": "Implemented, reviewed (APPROVE), integrated. 18 new tests. scratch_dir() keys on the full 5-field tuple (work_id, gate, role, worktree, attempt); dispatch reserves via mkdir(exist_ok=False) before any registry write; resume gets without re-reserving. Forced collision raises the exact message naming the path and tuple.",
+      "evidence": "tests/test_crew_launcher.py -k ScratchDir and related: 18 new, 206 total passed. Reviewer's independent mutation test: stripped worktree from the key, confirmed 4 tests fail including the named regression test, restored, confirmed byte-identical diff."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "Full clean-env, cache-cleared suite is green at the published head",
+      "expected": "All tests pass (matching or exceeding the baseline's 3103-3104 passed / 6-7 skipped)",
+      "observed": "3129 passed, 6 skipped, 1165 subtests passed (after regenerating map/INDEX.md, which had gone stale from this run's own new entities)",
+      "source": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q, run twice (pre-map-regen: 1 failure in MapTreeFreshnessTests; post-map-regen: fully green)"
+    },
+    {
+      "claim": "main is unchanged since dispatch, so no re-measurement drift needs reconciling",
+      "expected": "main/origin/main still at e36e630b (the base commit), per the launch order's warning that lane A might land under this run",
+      "observed": "git fetch origin main at gate time confirmed origin/main HEAD is still e36e630b, identical to this worktree's base -- lane A had not landed as of this run's gate time",
+      "source": "git fetch origin main; git log -1 --format=%H origin/main"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "map/INDEX.md went stale mid-run after this run's own new entities (scratch_dir, _parent_lease_heartbeat, and their tests) were added -- MapTreeFreshnessTests failed on the first full-suite run at g2-integrate.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "g2-integrate's full-suite postcondition",
+      "evidence": "First full-suite run: 1 failed (test_map_tree_freshness_root_index_matches_a_fresh_build), 3128 passed. Fixed by running `py -m scripts.code_map build --root .` and re-measuring: 3129 passed, 0 failed.",
+      "reason": "This is expected, mechanical maintenance the launch order's own Inherited Context anticipated (\"map/INDEX.md is generated and freshness-tested -- rebuild and commit if entities change\") -- repaired in place, not a real defect."
+    },
+    {
+      "id": "D1",
+      "signal": "map_orient.py's anchor contract (struct:/capability:/decision: id syntax expecting docs/architecture packets) structurally never matches this repo's own generated map/ (code_map module+entity-count index, no anchor ids), so every commander run against this repo reads DEGRADED-UNPARSEABLE regardless of real staleness.",
+      "classification": "later_only",
+      "affects": "Every future commander run's context/plan gates in this repo, not this run's own correctness (discharged via the documented substitute path)",
+      "evidence": ".agent-work/cleanup-e-crew-tooling/map-orientation.json -- DEGRADED-UNPARSEABLE, discharged with declared substitutes.",
+      "reason": "A tooling gap worth a dedicated issue, not something this run's latitude covers fixing (map_orient.py is not in File Ownership)."
+    },
+    {
+      "id": "D2",
+      "signal": "checklist_engine.save() appears to be a non-atomic read-modify-write with no file locking; g1's parent-lease-heartbeat fix introduces a new concurrent writer onto a spine file the dispatched child crew may also write to in the shared-spine case.",
+      "classification": "later_only",
+      "affects": "Long-term robustness of #607's fix under heavy concurrent write load; no observed corruption this run",
+      "evidence": "Flagged as tc4 via flag-candidate at g1-review; recorded in this packet's uncertainty_register.",
+      "reason": "checklist_engine.py is fenced -- out of this run's latitude to fix; a follow-up issue is the correct route."
+    },
+    {
+      "id": "D3",
+      "signal": "run_log_paths (scripts/run_crew.py:230-234) omits worktree from its stdout/stderr file naming even though next_attempt/active_duplicate key duplicate-detection on the full (work_id, gate, role, worktree) tuple -- a narrower, pre-existing instance of the same collision shape #525 fixes for scratch dirs.",
+      "classification": "later_only",
+      "affects": "A latent, narrower collision surface distinct from this run's two named defects",
+      "evidence": "Found while scoping g2's scratch_dir key tuple against next_attempt's real scoping.",
+      "reason": "Out of this run's bounded scope (owned files, but a different function than either #607 or #525 named) -- recommend a dedicated follow-up issue rather than a drive-by fix."
+    },
+    {
+      "id": "D4",
+      "signal": "#525's CREW_SCRATCH_DIR env var closes the collision-avoidance half only -- run_crew.py cannot make a dispatched reviewer/implementer's own skill actually write into it instead of a shared default.",
+      "classification": "later_only",
+      "affects": "The real-world completeness of #525's fix outside this run's owned files",
+      "evidence": "Explicitly named as an honest gap in both the plan gate's mission frame and g2's implementer/reviewer results.",
+      "reason": "Wiring consuming skills (e.g. skills/reviewer/SKILL.md) is a distinct, unowned-files follow-up, not part of this run's File Ownership."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "scripts/run_crew.py",
+      "scripts/recover_crews.py",
+      "tests/test_crew_launcher.py"
+    ],
+    "map_status": "map/INDEX.md regenerated and fresh as of this run's g2-integrate; map/ids.jsonl remains structurally empty for this repo's own code-derived map (a pre-existing, separately-flagged condition, not this run's regression)."
+  }
+}
