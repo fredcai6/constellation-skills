@@ -133,7 +133,8 @@
           "id": "p1",
           "statement": "g0-measure settled the mechanism; the design targets the mechanism that was actually measured",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g0-measure settled the mechanism as candidate 2 -- the collision is ACROSS binding keys and the timestamp guard is structurally blind to it. The design targets exactly that: owner in the filename removes the cross-key collision. The ruling's R1 states the residual plainly -- the sequential relaunch case is NOT addressed by identity and keeps the timestamp comparison."
         }
       ],
       "postconditions": [
@@ -206,7 +207,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,

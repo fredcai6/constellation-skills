@@ -64,33 +64,92 @@ file on disk. Never a patched `_read_gauge`. Never a fixture that hand-injects
 `CLAUDE_PROJECT_DIR` — that variable is what the harness delivers, and a test that
 supplies it proves nothing about the harness.
 
+## Amended by `ADMIRAL_RULING-1.md` — read this before the Close Criteria
+
+The float this gate was blocked on has been ruled. **The ruling supersedes the
+frozen order and this handoff's original wording wherever they disagree**, and the
+Close Criteria below are already rewritten to it. Five things changed:
+
+- **R1 — filename *and* field, and the timestamp guard STAYS.** `decision:identity-not-time`
+  is **amended, not satisfied**. Identity handles the **concurrent** case, time the
+  **sequential** one. The frozen order's "should end up unnecessary" is
+  **withdrawn**: a relaunch reuses its predecessor's lease name *by design*, so no
+  identity scheme can see it, and #601's comparison is permanent. This wave fixes
+  the concurrent collision and **does not complete** `identity-not-time` — passing
+  the *harness* identity into the engine is the only route to that and is out of
+  scope. Do not claim otherwise in your result.
+- **R2 — normalize an unusable owner, never reject one.** Slug **plus hash**, total
+  over every input. **82 of 398** distinct session ids in this checkout fail the
+  `[A-Za-z0-9_-]{1,64}` allowlist this handoff originally told you to reuse, because
+  slash-bearing lease names are current fleet practice. Rejecting takes the governor
+  away from a fifth of the fleet permanently and **invisibly** — losing the governor
+  never shows up as a test failure, and this repo has been burned twice by silent
+  governors (#252, #271) and once by a wave-long dark one (#488).
+- **R3 — a leaseless checklist keeps exactly today's behaviour.** Owner-keying
+  applies only where a lease exists.
+- **R4 — the ambiguity guard is about attribution, not count.**
+- **R5 — `decision:consume-on-lease-change` is settled.** Still not this gate's
+  business; #500 is a separate gate.
+
 ## Close Criteria
 
-1. The writer names the record for its owner: `gauge-<owner>.json` beside the
-   spine, where `<owner>` is the `engine_session` carried by the binding entry it
-   already resolved. The two existing sidecars follow that name (both are derived
-   with `.with_name()` off the gauge path, so this should fall out).
-2. The engine resolves the same name from its **own** active lease `session_id`.
-   These two strings are the same value by construction — the binding entry's
-   `engine_session` is parsed from the `claim --session-id X` command, and the
-   lease's `session_id` is that same `X`. Verified live in this run:
-   binding `engine_session = commander-cleanup-b-context-identity` and lease
-   `session_id = commander-cleanup-b-context-identity`.
-3. **No fallback to a shared `gauge.json`** on either side
-   (`decision:no-shared-file-fallback`). A fallback reinstates the folder-owned
-   file this issue exists to remove. When no owner resolves, write nothing and
-   read nothing (`decision:unattributable-means-no-reading`).
-4. Owner names are filename-safe. **Reuse the existing single identity predicate
-   idiom** — `spine_rail.is_usable_agent_id` (a 1–64 char `[A-Za-z0-9_-]`
-   allowlist, `scripts/hooks/spine_rail.py:447`ff). #441 made that the *sole*
-   identity predicate precisely so two definitions could not drift; do not add a
-   third. You may **read** `spine_rail.py`; it is **fenced** for edits.
-5. A declined or absent reading produces a **visible** advisory naming the cause
-   and the remedy, in the shape the existing `_declined_reading_advisory` /
-   `_no_reading_advisory` family already uses.
-6. `#601`'s timestamp comparison need **not** be deleted this wave
-   (`decision:identity-not-time` says so explicitly). Leave it in place unless it
-   actively conflicts; say which you did and why.
+1. **The writer names the record for its owner** — `gauge-<owner>.json` beside the
+   spine, where `<owner>` is normalized from the `engine_session` carried by the
+   binding entry it already resolved — **and also stamps an `owner` field into the
+   record**. The filename *removes* the collision; the field makes a mismatch
+   *detectable* if one ever reappears. Both, not either (R1).
+2. **The engine resolves the same name from its own active lease `session_id`.**
+   Those two strings are the same value by construction: the binding entry's
+   `engine_session` is parsed from `claim --session-id X`, and the lease's
+   `session_id` is that same `X`. Verified live right now — the binding store holds
+   **three** distinct harness keys all carrying
+   `engine_session: commander-cleanup-b-context-identity` against the identical
+   spine, which is the collision itself, sitting in front of you.
+3. **Normalize, never reject (R2).** Every lease session id must yield a usable
+   owner key: **slug plus hash**. Cover the slash-bearing ids, the live entries
+   carrying `engine_session: null`, and the one carrying the literal `'$SID'`. The
+   allowlist idiom this handoff originally pointed you at
+   (`spine_rail.is_usable_agent_id`, `scripts/hooks/spine_rail.py:447`ff) is still
+   worth **reading** for its character-class reasoning, but **rejection is
+   withdrawn** — read it, do not copy its refusal. `spine_rail.py` stays **fenced**
+   for edits. **Reserve `skip` and `uncalibrated`** as owner names: both would pass
+   any sane allowlist and would collide with `SKIP_FILENAME` /
+   `UNCALIBRATED_FILENAME`.
+4. **No lease keeps today's behaviour (R3).** With no lease there is no owner, so
+   the engine reads the unowned `gauge.json` and trips on it **exactly as today**.
+   Where a lease **does** exist and no owner-keyed gauge resolves, return `None` —
+   no fallback to the shared file, which would reinstate the folder-owned file this
+   issue exists to remove (`decision:unattributable-means-no-reading`). The
+   fail-safe is "no *attributable* reading yields `None`"; it must **not** become
+   "no lease yields nothing".
+5. **The ambiguity guard becomes a question about attribution (R4).** In
+   `resolve_gauge_path`, dedupe by resolved **owner-keyed** path, write **every**
+   distinct candidate, and fire the `len(...) > 1` skip **only** when a candidate
+   cannot be attributed an owner at all. The guard exists because the writer could
+   not tell *whose* reading it held; the owner in the filename answers that by
+   construction. Two spines in one work directory under the **same** owner still
+   collapse to one file — that is **#488's own case** and it must stay working.
+6. **One definition of the owner key.** It is computed on both sides of a process
+   boundary — the hook from the binding entry, the engine from its own lease — and
+   drift between them silently stops every reading resolving. Define it **once** in
+   `scripts/gauge_reader.py` and load it in the hook through the by-path loader
+   idiom this codebase already uses twice (`gauge_writer_hook._load_spine_rail`,
+   `checklist_engine._load_gauge_reader`), keeping the existing fail-safe: a load
+   failure yields no owner, which is today's behaviour and not a new refusal. This
+   is `decision:one-owner-key-definition`, graded a **guess** — if you depart from
+   it, argue the departure in your result.
+7. **The sidecars do not follow the gauge name by themselves.** Corrected by the
+   cold critic (F4): `SKIP_FILENAME` and `UNCALIBRATED_FILENAME` are **constants**
+   on both sides, not `.with_name()` derivations. Decide explicitly whether they go
+   per-owner and **state the choice**; do not assume it falls out.
+8. **Name what the advisories resolve to.** `_uncalibrated_advisory` and
+   `_no_reading_advisory` take `base_dir` only and sit **outside** the trip region
+   (F5). Left on the shared path they would report on a file nobody reads. A
+   declined or absent reading must still produce a **visible** advisory naming the
+   cause and the remedy, in the shape that family already uses.
+9. **`#601`'s timestamp comparison stays (R1).** Do not delete or weaken it. It is
+   the sequential-relaunch half of the fix, permanently and by design. Confirm in
+   your result that it is still present and still fires.
 
 ## Allowed Scope
 
@@ -102,8 +161,7 @@ supplies it proves nothing about the harness.
   `_no_reading_advisory`) will need the checklist threaded through; that is in
   scope and mechanical.
 - `tests/test_gauge_writer.py`, `tests/test_gauge_reader.py`,
-  `tests/test_checklist_engine.py`, `tests/test_gauge_chain_writer_to_trip.py`,
-  `tests/test_spine_rail.py` (only where it asserts the gauge filename)
+  `tests/test_checklist_engine.py`, `tests/test_gauge_chain_writer_to_trip.py`
 - `docs/GAUGE_WRITER_HOOK.md`, `docs/CHECKLIST_SCHEMA.md` — update the prose you
   invalidate.
 
@@ -114,6 +172,12 @@ supplies it proves nothing about the harness.
   `spine_rail.py`'s one `gauge.json` mention (`:769`) is a comment about a check
   that keys on `items`, not on the filename, so the design should need no edit
   there. **If you find it does, stop and report** rather than editing.
+- **`tests/test_spine_rail.py` is fenced too** (cold critic F11). Its 2 occurrences
+  of the literal name belong to a module lane C is editing concurrently. Do not
+  touch it; the coupling goes to the Admiral as a cross-lane note.
+- **Runtime coupling to lane C, stated rather than implicit:** reading
+  `spine_rail.is_usable_agent_id`'s alphabet couples this design to a module lane C
+  may change under you. Reading is permitted; note the coupling in your result.
 - `checklist_engine.py`'s **claim path** changed on `main` this morning (#601).
   Leave it alone unless your design requires it — and say so if it does.
 - `episodes/**` — those are historical records, never edited. Several mention
@@ -146,11 +210,16 @@ supplies it proves nothing about the harness.
 - The read side's intent is in `scripts/gauge_reader.py`'s `_PROFILES` note
   (`:76`); the policy side's is the trip block comment from
   `scripts/checklist_engine.py:1328`. **Read both before changing either.**
-- Decisions in force: `decision:identity-not-time`,
-  `decision:unattributable-means-no-reading`, `decision:no-new-state-file`,
-  `decision:owner-in-the-filename`, `decision:no-shared-file-fallback`. Their
-  wording and grades are in
-  `.agent-work/cleanup-b-context-identity/MISSION_FRAME.md`.
+- Decisions in force, as **amended by the ruling**: `decision:identity-not-time`
+  (amended, R1), `decision:owner-in-the-filename` (settled, filename *and* field),
+  `decision:normalize-never-reject` (settled, R2),
+  `decision:no-lease-keeps-todays-behaviour` (settled, R3 — this **replaces**
+  `decision:no-shared-file-fallback`), `decision:ambiguity-guard-is-about-attribution`
+  (settled, R4), `decision:unattributable-means-no-reading`,
+  `decision:no-new-state-file`, `decision:one-owner-key-definition` (a guess, raised
+  this leg). Their wording and grades are in
+  `.agent-work/cleanup-b-context-identity/MISSION_FRAME.md`; the rulings themselves
+  are in `.agent-work/cleanup-b-context-identity/ADMIRAL_RULING-1.md`.
 - **Recorded dead end — do not re-propose it:** writing one reading to *every*
   bound spine ("fan-out") was tried and reverted, because it cross-writes one
   agent's reading into an unrelated agent's work area (#202/#261). A confident
@@ -186,15 +255,42 @@ grep -rl "gauge\.json\|gauge-uncalibrated\.json\|gauge-skip\.json" \
 occurrences, `test_gauge_writer.py` alone has 64), 2 docs, 7 episodes (leave
 alone), 2 notes. Report your own count and reconcile any difference.
 
+**Zero occurrences is the WRONG target.** Under R3 the literal name **survives** on
+the leaseless read path. Each occurrence needs an explicit **change/no-change
+disposition**, not deletion.
+
 ## Required Evidence
 
-- The failing test(s) first, with the **output showing they fail for the right
-  reason** — not merely that they fail.
-- Green-after for the same tests.
-- A fresh-process demonstration that two agents in one work directory now each
-  keep their own reading. `measurement/probe_cross_key.py` is the natural
-  starting point; extend or adapt it, and say what you changed.
-- The blast-radius count from the Wiring Grep, reconciled.
+- **These four tests, by exact node id** — they are the only checks in this gate's
+  plan that can discriminate the fixed world from the broken one, because the four
+  existing suites already pass (cold critic F8). Create exactly these names:
+
+  ```
+  tests/test_gauge_writer.py::OwnerKeyedGaugePath::test_two_keys_one_work_dir_each_keep_their_own_reading
+  tests/test_gauge_writer.py::OwnerKeyedGaugePath::test_two_spines_one_key_one_owner_still_writes
+  tests/test_gauge_reader.py::OwnerKeyNormalization::test_every_live_session_id_yields_a_usable_owner
+  tests/test_checklist_engine.py::TripGaugeReadingOwnership::test_leaseless_checklist_reads_the_unowned_gauge
+  ```
+
+  The **second** is #488's exact shape — an Admiral's `spine.json` and its
+  `latitude-interrogation.json` in **one** work directory — and asserts the write
+  **happens**. That regression cost an entire wave of dark governor and must not be
+  re-armed by a rename (R4). The **third** must feed real session ids **including
+  slash-bearing ones** and the live `null` / literal `'$SID'` cases (R2).
+  The gate's postcondition runs these node ids verbatim, so a different name fails
+  the gate even if the test is good.
+- Run all four against the merge base `a69bbac4` and **paste the RED result**, with
+  the output showing they fail for the **right reason** — not merely that they fail.
+  Then paste them green at your head.
+- A fresh-process demonstration that two agents in one work directory now each keep
+  their own reading. **Do not edit `measurement/probe_cross_key.py`** — after this
+  change it takes its `after_sub is None` branch and prints `VERDICT: NEITHER`,
+  which misdescribes the fixed world; keeping it truthful about the *pre-fix* world
+  until integration is deliberate, and updating it is the Commander's job at
+  `g1-integrate`. Write your demonstration as a new artifact.
+- The blast-radius count from the Wiring Grep, reconciled, with a per-occurrence
+  disposition.
+- Confirmation that #601's timestamp comparison is still present and still fires.
 - Pasted output of every verification command below.
 
 ## Verification Commands
@@ -225,9 +321,11 @@ and the change spans three modules that have to move together.
 
 ## Authority
 
-Admiral launch order `LAUNCH_ORDER.md` (frozen), via Commander
-`commander-cleanup-b-context-identity`. No human is reachable. Take a genuine gap
-up, do not guess past it.
+Admiral launch order `LAUNCH_ORDER.md` (frozen) **as amended by
+`ADMIRAL_RULING-1.md` R1–R5**, relaunched under `LAUNCH_ORDER-2.md`, via Commander
+`commander-cleanup-b-context-identity` (leg 2). No human is reachable. Take a
+genuine gap up, do not guess past it. Where the ruling and the frozen order
+disagree, the **ruling** wins — R1 and R2 are the human's own rulings.
 
 ## Stop Conditions
 
