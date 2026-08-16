@@ -1,0 +1,260 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Lane B — the Context Governor's reading belongs to an agent, not a folder",
+      "spec_path": ".agent-work/cleanup-b-context-identity/LAUNCH_ORDER.md",
+      "intent_and_why": "A gauge reading was keyed by work directory, so two agents bound to one .agent-work/<work-id>/ overwrote each other's context reading and the governor either went dark or tripped on a foreign fill. Key the reading to the agent that produced it (#600), and let a re-claim consume the agent's own pending refresh-request (#500). Amended in flight by ADMIRAL_RULING-1.md (R1-R5) and ADMIRAL_RULING-2.md (the R4 amendment)."
+    },
+    "definition_of_done": [
+      "A context reading is attributable to the agent that produced it, and no agent can read another's fill as its own.",
+      "The governor never REFUSES anywhere it previously permitted — the lane's hard latitude boundary.",
+      "#601's timestamp comparison survives and still fires on the sequential relaunch case; identity does not replace time, it covers the concurrent case time cannot see."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Losing the governor never shows up as a test failure, so coverage loss must be proven absent rather than assumed: the owner-key normalizer is verified TOTAL over the checkout's real session ids, and every refusal path is enumerated rather than sampled.",
+      "sufficient_evidence": "Red-before/green-after against the real reader and a real gauge file in a fresh process — never a patched _read_gauge — plus a zero-failure full-suite difference against a main baseline re-measured at gate time.",
+      "appetite": "One bounded wave: the concurrent collision. Completing decision:identity-not-time needs the harness identity passed into the engine and is explicitly out of scope."
+    },
+    "hard_constraints": [
+      "The governor must not refuse where it currently permits.",
+      "Fenced files are byte-identical: scripts/hooks/spine_rail.py, tests/test_spine_rail.py, scripts/run_crew.py (lane C); scripts/mcp_spine_server.py, .mcp.json (lane A); episodes/**; checklist_engine.py's claim path (#601).",
+      "Clear __pycache__ before every measurement (#597) — stale bytecode fabricates failures that look like defects.",
+      "Hook code is not fenced by git isolation: CLAUDE_PROJECT_DIR is resolved once at session launch, so a hook change is validated in a fresh process, never by a fixture that hand-injects the variable.",
+      "Park at archive. Do not merge — publication is the Admiral's class."
+    ],
+    "fixed_decisions": [
+      "R1: identity for the CONCURRENT case (gauge-<owner>.json keyed on the lease session id plus an owner field in the record) while #601's timestamp comparison STAYS for the SEQUENTIAL relaunch case.",
+      "R2: normalize an unusable owner by slug-plus-hash, never reject — 82 of 398 real session ids fail the allowlist originally proposed.",
+      "R3: a leaseless checklist keeps exactly today's behaviour on the unowned gauge.json; the fail-safe is 'no attributable reading yields None', not 'no lease yields nothing'.",
+      "R4 as amended by ADMIRAL_RULING-2.md: dedupe by owner-keyed path; write every distinct candidate when they share ONE owner (this is #488's own case and must write); skip plus VISIBLE sidecars when a candidate has no owner OR when one sample would have to be attributed to more than one owner.",
+      "R5: decision:consume-on-lease-change settled, option (a). #500 ships only if context genuinely allows.",
+      "Launched identities remain stable: the lane is #600 then #500, and leg boundaries do not renumber them."
+    ],
+    "current_wave": {
+      "objective": "Ship #600 — a gauge reading is named for the agent that produced it — reviewed, integrated, and measured against a re-measured main; then #500 if and only if context allows.",
+      "exit_criteria": [
+        "g1-review returns a verdict and g1-integrate carries an APPROVE.",
+        "The full suite is green against a gate-time-re-measured main baseline with __pycache__ cleared.",
+        "measurement/probe_cross_key.py is retired at g1-integrate — post-fix it prints VERDICT: NEITHER, which misdescribes the fixed world.",
+        "The lane C #549 re-measurement is reported by re-running the probe, not assumed either way.",
+        "#500 ships under R5, or DESIGN_500.md is handed back at the boundary with the limit reported plainly."
+      ],
+      "issues": [
+        {
+          "id": "600",
+          "title": "A gauge reading is named for the agent that produced it",
+          "desired_outcome": "The writer emits gauge-<owner>.json beside the spine and stamps a matching owner field; the engine resolves the same name from its own active lease session_id; two agents under one work directory no longer overwrite each other.",
+          "useful_now": "It is the measured defect — two distinct binding keys sharing one .agent-work/<work-id>/ each took the clean single-candidate branch and each wrote, last writer wins, and the foreign write is fresh so #477/#601's timestamp guard is structurally blind to it.",
+          "appetite": "One crew gate plus review and integrate.",
+          "acceptance_or_falsification_evidence": "Four discriminating node ids RED at the merge base and GREEN at head, a fresh-process demonstration at measurement/demo_owner_keyed_gauge.py with .before.out/.after.out, and a zero-failure suite difference.",
+          "implementation_latitude": "Choose internals; the owner key should have ONE definition across the hook/engine process boundary or the departure must be argued.",
+          "hard_constraints_no_gos": [
+            "No new refusal path.",
+            "No edit to a fenced file.",
+            "Do not claim decision:identity-not-time is complete."
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/gauge_reader.py",
+            "scripts/hooks/gauge_writer_hook.py",
+            "scripts/checklist_engine.py",
+            "docs/GAUGE_WRITER_HOOK.md"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "500",
+          "title": "A re-claim consumes the agent's own pending refresh-request",
+          "desired_outcome": "An agent re-claiming its own lease consumes its own pending refresh-request rather than inheriting it, per decision:consume-on-lease-change option (a).",
+          "useful_now": "It closes the relaunch loop this lane has now exercised three times in its own body.",
+          "appetite": "One gate, with a ship-or-hand-back branch declared at the boundary before starting.",
+          "acceptance_or_falsification_evidence": "DESIGN_500.md is the accepted design; acceptance is its tests green plus the suite difference.",
+          "implementation_latitude": "Ship under R5 only if context genuinely allows; a third hand-back of DESIGN_500.md is an accepted outcome.",
+          "hard_constraints_no_gos": [
+            "Running long to avoid a handoff is not acceptable."
+          ],
+          "local_unknowns": [
+            "Whether leg 3's remaining context reaches it after g1-review and g1-integrate."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            ".agent-work/cleanup-b-context-identity/DESIGN_500.md"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Complete decision:identity-not-time by passing the HARNESS identity into the engine",
+        "why_likely": "This wave fixes the concurrent collision only. The engine resolves an owner from its own lease, so an agent with no lease is still unattributable, and that is the remaining half of the decision.",
+        "entry_conditions": [
+          "#600 is merged and the owner key has settled to one definition."
+        ]
+      },
+      {
+        "outcome": "Make liveness judgements safe against a legitimately blocked parent",
+        "why_likely": "tc2 measured a healthy Commander going lease-stale at 53 minutes because run_crew.py blocks by design and a parent waiting on a child issues no mutating verb. The liveness work merged this morning judges by heartbeat age.",
+        "entry_conditions": [
+          "The Admiral files tc2 on the tracker (he has taken this himself)."
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether #500 fits inside leg 3's context after g1-review and g1-integrate",
+        "affects": "Whether the current wave exits complete or hands DESIGN_500.md back a third time",
+        "settle_by": "The g2-implement-500 boundary, where the gate's c1 requires a ship-or-hand-back declaration before starting",
+        "current_evidence": "Two legs have already ended at a context boundary; leg 2 was refused entry to g1-review at 17% of a 150000 absolute cap.",
+        "next_probe": "Read the gauge at the g2 boundary and declare."
+      },
+      {
+        "unknown": "Whether lane C's #549 removed the mechanism behind the cross-key collision or only one route into it",
+        "affects": "Whether #600 is still load-bearing after df6f951b",
+        "settle_by": "g1-integrate, by re-running the probe against the merged tree",
+        "current_evidence": "ADMIRAL_NOTE-lane-C-landed.md holds that #549 removes one route, not the mechanism, and leg 2's own SessionStart bind-on-resume finding is offered as the proof.",
+        "next_probe": "Re-run the cross-key probe at g1-integrate and report the reading rather than assuming either way."
+      }
+    ],
+    "parked_possibilities": [
+      "Fan-out — writing one reading to every bound spine. Tried, measured and REVERTED in #202/#261; ADMIRAL_RULING-2.md re-confirms it as a dead end.",
+      "An allowlist-based owner key. Rejected by R2: 82 of 398 real session ids fail it."
+    ]
+  },
+  "completed_outcomes": [],
+  "wave_evidence": [
+    {
+      "claim": "Gate progress at the time of writing: e0-context, g0-measure and g1-implement are closed; g1-review is in-progress; g1-integrate and g2-implement-500 are pending. Neither issue is COMPLETE, so completed_outcomes is deliberately empty and both 600 and 500 remain open.",
+      "expected": "#600 would be reportable as a completed outcome once its code shipped.",
+      "observed": "The code shipped at 3bc87e93 but the issue is not complete until g1-review returns a verdict and g1-integrate carries an APPROVE. Shipping is the middle of the gate, not its end, so 600 stays in open_current_wave_issue_ids.",
+      "source": ".agent-work/cleanup-b-context-identity/execute.json, read at leg 3 start"
+    },
+    {
+      "claim": "The #600 open question was settled by measurement rather than argument.",
+      "expected": "The design question would be settled by reasoning about the guard.",
+      "observed": "g0-measure measured it instead: the gauge collides ACROSS binding keys and the timestamp guard cannot see it. Closed on leg 1's ACCEPTED measurement rather than re-run.",
+      "source": "commit a89d61e3; measurement/ and notes-b.md sections 1-2b"
+    },
+    {
+      "claim": "#600's implementation is shipped and committed.",
+      "expected": "One commit implementing the owner-keyed gauge across writer, reader and engine.",
+      "observed": "commit 3bc87e93, 12 files, +1352/-202: gauge_reader.py gains the single owner-key definition (owner_key() as slug plus 12-hex SHA-256, gauge_filename(), GAUGE_FILENAME, record_owner()); gauge_writer_hook.py loads it by path, writes gauge-<owner>.json and stamps a matching owner field, its ambiguity guard becoming a question about attribution rather than count; checklist_engine.py resolves the same name from its own active lease session_id and, with no lease, reads the unowned gauge.json and trips exactly as today. No fenced whole file is in the diff.",
+      "source": "commit 3bc87e93; crew-handoffs/g1-implementer-result.md"
+    },
+    {
+      "claim": "The gate-time baseline is green on the merged branch.",
+      "expected": "3057 (frozen order) or 3089 (LAUNCH_ORDER-3.md) passed on main.",
+      "observed": "Both figures are stale. main was merged into the branch at ccb8b8d8 (bringing lane C df6f951b and lane D 43c577d4; map/INDEX.md conflicted and was resolved by regenerating it with py -m scripts.code_map build, not by hand). With __pycache__ cleared the branch measures 3104 passed, 6 skipped, 0 failed in 125.02s.",
+      "source": "commit ccb8b8d8; /tmp/suite-leg3-baseline.log"
+    },
+    {
+      "claim": "The gauge collision is real and the timestamp guard is structurally blind to it.",
+      "expected": "Either the collision does not occur, or #477/#601's observed_at > claimed_at comparison catches it.",
+      "observed": "Two distinct binding keys whose spine files share one .agent-work/<work-id>/ each resolved to one gauge candidate, each took the clean single-candidate branch, and each wrote — last writer wins. The foreign write is FRESH, so the timestamp comparison cannot distinguish it.",
+      "source": "g0-measure; commit a89d61e3; measurement/probe_cross_key.py pre-fix output"
+    },
+    {
+      "claim": "The fix is live and self-demonstrating inside this very run.",
+      "expected": "The owner-keyed path is exercised only by tests.",
+      "observed": ".agent-work/.spine-rail-binding.json holds THREE distinct harness keys all carrying engine_session: commander-cleanup-b-context-identity against the identical spine, and gauge-commander-cleanup-b-context-iden-88c76234484d.json is this Commander's own owner-keyed reading, written by the changed hook. The refusal that ended leg 2 fired on a reading provably its own; before this wave the same trip would have been unattributable.",
+      "source": "leg 2, LEG2_DIGEST.md; the live binding file and gauge file in the work directory"
+    },
+    {
+      "claim": "R4 as originally ruled would have re-armed a measured dead end.",
+      "expected": "Writing every distinct candidate is safe because the owner in the filename answers whose reading it is.",
+      "observed": "It does not. The READING comes from one transcript belonging to one harness agent, so owner-keying the DESTINATION cannot make a single sample true of two owners; writing to both stamps agent A's fill with agent B's name. The Admiral amended R4 rather than the Commander narrowing it quietly.",
+      "source": "ADMIRAL_RULING-2.md; the #202/#261 fan-out revert"
+    },
+    {
+      "claim": "A format sweep is not a dependency sweep.",
+      "expected": "The prescribed Wiring Grep for the literal gauge.json would find every dependent.",
+      "observed": "It could not see a dependency expressed as gauge_reader.py. Only the full suite caught it. Uncaught, it would have shipped a DARK governor into every install.",
+      "source": "tc3; LEG2_DIGEST.md"
+    },
+    {
+      "claim": "A blocked Commander goes lease-stale while healthy.",
+      "expected": "Heartbeat age tracks liveness.",
+      "observed": "run_crew.py is blocking by design and a parent waiting on a child issues no mutating verb, so it cannot heartbeat. Measured at 53 minutes blocked on a live crew, with the engine already calling that lease stale.",
+      "source": "tc2; the Admiral is filing it on the tracker himself"
+    },
+    {
+      "claim": "The g1 implementer dispatch is recorded in the durable crew registry.",
+      "expected": "crew-runs.json holds a g1-implement/implementer entry, because doctrine says NEVER hand-launch a crew and every dispatch goes through run_crew.py.",
+      "observed": "crew-runs.json held only three entries at leg 3 start, all execute/commander (the Admiral's three dispatches of this lane). There is no g1-implement entry, though g1-implementer-result.md exists and the gate is closed and committed at 3bc87e93. The work is delivered; the registry did not capture it.",
+      "source": "recover_crews.py cleanup-b-context-identity and crew-runs.json, read at leg 3 start"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "R4's literal third case would have written one agent's context reading into another agent's owner-keyed file — a fabricated reading, worse than no reading.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "The fixed decision R4 itself, and through it the g1-review gate's check (d), which still demands the superseded behaviour.",
+      "evidence": "ADMIRAL_RULING-2.md, which accepts leg 2's departure and amends R4's fourth row to skip-plus-sidecars; the #202/#261 fan-out revert it points at.",
+      "reason": "A settled/admiral ruling was shown to be wrong on one branch by measurement. The Admiral amended it after being shown the measurement; the Commander carried it up rather than narrowing it quietly. The frozen gate imperative was NOT hand-edited — the amendment was relayed to the reviewer through the handoff."
+    },
+    {
+      "id": "D1",
+      "signal": "A blocked Commander goes lease-stale while healthy, at 53 minutes measured, because run_crew.py blocks and a waiting parent issues no mutating verb.",
+      "classification": "later_only",
+      "affects": "Anything judging a lease or an entry by heartbeat age — directly qualifying the liveness work merged this morning in lane C.",
+      "evidence": "tc2, measured during leg 2; the engine called the lease stale while the crew was live.",
+      "reason": "It does not block this wave's exit — this lane's own lease survived it. It qualifies work already merged, so it belongs to the next wave. The Admiral has taken the filing himself; it is not auto-filed here."
+    },
+    {
+      "id": "D2",
+      "signal": "The prescribed Wiring Grep is a format sweep, not a dependency sweep: grepping the literal gauge.json could not see a dependency expressed as gauge_reader.py.",
+      "classification": "later_only",
+      "affects": "The Wiring Grep step as doctrine, everywhere it is prescribed — not just this lane.",
+      "evidence": "tc3; the full suite caught what the grep missed. Uncaught it would have shipped a dark governor into every install.",
+      "reason": "The Admiral ruled this is worth stating as DOCTRINE rather than a defect, so it is an amendment to how a sweep is specified, not a repair to this wave."
+    },
+    {
+      "id": "D3",
+      "signal": "A SessionStart/stop hook tells a dispatched crew to drive its PARENT's execute gate, because it resolves SPINE_FILE from an inherited environment — the same defect as #600, one layer up.",
+      "classification": "evidence_only",
+      "affects": "Crew dispatch generally: acting on the misfire needs a --force takeover of a live parent's lease and would deadlock the wave.",
+      "evidence": "tc1. The crew verified the refusal by command and left spine.json byte-identical. Leg 3's own SessionStart carried the same foreign imperative and was likewise not acted on.",
+      "reason": "The defect is real and recorded, but every crew so far has correctly refused it and the refusal is cheap. It is recorded as evidence; it is not auto-filed."
+    },
+    {
+      "id": "D4",
+      "signal": "map_orient.py verify-frame refuses decision:/constraint:/assumption:/claim: ids whenever the map is DEGRADED, so a frame complying with the required template cannot pass.",
+      "classification": "evidence_only",
+      "affects": "plan.c6, which was WAIVED on this reason — recorded, not skipped.",
+      "evidence": "tc6, filed at plan. All 11 refusals were decision ids while the frame's path citations resolved cleanly.",
+      "reason": "It is a checker defect, not a frame defect, and the waiver records who accepted it and why. No issue is filed automatically."
+    },
+    {
+      "id": "D5",
+      "signal": "The g1 implementer dispatch is absent from the durable crew registry, though its result artifact exists and the gate is closed and committed.",
+      "classification": "evidence_only",
+      "affects": "Crash-resume fidelity: a relaunched Commander running recover_crews.py first — the prescribed cold-start move — would see no implementer crew at all, and the artifact on disk is the only thing that prevents a blind redispatch of work that is already committed.",
+      "evidence": "recover_crews.py cleanup-b-context-identity at leg 3 start reported three crews, all execute/commander; crew-runs.json confirms no g1-implement entry; g1-implementer-result.md (31KB) and commit 3bc87e93 exist.",
+      "reason": "No work was lost and the gate is sound, so this does not block the wave exit. It is recorded because the registry is the mechanism relaunch safety rests on, and here it was the artifact rather than the registry that carried the signal. Not auto-filed."
+    }
+  ],
+  "open_current_wave_issue_ids": ["600", "500"],
+  "unlaunched_items": [
+    {"id": "identity-not-time-completion", "kind": "forecast"},
+    {"id": "liveness-vs-blocked-parent", "kind": "forecast"},
+    {"id": "500-context-fit", "kind": "uncertainty"},
+    {"id": "lane-c-549-remeasurement", "kind": "uncertainty"},
+    {"id": "fan-out-to-every-bound-spine", "kind": "parked"},
+    {"id": "allowlist-owner-key", "kind": "parked"}
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/gauge_reader.py",
+      "scripts/hooks/gauge_writer_hook.py",
+      "scripts/checklist_engine.py",
+      "scripts/install_constellation.py",
+      "docs/GAUGE_WRITER_HOOK.md"
+    ],
+    "map_status": "DEGRADED — map/ids.jsonl is empty and the per-module INDEX.md targets are absent. The hash-pinned substitute entry point is docs/GAUGE_WRITER_HOOK.md, recorded in .agent-work/cleanup-b-context-identity/map-orientation.json. map/INDEX.md was regenerated with py -m scripts.code_map build to resolve the main-merge conflict at ccb8b8d8."
+  }
+}

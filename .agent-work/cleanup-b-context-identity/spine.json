@@ -401,12 +401,12 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "blocked",
+      "status": "in-progress",
       "status_detail": {
         "blocker": "CONTEXT EXHAUSTED at a clean gate boundary -- relaunch, not rework. g1-implement is CLOSED and committed (3bc87e93); g1-review is NOT begun because the engine itself refused to start it: 'context at 17% is at/over the hard limit, so this is not the moment to BEGIN work here -- finish and close the gate you are already in, then request a refresh so a fresh agent starts this one.' That refusal was obeyed rather than routed around, and refresh-requests are attached at both seams (e-g1-review-1 on execute.json g1-review, e-execute-3 on this spine's execute). WHAT THE ADMIRAL OWES A DECISION ON: the implementer narrowed R4 in one branch -- with 2+ candidates under ONE binding key resolving to TWO DISTINCT owners it skips rather than writing every candidate, because one binding key has exactly one transcript and writing it to both files agent A's fill against agent B, which is the #202/#261 fan-out dead end. R4's rationale is satisfied; its literal wording did not anticipate that branch. It behaves exactly as today and reverses in one line. NOT blocking -- the reviewer adjudicates, the Admiral rules. STATE: #600 shipped and UNREVIEWED, #500 not started (DESIGN_500.md hand-back stands), decision:identity-not-time explicitly NOT complete. Four triage candidates filed (tc1 the same defect one layer up in the hooks, tc2 a blocked Commander goes lease-stale while healthy, tc3 a format sweep is not a dependency sweep, tc6 verify-frame refuses decision ids under a degraded map). Still owed: REPLAN_INPUT.json, retiring measurement/probe_cross_key.py at g1-integrate, the lane C #549 re-measurement, and g2-implement-500. RELAUNCH INTO THIS SAME SPINE AND LEASE NAME -- no --force; #601 re-stamps claimed_at. Read LEG2_DIGEST.md then STATE_NOTE.md; the reviewer handoff is already written at crew-handoffs/g1-reviewer-handoff.md.",
         "authority_needed": "parent agent",
         "next_action": "",
-        "prior_status": "in-progress"
+        "resume_reason": "Leg 3 relaunched with fresh context under LAUNCH_ORDER-3.md. p1 satisfied: constellation-commander-delegated reloaded and active, commander-core.md and crew-dispatch.md read. p2 satisfied: STATE_NOTE.md rewritten (verify_state_note.py OK). Lease re-claimed without --force; main merged at ccb8b8d8 and the baseline re-measured green at 3104 passed / 6 skipped / 0 failed."
       },
       "result": null,
       "finding": null,
@@ -710,25 +710,18 @@
       "statement": "map_orient.py verify-frame refuses decision/constraint/assumption/claim ids whenever the map is DEGRADED, so a template-compliant mission frame in a repo with no packet map cannot pass c6. frame_verdict's non-RESOLVED branch appends an unconditional 'cannot resolve' problem for every id scan_anchors returns, and ANCHOR_RE's vocabulary is struct|capability|event|constraint|assumption|claim|decision. Only struct and capability are map-inventory ids; a decision id is minted by the launch order and the run and exists whether or not a map does. Measured here: 11 problems, ALL of them decision ids, while the frame's path citations resolved cleanly against the receipt's hash-pinned substitutes -- so the map-ignoring regression floor the gate exists for was actually met. The only ways past are a waiver or deleting the section the template requires. Suggested fix: check map membership only for map-inventory ids, and check run-minted ids some other way or not at all."
     }
   ],
-  "blockers": [
-    {
-      "item": "execute",
-      "blocker": "CONTEXT EXHAUSTED at a clean gate boundary -- relaunch, not rework. g1-implement is CLOSED and committed (3bc87e93); g1-review is NOT begun because the engine itself refused to start it: 'context at 17% is at/over the hard limit, so this is not the moment to BEGIN work here -- finish and close the gate you are already in, then request a refresh so a fresh agent starts this one.' That refusal was obeyed rather than routed around, and refresh-requests are attached at both seams (e-g1-review-1 on execute.json g1-review, e-execute-3 on this spine's execute). WHAT THE ADMIRAL OWES A DECISION ON: the implementer narrowed R4 in one branch -- with 2+ candidates under ONE binding key resolving to TWO DISTINCT owners it skips rather than writing every candidate, because one binding key has exactly one transcript and writing it to both files agent A's fill against agent B, which is the #202/#261 fan-out dead end. R4's rationale is satisfied; its literal wording did not anticipate that branch. It behaves exactly as today and reverses in one line. NOT blocking -- the reviewer adjudicates, the Admiral rules. STATE: #600 shipped and UNREVIEWED, #500 not started (DESIGN_500.md hand-back stands), decision:identity-not-time explicitly NOT complete. Four triage candidates filed (tc1 the same defect one layer up in the hooks, tc2 a blocked Commander goes lease-stale while healthy, tc3 a format sweep is not a dependency sweep, tc6 verify-frame refuses decision ids under a degraded map). Still owed: REPLAN_INPUT.json, retiring measurement/probe_cross_key.py at g1-integrate, the lane C #549 re-measurement, and g2-implement-500. RELAUNCH INTO THIS SAME SPINE AND LEASE NAME -- no --force; #601 re-stamps claimed_at. Read LEG2_DIGEST.md then STATE_NOTE.md; the reviewer handoff is already written at crew-handoffs/g1-reviewer-handoff.md.",
-      "authority_needed": "parent agent",
-      "next_action": ""
-    }
-  ],
+  "blockers": [],
   "origin": {
     "work_id": "cleanup-b-context-identity",
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity",
     "opened_by": "init_work_area"
   },
-  "refusals": 6,
+  "refusals": 7,
   "engine_session": {
     "session_id": "commander-cleanup-b-context-identity",
     "status": "active",
     "claimed_at": "2026-08-16T14:13:23.541364+00:00",
-    "last_heartbeat": "2026-08-16T14:13:23.541364+00:00",
+    "last_heartbeat": "2026-08-16T14:16:45.385400+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,

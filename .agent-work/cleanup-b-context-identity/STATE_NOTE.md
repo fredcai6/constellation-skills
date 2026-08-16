@@ -1,15 +1,19 @@
 # Crash-resume state note — cleanup-b-context-identity
 
-- **step:** execute · gate `g1-review` **not begun** (`g1-implement` closed and committed at `3bc87e93`) · leg 3 picks up here
+- **step:** execute · leg 3 · gate `g1-review` **in-progress**, reviewer crew dispatched and running (`e0-context`, `g0-measure`, `g1-implement` closed; `g1-implement` committed at `3bc87e93` — **do not rerun the g1 implementer**)
 - **slug:** cleanup-b-context-identity · branch `cleanup/b-context-identity` · worktree `/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity`
-- **next command:** re-claim the lease (`claim --session-id commander-cleanup-b-context-identity`, **never** `--force`), then `env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py /home/tommy/.claude/skills/constellation-workbench/scripts/checklist_engine.py --file .agent-work/cleanup-b-context-identity/execute.json start g1-review`
-- **pid:** none — no crew running. `recover_crews.py cleanup-b-context-identity` at handoff: attempt-1 commander ABANDONED, attempt-2 commander (leg 2, this session) exiting, g1 implementer COMPLETE — do not rerun it
-- **expected artifact:** `.agent-work/cleanup-b-context-identity/crew-handoffs/g1-reviewer-result.md`, dispatched with the already-written `g1-reviewer-handoff.md`
-- **read first:** `.agent-work/cleanup-b-context-identity/LEG2_DIGEST.md` — verdict, the R4 departure carried up to the Admiral, four triage candidates, and exactly where to pick up
-- **why leg 2 stopped:** the engine refused `start g1-review` at 17% of the 150000 absolute cap. A `refresh-request` is attached (`e-g1-review-1`, seam `g1-review`, `why_ref w-3`), so the guard takes its release path for you
-- **spine session id:** `commander-cleanup-b-context-identity` — #601 re-stamps `claimed_at` on a re-claim, so you do not inherit leg 2's reading
-- **governing docs, in order:** `ADMIRAL_RULING-1.md` (R1–R5, supersedes the frozen order where they disagree) → `LAUNCH_ORDER-2.md` → `LAUNCH_ORDER.md` → revised `MISSION_FRAME.md` and `execute.json`
-- **do not redo:** the measurement (`notes-b.md` §1–2b, `measurement/`), the `SessionStart` bind-on-resume finding, `DESIGN_500.md`, `CRITIC_TRIAGE.md`'s 11 findings, and now leg 2's shipped #600 change. Cite them.
-- **still owed:** `REPLAN_INPUT.json` (execute's own postcondition refuses completion without it), retiring `measurement/probe_cross_key.py` at `g1-integrate`, the lane C #549 re-measurement, and `g2-implement-500`
+- **next command:** `py /home/tommy/.claude/skills/constellation-commander/scripts/recover_crews.py cleanup-b-context-identity` FIRST — the reviewer's result may already be on disk. If it is, integrate it and `advance g1-review`; if the crew is `resumable`, `run_crew.py --resume constellation/cleanup-b-context-identity/g1-review/reviewer/attempt-1`. **Do not blind-redispatch.**
+- **pid:** `3475314` (reviewer crew, `cli` backend; wrapper pid `3475311`). Legs 1 and 2 of this lane are now explicitly ABANDONED in the registry and no longer block a launch; attempt-3 is this session.
+- **expected artifact:** `.agent-work/cleanup-b-context-identity/crew-handoffs/g1-reviewer-result.md` (crew stdout/stderr under `crew-runs/g1-review-reviewer-attempt-1.*`)
 
-_Updated: 2026-08-16T14:15:00Z (leg 2 handoff)_
+## Leg 3 facts a fresh agent needs
+
+- **lease:** `commander-cleanup-b-context-identity`, re-claimed at leg 3 start (claim re-stamped by #601). **Never `--force`** — the lease is this lane's own.
+- **main is merged:** `ccb8b8d8` merges `main` (`d7b911a7`, which carries lane C `df6f951b` and lane D) into the branch. `map/INDEX.md` conflicted and was resolved by regenerating it with `py -m scripts.code_map build`, not by hand.
+- **gate-time baseline, re-measured after the merge with `__pycache__` cleared:** `3104 passed, 6 skipped, 0 failed` (125s). The stale 3057 in the frozen order and the 3089 in `LAUNCH_ORDER-3.md` are both superseded by this reading.
+- **read first:** `LAUNCH_ORDER-3.md` → `ADMIRAL_RULING-2.md` → `ADMIRAL_RULING-1.md` → `LEG2_DIGEST.md` → `LAUNCH_ORDER-2.md` → `LAUNCH_ORDER.md`.
+- **do not redo:** the measurement (`notes-b.md` §1–2b, `measurement/`), the `SessionStart` bind-on-resume finding, `DESIGN_500.md`, `CRITIC_TRIAGE.md`'s 11 findings, leg 2's shipped #600 change. Cite them.
+- **still owed:** `g1-review`; `g1-integrate` (retire `measurement/probe_cross_key.py`, lane C #549 re-measurement); `REPLAN_INPUT.json` (execute's postcondition refuses completion without it); `g2-implement-500` under R5 **only if context allows** — a third hand-back of `DESIGN_500.md` is an accepted outcome, running long to avoid it is not.
+- **park at `archive`. Do not merge** — publication is the Admiral's class.
+
+_Updated: 2026-08-16T14:35:00Z (leg 3, before `resume execute`)_

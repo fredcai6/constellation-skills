@@ -2,12 +2,48 @@
 
 Work id: `cleanup-b-context-identity` · worktree
 `/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity`
-· branch `cleanup/b-context-identity` · merge base `a69bbac4`.
+· branch `cleanup/b-context-identity`.
+
+## AMENDMENT — read this first, it changes check (d) and departure 1
+
+This handoff and the gate imperative were both written **before**
+`.agent-work/cleanup-b-context-identity/ADMIRAL_RULING-2.md` existed. That ruling
+is now the **top authority** and it amends R4. Read it before anything else.
+
+Three things it changes for you:
+
+1. **Departure 1 is ACCEPTED — you are not adjudicating whether to accept it.**
+   The Admiral ruled his own R4 under-specified: with 2+ candidates carrying two
+   or more **distinct owners** under one binding key, skip-plus-sidecars is
+   **correct**, because one binding key has one transcript belonging to one
+   agent, and owner-keying the destination cannot make a single sample true of
+   two owners. Writing it to both stamps agent A's fill with agent B's name — a
+   fabricated reading, the #202/#261 dead end.
+2. **The gate imperative's check (d) is partly superseded.** Its clause "and two
+   distinct owners in one work directory BOTH write" is **no longer the required
+   behaviour**; that row is amended to **skip + sidecars**. Verify the amended
+   behaviour, and do **not** raise a finding against the change for matching the
+   ruling rather than the frozen imperative. The rest of (d) stands unchanged.
+3. **Two things the Admiral explicitly held to — verify both, they are the
+   sharpest checks in this review:**
+   - **#488's own case must still WRITE.** An Admiral's `spine.json` and its
+     `latitude-interrogation.json` in one work directory share one lease and
+     therefore **one owner**, so they are the write case. Confirm the pinning
+     test exercises the **same-owner** path **specifically** — not merely "two
+     candidates". A test that passes only because there happen to be two
+     candidates does not pin #488, and saying so is a finding.
+   - **The skip must remain VISIBLE.** Sidecars must be written on the skip
+     branch. A silent skip here is the silent-governor failure this subsystem
+     has been burned by three times (#252, #271, #488). Drive it and see the
+     sidecar, do not read for it.
+
+Everything else in this handoff still binds.
 
 ## Gate
 
 `g1-review` in `.agent-work/cleanup-b-context-identity/execute.json`. Read that
-gate's imperative — it lists checks (a)–(i) and they are your spine.
+gate's imperative — it lists checks (a)–(i) and they are your spine, **as
+amended above**.
 
 ## Survey State Location
 
@@ -24,9 +60,11 @@ record. The engine resolves the same name from its **own** active lease
 
 Read these three in this order before the diff:
 
+0. `.agent-work/cleanup-b-context-identity/ADMIRAL_RULING-2.md` — **the top
+   authority.** It amends R4; see the Amendment section above.
 1. `.agent-work/cleanup-b-context-identity/ADMIRAL_RULING-1.md` — **R1–R5 are the
-   authority.** R1 and R2 are the human's own rulings. Where the frozen launch
-   order disagrees, the ruling wins.
+   authority** except where ruling 2 amends them. R1 and R2 are the human's own
+   rulings. Where the frozen launch order disagrees, the ruling wins.
 2. `.agent-work/cleanup-b-context-identity/crew-handoffs/g1-implementer-result.md`
    — what was built, the TDD evidence, and **three flagged departures** you must
    adjudicate rather than accept.
@@ -41,10 +79,24 @@ timestamp guard is **structurally blind** to it.
 
 ## How to Inspect the Diff
 
+**The branch has moved since this handoff was first written.** `main` was merged
+in at `ccb8b8d8` (bringing lane C `df6f951b` and lane D `43c577d4`), so
+`git diff a69bbac4` would now hand you lane C's and lane D's changes mixed in
+with the one under review. It is no longer the right range — do not use it.
+
+The #600 change under review is exactly **one commit, `3bc87e93`**:
+
 ```
 cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity
-git diff a69bbac4 -- scripts/ tests/ docs/ map/
-git diff --stat a69bbac4
+git show 3bc87e93
+git diff --stat 3bc87e93^ 3bc87e93
+```
+
+Review the change at **HEAD** (the merged tree), but scope the *diff* to that
+commit. If you want to confirm nothing since has touched the files it owns:
+
+```
+git log --oneline 3bc87e93..HEAD -- scripts/ tests/ docs/
 ```
 
 Live corroboration you can see for yourself: `.agent-work/.spine-rail-binding.json`
@@ -83,21 +135,18 @@ risk, and why:
   the refusal paths; do not sample them. This is the lane's hard latitude
   boundary — a new refusal is not shippable here and must be floated.
 
-## The three departures you are adjudicating
+## The departures — one resolved above, two still yours
 
-The implementer flagged all three rather than taking them quietly. Judge each on
-the merits; you may confirm, narrow, or reject.
+The implementer flagged all three rather than taking them quietly. Departure 1
+has since been ruled on by the Admiral. Judge 2 and 3 on the merits; you may
+confirm, narrow, or reject.
 
-1. **R4 narrowed in one branch.** With 2+ candidates under **one** binding key
-   resolving to **two distinct owners**, the implementer **skips** instead of
-   writing every candidate. The argument: one binding key has exactly **one**
-   transcript, so writing it to both files agent A's fill against agent B — the
-   fan-out dead end tried, measured and reverted in #202/#261. R4's *rationale*
-   ("the writer could not tell whose reading it held") is satisfied by
-   owner-keying; its literal wording did not anticipate that third branch. The
-   branch behaves exactly as today, so it cannot make the governor louder.
-   **Test the claim that this branch is unreachable-or-conservative, and say
-   whether you agree the literal reading would re-arm a known dead end.**
+1. ~~**R4 narrowed in one branch.**~~ **RESOLVED — no longer yours to
+   adjudicate.** The Admiral accepted this departure in `ADMIRAL_RULING-2.md`
+   and amended R4 to match it. Your job on this branch is now the two
+   verification obligations in the Amendment section above (#488's same-owner
+   case still WRITES and its test pins the same-owner path specifically; the
+   skip stays VISIBLE via sidecars). Verify those and move on.
 2. **Three files outside Allowed Scope:** `scripts/install_constellation.py` (+
    its test) and `map/INDEX.md`. The claimed justification is that the install
    destination is **flat**, so a loader written only for this checkout's layout
@@ -121,6 +170,20 @@ Review only. Do not edit implementation files. Write your survey and your
 `scripts/hooks/spine_rail.py`, `tests/test_spine_rail.py`, `scripts/run_crew.py`
 (lane C); `scripts/mcp_spine_server.py`, `.mcp.json` (lane A); `episodes/**`;
 `checklist_engine.py`'s **claim path** (#601 landed on `main` this morning).
+
+Note on **whole-file vs in-file** fences, because they are checked differently
+and one of them is the real risk here. The whole-file fences are cheap to
+confirm — `git diff --stat 3bc87e93^ 3bc87e93` should not list any of them, and
+lane C's own edits to `spine_rail.py`/`run_crew.py` arrived on the branch through
+the `main` merge at `ccb8b8d8`, not from this change, so scope the check to the
+commit and they are clean.
+
+The in-file fence is the one that needs real work: **`checklist_engine.py` is
+touched by this commit** (~158 lines). The fence is on its **claim path**
+specifically, not on the file. Read the `checklist_engine.py` hunks of
+`git show 3bc87e93` and confirm the claim path — and #601's `claimed_at`
+re-stamp in particular — is untouched. Do not settle for "the file changed for
+gauge reasons"; point at the hunks and say so.
 
 `measurement/probe_cross_key.py` is **deliberately** left describing the *pre-fix*
 world and is **not** a defect — retiring it belongs to the Commander at
@@ -180,8 +243,20 @@ cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identi
 ```
 
 The merge gate is a **failure-set difference** against a `main` baseline
-**re-measured at gate time**, not an absolute number. `main` was 3057 passed / 0
-failed at dispatch; measure both sides yourself and report both.
+**re-measured at gate time**, not an absolute number. Two figures in the older
+documents are stale and you should ignore both: **3057** (the frozen order) and
+**3089** (`LAUNCH_ORDER-3.md`, measured before `main` moved again).
+
+The Commander re-measured at the top of this gate, on the merged branch at
+`ccb8b8d8`, with `__pycache__` cleared first:
+
+```
+3104 passed, 6 skipped, 0 failed in 125.02s
+```
+
+Measure both sides yourself and report both. **Zero failures is the bar** — a
+failure-set difference of zero against a green baseline means the same thing as
+an absolute green, and that is what you should see.
 
 ## Suggested Model Tier
 
