@@ -198,9 +198,11 @@ class SpineOpenNeverBindsIdentityTests(unittest.TestCase):
         self.assertEqual(
             [], offenders,
             f"_spine_open's own source now references {offenders} -- spine_open must act "
-            "purely on ambient, server-launch-time state (SPINE_FILE/SPINE_PARENT re-read "
-            "fresh) and never on the identity THIS door happens to be bound to, or a call "
-            "meant to open unrelated work could be redirected onto the bound spine",
+            "purely on server-launch-time state (SPINE_PARENT re-read fresh from the "
+            "environment, and the repo root from _primary_checkout_for_lifecycle, which "
+            "reads no environment at all) and never on the identity THIS door happens to "
+            "be bound to, or a call meant to open unrelated work could be redirected onto "
+            "the bound spine",
         )
 
     def test_the_spine_open_identity_pin_can_fail(self):
