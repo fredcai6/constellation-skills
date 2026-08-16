@@ -1,0 +1,233 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "cleanup-a-door \u2014 make the MCP door usable by the session that needs it",
+      "spec_path": ".agent-work/cleanup-a-door/LAUNCH_ORDER.md",
+      "intent_and_why": "An orchestrator could not bind the door to a spine it was about to create, so every epic since #424 drove its own spine through the CLI \u2014 the opposite of what #559 ruled."
+    },
+    "definition_of_done": [
+      "A session started with no SPINE_FILE calls spine_open, gets bound, and drives a real spine end to end without touching the CLI."
+    ],
+    "good_enough": {
+      "mandatory_quality": "The identity guard is not weakened while it is made reachable",
+      "sufficient_evidence": "Subprocess probes plus committed regression tests that fail pre-fix",
+      "appetite": "One working session, three defects"
+    },
+    "hard_constraints": [
+      "_identity_violation's semantics are fenced",
+      "No tool takes a spine path per call",
+      "checklist_engine.py, scripts/hooks/**, run_crew.py, gauge_reader.py belong to lanes B and C"
+    ],
+    "fixed_decisions": [
+      "decision:one-spine-per-process-stands",
+      "decision:fail-closed-beats-fail-open",
+      "decision:telemetry-never-fatal",
+      "decision:bind-on-open-over-new-verb",
+      "decision:demo-spine-is-generated-not-hand-fixed"
+    ],
+    "current_wave": {
+      "objective": "Fix #604, #605 and #603 so the door is usable",
+      "exit_criteria": [
+        "Unbound door refuses by name",
+        "spine_open binds the calling process",
+        "A mutating verb then succeeds",
+        "Full clean-env Linux suite green"
+      ],
+      "issues": [
+        {
+          "id": "604",
+          "title": "The door dies on its own call log",
+          "desired_outcome": "A telemetry write can never fail a call or the server.",
+          "useful_now": "It is a prerequisite for probing an unbound door at all.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "Probe exit 1 -> exit 0, plus a test that fails pre-fix.",
+          "implementation_latitude": "Where the guard sits; test structure.",
+          "hard_constraints_no_gos": [
+            "Do not change _identity_violation"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/mcp_spine_server.py"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "605",
+          "title": "The shipped demo spine is unusable",
+          "desired_outcome": "The demo runs where it is installed, on any machine.",
+          "useful_now": "g3 removes the demo default, so demo-first keeps every commit coherent.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "Driven from two unrelated cwds; guard fails on pre-fix content.",
+          "implementation_latitude": "How the spine is generated and addresses its own files.",
+          "hard_constraints_no_gos": [
+            "Do not touch .mcp.json"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "examples/mcp-interactive-demo"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "603",
+          "title": "The door cannot be bound, and fails open when unbound",
+          "desired_outcome": "Fail closed, and bind on open.",
+          "useful_now": "It is the epic's exit criterion.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "Unbound refuses -> spine_open binds -> claim succeeds, in one process.",
+          "implementation_latitude": "Refusal wording; where the check sits; how the checkout is derived when unbound.",
+          "hard_constraints_no_gos": [
+            "_identity_violation is fenced",
+            "No per-call spine argument"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/mcp_spine_server.py",
+            ".mcp.json"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Agent-facing skills stop teaching the CLI as the default path",
+        "why_likely": "The door is now bindable by the session that needs it",
+        "entry_conditions": [
+          "This wave merges"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "What the launch order's 'door-detection change' refers to",
+        "affects": "scripts/install_constellation.py and skills/commander/templates/COMMANDER_SPINE.template.json",
+        "settle_by": "Admiral ruling",
+        "current_evidence": "No such concept exists anywhere in the repo; none of #603/#604/#605 mentions either file",
+        "next_probe": "Ask the Admiral"
+      }
+    ],
+    "parked_possibilities": [
+      "Consolidate the ~7 restatements of the door's binding rule into one source of truth"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "604",
+      "outcome": "A telemetry write can no longer fail a tool call or kill the door.",
+      "evidence": "Same probe, same missing-directory target: exit 1 pre-fix, exit 0 post-fix; tests/test_mcp_door_telemetry.py fails 5/7 on a reverted server; reviewer mutation-tested the guards three ways."
+    },
+    {
+      "issue_id": "605",
+      "outcome": "The shipped demo spine runs where it is installed, on any machine.",
+      "evidence": "Zero machine-specific paths under examples/; driven end to end from /tmp and from $HOME with the default workspace branch; the portability and regenerate-and-compare guards fail 3/7 on the pre-fix spine."
+    },
+    {
+      "issue_id": "603",
+      "outcome": "The door fails closed when unbound and spine_open binds the calling process, so a session that starts unbound can mint work and drive it.",
+      "evidence": "Reproduced in one process: unbound refused by name, spine_open returned SPINE_FILE and SPINE_SESSION, spine_lease claim succeeded. tests/test_mcp_lifecycle.py:194 byte-identical (zero removed lines vs a69bbac4) with a stronger module-wide assignment pin added; tests/test_mcp_door_unbound.py fails 12/12 on a reverted server."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "#604 killed the server",
+      "expected": "exit 1 on a missing spine directory",
+      "observed": "exit 1 pre-fix, exit 0 post-fix, same probe",
+      "source": "door_probe.py subprocess"
+    },
+    {
+      "claim": "An unbound door answered about a demo spine",
+      "expected": "a refusal",
+      "observed": "pre-fix: KeyError at import, exit 1 (unset) and IsADirectoryError (empty). post-fix: both refuse by name, server alive",
+      "source": "door_probe.py subprocess"
+    },
+    {
+      "claim": "The epic exit criterion is reachable",
+      "expected": "unbound refuses, spine_open binds, a mutating verb succeeds",
+      "observed": "reproduced in one process: claim succeeded as constellation/verify-exit-criterion",
+      "source": "commander probe"
+    },
+    {
+      "claim": "The fenced identity guard is intact",
+      "expected": "tests/test_mcp_lifecycle.py:194 unchanged",
+      "observed": "zero removed lines vs a69bbac4; a stronger module-wide pin added beside it",
+      "source": "git diff"
+    },
+    {
+      "claim": "No regression",
+      "expected": "full clean-env suite green",
+      "observed": "3093 passed, 6 skipped, 1153 subtests, 0 failed at 5a626351; main baseline at e36e630b 3103 passed, 0 failed \u2014 both failure sets empty",
+      "source": "pytest"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "map/ids.jsonl is tracked but empty (0 bytes), so map_orient resolves no anchor for any area and verify-frame cannot pass for any mission frame in this repo",
+      "classification": "evidence_only",
+      "affects": "Every commander run in this repo, not just this lane",
+      "evidence": "map_orient.py orient returns DEGRADED-UNPARSEABLE; verify-frame reports 7 unresolvable anchors",
+      "reason": "Out of lane A's file ownership; recorded, not filed"
+    },
+    {
+      "id": "D1",
+      "signal": "The launch order's 'door-detection change' for install_constellation.py and COMMANDER_SPINE.template.json is undefined and no such concept exists in the repo",
+      "classification": "blocks_current_wave_exit",
+      "affects": "The fourth gate the order implied but never specified",
+      "evidence": "grep across scripts/ skills/ docs/ returns one false positive; none of #603/#604/#605 mentions either file",
+      "reason": "Floated to the Admiral; the plausible reading collides with a must-float item"
+    },
+    {
+      "id": "D2",
+      "signal": "This change invalidated claims in three FENCED files owned by lanes B and C",
+      "classification": "later_only",
+      "affects": "scripts/run_crew.py:468-471, scripts/hooks/spine_rail.py:1081, tests/test_spine_rail.py:2698",
+      "evidence": "All three still assert mcp_spine_server raises KeyError or reads SPINE_FILE at module scope; both false since #603",
+      "reason": "Fenced \u2014 reported to the Admiral rather than fixed"
+    },
+    {
+      "id": "D3",
+      "signal": "The launch order recorded main at 3057 passed; measured 3058 at the same commit",
+      "classification": "evidence_only",
+      "affects": "Baseline bookkeeping only",
+      "evidence": "pytest at a69bbac4",
+      "reason": "Off-by-one in the order's figure; no action"
+    },
+    {
+      "id": "D4",
+      "signal": "The order said this repo has no docs/agents/ overlay",
+      "classification": "drop",
+      "affects": "Which context the run loaded",
+      "evidence": "ORCHESTRATOR_CONTEXT.md, GLOSSARY.md and CREW_CONTEXT.md are all tracked and were read",
+      "reason": "The order's claim was simply false; the correct files were used"
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {
+      "id": "door-detection-change",
+      "kind": "issue"
+    },
+    {
+      "id": "consolidate-binding-restatements",
+      "kind": "parked"
+    },
+    {
+      "id": "map-ids-jsonl-empty",
+      "kind": "uncertainty"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/mcp_spine_server.py",
+      "examples/mcp-interactive-demo",
+      ".mcp.json"
+    ],
+    "map_status": "map/INDEX.md is generated and fresh; map/ids.jsonl is empty so no anchor ids resolve"
+  }
+}

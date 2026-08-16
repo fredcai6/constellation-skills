@@ -1,0 +1,23 @@
+**My dispatch is complete; the mid-flight signal is not mine.** I checked rather than assumed:
+
+| | |
+|---|---|
+| Mid-flight spine | `.agent-work/cleanup-a-door/spine.json`, type `gated`, gate `execute` |
+| Its lease owner | `commander-cleanup-a-door` (claimed_by `commander`) — **not** my session |
+| My work file | `.agent-work/cleanup-a-door/g2-review/review.json`, type `survey` |
+| Its state | 7/7 items `complete`/`pass`, consolidated `APPROVE`, lease **released** |
+| Deliverable | `crew-handoffs/g2-reviewer-result.md`, 19KB, all 12 required sections present |
+
+The hook resolves `SPINE_FILE` and reports on whoever's spine is bound, with no notion of which role the process is. `SPINE_FILE` points at my **parent's** execute spine — that's the reach-up handle for `spine_halt block`, not a checklist for me to drive. Driving it would mean closing the Commander's own gate.
+
+I did not take the exits the hook offered, for concrete reasons:
+
+- **Driving `execute`** is Commander authority. My handoff says "Review only. Report findings; do not fix," and its stop conditions include "a decision outside review authority is needed."
+- **`block`ing it** would inject a false blocker into a run that isn't blocked — my own work finished clean. It's also mechanically refused: I don't hold that lease, so every mutating verb from my session fails the ownership gate, and forcing a takeover of my parent's lease is not a reviewer's move.
+- **`waive` with human authority** would be inventing an authority I don't have — precisely the failure the reviewer skill calls out by name.
+
+So the honest action was to verify my own completion and report, which I've now done. I also recorded the hook misfire in the result's Workflow Feedback: it shares a root cause with the binding confusion the g2 implementer and I both hit independently, and in this form it means **every dispatched crew gets told it abandoned a run at the moment it correctly completed one**. Suggested fix noted there — compare the bound spine's `engine_session.session_id` against the current session and stay silent when they differ.
+
+The reviewed tree is untouched by the whole review: staged-OID manifest diffs clean against its pre-review snapshot, worktree clean against the index.
+
+The `execute` gate stays open because the Commander is the one who resumes it — `run_crew.py` dispatched me foreground/blocking, so control returns there now.

@@ -17,11 +17,15 @@ string-matched around; a wrapper is verified by actually calling through it.
 Mechanism disambiguation, kept explicit (do not conflate these two facts):
 
   - DC3 is about THE DOOR: `mcp_spine_server.py` binds its ambient state
-    (SPINE_FILE, SPINE_ENGINE, SPINE_SESSION) from the environment at
-    server-launch time -- the module's own docstring calls this "the seam
-    identity rides on". DC3 asks whether a subagent given no special
-    configuration can reach a server bound to that seam through the
-    PARENT's own values.
+    (SPINE_FILE, SPINE_ENGINE, SPINE_SESSION) from the environment when the
+    server launches, and that environment seam is what DC3 measures -- it
+    asks whether a subagent given no special configuration can reach a
+    server bound that way through the PARENT's own values. (Since issue #603
+    the launch is no longer the only binding moment: a successful
+    `spine_open` rebinds the process via `_bind_process_to`. That path mints
+    a NEW spine for a door that had none, so it cannot hand a child the
+    parent's identity, and it is out of DC3's scope rather than a second
+    thing measured here.)
   - It is a SEPARATE, CLI/engine-lease fact that two different callers can
     pass the identical free-text `--session-id` string to `checklist_engine
     claim` (a convention at the argument-passing layer, e.g. two crews in one
@@ -490,9 +494,19 @@ class DC3PositiveControlTests(unittest.TestCase):
         """A second, independent way to reach 'no identity': SPINE_FILE
         itself is simply never set (the config-delivery flavor of DC3's
         trap, distinct from the server-never-started flavor above).
-        mcp_spine_server.py requires it at import time, so this crashes
-        immediately -- proof of manipulation is the KeyError itself,
-        verbatim, in the child's own stderr."""
+
+        The CLAIM here is unchanged and is the only thing this control has
+        ever asserted: with no config delivered, the door serves no identity,
+        and the control notices. The MECHANISM changed at gate g3 (issue
+        #603). This used to read `os.environ["SPINE_FILE"]` at import, so the
+        child died with a `KeyError` and proof-of-manipulation was that
+        traceback. A door that dies is indistinguishable from a door that was
+        never installed -- the exact confusion this whole control class
+        exists to separate -- so the door now stays UP and REFUSES.
+
+        Proof of manipulation is correspondingly stronger, not weaker: a
+        positive statement FROM the process under test, naming the reason,
+        instead of a stack trace that only proves something broke."""
         base_env = dict(os.environ)
         for k in SPINE_ENV_KEYS:
             base_env.pop(k, None)
@@ -501,11 +515,14 @@ class DC3PositiveControlTests(unittest.TestCase):
         try:
             with self.assertRaises(AssertionError):
                 assert_door_is_up_and_serving(self, inst, "irrelevant")
-            inst.proc.wait(timeout=10)
-            self.assertNotEqual(0, inst.proc.returncode)
-            stderr = inst.proc.stderr.read()
-            self.assertIn("KeyError", stderr)
-            self.assertIn("SPINE_FILE", stderr)
+            text = inst.status_text(timeout=10)
+            self.assertIsNotNone(
+                text, "the door died instead of refusing -- a dead door cannot "
+                      "distinguish 'no config' from 'never installed'")
+            self.assertIn("no spine is bound", text)
+            self.assertIn("spine_open", text)
+            stderr = inst.proc.stderr.read() if inst.proc.poll() is not None else ""
+            self.assertNotIn("KeyError", stderr)
         finally:
             inst.close()
 
@@ -532,8 +549,12 @@ class DC3PositiveControlTests(unittest.TestCase):
 
 class DC3InheritanceMechanismTests(unittest.TestCase):
     """DC3, at the seam `mcp_spine_server.py`'s own module docstring names:
-    'Ambient state is bound at server-launch time from the environment ...
-    that is the seam identity rides on.' This class measures whether a
+    'Ambient state is bound at launch OR at `spine_open` -- at launch from the
+    environment ...' -- and it is that launch-from-the-environment half that is
+    the seam identity rides on here. (The `spine_open` half, issue #603, binds
+    a process that had no spine to the one it just minted; it does not deliver
+    a PARENT's identity to a child, which is what this class measures.) This
+    class measures whether a
     process launched the way a subagent with NO special MCP configuration
     would be launched -- inheriting whatever environment its caller already
     has, no explicit `--mcp-config` of its own -- can end up reading a
@@ -621,19 +642,29 @@ class DC3InheritanceMechanismTests(unittest.TestCase):
         calling process's real environment, no explicit --mcp-config of its
         own. Per the previous test, that environment structurally cannot
         contain the parent's SPINE_FILE/SPINE_SESSION under this repo's
-        delivery mechanism, so the subagent's server crashes on launch (no
-        SPINE_FILE at all) -- NO IDENTITY, cleanly, never the parent's
-        reading. The positive control is asserted on the PARENT throughout,
-        proving the parent's door stayed genuinely up and unaffected while
-        the subagent's crashed."""
+        delivery mechanism, so the subagent's door has NO IDENTITY, cleanly,
+        and never the parent's reading. The positive control is asserted on
+        the PARENT throughout, proving the parent's door stayed genuinely up
+        and unaffected while the subagent's refused.
+
+        The claim is unchanged since gate g3 (issue #603); the mechanism is
+        not. The subagent's server used to CRASH on launch, and this asserted
+        that crash. It now stays up and refuses -- so the assertion moved from
+        'produced no reply' to 'replied, and what it replied names no spine
+        and is not the parent's'. That is strictly more evidence for DC3: a
+        crash proves only the absence of an answer, while a refusal proves the
+        door was reachable, had no identity of its own, and did not reach the
+        parent's."""
         subagent = ServerInstance(None, None, self.root / "subagent", base_env=None)
         try:
             text = subagent.status_text(timeout=10)
-            self.assertIsNone(text, "a subagent with no special configuration produced a reply -- expected none")
-            subagent.proc.wait(timeout=10)
-            self.assertNotEqual(0, subagent.proc.returncode)
-            stderr = subagent.proc.stderr.read()
-            self.assertIn("SPINE_FILE", stderr)
+            self.assertIsNotNone(
+                text, "the unconfigured subagent's door died instead of refusing")
+            self.assertIn("no spine is bound", text)
+            self.assertNotIn(
+                "parent-session", text,
+                "a subagent with no configuration of its own read the PARENT's identity")
+            self.assertNotIn("PARENT-MARK", text)
 
             assert_door_is_up_and_serving(self, self.parent, "PARENT-MARK")
             parent_text = self.parent.status_text()

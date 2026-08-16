@@ -1,0 +1,197 @@
+{
+  "work_id": "cleanup-a-door",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md + global-everyone.md (inherited), docs/agents/CREW_CONTEXT.md (119 lines: py-is-the-interpreter, record stores never hand-edited, verification discipline incl. 'a check that cannot fail is indistinguishable from one that passed'), docs/agents/GLOSSARY.md (30 terms), the g3 reviewer handoff, the g3 IMPLEMENTER_RESULT, and the commit-4e1f22cb file list (exactly the nine named files).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Both halves landed and I reproduced every load-bearing close criterion myself, black-box against subprocess doors I launched.\n(A) Fail closed: my own sweep (g3-review/reviewer_sweep.py) asks the door via tools/list what it declares -- 11 tools -- then calls ALL 11 with required arguments synthesized from each tool's own inputSchema, so the list is the door's answer and not a hand-maintained one. Across SIX inputs (empty FIRST, then unset, whitespace, missing path, a directory, chmod 000): 11/11 answered, 10 refused, server EXIT 0, stderr empty, every time. The 11th is spine_open, exempt by design; I called it with a deliberately missing required argument so it could not mint anything, and it answered 'missing required argument(s): work_id, spec' -- proving it passed the unbound gate rather than being refused by it.\n(B) Bind on open: g3-review/exit_criterion.py drives ONE process with SPINE_FILE, SPINE_SESSION and SPINE_ENGINE all absent: spine_status REFUSES -> spine_open returns SPINE_FILE + SPINE_SESSION -> spine_lease claim SUCCEEDS ('claimed lease constellation/g3-reviewer-exit -> active'). claim is the load-bearing call and it is the one I got. Server exit 0. Staged in a throwaway git repo and torn down; I verified afterwards that the real checkout has neither the branch nor the worktree.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. 'git show --name-only 4e1f22cb' lists EXACTLY the nine files the handoff named -- .mcp.json, scripts/mcp_spine_server.py, four existing test files, one new test file, examples/mcp-interactive-demo/README.md, map/INDEX.md. No tenth file.\nFenced/excluded paths: scripts/checklist_engine.py, scripts/hooks/**, scripts/run_crew.py and scripts/gauge_reader.py are absent from the commit (lanes B and C untouched). scripts/install_constellation.py, COMMANDER_SPINE.template.json, examples/mcp-interactive-demo/spine.json and make_demo_spine.py are likewise absent -- the floated door-detection doctrine change is deliberately not here, and per the handoff I did not block for it.\nmap/ 'rebuilt' checked rather than assumed: .gitignore:73 ignores map/*, only 2 map files are tracked, and all ten new symbols DO have generated map pages on disk -- so map/INDEX.md being the sole map file in the commit is correct, not a partial rebuild.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "FAIL -- close criterion 13 (full clean-env suite green) is NOT met, and this commit caused it.\n\nMEASURED at HEAD (4e1f22cb), __pycache__ cleared, 'env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q':\n  1 failed, 3092 passed, 6 skipped, 1153 subtests in 126.04s\n  FAILED tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build\n  'map/INDEX.md is stale: rerun python -m scripts.code_map build --root . and commit the result'\n  fresh build: tests 84 modules / 4743 entities; committed INDEX.md: 83 modules / 4710 entities.\nThe implementer's claim was '3093 passed, 6 skipped, 0 failed'. It does not reproduce.\n\nATTRIBUTION (I nearly misattributed this and had to redo it -- my first clone reproduced a false failure at every revision because code_map titles the index from the DIRECTORY NAME, so a clone named anything but constellation-skills fails for a bogus reason). Re-run in a correctly-named clone, one revision at a time:\n  d7b911a7 origin/main  PASS\n  a69bbac4 gate base    PASS\n  0060dc08 g1 #604      FAIL\n  6856953d g1 closed    FAIL\n  4f593b32 g2 #605      PASS   (g2's map rebuild incidentally repaired g1's)\n  408e6d26 g3's parent  PASS\n  4e1f22cb THIS COMMIT  FAIL\nSo the parent is green and this commit turns it red.\n\nMECHANISM, proven not guessed: code_map enumerates via 'git ls-files -- *.py', i.e. TRACKED files only. The implementer's own evidence file is stamped 07:19:27; the commit is 07:27:11. The suite was run EIGHT MINUTES BEFORE the commit, while tests/test_mcp_door_unbound.py was still untracked -- so the fresh build counted 83 test modules and matched the INDEX they had just rebuilt. Committing the file made it tracked, and the same guard went red. The map WAS rebuilt (the commit moves scripts.mcp_spine_server 21->30 entities); it was just rebuilt before its own new test file was staged.\n\nREMEDY, verified: at 4e1f22cb in a clean clone, 'py -m scripts.code_map build --root .' changes map/INDEX.md (3 insertions, 2 deletions) and both MapTreeFreshness tests pass. One command plus a commit. Review-only, so I did not apply it.\n\nRULED OUT: my own five probe scripts under .agent-work/cleanup-a-door/g3-review/ are not the cause -- the failure is byte-identical with them moved out of the tree, and scripts/code_map/discovery.py:16 excludes '.agent-work/' from the mappable corpus outright.\n\nEVERY OTHER EVIDENCE CLAIM REPRODUCED, several stronger than claimed:\n - the new regression test red pre-fix: I swapped in 408e6d26's server and got 12 failed / 0 passed (the result doc claims 9), then restored the server byte-identically (cmp clean) and got 12 passed.\n - unbound+empty refusals, exit 0, no fabricated path: reproduced across six inputs.\n - bind-on-open through to a successful claim: reproduced in one process.\n - :194 pure-addition, IdentityGuardSurvivesARebindTests, env overrides, lease-held refusal: all reproduced.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "FAIL -- one inherited rule is violated three times: global-everyone.md's 'enumerate the blast radius of your own change ... by command, never by memory'. This change renamed or deleted three identifiers and left three artifacts still naming them. All three are documentation, none changes behaviour, and all are one-line fixes.\n\n1. scripts/mcp_spine_server.py:685 -- _log_rejection's docstring still opens 'Append ONE record for a door-own rejection to REJECTIONLOG'. This same commit deleted REJECTIONLOG; I confirmed by AST that none of REJECTIONLOG, CALLLOG or START_MARKER exists as an identifier at HEAD. The replacement is _rejectionlog().\n2. examples/mcp-interactive-demo/README.md:69 -- cites tests/test_mcp_spine_server.py's 'test_mcp_json_referenced_spine_file_exists_and_loads', which this same commit renamed to test_mcp_json_spine_file_is_overridable_and_any_default_loads. A repo-wide grep finds that old name in exactly ONE place: this line. The README's OPENING paragraph, which the handoff asked for, IS correctly fixed -- the miss is 60 lines further down, in the same file the commit edited.\n3. scripts/mcp_spine_server.py:962-963 -- _spine_open's docstring says the repo root 'comes from _primary_checkout_for_lifecycle (ambient SPINE_FILE, re-read fresh)'. That is exactly what the commit STOPPED doing: _primary_checkout_for_lifecycle now reads the SPINE global with a Path(__file__) fallback and no os.environ read at all. The docstring describes the behaviour the change removed.\n\nThis lands under CREW_CONTEXT.md's own 'Assert against behaviour, never against text that describes it -- docstrings are hand-authored and none is checked against what runs'. Item 1 additionally propagates: map/scripts.mcp_spine_server/_log_rejection.md:8 and map/.../INDEX.md:171 are generated from that docstring and now carry the dead name too.\n\nRULES THAT PASS:\n - 'Clear __pycache__ before every measurement' (#597): I cleared it before each measurement.\n - 'Validate against a subprocess you launch': every behavioural claim above comes from a door I launched, never from this session's own door.\n - 'A check that cannot fail is indistinguishable from one that passed': satisfied, and I tested it rather than trusting it -- see r5 for the :588 mutation and the pin-detector matrix.\n - 'Name the exact commands and paste real output including exit codes': the implementer's evidence files do this.\n - Fail-visibly / no hidden fallback: the unbound path refuses by name with isError true and exit 0; no silent binding to cwd remains.\n - Windows encoding rule: every new write passes encoding='utf-8' (newline='\\n' on the rejection log, matching the pre-existing site).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. The Map Impact notes match the diff, and the fenced guard is intact. What I attacked hardest, per the handoff, and what I found.\n\nCRITERION 4 -- the FENCED guard. Not weakened. _identity_violation's source is BYTE-IDENTICAL to a69bbac4 (AST-extracted from both revisions and compared); so is call_tool and _tool_error. IdentityGuardSurvivesARebindTests: 17 passed. Its non-vacuity is real -- test_the_spine_bound_by_the_rebind_is_accepted_after_it stops a refuse-everything guard from satisfying it, and test_the_old_spine_is_refused_after_a_rebind proves a rebind is a MOVE. I also saw the guard fire live AFTER a real rebind: a spine_advance --from-child /etc/passwd was refused naming the NEW spine's directory.\n\nCRITERION 5 -- all four derivations follow the rebind, and there is NO fifth. AST scan of the module: function default arguments referencing SPINE/SESSION/ENGINE = ZERO (the :188 hazard is genuinely gone); module-level statements referencing them = only the two assignments themselves plus sys.path.insert. Then black-box, one door, real spine_open rebind, no env overrides: OLD spine dir got mcp_calls.jsonl with verbs ['current'] only (the pre-rebind call); NEW spine dir got mcp_calls.jsonl ['current','advance'], mcp_server_started, AND mcp_rejections.jsonl. So CALLLOG, START_MARKER and REJECTIONLOG all followed, and the containment bound_dir followed too.\nThe CALLLOG-is-None question: I enumerated every write site in the module (grep for .open( / write_text / exists / mkdir). Five sites. _log's two are both None-guarded before the OSError try; _log_rejection returns early on None; _unbound_refusal:421 only opens a spine already proven non-None; _write_amend_delta:753 uses SPINE.parent but is reachable only through run_engine, which sits behind _unbound_refusal AND behind main()'s dispatch gate. No path reaches an unguarded None.\n\nTHE BINDER'S REACHABILITY. Assignments to SPINE/SESSION anywhere in the module: exactly module scope (:190/:191) and _bind_process_to (:903/:904). _bind_process_to has exactly one call site, _spine_open:1028, after open_work succeeds. I then attacked the new pin's DETECTOR by feeding it twelve rebind forms: it catches plain Assign, AnnAssign, AugAssign, walrus, for-target, with-as, except-as and tuple unpack (8/8). It MISSES globals()['SPINE']=x, setattr(sys.modules[__name__],...), 'import x as SPINE', and 'def SESSION():'. Non-blocking: the hazard the pin's own docstring names -- a convenience helper that quietly sets the session -- is caught, and none of the four misses is a plausible accidental arrival. Recorded as a triage candidate, not a defect.\n\nCRITERION 12 -- :588 is NOT vacuous. The predicate is extracted as _default_spine_problem and its positive control feeds it four broken defaults. I proved it can still fail against the REAL config: I mutated .mcp.json's SPINE_FILE to '${SPINE_FILE:-examples/no-such-spine.json}' and test_mcp_json_spine_file_is_overridable_and_any_default_loads FAILED with 'the default names a spine that is not there'. Restored byte-identically (git diff clean) and green again. A present-but-unresolvable default is still caught.\n\nTHE TWO RECONCILED TEST FILES are honest: test_mcp_door_engine_cwd keeps the class's real claim (the process neither moves nor dies) and adds 'a refused call must never reach the engine'; the two DC3 controls keep their claim and now assert a positive refusal plus assertNotIn('KeyError'), which pins the old death as an anti-assertion.\n\nCORRECTION TO THE RESULT'S OWN TRIAGE CANDIDATES -- two of the four do NOT reproduce, and Commander should not forward them:\n - candidate 1 claims a door launched from another cwd with the relative SPINE_ENGINE 'dies at import with ImportError'. Measured from cwd=/tmp: it answered spine_status normally, exit 0, stderr empty.\n - candidate 2 claims an explicitly-set but bogus SPINE_ENGINE 'still kills the server at import'. Measured with SPINE_ENGINE=/tmp/definitely-not-an-engine.py: it answered normally, exit 0.\nThe reason is structural: ENGINE is used at exactly ONE place, sys.path.insert(0, ENGINE.parent) (:193, confirmed by grep -- the identifier appears twice in the file and nowhere else). checklist_engine.py sits BESIDE mcp_spine_server.py, and Python already puts the script's own directory on sys.path, so the import resolves whatever SPINE_ENGINE says. The real fix for SPINE_ENGINE was removing the KeyError, which does hold (criterion 10 verified: unset SPINE_ENGINE + unset SPINE_FILE refuses rather than dying). The named sibling fallback is therefore inert in practice -- harmless, but it is not what is doing the work.\n\nMAP CLAIMS. 'map/ rebuilt' checked: .gitignore:73 ignores map/*, only map/INDEX.md and one other file are tracked, and all ten new symbols do have generated pages on disk. The Map Impact structural/capability/decision notes match what I read in the diff.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/cleanup-a-door/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/cleanup-a-door/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/cleanup-a-door/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. All 12 baseline smells given a verdict; verify_fowler_pass.py exits 0 (smells=12, flagged=['feature-envy','comments-as-deodorant'], overridden=['duplicated-code','primitive-obsession','speculative-generality'], each override carrying its standard and reason). Record at .agent-work/cleanup-a-door/FOWLER_PASS.json.\nTwo flags, both non-blocking observations: feature-envy (_rebind_refusal depends on checklist_engine._active_lease, a private cross-module function -- right trade today, wants a public accessor at a third caller) and comments-as-deodorant (three docstrings/doc lines drifted from the code this commit changed -- the substance is in r4-quality).\nThe three overrides are genuine judgments, not shrugs: the duplicated-code override turns on one-name-for-one-thing, primitive-obsession on 'no speculative abstraction', and speculative-generality on the fact that CREW_CONTEXT's hand-maintained-list rule is justified by SILENT drift, while an omission from BINDS_WITHOUT_A_BOUND_SPINE fails closed and loudly -- so I logged the tension instead of dismissing it.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/cleanup-a-door/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r3-evidence: FAIL -- close criterion 13 (full clean-env suite green) is NOT met, and this commit caused it.\n\nMEASURED at HEAD (4e1f22cb), __pycache__ cleared, 'env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q':\n  1 failed, 3092 passed, 6 skipped, 1153 subtests in 126.04s\n  FAILED tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build\n  'map/INDEX.md is stale: rerun python -m scripts.code_map build --root . and commit the result'\n  fresh build: tests 84 modules / 4743 entities; committed INDEX.md: 83 modules / 4710 entities.\nThe implementer's claim was '3093 passed, 6 skipped, 0 failed'. It does not reproduce.\n\nATTRIBUTION (I nearly misattributed this and had to redo it -- my first clone reproduced a false failure at every revision because code_map titles the index from the DIRECTORY NAME, so a clone named anything but constellation-skills fails for a bogus reason). Re-run in a correctly-named clone, one revision at a time:\n  d7b911a7 origin/main  PASS\n  a69bbac4 gate base    PASS\n  0060dc08 g1 #604      FAIL\n  6856953d g1 closed    FAIL\n  4f593b32 g2 #605      PASS   (g2's map rebuild incidentally repaired g1's)\n  408e6d26 g3's parent  PASS\n  4e1f22cb THIS COMMIT  FAIL\nSo the parent is green and this commit turns it red.\n\nMECHANISM, proven not guessed: code_map enumerates via 'git ls-files -- *.py', i.e. TRACKED files only. The implementer's own evidence file is stamped 07:19:27; the commit is 07:27:11. The suite was run EIGHT MINUTES BEFORE the commit, while tests/test_mcp_door_unbound.py was still untracked -- so the fresh build counted 83 test modules and matched the INDEX they had just rebuilt. Committing the file made it tracked, and the same guard went red. The map WAS rebuilt (the commit moves scripts.mcp_spine_server 21->30 entities); it was just rebuilt before its own new test file was staged.\n\nREMEDY, verified: at 4e1f22cb in a clean clone, 'py -m scripts.code_map build --root .' changes map/INDEX.md (3 insertions, 2 deletions) and both MapTreeFreshness tests pass. One command plus a commit. Review-only, so I did not apply it.\n\nRULED OUT: my own five probe scripts under .agent-work/cleanup-a-door/g3-review/ are not the cause -- the failure is byte-identical with them moved out of the tree, and scripts/code_map/discovery.py:16 excludes '.agent-work/' from the mappable corpus outright.\n\nEVERY OTHER EVIDENCE CLAIM REPRODUCED, several stronger than claimed:\n - the new regression test red pre-fix: I swapped in 408e6d26's server and got 12 failed / 0 passed (the result doc claims 9), then restored the server byte-identically (cmp clean) and got 12 passed.\n - unbound+empty refusals, exit 0, no fabricated path: reproduced across six inputs.\n - bind-on-open through to a successful claim: reproduced in one process.\n - :194 pure-addition, IdentityGuardSurvivesARebindTests, env overrides, lease-held refusal: all reproduced.",
+      "r4-quality: FAIL -- one inherited rule is violated three times: global-everyone.md's 'enumerate the blast radius of your own change ... by command, never by memory'. This change renamed or deleted three identifiers and left three artifacts still naming them. All three are documentation, none changes behaviour, and all are one-line fixes.\n\n1. scripts/mcp_spine_server.py:685 -- _log_rejection's docstring still opens 'Append ONE record for a door-own rejection to REJECTIONLOG'. This same commit deleted REJECTIONLOG; I confirmed by AST that none of REJECTIONLOG, CALLLOG or START_MARKER exists as an identifier at HEAD. The replacement is _rejectionlog().\n2. examples/mcp-interactive-demo/README.md:69 -- cites tests/test_mcp_spine_server.py's 'test_mcp_json_referenced_spine_file_exists_and_loads', which this same commit renamed to test_mcp_json_spine_file_is_overridable_and_any_default_loads. A repo-wide grep finds that old name in exactly ONE place: this line. The README's OPENING paragraph, which the handoff asked for, IS correctly fixed -- the miss is 60 lines further down, in the same file the commit edited.\n3. scripts/mcp_spine_server.py:962-963 -- _spine_open's docstring says the repo root 'comes from _primary_checkout_for_lifecycle (ambient SPINE_FILE, re-read fresh)'. That is exactly what the commit STOPPED doing: _primary_checkout_for_lifecycle now reads the SPINE global with a Path(__file__) fallback and no os.environ read at all. The docstring describes the behaviour the change removed.\n\nThis lands under CREW_CONTEXT.md's own 'Assert against behaviour, never against text that describes it -- docstrings are hand-authored and none is checked against what runs'. Item 1 additionally propagates: map/scripts.mcp_spine_server/_log_rejection.md:8 and map/.../INDEX.md:171 are generated from that docstring and now carry the dead name too.\n\nRULES THAT PASS:\n - 'Clear __pycache__ before every measurement' (#597): I cleared it before each measurement.\n - 'Validate against a subprocess you launch': every behavioural claim above comes from a door I launched, never from this session's own door.\n - 'A check that cannot fail is indistinguishable from one that passed': satisfied, and I tested it rather than trusting it -- see r5 for the :588 mutation and the pin-detector matrix.\n - 'Name the exact commands and paste real output including exit codes': the implementer's evidence files do this.\n - Fail-visibly / no hidden fallback: the unbound path refuses by name with isError true and exit 0; no silent binding to cwd remains.\n - Windows encoding rule: every new write passes encoding='utf-8' (newline='\\n' on the rejection log, matching the pre-existing site)."
+    ],
+    "summary": "BLOCK on one reproducible, precisely-attributed defect; the gate's actual subject matter is sound and I could not break it.\n\nThe change does what #603 asked. I reproduced every behavioural close criterion myself against subprocess doors I launched: 11 declared tools, 10 refuse across all six unbound-class inputs (empty first) with the server alive at exit 0 and no fabricated path; spine_open is exempt and provably so; and the exit criterion runs end to end in ONE process, unbound refusal -> spine_open -> claim SUCCEEDS. The fenced guard is untouched -- _identity_violation is byte-identical to a69bbac4 and still refuses a foreign spine after a real rebind. All four import-time derivations follow the rebind, measured black-box, and an AST scan shows zero remaining default-argument or module-level derivations and exactly two assignment sites for SPINE/SESSION. The reconciled :588 is not vacuous: I mutated .mcp.json and watched it go red.\n\nWhat blocks: close criterion 13 (full clean-env suite green) is NOT met. At HEAD I measure 1 failed, 3092 passed -- tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build, 'map/INDEX.md is stale'. The parent commit 408e6d26 is green and 4e1f22cb turns it red. Mechanism proven: code_map enumerates tracked files via git ls-files, and the implementer's own suite evidence is stamped 07:19:27 against a 07:27:11 commit -- the map was rebuilt and the suite run eight minutes BEFORE tests/test_mcp_door_unbound.py was staged, so the guard could not yet see the module it now counts. Remedy verified in a clean clone: rerun 'py -m scripts.code_map build --root .' and commit map/INDEX.md (3 insertions, 2 deletions); both freshness tests then pass. I did not apply it -- review only.\n\nAlso failing, and cheap: three doc references this commit's own renames stranded -- _log_rejection:685 still names the deleted REJECTIONLOG, _spine_open:962-963 still describes the os.environ read this commit removed, and README.md:69 still cites the test this commit renamed.\n\nNeither finding touches the door's behaviour. Both are one-command or one-line fixes, and a re-review should be short."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "map/INDEX.md goes stale whenever a commit adds a TRACKED .py file after the map build was run. It happened at g1 (0060dc08) and again at g3 (4e1f22cb); g2 repaired g1's only incidentally. The ordering trap is invisible because code_map enumerates via 'git ls-files', so a rebuild run while the new file is still untracked looks correct and passes its own guard. Worth a pre-commit hook, or doctrine that the map rebuild is the LAST step after staging."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "SPINE_ENGINE is effectively inert: the ENGINE global is referenced at exactly two places in scripts/mcp_spine_server.py, its own assignment (:189) and sys.path.insert(0, ENGINE.parent) (:193). Because checklist_engine.py ships beside the server and Python already puts the script's directory on sys.path, the import resolves regardless of what SPINE_ENGINE says -- measured: a bogus absolute SPINE_ENGINE and a relative one launched from a foreign cwd both answered normally, exit 0. Either make the variable do something or retire it. This SUPERSEDES the g3 implementer result's triage candidates 1 and 2, which assert deaths that do not reproduce."
+    },
+    {
+      "id": "tc3",
+      "from": "r5-reconciliation",
+      "statement": "The new module-wide binder pin's detector (tests/test_mcp_lifecycle.py::_assignments_to) catches 8 of 12 rebind forms I fed it -- Assign, AnnAssign, AugAssign, walrus, for-target, with-as, except-as, tuple unpack -- and misses globals()['SPINE']=x, setattr(sys.modules[__name__],...), 'import x as SPINE', and 'def SESSION():'. None is a plausible accidental arrival and the hazard the pin's docstring names IS caught, so this is hardening, not a defect."
+    },
+    {
+      "id": "tc4",
+      "from": "r6-fowler",
+      "statement": "_rebind_refusal depends on checklist_engine._active_lease, a private function of another module, with no published contract. Correct trade today (it cannot drift from the engine's own reading of its own field); promote to a public engine accessor if a third caller appears."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/cleanup-a-door/g3/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-16T14:32:00.642843+00:00",
+    "last_heartbeat": "2026-08-16T14:50:16.850148+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T14:52:26.290774+00:00"
+  }
+}

@@ -1,0 +1,11 @@
+**Not a mid-flight stop — a completed crew run.** Verified rather than asserted:
+
+- **My plan**: `DONE: no open items`, `LEASE released: constellation/cleanup-a-door/g1/implementer/attempt-1`. All four items driven through the engine and closed in order.
+- **The deliverable**: `.agent-work/cleanup-a-door/crew-handoffs/g1-implementer-result.md` exists, written this run, status `complete`.
+- **The gate the hook names**: `execute`, `LEASE active: commander-cleanup-a-door`. Not my session, not my gate.
+
+The hook read `SPINE_FILE`, which a dispatched crew inherits from its parent, so it saw the Commander's open gate and attributed it to me. Neither branch it offers is right here: driving `execute` would mean seizing the Commander's lease and doing its job, and `block`/`waive` would be inventing a blocker on a gate I don't own — the reviewer failure the implementer skill explicitly warns about. `SPINE_PARENT` is `constellation/cleanup-a-door/execute/commander/attempt-1`, which is exactly the agent that dispatched me and will consume my result artifact.
+
+I've recorded the hook defect in the result's Workflow Feedback, since it's the kind of friction only the crew that hit it can report: **the hook should compare the spine's lease owner against its own session id and stay silent when they differ.** As written, every crew in this epic finishes against a warning telling it to take over its Commander's spine — and a crew that complies corrupts the run instead of failing visibly.
+
+Gate g1 (#604) delivered: commit `0060dc08`, probe `EXIT 1 → EXIT 0`, regression test `5 failed` pre-fix / `7 passed` after, `96 passed` across the six MCP test files.

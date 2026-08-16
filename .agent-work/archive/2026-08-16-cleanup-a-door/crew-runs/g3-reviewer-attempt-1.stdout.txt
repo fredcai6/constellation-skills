@@ -1,0 +1,24 @@
+My handback is complete and consumable. I'm stopping here deliberately, not abandoning work.
+
+## Why this is an honest stop, not a mid-flight abandonment
+
+The hook is watching gate `execute` on `.agent-work/cleanup-a-door/spine.json`. That gate belongs to session `commander-cleanup-a-door`, which holds its lease right now. My dispatch was the g3 **reviewer crew**, and my work file was `.agent-work/cleanup-a-door/g3-review/review.json` — a different file, a different lease, now driven to a consolidated verdict and released.
+
+I did not use the engine's `block` verb, and that is a considered choice rather than a skipped step:
+
+- **I don't own that gate.** The lease holder is `commander-cleanup-a-door`; my `SPINE_SESSION` is `constellation/cleanup-a-door/execute/commander`. They don't match, so the engine would refuse any mutating verb from me on ownership grounds.
+- **Blocking `execute` would be wrong even if it succeeded.** A reviewer returning BLOCK is a normal, expected outcome the Commander handles by re-dispatching the implementer. Halting the Commander's whole run over it would over-reach my role and stall a run that isn't stuck.
+- **Waiving is not available to me.** I have no human authority, and inventing one is precisely the failure the reviewer skill warns about.
+
+The BLOCK is already bubbled to my parent through the sanctioned channel: the consolidation (`verdict: BLOCK`, 2 findings) plus the result artifact at `crew-handoffs/g3-reviewer-result.md`. I verified the engine can consume it — `advance --from-child` reads `consolidation` and attaches it as a `review-result`, and my payload carries `verdict` at the top level. A `g3-review` postcondition matching `verdict=APPROVE` will correctly refuse until a re-review approves.
+
+## Commander's next move
+
+Two fixes, both small, then re-review:
+
+1. `py -m scripts.code_map build --root .` and commit `map/INDEX.md` — verified to turn the suite green (3 insertions, 2 deletions).
+2. Three stranded doc references: `mcp_spine_server.py:685`, `:962-963`, `README.md:69`.
+
+And before forwarding the implementer's triage candidates: **candidates 1 and 2 do not reproduce** — I measured both `SPINE_ENGINE` failure claims answering normally at exit 0. Replacement candidate `tc2` is filed in my survey.
+
+One caveat on my own report: the map-freshness attribution came within a step of being wrong. My first sweep showed the test red on `origin/main` because `code_map` titles its index from the directory name, so a clone named anything else fails spuriously. The corrected per-revision table in the result is the one to trust.

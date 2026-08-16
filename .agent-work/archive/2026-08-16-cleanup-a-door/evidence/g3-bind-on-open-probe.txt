@@ -1,0 +1,44 @@
+# g3 evidence #1: the probe transcript that is this gate's whole point.
+# unbound door REFUSES by name -> spine_open BINDS it -> claim SUCCEEDS.
+# 2026-08-16T07:15:07-07:00, __pycache__ cleared (#597). Real server subprocess, real JSON-RPC.
+#
+# Staged in a throwaway checkout carrying a copy of scripts/, because an UNBOUND
+# door derives its primary checkout from the server script's own location -- so
+# running the repo's own script here would open work in the developer's real tree.
+
+ENVIRONMENT: SPINE_FILE is ABSENT; SPINE_SESSION is ABSENT; SPINE_ENGINE is ABSENT
+
+--- call 2: spine_status -- UNBOUND: the door refuses by name
+    isError: True
+    REFUSED: no spine is bound to this door, so there is nothing for this tool to act on. Call `spine_open` to mint a spine and bind this process to it, or relaunch this door with SPINE_FILE set to an existing spine file.
+
+--- call 3: spine_open -- spine_open: mints a spine and BINDS this process
+    isError: False
+    {"SPINE_FILE": "/tmp/tmpmb417yyf/repo/.worktrees/exit-criterion/.agent-work/exit-criterion/spine.json", "SPINE_SESSION": "constellation/exit-criterion", "SPINE_PARENT": "unknown", "branch": "exit-criterion", "worktree": "/tmp/tmpmb417yyf/repo/.worktrees/exit-criterion"}
+
+--- call 4: spine_lease -- claim: the MUTATING verb -- this is what proves SESSION was rebound
+    isError: False
+    RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+    
+    claimed lease constellation/exit-criterion -> active
+
+--- call 5: spine_start -- start: a second mutating verb on the newly bound spine
+    isError: False
+    RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+    
+    m1 -> in-progress
+
+--- call 6: spine_status -- status: the door is genuinely driving the new spine
+    isError: False
+    RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+    
+    LEASE active: constellation/exit-criterion (by implementer, heartbeat 2026-08-16T14:15:07.560939+00:00)
+    ACTIVE m1 [in-progress] — do the thing
+    postconditions:
+      c1 [unmet] artifact — done
+    0/1 met
+    directives:
+      handback:
+
+server exit code: 0  (0 = alive through all five calls)
+server stderr: (none)

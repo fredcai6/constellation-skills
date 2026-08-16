@@ -1,0 +1,208 @@
+# g3 rework 2 — blast-radius sweep, AST-aware + whitespace-normalized (NOT line-based)
+# script: .agent-work/cleanup-a-door/evidence/g3-rework2-sweep.py (committed as evidence, self-documenting)
+# host: Python 3.12.3; base commit 359d93df
+
+================================================================
+CONTROL 1 — the line-based sweep rework 1 ran, at HEAD (pre-edit)
+================================================================
+$ git grep -F "re-read fresh" HEAD --
+exit=1 -> 0 files, tree-wide. This is WHY the instance survived:
+the phrase is assembled from two adjacent string literals, so it is on no single line.
+
+================================================================
+CONTROL 2 — THIS sweep at HEAD (pre-edit): it must FIND what grep missed
+================================================================
+$ py .agent-work/cleanup-a-door/evidence/g3-rework2-sweep.py --rev HEAD
+REV: HEAD
+FILES SCANNED (layer A, whitespace-normalized, all tracked text): 10145
+FILES SCANNED (layer B, AST strings + comments, tracked .py):     517
+INVALIDATED-CLAIM HITS (window names BOTH SPINE_FILE and spine_open): 14
+    HISTORICAL: 3
+    LIVE IN-SCOPE: 5
+    LIVE OUT-OF-SCOPE (report to Commander): 6
+NEAR MISSES (name SPINE_FILE but not spine_open -- still-true statements about the module's own launch-time binding): 85
+
+LIVE IN-SCOPE HITS: 5
+    (in-scope = this rework's allowed scope, tests/test_mcp_lifecycle.py)
+
+--- EVERY INVALIDATED-CLAIM HIT, CLASSIFIED ---
+[HISTORICAL] .agent-work/cleanup-a-door/crew-handoffs/plan-critic-result.md:0 via A:normalized trigger='ambient'
+    ...`spine_open`, gets bound, drives a real spine end to end") is not reached; something adjacent is. This is not a detail the implementer can absorb: `_primary_checkout_for_lifecycle` is *deliberately* ambient-`SPINE_FILE`-derived and *deliberately* not cwd-derived (its own docstring, `:568-592`, and the `:194` pin both depend on that), so "where is the primary checkout when nothing is bound?" is a genuine...
+
+[HISTORICAL] .agent-work/cleanup-a-door/crew-handoffs/plan-critic-result.md:0 via A:normalized trigger='derivation'
+    ...bound refusals say "no spine is bound; call `spine_open` (or set `SPINE_FILE`)"; missing/ unreadable refusals name the path *and* say how to rebind. --- ## What I checked and found sound - **The four-derivation count is correct.** I enumerated it myself with an AST pass over the whole module — every module-level statement and every default argument evaluated at import that reads `SPINE`: ``` L162 CALLLOG =...
+
+[HISTORICAL] .agent-work/cleanup-a-door/execute.json:0 via A:normalized trigger='derive'
+    ...nbound session calling spine_open gets `tool error: missing or unknown 'SPINE_FILE'`, and the exit criterion is NOT reached. PREFERRED ANSWER, and it is this gate's to confirm or reject with reasons: derive the primary checkout from the SERVER SCRIPT'S OWN LOCATION (Path(__file__).resolve()), then `git rev-parse --git-common-dir` from there -- it needs no new env var, no ambient cwd read, and does not r...
+
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:0 via A:normalized trigger='ambient'
+    ...strip()}") return proc.stdout.strip() def _primary_checkout_for_lifecycle() -> Path: """The PRIMARY checkout: the BOUND SPINE's own, falling back to THIS SCRIPT's own when nothing is bound. Never the ambient cwd. This used to read `os.environ["SPINE_FILE"]` unconditionally, so that `_spine_open`'s own source never contained the identifier `SPINE`. That worked only while every door was born bound. Gate g3...
+
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:0 via A:normalized trigger='deriving'
+    ...spine_close` acting only on the one this door is already bound to: `spine_open` never references `SPINE`, `SESSION` or `run_engine` (checked, not merely claimed -- see `tests/test_mcp_lifecycle.py`), deriving the primary checkout it opens work from fresh off `SPINE_FILE` (ambient, server-launch-time state) rather than the module's own `SPINE` binding; `spine_close` takes no arguments at all and acts on `S...
+
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:0 via A:normalized trigger='fresh off'
+    ...already bound to: `spine_open` never references `SPINE`, `SESSION` or `run_engine` (checked, not merely claimed -- see `tests/test_mcp_lifecycle.py`), deriving the primary checkout it opens work from fresh off `SPINE_FILE` (ambient, server-launch-time state) rather than the module's own `SPINE` binding; `spine_close` takes no arguments at all and acts on `SPINE` alone, because there is no field to redirect...
+
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:2 via B:ast trigger='deriving'
+    ...spine_close` acting only on the one this door is already bound to: `spine_open` never references `SPINE`, `SESSION` or `run_engine` (checked, not merely claimed -- see `tests/test_mcp_lifecycle.py`), deriving the primary checkout it opens work from fresh off `SPINE_FILE` (ambient, server-launch-time state) rather than the module's own `SPINE` binding; `spine_close` takes no arguments at all and acts on `S...
+
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:2 via B:ast trigger='fresh off'
+    ...already bound to: `spine_open` never references `SPINE`, `SESSION` or `run_engine` (checked, not merely claimed -- see `tests/test_mcp_lifecycle.py`), deriving the primary checkout it opens work from fresh off `SPINE_FILE` (ambient, server-launch-time state) rather than the module's own `SPINE` binding; `spine_close` takes no arguments at all and acts on `SPINE` alone, because there is no field to redirect...
+
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:787 via B:ast trigger='ambient'
+    ...The PRIMARY checkout: the BOUND SPINE's own, falling back to THIS SCRIPT's own when nothing is bound. Never the ambient cwd. This used to read `os.environ["SPINE_FILE"]` unconditionally, so that `_spine_open`'s own source never contained the identifier `SPINE`. That worked only while every door was born bound. Gate g3...
+
+[LIVE IN-SCOPE] tests/test_mcp_lifecycle.py:0 via A:normalized trigger='ambient'
+    ...f(tree, "_spine_open") offenders = _referenced_names(fn, BANNED_IDENTIFIERS) self.assertEqual( [], offenders, f"_spine_open's own source now references {offenders} -- spine_open must act " "purely on ambient, server-launch-time state (SPINE_FILE/SPINE_PARENT re-read " "fresh) and never on the identity THIS door happens to be bound to, or a call " "meant to open unrelated work could be redirected onto the...
+
+[LIVE IN-SCOPE] tests/test_mcp_lifecycle.py:200 via B:ast trigger='ambient'
+    ...-- spine_open must act purely on ambient, server-launch-time state (SPINE_FILE/SPINE_PARENT re-read fresh) and never on the identity THIS door happens to be bound to, or a call meant to open unrelated work could be redirected onto the bound...
+
+[LIVE IN-SCOPE] tests/test_mcp_lifecycle.py:200 via B:ast trigger='ambient'
+    ..._spine_open's own source now references -- spine_open must act purely on ambient, server-launch-time state (SPINE_FILE/SPINE_PARENT re-read fresh) and never on the identity THIS door happens to be bound to, or a call meant to open unrelated work could be redirected onto the bound...
+
+[LIVE IN-SCOPE] tests/test_mcp_lifecycle.py:200 via B:ast trigger='re-read fresh'
+    ...-- spine_open must act purely on ambient, server-launch-time state (SPINE_FILE/SPINE_PARENT re-read fresh) and never on the identity THIS door happens to be bound to, or a call meant to open unrelated work could be redirected onto the bound spine...
+
+[LIVE IN-SCOPE] tests/test_mcp_lifecycle.py:200 via B:ast trigger='re-read fresh'
+    ..._spine_open's own source now references -- spine_open must act purely on ambient, server-launch-time state (SPINE_FILE/SPINE_PARENT re-read fresh) and never on the identity THIS door happens to be bound to, or a call meant to open unrelated work could be redirected onto the bound spine...
+
+--- NEAR MISSES (85), not counted: SPINE_FILE without spine_open ---
+[HISTORICAL] .agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-handoffs/g3-implementer-handoff.md:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-plans/g3-implementer-plan.json:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/ADMIRAL_LOG.md:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/ADMIRAL_LOG.md:0 via A:normalized trigger='derived'
+
+================================================================
+THE MEASUREMENT — working tree, after the one-string fix
+================================================================
+$ py .agent-work/cleanup-a-door/evidence/g3-rework2-sweep.py
+REV: working tree
+FILES SCANNED (layer A, whitespace-normalized, all tracked text): 10145
+FILES SCANNED (layer B, AST strings + comments, tracked .py):     517
+INVALIDATED-CLAIM HITS (window names BOTH SPINE_FILE and spine_open): 10
+    HISTORICAL: 4
+    LIVE OUT-OF-SCOPE (report to Commander): 6
+NEAR MISSES (name SPINE_FILE but not spine_open -- still-true statements about the module's own launch-time binding): 85
+
+LIVE IN-SCOPE HITS: 0
+    (in-scope = this rework's allowed scope, tests/test_mcp_lifecycle.py)
+
+--- EVERY INVALIDATED-CLAIM HIT, CLASSIFIED ---
+[HISTORICAL] .agent-work/cleanup-a-door/FOWLER_PASS.json:0 via A:normalized trigger='re-read fresh'
+    ...e instance SURVIVES, and neither the implementer's sweep nor my predecessor's found it: tests/test_mcp_lifecycle.py:201 still tells a future debugger that _spine_open acts on 'SPINE_FILE/SPINE_PARENT re-read fresh', when the measured truth at HEAD is SPINE_PARENT once and SPINE_FILE zero times -- removing that read IS the #603 fix. It hid because the phrase is split across two adjacent string literals, so the...
+
+[HISTORICAL] .agent-work/cleanup-a-door/crew-handoffs/plan-critic-result.md:0 via A:normalized trigger='ambient'
+    ...`spine_open`, gets bound, drives a real spine end to end") is not reached; something adjacent is. This is not a detail the implementer can absorb: `_primary_checkout_for_lifecycle` is *deliberately* ambient-`SPINE_FILE`-derived and *deliberately* not cwd-derived (its own docstring, `:568-592`, and the `:194` pin both depend on that), so "where is the primary checkout when nothing is bound?" is a genuine...
+
+[HISTORICAL] .agent-work/cleanup-a-door/crew-handoffs/plan-critic-result.md:0 via A:normalized trigger='derivation'
+    ...bound refusals say "no spine is bound; call `spine_open` (or set `SPINE_FILE`)"; missing/ unreadable refusals name the path *and* say how to rebind. --- ## What I checked and found sound - **The four-derivation count is correct.** I enumerated it myself with an AST pass over the whole module — every module-level statement and every default argument evaluated at import that reads `SPINE`: ``` L162 CALLLOG =...
+
+[HISTORICAL] .agent-work/cleanup-a-door/execute.json:0 via A:normalized trigger='derive'
+    ...nbound session calling spine_open gets `tool error: missing or unknown 'SPINE_FILE'`, and the exit criterion is NOT reached. PREFERRED ANSWER, and it is this gate's to confirm or reject with reasons: derive the primary checkout from the SERVER SCRIPT'S OWN LOCATION (Path(__file__).resolve()), then `git rev-parse --git-common-dir` from there -- it needs no new env var, no ambient cwd read, and does not r...
+
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:0 via A:normalized trigger='ambient'
+    ...strip()}") return proc.stdout.strip() def _primary_checkout_for_lifecycle() -> Path: """The PRIMARY checkout: the BOUND SPINE's own, falling back to THIS SCRIPT's own when nothing is bound. Never the ambient cwd. This used to read `os.environ["SPINE_FILE"]` unconditionally, so that `_spine_open`'s own source never contained the identifier `SPINE`. That worked only while every door was born bound. Gate g3...
+
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:0 via A:normalized trigger='deriving'
+    ...spine_close` acting only on the one this door is already bound to: `spine_open` never references `SPINE`, `SESSION` or `run_engine` (checked, not merely claimed -- see `tests/test_mcp_lifecycle.py`), deriving the primary checkout it opens work from fresh off `SPINE_FILE` (ambient, server-launch-time state) rather than the module's own `SPINE` binding; `spine_close` takes no arguments at all and acts on `S...
+
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:0 via A:normalized trigger='fresh off'
+    ...already bound to: `spine_open` never references `SPINE`, `SESSION` or `run_engine` (checked, not merely claimed -- see `tests/test_mcp_lifecycle.py`), deriving the primary checkout it opens work from fresh off `SPINE_FILE` (ambient, server-launch-time state) rather than the module's own `SPINE` binding; `spine_close` takes no arguments at all and acts on `SPINE` alone, because there is no field to redirect...
+
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:2 via B:ast trigger='deriving'
+    ...spine_close` acting only on the one this door is already bound to: `spine_open` never references `SPINE`, `SESSION` or `run_engine` (checked, not merely claimed -- see `tests/test_mcp_lifecycle.py`), deriving the primary checkout it opens work from fresh off `SPINE_FILE` (ambient, server-launch-time state) rather than the module's own `SPINE` binding; `spine_close` takes no arguments at all and acts on `S...
+
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:2 via B:ast trigger='fresh off'
+    ...already bound to: `spine_open` never references `SPINE`, `SESSION` or `run_engine` (checked, not merely claimed -- see `tests/test_mcp_lifecycle.py`), deriving the primary checkout it opens work from fresh off `SPINE_FILE` (ambient, server-launch-time state) rather than the module's own `SPINE` binding; `spine_close` takes no arguments at all and acts on `SPINE` alone, because there is no field to redirect...
+
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:787 via B:ast trigger='ambient'
+    ...The PRIMARY checkout: the BOUND SPINE's own, falling back to THIS SCRIPT's own when nothing is bound. Never the ambient cwd. This used to read `os.environ["SPINE_FILE"]` unconditionally, so that `_spine_open`'s own source never contained the identifier `SPINE`. That worked only while every door was born bound. Gate g3...
+
+--- NEAR MISSES (85), not counted: SPINE_FILE without spine_open ---
+[HISTORICAL] .agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-handoffs/g3-implementer-handoff.md:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-plans/g3-implementer-plan.json:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/ADMIRAL_LOG.md:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/ADMIRAL_LOG.md:0 via A:normalized trigger='derived'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/m1-reviewer-handoff.md:0 via A:normalized trigger='derived'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/transitions/w3x-door-binding/CURRENT_TRUTH.md:0 via A:normalized trigger='derived'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/transitions/w3x-door-binding/REPLAN_RESULT.json:0 via A:normalized trigger='derived'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/transitions/w3x-door-binding/REPLAN_RESULT.json:0 via A:normalized trigger='derived'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/transitions/w3x-door-binding/REPLAN_RESULT.json:0 via A:normalized trigger='derived'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/transitions/w3x-door-binding/REPLAN_RESULT.json:0 via A:normalized trigger='derives'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/transitions/w4x-mechanical-and-mcp-only/REPLAN_INPUT.json:0 via A:normalized trigger='derived'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/transitions/w4x-mechanical-and-mcp-only/REPLAN_INPUT.json:0 via A:normalized trigger='derived'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/transitions/w4x-mechanical-and-mcp-only/REPLAN_INPUT.json:0 via A:normalized trigger='derives'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/transitions/w5x-door-is-the-interface/REPLAN_RESULT.json:0 via A:normalized trigger='derived'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-418-followon/transitions/w5x-door-is-the-interface/WAVE_REVIEW.md:0 via A:normalized trigger='derived'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-559/a-spine-is-the-job/HANDOFF.md:0 via A:normalized trigger='deriving'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-559/a-spine-is-the-job/REVIEW_HANDOFF.md:0 via A:normalized trigger='derive'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-559-c3-lifecycle/crew-handoffs/g1-implementer-result.md:0 via A:normalized trigger='derivation'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-559-c3-lifecycle/crew-handoffs/g1-implementer-result.md:0 via A:normalized trigger='derived'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-559-c3-lifecycle/crew-handoffs/plan-alt-b-result.md:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-12-epic-559-c3-lifecycle/crew-runs/g1-implementer-attempt-1.stdout.txt:0 via A:normalized trigger='derivation'
+[HISTORICAL] .agent-work/archive/2026-08-15-crew-verdict-and-door/triage-recommendations/full-suite-false-fails-inside-a-spine-bound-shell.md:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-15-epic-568-441/execute.json:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-15-epic-568-441/spine.json:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-15-epic-568-441/spine.json:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-15-epic-568/triage-candidates/crew-dispatch-must-bind-the-spine-door.md:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-15-epic-568/triage-candidates/crew-dispatch-must-bind-the-spine-door.md:0 via A:normalized trigger='derives'
+[HISTORICAL] .agent-work/archive/2026-08-15-stop-hook-door-binding/crew-runs/g1-implement-implementer-attempt-1.stdout.txt:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-15-stop-hook-door-binding/crew-runs/g1-review-reviewer-attempt-1.stdout.txt:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-15-tc1-worktree-identity/REPLAN_INPUT.json:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-15-tc1-worktree-identity/crew-handoffs/g1-implement-implementer-result.md:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-15-tc1-worktree-identity/crew-handoffs/g1-implement-implementer-result.md:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-15-tc1-worktree-identity/crew-handoffs/g1-review-handoff.md:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-15-tc1-worktree-identity/crew-handoffs/g1-review-reviewer-result.md:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-15-tc1-worktree-identity/crew-runs/g1-implement-implementer-attempt-1.stdout.txt:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-15-tc1-worktree-identity/episode-delta.json:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-15-tc1-worktree-identity/execute.json:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-15-tc1-worktree-identity/execute.json:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/archive/2026-08-15-tc1-worktree-identity/g1-review/review.json:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/cleanup-a-door/crew-handoffs/g3-implementer-handoff.md:0 via A:normalized trigger='ambient'
+[HISTORICAL] .agent-work/cleanup-a-door/crew-handoffs/plan-critic-handoff.md:0 via A:normalized trigger='deriving'
+[HISTORICAL] .agent-work/cleanup-a-door/crew-handoffs/plan-critic-result.md:0 via A:normalized trigger='derived'
+[HISTORICAL] .agent-work/cleanup-a-door/crew-handoffs/plan-critic-result.md:0 via A:normalized trigger='derived'
+[HISTORICAL] .agent-work/cleanup-a-door/execute.json:0 via A:normalized trigger='ambient'
+[HISTORICAL] episodes/active/tc1-worktree-identity-002.md:0 via A:normalized trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:0 via A:normalized trigger='Ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:0 via A:normalized trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:0 via A:normalized trigger='derive'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:2 via B:ast trigger='Ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:2 via B:ast trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/mcp_spine_server.py:787 via B:ast trigger='derive'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/run_crew.py:0 via A:normalized trigger='Deriving'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/run_crew.py:0 via A:normalized trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/run_crew.py:0 via A:normalized trigger='derived'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/run_crew.py:0 via A:normalized trigger='derived'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/run_crew.py:0 via A:normalized trigger='derived'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/run_crew.py:0 via A:normalized trigger='deriving'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/run_crew.py:790 via B:ast trigger='derived'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/run_crew.py:835 via B:ast trigger='Deriving'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/run_crew.py:835 via B:ast trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/run_crew.py:835 via B:ast trigger='derived'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/run_crew.py:940 via B:ast trigger='deriving'
+[LIVE OUT-OF-SCOPE (report to Commander)] scripts/run_crew.py:1631 via B:ast trigger='derived'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_crew_launcher.py:0 via A:normalized trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_crew_launcher.py:0 via A:normalized trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_crew_launcher.py:0 via A:normalized trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_crew_launcher.py:0 via A:normalized trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_crew_launcher.py:0 via A:normalized trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_crew_launcher.py:0 via A:normalized trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_crew_launcher.py:0 via A:normalized trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_crew_launcher.py:0 via A:normalized trigger='derived'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_crew_launcher.py:0 via A:normalized trigger='derived'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_crew_launcher.py:0 via A:normalized trigger='derived'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_crew_launcher.py:0 via A:normalized trigger='derived'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_crew_launcher.py:0 via A:normalized trigger='derived_binding_wins_over_inherited_caller_value'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_crew_launcher.py:0 via A:normalized trigger='deriving'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_crew_launcher.py:0 via A:normalized trigger='deriving'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_crew_launcher.py:94 via B:ast trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_crew_launcher.py:1023 via B:ast trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_mcp_identity.py:0 via A:normalized trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_mcp_identity.py:0 via A:normalized trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_mcp_identity.py:0 via A:normalized trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_mcp_identity.py:0 via A:normalized trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_mcp_identity.py:1 via B:ast trigger='ambient'
+[LIVE OUT-OF-SCOPE (report to Commander)] tests/test_mcp_identity.py:668 via B:ast trigger='ambient'

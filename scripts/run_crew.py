@@ -27,6 +27,8 @@ that stays with Commander and the engine (#6 owns checklist leasing).
 from __future__ import annotations
 
 import argparse
+import contextlib
+import hashlib
 import json
 import os
 import re
@@ -34,6 +36,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import threading
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -57,6 +60,17 @@ DEFAULT_LAUNCHER = "claude"
 # `.agent-work/archive/2026-08-15-epic-568-441/crew-runs.json`). 8h sits
 # ~2.3x above the healthy max and ~2.8x below the phantom min.
 HEARTBEAT_STALE_SECONDS = 28800
+
+# How often the DISPATCHING process's own ambient engine-session lease (its
+# `SPINE_FILE`/`SPINE_SESSION`, e.g. a Commander blocked on this launcher's own
+# child crew) is refreshed while `launch(...)` blocks (issue #607). This is a
+# different axis than `HEARTBEAT_STALE_SECONDS` above -- that one judges a
+# REGISTRY ENTRY's pidless heartbeat; this one is the cadence this launcher
+# itself heartbeats the PARENT's engine lease so a healthy-but-blocked parent
+# never reads as lease-stale to an external liveness reader. Kept well under
+# `checklist_engine.py`'s own `DEFAULT_LEASE_STALE_SECONDS` (1800s) so a single
+# missed beat never flips the lease stale.
+PARENT_HEARTBEAT_INTERVAL_SECONDS = 300
 
 # Dispatch modes. "spawn" (default) launches a real `claude` CLI subprocess via
 # `launch_process`. "external" records the durable registry entry but spawns
@@ -232,6 +246,37 @@ def run_log_paths(work_id: str, gate: str, role: str, attempt: int, root: Path) 
     runs = work_dir(work_id, root) / "crew-runs"
     stem = f"{gate}-{role}-attempt-{attempt}"
     return runs / f"{stem}.stdout.txt", runs / f"{stem}.stderr.txt"
+
+
+def scratch_dir(work_id: str, gate: str, role: str, worktree: str, attempt: int, root: Path) -> Path:
+    """Namespaced scratch/evidence directory reserved for ONE dispatch (issue
+    #525: concurrent crews sharing one scratch area collided under generic
+    filenames -- a `g8` reviewer found `r0`-`r6` finding-files an EARLIER
+    gate's reviewer had left behind, using the same generic names it was
+    about to use). Keyed on the FULL `(work_id, gate, role, worktree, attempt)`
+    tuple -- the SAME tuple `active_duplicate`/`next_attempt` (below) actually
+    use for duplicate-detection/attempt-numbering.
+
+    `worktree` MUST stay in this key: `next_attempt` scopes attempt numbers PER
+    WORKTREE, so two different worktrees dispatching the same
+    work_id/gate/role can each independently reach `attempt=1` -- omitting
+    `worktree` here would let those two collide on the identical scratch
+    directory, reintroducing #525 one field narrower. (An earlier draft of
+    this plan made exactly this mistake; caught before it shipped.)
+
+    `worktree` is hashed as the RAW string exactly as recorded on the registry
+    entry -- NEVER resolved to an absolute path first (unlike `crew_cwd`
+    above, which DOES resolve it, for the unrelated purpose of choosing a
+    spawn directory). `active_duplicate`/`next_attempt` compare
+    `entry.get("worktree") == worktree` as raw strings, so hashing the raw
+    string keeps this function's notion of identity consistent with the
+    registry's own existing equality semantics: two differently-spelled-but-
+    equivalent worktree arguments are already treated as different registry
+    entries today, and this matches that existing behavior rather than
+    "fixing" it (out of scope for this gate)."""
+    wtkey = hashlib.sha256(worktree.encode("utf-8")).hexdigest()[:12]
+    stem = f"{gate}-{role}-attempt-{attempt}-{wtkey}"
+    return work_dir(work_id, root) / "crew-scratch" / stem
 
 
 def load_registry(path: Path) -> list[dict]:
@@ -893,6 +938,7 @@ def crew_env(
     spine_file: str | None = None,
     spine_session: str | None = None,
     parent: str | None = None,
+    scratch_dir: str | None = None,
 ) -> dict[str, str]:
     """UTF-8-safe environment defaults for the child, PLUS the MCP door binding.
 
@@ -922,7 +968,15 @@ def crew_env(
     `spine_file`/`spine_session`, `omitted` here (`None`) genuinely means "no
     binding requested" (matched by callers who pre-resolve `None` to
     `UNKNOWN_PARENT` before calling in, e.g. `_crew_door_env`), so this stays a
-    plain optional rather than a second untouched-inherited-route case."""
+    plain optional rather than a second untouched-inherited-route case.
+
+    `scratch_dir` (issue #525) is ASSIGNED the same way as the spine pair,
+    when given: it names the CHILD's own reserved namespaced scratch/evidence
+    directory (`scratch_dir()`, computed by the caller against the child's own
+    `(work_id, gate, role, worktree, attempt)` tuple), never whatever this
+    DISPATCHING process's own `CREW_SCRATCH_DIR` happens to be. Omitted
+    (`None`) leaves the inherited environment route untouched, same as the
+    spine pair's contract."""
     env = dict(os.environ if base_env is None else base_env)
     env.setdefault("PYTHONUTF8", "1")
     env.setdefault("PYTHONIOENCODING", "utf-8")
@@ -932,12 +986,14 @@ def crew_env(
         env["SPINE_SESSION"] = spine_session
     if parent is not None:
         env["SPINE_PARENT"] = parent
+    if scratch_dir is not None:
+        env["CREW_SCRATCH_DIR"] = scratch_dir
     return env
 
 
 def _crew_door_env(
     *, work_id: str, gate: str, role: str, spine: str | None, root: Path,
-    parent: str | None = None,
+    parent: str | None = None, scratch_dir: str | None = None,
 ) -> dict[str, str]:
     """The env every dispatched/resumed crew gets: its OWN spine (if any),
     resolved absolute against `root`, its assignment-keyed lease identity, and
@@ -957,14 +1013,22 @@ def _crew_door_env(
     crew this launches gets a definitive answer, `parent` if given else
     `UNKNOWN_PARENT`, never the ambient value of whatever this DISPATCHING
     process's own `SPINE_PARENT` happens to be (that would name the wrong
-    rung: the dispatcher's own parent, not the dispatcher itself)."""
+    rung: the dispatcher's own parent, not the dispatcher itself).
+
+    `scratch_dir` (issue #525) is passed straight through to `crew_env` --
+    this function does not compute it. The caller (`CliBackend.dispatch`/
+    `resume`) already knows the child's own `(work_id, gate, role, worktree,
+    attempt)` tuple and calls `scratch_dir()` itself; recomputing it here
+    would need `worktree`/`attempt` threaded onto this signature for no
+    benefit, since there is exactly one caller-known path either way."""
     resolved_parent = _normalize_parent(parent) or UNKNOWN_PARENT
     if spine is None:
-        return crew_env(parent=resolved_parent)
+        return crew_env(parent=resolved_parent, scratch_dir=scratch_dir)
     return crew_env(
         spine_file=_resolve_optional_path(spine, root),
         spine_session=assignment_session_name(work_id, gate, role),
         parent=resolved_parent,
+        scratch_dir=scratch_dir,
     )
 
 
@@ -1043,6 +1107,7 @@ def build_entry(
     reasoning_effort: str | None = None,
     spine: str | None = None,
     parent: str | None = None,
+    scratch: str | None = None,
 ) -> dict:
     """Construct the base `crew-runs.json` entry shared by BOTH backends (the
     consolidation the wave-1 triage named). One place builds the durable record so
@@ -1078,6 +1143,12 @@ def build_entry(
                      this back so the SPINE_PARENT binding and prompt clause
                      stay stable across attempts instead of re-deriving from
                      whatever the RESUMING process's own environment carries).
+      * `scratch`  — the crew's own reserved namespaced scratch/evidence
+                     directory (issue #525, `scratch_dir()`), recorded when
+                     present -- same "recorded when present" shape as `model`
+                     below, not the "recorded null, not omitted" shape `spine`
+                     uses, since only the cli backend (the one path that
+                     actually reserves one) ever has a value to give.
       * `door_bound` — `True` only for `backend == "cli"` (the one path that
                      actually spawns a child and binds `SPINE_FILE`/
                      `SPINE_SESSION` into its environment via `_crew_door_env`),
@@ -1123,6 +1194,8 @@ def build_entry(
         entry["model"] = model
     if reasoning_effort:
         entry["reasoning_effort"] = reasoning_effort
+    if scratch:
+        entry["scratch_dir"] = _relativize(scratch, root)
     return entry
 
 
@@ -1291,6 +1364,73 @@ class CrewSpec:
             )
 
 
+# The thread `_parent_lease_heartbeat` starts is named so tests can assert its
+# absence/presence via `threading.enumerate()` without the context manager
+# needing to hand back a handle.
+_PARENT_HEARTBEAT_THREAD_NAME = "run_crew-parent-lease-heartbeat"
+
+
+@contextlib.contextmanager
+def _parent_lease_heartbeat(interval: float | None = None):
+    """Keep the DISPATCHING process's OWN ambient engine-session lease alive for
+    exactly the duration of the wrapped blocking call (issue #607).
+
+    A parent (e.g. a Commander) that dispatches a crew via this launcher blocks
+    foreground on `launch(...)` and issues no mutating engine verb of its own
+    while it waits -- so a healthy, still-blocked parent's lease can go stale
+    purely from being blocked, even though it is very much alive. This context
+    manager reads the DISPATCHER's own ambient `SPINE_FILE`/`SPINE_SESSION`
+    (never the child's derived env -- `_crew_door_env`/`crew_env` may hand the
+    child the SAME pair unchanged when no explicit `--spine` was given; that is
+    the common case, not an edge case, and is exactly what makes this fix
+    matter) and, if both are set, heartbeats that lease on a background daemon
+    thread every `interval` seconds (default `PARENT_HEARTBEAT_INTERVAL_SECONDS`)
+    until the wrapped block exits.
+
+    No self-collision guard: `checklist_engine.heartbeat()` already refuses a
+    `session_id` that does not own the lease, so heartbeating with the same
+    pair the child also carries is safe, and guarding it off would silently
+    disable the fix in its most common case.
+
+    If either ambient var is unset, this is a no-op: no thread starts, nothing
+    else changes. Any exception raised while heartbeating (missing file,
+    refused by the engine, anything) is caught and swallowed -- a heartbeat
+    failure must never become a dispatch failure. On exit, the thread is
+    always stopped and JOINED before control returns to the caller -- this
+    ordering is load-bearing: it prevents the heartbeat thread racing the very
+    next mutating call (`finalize_from_exit_code`, `save_registry`) the caller
+    issues against the same spine file immediately after."""
+    spine_file = os.environ.get("SPINE_FILE")
+    spine_session = os.environ.get("SPINE_SESSION")
+    if not spine_file or not spine_session:
+        yield
+        return
+
+    effective_interval = PARENT_HEARTBEAT_INTERVAL_SECONDS if interval is None else interval
+    stop_event = threading.Event()
+
+    def _beat_loop() -> None:
+        while not stop_event.wait(effective_interval):
+            try:
+                cl = checklist_engine.load(Path(spine_file))
+                checklist_engine.heartbeat(cl, spine_session)
+                checklist_engine.save(Path(spine_file), cl)
+            except Exception:
+                # A heartbeat failure is not a dispatch failure -- swallow and
+                # retry on the next tick.
+                pass
+
+    thread = threading.Thread(
+        target=_beat_loop, daemon=True, name=_PARENT_HEARTBEAT_THREAD_NAME,
+    )
+    thread.start()
+    try:
+        yield
+    finally:
+        stop_event.set()
+        thread.join()
+
+
 # --------------------------------------------------------------------------- #
 # crew-launch backends — one result contract, exactly two implementations
 # --------------------------------------------------------------------------- #
@@ -1364,13 +1504,33 @@ class CliBackend(CrewBackend):
         # require here.
         handoff_path = _require_handoff(spec.handoff, root, action="launch") if spec.handoff is not None else None
 
+        # Reserve this dispatch's OWN namespaced scratch/evidence directory
+        # (issue #525) BEFORE any registry write: `Path.mkdir(exist_ok=False)`
+        # either creates it fresh or raises `FileExistsError`. A `FileExistsError`
+        # here means a fresh attempt number collided on the SAME
+        # (work_id, gate, role, worktree, attempt) tuple -- the real #525 race
+        # (two dispatches racing `next_attempt()` before either saved its
+        # registry entry) made visible. Reserving before `build_entry`/
+        # `entries.append` means a collision leaves no partial "running" entry
+        # behind -- the refusal is loud and the registry stays clean.
+        scratch = scratch_dir(spec.work_id, spec.gate, spec.role, spec.worktree, spec.attempt, root)
+        try:
+            scratch.mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            raise CrewLaunchError(
+                f"scratch directory collision: {scratch} already exists for "
+                f"(work_id={spec.work_id!r}, gate={spec.gate!r}, role={spec.role!r}, "
+                f"worktree={spec.worktree!r}, attempt={spec.attempt}) -- refusing to "
+                f"silently reuse or overwrite another dispatch's evidence (issue #525)"
+            )
+
         started = _now()
         entry = build_entry(
             work_id=spec.work_id, gate=spec.gate, role=spec.role, attempt=spec.attempt,
             worktree=spec.worktree, handoff=spec.handoff, result=spec.result, root=root,
             started=started, backend=self.name, pid=os.getpid(), spine=spec.spine,
             parent=spec.parent, model=spec.model,
-            reasoning_effort=spec.reasoning_effort,
+            reasoning_effort=spec.reasoning_effort, scratch=str(scratch),
         )
         # Durable record BEFORE the crew starts (so a parent loss leaves a durable
         # `running` record).
@@ -1387,10 +1547,11 @@ class CliBackend(CrewBackend):
         )
         env = _crew_door_env(
             work_id=spec.work_id, gate=spec.gate, role=spec.role, spine=spec.spine, root=root,
-            parent=spec.parent,
+            parent=spec.parent, scratch_dir=str(scratch),
         )
-        exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path,
-                           cwd=crew_cwd(spec.worktree, root))
+        with _parent_lease_heartbeat():
+            exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path,
+                               cwd=crew_cwd(spec.worktree, root))
 
         final = finalize_from_exit_code(
             entry, exit_code=exit_code, result=spec.result, root=root, since=started, spine=spec.spine,
@@ -1435,6 +1596,19 @@ class CliBackend(CrewBackend):
         reg = registry_path(work_id, root)
         save_registry(reg, entries)
 
+        # A resume re-enters the SAME attempt, not a new one: GET the
+        # already-reserved scratch directory (computed, never re-reserved --
+        # `mkdir(exist_ok=False)` is the DISPATCH-side collision guard, and an
+        # existing directory here is expected and correct). `entry.get("worktree")`
+        # can be `None` for a legacy entry recorded before `worktree` was
+        # threaded onto the registry (the same degradation `crew_cwd` above
+        # already makes for that case) -- such an entry has no scratch
+        # directory to recompute, so `CREW_SCRATCH_DIR` is simply left unbound.
+        entry_worktree = entry.get("worktree")
+        scratch = (
+            scratch_dir(entry["work_id"], entry["gate"], entry["role"], entry_worktree, entry["attempt"], root)
+            if entry_worktree is not None else None
+        )
         argv = build_crew_argv(
             entry.get("launcher", DEFAULT_LAUNCHER),
             role=entry["role"],
@@ -1447,9 +1621,11 @@ class CliBackend(CrewBackend):
         env = _crew_door_env(
             work_id=entry["work_id"], gate=entry["gate"], role=entry["role"],
             spine=entry.get("spine"), root=root, parent=entry.get("parent"),
+            scratch_dir=(str(scratch) if scratch is not None else None),
         )
-        exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path,
-                           cwd=crew_cwd(entry.get("worktree"), root))
+        with _parent_lease_heartbeat():
+            exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path,
+                               cwd=crew_cwd(entry.get("worktree"), root))
 
         final = finalize_from_exit_code(
             entry, exit_code=exit_code, result=entry["result"], root=root, since=resumed_at,

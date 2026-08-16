@@ -1,0 +1,186 @@
+{
+  "work_id": "cleanup-a-door",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, GLOSSARY.md, the g3 reviewer handoff plus its REWORK ADDENDUM, the predecessor REVIEW_RESULT (BLOCK, 2 blockers), the g3-rework IMPLEMENTER_RESULT, and both diffs (4e1f22cb, 359d93df). Re-review scope: verify the rework closed both blockers and changed no behaviour.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All five REWORK ADDENDUM items reproduced independently. (1) Full clean-env suite at HEAD: 3093 passed, 6 skipped, 1153 subtests, exit 0 -- matches the claim exactly. (2) map/INDEX.md fresh against the committed tree: a rebuild is a zero-byte no-op, and I proved the guard can still fail by mutating the entity count (4743->4742) and watching MapTreeFreshness go red, then restoring byte-identically. (3) All three reworked doc references now assert things that are TRUE of the code, checked by AST not by grep: _rejectionlog() exists and _log_rejection calls it; _primary_checkout_for_lifecycle has zero os.environ/getenv reads and does fall back to __file__; the cited test name exists and .mcp.json's default really is empty. (4) Blast-radius sweep run from the commit itself: 7 identifiers removed, 5 re-bound (moved), 2 genuinely gone, 0 live stranded identifier references at HEAD. (5) The rework changed no behaviour -- the only .py file it touched is AST-identical to 4e1f22cb once docstrings are stripped, with the sources asserted to differ so the probe cannot be vacuous.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Both g3 commits together (408e6d26..HEAD) touch EXACTLY nine files -- the nine the handoff named, with map/ represented by its only committable artifact map/INDEX.md. The rework commit itself is three: README.md, map/INDEX.md, mcp_spine_server.py. Zero fenced or excluded paths appear: checklist_engine.py, scripts/hooks/**, run_crew.py, gauge_reader.py, install_constellation.py and COMMANDER_SPINE.template.json are all absent from the g3 range. make_demo_spine.py and examples/mcp-interactive-demo/spine.json do appear in the wider a69bbac4..HEAD range but belong to g2, which is closed and excluded from this review. The implementer's one declared departure -- 'points at'->'pointed at' in the same README sentence -- is correct on the merits: .mcp.json's default really is empty, so the present tense was false.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Two of three evidence claims reproduce exactly; the blast-radius claim does not. REPRODUCED: full clean-env suite 3093 passed / 6 skipped / 1153 subtests / exit 0 at HEAD, measured on the committed tree (no tracked modifications outside .agent-work); and the diffstat, 3 files 13+/9-. DOES NOT REPRODUCE: the sweep AFTER count of \"0 stranded references in scope\". I measure 1 in scope. tests/test_mcp_lifecycle.py:201 -- one of the nine files 4e1f22cb changed -- still asserts in its failure message that _spine_open acts on \"SPINE_FILE/SPINE_PARENT re-read fresh\". Measured against the AST: _spine_open reads SPINE_PARENT from os.environ once (still true) and SPINE_FILE zero times (false, and deliberately so -- removing that read IS the #603 fix). This is the same invalidated claim, in the same words, that the rework fixed at mcp_spine_server.py:962-963. It survived because the sweep grep for the phrase is line-oriented and the message is assembled from two adjacent string literals split as \"re-read \" + \"fresh)\", so the phrase appears on no single line. Control: git grep -F for that phrase returns 0 files tree-wide while a whitespace-normalized sweep returns 1 -- the CREW_CONTEXT.md hazard about grepping for a message string. The method hole, not just the instance, is the finding.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Inherited rules hold for this rework. __pycache__ cleared before every measurement I took (#597). No write site is touched at all, so the utf-8/newline rule has no new surface. No trailing whitespace introduced (git diff --check clean). No lint config exists to violate; the README lines land at ~100 cols, matching the paragraph they sit in, and the only very long line is generated map/INDEX.md content. The record-stores-are-never-hand-edited rule holds for map/INDEX.md by measurement, not assertion: a fresh code_map build produces a zero-byte diff, which a hand-edited index would not. The prose itself is an improvement on how-to-talk grounds -- each of the three replacements names the mechanism that actually runs instead of one that was deleted. The one quality-adjacent defect, the line-oriented sweep that could not see a phrase split across two string literals, is recorded against r3-evidence rather than duplicated here.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No divergence that Commander must reconcile inside this gate. The Map Impact claim \"no symbol added, removed, renamed or re-signatured\" is proven, not accepted: the rework is AST-identical to 4e1f22cb once docstrings are stripped, so the symbol set cannot have moved. Capability claim \"none\" holds for the same reason. The three decision anchors (one-spine-per-process-stands, fail-closed-beats-fail-open, bind-on-open-over-new-verb) are untouched by this commit. The implementer assumption that the two map/scripts.mcp_spine_server/ pages cannot be committed is TRUE and I verified it at source: .gitignore:73 ignores map/* and un-ignores only INDEX.md and ids.jsonl, so git check-ignore exits 0 on those pages. The handoff request to commit them was impossible, and only map/INDEX.md is a committable map artifact. The generated page on disk did pick up the new docstring. Two out-of-scope divergences flagged as tc1 (an active episode assertion #603 falsified) and tc2 (the fenced spine_rail.py inference, substantive rather than cosmetic). Separately noted and explicitly NOT attributable to this gate: episodes/ carries all eight epic-559 c2 episodes twice, once under active/ with underscore ids and once under retired/ with hyphen ids, bodies differing. No episodes/ file appears anywhere in a69bbac4..HEAD, so this predates the gate entirely.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/cleanup-a-door/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/cleanup-a-door/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/cleanup-a-door/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Pass run over the gate whole change a69bbac4..HEAD, since the rework slice alone is docs and a generated index. 12 smells visited, rail exit 0. FLAGGED 2: feature-envy (_rebind_refusal reaches into the private checklist_engine._active_lease; right trade today, promote at a third caller) and comments-as-deodorant. OVERRIDDEN 5, each with the standard and the reason logged: duplicated-code, data-clumps, primitive-obsession, divergent-change, speculative-generality. ABSENT 5. The pass genuinely moved two verdicts rather than restating my predecessor. shotgun-surgery is absent because this gate CURED it -- the four import-time derivations collapsed into one _telemetry_path, verified by an AST scan finding zero function defaults referencing SPINE/SESSION/ENGINE. comments-as-deodorant stays flagged on a narrower and sharper basis: the three drifted docstrings are genuinely fixed and I checked each against the AST, but one in-scope instance survives at tests/test_mcp_lifecycle.py:201, which is the r3 blocker. The data-clumps override is the one worth reading: the obvious Identity value object is exactly the refactoring that would blind the module-wide AST pin guarding this gate core invariant. I also proved the rail can refuse rather than assuming it -- dropping a smell gives REFUSED visit-every-item, blanking an override reason gives REFUSED OVERRIDE-LOG, and the record was restored byte-identically.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/cleanup-a-door/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r3-evidence: Two of three evidence claims reproduce exactly; the blast-radius claim does not. REPRODUCED: full clean-env suite 3093 passed / 6 skipped / 1153 subtests / exit 0 at HEAD, measured on the committed tree (no tracked modifications outside .agent-work); and the diffstat, 3 files 13+/9-. DOES NOT REPRODUCE: the sweep AFTER count of \"0 stranded references in scope\". I measure 1 in scope. tests/test_mcp_lifecycle.py:201 -- one of the nine files 4e1f22cb changed -- still asserts in its failure message that _spine_open acts on \"SPINE_FILE/SPINE_PARENT re-read fresh\". Measured against the AST: _spine_open reads SPINE_PARENT from os.environ once (still true) and SPINE_FILE zero times (false, and deliberately so -- removing that read IS the #603 fix). This is the same invalidated claim, in the same words, that the rework fixed at mcp_spine_server.py:962-963. It survived because the sweep grep for the phrase is line-oriented and the message is assembled from two adjacent string literals split as \"re-read \" + \"fresh)\", so the phrase appears on no single line. Control: git grep -F for that phrase returns 0 files tree-wide while a whitespace-normalized sweep returns 1 -- the CREW_CONTEXT.md hazard about grepping for a message string. The method hole, not just the instance, is the finding."
+    ],
+    "summary": "BLOCK on one in-scope finding; everything else the rework was dispatched to fix is closed and independently reproduced. Both of my predecessor blockers are genuinely closed: the full clean-env suite at HEAD is 3093 passed / 6 skipped / 1153 subtests / exit 0 measured on the committed tree, map/INDEX.md is fresh (a rebuild is a zero-byte no-op) and I proved the freshness guard can still fail by mutating the entity count and watching it go red, and all three doc references now assert things TRUE of the code, each checked against the AST rather than against text. The rework changed no behaviour: the one .py file it touched is AST-identical to 4e1f22cb once docstrings are stripped. The gate substance -- fail-closed, bind-on-open, the fenced _identity_violation, the nine-file scope -- is sound and I could not break it. The blocker is that the rework did not finish its own class of defect. tests/test_mcp_lifecycle.py:201, one of the nine files this gate changed, still asserts that _spine_open acts on SPINE_FILE/SPINE_PARENT re-read fresh; measured, _spine_open reads SPINE_PARENT once and SPINE_FILE zero times, because removing that read IS the #603 fix. It is the same invalidated claim, in the same words, that the rework fixed at mcp_spine_server.py:962-963. It survived because the sweep grep is line-oriented and the phrase is split across two adjacent string literals, so git grep -F for it returns 0 files tree-wide while a whitespace-normalized sweep returns 1 -- so the implementer AFTER count of 0 in scope does not reproduce. One-line fix to a test failure message; no behaviour, no test logic, no map rebuild needed. The method hole matters more than the instance and is why I blocked rather than waved it through."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "episodes/active/epic-559_c2-generate-the-spine-006.md assertion a3 (kind observed-behavior, strength strong, lifecycle-standing active) states \"The door binds exactly one file at import time -- SPINE = Path(os.environ[SPINE_FILE]).resolve() in mcp_spine_server.py\". Issue #603 falsified the import-time-only half: bind-on-open lets the binding change at runtime, and that expression is deleted. Per docs/EPISODE_STORE.md, lifecycle-standing answers \"is this specific claim still believed?\", so this is a live belief, not a dated record, and the governed op is amend-assertion to superseded via scripts/apply_episode_delta.py. NOT attributable to this gate alone: the same assertion also says the door has nine tools, which was already wrong at the gate base a69bbac4 (11 tools there and at HEAD), so only the binding clause is #603 drift."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "scripts/hooks/spine_rail.py:1081 _handle_door_lease quotes the deleted expression as mcp_spine_server.py current contract, and its INFERENCE is now unsound, which matters more than the stale quote: it resolves the claimed spine from the hook process own SPINE_FILE. After bind-on-open, _bind_process_to rewrites SPINE_FILE inside the DOOR process only; a hook process spawned by the harness keeps the launch-time value, so after a rebind the hook can record a lease binding against the wrong spine. Feeds decision:door-binding-source-of-truth. Fenced to lanes B/C by this handoff, correctly left untouched; route to whichever lane owns that file as correctness, not tidiness. Matches the implementer own tc1."
+    }
+  ],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/cleanup-a-door/g3-rereview/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-16T15:14:07.145396+00:00",
+    "last_heartbeat": "2026-08-16T15:25:19.114102+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T15:27:06.532793+00:00"
+  }
+}

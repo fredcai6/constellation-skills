@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-guard",
+  "mechanical": {
+    "run": "cleanup-a-door-g1-implementer",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 2,
+    "spine-step": "m1-guard",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-a-door-g1-implementer-m1-guard@8d16b1b2a214c310b39f0051c663d57011bc3960",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-a-door-g1-implementer",
+    "generated_at": "2026-08-16T12:56:53Z"
+  }
+}

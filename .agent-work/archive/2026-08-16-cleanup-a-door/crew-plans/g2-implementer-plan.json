@@ -1,0 +1,467 @@
+{
+  "work_id": "cleanup-a-door-g2-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-guard-red",
+    "m2-generator-green",
+    "m3-drives-two-cwds",
+    "m4-readme",
+    "m5-confirmatory"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and settle candidate (a) vs (b)",
+      "imperative": "Read inherited crew doctrine, the g2 handoff, and the ground truth it names: examples/mcp-interactive-demo/spine.json, its README, the archived generator, checklist_engine.py:883 (read only), tests/test_mcp_spine_server.py:588. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Settle the one design call this gate owns -- candidate (a) ship-the-generator vs (b) ship-a-self-locating-spine -- and record the reason. Attest c1 and c2.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff loaded; handoff complete (all eight fields present)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Handoff has all eight fields: Task, Protected intent, Allowed scope, Specific exclusions, Required evidence, Constraints, Stop conditions, Return format. 'Test mode' is not a named section but is unambiguous from the Constraints ('the guard must be able to fail', demonstrate red on pre-fix content) = TDD red-then-green for the guard, test-after for the rest. Ground truth read: examples/mcp-interactive-demo/{spine.json,README.md}, archived make_scratch_spine.py, checklist_engine.py:871-941 (read only), tests/test_mcp_spine_server.py:588. Handoff complete; no block."
+        },
+        {
+          "id": "c2",
+          "statement": "candidate (a) vs (b) settled with a recorded, measured reason",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "CANDIDATE (b) -- ship a committed spine whose check text is location-independent, produced by a committed generator living in the example's own directory. Candidate (a) is not a judgement call, it is FORCED OUT by an exclusion: tests/test_mcp_spine_server.py:588 asserts ROOT/<.mcp.json's SPINE_FILE default>.is_file() and json-loads it; that default is examples/mcp-interactive-demo/spine.json. Not committing the generated spine fails that test, and the only reconciliation is editing .mcp.json's default -- g3's, and an explicit stop condition. (b) is also strictly smaller: one generator plus one regenerated file, no test reconciliation, no cross-gate ordering hazard. Drift, which is (a)'s whole argument, is closed instead by a guard test that imports the generator and asserts the committed spine.json is byte-identical to what it produces -- so a hand-edit back to a machine-specific path fails the suite. Mechanism: command checks and imperatives address the workspace as ${SPINE_DEMO_WORKSPACE:-${TMPDIR:-/tmp}/constellation-mcp-demo-$(id -u)}/workspace -- absolute at expansion time on every machine, needs no ambient cwd (which is what checklist_engine.py:883 denies it), and carries no machine-specific literal."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-guard-red": {
+      "id": "m1-guard-red",
+      "title": "A guard that forbids machine-specific absolute paths in shipped examples, observed failing on pre-fix content",
+      "imperative": "Write a real test in tests/ that walks every shipped file under examples/ and fails when any carries a machine-specific absolute path (user-home roots, Windows drive paths, this checkout's own absolute path). It must assert what it looped over and must not pass on an empty set -- state the file count. Scope it to examples/ only; do not sweep .agent-work/ spines, fixtures, or the archived generator. Then observe it FAIL against the current pre-fix examples/mcp-interactive-demo/spine.json and capture that transcript. Attest c1 with the observed failure.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded, handoff complete, candidate settled",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0 closed: handoff complete, candidate (b) settled."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the guard is written and observed FAILING on the pre-fix examples/ content, naming the six /home/tommy paths -- manual attest, because a command check here would run a by-design-failing test",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed. tests/test_shipped_examples_are_portable.py fails on the pre-fix tree with exactly 6 violations at spine.json lines 20, 28, 78, 86, 109, 117 -- the same six the handoff enumerates -- each reported as \"'/home/tommy' is a POSIX user home directory\". The failure message states the loop size: 'scanned 3 shipped example file(s) under examples/'. The guard therefore discriminates: it is not identical in the healthy and the defective world."
+        },
+        {
+          "id": "c2",
+          "statement": "the guard is a real collected test in the suite (it is discovered and reported by pytest)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && py -m pytest -q --collect-only tests/test_shipped_examples_are_portable.py 2>&1 | grep -qE 'test_(no_machine_specific|examples)'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-guard-red-1"
+        }
+      ],
+      "constraints": [
+        "guard must be able to fail",
+        "guard must not be vacuous -- assert the count it looped over",
+        "scope to shipped examples only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-guard-red-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && py -m pytest -q --collect-only tests/test_shipped_examples_are_portable.py 2>&1 | grep -qE 'test_(no_machine_specific|examples)'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-generator-green": {
+      "id": "m2-generator-green",
+      "title": "Generate the demo spine from the example's own directory, with location-independent check text",
+      "imperative": "Add a generator under examples/mcp-interactive-demo/ and produce spine.json from it -- do not hand-edit the six path strings. Every command check and every imperative must address the demo workspace through an expression that needs no ambient cwd and names no machine-specific path. Run the generator, commit the generated spine, and confirm the guard from m1 now passes and zero machine-specific absolute paths remain under examples/.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "guard exists and was observed failing on pre-fix content",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 closed with the RED transcript: 6 violations on the pre-fix tree."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD green: the portability guard passes on the regenerated tree",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_shipped_examples_are_portable.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-generator-green-3"
+        },
+        {
+          "id": "c2",
+          "statement": "zero /home/, constellation-skills-wt or f-424 occurrences remain under examples/",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && ! grep -rn '/home/\\|constellation-skills-wt\\|f-424' examples/"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-generator-green-4"
+        },
+        {
+          "id": "c3",
+          "statement": "the committed spine.json is exactly what the committed generator produces (regenerating is a no-op)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Enforced by a real test, not by assertion: DemoSpineIsGeneratedNotHandEditedTests.test_committed_spine_is_exactly_what_the_generator_produces imports examples/mcp-interactive-demo/make_demo_spine.py and compares spine_text() against the committed bytes. Re-running the generator is a no-op: git diff over examples/ is empty after a second run."
+        }
+      ],
+      "constraints": [
+        "do not hand-edit the six path strings",
+        "spine.json stays committed so tests/test_mcp_spine_server.py:588 keeps passing without touching .mcp.json (g3's)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-generator-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_shipped_examples_are_portable.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-generator-green-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && ! grep -rn '/home/\\|constellation-skills-wt\\|f-424' examples/",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-generator-green-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_shipped_examples_are_portable.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-generator-green-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && ! grep -rn '/home/\\|constellation-skills-wt\\|f-424' examples/",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-drives-two-cwds": {
+      "id": "m3-drives-two-cwds",
+      "title": "The demo actually drives, from two different working directories",
+      "imperative": "Drive the shipped demo spine end to end twice, from two different working directories, one of which is neither the repo root nor the example directory. Capture both transcripts including a gate advancing. The driving cwd is the load-bearing variable. Say where the workspace writes land and confirm they do not dirty a tracked directory.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "regenerated spine is in place and portable",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Regenerated spine is committed-clean and portable; guard green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the demo drove to completion from a cwd that is neither the repo root nor the example directory, with gates advancing -- transcript captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RUN 1, cwd=/tmp/nowhere-near-the-repo-3112947/deep/dir -- neither the repo root nor the example directory, and not under either. Drove the SHIPPED examples/mcp-interactive-demo/spine.json all four gates to 'DONE: no open items. WAIVED: [g3.c1]'. Every condition shape exercised: g1 command-check + attest, g2 artifact/user-decision attach, g3 waive of a check left deliberately false, g4 block/resume then close. Default workspace expanded to /tmp/constellation-mcp-demo-1000/workspace with no setup and no env var set."
+        },
+        {
+          "id": "c2",
+          "statement": "the demo drove to completion from a second, different cwd -- transcript captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RUN 2, cwd=the repo root (git toplevel) -- what the MCP door actually stands in per _worktree_root_for_lifecycle. Same spine, regenerated and workspace deleted first so nothing carried over. Drove all four gates to 'DONE: no open items. WAIVED: [g3.c1]'. Run 2 also carried the negative control: with notes.txt absent the engine REFUSED advance g1 ('postconditions unmet [c1]'); after creating the file the same command advanced. So the check is genuinely reading the filesystem, not passing vacuously -- the healthy and defective worlds differ."
+        },
+        {
+          "id": "c3",
+          "statement": "driving the demo leaves the tracked tree clean (no workspace writes under examples/)",
+          "check": {
+            "kind": "command",
+            "command": "! git status --porcelain --untracked-files=all examples/ | grep -qv '^[AM] '"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-drives-two-cwds-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-drives-two-cwds-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! git status --porcelain --untracked-files=all examples/ | grep -qv '^[AM] '",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-readme": {
+      "id": "m4-readme",
+      "title": "The README's regeneration command points at a path that exists",
+      "imperative": "Update examples/mcp-interactive-demo/README.md so its regeneration command names the committed generator, and say where workspace writes land. Leave the opening sentence about .mcp.json alone -- that is g3's. Extend the guard so a dead relative path in a shipped example is caught too, since an absolute-path guard cannot see one.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "generator exists at its committed location",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "examples/mcp-interactive-demo/make_demo_spine.py exists and is staged."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every path the README's regeneration command names exists, enforced by a collected test",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_shipped_examples_are_portable.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-readme-1"
+        },
+        {
+          "id": "c2",
+          "statement": "README's opening sentence about .mcp.json is unchanged (g3 owns it)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && grep -q 'This is the checklist the project-scope' examples/mcp-interactive-demo/README.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-readme-2"
+        }
+      ],
+      "constraints": [
+        "do not touch .mcp.json or the README's opening sentence"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-readme-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_shipped_examples_are_portable.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-readme-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && grep -q 'This is the checklist the project-scope' examples/mcp-interactive-demo/README.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-confirmatory": {
+      "id": "m5-confirmatory",
+      "title": "Confirmatory suite, map freshness, and the wiring grep",
+      "imperative": "Clear __pycache__, then run the handoff's confirmatory suite, rebuild the code map if an entity was added or renamed, and run the wiring grep naming each new symbol with its external call-site count. Zero external call sites is a stop condition.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all functional slices are green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-m4 all closed green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the handoff's confirmatory suite passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_mcp_spine_server.py tests/test_wire_mcp_interpreter.py tests/test_install_constellation.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-confirmatory-1"
+        },
+        {
+          "id": "c2",
+          "statement": "map/INDEX.md freshness still passes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "map/INDEX.md was stale: the new generator added 'examples: 1 modules, 4 entities', which the freshness test caught. Ran py -m scripts.code_map build --root . and staged map/INDEX.md; tests/test_code_map.py then passed 148/148. Full suite also run: 3072 passed, 6 skipped, 1149 subtests, 0 failures."
+        },
+        {
+          "id": "c3",
+          "statement": "wiring grep run: each new symbol shown called from outside its own definition and outside any --self-test path, with the count",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Wiring grep run over all 9 new callable symbols; every one has at least one call site outside its own definition, and no --self-test path exists in either file. build_spine 2 (spine_text() in the generator, generator.build_spine() in the test), spine_text 2 (write_spine(), the drift test), write_spine 1 (main()), shipped_example_files 2, load_demo_generator 2, read_text_or_none 2, machine_specific_hits 1, repo_top_level_entries 1, repo_path_tokens 1. Zero external call sites nowhere; no stop condition."
+        }
+      ],
+      "constraints": [
+        "clear __pycache__ before every measurement (#597)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-confirmatory-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_mcp_spine_server.py tests/test_wire_mcp_interpreter.py tests/test_install_constellation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/cleanup-a-door/g2/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-16T13:21:22.085984+00:00",
+    "last_heartbeat": "2026-08-16T13:36:08.501300+00:00",
+    "claimed_by": "implementer",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T13:37:37.930682+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff is complete and the gate's one design call is settled on measured grounds, not preference: candidate (a) is excluded by tests/test_mcp_spine_server.py:588 plus the .mcp.json exclusion, so (b) -- a committed, generator-produced spine addressing its workspace through a cwd-free shell expansion -- is the only candidate that fits inside this gate's authority, and it is the smaller change besides.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:23:00.263125+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-guard-red",
+      "why": "The guard exists as a collected test and was observed failing on the defective content it is meant to catch, naming all six paths and stating the 3 files it looped over. A guard that has never been seen to fail is indistinguishable from one that cannot; this one has been.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:24:18.360512+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-generator-green",
+      "why": "The six machine-specific paths are gone because the spine is now produced from the example's own directory, not hand-edited. Each path is a shell expansion the check's own shell resolves -- absolute on any machine, dependent on no working directory, which is the property checklist_engine.py:883 actually requires. The guard that failed six times on the pre-fix tree now passes, and a second test pins the committed file to its generator so the paths cannot drift back by hand. One thing the first attempt got wrong and this one fixes: importing the generator from the test wrote a .pyc into examples/, and that .pyc embeds this checkout's absolute path -- the suite was re-creating the very defect inside the directory it was guarding. Bytecode writing is now suppressed for that import.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:26:43.263116+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-drives-two-cwds",
+      "why": "The demo drives from two unrelated working directories, which is the claim #605 denied. The cwd is genuinely load-bearing and genuinely neutralised: the same spine completed from a /tmp path and from the repo root, and the negative control shows the check still fails when the file is missing. Driving it also surfaced something the handoff only half-anticipated: the workspace writes were never the thing that dirties the tree -- they land in /tmp, outside the repo. What dirties it is the engine writing its own per-run state next to whatever spine it is pointed at, nine files with twelve absolute paths. Those are now ignored in the demo directory, so trying the demo no longer leaves the repo dirty.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:29:45.846533+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-readme",
+      "why": "An absolute-path guard is blind to a dead RELATIVE path, and the README carried two: the regeneration command pointing into .agent-work/epic-418-followon/ (the generator had moved to .agent-work/archive/), and a recommendation to use scripts/gen_mcp_config.py, which was deleted when per-dispatch identity moved to .mcp.json plus caller-environment expansion. Both were caught by a new guard observed failing on them, not asserted. The guard resolves only tokens rooted at this repo's own top-level entries, so examples/sync-constellation-skills.yml -- a workflow template whose paths deliberately address a CONSUMING repo -- is exempted by name with its reason, and a second test fails if that exemption ever names a file that no longer exists.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:32:10.555993+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-confirmatory",
+      "why": "Confirmatory layer holds and the map was genuinely stale rather than assumed fresh -- the new generator is a new module, so map/INDEX.md needed the rebuild the handoff warned about. Every new symbol is wired: the generator is not dead code, because the drift test imports it and compares its output to the committed spine, which is also what makes 'generated, not hand-edited' enforceable rather than merely stated.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:36:08.501278+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-16T13:29:22.568791+00:00",
+      "reason": "The original c3 text ('no workspace writes under examples/') asked the wrong question, and driving the demo proved it. The workspace writes were never the risk -- they land in /tmp. What actually dirties the tracked directory is the ENGINE's own per-run state, written next to whatever spine file it is pointed at: spine.json.journal plus context/g1..g4.json and mechanical/g1..g4.json, nine files carrying twelve absolute-path occurrences. The original check also could not distinguish those from this gate's own intended, staged edits, so it would have failed for the wrong reason. Corrected to the honest question: after a full drive, does anything UNSTAGED or UNTRACKED remain under examples/.",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m3-drives-two-cwds.c3"
+      ]
+    }
+  ]
+}

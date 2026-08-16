@@ -1,0 +1,814 @@
+# every tier-2 fragment in the source tree: 271
+
+[docs/CHECKLIST_ENGINE_DESIGN.md para@295] classes=[]
+  **Identity rides the environment, not a generated file.** The server binds `SPINE_FILE`, `SPINE_ENGINE` and `SPINE_SESSION` at launch from its environment, deliberately **not** as tool arguments, so a model cannot point the door at another spine or another identity mid-conversation. The committed pr
+
+[docs/CHECKLIST_SCHEMA.md para@111] classes=[]
+  | field | written by | meaning | |---|---|---| | `work_id` | both | the checklist's own work-id, repeated here | | `worktree` | both | the tree the file was created in; `spine_lifecycle.build_origin` stores `str(Path(worktree))` (native separators), `init_work_area.instantiate_spine` stores `Path(ro
+
+[docs/superpowers/plans/2026-06-24-worktree-isolation-real-fix.md para@13] classes=['a-import-raises']
+  - The script is `scripts/verify_worktree_isolation.py`, styled exactly like `scripts/verify_state_note.py`: `#!/usr/bin/env python`, `from __future__ import annotations`, a `_utf8_stdio()` helper called at import, `def main(argv: list[str] | None = None) -> int`, and `if __name__ == "__main__": rais
+
+[examples/mcp-interactive-demo/README.md para@3] classes=[]
+  This is a checklist you can point the MCP door at by hand. The project-scope `.mcp.json` no longer defaults to it: since issue #603 a door with no `SPINE_FILE` refuses every tool and tells you how to bind one, rather than quietly answering about this demo as though it were your own work. To drive it
+
+[examples/mcp-interactive-demo/README.md para@36] classes=[]
+  Project-scope `.mcp.json` is the **interactive convenience path only**. It is not the delivery mechanism for a cold or headless agent: a fresh project-scope `.mcp.json` is not picked up by a live session, and on a fresh process it lands in `Pending approval` with no human present to clear it. For a 
+
+[examples/mcp-interactive-demo/README.md para@9] classes=[]
+  ``` SPINE_FILE=examples/mcp-interactive-demo/spine.json claude ```
+
+[scripts/checklist_engine.py comment@182] classes=['a-import-raises']
+  --------------------------------------------------------------------------- # gauge reader binding (#181) — loaded by file path so the engine drives whether it is run as a script or imported by a test via spec_from_file_location (both set __file__ to scripts/checklist_engine.py, so the sibling resol
+
+[scripts/generate_spine.py comment@114] classes=['a-import-raises']
+  : Pins DESIGN_NOTE.md section 4's own claim -- "`<repo-root>` is resolver-owned : -- verified, `_RESOLVER_OWNED_TOKEN_RE.fullmatch("<repo-root>")` is true -- : so it is legitimate in output and is not the placeholder class the generator : refuses." Without this, that sentence was argued in prose whi
+
+[scripts/hooks/spine_rail.py comment@1139] classes=[]
+  release -- SPINE_FILE is authoritative, no ladder needed
+
+[scripts/hooks/spine_rail.py string@1075] classes=[]
+  Maintain the session->spine binding from a DOOR-issued spine_lease claim/release (`DOOR_LEASE_TOOL_NAME`) -- the second, additive binding- writing source alongside the Bash `checklist_engine.py` path below. The door call carries NO `--file`: `SPINE_FILE`/`SPINE_SESSION` are THIS hook process's OWN e
+
+[scripts/hooks/spine_rail.py string@1104] classes=[]
+  SPINE_FILE
+
+[scripts/install_constellation.py comment@110] classes=['a-import-raises']
+  run_crew.py: `sys.path.insert(0, <own parent>)` + a plain top-level `import install_constellation` (#539, for `assert_shell_safe_command`). Exactly the #305 mechanism this dict exists to catch -- and it did not, because the guard that pins this dict against reality was keyed to the literal `"checkli
+
+[scripts/install_constellation.py comment@145] classes=['a-import-raises']
+  NON-INSTALLABLE PACKAGES: directories under scripts/ that are real Python packages -- they carry an __init__.py and their modules import each other with intra-package relative imports (`from .discovery import ...`). Because the install destination is FLAT (above), copying such a package's modules ou
+
+[scripts/mcp_spine_server.py comment@1417] classes=[]
+  The tools reachable with NO usable spine bound -- every other tool refuses (issue #603, `_unbound_refusal`). `spine_open` is here because it is the way OUT of that state: it acts on a spine that does not exist yet and, since this gate, binds this process to the one it mints. Exactly one name, and it
+
+[scripts/mcp_spine_server.py comment@1716] classes=[]
+  Fail closed, for the WHOLE surface at once (issue #603). Deliberately here rather than inside each tool's own branch: this runs before any required-argument check, so an unbound door answers the question the caller actually has ("nothing is bound") instead of a downstream complaint about an argument
+
+[scripts/mcp_spine_server.py comment@768] classes=[]
+  --------------------------------------------------------------------------- # The lifecycle door -- spine_open / spine_close. See the module docstring's "The lifecycle door" section for why these are dispatched OUTSIDE call_tool. ----------------------------------------------------------------------
+
+[scripts/mcp_spine_server.py string@1000] classes=[]
+  spine_open
+
+[scripts/mcp_spine_server.py string@1009] classes=[]
+  spine_open
+
+[scripts/mcp_spine_server.py string@1015] classes=[]
+  spine_open: could not resolve the primary checkout:
+
+[scripts/mcp_spine_server.py string@1016] classes=[]
+  spine_open
+
+[scripts/mcp_spine_server.py string@1026] classes=[]
+  spine_open: work_id
+
+[scripts/mcp_spine_server.py string@1028] classes=[]
+  spine_open
+
+[scripts/mcp_spine_server.py string@1035] classes=[]
+  spine_open
+
+[scripts/mcp_spine_server.py string@1035] classes=[]
+  spine_open:
+
+[scripts/mcp_spine_server.py string@1041] classes=[]
+  SPINE_FILE
+
+[scripts/mcp_spine_server.py string@1068] classes=[]
+  A NEW MODULE-LEVEL SIBLING of `call_tool`, never a branch inside it -- `call_tool`'s own choke-point pin (`tests/test_mcp_identity.py::IdentityBindingPinTests.test_call_tool_can_only_produce_content_two_ways`) resolves `call_tool`'s `ast.FunctionDef` node BY NAME and walks only that subtree, so a tr
+
+[scripts/mcp_spine_server.py string@1093] classes=[]
+  spine_open
+
+[scripts/mcp_spine_server.py string@1370] classes=[]
+  spine_open
+
+[scripts/mcp_spine_server.py string@1372] classes=[]
+  Open Constellation work in one call: creates a worktree, a branch, a scaffolded work area, and a compiled, origin-stamped spine for `work_id`, then returns the values (SPINE_FILE, SPINE_SESSION, SPINE_PARENT, the branch, the worktree) a crew's own door binds to. Acts on a spine that does not exist y
+
+[scripts/mcp_spine_server.py string@1425] classes=[]
+  spine_open
+
+[scripts/mcp_spine_server.py string@157] classes=['a-import-raises']
+  The spine named by the environment, or None when NOTHING is named. Three readings of "nothing" collapse into one here, deliberately (issue #603): * **unset** -- this used to be `os.environ["SPINE_FILE"]`, a `KeyError` at module scope, *at import*. The server died before it could refuse anything and 
+
+[scripts/mcp_spine_server.py string@176] classes=[]
+  SPINE_FILE
+
+[scripts/mcp_spine_server.py string@181] classes=[]
+  The engine this door wraps: `SPINE_ENGINE` when set, else the copy that ships BESIDE this script. `SPINE_ENGINE` unset was a `KeyError` one line above `SPINE_FILE`'s, and a session that never bound a spine very likely never set an engine either -- so without this, the door died at import and #603's 
+
+[scripts/mcp_spine_server.py string@194] classes=[]
+  SPINE_ENGINE
+
+[scripts/mcp_spine_server.py string@2] classes=[]
+  MCP front door for the checklist engine (issue #424, workstream F of epic #418). Zero dependencies: newline-delimited JSON-RPC 2.0 over stdio, which is what the MCP stdio transport is. No SDK install, so nothing new leaks into the corpus. This server WRAPS the engine -- it never reimplements it. Eve
+
+[scripts/mcp_spine_server.py string@213] classes=[]
+  Where one telemetry side-channel writes, asked FRESH on every call. Three things had to be true at once here, and each of them rules out an obvious shorter version (issue #603): * **Late-bound, not import-time.** `spine_open` can rebind this process to a new spine mid-life (`_bind_process_to`), and 
+
+[scripts/mcp_spine_server.py string@325] classes=[]
+  Resolve `value` and report whether it escapes `bound_dir`. Shared by both `--from-child` and `--delta` in `_identity_violation` -- one containment predicate, not two, for the two flags that carry the same underlying hazard: a filesystem path the engine will read and act on. `join_relative_to` is whe
+
+[scripts/mcp_spine_server.py string@384] classes=[]
+  Call `spine_open` to mint a spine and bind this process to it, or relaunch this door with SPINE_FILE set to an existing spine file.
+
+[scripts/mcp_spine_server.py string@388] classes=[]
+  Call `spine_open` to mint a spine and rebind this process to it, or relaunch this door with SPINE_FILE set to an existing spine file.
+
+[scripts/mcp_spine_server.py string@394] classes=['a-import-raises']
+  Is a USABLE spine bound? Returns None when one is, else the refusal. Five inputs, one class (issue #603). `SPINE_FILE` unset, empty or whitespace-only means nothing was ever named (`_spine_from_env` already collapsed those three into `None`); a path that does not exist, is a directory, or cannot be 
+
+[scripts/mcp_spine_server.py string@575] classes=[]
+  Stand in the bound spine's OWN worktree for the duration of the block, then return to where the process was, unconditionally (issue #568). Why the door moves at all. `checklist_engine.origin_worktree_refusal` compares a spine's stamped `origin.worktree` against the engine's AMBIENT cwd, and `run_eng
+
+[scripts/mcp_spine_server.py string@798] classes=[]
+  The PRIMARY checkout: the BOUND SPINE's own, falling back to THIS SCRIPT's own when nothing is bound. Never the ambient cwd. This used to read `os.environ["SPINE_FILE"]` unconditionally, so that `_spine_open`'s own source never contained the identifier `SPINE`. That worked only while every door was 
+
+[scripts/mcp_spine_server.py string@865] classes=[]
+  The worktree `SPINE` itself lives in -- its own toplevel, NOT the primary checkout. This is `close_work`'s own `root`: it computes `work_id` as `spine_path.parent.relative_to(root / ".agent-work")`, and a spine `open_work` created lives under a LINKED worktree's `.agent-work/`, not the primary check
+
+[scripts/mcp_spine_server.py string@879] classes=['b-launch-time-binding']
+  THE one place `SPINE` and `SESSION` are assigned outside module scope. `decision:bind-on-open-over-new-verb`: a successful `spine_open` binds THIS process to the spine it just minted, rather than the caller having to relaunch the door to use work it just created. Before this, a session that started 
+
+[scripts/mcp_spine_server.py string@916] classes=[]
+  SPINE_FILE
+
+[scripts/mcp_spine_server.py string@954] classes=[]
+  , and one door drives one spine at a time. Opening new work now would leave that lease held by nobody. Release it first (`spine_lease` with action 'release'), then call `spine_open` again.
+
+[scripts/mcp_spine_server.py string@969] classes=[]
+  `spine_open`'s own dispatch path. Never references `SPINE`, `SESSION` or `run_engine` -- checked by `tests/test_mcp_lifecycle.py`, with a mutated positive control proving that check can fail. It acts on a spine that does not exist yet, so nothing here may presuppose one is bound: the repo root comes
+
+[scripts/mcp_spine_server.py string@993] classes=[]
+  spine_open
+
+[scripts/mcp_spine_server.py string@993] classes=[]
+  spine_open:
+
+[scripts/mcp_spine_server.py string@999] classes=[]
+  spine_open: spec must be a non-empty JSON object
+
+[scripts/run_crew.py comment@463] classes=['a-import-raises']
+  A crew's work is a full bounded engineering task (unlike the eval harness's python/pytest-only need), so the grant is broad: unrestricted Bash plus the core file/search tools, and the MCP spine door tools a crew drives its own checklist through (`mcp_spine_server.py`). The `mcp__spine__*` entries ar
+
+[scripts/run_crew.py comment@483] classes=[]
+  The lifecycle door (issue #559, C3/g3): without these, a dispatched crew is silently denied spine_open/spine_close even though the door itself advertises them -- exactly the "two tools silently denied to every crew" failure this tuple's own drift-guard test (test_crew_launcher.py) exists to catch.
+
+[scripts/run_crew.py string@1374] classes=[]
+  on the external backend: ExternalBackend spawns no process and builds no environment, so nothing binds the value into a child's SPINE_FILE/SPINE_SESSION. --spine is only meaningful on the cli backend (--backend cli). A spine-only dispatch here would leave the crew with no job at all -- pass --handof
+
+[scripts/run_crew.py string@1410] classes=[]
+  has an UNBOUND MCP door -- ExternalBackend spawns no process and builds no environment, so nothing binds SPINE_FILE/SPINE_SESSION. Its MCP door resolves to .mcp.json's demo default, not this crew's own spine. Verify spine_status before any mutating verb.
+
+[scripts/run_crew.py string@1631] classes=[]
+  path to the spine/checklist file this crew will drive through its MCP door. On the cli backend, bound into the spawned child's SPINE_FILE (and its assignment-keyed SPINE_SESSION, derived from --work-id/--gate/--role) so the door resolves to this crew's own spine instead of .mcp.json's demo default. 
+
+[scripts/run_crew.py string@488] classes=[]
+  mcp__spine__spine_open
+
+[scripts/run_crew.py string@790] classes=[]
+  UTF-8-safe environment defaults for the child, PLUS the MCP door binding. `spine_file` is the spine THIS crew will drive and `spine_session` is its assignment-keyed lease identity (`assignment_session_name`, no `attempt-<n>` tail). Both are optional so a caller with no spine to bind (e.g. a legacy r
+
+[scripts/run_crew.py string@823] classes=[]
+  SPINE_FILE
+
+[scripts/run_crew.py string@835] classes=[]
+  The env every dispatched/resumed crew gets: its OWN spine (if any), resolved absolute against `root`, its assignment-keyed lease identity, and its parent -- built in one place so `dispatch` and `resume` cannot drift apart. `spine_file` and `spine_session` are bound as a PAIR, and ONLY when `spine` w
+
+[scripts/run_crew.py string@940] classes=[]
+  Construct the base `crew-runs.json` entry shared by BOTH backends (the consolidation the wave-1 triage named). One place builds the durable record so the two dispatch paths can never drift in shape. Every new entry carries a `backend` field (`"cli"` | `"external"`, Decision 1) and starts `running` s
+
+[scripts/spine_lifecycle.py string@337] classes=[]
+  SPINE_FILE
+
+[scripts/spine_lifecycle.py string@95] classes=[]
+  spine_open
+
+[tests/test_crew_launcher.py comment@1023] classes=[]
+  CONTROL: a dispatcher that is ITSELF door-bound (ambient SPINE_FILE + SPINE_SESSION already in this process's environment, e.g. a live Admiral/Commander crew) launches a child with NO --spine. "No --spine means the inherited environment route is genuinely untouched" requires BOTH values to pass thro
+
+[tests/test_crew_launcher.py comment@2253] classes=[]
+  The cli backend spawns a real child and binds SPINE_FILE/SPINE_SESSION into its environment (_crew_door_env) -- its door is genuinely bound.
+
+[tests/test_crew_launcher.py comment@2259] classes=[]
+  The external backend spawns no process and builds no environment, so nothing ever binds SPINE_FILE/SPINE_SESSION for it -- its door resolves to .mcp.json's demo default. This field must state that plainly in the registry rather than let it silently read as bound.
+
+[tests/test_crew_launcher.py comment@527] classes=[]
+  A fresh module name each call: mcp_spine_server reads SPINE_FILE at IMPORT time, so a cached `sys.modules` entry would carry a stale binding on a second load in the same test process.
+
+[tests/test_crew_launcher.py comment@551] classes=[]
+  CONTROL for the tie test above: pins the count so a future door regression (e.g. a tool silently dropped) cannot slip through by shrinking BOTH sides of the comparison in lockstep. 9 engine tools + 2 lifecycle tools (spine_open, spine_close -- issue #559, C3/g3) = 11; unlike test_mcp_adoption.py's T
+
+[tests/test_crew_launcher.py comment@896] classes=[]
+  ASSIGN semantics (Admiral ruling, reversing the earlier setdefault ruling that froze this defect in place): an explicit spine_file/ spine_session argument is MORE SPECIFIC than whatever SPINE_FILE/ SPINE_SESSION already sits in the base environment, so it must win — a door-bound dispatcher's own bin
+
+[tests/test_crew_launcher.py comment@910] classes=[]
+  Demonstrates the RAW defect `crew_env()` used to have with no binding params at all: base_env defaults to dict(os.environ), so a dispatching process that already has ITS OWN SPINE_FILE/SPINE_SESSION bound (e.g. this very implementer) hands that SAME spine to every child it dispatches, regardless of 
+
+[tests/test_crew_launcher.py comment@960] classes=[]
+  A caller with nothing to bind (e.g. a legacy call site not yet updated to pass --spine) must not crash. Both SPINE_FILE and SPINE_SESSION are bound only as a PAIR: deriving the assignment identity without the file it belongs to hands the child a lease with nothing telling it which spine to claim it 
+
+[tests/test_crew_launcher.py comment@982] classes=[]
+  Reverses the earlier "RULED design" here: a cold reviewer showed that letting a SPINE_FILE/SPINE_SESSION already present in the dispatching process's own environment win over an explicit --spine is a silent hijack — a door-bound dispatcher's child claims the DISPATCHER's own lease instead of the one
+
+[tests/test_crew_launcher.py string@101] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@1010] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@1013] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@1033] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@1035] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@1048] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@1077] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@1101] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@128] classes=['a-import-raises']
+  #559 pass 3, blocker 1: `2152ded3` added `import install_constellation` at module scope in `run_crew.py` (#539's `assert_shell_safe_command`), but no bundle carrying `run_crew.py` shipped `install_constellation.py` as a companion -- every installed Commander and Explorer raised `ModuleNotFoundError`
+
+[tests/test_crew_launcher.py string@1747] classes=[]
+  CONTROL C: the cold reviewer's blocking finding, reproduced and closed. A door-bound dispatcher (its OWN SPINE_FILE/SPINE_SESSION already sitting in THIS process's environment, exactly as a live commander crew is bound) dispatches a child with its own `--spine`, through the REAL `RC.launch_crew` pat
+
+[tests/test_crew_launcher.py string@1797] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@1799] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@1819] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@1822] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@522] classes=[]
+  SPINE_ENGINE
+
+[tests/test_crew_launcher.py string@522] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@523] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@524] classes=[]
+  SPINE_ENGINE
+
+[tests/test_crew_launcher.py string@877] classes=[]
+  CONTROL A, made green: `crew_env()` must bind SPINE_FILE/SPINE_SESSION to the crew it is actually building an environment FOR, not silently omit them or leak whatever spine this (dispatching) process happens to carry.
+
+[tests/test_crew_launcher.py string@883] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@892] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@902] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@906] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@918] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@921] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@928] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@94] classes=[]
+  Strip SPINE_FILE/SPINE_SESSION from THIS process's environment for the duration of the block. A dispatch with NO explicit `--spine` leaves the inherited-environment route untouched (`crew_env()`'s documented contract for the Admiral's own bootstrap), so a test running under a harness that already ha
+
+[tests/test_crew_launcher.py string@954] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@978] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@994] classes=[]
+  SPINE_FILE
+
+[tests/test_crew_launcher.py string@996] classes=[]
+  SPINE_FILE
+
+[tests/test_install_constellation.py string@1500] classes=['a-import-raises']
+  at runtime but SCRIPT_RUNTIME_COMPANIONS['checklist_engine.py'] does not declare them -- every skill bundling the engine installs a tree where that import fails, and the engine's ImportError fallback makes the feature no-op SILENTLY
+
+[tests/test_install_constellation.py string@1623] classes=['a-import-raises']
+  #559 pass 3: the guard above (`test_engine_runtime_siblings_are_declared_ as_companions`) reads `SCRIPT_RUNTIME_COMPANIONS.get('checklist_engine.py', ())` -- a LITERAL, so it watches exactly one script. `gauge_writer_hook.py` got its own, separately hand-written copy of the same check. Neither gener
+
+[tests/test_install_constellation.py string@1678] classes=['a-import-raises']
+  's import of it fails
+
+[tests/test_install_constellation.py string@1865] classes=['a-import-raises']
+  Bundling one of these copies it flat and every relative import in it raises on the installed side, where nothing here would catch it.
+
+[tests/test_install_constellation.py string@4021] classes=[]
+  ${SPINE_FILE:-examples/mcp-interactive-demo/spine.json}
+
+[tests/test_install_constellation.py string@4021] classes=[]
+  SPINE_FILE
+
+[tests/test_map_contract_wiring.py comment@250] classes=['a-import-raises']
+  A frozen dataclass resolves its own module through sys.modules at class creation; without this line the import raises on 3.14.
+
+[tests/test_map_orient.py comment@36] classes=['a-import-raises']
+  A frozen dataclass resolves its own module through sys.modules at class creation; without this line the import raises on 3.14.
+
+[tests/test_mcp_adoption.py comment@243] classes=[]
+  Scoped to the engine tools (TOOL_NAMES - LIFECYCLE_TOOL_NAMES): issue #559, C3/g3 added spine_open/spine_close, which are NOT pass-throughs this file's Tier3 "## MCP door" section describes (see TestTier3ChecklistEngineReference below, which pins DOOR_TOOL_NAMES against that doc section -- a lifecyc
+
+[tests/test_mcp_adoption.py string@171] classes=[]
+  Import `mcp_spine_server` fresh, under a scratch `SPINE_FILE`/`SPINE_ENGINE`/ `SPINE_SESSION` env. It reads those from the environment at IMPORT time -- since issue #603 without raising, binding `SPINE = None` when nothing is named -- and the scratch env is what keeps this file's own tests off whate
+
+[tests/test_mcp_adoption.py string@184] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_adoption.py string@184] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_adoption.py string@185] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_adoption.py string@186] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_adoption.py string@205] classes=[]
+  The engine's own verb registry, read from its argparse subparsers -- never hand-typed. `checklist_engine.parse_args` builds the whole subparser tree in one function and returns `p.parse_args(argv)` on its last line, so there is no module-level list to import; handing it one bogus verb makes argparse
+
+[tests/test_mcp_adoption.py string@839] classes=[]
+  Issue #559 ("a spine is the job") supersedes the g1 identity-trade fact the old `TestTier2IdentityTradeCarried` pinned for these two files specifically: `run_crew.py` now binds a dispatched crew's OWN spine before it starts (`--spine`, `SPINE_FILE`/`SPINE_SESSION`), so it no longer shares the dispat
+
+[tests/test_mcp_door_engine_cwd.py string@179] classes=[]
+  End to end through the REAL engine: `claim` is origin-guarded, the spine belongs to a worktree that is not this process's directory, and it must go through -- this is the `spine_open` -> `claim` round trip that was impossible by construction.
+
+[tests/test_mcp_door_engine_cwd.py string@2] classes=[]
+  The door stands in the bound spine's own worktree for an engine call (issue #568, the g1b delta). `checklist_engine.origin_worktree_refusal` compares a spine's stamped `origin.worktree` against the engine's AMBIENT cwd, and `run_engine` calls `checklist_engine.main(argv)` IN PROCESS. The door's own 
+
+[tests/test_mcp_door_engine_cwd.py string@97] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_door_engine_cwd.py string@98] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_door_telemetry.py string@115] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_door_telemetry.py string@116] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_door_unbound.py comment@403] classes=[]
+  `spine_open` runs real git commands including `git commit`, so author identity comes from env vars rather than an ambient global gitconfig that a CI runner may not have.
+
+[tests/test_mcp_door_unbound.py comment@445] classes=[]
+  2. spine_open mints a real spine and binds THIS process to it.
+
+[tests/test_mcp_door_unbound.py comment@55] classes=[]
+  The one tool that is REACHABLE with nothing bound, because it is the way out: `spine_open` mints a spine and binds this process to it. Every other tool refuses. Kept here as data so the enumeration test below can assert a COUNT rather than a hand-copied list.
+
+[tests/test_mcp_door_unbound.py comment@61] classes=[]
+  Anchors, deliberately short: the wording may be improved, but a refusal that stops saying "no spine is bound" or stops naming `spine_open` has stopped telling the caller what to do, which is the whole point of the gate.
+
+[tests/test_mcp_door_unbound.py string@1] classes=['a-import-raises']
+  The MCP door must fail CLOSED when nothing usable is bound (issue #603, cleanup-a-door gate g3). An unbound door used to do one of two things, never the right one: * `SPINE_FILE` **unset** -- `KeyError` at module scope, *at import*. The server died before it could refuse anything and the client saw 
+
+[tests/test_mcp_door_unbound.py string@103] classes=[]
+  Spawn the real door with `env_under_test` and make `calls` through it. `env_under_test` is the WHOLE environment (plus PATH), not an overlay: this file is about variables being absent, and an overlay cannot express absence when the test process's own environment may carry them -- this suite may itse
+
+[tests/test_mcp_door_unbound.py string@140] classes=[]
+  The environment of a session that never bound a door: `SPINE_FILE` is genuinely ABSENT, not empty. The two are different failure worlds and this file measures both -- so absence is expressed by BUILDING the variable in only when a caller asks for it, never by setting it and deleting it again. `drive
+
+[tests/test_mcp_door_unbound.py string@146] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_door_unbound.py string@215] classes=[]
+  The measured pre-fix behaviour: `KeyError: 'SPINE_FILE'` at module scope, exit 1, no answer at all.
+
+[tests/test_mcp_door_unbound.py string@220] classes=['a-import-raises']
+  the door still dies at import on an unset SPINE_FILE
+
+[tests/test_mcp_door_unbound.py string@224] classes=[]
+  `Path("").resolve()` is the cwd. The door must not bind a directory it merely happens to be standing in -- and this is the case a shell's `${SPINE_FILE:-}` expansion actually produces.
+
+[tests/test_mcp_door_unbound.py string@232] classes=[]
+  an empty SPINE_FILE silently bound the door to its working directory
+
+[tests/test_mcp_door_unbound.py string@265] classes=[]
+  `SPINE_ENGINE` was a `KeyError` one line above `SPINE_FILE`'s. A session that bound neither must still get a refusal it can read.
+
+[tests/test_mcp_door_unbound.py string@268] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_door_unbound.py string@296] classes=[]
+  spine_open
+
+[tests/test_mcp_door_unbound.py string@347] classes=[]
+  A throwaway git checkout carrying this repo's own `scripts/`. `spine_open` on an UNBOUND door derives the primary checkout from the server script's own location (`_primary_checkout_for_lifecycle`) -- there is no bound spine to derive it from, which is the whole point. So a test that ran the repo's o
+
+[tests/test_mcp_door_unbound.py string@383] classes=[]
+  `decision:bind-on-open-over-new-verb`, end to end and in one process. The epic's exit criterion, verbatim: a session started with NO `SPINE_FILE` calls `spine_open`, gets bound, and drives a real spine without touching the CLI. The load-bearing assertion is that **`claim` then succeeds** -- a transc
+
+[tests/test_mcp_door_unbound.py string@435] classes=[]
+  spine_open
+
+[tests/test_mcp_door_unbound.py string@448] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_door_unbound.py string@452] classes=[]
+  spine_open escaped the staged checkout:
+
+[tests/test_mcp_door_unbound.py string@475] classes=[]
+  spine_open
+
+[tests/test_mcp_door_unbound.py string@477] classes=[]
+  spine_open
+
+[tests/test_mcp_door_unbound.py string@494] classes=[]
+  spine_open
+
+[tests/test_mcp_door_unbound.py string@497] classes=[]
+  spine_open
+
+[tests/test_mcp_door_unbound.py string@59] classes=[]
+  spine_open
+
+[tests/test_mcp_door_unbound.py string@64] classes=[]
+  spine_open
+
+[tests/test_mcp_friction_capture.py string@92] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_friction_capture.py string@93] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_identity.py comment@1044] classes=[]
+  Scoped to the engine tools (TOOL_NAMES - LIFECYCLE_TOOL_NAMES): spine_open/spine_close (issue #559, C3/g3) are dispatched from `call_lifecycle_tool`, never `call_tool`, and never call `run_engine` at all -- calling `module.call_tool` on either raises KeyError by design (see mcp_spine_server.py's mod
+
+[tests/test_mcp_identity.py comment@587] classes=[]
+  Isolate the identity-seam keys from the CALLING test process's own environment before measuring anything: a Commander/crew dispatched via `run_crew.py --backend cli --spine ...` already has SPINE_FILE/ SPINE_SESSION bound into its real shell before this test ever runs (the doctrine-recommended workf
+
+[tests/test_mcp_identity.py string@1] classes=[]
+  DC2 (separation) and DC3 (inheritance fails closed) acceptance tests for the MCP front door (issue #424, workstream F, gate g3). DC2 — a parent and a subagent drive two different spines at once, each through its own server instance; leases never collide and each status call returns its own reading. 
+
+[tests/test_mcp_identity.py string@111] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_identity.py string@112] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_identity.py string@494] classes=['a-import-raises']
+  A second, independent way to reach 'no identity': SPINE_FILE itself is simply never set (the config-delivery flavor of DC3's trap, distinct from the server-never-started flavor above). The CLAIM here is unchanged and is the only thing this control has ever asserted: with no config delivered, the doo
+
+[tests/test_mcp_identity.py string@513] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_identity.py string@523] classes=[]
+  spine_open
+
+[tests/test_mcp_identity.py string@55] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_identity.py string@55] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_identity.py string@551] classes=[]
+  DC3, at the seam `mcp_spine_server.py`'s own module docstring names: 'Ambient state is bound at launch OR at `spine_open` -- at launch from the environment ...' -- and it is that launch-from-the-environment half that is the seam identity rides on here. (The `spine_open` half, issue #603, binds a pro
+
+[tests/test_mcp_identity.py string@640] classes=[]
+  The DC3 claim itself: launch a 'subagent' the way one with no special MCP configuration would be launched -- inheriting the calling process's real environment, no explicit --mcp-config of its own. Per the previous test, that environment structurally cannot contain the parent's SPINE_FILE/SPINE_SESSI
+
+[tests/test_mcp_identity.py string@676] classes=[]
+  The mirror of DC2's collision control, applied to DC3: if the parent's SPINE_FILE/SPINE_SESSION HAD somehow become ambient in a subagent's environment (the risk the previous test's first assertion shows this repo's actual delivery mechanism structurally avoids), the subagent WOULD read the parent's 
+
+[tests/test_mcp_identity.py string@686] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_identity.py string@686] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_identity.py string@687] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_identity.py string@687] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_identity.py string@796] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_identity.py string@797] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_identity.py string@861] classes=[]
+  The confinement property itself: once the module is imported, moving SPINE_FILE in the environment cannot move where the door points. A binding re-read per call would fail this.
+
+[tests/test_mcp_identity.py string@870] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_identity.py string@871] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_identity.py string@880] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_identity.py string@882] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_imperative_equivalence.py string@283] classes=[]
+  The property itself: every gate carrying an imperative, across every shipped gated/survey checklist template, discovered by walking the tree. One persistent MCP server subprocess is reused across the whole walk (its bound SPINE_FILE is rewritten before each gate's comparison, since the engine reload
+
+[tests/test_mcp_lifecycle.py comment@183] classes=[]
+  --------------------------------------------------------------------------- # 2. spine_open never references SPINE, SESSION or run_engine. --------------------------------------------------------------------------- #
+
+[tests/test_mcp_lifecycle.py comment@259] classes=[]
+  --------------------------------------------------------------------------- # 3. Containment on spine_open's one caller-derived path. --------------------------------------------------------------------------- #
+
+[tests/test_mcp_lifecycle.py comment@365] classes=[]
+  spine_open/spine_close (unlike the engine-only tools this shape was copied from) run REAL git commands, including `git commit` -- deterministic author/committer identity via env vars, never the ambient global gitconfig (absent here: only PATH is forwarded, and a real CI runner may have none configur
+
+[tests/test_mcp_lifecycle.py comment@439] classes=[]
+  Door A: bound to a placeholder spine INSIDE the repo (never read by spine_open -- only its own directory matters, to derive the primary checkout).
+
+[tests/test_mcp_lifecycle.py comment@465] classes=[]
+  Door B: bound to the NEW spine spine_open just created -- the process a real dispatched crew would be launched with.
+
+[tests/test_mcp_lifecycle.py comment@59] classes=[]
+  : The three identifiers `_spine_open`'s own dispatch path may never : reference (LIFECYCLE_CONTRACT.md section 6) -- the bound-spine globals and : the engine pass-through, none of which apply to a spine that does not : exist yet.
+
+[tests/test_mcp_lifecycle.py string@1] classes=[]
+  Tests for the MCP lifecycle door -- `spine_open`/`spine_close` (`scripts/mcp_spine_server.py`'s `call_lifecycle_tool`, issue #559, C3/g3). Frozen contract: `.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-559/c3-lifecycle/LIFECYCLE_CONTRACT.md` section 6. `scripts/spine_lifecycle.py`'
+
+[tests/test_mcp_lifecycle.py string@100] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_lifecycle.py string@135] classes=[]
+  _spine_open
+
+[tests/test_mcp_lifecycle.py string@150] classes=[]
+  call_lifecycle_tool now returns content some way other than _spine_open(args)/_spine_close(args):
+
+[tests/test_mcp_lifecycle.py string@162] classes=[]
+  def call_lifecycle_tool(name, args): out = _spine_open(args) out['content'][0]['text'] += 'leak' return out
+
+[tests/test_mcp_lifecycle.py string@188] classes=[]
+  `spine_open` acts on a spine that does not exist yet and must never touch the identity this door is itself bound to -- LIFECYCLE_CONTRACT.md section 6's "must never touch SPINE/SESSION", made a checked fact rather than a claim, over `_spine_open`'s own source (found by name, the same way the choke-p
+
+[tests/test_mcp_lifecycle.py string@196] classes=[]
+  _spine_open
+
+[tests/test_mcp_lifecycle.py string@200] classes=['b-launch-time-binding']
+  -- spine_open must act purely on server-launch-time state (SPINE_PARENT re-read fresh from the environment, and the repo root from _primary_checkout_for_lifecycle, which reads no environment at all) and never on the identity THIS door happens to be bound to, or a call meant to open unrelated work co
+
+[tests/test_mcp_lifecycle.py string@200] classes=[]
+  _spine_open's own source now references
+
+[tests/test_mcp_lifecycle.py string@209] classes=[]
+  Positive control: a hypothetical `_spine_open` that answers via the engine pass-through (exactly the forbidden shape) must be caught.
+
+[tests/test_mcp_lifecycle.py string@212] classes=[]
+  def _spine_open(args): if SESSION: return as_result(run_engine('current', mutating=False)) return as_result(run_engine('current', mutating=False, file=SPINE))
+
+[tests/test_mcp_lifecycle.py string@226] classes=[]
+  Sanity check on the pin's OWN scope: `spine_close` acts on the bound spine BY DESIGN (LIFECYCLE_CONTRACT.md section 6's opposite identity posture), so it legitimately references `SPINE` -- proving the ban above is `_spine_open`-specific, not a whole-module sweep that would make `_spine_close` unwrit
+
+[tests/test_mcp_lifecycle.py string@237] classes=[]
+  `_spine_open`'s own `wt_root` must come from `spine_lifecycle._default_wt_root`, the ONE place that answers "where do worktrees live" -- not a second, inline restatement of the rule (`root.parent / f"{root.name}-wt"`) that could silently drift from it. Checked over `_spine_open`'s own source segment
+
+[tests/test_mcp_lifecycle.py string@245] classes=[]
+  _spine_open
+
+[tests/test_mcp_lifecycle.py string@249] classes=[]
+  _spine_open no longer calls spine_lifecycle._default_wt_root -- it must be the single owner of the worktree-root rule, not restated inline here
+
+[tests/test_mcp_lifecycle.py string@254] classes=[]
+  _spine_open still contains the old inline sibling-'-wt' reconstruction -- that duplicate must be removed once _default_wt_root is called instead
+
+[tests/test_mcp_lifecycle.py string@264] classes=[]
+  `work_id` is the only caller-supplied value `spine_open` turns into a filesystem path (the candidate worktree). Confined through `_resolve_confined` -- the SAME predicate `_identity_violation` already uses for `--from-child`/`--delta` -- parameterized with `wt_root` as `bound_dir` instead of the def
+
+[tests/test_mcp_lifecycle.py string@279] classes=[]
+  Direct proof that `_resolve_confined` -- not a reimplementation -- is what spine_open's containment runs on, parameterized by a `bound_dir` unrelated to `SPINE.parent`.
+
+[tests/test_mcp_lifecycle.py string@305] classes=[]
+  _spine_open
+
+[tests/test_mcp_lifecycle.py string@335] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_lifecycle.py string@344] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_lifecycle.py string@346] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_lifecycle.py string@372] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_lifecycle.py string@373] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_lifecycle.py string@410] classes=[]
+  Required evidence (criterion 4): `tools/call spine_open` creates a real worktree and spine in a throwaway git repo under `tmp_path`; that spine is driven to terminal through the door's own existing engine tools (`spine_lease`, `spine_start`, `spine_evidence`, `spine_advance`); `tools/call spine_clos
+
+[tests/test_mcp_lifecycle.py string@455] classes=[]
+  spine_open
+
+[tests/test_mcp_lifecycle.py string@459] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_lifecycle.py string@460] classes=[]
+  spine_open did not write a real spine file
+
+[tests/test_mcp_lifecycle.py string@462] classes=[]
+  spine_open did not create a real worktree
+
+[tests/test_mcp_lifecycle.py string@550] classes=[]
+  Since gate g3 this door can REBIND itself: `spine_open` binds the process to the spine it just minted (`decision:bind-on-open-over-new-verb`). That makes a new regression possible which no existing pin can see. The `_spine_open` identifier ban above is scoped to ONE function's source, so a second, q
+
+[tests/test_mcp_lifecycle.py string@611] classes=[]
+  A pin proving there is only ONE binder is satisfied vacuously by a binder nothing calls. This is the other half: `_spine_open` reaches it.
+
+[tests/test_mcp_lifecycle.py string@613] classes=[]
+  _spine_open
+
+[tests/test_mcp_lifecycle.py string@99] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_spine_server.py comment@241] classes=[]
+  issue #559, C3/g3 added 2 lifecycle tools (spine_open, spine_close) that are not engine pass-throughs (see mcp_spine_server.py's module docstring, "The lifecycle door") -- EXPECTED_TOOLS names the original 9 engine tools this test was written for, unchanged.
+
+[tests/test_mcp_spine_server.py comment@680] classes=[]
+  The caller-set overrides ${SPINE_FILE:-...} / ${SPINE_SESSION:-...} expand to -- exactly the seam a real dispatch uses. The 'session_id#agent_id' composition is a caller-side convention; nothing in this repo composes or validates it anymore.
+
+[tests/test_mcp_spine_server.py comment@757] classes=[]
+  issue #559, C3/g3's spine_open/spine_close never call run_engine and so cover no engine verb by design (see mcp_spine_server.py's module docstring, "The lifecycle door") -- excluded here the same way tests/test_mcp_identity.py's runtime sweep scopes itself off LIFECYCLE_TOOL_NAMES, so this stays a c
+
+[tests/test_mcp_spine_server.py string@180] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_spine_server.py string@181] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_spine_server.py string@245] classes=[]
+  spine_open
+
+[tests/test_mcp_spine_server.py string@574] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_spine_server.py string@575] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_spine_server.py string@584] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_spine_server.py string@584] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_spine_server.py string@600] classes=[]
+  None when `raw` is an acceptable SPINE_FILE value, else what is wrong. Extracted from the test body so the test below can feed it values that SHOULD fail. A conditional guard whose condition is currently false is exactly the shape that rots into a vacuous pass, and the only defence is to keep exerci
+
+[tests/test_mcp_spine_server.py string@606] classes=[]
+  \$\{SPINE_FILE:-(?P<default>[^}]*)\}
+
+[tests/test_mcp_spine_server.py string@608] classes=[]
+  SPINE_FILE must stay overridable per dispatch via ${SPINE_FILE:-<default>} expansion; got
+
+[tests/test_mcp_spine_server.py string@625] classes=[]
+  SPINE_FILE stays written as `${SPINE_FILE:-<default>}` so a dispatcher can rebind it per agent through the calling process's environment -- a literal path here would bind one spine for every consumer and could not serve two agents driving different spines. The default itself is now EMPTY, deliberate
+
+[tests/test_mcp_spine_server.py string@636] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_spine_server.py string@645] classes=[]
+  ${SPINE_FILE:-examples/no-such-spine.json}
+
+[tests/test_mcp_spine_server.py string@646] classes=[]
+  ${SPINE_FILE:-README.md}
+
+[tests/test_mcp_spine_server.py string@647] classes=[]
+  ${SPINE_FILE:-.mcp.json}
+
+[tests/test_mcp_spine_server.py string@656] classes=[]
+  End-to-end replacement for the old generated-config test: per-dispatch identity now ships via the committed `.mcp.json` plus `${VAR}` expansion from the caller's environment (M1, g1 rework handoff), not a generated file. Launches the server EXACTLY as `.mcp.json` specifies (its own `command` + `args
+
+[tests/test_mcp_spine_server.py string@684] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_spine_server.py string@685] classes=[]
+  SPINE_ENGINE
+
+[tests/test_mcp_spine_server.py string@763] classes=[]
+  spine_open
+
+[tests/test_mcp_spine_server.py string@819] classes=[]
+  SPINE_FILE
+
+[tests/test_mcp_spine_server.py string@820] classes=[]
+  SPINE_ENGINE
+
+[tests/test_run_skill_eval.py string@83] classes=['a-import-raises']
+  import sys print('this check always fails') sys.exit(1)
+
+[tests/test_shipped_examples_are_portable.py string@308] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_lifecycle.py string@1074] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_lifecycle.py string@196] classes=[]
+  spine_open
+
+[tests/test_spine_lifecycle.py string@421] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_lifecycle.py string@424] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_lifecycle.py string@429] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_lifecycle.py string@434] classes=[]
+  spine_open
+
+[tests/test_spine_lifecycle.py string@457] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_lifecycle.py string@486] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_origin_isolation.py string@127] classes=[]
+  spine_open
+
+[tests/test_spine_rail.py comment@2695] classes=[]
+  --- door path: mcp__spine__spine_lease claim/release (#door-binding) ------- The MCP door carries no --file: it reads SPINE_FILE/SPINE_SESSION from its OWN environment (scripts/mcp_spine_server.py: SPINE = Path(os.environ ["SPINE_FILE"]).resolve()), and this hook process shares that environment. So 
+
+[tests/test_spine_rail.py string@2721] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_rail.py string@2736] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_rail.py string@2753] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_rail.py string@2764] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_rail.py string@2779] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_rail.py string@2789] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_rail.py string@2804] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_rail.py string@2815] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_rail.py string@2826] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_rail.py string@2835] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_rail.py string@2843] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_rail.py string@2851] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_rail.py string@2858] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_rail.py string@2868] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_rail.py string@2877] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_rail.py string@2898] classes=[]
+  SPINE_FILE
+
+[tests/test_spine_rail.py string@2900] classes=[]
+  SPINE_FILE
+
+[tests/test_wire_mcp_interpreter.py string@42] classes=[]
+  ${SPINE_FILE:-examples/mcp-interactive-demo/spine.json}
+
+[tests/test_wire_mcp_interpreter.py string@42] classes=[]
+  SPINE_FILE

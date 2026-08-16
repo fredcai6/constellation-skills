@@ -238,16 +238,30 @@ class UnresolvableWorktreeIsNotAFailureTests(_EngineSpyMixin, unittest.TestCase)
                          "an unresolvable worktree must leave the process where it was")
         self.assertEqual(before, os.getcwd())
 
-    def test_removed_spine_directory_still_runs(self):
-        """The spine's own directory is gone (a closed-out worktree). Deriving
-        the tree is impossible; the call must still proceed."""
+    def test_removed_spine_directory_refuses_without_moving_or_dying(self):
+        """The spine's own directory is gone (a closed-out worktree).
+
+        This used to assert the call still SUCCEEDED -- the pre-g3 fail-open
+        reading of "a door that cannot locate a tree must not become a door
+        that cannot run". Gate g3 (issue #603) settled the other half of that
+        sentence: a door whose spine is not there must not answer as though it
+        were. `decision:fail-closed-beats-fail-open`. So the call now refuses,
+        by name, before the engine is reached at all.
+
+        What this class is actually about is UNCHANGED and still asserted: the
+        process does not move and does not die. An unresolvable worktree is
+        still not a failure -- see the test above, whose spine exists and which
+        still runs to a clean exit outside any repo. Only the case where there
+        is nothing left to read now refuses."""
         module, spine = self._module_on_a_non_repo_spine()
         spy = self.spy_on_engine(module)
         shutil.rmtree(spine.parent)
         before = os.getcwd()
         rec = module.run_engine("current", mutating=False)
-        self.assertEqual(0, rec["code"], rec["stderr"])
-        self.assertEqual([before], spy.seen)
+        self.assertEqual(2, rec["code"])
+        self.assertIn(str(spine), rec["stderr"], "the refusal must name the path")
+        self.assertIn("rebind", rec["stderr"])
+        self.assertEqual([], spy.seen, "a refused call must never reach the engine")
         self.assertEqual(before, os.getcwd())
 
 

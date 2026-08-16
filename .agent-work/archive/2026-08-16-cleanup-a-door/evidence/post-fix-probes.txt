@@ -1,0 +1,38 @@
+# POST-FIX evidence, measured 2026-08-16T05:59:21-07:00 with the g1 guard in scripts/mcp_spine_server.py
+# Pre-fix baseline: .agent-work/cleanup-a-door/evidence/pre-fix-probes.txt, measured at a69bbac4.
+# Reproduction condition still holds: /home/tommy/projects/constellation-skills/.agent-work/epic-418-followon does not exist.
+
+## #604 -- door bound to a spine whose directory is gone
+```
+$ py .agent-work/cleanup-a-door/door_probe.py /home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/spine.json
+SPINE_FILE=/home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/spine.json
+TOOL=spine_status
+RESULT: {"content": [{"type": "text", "text": "FileNotFoundError: [Errno 2] No such file or directory: '/home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/spine.json'"}], "isError": true}
+STDERR: TELEMETRY WRITE FAILED: could not write to /home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/mcp_calls.jsonl (FileNotFoundError: [Errno 2] No such file or directory: '/home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/mcp_calls.jsonl'). Lost record: {"verb": "current", "argv": ["--file", "/home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/spine.json", "current"], "code": 1, "stdout": "", "stderr": "FileNotFoundError: [Errno 2] No such file or directory: '/home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/spine.json'"}
+TELEMETRY WRITE FAILED: could not write to /home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/mcp_server_started (FileNotFoundError: [Errno 2] No such file or directory: 
+EXIT 0
+```
+
+## Exit codes, side by side
+```
+PRE-FIX  (a69bbac4): RESULT: (the server never answered the call)   EXIT 1
+POST-FIX (this run): RESULT: the door answered spine_status          EXIT 0
+```
+
+## Reading the post-fix RESULT
+
+The door now ANSWERS. Its answer is `isError: true` reporting that the spine file
+itself is missing -- which is the truth: that directory is gone. Fail-closed
+wording for the unbound/missing-spine case is gate g3's lane (#603), not this
+gate's. What #604 asked for is exactly what changed: the process no longer dies,
+so the client gets an answer instead of a closed connection.
+
+## stdout stays pure JSON-RPC while both telemetry writes fail
+```
+$ py - (spawns the same door on the same missing spine; prints a parse verdict per stdout line)
+  [JSON-RPC] {"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2024-11-05", "capabilities": {"
+  [JSON-RPC] {"jsonrpc": "2.0", "id": 2, "result": {"content": [{"type": "text", "text": "FileNotFoundE
+stdout lines examined: 2  non-JSON-RPC lines: 0
+stderr carried 2 telemetry-drop report(s)
+EXIT 0
+```

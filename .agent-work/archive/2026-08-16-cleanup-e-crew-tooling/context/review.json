@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "review",
+  "files": [],
+  "repo_rev": {
+    "commit": "e36e630bb0a2df5c588cddbd29fc50ae884154e9"
+  },
+  "run": {
+    "work_id": "cleanup-e-crew-tooling",
+    "generated_at": "2026-08-16T16:21:01Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-e-crew-tooling",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-e-crew-tooling",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-e-crew-tooling"
+    }
+  }
+}

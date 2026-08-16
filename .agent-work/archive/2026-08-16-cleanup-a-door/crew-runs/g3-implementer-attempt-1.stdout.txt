@@ -1,0 +1,15 @@
+The hook's premise doesn't hold here, and I've verified that with the parent's own tooling rather than assuming it.
+
+**The open `execute` gate is not mine.** It belongs to `cleanup-a-door` — the Commander's spine, session `constellation/cleanup-a-door/execute/commander`, which is my `SPINE_PARENT`. It only appears "mid-flight" to the hook because that spine is what `SPINE_FILE` points at in my environment; a dispatched crew inherits its parent's binding.
+
+**My run is complete and verified:**
+
+- My plan `cleanup-a-door-g3-implementer` — 7/7 items `complete`, lease released as the last journaled action.
+- The parent's own registry agrees: `recover_crews.py` reports `g3/implementer/attempt-1: COMPLETE — recoverable/complete; do not rerun`. The one unresolved entry is the Commander's own `execute` session (ACTIVE, pid alive) — the session that dispatched me and is waiting on my return.
+- Deliverable in place at the handoff's named path, 14,453 bytes, `Return status: complete` on line 3 in the exact lowercase form the handoff said would be matched on case.
+
+**What I'm declining to do, and why.** I won't drive `execute`: its imperative says to reload the constellation-commander skill and dispatch implementer/reviewer crews through `run_crew.py` — executed by me, that means recursively dispatching my own siblings. I won't `block` it either: it isn't blocked, it's awaiting my parent's continuation, and writing a false blocker into my parent's spine would corrupt state I don't own and can't legitimately hold the lease on. My own skill's rule against waiving a gate or inventing an authority to close it cuts the same way for someone else's gate.
+
+The channel by which my parent learns I'm finished is the result artifact plus the crew registry, and both are already satisfied. The Commander resuming is what closes `execute` — that's its call, not mine.
+
+One item from my result still needs your decision, since it's a handoff/dispatch defect rather than a code one: **this crew was dispatched bound to the Commander's spine instead of one of its own.** That's the direct cause of this hook loop, and it will recur on every crew dispatched this way. I worked around it by driving my own plan at `crew-plans/g3-implementer-plan.json` (the g1/g2 precedent) and never touching yours, but the fix belongs in `run_crew.py`'s binding or in the implementer skill's wording.

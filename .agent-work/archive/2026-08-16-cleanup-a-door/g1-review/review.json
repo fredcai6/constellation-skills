@@ -1,0 +1,189 @@
+{
+  "work_id": "cleanup-a-door",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded: global-crew.md + global-everyone.md, docs/agents/CREW_CONTEXT.md + GLOSSARY.md, the g1 reviewer handoff, the diff, and the g1-review context/mechanical packets. Material discovery at load: the handoff names commit 8b1d3208 but HEAD is 0060dc08 (amended). git diff 8b1d3208 0060dc08 shows scripts/mcp_spine_server.py byte-identical and tests/test_mcp_door_telemetry.py +15 lines (one added test, 247 -> 262 lines). Review target is HEAD.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Asked: make the door's telemetry writes incapable of failing a call or killing the server, proven by a committed test that is red pre-fix. Delivered, and I reproduced every part. Crash reproduces and is fixed, by real subprocess exit code: at a69bbac4 the probe against a spine whose directory is gone gives 'the server never answered the call', EXIT 1; at HEAD the same probe gives EXIT 0 with {isError: true, FileNotFoundError} -- the door is alive and telling the truth. The committed test discriminates: on an isolated pre-fix tree it is 5 failed / 2 passed, on HEAD the suite is 96 passed / 10 subtests. Only discrepancy: the handoff names commit 8b1d3208, but HEAD is 0060dc08 (amended after the handoff was written). git diff 8b1d3208 0060dc08 = scripts/mcp_spine_server.py byte-identical, tests +15 lines adding test_an_unwritable_call_log_does_not_suppress_the_start_marker. The amendment strictly strengthens the change, so it does not bar the gate, but the handoff's pointer is stale.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No drift. git show 0060dc08 --stat is exactly the two files the handoff names: scripts/mcp_spine_server.py (+43/-4) and tests/test_mcp_door_telemetry.py (new, 262 lines). The server diff is a SINGLE hunk (@@ -177,11 +177,46 @@), so nothing outside _log and the new _report_dropped_telemetry moved. Every fenced item verified untouched: _identity_violation, checklist_engine.py, scripts/hooks/**, run_crew.py, gauge_reader.py, .mcp.json, examples/mcp-interactive-demo/**. Working tree is clean for both reviewed files -- the only modified/untracked paths are under .agent-work/.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every claim reproduced independently; nothing accepted on the report. (1) Crash pre/post with real exit codes: pre-fix EXIT 1 / never answered, post-fix EXIT 0 / isError answer. (2) Guard width is OSError, not bare Exception, at :213 and :218 -- read in source, and correct: json.dumps at :209 sits OUTSIDE both guards, so a programming error still propagates rather than hiding behind a telemetry message. (3) Loss reported on stderr: both drops named on stderr with the lost record, observed in the probe. (5) stdout stays pure JSON-RPC while telemetry fails -- and that check is NOT a check that cannot fail: mutating _report_dropped_telemetry to write to stdout turns test_stdout_stays_pure_json_rpc_when_telemetry_fails red. (6) The test is genuinely red pre-fix: isolated tree from git archive a69bbac4 (helper absent, _log unguarded at :181/:184 confirmed; checklist_engine.py byte-identical to HEAD so the engine is not a variable) -> 5 failed, 2 passed. I did NOT use the handoff's in-place git checkout recipe: lanes B and C run concurrently in this worktree and briefly reverting a shared file could corrupt them; the isolated tree is strictly more faithful. (7) SPINE_CALLLOG / SPINE_START_MARKER / SPINE_REJECTION_LOG overrides still work -- the three module-level os.environ.get lines (:162, :167, :177) are outside the diff hunk, and all three are exercised green by test_mcp_lifecycle.py:102-103, test_mcp_friction_capture.py:99 and test_mcp_door_telemetry.py:118-120. THE HANDOFF'S QUESTION -- are both pre-fix passes benign? Yes, and the implementer's disclosure is complete. test_stdout_stays_pure... passes pre-fix because a dead door's stdout holds only the initialize reply, which is valid JSON-RPC; disclosed, and shown above to have a reachable failing state. The second, test_healthy_run_writes_both_telemetry_files, is the declared positive control -- it is SUPPOSED to pass on both trees, since that is exactly how it stops a fix that simply stopped writing telemetry, and it is documented as such in its own docstring and the module docstring. I proved it can fail: mutating _log to an immediate return (the 'stopped writing telemetry' fix) turns it red (4 failed, 3 passed). Correction to my first pass at this item: I had cited the collapsed-guard mutant for that, which is wrong -- the control survives that one. The no-write mutant is the one that kills it. Evidence artifacts exist and are fresh from this run: evidence/pre-fix-probes.txt (05:44), post-fix-probes.txt (05:59), red-test.txt (06:04).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "CRITERION 4 -- MY OWN COUNT: FOUR filesystem writes in the module, confirming the two prior passes. Enumerated mechanically, not by eye: an ast.walk over scripts/mcp_spine_server.py for every write-capable call site returns 12, which classify as 4 filesystem writes and 8 non-filesystem. The four: (a) :211-212 CALLLOG append, telemetry, guarded except OSError :213; (b) :217 START_MARKER.write_text, telemetry, guarded except OSError :218; (c) :527-528 REJECTIONLOG append in _log_rejection, telemetry, guarded except OSError :529 (pre-existing, issue #541); (d) :570 path.write_text in _write_amend_delta. The eight non-filesystem: :187 and :530 sys.stderr, :1402 and :1410 sys.stdout (the JSON-RPC channel), :485 and :493 err.write into an io.StringIO buffer (:479, in-memory, cannot raise OSError), and :212/:528 which are the fh.write halves of (a) and (c). So NO telemetry write anywhere in the module remains unguarded -- three of three. The fourth, (d), is deliberately NOT telemetry and correctly not best-effort: it materialises the delta the engine must then read, so it must fail the call. It is unguarded at the write site but its sole call site (:1324-1330, verified sole by grep) catches OSError and returns _tool_error('spine_amend: could not write delta file: ...'). I did not take that on reading: probing spine_amend against the missing directory returns isError:true with that exact message at EXIT 0, and probing an unknown tool -- the only path that reaches _log_rejection -- returns isError:true at EXIT 0 with 'REJECTION CAPTURE FAILED' on stderr. All four write paths are non-fatal, and the implementer's own tests exercise only (a) and (b), so (c) and (d) rest on my probes. HANDOFF CONSTRAINTS all honoured: __pycache__ cleared before every measurement (worktree and both temp trees); every validation ran against a subprocess I launched, never this session's own door; the suite ran with env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -> 96 passed, 10 subtests passed. OBSERVATION, not a blocker, out of gate scope: docs/agents/CREW_CONTEXT.md 'Writing Files On Windows' requires encoding='utf-8', newline='\\n' on EVERY write. _log_rejection at :527 passes newline='\\n'; the two _log writes at :211 and :217 pass encoding only, so on Windows mcp_calls.jsonl and mcp_server_started get CRLF while mcp_rejections.jsonl gets LF. This is PRE-EXISTING -- the diff wrapped those two calls in guards without altering their arguments, and introduced no new file write -- so it is not a regression and does not bar g1. Flagged as a triage candidate.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No divergence Commander must reconcile. I verified the implementer's Map Impact notes against the diff and my own evidence rather than against the report. Structural (:180-219, _log plus the new module-private _report_dropped_telemetry directly above it) matches the file at HEAD exactly, and run_engine's call-site contract really is unchanged -- the single diff hunk never reaches it. Capability (door telemetry: call log and start marker now best-effort, the door's answer no longer depends on either) is exactly what my probes show. constraint:stdout-is-the-protocol-channel is honoured AND measured, and I strengthened that measurement: it is not merely observed clean, it is pinned by a test I proved goes red when the drop report is rerouted to stdout. constraint:env-overrides-for-log-paths-must-survive is honoured; all three overrides are green. decision:telemetry-never-fatal (@grade settled/measured, leans g1-implement) is implemented as given, and the implementer's one in-authority choice -- guarding the two writes separately rather than with one try around the body -- is not just asserted: collapsing them into a single try turns exactly 2 of the 7 tests red, so the choice is pinned, not decorative. claim:604-kills-the-server reproduced in both directions with real exit codes. No architecture-significant graph change: this adds a module-private helper and widens no interface, so there is nothing here that needs a Cartographer pass. TWO NOTES, neither blocking. (1) Confirmed independently: map/ids.jsonl is tracked and 0 bytes, so no map anchor resolves anywhere in this repo and every anchor in both handoffs was necessarily verified against source instead. This is the handoff's own tc1; I am confirming it, not filing a second issue. (2) Minor: the new _log docstring cites run_engine's call site as ':461' without saying which revision that is -- true pre-fix, but at HEAD the _log(rec) call is at :496, since the change inserted 35 lines above it. Per the inherited 'pin a claim to the revision you read it at' rule a history note should name its revision. Too small to flag; recorded so the next reader of that docstring is not misled.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/cleanup-a-door/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/cleanup-a-door/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from cleanup-a-door alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/cleanup-a-door/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Refactoring pass run over commit 0060dc08; record at .agent-work/cleanup-a-door/FOWLER_PASS.json, rail scripts/verify_fowler_pass.py exits 0 (smells=12, flagged=['duplicated-code'], overridden=['comments-as-deodorant']). All 12 baseline smells visited. ONE FLAGGED -- duplicated-code: _report_dropped_telemetry's body (:187-191) and the inline stderr block inside _log_rejection (:530-534) are the same five lines apart from one label ('TELEMETRY WRITE FAILED' vs 'REJECTION CAPTURE FAILED'). The implementer described the helper as reusing _log_rejection's shape, and it reused that shape by copying rather than extracting; one _report_lost_record(kind, target, exc, lost) would carry both and keep the two lost-record diagnostics guaranteed to match each other. Observation, not a blocker: two occurrences only, and collapsing them would edit _log_rejection, which g1 was not asked to touch. Flagged as a triage candidate. ONE OVERRIDDEN -- comments-as-deodorant: the docstring-to-code ratio (15:11 in _log, 6:5 in the helper) reads as the smell, but global-crew.md's 'match the surrounding code's in-file documentation conventions' wins, and this module's convention is uniform why-first docstrings (_log_rejection, _write_amend_delta, _git_rev_parse, _resolve_confined, _utf8_stdio, and a 60-line module docstring). The reason the standard subordinates the smell is that the prose is rationale, not restatement: why OSError and not bare Exception, why two separate guards, why stderr and never stdout, and the #604 history. None of that is recoverable from the code, which is the line between deodorant and rationale. The other ten are absent, each with the reasoning recorded rather than left blank -- notably speculative-generality, where the helper's two real call sites make the seam real rather than hypothetical, and primitive-obsession, where lost being a str is deliberate so the reported record is byte-identical to the one that would have been written.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/cleanup-a-door/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. Issue #604 is fixed and the fix is proven, every claim reproduced independently rather than accepted. Crash pre/post by real subprocess exit code: at a69bbac4 the door dies on its own call log (EXIT 1, never answered); at HEAD the same probe is EXIT 0 with a truthful {isError: true, FileNotFoundError}. The guard is OSError and not bare Exception (:213, :218), and json.dumps at :209 sits outside it so programming errors still propagate. Both drops are reported on stderr with the lost record. My own mechanical enumeration -- an ast.walk, not a read-by-eye -- finds FOUR filesystem writes in the module, confirming the two prior passes: three are telemetry (:211, :217, :527) and all three are guarded; the fourth (:570, _write_amend_delta) is functional rather than telemetry and correctly fails the CALL, not the process, which I proved by probe rather than by reading. The regression test genuinely discriminates: 5 failed / 2 passed on an isolated pre-fix tree, 96 passed / 10 subtests on HEAD. I also killed the two remaining could-not-fail worries by mutation -- rerouting the drop report to stdout turns the stdout-purity test red, and reducing _log to an immediate return turns the positive control red -- so the handoff's question is answered: both pre-fix passes are benign and the implementer's disclosure was complete. The separate-guards choice is pinned, not decorative: collapsing them into one try turns exactly 2 of the 7 tests red. Three non-blocking triage candidates (tc1 CRLF newline discipline on _log's two writes, pre-existing; tc2 map/ids.jsonl is 0 bytes so no map anchor resolves, confirming the handoff's own tc1; tc3 the drop-report duplication between :187-191 and :530-534). NOT CHECKED, stated as scoped nulls: fail-closed refusal wording for a missing or unbound spine (gate g3's, and the raw FileNotFoundError is the correct g1 outcome); anything under the fenced files; Windows behaviour, since every measurement here was on Linux 3.12.3; and whether this local green matches CI's pin."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r4-quality",
+      "statement": "scripts/mcp_spine_server.py:211,217 -- _log's two telemetry writes pass encoding='utf-8' but not newline='\\n', so on Windows the call log and start marker get CRLF while _log_rejection's REJECTIONLOG (:527) gets LF. Pre-existing, not introduced by #604; violates docs/agents/CREW_CONTEXT.md 'Writing Files On Windows'."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "map/ids.jsonl is tracked but 0 bytes, so no map anchor resolves anywhere in this repo and every map-anchored handoff must be verified against source instead. Independently confirmed by this review; this is the g1 handoff's own tc1, restated for the record, not a second issue."
+    },
+    {
+      "id": "tc3",
+      "from": "r6-fowler",
+      "statement": "scripts/mcp_spine_server.py -- _report_dropped_telemetry (:187-191) and _log_rejection's inline stderr block (:530-534) are the same five lines apart from one label. Extracting a shared _report_lost_record(kind, target, exc, lost) would collapse the duplication and keep the two lost-record diagnostics the same shape as each other. Out of g1's scope: the fix would edit _log_rejection."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/cleanup-a-door/g1/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-16T13:05:24.488906+00:00",
+    "last_heartbeat": "2026-08-16T13:14:38.453017+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T13:16:12.526800+00:00"
+  }
+}

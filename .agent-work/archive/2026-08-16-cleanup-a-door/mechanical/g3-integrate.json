@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g3-integrate",
+  "mechanical": {
+    "run": "cleanup-a-door",
+    "project": "constellation-skills",
+    "spine-step": "g3-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 3,
+    "context-manifest-ref": "ctx-cleanup-a-door-g3-integrate@66fba919858c668502112abe023706be162f1cfc",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "cleanup-a-door",
+    "generated_at": "2026-08-16T16:44:50Z"
+  }
+}

@@ -1,0 +1,35 @@
+# PRE-FIX evidence, measured 2026-08-16T05:44:51-07:00 at a69bbac4
+
+## #604 — door bound to a spine whose directory is gone
+```
+SPINE_FILE=/home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/spine.json
+TOOL=spine_status
+RESULT: (the server never answered the call)
+STDERR: Traceback (most recent call last):
+  File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1380, in <module>
+    main()
+  File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1359, in main
+    result = call_tool(nm, call_args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 1066, in call_tool
+    return as_result(run_engine("current", mutating=False))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 461, in run_engine
+    _log(rec)
+  File "/home/tommy/projects/co
+EXIT 1
+```
+
+## #603 — UNBOUND door (SPINE_FILE genuinely unset)
+```
+SPINE_FILE=(unset)
+TOOL=spine_status
+RESULT: (the server never answered the call)
+STDERR: Traceback (most recent call last):
+  File "/home/tommy/projects/constellation-skills/.worktrees/cleanup-a-door/scripts/mcp_spine_server.py", line 146, in <module>
+    SPINE = Path(os.environ["SPINE_FILE"]).resolve()
+                 ~~~~~~~~~~^^^^^^^^^^^^^^
+  File "<frozen os>", line 685, in __getitem__
+KeyError: 'SPINE_FILE'
+EXIT 1
+```

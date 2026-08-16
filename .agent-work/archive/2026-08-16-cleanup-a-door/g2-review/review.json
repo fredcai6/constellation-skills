@@ -1,0 +1,184 @@
+{
+  "work_id": "cleanup-a-door",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md (python-invocation + record-stores-never-hand-edited deltas), the g2 reviewer handoff, the IMPLEMENTER_RESULT, and the staged diff (6 files, exactly the six named). Bound SPINE_FILE is the Commander's gated execute spine, not a survey for me; authored my own survey at .agent-work/cleanup-a-door/g2-review/review.json per skill convention.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The handoff's nine close criteria all verified independently. C1: 0 machine-specific paths in shipped (tracked) content over 5 tracked files under examples/ (git ls-files | grep -> exit 123; a broader sweep for /home|/Users|/root|/srv|/opt|/mnt|/media|X:\\ also 0). C2: drove the SHIPPED spine to DONE from two cwds neither the repo root nor the example dir -- $HOME with the DEFAULT workspace and no env var set, and '/tmp/a demo cwd with spaces/deep dir' with SPINE_DEMO_WORKSPACE='/tmp/demo ws with spaces'; each carried a negative control (advance REFUSED 'postconditions unmet [c1]' before the file existed, complete after), so a command postcondition genuinely resolved the path. Spine restored byte-identical (md5 62b0cf80..., index OID manifest diff clean). C3: 4 tests fail on pre-fix content (one more than the Commander's 3, because I restored the pre-fix README too). C5, C6, C7, C8, C9 all pass -- see the other checks. The design call for candidate (b) holds: test_mcp_spine_server.py:588 does json-load .mcp.json's SPINE_FILE default, which is this spine, so (a) really would have forced an edit to g3's fenced file.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No scope drift. 'git diff HEAD --name-only -- . :!.agent-work' returns exactly the six files the handoff named -- staged AND unstaged, so nothing hides in the worktree. Every fenced file is byte-untouched vs HEAD (0-line diff each): .mcp.json, scripts/mcp_spine_server.py, scripts/checklist_engine.py, scripts/run_crew.py, scripts/gauge_reader.py, scripts/hooks/**. C7 specifically: README.md lines 1-9 are byte-identical between a69bbac4 and the staged blob (diff empty), so the opening sentence 'This is the checklist the project-scope .mcp.json points at' is intact and g3 still owns changing it. map/INDEX.md is in scope as a generated consequence, and the per-module map dirs the rebuild also wrote are covered by .gitignore:73 'map/*', so leaving them unstaged is correct, not an omission.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every claim in IMPLEMENTER_RESULT reproduced at its source, none taken on the report's word. Full suite: 3072 passed, 6 skipped, 1149 subtests -- exactly the implementer's number. Handoff suite: 244 passed, 508 subtests -- exactly the Commander's number. C5 test_mcp_json_referenced_spine_file_exists_and_loads passes (1 passed). C8 map freshness: 2 passed (tests/test_code_map.py -k freshness). C6: ran the README's regeneration command verbatim from the repo root -- exit 0, output byte-identical (md5 unchanged), and it also works from /tmp because HERE resolves from __file__, so the doc'd command is not cwd-dependent. C9: the generator has an external call site at tests/test_shipped_examples_are_portable.py:100 (load_demo_generator, used by 2 tests) plus the README:13 CLI invocation I ran; no --self-test path exists in the file (grep exit 1). Every measurement taken after clearing __pycache__.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "C4 (vacuity), the check the handoff told me to attack hardest, survives every attack I could build. (a) Forced the shipped-file set EMPTY: both guards FAIL, naming the count -- 'guard looped over 0 file(s) ... floor 3' and 'guard examined 0 shipped example file(s); it must not pass on nothing'. With ONE file they still fail. So neither can go green on an empty set. (b) MUTATION MATRIX -- injected a fresh violation into a shipped file, 7 mutants: /home/alice CAUGHT, /Users/bob CAUGHT, /root CAUGHT, C:\\Users\\bob CAUGHT, this checkout's own absolute path CAUGHT (2 hits), a newly-dead relative path scripts/no_such_generator.py CAUGHT by the dead-path guard, and the CONTROL '${TMPDIR:-/tmp}/demo' correctly NOT caught. So the guard catches new violations, not just the historical one, and does not fire on portable text. (c) DRIFT guard is byte-exact: a hand-edit back to /home/tommy CAUGHT, a one-space reflow CAUGHT, a removed trailing newline CAUGHT. All mutated files restored and verified byte-identical afterwards. Repo constraints honoured: __pycache__ cleared before every measurement (#597); suite run with env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT; the change is staged not committed, so I copied the index blobs aside first and restored the full staged manifest (OID diff clean). CREW_CONTEXT's 'never compare two files by raw working-tree bytes' is satisfied -- the drift test uses Path.read_text, whose universal-newline decode normalizes CRLF, so it is not byte-naive on Windows.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map Impact notes check out against the diff and the evidence, with one correction. VERIFIED: constraint:engine-runs-command-checks-with-no-cwd holds exactly as stated -- _run_check_command at :881-883 calls subprocess.run([shell,'-c',command]) with no cwd, and _check_condition's base_dir really is used only by the git-change-policy branch, so it is not a latent way out. constraint:shipped-content-must-not-carry-machine-specific-absolute-paths is now an executable guard I observed failing on pre-fix content and on 6 fresh mutants. decision:demo-spine-is-generated-not-hand-fixed resolved to candidate (b) on a reason I reproduced (test_mcp_spine_server.py:588 json-loads .mcp.json's SPINE_FILE default, which is this spine), so the regrade from guess to measured is earned. claim:605-demo-unusable is discharged -- I drove it to DONE twice with negative controls. CORRECTION to the implementer's note: it says the engine runs checks under a POSIX shell and the new test proves expansion under 'bash', but _find_posix_shell returns shutil.which('sh') on POSIX and only prefers bash on Windows -- on this host the engine used /usr/bin/sh (dash). I re-verified the nested ${A:-${B:-c}}/$(id -u) expansion under dash directly and it is identical, so the design is correct on both; the test's shell is a fidelity gap, not a defect. No divergence from recorded architecture that Commander must reconcile. Triage candidates recorded separately.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/cleanup-a-door/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/cleanup-a-door/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from cleanup-a-door alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/cleanup-a-door/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass complete over all 12 baseline smells; verify_fowler_pass.py exits 0 (smells=12, flagged=['duplicated-code','speculative-generality'], overridden=['long-method','divergent-change','message-chains','comments-as-deodorant']). Record at .agent-work/cleanup-a-door/FOWLER_PASS.json; g1's record preserved first at .agent-work/cleanup-a-door/g1-review/FOWLER_PASS.json because the template pins one fixed path per work-id and this is the second gate to use it. Both flagged smells were verified by command before recording, and both are NON-BLOCKING observations: (1) duplicated-code -- the vacuity floor is named MIN_SHIPPED_FILES=3 at :44 but hardcoded as a bare 2 at :201 for the same purpose, so the unnamed one is easier to weaken by accident; (2) speculative-generality -- main()'s optional argv[1] target-dir branch (:161-164, advertised at docstring line 6) has no consumer anywhere in tracked content, confirmed by grep. The four overrides each name a documented standard and why it subordinates the smell; the load-bearing one is long-method, where build_spine()'s 81 lines are a single branch-free data literal and global-crew.md's split trigger is blurred intent, not line count.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/cleanup-a-door/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. All 7 survey checks recorded pass, every one on evidence I reproduced myself rather than on the implementer's or Commander's word. The nine close criteria hold: 0 machine-specific paths over 5 tracked files under examples/; the SHIPPED spine driven to DONE from two cwds ($HOME with the default workspace and nothing set, and a cwd with spaces using a SPINE_DEMO_WORKSPACE with spaces), each with a negative control proving a command postcondition genuinely resolved the path; 4 guard tests fail on pre-fix content; the guards are not vacuous under an empty set, a one-file set, or a 7-mutant injection matrix (6 caught, portable control correctly ignored); the drift guard is byte-exact against 3 mutations; test_mcp_spine_server.py:588 passes; the README's regeneration command runs and reproduces the file byte-identically from any cwd; README lines 1-9 are byte-identical to a69bbac4; map freshness passes; the generator has an external call site and no self-test path. Full suite 3072 passed / 6 skipped / 1149 subtests. Scope is exactly the six named files staged AND unstaged, with every fenced file 0-line-diff against HEAD. The candidate-(b) design call is sound and its stated reason is reproducible. Staged state restored byte-identical after every mutation (index OID manifest diff clean). Two non-blocking Fowler observations and two triage candidates recorded; nothing blocks."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r4-quality",
+      "statement": "No test exercises the demo spine's DEFAULT workspace branch. Both ShippedDemoDrivesFromAnyDirectoryTests methods set SPINE_DEMO_WORKSPACE (tests/test_shipped_examples_are_portable.py:309), so the committed default ${TMPDIR:-/tmp}/constellation-mcp-demo-$(id -u) is only asserted for absoluteness, never driven. I drove it end to end by hand from $HOME and it works, so this is a coverage gap, not a defect. Cheapest fix: one more drive case with SPINE_DEMO_WORKSPACE unset, pointed at a TMPDIR the test controls."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "tests/test_shipped_examples_are_portable.py:289 expands the check path with 'bash -c', but checklist_engine._find_posix_shell returns shutil.which('sh') on POSIX and prefers bash only on Windows -- so on Linux the test asserts under a shell the engine never uses (here: /usr/bin/sh, dash). I verified dash expands the nested ${A:-${B:-c}} and $(id -u) identically, so nothing is broken today; the test would just miss a future bashism. Cheapest fix: call checklist_engine._find_posix_shell() instead of hardcoding bash."
+    }
+  ],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/cleanup-a-door/g2/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-16T13:40:27.698697+00:00",
+    "last_heartbeat": "2026-08-16T13:51:48.581901+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-16T13:53:38.499067+00:00"
+  }
+}

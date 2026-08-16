@@ -98,10 +98,14 @@ ROOT = Path(__file__).resolve().parent.parent
 # The 9 door tools (scripts/mcp_spine_server.py TOOLS list). A door-tool mention is any of
 # these bare names, or the fully-qualified `mcp__spine__<name>` form used to actually call one.
 #
-# Hand-typed here on purpose, not imported at module scope -- `mcp_spine_server` reads
-# SPINE_FILE/SPINE_ENGINE from the environment at IMPORT time and raises KeyError without
-# both set (its own module docstring says so), so importing it here would make collecting
-# this file itself require a bound spine. Tied instead by
+# Hand-typed here on purpose, not imported at module scope -- because importing
+# `mcp_spine_server` is not side-effect-free. At module scope the door binds `SPINE` and
+# `SESSION` from whatever the AMBIENT environment happens to hold, and it does
+# `sys.path.insert(0, ENGINE.parent)` in the importing process. Either at COLLECTION time
+# would tie this file's collection to the collecting shell's environment, before any test
+# could supply a scratch one. (An unbound door has been a first-class state since issue
+# #603: with neither variable named, the module-scope binding is simply `SPINE = None`.)
+# Tied instead by
 # `TestDoorSurfaceTiesToTheEngineRegistry::test_door_tool_names_tie_to_mcp_spine_servers_own_registry`,
 # which imports it inside a test with a scratch env -- the same shape
 # `tests/test_crew_launcher.py`'s `CrewGrantTiesToDoorTests` already uses for
@@ -165,10 +169,13 @@ def _text(path: str) -> str:
 
 def _load_mcp_spine_server(scratch_root: Path):
     """Import `mcp_spine_server` fresh, under a scratch `SPINE_FILE`/`SPINE_ENGINE`/
-    `SPINE_SESSION` env. It reads those from the environment at IMPORT time and raises
-    KeyError without both `SPINE_FILE`/`SPINE_ENGINE` set (its own module docstring), so
-    it is never imported at this file's module scope -- only here, on demand, inside a
-    test. Same shape as `tests/test_crew_launcher.py`'s `CrewGrantTiesToDoorTests.
+    `SPINE_SESSION` env. It reads those from the environment at IMPORT time -- since issue
+    #603 without raising, binding `SPINE = None` when nothing is named -- and the scratch
+    env is what keeps this file's own tests off whatever spine the developer's shell is
+    bound to. That is also why it is never imported at this file's module scope: the
+    binding, and the `sys.path.insert` the door does beside it, would then happen at
+    COLLECTION time, under the ambient environment, before any test could supply a scratch
+    one. Same shape as `tests/test_crew_launcher.py`'s `CrewGrantTiesToDoorTests.
     _load_mcp_spine_server`, which ties `CREW_ALLOWED_TOOLS` the same way. A fresh module
     name per call, so a cached `sys.modules` entry from a prior call in the same test
     process cannot carry a stale binding forward."""

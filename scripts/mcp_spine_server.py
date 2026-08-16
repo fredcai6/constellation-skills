@@ -27,9 +27,15 @@ cwd-independent, and the helpers that ask git a question still pass `cwd`
 explicitly -- more strictly than before, since the process's own cwd is now a
 thing that moves.
 
-Ambient state is bound at server-launch time from the environment, NOT exposed
-as tool arguments (so a model cannot point the door at a different spine or
-identity mid-conversation):
+Ambient state is bound at launch OR at `spine_open` -- at launch from the
+environment, and thereafter by `_bind_process_to`, the one place `SPINE` and
+`SESSION` are assigned outside module scope, when a successful `spine_open`
+binds this process to the spine it just minted
+(`decision:bind-on-open-over-new-verb`, issue #603). What did NOT change is
+that neither is ever exposed as a tool argument, so a model still cannot point
+the door at a different spine or identity mid-conversation, and `_rebind_refusal`
+still blocks the swap while this process holds an active lease -- one spine per
+process stands. The values:
   SPINE_FILE    -- the --file every engine call needs
   SPINE_ENGINE  -- path to checklist_engine.py (this repo's own copy; dogfooding
                    convention -- see checklist-engine.md "Dogfooding on the
@@ -125,11 +131,16 @@ untouched.
 Their identity postures are opposite, matching `spine_open` acting on a spine
 that does not exist yet and `spine_close` acting only on the one this door is
 already bound to: `spine_open` never references `SPINE`, `SESSION` or
-`run_engine` (checked, not merely claimed -- see `tests/test_mcp_lifecycle.py`),
-deriving the primary checkout it opens work from fresh off `SPINE_FILE`
-(ambient, server-launch-time state) rather than the module's own `SPINE`
-binding; `spine_close` takes no arguments at all and acts on `SPINE` alone,
-because there is no field to redirect.
+`run_engine` in its OWN source (checked, not merely claimed -- see
+`tests/test_mcp_lifecycle.py`), taking the primary checkout it opens work from
+`_primary_checkout_for_lifecycle` instead. That helper reads no environment at
+all -- not `SPINE_FILE`, not anything: it anchors on the BOUND spine's own
+directory when there is one, and on THIS SCRIPT's own when there is not. The
+identifier ban is on `_spine_open`'s own source, which that helper is not, so
+what the ban buys is that no ARGUMENT on the call can redirect the open onto
+the bound spine -- never that the bound spine is invisible to the tool.
+`spine_close` takes no arguments at all and acts on `SPINE` alone, because
+there is no field to redirect.
 """
 from __future__ import annotations
 
@@ -142,8 +153,52 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-ENGINE = Path(os.environ["SPINE_ENGINE"]).resolve()
-SPINE = Path(os.environ["SPINE_FILE"]).resolve()
+def _spine_from_env() -> Path | None:
+    """The spine named by the environment, or None when NOTHING is named.
+
+    Three readings of "nothing" collapse into one here, deliberately (issue
+    #603):
+
+    * **unset** -- this used to be `os.environ["SPINE_FILE"]`, a `KeyError` at
+      module scope, *at import*. The server died before it could refuse
+      anything and the client saw only `Connection closed`.
+    * **empty** -- this is the case production actually takes. `.mcp.json`
+      writes `${SPINE_FILE:-<default>}`, so dropping the default yields
+      `${SPINE_FILE:-}`, which a shell expands to an empty string, not to an
+      unset variable. `Path("").resolve()` is the process's **cwd**, so the old
+      form silently bound the door to whatever directory it was standing in.
+    * **whitespace** -- the same accident with a space in the config.
+
+    None means "no spine is named", NOT "the named spine is fine": whether the
+    named path is a readable spine file is `_unbound_refusal`'s question, asked
+    per call rather than once at import, because a spine's directory can be
+    removed while this process is running (issue #604)."""
+    named = os.environ.get("SPINE_FILE", "").strip()
+    return Path(named).resolve() if named else None
+
+
+def _engine_from_env() -> Path:
+    """The engine this door wraps: `SPINE_ENGINE` when set, else the copy that
+    ships BESIDE this script.
+
+    `SPINE_ENGINE` unset was a `KeyError` one line above `SPINE_FILE`'s, and a
+    session that never bound a spine very likely never set an engine either --
+    so without this, the door died at import and #603's refusal was
+    unreachable, for the *other* variable, before the refusal path ever ran.
+
+    The fallback is not a guess. `checklist_engine.py` and this file ship in the
+    same directory and are installed together, so the script's own location
+    answers the question with no new environment variable, no ambient cwd read,
+    and no way to disagree with an explicit `SPINE_ENGINE` (which still wins
+    whenever it is set)."""
+    named = os.environ.get("SPINE_ENGINE", "").strip()
+    if named:
+        return Path(named).resolve()
+    return Path(__file__).resolve().parent / "checklist_engine.py"
+
+
+ENGINE = _engine_from_env()
+SPINE: Path | None = _spine_from_env()
 SESSION = os.environ.get("SPINE_SESSION", "")
 
 sys.path.insert(0, str(ENGINE.parent))
@@ -154,38 +209,118 @@ PROTOCOL_DEFAULT = "2025-06-18"
 SERVER_NAME = "spine"
 SERVER_VERSION = "0.1.0"
 
-# One JSONL line per engine call this server made, so a tracer/reviewer can
-# count real engine dispatches without scraping a model transcript. Never read
-# back by the server itself -- corroborating detail only, per MISSION_FRAME's
-# claim table (a server-log numerator would structurally undercount the client
-# rejections a schema-typed tool surface is supposed to prevent).
-CALLLOG = Path(os.environ.get("SPINE_CALLLOG", str(SPINE.parent / "mcp_calls.jsonl")))
+def _telemetry_path(env_var: str, beside_the_spine: str) -> Path | None:
+    """Where one telemetry side-channel writes, asked FRESH on every call.
 
-# A start-marker file: written on first successful engine call, so an external
-# probe (the delivery-path measurement in MISSION_FRAME) can tell "config was
-# valid and the server actually ran" from "config was merely accepted".
-START_MARKER = Path(os.environ.get("SPINE_START_MARKER", str(SPINE.parent / "mcp_server_started")))
+    Three things had to be true at once here, and each of them rules out an
+    obvious shorter version (issue #603):
 
-# One JSONL line per rejection the DOOR ITSELF issues -- an unknown tool name, an
-# unknown multiplexed `action`, or a missing required argument (issue #541). Every
-# one of those returns `_tool_error(...)` BEFORE `run_engine()` is ever called (see
-# the module docstring's "Zero dependencies" section and `call_tool()` below), so
-# `_log()` and CALLLOG never see it and the engine's own refusal counter never
-# moves -- this file is that path's only durable trace. Beside the spine, like
-# CALLLOG, for the same reason: one location a run's own evidence-gathering has to
-# remember, not two.
-REJECTIONLOG = Path(os.environ.get("SPINE_REJECTION_LOG", str(SPINE.parent / "mcp_rejections.jsonl")))
+    * **Late-bound, not import-time.** `spine_open` can rebind this process to a
+      new spine mid-life (`_bind_process_to`), and a path captured at import
+      would keep writing this run's telemetry beside the spine the door has
+      stopped driving.
+    * **The env override still wins.** A naive "recompute from `SPINE.parent`"
+      late-binding silently discards `SPINE_CALLLOG` / `SPINE_START_MARKER` /
+      `SPINE_REJECTION_LOG`, which `tests/test_mcp_lifecycle.py` and four other
+      suites set to keep test telemetry out of the repo. Read the override
+      first, exactly as the import-time form did.
+    * **None when nothing is bound**, and None is a real answer, not a gap.
+      With no spine there is no directory to sit beside, and inventing one
+      (the cwd, a temp dir) is the very fail-open this gate exists to end. The
+      callers SKIP the write instead -- and they must, because g1's telemetry
+      guard catches `OSError` only, so an `AttributeError` on `None` would sail
+      straight past it and take the server down.
+    """
+    override = os.environ.get(env_var, "").strip()
+    if override:
+        return Path(override)
+    return None if SPINE is None else SPINE.parent / beside_the_spine
+
+
+def _calllog() -> Path | None:
+    """One JSONL line per engine call this server made, so a tracer/reviewer can
+    count real engine dispatches without scraping a model transcript. Never read
+    back by the server itself -- corroborating detail only, per MISSION_FRAME's
+    claim table (a server-log numerator would structurally undercount the client
+    rejections a schema-typed tool surface is supposed to prevent)."""
+    return _telemetry_path("SPINE_CALLLOG", "mcp_calls.jsonl")
+
+
+def _start_marker() -> Path | None:
+    """A start-marker file: written on first successful engine call, so an
+    external probe (the delivery-path measurement in MISSION_FRAME) can tell
+    "config was valid and the server actually ran" from "config was merely
+    accepted"."""
+    return _telemetry_path("SPINE_START_MARKER", "mcp_server_started")
+
+def _rejectionlog() -> Path | None:
+    """One JSONL line per rejection the DOOR ITSELF issues -- an unknown tool
+    name, an unknown multiplexed `action`, a missing required argument (issue
+    #541), or a call made with no spine bound (issue #603). Every one of those
+    returns `_tool_error(...)` BEFORE `run_engine()` is ever called (see the
+    module docstring's "Zero dependencies" section and `call_tool()` below), so
+    `_log()` and the call log never see it and the engine's own refusal counter
+    never moves -- this file is that path's only durable trace. Beside the
+    spine, like the call log, for the same reason: one location a run's own
+    evidence-gathering has to remember, not two."""
+    return _telemetry_path("SPINE_REJECTION_LOG", "mcp_rejections.jsonl")
+
+
+def _report_dropped_telemetry(target: Path, exc: OSError, lost: str) -> None:
+    """Report one telemetry write this door could not make -- never raises.
+
+    Same shape and same principle as `_log_rejection` below: **fail loud, every
+    occurrence** -- no batching, no once-per-run flag, no silent drop. `stderr`,
+    never `stdout`, because `main()` writes the JSON-RPC protocol to `stdout` and
+    a diagnostic there would corrupt the transport."""
+    sys.stderr.write(
+        f"TELEMETRY WRITE FAILED: could not write to {target} "
+        f"({type(exc).__name__}: {exc}). Lost record: {lost}\n"
+    )
+    sys.stderr.flush()
 
 
 def _log(rec: dict) -> None:
-    with CALLLOG.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
-    if not START_MARKER.exists():
-        START_MARKER.write_text(f"started for {SPINE}\n", encoding="utf-8")
+    """Append one call record, and write the start marker on first success.
+
+    Both writes are guarded, and guarded SEPARATELY: these are two independent
+    side-channels, so one destination being unwritable must not suppress the
+    other. The catch is `OSError` -- covering `FileNotFoundError` (issue #604: the
+    bound spine's directory is gone), `PermissionError` and `IsADirectoryError` --
+    and deliberately not bare `Exception`, which would swallow programming errors
+    in this module and hide them behind a telemetry message.
+
+    **A diagnostic side-channel must never take down the thing it observes.**
+    Before issue #604 neither write was guarded, `run_engine` called this OUTSIDE
+    its own try/except (`:461`), and `main()` caught only `KeyError` -- so an
+    unwritable call log killed the whole server and the client saw only a closed
+    connection.
+
+    A destination of `None` -- no spine bound and no env override, so there is no
+    directory to write beside (issue #603) -- SKIPS that write. It is not routed
+    through the `OSError` guard above, because it is not an I/O failure: nothing
+    was attempted and nothing was lost that a report could name. And it could not
+    be routed there anyway: the guard catches `OSError`, while `None.open()`
+    raises `AttributeError`, which would sail past it and take the server down --
+    the exact class of death this gate exists to end."""
+    line = json.dumps(rec, ensure_ascii=False)
+    calllog, start_marker = _calllog(), _start_marker()
+    if calllog is not None:
+        try:
+            with calllog.open("a", encoding="utf-8") as fh:
+                fh.write(line + "\n")
+        except OSError as exc:
+            _report_dropped_telemetry(calllog, exc, line)
+    if start_marker is not None:
+        try:
+            if not start_marker.exists():
+                start_marker.write_text(f"started for {SPINE}\n", encoding="utf-8")
+        except OSError as exc:
+            _report_dropped_telemetry(start_marker, exc, f"start marker for {SPINE}")
 
 
 def _resolve_confined(
-    value: str, *, join_relative_to: Path | None, bound_dir: Path = SPINE.parent,
+    value: str, *, join_relative_to: Path | None, bound_dir: Path | None = None,
 ) -> tuple[Path, bool]:
     """Resolve `value` and report whether it escapes `bound_dir`. Shared by
     both `--from-child` and `--delta` in `_identity_violation` -- one
@@ -222,7 +357,19 @@ def _resolve_confined(
     that does not exist yet, and `spine_open`'s own source may never reference
     `SPINE` at all (see `call_lifecycle_tool`'s docstring). Reusing this one
     predicate with a different `bound_dir` is the whole point: not a second,
-    differently-shaped check."""
+    differently-shaped check.
+
+    That default is spelled `None`-then-resolve rather than `bound_dir: Path =
+    SPINE.parent`, because a default ARGUMENT is evaluated once, at import --
+    the subtlest of the four import-time `SPINE` derivations this door used to
+    carry (issue #603). After `spine_open` rebinds this process, an import-time
+    default would still be confining paths to the directory of the spine the
+    door has stopped driving, and nothing in the containment check itself would
+    look wrong. `SPINE` is not None at the only site that omits `bound_dir`
+    (`_identity_violation`, which `run_engine` reaches only after
+    `_unbound_refusal` has already passed)."""
+    if bound_dir is None:
+        bound_dir = SPINE.parent
     p = Path(value)
     if not p.is_absolute() and join_relative_to is not None:
         p = join_relative_to / value
@@ -231,6 +378,66 @@ def _resolve_confined(
     except (OSError, ValueError, RuntimeError):
         escapes = True  # a path that cannot be resolved is not proof it is inside
     return p, escapes
+
+
+_HOW_TO_BIND = (
+    "Call `spine_open` to mint a spine and bind this process to it, or relaunch this "
+    "door with SPINE_FILE set to an existing spine file."
+)
+_HOW_TO_REBIND = (
+    "Call `spine_open` to mint a spine and rebind this process to it, or relaunch this "
+    "door with SPINE_FILE set to an existing spine file."
+)
+
+
+def _unbound_refusal() -> str | None:
+    """Is a USABLE spine bound? Returns None when one is, else the refusal.
+
+    Five inputs, one class (issue #603). `SPINE_FILE` unset, empty or
+    whitespace-only means nothing was ever named (`_spine_from_env` already
+    collapsed those three into `None`); a path that does not exist, is a
+    directory, or cannot be read means something was named that no tool can act
+    on. All five used to produce a different wrong answer -- a crash at import,
+    a silent binding to the cwd, a raw `FileNotFoundError`, an
+    `IsADirectoryError` -- and none of them told the caller what to do.
+
+    **The wording splits, and the split is not cosmetic.** An unbound door has
+    no path to name, so a single message that promises to name one is
+    unsatisfiable there and invites a fabricated path. So: unbound says nothing
+    is bound and how to bind; named-but-unusable NAMES the path and says how to
+    rebind. Both name `spine_open`, because since this gate that is the way out
+    of either state without relaunching.
+
+    **Asked per call, never cached.** The bound spine's directory can be removed
+    while this process runs (issue #604), and `spine_open` can rebind this
+    process to a different spine mid-life, so the answer is not a property of
+    server-launch time.
+
+    The read is a one-byte open, not `os.access`: `access` answers about the
+    permission bits, while the caller's next act is to READ the file, and those
+    two questions disagree under ACLs, read-only mounts and a file being
+    replaced underneath. Ask the question the caller is about to ask."""
+    spine = SPINE
+    if spine is None:
+        return (
+            f"REFUSED: no spine is bound to this door, so there is nothing for this tool "
+            f"to act on. {_HOW_TO_BIND}"
+        )
+    try:
+        if spine.is_dir():
+            why = "that path is a directory, not a spine file"
+        elif not spine.exists():
+            why = "no file exists at that path"
+        else:
+            with spine.open("rb") as fh:
+                fh.read(1)
+            return None
+    except OSError as exc:
+        why = f"that file cannot be read ({type(exc).__name__})"
+    return (
+        f"REFUSED: this door was pointed at {str(spine)!r}, but {why} -- so no spine is "
+        f"bound that this tool could act on. {_HOW_TO_REBIND}"
+    )
 
 
 def _identity_violation(argv: list[str]) -> str | None:
@@ -437,7 +644,23 @@ def run_engine(verb: str, *rest: str, mutating: bool = True) -> dict:
     only for that call. `_identity_violation` stays OUTSIDE it: it resolves
     caller-supplied paths for containment, and resolving them against a
     directory this door just moved to would change what "confined" means
-    mid-check."""
+    mid-check.
+
+    `_unbound_refusal` is asked FIRST, before an argv is even built, and this is
+    the second of its two call sites (issue #603). `main()`'s dispatch is the
+    first and covers the whole tool surface uniformly; this one is defense in
+    depth for the pass-through path specifically, and it is not optional
+    politeness: with no spine bound there is no `--file` to construct, and the
+    old expression would have handed the engine the string `'None'`. Same
+    predicate at both sites, never a second differently-shaped check -- the
+    failure `_identity_violation`'s own docstring records six times over."""
+    refusal = _unbound_refusal()
+    if refusal is not None:
+        rec = {"verb": verb, "argv": [verb, *rest], "code": 2,
+               "stdout": "", "stderr": refusal + "\n"}
+        _log(rec)
+        return rec
+
     argv = ["--file", str(SPINE), verb, *rest]
     if mutating and SESSION:
         argv += ["--session-id", SESSION]
@@ -470,7 +693,7 @@ def as_result(rec: dict) -> dict:
 
 
 def _log_rejection(tool: str, rejection_class: str, detail: str) -> None:
-    """Append ONE record for a door-own rejection to REJECTIONLOG -- never raises.
+    """Append ONE record for a door-own rejection to `_rejectionlog()` -- never raises.
 
     Carries what a diagnosis needs: `tool` (which tool was called), `class` (which
     of the three in-scope rejection shapes this is), `detail` (the door's own
@@ -488,12 +711,18 @@ def _log_rejection(tool: str, rejection_class: str, detail: str) -> None:
         "detail": detail,
     }
     line = json.dumps(record, ensure_ascii=False)
+    destination = _rejectionlog()
+    if destination is None:
+        # No spine bound and no override: no directory to write beside. Skipped,
+        # not failed -- see `_log`. The rejection still reaches the caller as the
+        # tool result itself, which is the channel that matters.
+        return
     try:
-        with REJECTIONLOG.open("a", encoding="utf-8", newline="\n") as fh:
+        with destination.open("a", encoding="utf-8", newline="\n") as fh:
             fh.write(line + "\n")
     except OSError as exc:
         sys.stderr.write(
-            f"REJECTION CAPTURE FAILED: could not write to {REJECTIONLOG} "
+            f"REJECTION CAPTURE FAILED: could not write to {destination} "
             f"({type(exc).__name__}: {exc}). Lost record: {line}\n"
         )
         sys.stderr.flush()
@@ -566,10 +795,45 @@ def _git_rev_parse(*args: str, cwd: Path) -> str:
 
 
 def _primary_checkout_for_lifecycle() -> Path:
-    """The PRIMARY checkout -- read fresh off `SPINE_FILE` (ambient,
-    server-launch-time state), never off the module-level `SPINE` global, so
-    `_spine_open`'s own source never contains the identifier `SPINE` (checked
-    by `tests/test_mcp_lifecycle.py`). This is `open_work`'s own `root`:
+    """The PRIMARY checkout: the BOUND SPINE's own, falling back to THIS
+    SCRIPT's own when nothing is bound. Never the ambient cwd.
+
+    This used to read `os.environ["SPINE_FILE"]` unconditionally, so that
+    `_spine_open`'s own source never contained the identifier `SPINE`. That
+    worked only while every door was born bound. Gate g3 (issue #603) makes an
+    UNBOUND door reachable, and `spine_open` is the one tool it must serve -- at
+    which point that read is a `KeyError`, raised on `spine_open`'s own path,
+    and `_spine_open` catches `(OSError, RuntimeError)`, which does not include
+    it. Measured: the caller got `tool error: missing or unknown 'SPINE_FILE'`,
+    not a binding and not even a refusal.
+
+    **The fallback is a fallback, not a replacement, and that was measured the
+    hard way.** The handoff's preferred answer was to derive from
+    `Path(__file__)` outright. Both derivations return the SAME primary checkout
+    in production -- verified from a linked worktree's `scripts/` and from the
+    primary checkout's own -- because the door is addressed as the
+    project-relative `scripts/mcp_spine_server.py` and therefore always runs
+    from inside the checkout it serves. But they part company the moment the
+    script and the spine live in DIFFERENT repositories, and one caller does
+    exactly that: `tests/test_mcp_lifecycle.py::FullStdioRoundTripTests` binds a
+    door to a spine in a throwaway repo while running this repo's own script.
+    Under the outright replacement that test opened `roundtrip-work` in the
+    DEVELOPER'S REAL CHECKOUT and still passed, because `spine_close` tidied up
+    after it. A derivation that can silently redirect `spine_open` into a
+    different repository than the caller's own spine is not a safe default.
+
+    So the bound spine still answers whenever there IS one -- unchanged
+    behaviour, unchanged isolation -- and the script's location answers only the
+    case the old form could not answer at all. `SPINE` is read here rather than
+    `os.environ` because they cannot disagree (`_bind_process_to` writes both)
+    and the global is already `None`-safe; the identifier ban is on
+    `_spine_open`'s own source, which this function is not.
+
+    This adds no fourth ambient input: no new environment variable, no cwd read.
+    A door outside any checkout AND unbound fails to resolve, which surfaces as
+    `_spine_open`'s existing `(OSError, RuntimeError)` refusal, not a crash.
+
+    This is `open_work`'s own `root`:
     `scripts/spine_lifecycle.py`'s `_default_wt_root` is the ONE place that
     answers "where do worktrees live" -- `<root>/.worktrees`, nested under the
     primary checkout -- so a NEW worktree must always nest under the primary
@@ -590,10 +854,10 @@ def _primary_checkout_for_lifecycle() -> Path:
     Nothing here runs inside that window, but this process's cwd is no longer
     a constant, so an ambient read would be answering a different question
     depending on when it ran."""
-    spine_dir = Path(os.environ["SPINE_FILE"]).resolve().parent
-    common = Path(_git_rev_parse("--git-common-dir", cwd=spine_dir))
+    anchor = SPINE.parent if SPINE is not None else Path(__file__).resolve().parent
+    common = Path(_git_rev_parse("--git-common-dir", cwd=anchor))
     if not common.is_absolute():
-        common = spine_dir / common
+        common = anchor / common
     return common.resolve().parent
 
 
@@ -611,6 +875,88 @@ def _worktree_root_for_lifecycle() -> Path:
     return Path(_git_rev_parse("--show-toplevel", cwd=SPINE.parent))
 
 
+def _bind_process_to(spine_file: str, session: str) -> None:
+    """THE one place `SPINE` and `SESSION` are assigned outside module scope.
+
+    `decision:bind-on-open-over-new-verb`: a successful `spine_open` binds THIS
+    process to the spine it just minted, rather than the caller having to
+    relaunch the door to use work it just created. Before this, a session that
+    started with no `SPINE_FILE` could mint a spine and then do nothing with it,
+    which is the epic's exit criterion left unmet.
+
+    **Both roots, never one.** `open_work` returns THREE binding values and two
+    of them are identity: `SPINE_FILE` and `SPINE_SESSION`. Binding the spine
+    alone leaves `SESSION` empty, `run_engine` then omits `--session-id`, and
+    `checklist_engine.claim` refuses with "claim requires a non-empty
+    --session-id". A door that cannot `claim` is not bound, so "bound" here
+    means both.
+
+    **`decision:one-spine-per-process-stands`.** This changes WHEN the binding
+    is decided, never HOW MANY are live: one process still drives exactly one
+    spine at a time, and `_rebind_refusal` blocks the swap while this process
+    still holds an active lease. `_identity_violation` is untouched and keeps
+    comparing against `SPINE` at CALL time, so it refuses a foreign spine after
+    a rebind exactly as it did before -- the binding moved, the guard did not.
+
+    `os.environ` is updated alongside the globals so the two views of this
+    door's identity cannot disagree for any later reader; the module docstring's
+    "bound at server-launch time" is now "bound at launch OR at `spine_open`",
+    and nothing may be left describing the previous spine.
+
+    Deliberately narrow: this takes the two values as plain strings and assigns
+    them. It does not decide WHETHER to rebind (`_rebind_refusal`), and it does
+    not mint anything (`spine_lifecycle.open_work`). A single named binder is
+    what makes the module-wide AST pin in `tests/test_mcp_lifecycle.py`
+    expressible at all -- that pin asserts the set of assignments to these two
+    names is exactly {module scope, this function}, so a second, quieter rebind
+    site added later fails there."""
+    global SPINE, SESSION
+    SPINE = Path(spine_file).resolve()
+    SESSION = session
+    os.environ["SPINE_FILE"] = str(SPINE)
+    os.environ["SPINE_SESSION"] = session
+
+
+def _rebind_refusal() -> str | None:
+    """May this process rebind? None when it may, else the refusal.
+
+    **Ruled for gate g3:** a rebind is refused while this process still HOLDS an
+    active lease on its current spine. A lease records who is driving; rebinding
+    out from under one leaves a lease on a spine nobody is holding, and the next
+    session to arrive must then force it. Releasing first is one call
+    (`spine_lease` `action: release`) and is what the door's own closeout
+    already does.
+
+    Scoped to a lease THIS process holds -- `session_id == SESSION` -- not to
+    any active lease at all. A lease held by some other session is not this
+    door's to orphan, and refusing on it would let an unrelated agent's stale
+    lease block this one from opening new work.
+
+    Fails OPEN, deliberately, in three directions: nothing bound, an unreadable
+    or unparseable spine, and no lease. In each case there is demonstrably no
+    lease of ours to orphan, so there is nothing for this check to protect --
+    and a check that refuses when it cannot answer would make an unbound door
+    unable to open the work it exists to open. `checklist_engine._active_lease`
+    is reused rather than re-deriving "is this lease live", so this cannot drift
+    from the engine's own reading of its own field."""
+    spine = SPINE
+    if spine is None or not SESSION or _unbound_refusal() is not None:
+        return None
+    try:
+        current = json.loads(spine.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    lease = checklist_engine._active_lease(current) if isinstance(current, dict) else None
+    if lease is None or lease.get("session_id") != SESSION:
+        return None
+    return (
+        f"REFUSED: this door still holds an active lease on {str(spine)!r} as "
+        f"{SESSION!r}, and one door drives one spine at a time. Opening new work now "
+        f"would leave that lease held by nobody. Release it first (`spine_lease` with "
+        f"action 'release'), then call `spine_open` again."
+    )
+
+
 def _lifecycle_result(payload: dict) -> dict:
     """The lifecycle door's OWN success answer: the returned dict, JSON-encoded
     as text, `isError: False`. Mirrors `as_result`'s content/isError shape
@@ -624,8 +970,10 @@ def _spine_open(args: dict) -> dict:
     or `run_engine` -- checked by `tests/test_mcp_lifecycle.py`, with a
     mutated positive control proving that check can fail. It acts on a spine
     that does not exist yet, so nothing here may presuppose one is bound: the
-    repo root comes from `_primary_checkout_for_lifecycle` (ambient
-    `SPINE_FILE`, re-read fresh), and `parent` comes from `SPINE_PARENT` (the
+    repo root comes from `_primary_checkout_for_lifecycle`, which reads no
+    environment at all -- the bound spine's own checkout when there is one,
+    THIS SCRIPT's own location when there is not, which is the unbound case
+    this tool exists to serve -- and `parent` comes from `SPINE_PARENT` (the
     dispatching session this door's own process was launched under -- a
     DIFFERENT env var from `SPINE_SESSION`/`SESSION`, never read elsewhere in
     this module).
@@ -653,6 +1001,13 @@ def _spine_open(args: dict) -> dict:
         )
     base = args.get("base") or "HEAD"
 
+    # Asked BEFORE anything is minted. A refusal that arrived after `open_work`
+    # would leave a real branch and a real worktree behind for work this door
+    # then declined to drive.
+    blocked = _rebind_refusal()
+    if blocked is not None:
+        return _tool_error(blocked, tool="spine_open", rejection_class="lease-held")
+
     try:
         root = _primary_checkout_for_lifecycle()
     except (OSError, RuntimeError) as exc:
@@ -678,6 +1033,12 @@ def _spine_open(args: dict) -> dict:
         opened = spine_lifecycle.open_work(work_id, spec, root=root, base=base, parent=parent)
     except spine_lifecycle.SpineLifecycleError as exc:
         return _tool_error(f"spine_open: {exc}", tool="spine_open", rejection_class="open-refused")
+
+    # The open succeeded, so this door now drives what it just minted
+    # (`decision:bind-on-open-over-new-verb`). Both identity roots, from
+    # `open_work`'s own return value -- binding the spine without the session
+    # produces a door that cannot `claim`, which is not a bound door.
+    _bind_process_to(opened["SPINE_FILE"], opened["SPINE_SESSION"])
     return _lifecycle_result(opened)
 
 
@@ -1053,6 +1414,16 @@ LIFECYCLE_TOOL_NAMES = {t["name"] for t in LIFECYCLE_TOOLS}
 TOOLS = TOOLS + LIFECYCLE_TOOLS
 TOOL_NAMES = {t["name"] for t in TOOLS}
 
+# The tools reachable with NO usable spine bound -- every other tool refuses
+# (issue #603, `_unbound_refusal`). `spine_open` is here because it is the way
+# OUT of that state: it acts on a spine that does not exist yet and, since this
+# gate, binds this process to the one it mints. Exactly one name, and it is a
+# SET rather than an `!=` so the exemption is a listed fact a reader can find,
+# not a comparison buried in a dispatch chain. `spine_close` is deliberately
+# NOT here: it acts on the bound spine, so with nothing bound it has nothing to
+# close and must refuse like the rest.
+BINDS_WITHOUT_A_BOUND_SPINE = {"spine_open"}
+
 
 def _require(args: dict, *names: str) -> str | None:
     missing = [n for n in names if not args.get(n)]
@@ -1342,11 +1713,21 @@ def main() -> None:
         elif method == "tools/call":
             nm = params.get("name", "")
             call_args = params.get("arguments") or {}
+            # Fail closed, for the WHOLE surface at once (issue #603).
+            # Deliberately here rather than inside each tool's own branch: this
+            # runs before any required-argument check, so an unbound door
+            # answers the question the caller actually has ("nothing is bound")
+            # instead of a downstream complaint about an argument that would not
+            # have helped anyway. `spine_open` is exempt because it is the way
+            # OUT of this state -- it mints a spine and binds this process to it.
+            unbound = None if nm in BINDS_WITHOUT_A_BOUND_SPINE else _unbound_refusal()
             if nm not in TOOL_NAMES:
                 result = _tool_error(
                     f"unknown tool {nm!r}",
                     tool=nm or "(empty)", rejection_class="unknown-tool",
                 )
+            elif unbound is not None:
+                result = _tool_error(unbound, tool=nm, rejection_class="unbound-door")
             elif nm in LIFECYCLE_TOOL_NAMES:
                 # Routed here, never inside call_tool -- see the module
                 # docstring's "The lifecycle door" section.

@@ -1,0 +1,35 @@
+I've verified this precisely, and I'm deliberately not acting on it.
+
+**The hook is reading the Commander's spine, not mine.**
+
+```
+.agent-work/cleanup-a-door/spine.json
+  gates          : init, context, understand, plan, execute, reconcile,
+                   triage, review, feedback, archive   ← the Commander lifecycle
+  engine_session : {"session_id": "commander-cleanup-a-door",
+                    "claimed_by": "commander", "status": "active"}
+  open gate      : execute  (in-progress)
+```
+
+`execute` is the Commander's own gate, held under a **live** lease by another session. Its imperative is entirely Commander work: write `STATE_NOTE.md`, run `recover_crews.py`, dispatch crews through `run_crew.py`, verify role artifacts. I am one of the crews that gate dispatches.
+
+Driving it would mean force-taking a live Commander lease and closing my parent's gate from inside its own child — an authority inversion, and the thing `run_crew.py` exists to prevent. So I'm leaving it alone.
+
+**I'm also not calling `block`.** The hook offers that as the honest-stop path, but nothing is blocked. `run_crew.py` is foreground/blocking and verifies the result artifact, so the Commander resumes the moment this process exits. Bubbling a blocker would halt a healthy parent run and misreport a successful gate as failed.
+
+**My dispatch is genuinely finished:**
+
+```
+crew-plans/g2-implementer-plan.json
+  m0-context complete · m1-guard-red complete · m2-generator-green complete
+  m3-drives-two-cwds complete · m4-readme complete · m5-confirmatory complete
+  lease: released
+crew-handoffs/g2-implementer-result.md   17241 bytes
+  **Return status:** `complete`
+```
+
+Final `advance` ran before `release`, so the lease covers every journaled action.
+
+This is exactly the ambiguity I flagged as Workflow Feedback item #2 in the result: a dispatched crew inherits `SPINE_FILE`/`SPINE_SESSION` pointing at its **parent's** spine. That binding is the reach-up handle for `spine_halt block` — but the crew skill's "do not author a plan of your own when a spine is already bound" reads as an instruction to drive it, and the stop hook enforces that reading. For a crew dispatch the two collide, because the bound spine's open gate is by construction the parent's. Worth disambiguating in the skill, and it's recorded in the result for the Commander to harvest.
+
+The g2 work itself stands as reported: demo drives from two cwds, both guards demonstrated failing on pre-fix content, zero machine-specific paths in shipped content, full suite 3072 passed.

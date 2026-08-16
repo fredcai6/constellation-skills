@@ -1,0 +1,10 @@
+# g3 CONFIRMATORY: the three telemetry env overrides still work after late-binding.
+# The hazard the handoff named: a naive 'recompute from SPINE.parent' late-binding
+# silently DISCARDS these, which tests/test_mcp_lifecycle.py:102-103 relies on.
+# 2026-08-16T07:26:52-07:00
+
+SPINE_CALLLOG          written at the override: True    leaked beside the spine instead: False
+SPINE_START_MARKER     written at the override: True    leaked beside the spine instead: False
+SPINE_REJECTION_LOG    written at the override: True    leaked beside the spine instead: False
+
+server exit 0; stderr: (none)
