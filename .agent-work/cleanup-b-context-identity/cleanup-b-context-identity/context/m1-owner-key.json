@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1-owner-key",
+  "files": [],
+  "repo_rev": {
+    "commit": "a0f38c6efbbd03b33ccb3b1f830d8542bff7ad4b"
+  },
+  "run": {
+    "work_id": "cleanup-b-context-identity",
+    "generated_at": "2026-08-16T13:37:47Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity"
+    }
+  }
+}

@@ -44,7 +44,8 @@
           "id": "p1",
           "statement": "context loaded and handoff complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "m0 complete"
         }
       ],
       "postconditions": [
@@ -52,7 +53,8 @@
           "id": "c1",
           "statement": "TDD red: OwnerKeyNormalization written and observed failing at merge base a69bbac4 for the right reason (no owner_key symbol) -- manual attest",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "RED observed at merge-base source (git diff a69bbac4 -- scripts/ empty): 14 SUBFAILED subtests, one per live session id, all 'AttributeError: module gauge_reader has no attribute owner_key'. Behavioural red captured separately in measurement/demo_owner_keyed_gauge.before.out: VERDICT COLLISION, both agents resolve to one gauge.json, 0.9 destroyed 0.02, no skip sidecar."
         },
         {
           "id": "c2",
@@ -61,7 +63,8 @@
             "kind": "command",
             "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_gauge_reader.py"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m1-owner-key-1"
         }
       ],
       "constraints": [
@@ -71,11 +74,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m1-owner-key-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_gauge_reader.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m2-writer": {
@@ -87,7 +102,8 @@
           "id": "p1",
           "statement": "owner key defined once in gauge_reader and green",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "m1 green: 71 passed, 97 subtests"
         }
       ],
       "postconditions": [
@@ -95,7 +111,8 @@
           "id": "c1",
           "statement": "TDD red: both OwnerKeyedGaugePath tests written and observed failing at a69bbac4 for the right reason (one file, last writer wins / no owner-keyed name) -- manual attest",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "RED at merge base: both node ids failed with AttributeError module gauge_reader has no attribute gauge_filename. Behavioural red in a fresh process (measurement/demo_owner_keyed_gauge.before.out): VERDICT COLLISION - both agents resolve to gauge.json, surviving fill 0.9, the 0.02 destroyed, gauge-skip.json None. GREEN after (demo_owner_keyed_gauge.after.out): VERDICT EACH AGENT KEPT ITS OWN READING."
         },
         {
           "id": "c2",
@@ -104,7 +121,8 @@
             "kind": "command",
             "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_gauge_writer.py"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m2-writer-1"
         }
       ],
       "constraints": [
@@ -114,11 +132,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m2-writer-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_gauge_writer.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m3-engine": {
@@ -130,7 +160,8 @@
           "id": "p1",
           "statement": "writer side green",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "writer suite 73 passed"
         }
       ],
       "postconditions": [
@@ -138,7 +169,8 @@
           "id": "c1",
           "statement": "TDD red: test_leaseless_checklist_reads_the_unowned_gauge written and observed failing at a69bbac4 for the right reason -- manual attest",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "RED at merge base: AttributeError module gauge_reader has no attribute owner_key, raised from the test helper that composes the file the acting session owns. GREEN after: 4 passed. Also green: the leaseless negative direction (an owner-keyed reading must NOT be picked up by a leaseless checklist)."
         },
         {
           "id": "c2",
@@ -147,7 +179,8 @@
             "kind": "command",
             "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_checklist_engine.py tests/test_gauge_chain_writer_to_trip.py"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m3-engine-1"
         }
       ],
       "constraints": [
@@ -157,11 +190,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m3-engine-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_checklist_engine.py tests/test_gauge_chain_writer_to_trip.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m4-evidence": {
@@ -173,7 +218,8 @@
           "id": "p1",
           "statement": "engine side green",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "engine 456 passed, chain 16 passed"
         }
       ],
       "postconditions": [
@@ -184,13 +230,15 @@
             "kind": "command",
             "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m4-evidence-1"
         },
         {
           "id": "c2",
           "statement": "fresh-process demonstration artifact exists and shows each agent keeping its own reading; docs updated; per-occurrence disposition recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "measurement/demo_owner_keyed_gauge.py written NEW (probe_cross_key.py untouched, verified by git diff HEAD). before.out VERDICT COLLISION, after.out VERDICT EACH AGENT KEPT ITS OWN READING. docs/GAUGE_WRITER_HOOK.md gained a #600 section and three corrected passages; docs/CHECKLIST_SCHEMA.md's trip section gained a Which file paragraph. Blast radius reconciled: 23 tracked files / 186 occurrences (was 21/219 at dispatch); the two new files are install_constellation.py and test_install_constellation.py, which acquired the literal only through prose I wrote."
         }
       ],
       "constraints": [
@@ -200,11 +248,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m4-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m5-result": {
@@ -216,7 +276,8 @@
           "id": "p1",
           "statement": "all evidence gathered",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "full suite, measured baseline, demonstration before/after, blast radius reconciled, #601 confirmed, deliverable path check all done"
         }
       ],
       "postconditions": [
@@ -227,17 +288,30 @@
             "kind": "command",
             "command": "test -s /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity/.agent-work/cleanup-b-context-identity/crew-handoffs/g1-implementer-result.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m5-result-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m5-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity/.agent-work/cleanup-b-context-identity/crew-handoffs/g1-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -247,13 +321,14 @@
   "refusals": 3,
   "engine_session": {
     "session_id": "constellation/cleanup-b-context-identity/g1/implementer/attempt-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-16T13:27:47.978849+00:00",
-    "last_heartbeat": "2026-08-16T13:28:16.030103+00:00",
+    "last_heartbeat": "2026-08-16T14:03:42.590466+00:00",
     "claimed_by": "implementer",
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-16T14:03:53.106325+00:00"
   },
   "why_trail": [
     {
@@ -262,6 +337,41 @@
       "why": "The collision is measured and live in this very run: the binding store holds FOUR distinct harness keys (my own dispatch added the fourth) all carrying engine_session commander-cleanup-b-context-identity against the identical spine, so resolve_gauge_path's within-key ambiguity guard cannot see across them. Design: one owner_key definition in gauge_reader (slug+hash, total), writer names gauge-<owner>.json and stamps a matching owner field, engine resolves the same name from its own active lease, no lease keeps the unowned gauge.json.",
       "mechanical": false,
       "ts": "2026-08-16T13:28:16.030093+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-owner-key",
+      "why": "owner_key is slug plus a 12-hex SHA-256 of the exact id, total over every string and None only when there is no id at all. The hash is not decoration: two live lease names in this checkout differ only at character 28 of 55, so a slug-only key would reintroduce the very collision being removed. skip/uncalibrated are reserved STRUCTURALLY - every key ends in -<12 hex>, which neither word can have - rather than by a check that could rot. 71 passed, 97 subtests.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:37:47.834665+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-writer",
+      "why": "resolve_gauge_targets carries (path, owner) per binding entry and resolve_gauge_path is now a view over it, so no existing caller changed shape. The guard became a question about attribution: it skips when a candidate has no owner beside others, OR when two or more distinct owners appear under one binding key. That second clause NARROWS R4's literal 'write every distinct candidate' - two owners under one harness key is two agents with one transcript, and writing it to both files is the #202/#261 fan-out that was measured and reverted. Departure argued in the result, not taken quietly. Writer suite 73 passed.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:42:18.464347+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-engine",
+      "why": "The engine resolves the file from _checklist_owner (active lease session_id through gauge_reader.owner_key) and every advisory was threaded with the checklist so it reports on the file actually read rather than on a shared one nobody reads. No lease keeps today's behaviour end to end, proven in both directions. The owner FIELD is compared against the filename and a disagreement declines the reading with a named advisory, which is the only branch on that dispatcher that can only be a defect, so it runs first. #601's _reading_predates_claim is untouched at :1518 and its two relaunch tests still pass. Engine 456 passed, chain 16 passed.",
+      "mechanical": false,
+      "ts": "2026-08-16T13:47:00.000417+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-evidence",
+      "why": "Full suite 3072 passed / 6 skipped against a measured merge-base baseline of 3057 passed / 7 skipped, and the delta reconciles exactly: 14 new tests plus one baseline skip that only skipped because I measured the baseline in /tmp rather than under the worktrees convention. No pre-existing test changed status. The suite also caught what my own wiring grep could not: gauge_reader.py had to be declared a runtime companion of the writer hook, and because installs are FLAT the loader had to look both beside itself and one level up - without that the writer would have written the unowned file while a leased engine read the owned one, a DARK governor in every install.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:01:00.000724+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-result",
+      "why": "IMPLEMENTER_RESULT written at the handoff's named path. Return status complete. It states plainly what this wave does NOT do (identity-not-time is amended, not completed), argues the one departure from R4's literal wording rather than taking it quietly, names the three scope extensions with their reasons, and reconciles the suite delta exactly against a baseline I measured rather than quoted.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:03:42.590455+00:00"
     }
   ]
 }

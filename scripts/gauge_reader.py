@@ -16,7 +16,9 @@ See the epic-178 DESIGN_SPEC ("2. Gauge") for the full rationale.
 
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -453,6 +455,131 @@ UNCALIBRATED_FILENAME = "gauge-uncalibrated.json"
 # gauge_writer_hook.SKIP_FILENAME). Kept as a literal for the same
 # writer-agnostic reason as UNCALIBRATED_FILENAME above.
 SKIP_FILENAME = "gauge-skip.json"
+
+
+# --- who a reading BELONGS to (issue #600) ----------------------------------
+#
+# The gauge used to be one file per work DIRECTORY. Two agents whose spine files
+# sit in one `.agent-work/<work_id>/` therefore wrote to one path and the last
+# one won. Measured live, in a fresh process driving the real writer with two
+# distinct binding keys bound into one work directory: an orchestrator's 0.9
+# overwrote a dispatched agent's 0.02 and NOTHING noticed -- no sidecar, no
+# guard. The writer's ambiguity guard enumerates candidates for ONE binding key,
+# so it is WITHIN-key and structurally cannot see across keys; and the overwrite
+# is FRESH, so #477/#601's `observed_at < claimed_at` comparison cannot see it
+# either. Identity fixes the CONCURRENT case, time fixes the SEQUENTIAL relaunch
+# case, and both are permanent (decision:identity-not-time, as amended).
+#
+# WHY THIS LIVES HERE, in the reader, and not in the writer. The key is computed
+# on BOTH sides of a process boundary -- the harness hook composes it from the
+# binding entry's `engine_session`, the engine composes it from its own active
+# lease's `session_id`, and those are the same string by construction (the entry
+# is parsed from `claim --session-id X` and the lease holds that same X). If the
+# two sides ever disagreed by a character, every reading would silently stop
+# resolving and the governor would go dark with no failing test anywhere. So
+# there is ONE definition, and the harness-specific writer loads THIS module by
+# path to reach it (decision:one-owner-key-definition). The dependency direction
+# is deliberate and unchanged: the reader ships bundled into every install and
+# still never imports the writer.
+
+# The unowned name -- what a LEASELESS checklist still reads, exactly as it did
+# before this change (R3). Owner-keying applies only where a lease exists: with
+# no lease there is no owner, and going quiet there would be a real loss of
+# coverage taken as a side effect of a rename. The fail-safe is "no ATTRIBUTABLE
+# reading yields None"; it is not "no lease yields nothing".
+GAUGE_FILENAME = "gauge.json"
+
+# The slug is for humans reading a directory listing; the hash is what carries
+# CORRECTNESS. The slug is lossy on purpose (case folded, separators collapsed,
+# truncated) and the fleet's real lease names share long prefixes -- two of them
+# in this checkout differ only at character 28 of 55 -- so a slug-only key would
+# reintroduce exactly the collision this issue exists to remove. 12 hex
+# characters of SHA-256 over the EXACT id is what makes two distinct sessions
+# structurally unable to share a file.
+_OWNER_SLUG_MAX = 32
+_OWNER_HASH_CHARS = 12
+
+# Characters safe to interpolate into a filename on every platform this repo
+# runs on -- the same alphabet `spine_rail.is_usable_agent_id` reasons about for
+# `agent-<id>.jsonl`. Read that function for the character-class reasoning; do
+# NOT copy its REJECTION. Rejecting an id that falls outside the alphabet was
+# the original proposal here and it is withdrawn (R2): 89 of the 426 distinct
+# lease session ids in this checkout are slash-bearing, because slash-bearing
+# lease names are current fleet practice, not a defect. Rejecting would take the
+# governor away from a fifth of the fleet permanently and INVISIBLY -- losing
+# the governor never shows up as a test failure, and this repo has been burned
+# twice by a silent governor (#252, #271) and once by a wave-long dark one
+# (#488). A normalization that is ugly and total beats an invariant that is
+# clean and partial.
+_OWNER_UNSAFE = re.compile(r"[^A-Za-z0-9_-]+")
+
+
+def owner_key(session_id) -> str | None:
+    """The owner key for an engine lease `session_id`: a slug plus a hash.
+
+    TOTAL over every string input -- there is no such thing as a session id this
+    function refuses. Returns None only when there is no id to key on at all (a
+    non-string, or blank), which is not a rejection but the absence of an owner:
+    the caller then uses the UNOWNED `GAUGE_FILENAME`, which is today's
+    behaviour exactly. The live binding store carries `engine_session: null`
+    entries and one holding the literal `'$SID'` from a shell-quoting bug; the
+    first lands on the None branch, the second normalizes like any other string.
+
+    `skip` and `uncalibrated` are RESERVED -- an owner named either would make
+    `gauge-<owner>.json` collide with `SKIP_FILENAME`/`UNCALIBRATED_FILENAME`.
+    They are unreachable STRUCTURALLY rather than by a check that could rot:
+    every key ends in `-` plus 12 hex characters, and neither reserved word has
+    that shape. `OwnerKeyNormalization` in tests/test_gauge_reader.py pins it.
+
+    Stable across processes and runs by construction: SHA-256 of the exact id,
+    with no salt, no clock, and no environment input.
+    """
+    if not isinstance(session_id, str):
+        return None
+    raw = session_id.strip()
+    if not raw:
+        return None
+    digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:_OWNER_HASH_CHARS]
+    # Lower-cased so the name is stable on case-insensitive filesystems; the
+    # hash is taken over the ORIGINAL id, so two ids differing only in case
+    # still get different files.
+    slug = _OWNER_UNSAFE.sub("-", raw).strip("-_").lower()[:_OWNER_SLUG_MAX]
+    slug = slug.strip("-_")
+    return f"{slug}-{digest}" if slug else digest
+
+
+def gauge_filename(owner: str | None) -> str:
+    """The gauge file name for `owner`, or the unowned name when there is none.
+
+    The one place the `gauge-<owner>.json` shape is composed, so the writer and
+    the engine cannot spell it differently."""
+    if not owner:
+        return GAUGE_FILENAME
+    return f"gauge-{owner}.json"
+
+
+def record_owner(gauge_path: str | Path) -> str | None:
+    """The `owner` the record at this path claims for itself, or None.
+
+    The filename REMOVES the collision; this field makes a mismatch DETECTABLE
+    if one ever reappears -- both, not either. A record whose stamped owner
+    disagrees with the name it is sitting in can only be a bug, and a caller
+    that notices should decline the reading rather than act on it (declining is
+    always the quiet direction, never a new refusal).
+
+    Field-shape validation only, and never raises -- the same fail-safe contract
+    as `raw_record` and `skip_reason`. Records written before this field existed
+    simply have no owner, which is None, which is not a mismatch."""
+    try:
+        record = json.loads(Path(gauge_path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(record, dict):
+        return None
+    owner = record.get("owner")
+    if not isinstance(owner, str) or not owner.strip():
+        return None
+    return owner
 
 
 def skip_reason(gauge_path: str | Path) -> dict | None:

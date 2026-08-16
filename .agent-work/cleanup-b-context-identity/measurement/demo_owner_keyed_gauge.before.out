@@ -1,0 +1,14 @@
+files written in the one work directory:
+  execute.json
+  gauge.json
+  spine.json
+
+DISPATCHED agent's file  : gauge.json
+  -> {'schema_version': 1, 'fill_fraction': 0.9, 'model': 'claude-opus-4-8', 'observed_at': '2026-08-16T12:00:00.000Z'}
+ORCHESTRATOR's file      : gauge.json
+  -> {'schema_version': 1, 'fill_fraction': 0.9, 'model': 'claude-opus-4-8', 'observed_at': '2026-08-16T12:00:00.000Z'}
+shared gauge.json        : {'schema_version': 1, 'fill_fraction': 0.9, 'model': 'claude-opus-4-8', 'observed_at': '2026-08-16T12:00:00.000Z'}
+gauge-skip.json          : None
+
+VERDICT: COLLISION -- both agents resolve to ONE file, gauge.json.
+  The surviving fill is 0.9; the other agent's reading was destroyed with no skip sidecar and no guard.

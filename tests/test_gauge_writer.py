@@ -10,7 +10,10 @@ network; no dependency on a live harness.
 import importlib.util
 import json
 import os
+import sys
+import tempfile
 import threading
+import unittest
 from pathlib import Path
 
 import pytest
@@ -28,6 +31,29 @@ def _load(name, path):
 
 sr = _load("spine_rail", _HOOKS_DIR / "spine_rail.py")
 gw = _load("gauge_writer_hook", _HOOKS_DIR / "gauge_writer_hook.py")
+# The owner key is defined ONCE, in the reader (#600 criterion 6), because it is
+# computed on both sides of a process boundary -- the hook from the binding
+# entry, the engine from its own lease -- and drift between them would silently
+# stop every reading resolving. These tests compose expected filenames through
+# that same definition rather than re-deriving it here, which is the property
+# under test; the literal values it produces are pinned separately, in
+# tests/test_gauge_reader.py::OwnerKeyNormalization.
+#
+# Loaded with its own loader rather than `_load` above: gauge_reader's frozen
+# @dataclass resolves its own module through sys.modules during class creation,
+# so it must be REGISTERED BEFORE exec or the import crashes. That is the same
+# registration `checklist_engine._load_gauge_reader` already carries, and the
+# reason it is not folded into `_load` is that the two hook modules above are
+# also loaded by name elsewhere in this suite; only this one needs it.
+def _load_reader(path):
+    spec = importlib.util.spec_from_file_location("gauge_reader", path)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+gr = _load_reader(_HOOKS_DIR.parent / "gauge_reader.py")
 
 # Hand-computed expectation for tests/fixtures/golden_transcript.jsonl's
 # latest MAIN-CHAIN (non-sidechain) assistant usage record (line 4):
@@ -43,6 +69,32 @@ gw = _load("gauge_writer_hook", _HOOKS_DIR / "gauge_writer_hook.py")
 EXPECTED_MODEL = "claude-opus-4-8"
 EXPECTED_FILL = (3 + 1200 + 158000) / 1_000_000
 
+# #600: the gauge is named for the agent that produced it, so `_bind`'s default
+# `eng-1` lease writes `gauge-eng-1-cf2640ffe69e.json`, not `gauge.json`.
+#
+# THESE ARE DRIFT PINS, NOT DERIVATIONS -- the same bargain `gauge_reader`'s
+# FILL_CEILING already makes. Composing them here by calling
+# `gr.gauge_filename(gr.owner_key("eng-1"))` would make every assertion below
+# agree with the implementation by construction, including when the
+# implementation is wrong. The algorithm that must produce these exact strings
+# is pinned separately and directly, in
+# tests/test_gauge_reader.py::OwnerKeyNormalization.
+GAUGE = "gauge-eng-1-cf2640ffe69e.json"
+GAUGE2 = "gauge-eng-2-9abec225cd95.json"
+
+
+def _readings(root):
+    """Every gauge READING file under `root`.
+
+    Replaces the `rglob("gauge.json")` these tests used before #600, which now
+    means "the UNOWNED reading" rather than "any reading" and would let an
+    owner-keyed file slip past a "nothing was written" assertion. The two
+    sidecar families are excluded on purpose: they are diagnostics about why
+    nothing was written, and several of these tests assert a skip sidecar IS
+    present in the same breath as asserting no reading is."""
+    return sorted(p for p in Path(root).rglob("gauge*.json")
+                  if p.name not in (gw.SKIP_FILENAME, gw.UNCALIBRATED_FILENAME))
+
 
 @pytest.fixture
 def proj(tmp_path, monkeypatch):
@@ -50,16 +102,23 @@ def proj(tmp_path, monkeypatch):
     return tmp_path
 
 
-def _bind(proj, session_id, spine_path):
+def _bind(proj, session_id, spine_path, engine_session="eng-1"):
     """Write a NEW-shape (#202 nested) binding entry for `session_id`, keyed
     by `spine_path` -- merges onto any existing entries for this session_id
     rather than clobbering them, so two calls under the same session_id bind
-    two distinct spines (needed for the fan-out tests below)."""
+    two distinct spines (needed for the fan-out tests below).
+
+    `engine_session` is the engine lease name the claim carried, and since #600
+    it is what NAMES the gauge file -- so it is a parameter rather than a
+    constant. It stays defaulted to the historical `eng-1` so every test
+    written before #600 keeps binding exactly what it always bound; only the
+    tests that need two DIFFERENT owners (two genuinely different agents) pass
+    it."""
     binding = sr.load_binding(proj)
     sid_bindings = dict(binding.get(session_id) or {})
     sid_bindings[str(spine_path)] = {
         "spine": str(spine_path),
-        "engine_session": "eng-1",
+        "engine_session": engine_session,
         "worktree": str(proj),
         "claimed_at": "2026-07-27T00:00:00+00:00",
     }
@@ -83,10 +142,14 @@ def test_golden_fixture_produces_well_formed_record(proj):
     out = gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
     assert out == {}
 
-    gauge_path = work / "gauge.json"
+    gauge_path = work / GAUGE
     assert gauge_path.exists()
     record = json.loads(gauge_path.read_text(encoding="utf-8"))
-    assert set(record.keys()) == {"schema_version", "fill_fraction", "model", "observed_at"}
+    # `owner` since #600 -- see
+    # test_top_level_record_keeps_exactly_the_frozen_four_fields for why the
+    # frozen four gained a fifth here and what still has exactly four.
+    assert set(record.keys()) == {
+        "schema_version", "fill_fraction", "model", "observed_at", "owner"}
     assert record["schema_version"] == 1
     assert isinstance(record["fill_fraction"], float)
     assert 0.0 <= record["fill_fraction"] <= 1.0
@@ -111,7 +174,7 @@ def test_golden_fixture_picks_latest_main_chain_usage_not_sidechain(proj):
 
     gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
 
-    record = json.loads((work / "gauge.json").read_text(encoding="utf-8"))
+    record = json.loads((work / GAUGE).read_text(encoding="utf-8"))
     assert record["model"] == EXPECTED_MODEL
     assert record["fill_fraction"] == pytest.approx(EXPECTED_FILL)
     assert record["observed_at"] == "2026-07-18T12:00:00.000Z"
@@ -131,7 +194,7 @@ def test_parse_failure_leaves_prior_gauge_file_untouched(proj, tmp_path):
     spine_path.write_text("{}", encoding="utf-8")
     _bind(proj, "s1", spine_path)
 
-    gauge_path = work / "gauge.json"
+    gauge_path = work / GAUGE
     prior = {"schema_version": 1, "fill_fraction": 0.42, "model": "claude-opus-4-8", "observed_at": "2026-07-18T09:00:00.000Z"}
     gauge_path.write_text(json.dumps(prior), encoding="utf-8")
 
@@ -150,7 +213,7 @@ def test_transcript_with_no_usable_usage_leaves_prior_file_untouched(proj, tmp_p
     spine_path.write_text("{}", encoding="utf-8")
     _bind(proj, "s1", spine_path)
 
-    gauge_path = work / "gauge.json"
+    gauge_path = work / GAUGE
     prior = {"schema_version": 1, "fill_fraction": 0.1, "model": "claude-opus-4-8", "observed_at": "2026-07-18T09:00:00.000Z"}
     gauge_path.write_text(json.dumps(prior), encoding="utf-8")
 
@@ -172,7 +235,7 @@ def test_missing_transcript_path_skips_no_write(proj):
 
     out = gw.handle_post_tool_use({"session_id": "s1"}, proj)
     assert out == {}
-    assert not (work / "gauge.json").exists()
+    assert not (work / GAUGE).exists()
 
 
 def test_nonexistent_transcript_file_skips_no_write(proj, tmp_path):
@@ -184,7 +247,7 @@ def test_nonexistent_transcript_file_skips_no_write(proj, tmp_path):
 
     out = gw.handle_post_tool_use(_hook_data("s1", tmp_path / "gone.jsonl"), proj)
     assert out == {}
-    assert not (work / "gauge.json").exists()
+    assert not (work / GAUGE).exists()
 
 
 def test_no_binding_skips_no_write(proj):
@@ -192,7 +255,7 @@ def test_no_binding_skips_no_write(proj):
     session) -- work_id is unresolvable, so the hook must skip entirely."""
     out = gw.handle_post_tool_use(_hook_data("unbound-session", _FIXTURE), proj)
     assert out == {}
-    assert not (proj / ".agent-work").exists() or list((proj / ".agent-work").rglob("gauge.json")) == []
+    assert not (proj / ".agent-work").exists() or _readings(proj / ".agent-work") == []
 
 
 # --- containment: never write outside .agent-work/<work_id>/ -----------------
@@ -213,9 +276,9 @@ def test_spine_outside_agent_work_skips_no_write(proj):
 
     out = gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
     assert out == {}
-    assert not (proj / "gauge.json").exists()
+    assert not (proj / GAUGE).exists()
     # and it did not silently redirect somewhere else either
-    assert list(proj.rglob("gauge.json")) == []
+    assert _readings(proj) == []
 
 
 def test_spine_directly_in_agent_work_root_skips_no_write(proj):
@@ -229,7 +292,7 @@ def test_spine_directly_in_agent_work_root_skips_no_write(proj):
     _bind(proj, "s1", spine_path)
 
     gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
-    assert not (work / "gauge.json").exists()
+    assert not (work / GAUGE).exists()
 
 
 def test_worktree_local_agent_work_outside_project_dir_still_writes(proj, tmp_path):
@@ -247,7 +310,7 @@ def test_worktree_local_agent_work_outside_project_dir_still_writes(proj, tmp_pa
 
     gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
 
-    record = json.loads((work / "gauge.json").read_text(encoding="utf-8"))
+    record = json.loads((work / GAUGE).read_text(encoding="utf-8"))
     assert record["model"] == EXPECTED_MODEL
     assert record["fill_fraction"] == pytest.approx(EXPECTED_FILL)
 
@@ -273,7 +336,7 @@ def test_resolve_gauge_path_returns_list_of_every_bound_spine(proj):
 
     paths = gw.resolve_gauge_path(proj, "s1")
     assert isinstance(paths, list)
-    assert set(paths) == {work_a / "gauge.json", work_b / "gauge.json"}
+    assert set(paths) == {work_a / GAUGE, work_b / GAUGE}
 
 
 def test_resolve_gauge_path_empty_list_when_unbound(proj):
@@ -301,10 +364,10 @@ def test_multiple_bindings_skips_writes_neither_spine(proj):
     (work_a / "spine.json").write_text("{}", encoding="utf-8")
     (work_b / "spine.json").write_text("{}", encoding="utf-8")
     _bind(proj, "s1", work_a / "spine.json")
-    _bind(proj, "s1", work_b / "spine.json")
+    _bind(proj, "s1", work_b / "spine.json", engine_session="eng-2")
 
-    gauge_a = work_a / "gauge.json"
-    gauge_b = work_b / "gauge.json"
+    gauge_a = work_a / GAUGE
+    gauge_b = work_b / GAUGE2
     assert not gauge_a.exists() and not gauge_b.exists()  # before
 
     out = gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
@@ -324,18 +387,18 @@ def test_multiple_bindings_skips_and_leaves_existing_gauge_files_untouched(proj)
     (work_a / "spine.json").write_text("{}", encoding="utf-8")
     (work_b / "spine.json").write_text("{}", encoding="utf-8")
     _bind(proj, "s1", work_a / "spine.json")
-    _bind(proj, "s1", work_b / "spine.json")
+    _bind(proj, "s1", work_b / "spine.json", engine_session="eng-2")
 
     prior_a = json.dumps({"schema_version": 1, "fill_fraction": 0.1, "model": "claude-opus-4-8", "observed_at": "2026-07-18T09:00:00.000Z"})
     prior_b = json.dumps({"schema_version": 1, "fill_fraction": 0.2, "model": "claude-sonnet-5", "observed_at": "2026-07-18T09:05:00.000Z"})
-    (work_a / "gauge.json").write_text(prior_a, encoding="utf-8")
-    (work_b / "gauge.json").write_text(prior_b, encoding="utf-8")
+    (work_a / GAUGE).write_text(prior_a, encoding="utf-8")
+    (work_b / GAUGE2).write_text(prior_b, encoding="utf-8")
 
     out = gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
     assert out == {}
 
-    assert (work_a / "gauge.json").read_text(encoding="utf-8") == prior_a  # byte-identical
-    assert (work_b / "gauge.json").read_text(encoding="utf-8") == prior_b  # byte-identical
+    assert (work_a / GAUGE).read_text(encoding="utf-8") == prior_a  # byte-identical
+    assert (work_b / GAUGE2).read_text(encoding="utf-8") == prior_b  # byte-identical
 
 
 # --- #488: dedup by DISTINCT gauge path, not by binding count ---------------
@@ -363,7 +426,7 @@ def test_resolve_gauge_path_dedups_two_bindings_resolving_to_one_path(proj):
     _bind(proj, "s1", work / "latitude-interrogation.json")
 
     paths = gw.resolve_gauge_path(proj, "s1")
-    assert paths == [work / "gauge.json"]
+    assert paths == [work / GAUGE]
 
 
 def test_admiral_shape_two_spines_one_work_dir_produces_a_reading_not_a_skip(proj):
@@ -381,7 +444,7 @@ def test_admiral_shape_two_spines_one_work_dir_produces_a_reading_not_a_skip(pro
     out = gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
     assert out == {}
 
-    gauge_path = work / "gauge.json"
+    gauge_path = work / GAUGE
     assert gauge_path.exists(), "same-path binding pair must produce a reading, not a skip"
     record = json.loads(gauge_path.read_text(encoding="utf-8"))
     assert record["model"] == EXPECTED_MODEL
@@ -402,15 +465,16 @@ def test_admiral_shape_negative_direction_genuinely_different_paths_still_skip(p
     (work_a / "spine.json").write_text("{}", encoding="utf-8")
     (work_b / "latitude-interrogation.json").write_text("{}", encoding="utf-8")
     _bind(proj, "s1", work_a / "spine.json")
-    _bind(proj, "s1", work_b / "latitude-interrogation.json")
+    _bind(proj, "s1", work_b / "latitude-interrogation.json",
+          engine_session="eng-2")
 
     paths = gw.resolve_gauge_path(proj, "s1")
-    assert set(paths) == {work_a / "gauge.json", work_b / "gauge.json"}
+    assert set(paths) == {work_a / GAUGE, work_b / GAUGE2}
 
     out = gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
     assert out == {}
-    assert not (work_a / "gauge.json").exists()
-    assert not (work_b / "gauge.json").exists()
+    assert not (work_a / GAUGE).exists()
+    assert not (work_b / GAUGE2).exists()
     assert (work_a / gw.SKIP_FILENAME).exists()
     assert (work_b / gw.SKIP_FILENAME).exists()
 
@@ -426,7 +490,7 @@ def test_single_binding_still_writes_normally(proj):
     out = gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
     assert out == {}
 
-    record = json.loads((work / "gauge.json").read_text(encoding="utf-8"))
+    record = json.loads((work / GAUGE).read_text(encoding="utf-8"))
     assert record["model"] == EXPECTED_MODEL
     assert record["fill_fraction"] == pytest.approx(EXPECTED_FILL)
 
@@ -442,7 +506,7 @@ def test_multiple_bindings_uncalibrated_flag_path_also_skips(proj, tmp_path):
     (work_a / "spine.json").write_text("{}", encoding="utf-8")
     (work_b / "spine.json").write_text("{}", encoding="utf-8")
     _bind(proj, "s1", work_a / "spine.json")
-    _bind(proj, "s1", work_b / "spine.json")
+    _bind(proj, "s1", work_b / "spine.json", engine_session="eng-2")
 
     unknown_model_transcript = tmp_path / "unknown_model.jsonl"
     line = {
@@ -461,8 +525,8 @@ def test_multiple_bindings_uncalibrated_flag_path_also_skips(proj, tmp_path):
 
     assert not (work_a / gw.UNCALIBRATED_FILENAME).exists()
     assert not (work_b / gw.UNCALIBRATED_FILENAME).exists()
-    assert not (work_a / "gauge.json").exists()
-    assert not (work_b / "gauge.json").exists()
+    assert not (work_a / GAUGE).exists()
+    assert not (work_b / GAUGE).exists()
 
 
 def test_containment_drops_one_bad_path_writes_the_remaining_single_candidate(proj):
@@ -488,11 +552,11 @@ def test_containment_drops_one_bad_path_writes_the_remaining_single_candidate(pr
     _bind(proj, "s1", work_good / "spine.json")
 
     paths = gw.resolve_gauge_path(proj, "s1")
-    assert paths == [work_good / "gauge.json"]  # bad_spine's candidate fenced out
+    assert paths == [work_good / GAUGE]  # bad_spine's candidate fenced out
 
     gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
-    assert (work_good / "gauge.json").exists()
-    assert not (proj / "gauge.json").exists()
+    assert (work_good / GAUGE).exists()
+    assert not (proj / GAUGE).exists()
 
 
 def test_real_subagent_transcript_finds_no_usage_and_writes_nothing(proj):
@@ -511,7 +575,7 @@ def test_real_subagent_transcript_finds_no_usage_and_writes_nothing(proj):
 
     out = gw.handle_post_tool_use(_hook_data("s1", _REAL_SUBAGENT_FIXTURE), proj)
     assert out == {}
-    assert not (work / "gauge.json").exists()
+    assert not (work / GAUGE).exists()
 
 
 # --- uncalibrated model: no reading, but a visible flag ---------------------
@@ -548,7 +612,7 @@ def test_uncalibrated_model_writes_no_reading(proj, tmp_path):
     governor at ~14% of real capacity. There must be NO reading at all."""
     work = _bound_work(proj)
     gw.handle_post_tool_use(_hook_data("s1", _unknown_model_transcript(tmp_path)), proj)
-    assert not (work / "gauge.json").exists()
+    assert not (work / GAUGE).exists()
 
 
 def test_uncalibrated_model_raises_a_visible_flag(proj, tmp_path):
@@ -568,10 +632,10 @@ def test_uncalibrated_flag_does_not_clobber_an_existing_reading(proj, tmp_path):
     its own, which the reader already collapses to no-reading."""
     work = _bound_work(proj)
     gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
-    before = (work / "gauge.json").read_text(encoding="utf-8")
+    before = (work / GAUGE).read_text(encoding="utf-8")
 
     gw.handle_post_tool_use(_hook_data("s1", _unknown_model_transcript(tmp_path)), proj)
-    assert (work / "gauge.json").read_text(encoding="utf-8") == before
+    assert (work / GAUGE).read_text(encoding="utf-8") == before
 
 
 def test_flag_is_cleared_once_the_model_resolves(proj, tmp_path):
@@ -583,7 +647,7 @@ def test_flag_is_cleared_once_the_model_resolves(proj, tmp_path):
 
     gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
     assert not (work / gw.UNCALIBRATED_FILENAME).exists()
-    assert (work / "gauge.json").exists()
+    assert (work / GAUGE).exists()
 
 
 # --- #271: gauge-skip.json -- positively-localized silence causes ------------
@@ -612,13 +676,13 @@ def test_ambiguous_binding_writes_skip_flag_to_every_candidate(proj):
     (work_a / "spine.json").write_text("{}", encoding="utf-8")
     (work_b / "spine.json").write_text("{}", encoding="utf-8")
     _bind(proj, "s1", work_a / "spine.json")
-    _bind(proj, "s1", work_b / "spine.json")
+    _bind(proj, "s1", work_b / "spine.json", engine_session="eng-2")
 
     out = gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
     assert out == {}
 
-    assert not (work_a / "gauge.json").exists()
-    assert not (work_b / "gauge.json").exists()
+    assert not (work_a / GAUGE).exists()
+    assert not (work_b / GAUGE2).exists()
 
     flag_a = json.loads((work_a / gw.SKIP_FILENAME).read_text(encoding="utf-8"))
     flag_b = json.loads((work_b / gw.SKIP_FILENAME).read_text(encoding="utf-8"))
@@ -637,7 +701,7 @@ def test_ambiguous_binding_with_three_candidates_fans_out_to_all_three(proj):
         w = proj / ".agent-work" / name
         w.mkdir(parents=True)
         (w / "spine.json").write_text("{}", encoding="utf-8")
-        _bind(proj, "s1", w / "spine.json")
+        _bind(proj, "s1", w / "spine.json", engine_session="eng-" + name)
         works.append(w)
 
     gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
@@ -661,7 +725,7 @@ def test_no_usable_record_single_candidate_writes_skip_flag_no_candidate_count(p
 
     out = gw.handle_post_tool_use(_hook_data("s1", empty_transcript), proj)
     assert out == {}
-    assert not (work / "gauge.json").exists()
+    assert not (work / GAUGE).exists()
 
     flag = json.loads((work / gw.SKIP_FILENAME).read_text(encoding="utf-8"))
     assert flag["reason"] == "no-usable-record"
@@ -716,7 +780,7 @@ def test_clean_write_clears_a_prior_skip_flag_at_that_path(proj, tmp_path):
 
     gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
     assert not (work / gw.SKIP_FILENAME).exists()
-    assert (work / "gauge.json").exists()
+    assert (work / GAUGE).exists()
 
 
 def test_uncalibrated_outcome_clears_a_prior_skip_flag_at_that_path(proj, tmp_path):
@@ -747,14 +811,14 @@ def test_ambiguous_binding_skip_flags_do_not_clobber_existing_gauge_files(proj):
     (work_a / "spine.json").write_text("{}", encoding="utf-8")
     (work_b / "spine.json").write_text("{}", encoding="utf-8")
     _bind(proj, "s1", work_a / "spine.json")
-    _bind(proj, "s1", work_b / "spine.json")
+    _bind(proj, "s1", work_b / "spine.json", engine_session="eng-2")
 
     prior_a = json.dumps({"schema_version": 1, "fill_fraction": 0.1, "model": "claude-opus-4-8", "observed_at": "2026-07-18T09:00:00.000Z"})
-    (work_a / "gauge.json").write_text(prior_a, encoding="utf-8")
+    (work_a / GAUGE).write_text(prior_a, encoding="utf-8")
 
     gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
 
-    assert (work_a / "gauge.json").read_text(encoding="utf-8") == prior_a  # byte-identical
+    assert (work_a / GAUGE).read_text(encoding="utf-8") == prior_a  # byte-identical
     assert json.loads((work_a / gw.SKIP_FILENAME).read_text(encoding="utf-8"))["reason"] == "ambiguous-binding"
     assert json.loads((work_b / gw.SKIP_FILENAME).read_text(encoding="utf-8"))["reason"] == "ambiguous-binding"
 
@@ -823,8 +887,8 @@ def test_resolve_gauge_path_keys_on_the_composite_key_not_the_session(proj):
     _bind(proj, "s1", work_parent / "spine.json")
     _bind(proj, "s1#a1", work_sub / "spine.json")
 
-    assert gw.resolve_gauge_path(proj, "s1") == [work_parent / "gauge.json"]
-    assert gw.resolve_gauge_path(proj, "s1#a1") == [work_sub / "gauge.json"]
+    assert gw.resolve_gauge_path(proj, "s1") == [work_parent / GAUGE]
+    assert gw.resolve_gauge_path(proj, "s1#a1") == [work_sub / GAUGE]
 
 
 def test_subagent_payload_never_writes_to_the_parents_gauge(proj):
@@ -842,7 +906,7 @@ def test_subagent_payload_never_writes_to_the_parents_gauge(proj):
 
     out = gw.handle_post_tool_use(_agent_hook_data("s1", "a1", _FIXTURE), proj)
     assert out == {}
-    assert list(proj.rglob("gauge.json")) == []
+    assert _readings(proj) == []
     assert list(proj.rglob(gw.UNCALIBRATED_FILENAME)) == []
     assert list(proj.rglob(gw.SKIP_FILENAME)) == []
 
@@ -860,7 +924,7 @@ def test_unresolvable_identity_writes_nothing(proj):
     for bad in ("", None, "sess#agent", "..", "a/b", "a\\b", 17):
         out = gw.handle_post_tool_use(_agent_hook_data("s1", bad, _FIXTURE), proj)
         assert out == {}
-        assert list(proj.rglob("gauge.json")) == [], bad
+        assert _readings(proj) == [], bad
         assert list(proj.rglob(gw.UNCALIBRATED_FILENAME)) == [], bad
         assert list(proj.rglob(gw.SKIP_FILENAME)) == [], bad
 
@@ -874,7 +938,7 @@ def test_spine_rail_missing_writes_nothing_and_does_not_raise(proj, monkeypatch)
 
     assert gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj) == {}
     assert gw.handle_post_tool_use(_agent_hook_data("s1", "a1", _FIXTURE), proj) == {}
-    assert not (work / "gauge.json").exists()
+    assert not (work / GAUGE).exists()
     assert not (work / gw.SKIP_FILENAME).exists()
 
 
@@ -923,7 +987,7 @@ def test_rejected_agent_id_writes_nothing_even_when_its_key_is_bound(proj):
 
         out = gw.handle_post_tool_use(_agent_hook_data("s1", bad, _FIXTURE), proj)
         assert out == {}
-        assert list(proj.rglob("gauge.json")) == [], bad
+        assert _readings(proj) == [], bad
         assert list(proj.rglob(gw.UNCALIBRATED_FILENAME)) == [], bad
         assert list(proj.rglob(gw.SKIP_FILENAME)) == [], bad
 
@@ -997,7 +1061,7 @@ def test_subagent_with_missing_derived_transcript_leaves_gauge_untouched(proj):
     distinct past value first, so the assertion cannot pass by filesystem
     timestamp granularity."""
     work = _bound_subagent_work(proj)
-    gauge_path = work / "gauge.json"
+    gauge_path = work / GAUGE
     prior = json.dumps({"schema_version": 1, "fill_fraction": 0.42,
                         "model": "claude-opus-4-8", "observed_at": "2026-07-18T09:00:00.000Z"})
     gauge_path.write_text(prior, encoding="utf-8")
@@ -1029,7 +1093,7 @@ def test_subagent_with_missing_derived_transcript_writes_no_gauge_at_all(proj):
 
     gw.handle_post_tool_use(_agent_hook_data("s1", "a1", _parent_transcript(proj)), proj)
 
-    assert list(proj.rglob("gauge.json")) == []
+    assert _readings(proj) == []
     assert list(proj.rglob(gw.UNCALIBRATED_FILENAME)) == []
     assert json.loads((work / gw.SKIP_FILENAME).read_text(encoding="utf-8"))["reason"] == \
         "subagent-transcript-missing"
@@ -1226,12 +1290,12 @@ def test_dispatched_agent_writes_its_own_reading_to_its_own_binding(proj):
     out = gw.handle_post_tool_use(_agent_hook_data("s1", _PARENT_AGENT_ID, parent), proj)
     assert out == {}
 
-    record = json.loads((work_sub / "gauge.json").read_text(encoding="utf-8"))
+    record = json.loads((work_sub / GAUGE).read_text(encoding="utf-8"))
     assert record["model"] == "claude-opus-4-8"
     assert record["fill_fraction"] == pytest.approx(_REAL_SUBAGENT_TOKENS / 1_000_000)
     assert record["observed_at"] == _REAL_SUBAGENT_OBSERVED_AT
     # the parent's own reading, from the parent's own transcript, is untouched
-    assert not (work_parent / "gauge.json").exists()
+    assert not (work_parent / GAUGE).exists()
     assert not (work_sub / gw.SKIP_FILENAME).exists()
 
 
@@ -1247,7 +1311,7 @@ def test_a_wrong_derived_transcript_fails_closed_rather_than_misattributing(proj
 
     gw.handle_post_tool_use(_agent_hook_data("s1", other, parent), proj)
 
-    assert not (work_sub / "gauge.json").exists()
+    assert not (work_sub / GAUGE).exists()
     assert json.loads((work_sub / gw.SKIP_FILENAME).read_text(encoding="utf-8"))["reason"] == \
         "no-usable-record"
 
@@ -1279,7 +1343,7 @@ def _write_a_subagent_reading(proj, agent_id=_PARENT_AGENT_ID):
     parent = _parent_transcript(proj)
     _plant_derived_transcript(parent, agent_id)
     gw.handle_post_tool_use(_agent_hook_data("s1", agent_id, parent), proj)
-    return json.loads((work_sub / "gauge.json").read_text(encoding="utf-8"))
+    return json.loads((work_sub / GAUGE).read_text(encoding="utf-8"))
 
 
 def test_identity_resolution_duration_is_recorded_within_budget(proj):
@@ -1288,7 +1352,8 @@ def test_identity_resolution_duration_is_recorded_within_budget(proj):
     evidence, so the writer records what it actually cost."""
     record = _write_a_subagent_reading(proj)
     assert set(record.keys()) == {
-        "schema_version", "fill_fraction", "model", "observed_at", "identity_resolution_ms"}
+        "schema_version", "fill_fraction", "model", "observed_at",
+        "identity_resolution_ms", "owner"}  # +owner since #600
     value = record["identity_resolution_ms"]
     assert isinstance(value, float)
     assert 0.0 <= value < _IDENTITY_BUDGET_MS
@@ -1312,15 +1377,47 @@ def test_identity_resolution_duration_tracks_a_deliberately_slowed_step(proj, mo
 
 
 def test_top_level_record_keeps_exactly_the_frozen_four_fields(proj):
-    """The fifth field is additive and OPTIONAL, and it appears only on the
-    dispatched-agent path: a payload with no agent_id must stay byte-identical
-    to today's behavior, and the frozen 4-field record is what the reader and
-    the pre-existing tests pin. There is no identity to resolve for a
-    top-level agent, so there is nothing to report."""
+    """`identity_resolution_ms` is additive and OPTIONAL, and it appears only
+    on the dispatched-agent path: there is no identity to resolve for a
+    top-level agent, so there is nothing to report.
+
+    #600 CHANGED WHAT "the frozen four" MEANS HERE, deliberately and not as a
+    side effect. `owner` now rides EVERY record the writer can attribute,
+    top-level ones included, because the filename alone cannot make a mismatch
+    detectable -- the field is what a reader compares the name against (R1:
+    filename AND field, not either). It is the same additive bargain the fifth
+    field already struck: gauge_reader validates the presence of its four
+    REQUIRED fields and does not reject extras, so this costs no reader change,
+    and the four keep their meaning untouched (pinned just below). An
+    UNATTRIBUTABLE record still carries no owner field at all and stays
+    byte-identical to a pre-#600 one -- pinned by
+    test_an_unowned_binding_writes_the_unowned_record_with_no_owner_field."""
     work = _bound_work(proj)
     gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+    record = json.loads((work / GAUGE).read_text(encoding="utf-8"))
+    assert set(record.keys()) == {
+        "schema_version", "fill_fraction", "model", "observed_at", "owner"}
+    assert record["owner"] == gr.owner_key("eng-1")
+
+
+def test_an_unowned_binding_writes_the_unowned_record_with_no_owner_field(proj):
+    """R3, at the writer: a binding entry with no `engine_session` has no owner,
+    so it writes the UNOWNED `gauge.json` with NO owner field -- byte-identical
+    to a pre-#600 record, which is what a leaseless engine still reads. The live
+    binding store carries `engine_session: null` entries right now, so this is a
+    real input rather than a defensive stub, and it is the writer-side half of
+    the symmetry that keeps 'no lease' behaving exactly as today."""
+    work = proj / ".agent-work" / "run-unowned"
+    work.mkdir(parents=True)
+    (work / "spine.json").write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", work / "spine.json", engine_session=None)
+
+    gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+
     record = json.loads((work / "gauge.json").read_text(encoding="utf-8"))
-    assert set(record.keys()) == {"schema_version", "fill_fraction", "model", "observed_at"}
+    assert set(record.keys()) == {
+        "schema_version", "fill_fraction", "model", "observed_at"}
+    assert not (work / GAUGE).exists()
 
 
 def test_the_four_required_fields_keep_their_meaning_alongside_the_fifth(proj):
@@ -1356,7 +1453,7 @@ def test_concurrent_reads_never_observe_a_torn_record(proj):
     real thread scheduling rather than asserted only by code inspection."""
     work = proj / ".agent-work" / "run1"
     work.mkdir(parents=True)
-    gauge_path = work / "gauge.json"
+    gauge_path = work / GAUGE
 
     record_a = {"schema_version": 1, "fill_fraction": 0.11, "model": "claude-opus-4-8", "observed_at": "2026-07-18T10:00:00.000Z"}
     record_b = {"schema_version": 1, "fill_fraction": 0.99, "model": "claude-sonnet-5", "observed_at": "2026-07-18T10:00:01.000Z"}
@@ -1429,3 +1526,164 @@ def test_main_malformed_stdin_fails_open(proj, capsys):
     rc = gw.main(["gauge_writer_hook.py"], "{ not json")
     assert rc == 0
     assert capsys.readouterr().out == ""
+
+
+
+# --- #600: a gauge reading is named for the AGENT that produced it -----------
+#
+# MEASURED, not assumed. `.agent-work/cleanup-b-context-identity/measurement/
+# probe_cross_key.py` drove the real `handle_post_tool_use` in a fresh process
+# with two distinct binding keys bound into ONE work directory: the
+# orchestrator's 0.9 overwrote the dispatched agent's 0.02 and NOTHING noticed
+# -- no skip sidecar, no guard. `resolve_gauge_path` enumerates candidates for
+# ONE binding key, so the `len(gauge_paths) > 1` ambiguity guard is
+# WITHIN-KEY; nothing anywhere compared ACROSS keys. The overwrite is FRESH, so
+# #601's `observed_at > claimed_at` comparison is structurally blind to it --
+# that comparison catches the SEQUENTIAL relaunch case and this one is
+# CONCURRENT (R1: identity for one, time for the other, both permanent).
+
+
+def _synthetic_transcript(path, total_tokens, model="claude-opus-4-8",
+                          timestamp="2026-08-16T12:00:00.000Z"):
+    """A minimal main-chain transcript carrying ONE assistant usage record of
+    exactly `total_tokens`.
+
+    Hand-built rather than a fixture copy because these tests need two
+    transcripts whose fills are DISTINGUISHABLE at a glance -- the whole point
+    is proving reading A did not become reading B."""
+    line = {
+        "type": "assistant",
+        "isSidechain": False,
+        "timestamp": timestamp,
+        "message": {
+            "model": model,
+            "role": "assistant",
+            "usage": {
+                "input_tokens": total_tokens,
+                "cache_creation_input_tokens": 0,
+                "cache_read_input_tokens": 0,
+            },
+        },
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(line) + "\n", encoding="utf-8", newline="\n")
+    return path
+
+
+def _owner_gauge(work, engine_session):
+    """The gauge file `engine_session` owns inside `work`, composed through the
+    ONE definition both sides of the process boundary use (#600 criterion 6:
+    the hook computes this from the binding entry, the engine from its own
+    lease, and drift between them silently stops every reading resolving)."""
+    return work / gr.gauge_filename(gr.owner_key(engine_session))
+
+
+class OwnerKeyedGaugePath(unittest.TestCase):
+    """#600: the writer names the record for its owner, so two agents sharing a
+    work directory stop clobbering each other.
+
+    A `unittest.TestCase` rather than this module's usual plain functions
+    purely so the gate's postcondition can address these two by the node id it
+    was given (`::OwnerKeyedGaugePath::...`); this repo runs pytest with no
+    config, so a plain class would not be collected at all. `setUp` rebuilds
+    exactly what the `proj` fixture provides."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.proj = Path(self._tmp.name)
+        self._prior = os.environ.get("CLAUDE_PROJECT_DIR")
+        os.environ["CLAUDE_PROJECT_DIR"] = str(self.proj)
+
+    def tearDown(self):
+        if self._prior is None:
+            os.environ.pop("CLAUDE_PROJECT_DIR", None)
+        else:
+            os.environ["CLAUDE_PROJECT_DIR"] = self._prior
+        self._tmp.cleanup()
+
+    def test_two_keys_one_work_dir_each_keep_their_own_reading(self):
+        """THE defect, in the shape it was measured in: two agents whose spines
+        sit in ONE work directory, reached under two DISTINCT binding keys,
+        each writing its own reading in the same window.
+
+        Before this change both resolved to `<work>/gauge.json` and the second
+        write silently destroyed the first. Each must now keep its own record,
+        and each record must NAME its owner -- the filename removes the
+        collision, the `owner` field makes a mismatch detectable if one ever
+        reappears (R1: both, not either)."""
+        proj = self.proj
+        work = proj / ".agent-work" / "epic-600"
+        work.mkdir(parents=True)
+        orchestrator_spine = work / "spine.json"
+        dispatched_spine = work / "execute.json"
+        orchestrator_spine.write_text("{}", encoding="utf-8")
+        dispatched_spine.write_text("{}", encoding="utf-8")
+
+        # two DISTINCT binding keys -- exactly what the probe bound -- carrying
+        # two DIFFERENT engine_session names, which is what two different
+        # agents in one work directory really look like.
+        _bind(proj, "s-orc", orchestrator_spine,
+              engine_session="owner-orchestrator")
+        _bind(proj, "s-disp", dispatched_spine,
+              engine_session="owner-dispatched")
+
+        orc_transcript = _synthetic_transcript(proj / "t-orc.jsonl", 900_000)
+        disp_transcript = _synthetic_transcript(proj / "t-disp.jsonl", 20_000)
+
+        # the dispatched agent writes first, the orchestrator second -- the
+        # exact order in which the probe lost the dispatched agent's reading.
+        gw.handle_post_tool_use(_hook_data("s-disp", disp_transcript), proj)
+        gw.handle_post_tool_use(_hook_data("s-orc", orc_transcript), proj)
+
+        disp_gauge = _owner_gauge(work, "owner-dispatched")
+        orc_gauge = _owner_gauge(work, "owner-orchestrator")
+        self.assertNotEqual(disp_gauge, orc_gauge)
+        self.assertTrue(disp_gauge.exists(),
+                        "the dispatched agent's reading was lost")
+        self.assertTrue(orc_gauge.exists(),
+                        "the orchestrator's reading was lost")
+
+        disp = json.loads(disp_gauge.read_text(encoding="utf-8"))
+        orc = json.loads(orc_gauge.read_text(encoding="utf-8"))
+        self.assertEqual(disp["fill_fraction"], pytest.approx(0.02))
+        self.assertEqual(orc["fill_fraction"], pytest.approx(0.9))
+        # the owner field agrees with the filename it sits in, on both records
+        self.assertEqual(disp["owner"], gr.owner_key("owner-dispatched"))
+        self.assertEqual(orc["owner"], gr.owner_key("owner-orchestrator"))
+        # and the shared, folder-owned file this issue exists to remove is gone
+        self.assertFalse((work / "gauge.json").exists())
+
+    def test_two_spines_one_key_one_owner_still_writes(self):
+        """#488's EXACT shape -- an Admiral's `spine.json` and the
+        `latitude-interrogation.json` survey its spine step requires it to
+        drive, both in ONE work directory, under ONE binding key and ONE owner.
+
+        Two bindings are two spine FILES, not two agents. There is no
+        whose-reading-is-it question when both answers name the same owner, so
+        this must still collapse to one file and the write must HAPPEN. The
+        undeduped version of this left an Admiral's governor dark for an entire
+        wave; a rename must not re-arm that regression (R4)."""
+        proj = self.proj
+        work = proj / ".agent-work" / "epic-418-redux"
+        work.mkdir(parents=True)
+        (work / "spine.json").write_text("{}", encoding="utf-8")
+        (work / "latitude-interrogation.json").write_text("{}", encoding="utf-8")
+        _bind(proj, "s1", work / "spine.json", engine_session="admiral-418")
+        _bind(proj, "s1", work / "latitude-interrogation.json",
+              engine_session="admiral-418")
+
+        self.assertEqual(gw.resolve_gauge_path(proj, "s1"),
+                         [_owner_gauge(work, "admiral-418")])
+
+        out = gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+        self.assertEqual(out, {})
+
+        gauge_path = _owner_gauge(work, "admiral-418")
+        self.assertTrue(
+            gauge_path.exists(),
+            "same-owner binding pair must produce a reading, not a skip (#488)")
+        record = json.loads(gauge_path.read_text(encoding="utf-8"))
+        self.assertEqual(record["model"], EXPECTED_MODEL)
+        self.assertEqual(record["fill_fraction"], pytest.approx(EXPECTED_FILL))
+        self.assertEqual(record["owner"], gr.owner_key("admiral-418"))
+        self.assertFalse((work / gw.SKIP_FILENAME).exists())

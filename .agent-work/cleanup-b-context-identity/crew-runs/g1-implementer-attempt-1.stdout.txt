@@ -1,0 +1,18 @@
+The finding is recorded in my own deliverable, and `spine.json` is byte-identical.
+
+**I'm holding my position, now backed by the engine itself.** Asked whether this crew may touch `execute`:
+
+```
+REFUSED: checklist lease 'commander-cleanup-b-context-identity' is stale;
+         `claim` it (same id or --force --reason) before mutating
+```
+
+Every route the hook offers — drive, `block`, or `waive` — requires a **`--force` seizure of a live parent's lease**. The Commander (PID 3041275) is alive and blocked in `run_crew.py` waiting for this crew to exit. Seizing its lease while it waits on me would deadlock the run, not rescue it.
+
+That refusal also surfaced a second finding I've written up: the lease reads **"stale"** because the Commander last heartbeat at `13:20:19Z` and has been blocked on a foreground crew for 53 minutes. `run_crew.py` blocks by design, and a parent waiting on a child issues no mutating verb, so it cannot heartbeat. **A healthy Commander looks abandonable to anything judging liveness by heartbeat** — including `recover_crews.py` and any `--force` recovery path. Both that and the hook misfire are in the result as triage candidates for you.
+
+The hook's own instance is worth naming plainly: it resolved `SPINE_FILE` from inherited environment and concluded a crew was its own parent. That is #600's defect one layer up — ambient context outliving the agent it described. This change fixes the gauge's instance; the hook's is untouched.
+
+**My dispatch is complete, not abandoned:** six plan items closed, lease released as the last journaled action, `g1-implementer-result.md` delivered with `Return status: complete`, full suite 3072 passed / 0 failed against a measured baseline.
+
+Ending my turn is not me walking away from the run — it is the single action that unblocks the Commander to drive `execute` under its own lease. I'd rather hand you a correct result and a live parent than a forced lease and a deadlock.

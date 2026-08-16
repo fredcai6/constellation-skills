@@ -1705,6 +1705,11 @@ class HookScriptBundleTests(unittest.TestCase):
     HOOK_SOURCE_DIR = ROOT / "scripts" / "hooks"
     WRITER = "gauge_writer_hook.py"
     RAIL = "spine_rail.py"
+    # #600: the writer also loads the READER, for `owner_key` -- the one
+    # definition of the name a gauge file carries. Its source sits in scripts/
+    # rather than scripts/hooks/, but the install destination is FLAT, so in an
+    # install it lands beside the writer like the rail does.
+    READER = "gauge_reader.py"
     # Canonical owner: the hook exists solely to feed checklist_engine.py's
     # `current` advisory, so it installs into the checklist engine's home skill.
     # Deliberately NOT a companion of checklist_engine.py -- that would copy it
@@ -1764,6 +1769,30 @@ class HookScriptBundleTests(unittest.TestCase):
             )
             self.assertTrue(hasattr(mod._spine_rail, "resolve_project_dir"))
 
+    def test_installed_gauge_writer_hook_actually_loads_its_gauge_reader(self):
+        """The #600 counterpart, and it is not ceremony: the writer's source
+        lives in `scripts/hooks/` and the reader's in `scripts/`, so the loader
+        has to find the reader ONE LEVEL UP in this checkout and BESIDE ITSELF in
+        a flat install. A loader written for only the checkout layout passes
+        every test that runs from a checkout and fails in every install --
+        silently, into no owner, which would leave the writer producing
+        `gauge.json` while a leased engine reads `gauge-<owner>.json`. That is a
+        DARK governor, not merely an inert one, and only an installed-layout
+        test can see it."""
+        with tempfile.TemporaryDirectory() as tmp:
+            scripts_dir = self._install_owner_skill(tmp)
+            self.assertTrue((scripts_dir / self.READER).is_file())
+            mod = load_module("installed_gauge_writer_hook_reader",
+                              scripts_dir / self.WRITER)
+            self.assertIsNotNone(
+                mod._gauge_reader,
+                "installed gauge writer hook could not load gauge_reader.py -- "
+                "it would resolve no owner and write the unowned gauge.json "
+                "where a leased engine reads an owner-keyed name, silently",
+            )
+            # and the loaded module is really the one that defines the key
+            self.assertEqual(mod._owner_key("eng-1"), "eng-1-cf2640ffe69e")
+
     def test_gauge_writer_hook_dynamic_loads_are_declared_as_companions(self):
         """Parse the writer's source for `parent / "<name>.py"` sibling loads and
         require each to be declared. Mirrors the engine's companion test so a NEW
@@ -1772,7 +1801,7 @@ class HookScriptBundleTests(unittest.TestCase):
         source = (self.HOOK_SOURCE_DIR / self.WRITER).read_text(encoding="utf-8")
         siblings = set(re.findall(r'parent\s*/\s*"([A-Za-z0-9_]+\.py)"', source))
         self.assertEqual(
-            {self.RAIL}, siblings,
+            {self.RAIL, self.READER}, siblings,
             f"{self.WRITER}'s dynamic sibling loads changed; update "
             "SCRIPT_RUNTIME_COMPANIONS and this expectation together",
         )

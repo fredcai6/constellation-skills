@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-result",
+  "mechanical": {
+    "run": "cleanup-b-context-identity",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 3,
+    "spine-step": "m5-result",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-b-context-identity-m5-result@a55e692a9969f74c06d67fbb18e9bd1e5ce6766a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-b-context-identity",
+    "generated_at": "2026-08-16T14:03:42Z"
+  }
+}

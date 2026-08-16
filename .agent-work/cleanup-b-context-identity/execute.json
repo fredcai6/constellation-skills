@@ -148,7 +148,8 @@
               "status": "complete"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
         },
         {
           "id": "c2",
@@ -157,7 +158,8 @@
             "kind": "command",
             "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && test -z \"$(git diff --name-only a69bbac4 -- scripts/hooks/spine_rail.py scripts/run_crew.py scripts/mcp_spine_server.py .mcp.json tests/test_spine_rail.py)\""
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-2"
         },
         {
           "id": "c3",
@@ -166,13 +168,15 @@
             "kind": "command",
             "command": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q 'tests/test_gauge_writer.py::OwnerKeyedGaugePath::test_two_keys_one_work_dir_each_keep_their_own_reading' 'tests/test_gauge_writer.py::OwnerKeyedGaugePath::test_two_spines_one_key_one_owner_still_writes' 'tests/test_gauge_reader.py::OwnerKeyNormalization::test_every_live_session_id_yields_a_usable_owner' 'tests/test_checklist_engine.py::TripGaugeReadingOwnership::test_leaseless_checklist_reads_the_unowned_gauge'"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-3"
         },
         {
           "id": "c4",
           "statement": "the blast-radius enumeration of the literal name gauge.json was run BY COMMAND and its COUNT is stated in the result, with a change/no-change disposition per occurrence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Blast radius enumerated BY COMMAND by the crew and reconciled against the Commander's dispatch-time count of 21 files; the result carries a per-occurrence disposition section. Two occurrences the Commander's own grep missed were caught by the full suite rather than by the sweep -- scripts/install_constellation.py's runtime-companion declaration and map/INDEX.md's freshness test -- which is exactly the under-inclusive-sweep failure the gate warned about, found by the suite instead of by the enumerator."
         }
       ],
       "constraints": [
@@ -207,11 +211,45 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "artifact": ".agent-work/cleanup-b-context-identity/crew-handoffs/g1-implementer-result.md",
+            "crew": "constellation/cleanup-b-context-identity/g1/implementer/attempt-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && test -z \"$(git diff --name-only a69bbac4 -- scripts/hooks/spine_rail.py scripts/run_crew.py scripts/mcp_spine_server.py .mcp.json tests/test_spine_rail.py)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity && find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q 'tests/test_gauge_writer.py::OwnerKeyedGaugePath::test_two_keys_one_work_dir_each_keep_their_own_reading' 'tests/test_gauge_writer.py::OwnerKeyedGaugePath::test_two_spines_one_key_one_owner_still_writes' 'tests/test_gauge_reader.py::OwnerKeyNormalization::test_every_live_session_id_yields_a_usable_owner' 'tests/test_checklist_engine.py::TripGaugeReadingOwnership::test_leaseless_checklist_reads_the_unowned_gauge'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g1-review": {
@@ -223,7 +261,8 @@
           "id": "p1",
           "statement": "implementer result integrated",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT integrated: attached as e-g1-implement-1 with status complete, verified fresh via run_crew.py --verify-result (constellation/cleanup-b-context-identity/g1/implementer/attempt-1 -> fresh (completed)). g1-implement advanced with its fenced-paths and four-node-id command postconditions passing."
         }
       ],
       "postconditions": [
@@ -407,6 +446,26 @@
       "why": "Closed on leg 1's ACCEPTED artifacts rather than re-run, per the ruling's do-not-redo list. Candidate 2 is confirmed: the collision is ACROSS binding keys and the timestamp guard cannot see it, because a foreign write is fresh. That is why the fix has to be identity for the concurrent case, and why time still has to stay for the sequential one.",
       "mechanical": false,
       "ts": "2026-08-16T13:21:22.863993+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-implement",
+      "why": "Owner-keyed gauge shipped: gauge-<owner>.json plus an owner field, slug-plus-hash normalization that is total, a leaseless checklist unchanged, and the ambiguity guard re-scoped to attribution. One flagged departure from R4's literal wording, taken conservatively and carried up rather than buried: with 2+ candidates under ONE binding key resolving to TWO DISTINCT owners, the crew skips instead of writing every candidate, because one binding key has exactly one transcript, so writing it to both files agent A's fill against agent B -- the #202/#261 fan-out dead end. R4's rationale (the writer could not tell WHOSE reading it held) is satisfied; its literal wording did not anticipate that third branch. The branch behaves exactly as today, so it cannot make the governor louder, and it reverses in one line.",
+      "mechanical": false,
+      "ts": "2026-08-16T14:06:47.174943+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1667,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-16T14:08:20.112324+00:00"
     }
   ]
 }

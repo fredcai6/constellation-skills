@@ -441,6 +441,21 @@ def _work_tree(tmp_path, *, bind_to=None):
     `bind_to` repoints the binding at some other spine path (the fault
     injection in `test_chain_binding_pointing_elsewhere_writes_no_gauge`);
     by default the binding names this tree's own spine.
+
+    `engine_session` is the ENGINE LEASE NAME the binding entry carries, and
+    since #600 it is what NAMES the gauge file the writer produces. It is None
+    here, and that is a deliberate fixture choice rather than an omission: this
+    spine is never claimed, so the engine that reads it at the far end of the
+    chain HAS NO LEASE and therefore no owner either. Binding a lease name to a
+    spine nobody claimed would make the writer produce `gauge-<owner>.json`
+    while the leaseless engine read `gauge.json` -- a mismatch invented by the
+    fixture, not one production can reach, since the entry's `engine_session`
+    is parsed from the very `claim --session-id` that creates the lease. Both
+    ends unowned IS a real configuration (the live binding store carries
+    `engine_session: null` entries right now) and it is exactly R3's path, so
+    these tests now pin the LEASELESS chain end to end. The OWNED chain is
+    pinned separately, by
+    `test_chain_owner_keyed_reading_reaches_the_leased_engine` below.
     """
     spine = _spine_tree(tmp_path, _WORK_ID)
 
@@ -449,7 +464,7 @@ def _work_tree(tmp_path, *, bind_to=None):
         _SESSION_ID: {
             str(bound.resolve()): {
                 "spine": str(bound.resolve()),
-                "engine_session": "chain-engine-session",
+                "engine_session": None,
                 "worktree": str(tmp_path),
                 "claimed_at": datetime.now(timezone.utc).isoformat(),
             }
@@ -964,11 +979,18 @@ def _bind_session_to(tmp_path, spines):
         _AMBIGUOUS_SESSION_ID: {
             str(spine.resolve()): {
                 "spine": str(spine.resolve()),
-                "engine_session": f"ambiguous-engine-session-{index}",
+                # None for the same reason `_work_tree` binds None (#600): none
+                # of these spines is ever claimed, so none of them has an owner
+                # at the reading end either. It also keeps this the HARDEST
+                # version of the ambiguity: unowned candidates are precisely the
+                # ones the writer still cannot attribute, so the skip under test
+                # is reached by the cause it names rather than by a distinct-
+                # owners shortcut.
+                "engine_session": None,
                 "worktree": str(tmp_path),
                 "claimed_at": datetime.now(timezone.utc).isoformat(),
             }
-            for index, spine in enumerate(spines)
+            for spine in spines
         }
     })
 
@@ -1458,3 +1480,97 @@ def test_window_invariance_the_band_is_a_function_of_absolute_tokens(tmp_path):
         f"of absolute tokens alone, which is precisely the condition that let "
         f"a wrong window mis-scale the governor in #252"
     )
+
+
+# --- #600: the OWNED chain, writer process to leased engine ------------------
+#
+# The chain above is the LEASELESS one (R3): nothing claims the spine, the
+# binding entry names no lease, and both ends agree on the unowned `gauge.json`.
+# This is its counterpart, and it is the one that covers the new behaviour --
+# the writer names the record for its owner and a LEASED engine, computing that
+# same name independently from its own lease, finds it.
+#
+# The two names are the same string by construction: the binding entry's
+# `engine_session` is parsed from the very `claim --session-id X` that creates
+# the lease, and the lease holds that same X. That is the claim under test, and
+# it is worth a process boundary because the two sides compute it in different
+# processes from different inputs -- an in-process test could share a cached
+# module and never notice a drift that would take the whole fleet's governor
+# dark in production.
+
+_OWNED_SESSION_ID = "chain-owner-to-trip-session"
+_OWNED_WORK_ID = "chainwork-owned"
+_OWNED_ENGINE_SESSION = "chain-owner-session"
+# DRIFT PIN, not a derivation: hand-computed from the owner-key algorithm, so
+# this asserts the name rather than agreeing with whatever the code produces.
+# The algorithm itself is pinned in tests/test_gauge_reader.py.
+_OWNED_GAUGE = "gauge-chain-owner-session-88570f7146b4.json"
+
+
+def test_chain_owner_keyed_reading_reaches_the_leased_engine(tmp_path):
+    """One record, written by the writer PROCESS under an owner-keyed name, read
+    back by the engine PROCESS from a name it computed independently.
+
+    ORDERING MATTERS AND IS NOT INCIDENTAL: the claim happens BEFORE the
+    transcript is sampled, so the reading is `observed_at >= claimed_at` and is
+    this session's own. Sampling first would make it pre-claim, and #601's
+    comparison would correctly decline it -- which is the SEQUENTIAL half of the
+    fix doing its job, not a failure, but it would leave this test unable to say
+    anything about the CONCURRENT half it exists for.
+    """
+    spine = _spine_tree(tmp_path, _OWNED_WORK_ID)
+
+    # --- the lease, through the real engine CLI as a fresh process -----------
+    claimed = _run_fenced(
+        [sys.executable, str(_ENGINE), "--file", str(spine), "claim",
+         "--session-id", _OWNED_ENGINE_SESSION, "--claimed-by", "agent"],
+        tmp_path)
+    assert claimed.returncode == 0, claimed.stderr
+
+    # The binding entry carries the SAME name the claim above carried, which is
+    # what production does -- spine_rail parses it out of that very command.
+    sr.save_binding(tmp_path, {
+        _OWNED_SESSION_ID: {
+            str(spine.resolve()): {
+                "spine": str(spine.resolve()),
+                "engine_session": _OWNED_ENGINE_SESSION,
+                "worktree": str(tmp_path),
+                "claimed_at": datetime.now(timezone.utc).isoformat(),
+            }
+        }
+    })
+
+    transcript = _fresh_transcript(tmp_path, sampled_at=datetime.now(timezone.utc))
+    proc = _run_writer_hook(tmp_path, transcript, session_id=_OWNED_SESSION_ID)
+    assert proc.returncode == 0, proc.stderr
+    assert proc.stdout == ""
+
+    gauge = spine.parent / _OWNED_GAUGE
+    assert gauge.exists(), (
+        f"the writer process wrote no owner-keyed gauge; the directory holds "
+        f"{sorted(p.name for p in spine.parent.iterdir())} "
+        f"(writer stderr: {proc.stderr})")
+    # the folder-owned file this issue exists to remove is NOT written
+    assert not (spine.parent / "gauge.json").exists()
+
+    written = json.loads(gauge.read_text(encoding="utf-8"))
+    # the record NAMES its owner, and that name is the one in the filename --
+    # the filename removes the collision, the field makes a mismatch detectable
+    assert written["owner"] == gauge.name[len("gauge-"):-len(".json")]
+    assert set(gr.REQUIRED_FIELDS) <= set(written)
+
+    # --- Trip, via the real engine CLI as a fresh process --------------------
+    # The engine was never told the filename. It recomputes it from the lease it
+    # is holding, so a rendered band is proof both processes agreed.
+    engine = _run_engine_current(tmp_path, spine)
+    assert engine.returncode == 0, engine.stderr
+    reading = gr.read(gauge)
+    assert reading is not None
+    soft, _hard = gr.thresholds_for(reading.model)
+    assert soft <= reading.fill_fraction, (
+        "the committed capture no longer reads at or above the soft band, so "
+        "the engine renders no advisory and this chain has nothing to trace")
+    assert "CONTEXT" in engine.stdout, (
+        f"the leased engine rendered no band from the owner-keyed reading it "
+        f"should have found at {gauge.name} -- writer and engine have drifted "
+        f"apart on how they name an owner. stdout: {engine.stdout}")

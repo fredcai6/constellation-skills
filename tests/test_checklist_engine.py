@@ -3507,8 +3507,8 @@ class TripTwoBandGatePolicy(unittest.TestCase):
     def test_unresolvable_work_id_no_base_dir_no_reading(self):
         # No base_dir -> the gauge location is unresolvable -> no reading, no advice,
         # never forces (the real _read_gauge/_gauge_path returns None on base_dir None).
-        self.assertIsNone(E._gauge_path(None))
-        self.assertIsNone(E._read_gauge(None))
+        self.assertIsNone(E._gauge_path(self.cl, None))
+        self.assertIsNone(E._read_gauge(self.cl, None))
         self.assertEqual(E._trip_advisory(self.cl, None), "")
         E._trip_hard_gate(self.cl, "g1", None)  # no raise
 
@@ -4325,33 +4325,38 @@ class StaleRecordAdvisoryTests(unittest.TestCase):
 
 class NoReadingAdvisoryDispatchTests(unittest.TestCase):
     """_no_reading_advisory tries each localizable cause in order and returns
-    the FIRST non-empty result -- the three sub-advisories are mocked
-    directly (band-structure style) since this is testing DISPATCH ORDER,
-    not any one advisory's own text."""
+    the FIRST non-empty result -- the sub-advisories are mocked directly
+    (band-structure style) since this is testing DISPATCH ORDER, not any one
+    advisory's own text.
+
+    The checklist passed in is leaseless, so it names no owner and the #600
+    owner-mismatch branch ahead of these three cannot fire -- these cases keep
+    testing exactly the order they always tested. The mismatch branch's own
+    priority is pinned by test_owner_mismatch_advisory_outranks_the_others."""
 
     def test_uncalibrated_wins_over_skip_and_stale(self):
         with mock.patch.object(E, "_uncalibrated_advisory", return_value="\nCONTEXT GAUGE OFF: x"), \
              mock.patch.object(E, "_skip_reason_advisory", return_value="\nCONTEXT GAUGE SILENT: skip"), \
              mock.patch.object(E, "_stale_record_advisory", return_value="\nCONTEXT GAUGE SILENT: stale"):
-            self.assertEqual(E._no_reading_advisory(Path(".")), "\nCONTEXT GAUGE OFF: x")
+            self.assertEqual(E._no_reading_advisory({}, Path(".")), "\nCONTEXT GAUGE OFF: x")
 
     def test_skip_reason_wins_over_stale_when_uncalibrated_empty(self):
         with mock.patch.object(E, "_uncalibrated_advisory", return_value=""), \
              mock.patch.object(E, "_skip_reason_advisory", return_value="\nCONTEXT GAUGE SILENT: skip"), \
              mock.patch.object(E, "_stale_record_advisory", return_value="\nCONTEXT GAUGE SILENT: stale"):
-            self.assertEqual(E._no_reading_advisory(Path(".")), "\nCONTEXT GAUGE SILENT: skip")
+            self.assertEqual(E._no_reading_advisory({}, Path(".")), "\nCONTEXT GAUGE SILENT: skip")
 
     def test_stale_record_is_the_last_resort(self):
         with mock.patch.object(E, "_uncalibrated_advisory", return_value=""), \
              mock.patch.object(E, "_skip_reason_advisory", return_value=""), \
              mock.patch.object(E, "_stale_record_advisory", return_value="\nCONTEXT GAUGE SILENT: stale"):
-            self.assertEqual(E._no_reading_advisory(Path(".")), "\nCONTEXT GAUGE SILENT: stale")
+            self.assertEqual(E._no_reading_advisory({}, Path(".")), "\nCONTEXT GAUGE SILENT: stale")
 
     def test_all_empty_yields_empty(self):
         with mock.patch.object(E, "_uncalibrated_advisory", return_value=""), \
              mock.patch.object(E, "_skip_reason_advisory", return_value=""), \
              mock.patch.object(E, "_stale_record_advisory", return_value=""):
-            self.assertEqual(E._no_reading_advisory(Path(".")), "")
+            self.assertEqual(E._no_reading_advisory({}, Path(".")), "")
 
 
 class TripRealGaugeFileWiring(unittest.TestCase):
@@ -4622,11 +4627,34 @@ class TripGaugeReadingOwnership(unittest.TestCase):
     from a second wall-clock read, so `before` and `after` are exact rather than
     racing the test's own runtime."""
 
-    def _write_gauge(self, d, fill, observed_at):
-        (Path(d) / "gauge.json").write_text(json.dumps({
+    #: distinguishes "caller said nothing" from "caller said None (unowned)"
+    _ACTING = object()
+
+    def _write_gauge(self, d, fill, observed_at, session_id=_ACTING,
+                     owner_field=_ACTING):
+        """Write the gauge file the ACTING SESSION owns (#600).
+
+        The gauge is no longer one file per work DIRECTORY -- it is named for
+        the session that produced it. A test that kept writing the bare
+        `gauge.json` here would be planting a file the leased engine no longer
+        reads, and every #477/#601 assertion below would start passing
+        vacuously against silence rather than against a declined reading.
+        Passing `session_id=None` writes the UNOWNED `gauge.json`, which is
+        what a LEASELESS checklist still reads, exactly as today (R3)."""
+        sid = self.SESSION if session_id is self._ACTING else session_id
+        owner = E._gauge_reader.owner_key(sid)
+        record = {
             "schema_version": 1, "fill_fraction": fill,
             "model": "claude-opus-4-8", "observed_at": observed_at,
-        }), encoding="utf-8")
+        }
+        # The filename removes the collision; the `owner` field makes a
+        # mismatch detectable if one ever reappears (R1: both, not either).
+        stamped = owner if owner_field is self._ACTING else owner_field
+        if stamped is not None:
+            record["owner"] = stamped
+        path = Path(d) / E._gauge_reader.gauge_filename(owner)
+        path.write_text(json.dumps(record), encoding="utf-8")
+        return path
 
     def _over_hard(self):
         _, hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
@@ -4823,6 +4851,119 @@ class TripGaugeReadingOwnership(unittest.TestCase):
             self.assertEqual(E.load(f)["tasks"]["g2"]["status"], "in-progress")
 
     # --- fail OPEN: no provenance means today's behaviour, exactly --------- #
+    def test_leaseless_checklist_reads_the_unowned_gauge(self):
+        """#600 R3, stated as its own pin because it is the one place
+        owner-keying could silently REMOVE coverage rather than add it.
+
+        Owner-keying applies only where a lease exists. With no lease there is
+        no owner, so the engine reads the UNOWNED `gauge.json` and trips on it
+        exactly as it does today. Going quiet here is the permit direction and
+        therefore inside this lane's latitude — but it is a real loss of
+        coverage on checklists that are governed today, and taking it as a side
+        effect of a rename is how coverage disappears without anyone deciding
+        it should. The fail-safe is "no ATTRIBUTABLE reading yields None"; it
+        must not become "no lease yields nothing".
+
+        Drives the real reader over a real file on disk through `main()`, and
+        pins the negative direction too: an OWNER-KEYED file must NOT be picked
+        up by a leaseless checklist, or this would pass for the wrong reason.
+        """
+        observed_at = (datetime.now(timezone.utc)
+                       - timedelta(minutes=9)).isoformat()
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._spine())
+            path = self._write_gauge(d, self._over_hard(), observed_at,
+                                     session_id=None)
+            self.assertEqual(path.name, "gauge.json")
+            self.assertEqual(
+                E.main(["--file", str(f), "start", "g2"]), 1,
+                "a leaseless checklist must still trip on the unowned gauge")
+
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._spine())
+            # the same over-hard reading, but named for an owner. A leaseless
+            # checklist has no owner to match it against, so it must not be
+            # read -- no reading, no trip, and NO fallback to somebody's file.
+            path = self._write_gauge(d, self._over_hard(), observed_at,
+                                     session_id="somebody-else")
+            self.assertNotEqual(path.name, "gauge.json")
+            self.assertEqual(
+                E.main(["--file", str(f), "start", "g2"]), 0,
+                "a leaseless checklist must not trip on an owned reading")
+
+    def test_a_record_stamped_for_another_owner_is_declined_and_announced(self):
+        """#600 R1: the filename removes the collision, the `owner` FIELD makes
+        a mismatch detectable if one ever reappears. Both, not either.
+
+        A record sitting in this session's own filename but stamped for someone
+        else can only be a bug -- the two sides compute the owner from the same
+        string through the same function. Declining is the quiet direction and
+        never a refusal, but declining SILENTLY would look exactly like "no
+        gauge yet", which is how #252 and #271 both survived unnoticed."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            claimed_at = self._claim(f)
+            # this session's own filename, a fresh self-measured over-hard
+            # reading, but stamped for somebody else
+            path = self._write_gauge(d, self._over_hard(),
+                                     (claimed_at + timedelta(seconds=1)).isoformat(),
+                                     owner_field="somebody-else-000000000000")
+            self.assertEqual(path.name,
+                             E._gauge_reader.gauge_filename(
+                                 E._gauge_reader.owner_key(self.SESSION)))
+
+            # not obeyed: the same reading with an honest stamp refuses `start`
+            # (test_a_self_measured_reading_over_hard_still_refuses), so a rc of
+            # 0 here is the decline and nothing else.
+            rc = E.main(["--file", str(f), "start", "g2",
+                         "--session-id", self.SESSION])
+            self.assertEqual(rc, 0)
+
+            # and not silent
+            import contextlib, io
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                E.main(["--file", str(f), "current"])
+            out = buf.getvalue()
+            self.assertIn("CONTEXT GAUGE DECLINED", out)
+            self.assertIn("somebody-else-000000000000", out)  # what it claims
+            self.assertIn(self.SESSION, out)                  # who is driving
+            self.assertNotIn(">= hard", out)
+
+    def test_a_record_with_no_owner_field_is_not_treated_as_a_mismatch(self):
+        """Every gauge file written before #600 carries no owner, and they must
+        keep working -- absence is not disagreement."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            claimed_at = self._claim(f)
+            self._write_gauge(d, self._over_hard(),
+                              (claimed_at + timedelta(seconds=1)).isoformat(),
+                              owner_field=None)
+            self.assertEqual(E.main(["--file", str(f), "start", "g2",
+                                     "--session-id", self.SESSION]), 1)
+
+    def test_owner_mismatch_advisory_outranks_the_others(self):
+        """It is the only cause on that dispatcher that can only be a DEFECT
+        rather than a condition, so it must not be buried under a description of
+        a gauge that is working correctly and has nothing to say."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            claimed_at = self._claim(f)
+            self._write_gauge(d, self._over_hard(),
+                              (claimed_at + timedelta(seconds=1)).isoformat(),
+                              owner_field="somebody-else-000000000000")
+            cl = E.load(f)
+            with mock.patch.object(E, "_uncalibrated_advisory",
+                                   return_value="\nCONTEXT GAUGE OFF: x"), \
+                 mock.patch.object(E, "_skip_reason_advisory",
+                                   return_value="\nCONTEXT GAUGE SILENT: skip"), \
+                 mock.patch.object(E, "_stale_record_advisory",
+                                   return_value="\nCONTEXT GAUGE SILENT: stale"):
+                out = E._no_reading_advisory(cl, Path(d))
+            self.assertIn("CONTEXT GAUGE DECLINED", out)
+
     def test_no_lease_at_all_behaves_exactly_as_today(self):
         """Every gauge.json in the wild predates this guard and most checklists
         are driven with no lease at all. With nothing to measure ownership
@@ -4833,12 +4974,14 @@ class TripGaugeReadingOwnership(unittest.TestCase):
             E.save(f, self._spine())
             self._write_gauge(d, self._over_hard(),
                               (datetime.now(timezone.utc)
-                               - timedelta(minutes=9)).isoformat())
+                               - timedelta(minutes=9)).isoformat(),
+                              session_id=None)
             self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 1)
 
     def test_a_released_lease_behaves_exactly_as_today(self):
         """A released lease names nobody currently driving, so it cannot be the
-        anchor for whose reading this is."""
+        anchor for whose reading this is — and, since #600, cannot name the
+        file either, so this reads the unowned gauge."""
         with tempfile.TemporaryDirectory() as d:
             f = Path(d) / "spine.json"
             cl = self._spine()
@@ -4847,7 +4990,8 @@ class TripGaugeReadingOwnership(unittest.TestCase):
             cl["engine_session"]["status"] = "released"
             E.save(f, cl)
             self._write_gauge(d, self._over_hard(),
-                              (claimed_at - timedelta(minutes=9)).isoformat())
+                              (claimed_at - timedelta(minutes=9)).isoformat(),
+                              session_id=None)
             self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 1)
 
     def test_an_unparseable_claimed_at_behaves_exactly_as_today(self):
