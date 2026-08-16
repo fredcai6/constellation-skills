@@ -142,7 +142,34 @@ def main(argv: list[str] | None = None) -> int:
         try:
             actual = current_toplevel()
         except RuntimeError as exc:
+            # #602. git's own words here are true and useless: "fatal: not a git
+            # repository" describes the launcher's cwd, and the caller -- who
+            # passed an absolute path and is running this as the first line of a
+            # launch order -- reads it as "isolation failed". Say what it means
+            # for THIS check instead, and keep git's text so the real error is
+            # never hidden.
+            #
+            # Do NOT "fix" this by running git against EXPECTED (`git -C`, or
+            # cwd=EXPECTED). cwd is the SUBJECT of this check, not a path base:
+            # forcing it makes the comparison EXPECTED == EXPECTED, true for any
+            # valid worktree, and disarms the gate. Measured in #315 / PR #576 --
+            # a naive cwd fix turned a real refusal into a clean advance for a
+            # Commander standing in the wrong checkout, which is why
+            # `IsolationGateSurvivesThroughTheCLI` exists.
             print(str(exc), file=sys.stderr)
+            print(
+                f"--here asserts about the directory you are STANDING IN, not "
+                f"about {args.here}. You are not inside a git repository, so "
+                f"there is nothing to compare — `cd {args.here}` first, then run "
+                f"this again.",
+                file=sys.stderr,
+            )
+            if not os.path.isdir(args.here):
+                print(
+                    f"Separately: {args.here} does not exist as a directory, so "
+                    f"the worktree you were assigned has not been created.",
+                    file=sys.stderr,
+                )
             return 1
         ok, reason = check_here(actual, args.here)
         if ok:

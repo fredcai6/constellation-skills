@@ -166,6 +166,79 @@ class TestWorktreePathForRealWorktree:
         assert Path(got).resolve() == ROOT.resolve()
 
 
+@requires_git
+class TestDefaultLayoutAgainstAConstructedTopology:
+    """#598 (closeout reconcile tc5) — the SAME composition as the class above,
+    against a topology this test builds, so it runs where anyone actually
+    measures.
+
+    `TestWorktreePathForRealWorktree` reads the ambient checkout, and its skip is
+    correct in itself: a hardcoded work id passes only from one checkout. The
+    consequence was not. The suite normally runs from the PRIMARY checkout, so
+    that test skipped in every routine run and `_default_wt_root` composed with
+    `worktree_path_for` was exercised by nothing — while worktree location became
+    load-bearing engine identity (`origin.worktree` is immutable once stamped,
+    #577), was given a single owner (#585), and then had to be repaired when the
+    nesting it introduced weakened `origin_worktree_refusal` (#588). The one test
+    that would catch a regression in how that path is computed did not run where
+    anyone was looking.
+
+    Building the topology instead of finding it removes the skip: this is the
+    pattern `tests/test_worktree_precondition_wiring.py::IsolationGateSurvivesThroughTheCLI`
+    established for the same reason.
+    """
+
+    def _worktree_at(self, primary: Path, slug: str) -> Path:
+        """Create the worktree at the LITERAL documented layout,
+        `<primary>/.worktrees/<slug>`.
+
+        Deliberately not `sl._default_wt_root(primary) / slug`: computing the
+        expected path with the function under test moves both sides of the
+        assertion together and passes for any implementation whatsoever. That is
+        the tautology #315 was blocked on and PR #576 landed a guard against, and
+        the first draft of this class reproduced it -- a regression to the old
+        sibling layout was caught by only one of the two tests here until this
+        helper stopped asking the code where it thought the worktree went.
+        """
+        target = primary / ".worktrees" / slug
+        subprocess.run(
+            ["git", "-C", str(primary), "worktree", "add", "-q",
+             str(target), "-b", slug],
+            check=True, capture_output=True,
+        )
+        return target
+
+    def test_the_default_layout_names_where_git_actually_puts_a_worktree(self, tmp_path):
+        """The composition under test is `_default_wt_root` -> `worktree_path_for`.
+        Its answer must be the path a real `git worktree add` produced, not a
+        string that merely looks right."""
+        primary = tmp_path / "proj"
+        _init_repo(primary)
+        created = self._worktree_at(primary, "issue-999")
+
+        got = sl.worktree_path_for("issue-999", wt_root=sl._default_wt_root(primary))
+
+        assert Path(got).resolve() == created.resolve()
+        # And git agrees it is a real linked worktree, not just a directory.
+        assert str(created.resolve()) in _porcelain(primary).replace("\\", "/") or \
+            str(created) in _porcelain(primary)
+
+    def test_a_nested_work_id_lands_beside_its_siblings(self, tmp_path):
+        """`worktree_path_for` takes only the last segment, so an epic-scoped
+        work id must not nest a directory per segment under `.worktrees/`. That
+        is the shape that produced the stray `constellation-skills-wt/s` and `/t`
+        directories a path-construction bug left on disk (#586)."""
+        primary = tmp_path / "proj"
+        _init_repo(primary)
+        created = self._worktree_at(primary, "issue-1000")
+
+        got = sl.worktree_path_for("epic-568/issue-1000",
+                                   wt_root=sl._default_wt_root(primary))
+
+        assert Path(got).resolve() == created.resolve()
+        assert Path(got).parent.name == ".worktrees"
+
+
 class TestBranchNameFor:
     def test_verbatim(self):
         assert sl.branch_name_for("epic-100/sample-slug") == "epic-100/sample-slug"

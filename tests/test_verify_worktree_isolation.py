@@ -1,4 +1,6 @@
+import contextlib
 import importlib.util
+import io
 import os
 import shutil
 import subprocess
@@ -210,6 +212,44 @@ class GitFailureTests(unittest.TestCase):
         # any repo): the gate must return 1 cleanly, never raise.
         os.chdir(self.tmp.name)
         self.assertEqual(self.m.main([self.tmp.name]), 1)
+
+    # --- #602: rc=1 is right, git's wording is not ------------------------- #
+    # This is the first command in every launch order. Run before `cd`, it says
+    # "fatal: not a git repository", which a Commander reads as "you are not
+    # isolated" when the truth is "you have not arrived yet". The verdict stays
+    # 1; what changes is that the caller can act on it.
+    def _here_stderr(self, expected):
+        os.chdir(self.tmp.name)
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            rc = self.m.main(["--here", expected])
+        return rc, err.getvalue()
+
+    def test_here_outside_a_repo_says_cd_first_and_keeps_gits_text(self):
+        target = os.path.join(self.tmp.name, "assigned-worktree")
+        os.makedirs(target)
+        rc, err = self._here_stderr(target)
+        self.assertEqual(rc, 1)
+        self.assertIn("STANDING IN", err)
+        self.assertIn(f"cd {target}", err)
+        # git's own error is kept: the caller must still be able to see the raw
+        # failure rather than only our interpretation of it.
+        self.assertIn("not a git repository", err)
+
+    def test_here_outside_a_repo_also_reports_a_missing_target(self):
+        """Two different problems answer the same rc=1, and the caller cannot
+        act without knowing which. A path that was never created is the
+        Admiral's provisioning failure, not the Commander's location."""
+        missing = os.path.join(self.tmp.name, "never-created")
+        rc, err = self._here_stderr(missing)
+        self.assertEqual(rc, 1)
+        self.assertIn("does not exist as a directory", err)
+
+    def test_here_does_not_report_a_missing_target_when_it_exists(self):
+        target = os.path.join(self.tmp.name, "assigned-worktree")
+        os.makedirs(target)
+        _, err = self._here_stderr(target)
+        self.assertNotIn("does not exist as a directory", err)
 
 
 if __name__ == "__main__":

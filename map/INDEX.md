@@ -4,7 +4,7 @@
 evals: 12 modules, 54 entities
 scripts: 58 modules, 1197 entities
 skills: 1 modules, 18 entities
-tests: 81 modules, 4657 entities
+tests: 81 modules, 4665 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -102,7 +102,7 @@ tests: 81 modules, 4657 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (81 modules, 4657 entities)
+## tests (81 modules, 4665 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -171,7 +171,7 @@ tests: 81 modules, 4657 entities
 - [tests.test_run_skill_eval](tests.test_run_skill_eval/INDEX.md) (121 entities, 106 holes): Agent-free unit layer for scripts/run_skill_eval.py (#106, gate g2).
 - [tests.test_shipped_check_commands_resolve](tests.test_shipped_check_commands_resolve/INDEX.md) (14 entities, 10 holes): Every shipped command check must actually run after instantiation (epic-559/b-instructions-to-checks, rework r3).
 - [tests.test_shipped_template_gates_satisfiable](tests.test_shipped_template_gates_satisfiable/INDEX.md) (8 entities, 7 holes): Prove the shipped EXECUTE_PLAN.template.json's g1-implement gate is actually satisfiable by a real drive of the real engine (epic-559/b-instructions-to-checks, 
-- [tests.test_spine_lifecycle](tests.test_spine_lifecycle/INDEX.md) (109 entities, 102 holes): Tests for scripts/spine_lifecycle.py -- open and close Constellation work in one call each.
+- [tests.test_spine_lifecycle](tests.test_spine_lifecycle/INDEX.md) (113 entities, 102 holes): Tests for scripts/spine_lifecycle.py -- open and close Constellation work in one call each.
 - [tests.test_spine_origin_isolation](tests.test_spine_origin_isolation/INDEX.md) (69 entities, 43 holes): Engine-native worktree isolation: the `origin` stamp and the refusal it feeds (#315/#568).
 - [tests.test_spine_provenance_check](tests.test_spine_provenance_check/INDEX.md) (34 entities, 32 holes): Provenance hardening for the eval `spine_completed` process check (issue #127).
 - [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (176 entities, 90 holes): Unit tests for scripts/hooks/spine_rail.py.
@@ -183,7 +183,7 @@ tests: 81 modules, 4657 entities
 - [tests.test_verify_installed_bundles](tests.test_verify_installed_bundles/INDEX.md) (18 entities, 11 holes): Tests for scripts/verify_installed_bundles.py -- the copy-vs-source check.
 - [tests.test_verify_spec_confirmed](tests.test_verify_spec_confirmed/INDEX.md) (37 entities, 32 holes): HOLE: no docstring
 - [tests.test_verify_spec_confirmed_cli](tests.test_verify_spec_confirmed_cli/INDEX.md) (7 entities, 6 holes): CLI-level regression coverage for verify_spec_confirmed.py's confirm-gate refusal.
-- [tests.test_verify_worktree_isolation](tests.test_verify_worktree_isolation/INDEX.md) (36 entities, 36 holes): HOLE: no docstring
+- [tests.test_verify_worktree_isolation](tests.test_verify_worktree_isolation/INDEX.md) (40 entities, 39 holes): HOLE: no docstring
 - [tests.test_wire_mcp_interpreter](tests.test_wire_mcp_interpreter/INDEX.md) (16 entities, 16 holes): Tests for scripts/wire_mcp_interpreter.py (M2 job 2, widened M2 g4-repair).
 - [tests.test_work_id_nesting](tests.test_work_id_nesting/INDEX.md) (43 entities, 16 holes): A work-id may NEST, and four tools used to disagree about that.
 - [tests.test_worktree_precondition_wiring](tests.test_worktree_precondition_wiring/INDEX.md) (15 entities, 13 holes): Deliberate-breakage tests for a worktree-isolation precondition (#329/#422).
