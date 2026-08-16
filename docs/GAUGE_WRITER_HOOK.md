@@ -69,7 +69,23 @@ collision, the field makes a mismatch DETECTABLE if one ever reappears.
 **Identity fixes the CONCURRENT case; time fixes the SEQUENTIAL one, and both
 are permanent.** #601's timestamp comparison is not superseded and must not be
 removed: a relaunched agent reuses its predecessor's lease name *by design*, so
-no identity scheme can tell the two legs apart.
+no identity scheme can tell the two legs apart. For the same reason
+`decision:identity-not-time` is **not complete**: an agent holding no lease is
+still unattributable, and closing that needs the *harness* identity passed into
+the engine — out of scope for #600 and stated here so it is not mistaken for
+done.
+
+**#549 does not remove the need for this, and that was measured rather than
+argued.** It is a reasonable guess that lane C's #549 — which stopped
+`decide_stop` rendering a subordinate's next imperative into a shared-session
+Stop-block — had already closed the route into this collision. It had not. The
+clean isolate is `main` at `d7b911a7`, which carries #549 and **not** #600:
+re-running the pre-fix cross-key probe there still reports the orchestrator's
+`0.9` overwriting the dispatched agent's `0.02` at one path, with
+`observed_at > claimed_at` so the #477/#601 guard still does not fire. **#549
+removed one route into the collision; the mechanism was untouched.** Co-located
+sessions collide with no orchestrator/subagent relationship at all, which is why
+keying on identity — rather than pruning one path into it — is what closes this.
 
 **The owner key is defined ONCE, in `scripts/gauge_reader.py`** (`owner_key`,
 `gauge_filename`), and this hook loads that module by path to reach it. It has

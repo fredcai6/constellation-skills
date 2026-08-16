@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "files": [],
+  "repo_rev": {
+    "commit": "95fe848ce2036b5aad890127cbed383cd3277d67"
+  },
+  "run": {
+    "work_id": "cleanup-b-context-identity",
+    "generated_at": "2026-08-16T14:54:22Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-workbench",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-b-context-identity"
+    }
+  }
+}
