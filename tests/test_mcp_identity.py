@@ -17,11 +17,15 @@ string-matched around; a wrapper is verified by actually calling through it.
 Mechanism disambiguation, kept explicit (do not conflate these two facts):
 
   - DC3 is about THE DOOR: `mcp_spine_server.py` binds its ambient state
-    (SPINE_FILE, SPINE_ENGINE, SPINE_SESSION) from the environment at
-    server-launch time -- the module's own docstring calls this "the seam
-    identity rides on". DC3 asks whether a subagent given no special
-    configuration can reach a server bound to that seam through the
-    PARENT's own values.
+    (SPINE_FILE, SPINE_ENGINE, SPINE_SESSION) from the environment when the
+    server launches, and that environment seam is what DC3 measures -- it
+    asks whether a subagent given no special configuration can reach a
+    server bound that way through the PARENT's own values. (Since issue #603
+    the launch is no longer the only binding moment: a successful
+    `spine_open` rebinds the process via `_bind_process_to`. That path mints
+    a NEW spine for a door that had none, so it cannot hand a child the
+    parent's identity, and it is out of DC3's scope rather than a second
+    thing measured here.)
   - It is a SEPARATE, CLI/engine-lease fact that two different callers can
     pass the identical free-text `--session-id` string to `checklist_engine
     claim` (a convention at the argument-passing layer, e.g. two crews in one
@@ -545,8 +549,12 @@ class DC3PositiveControlTests(unittest.TestCase):
 
 class DC3InheritanceMechanismTests(unittest.TestCase):
     """DC3, at the seam `mcp_spine_server.py`'s own module docstring names:
-    'Ambient state is bound at server-launch time from the environment ...
-    that is the seam identity rides on.' This class measures whether a
+    'Ambient state is bound at launch OR at `spine_open` -- at launch from the
+    environment ...' -- and it is that launch-from-the-environment half that is
+    the seam identity rides on here. (The `spine_open` half, issue #603, binds
+    a process that had no spine to the one it just minted; it does not deliver
+    a PARENT's identity to a child, which is what this class measures.) This
+    class measures whether a
     process launched the way a subagent with NO special MCP configuration
     would be launched -- inheriting whatever environment its caller already
     has, no explicit `--mcp-config` of its own -- can end up reading a

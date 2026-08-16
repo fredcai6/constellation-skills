@@ -27,9 +27,15 @@ cwd-independent, and the helpers that ask git a question still pass `cwd`
 explicitly -- more strictly than before, since the process's own cwd is now a
 thing that moves.
 
-Ambient state is bound at server-launch time from the environment, NOT exposed
-as tool arguments (so a model cannot point the door at a different spine or
-identity mid-conversation):
+Ambient state is bound at launch OR at `spine_open` -- at launch from the
+environment, and thereafter by `_bind_process_to`, the one place `SPINE` and
+`SESSION` are assigned outside module scope, when a successful `spine_open`
+binds this process to the spine it just minted
+(`decision:bind-on-open-over-new-verb`, issue #603). What did NOT change is
+that neither is ever exposed as a tool argument, so a model still cannot point
+the door at a different spine or identity mid-conversation, and `_rebind_refusal`
+still blocks the swap while this process holds an active lease -- one spine per
+process stands. The values:
   SPINE_FILE    -- the --file every engine call needs
   SPINE_ENGINE  -- path to checklist_engine.py (this repo's own copy; dogfooding
                    convention -- see checklist-engine.md "Dogfooding on the
@@ -125,11 +131,16 @@ untouched.
 Their identity postures are opposite, matching `spine_open` acting on a spine
 that does not exist yet and `spine_close` acting only on the one this door is
 already bound to: `spine_open` never references `SPINE`, `SESSION` or
-`run_engine` (checked, not merely claimed -- see `tests/test_mcp_lifecycle.py`),
-deriving the primary checkout it opens work from fresh off `SPINE_FILE`
-(ambient, server-launch-time state) rather than the module's own `SPINE`
-binding; `spine_close` takes no arguments at all and acts on `SPINE` alone,
-because there is no field to redirect.
+`run_engine` in its OWN source (checked, not merely claimed -- see
+`tests/test_mcp_lifecycle.py`), taking the primary checkout it opens work from
+`_primary_checkout_for_lifecycle` instead. That helper reads no environment at
+all -- not `SPINE_FILE`, not anything: it anchors on the BOUND spine's own
+directory when there is one, and on THIS SCRIPT's own when there is not. The
+identifier ban is on `_spine_open`'s own source, which that helper is not, so
+what the ban buys is that no ARGUMENT on the call can redirect the open onto
+the bound spine -- never that the bound spine is invisible to the tool.
+`spine_close` takes no arguments at all and acts on `SPINE` alone, because
+there is no field to redirect.
 """
 from __future__ import annotations
 

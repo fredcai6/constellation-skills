@@ -332,13 +332,7 @@ class SpineOpenContainmentTests(unittest.TestCase):
 
         original_open_work = module.spine_lifecycle.open_work
         module.spine_lifecycle.open_work = spy
-        # `_spine_open` deliberately RE-READS `SPINE_FILE` from the environment
-        # at call time (never the module's own bound `SPINE` -- that is the
-        # whole point of the identity pin above), so it must still be set now,
-        # not merely during `_load_module`'s own import (which already
-        # restored the surrounding environment by the time this line runs).
         saved_spine_file = os.environ.get("SPINE_FILE")
-        os.environ["SPINE_FILE"] = str(bound_spine)
         try:
             result = module._spine_open({
                 "work_id": "attack/..",
