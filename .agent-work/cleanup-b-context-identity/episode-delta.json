@@ -1,0 +1,277 @@
+{
+  "work_id": "cleanup-b-context-identity",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-b-context-identity",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/cleanup-b-context-identity/execute.json",
+        "refusals": 7,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 5,
+        "artifact-ref": [
+          ".agent-work/cleanup-b-context-identity/ADMIRAL_RULING-2.md",
+          ".agent-work/cleanup-b-context-identity/crew-handoffs/g1-reviewer-handoff.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Dispatch the g1 reviewer against the already-written handoff, under a gate imperative frozen at plan time whose check (d) required that two distinct owners in one work directory BOTH write."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The frozen gate imperative and the governing Admiral ruling would agree, so the reviewer could be pointed at the gate's checks (a)-(i) as written."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "They disagreed: ADMIRAL_RULING-2.md was written after execute.json was frozen and amended R4's fourth row from write-every-candidate to skip-plus-sidecars, so check (d) demanded behaviour the Admiral had already ruled wrong, and a reviewer following it literally would have blocked the change for matching the ruling."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The hand-edit ban on execute.json is absolute and the gate could not be corrected in place, so the amendment was relayed through the reviewer handoff instead, costing an amendment section, an edit to the departure list, and a note that the superseded clause must not be raised as a finding."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The handoff is writable where the frozen gate is not, so it carried the amendment: it named the superseded clause explicitly, restated the two obligations the Admiral held to, and the reviewer verified the amended behaviour and recorded departure 1 as resolved rather than adjudicating it."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "A ruling can be amended after the plan that cites it is frozen, and the engine offers amend and reopen for changing gates but nothing for recording that a gate's own text has been superseded by a higher authority."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-b-context-identity",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/cleanup-b-context-identity/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/cleanup-b-context-identity/crew-handoffs/g1-reviewer-handoff.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Merge main into the branch as the launch order required, then dispatch the reviewer with the already-written g1-reviewer-handoff.md exactly as the launch order instructed."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A handoff written one leg earlier would still describe the tree the reviewer was about to inspect."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The merge invalidated two of its instructions: its diff range git diff a69bbac4 would have handed the reviewer lane C's and lane D's changes mixed in with the one under review, and its stated main baseline of 3057 was three commits stale while LAUNCH_ORDER-3's own 3089 was also superseded."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Dispatching literally as instructed would have produced a review of the wrong diff against the wrong baseline, which the reviewer could not have detected from inside its own handoff."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The handoff was corrected before dispatch to scope the diff to the single commit 3bc87e93 and to carry a gate-time re-measured baseline, and the reviewer's Workflow Feedback afterwards named that correction as the thing that saved it from reviewing lanes C and D as this lane's work."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "A handoff naming a merge base rather than the commit under review goes stale the moment the branch takes a merge, while a handoff naming the commit does not."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-b-context-identity",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/cleanup-b-context-identity/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 2,
+        "artifact-ref": [
+          ".agent-work/cleanup-b-context-identity/measurement/probe_cross_key.py",
+          ".agent-work/cleanup-b-context-identity/measurement/README.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Update measurement/probe_cross_key.py at g1-integrate so the archived artifact asserts the post-fix world, then confirm the new assertion is load-bearing by running it against a real pre-fix worktree at 3bc87e93 caret rather than trusting that it would fail."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The red-direction run would merely confirm the probe refuses on a tree that predates the fix, adding little beyond the green run already observed."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "It exposed a real defect in the probe's own module loader: _load never registered the loaded module in sys.modules, which dataclass frozen field resolution requires, and it raised AttributeError NoneType object has no attribute __dict__ on the pre-fix tree while working fine on the post-fix tree because the post-fix hook loads gauge_reader first and registers it as a side effect."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The bug was invisible in exactly the world the probe was written for, so a green-only verification would have shipped a measurement artifact that breaks the first time anyone runs it anywhere else; catching it cost two failed runs and a three-line fix."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Registering the module in sys.modules before exec_module fixed the load, and a second observation followed: the probe then failed on the pre-fix tree for a different and legitimate reason, so it now detects the missing owner_key API and prints a refusal naming the pre-fix record instead of dying with a traceback."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "A path-loaded module that is also loaded by something else in the same process inherits that other loader's sys.modules registration, so its own omission stays invisible until it runs somewhere that other loader does not."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-b-context-identity",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/cleanup-b-context-identity/measurement/README.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/cleanup-b-context-identity/measurement/probe_cross_key.lane-c-remeasure.out"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Report whether lane C's #549 landed while this lane worked and, per the gate imperative, re-run the probe rather than assuming either way whether it had removed the collision this lane exists to fix."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "ADMIRAL_NOTE-lane-C-landed.md read #549 as removing one route into the collision but not the mechanism, and that reading was the working assumption going into the gate."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Measured on the clean isolate, main at d7b911a7 which carries #549 and not #600, the original pre-fix probe still printed VERDICT CANDIDATE 2 CONFIRMED with the orchestrator's 0.9 overwriting the dispatched agent's 0.02 at one path and observed_at greater than claimed_at so the #477/#601 guard still did not fire."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The collision reproduced unchanged with #549 present, confirming the Admiral's reading by measurement and settling that #600 was still load-bearing after lane C landed, at the cost of one detached worktree and one probe run."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "A commit that carries one change and not the other was used as the isolate, so the question could be answered by measurement rather than by reasoning about what #549 touched."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-b-context-identity",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/cleanup-b-context-identity/G2_BOUNDARY_DECLARATION.md",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/cleanup-b-context-identity/G2_BOUNDARY_DECLARATION.md",
+          ".agent-work/cleanup-b-context-identity/gauge-commander-cleanup-b-context-iden-88c76234484d.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Decide at the g2-implement-500 boundary whether #500 ships this wave or is handed back as a settled design, and declare the decision with the context reading it rests on before starting either branch."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The decision would be the Commander's judgement call about remaining budget, argued rather than measured."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The engine made it instead, refusing start g2-implement-500 with context at 17 percent is at or over the hard limit, and the reading it fired on came from this leg's own owner-keyed gauge file carrying owner commander-cleanup-b-context-iden-88c76234484d, which is attributable only because of the #600 change this same wave shipped."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "No code shipped for #500 and DESIGN_500.md returned accepted and unchanged for the third time, but the boundary declaration rests on a named measurement rather than on an estimate, and before 3bc87e93 the same trip would have been unattributable because three distinct harness keys are bound to this one spine."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The gate's authored HAND-BACK branch was taken and closed through the engine's skip verb with the refusal quoted as the reason, rather than treating a refusal to begin as a reason to abandon the gate unrouted."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "weak",
+          "statement": "A governor keyed to the agent rather than the folder can be cited as evidence by the agent it governs, which a folder-keyed reading could not support."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-b-context-identity",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "reconcile",
+        "context-manifest-ref": ".agent-work/cleanup-b-context-identity/spine.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "docs/GAUGE_WRITER_HOOK.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Rebuild map/INDEX.md and run the code-map freshness check at the reconcile step, then commit the reconciled structural record."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The only modified files at that point would be the ones this step had deliberately touched."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "git status also showed .mcp.json modified, changing the spine server command from python3 to py, which is a file the launch order fences to lane A and which nothing in this lane had any authority to touch."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "A blind git add -A at that moment would have committed a fenced-file violation into the lane's own branch, and the change appeared without any step of this run having requested it."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The file was reverted with git checkout before staging, and the revert recorded in the reconcile commit message rather than left silent, after reading the diff instead of trusting the file list."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "weak",
+          "statement": "Something in the run's tooling rewrites .mcp.json's interpreter field as a side effect, since no step of this run edited it and the change matches the interpreter this environment uses."
+        }
+      ]
+    }
+  ]
+}
