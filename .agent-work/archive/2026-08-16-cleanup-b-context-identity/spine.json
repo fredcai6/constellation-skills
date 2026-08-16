@@ -662,13 +662,14 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py cleanup-b-context-identity --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -679,6 +680,17 @@
           "payload": {
             "seam": "feedback",
             "why_ref": "w-8"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-feedback-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py cleanup-b-context-identity --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
           },
           "produced_by": "engine",
           "ts": ""
@@ -695,7 +707,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "feedback complete: six episodes recorded and verified, FEEDBACK.md written, committed."
         }
       ],
       "postconditions": [
@@ -773,11 +786,22 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "archive",
+            "why_ref": "w-9"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -825,7 +849,7 @@
     "session_id": "commander-cleanup-b-context-identity",
     "status": "active",
     "claimed_at": "2026-08-16T14:52:43.039579+00:00",
-    "last_heartbeat": "2026-08-16T15:02:02.460306+00:00",
+    "last_heartbeat": "2026-08-16T15:02:40.431782+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -887,6 +911,13 @@
       "why": "Run summary written to RUN_SUMMARY.md and accepted in delegated mode by a user-decision citing LAUNCH_ORDER:Return Shape; the Admiral ratifies at the epic return boundary. #600 shipped, reviewed APPROVE, integrated with a ZERO failure-set difference; #500 handed back on the engine's own refusal with the design accepted and unchanged; six triage candidates routed and none filed without authority; the architecture record reconciled directly and a fenced .mcp.json violation caught and reverted rather than shipped. The summary says what is not done as plainly as what is: T1 clears the fix-now ladder and is still unfixed, and decision:identity-not-time remains incomplete.",
       "mechanical": false,
       "ts": "2026-08-16T14:59:52.334692+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Six episodes recorded via apply_episode_delta.py --store-root episodes (the only write path; nothing under episodes/ hand-edited) and proved by verify_episode_captured.py --phase feedback, which found all six for this work id. They are records rather than rules, one per distinct thing that happened. FEEDBACK.md carries the reflection the gate asks for: one deliberate departure (relaying the ADMIRAL_RULING-2 amendment through the reviewer handoff, because the frozen gate could not be corrected in place and its check (d) demanded superseded behaviour), one near-miss (the main merge invalidated the already-written handoff's diff range and baseline, and dispatching literally as the launch order said would have reviewed the wrong diff), three doc gaps that three agents hit independently (--session-id on every mutating verb, record-not-advance on a survey, and REPLAN_INPUT's completed_outcomes partitioning against ISSUE ids), and the crew Workflow Feedback harvested from g1-review. The 'none' answers are confirmed rather than bare: no gate skipped and no evidence fabricated, checked by re-running the reviewer's own commands, driving the probe in both directions against a real pre-fix worktree, and measuring both suite sides at gate time. No durable-root feedback export was fenced this run -- the launch order fences specific files, not the main checkout -- so no staged-feedback directory was needed.",
+      "mechanical": false,
+      "ts": "2026-08-16T15:02:16.653486+00:00"
     }
   ],
   "trip_ledger": [
@@ -944,6 +975,17 @@
       "model": "claude-opus-5",
       "why_ref": "w-8",
       "ts": "2026-08-16T15:02:02.435830+00:00"
+    },
+    {
+      "id": "tl-6",
+      "gate": "archive",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2436,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-9",
+      "ts": "2026-08-16T15:02:40.409946+00:00"
     }
   ]
 }
