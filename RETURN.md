@@ -1,20 +1,63 @@
 # RETURN — `cmdr-567-a` (#559 anchor · bind-own-spine gap · #613 atomicity half)
 
-> **DRAFT IN PROGRESS.** Sections 5, 7, 8 and 9 are filled as the gates close.
-> Everything else is final. The Admiral should read section 3 first — it is the
-> artifact the human converges on.
-
 Worktree `/home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity`,
-branch `feat/567-a-spine-identity`, base `600de020`.
+branch `feat/567-a-spine-identity`, base `600de020`. **Not merged.**
+
+**Read §3 first.** It is the artifact the human converges on, and
+`decision:convergence-is-human-only` means the design pick below is *not* settled by my
+having recommended it.
 
 ## 1. Verdict
 
-*(pending final gates — provisional)* The lane's defect is **one missing verb, not a
-missing mechanism**: the door can already rebind safely, and the only caller of its
-one sanctioned rebinder mints new work. I reproduced the anchor defect in my own
-process at step one, converged a three-candidate panel onto a named hybrid, and found
-by measurement that the winning candidate's own session derivation would have refused
-**92% of live spines including the two the mission names**.
+**Delivered, with one design question the human must rule on and one honest weakness.**
+
+The lane's defect was **one missing verb, not a missing mechanism.** The previous lane had
+already made the door safely rebindable — `_bind_process_to` as the single named identity
+mutator, all four import-time derivations late-bound, `_unbound_refusal` deliberately
+uncached, and a module-wide AST pin over the assignment set. Its only caller was
+`spine_open`, which **mints**. Nothing bound a door to a spine that already exists.
+
+Shipped:
+
+- **`spine_bind(spine_file)`** — a door tool that binds to an existing spine, confined to
+  `<the door's own checkout>/.agent-work/` with a cross-checkout refusal. Property:
+  **one checkout's work-area tree per process.**
+- **`checklist_engine.save()` is atomic** — unique `mkstemp` sibling, mode preserved,
+  `fsync` before the rename, temp unlinked in a `finally`. #613's atomicity half, and only
+  that half.
+- 1,432 lines of new tests across three new modules; full suite green.
+
+Four things I would want read even if nothing else is:
+
+1. **I ran the winning candidate's own falsifier and it failed.** Candidate A derived the
+   session from `origin.work_id`; only **4 of 52** live spines carry it, and the two that
+   do not include *the Admiral's own spine* and *`IMPLEMENTER_PLAN.json`* — the exact cases
+   the mission names. My own spine does carry it, so a self-test would have passed while
+   the mission failed. Corrected to fall back to the top-level `work_id`: **52/52**.
+2. **A cold critic inverted my central argument, and it was right.** I disqualified
+   candidate C on a measured 683-target reach and crowned candidate A on an *unmeasured*
+   one that was actually **4205, of which 3505 were other lanes' checkouts** — because
+   `_primary_checkout_for_lifecycle()` resolves `--git-common-dir`. Narrowed to **683,
+   cross-checkout 0**. My isolation section had also asserted, 18 lines apart, both that a
+   sibling worktree's spine was reachable and that another checkout was not.
+3. **My fix would have shipped untested, and the tests would have been green.** The
+   implementing crew mutation-tested its own work: swapping the wide root back in left the
+   **whole suite passing**, because every fixture built a *primary* checkout — where
+   `--show-toplevel` and `--git-common-dir` return the same path. They diverge only inside
+   a linked worktree. A missing *topology*, not a missing test. Fixed with a
+   linked-worktree fixture plus a non-vacuity control; all three root mutations now red.
+4. **My gate plan could not detect its own success.** All four of its command
+   postconditions passed at base with zero code written. Amended through the engine, and I
+   verified the new ones fail at base.
+
+**The honest weakness:** net line count goes **up** (13,129 insertions / 112 deletions).
+What this lane deletes is one refusal clause and *the reason the epic's 15 CLI-fallback
+clauses and 11 `<engine>` tokens cannot be deleted*. Against a `settled/human`
+`decision:net-deletion`, the human may reasonably judge that insufficient — see §7.
+
+**The question I most want ruled** (§3): is `IDENTITY_TRADE.md` §2's confinement property
+**amendable**? If "the door cannot be pointed at another run's spine" is settled rather than
+a recorded trade, this design is dead as written whatever its internals look like.
 
 ## 2. Isolation evidence
 
