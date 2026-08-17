@@ -1,0 +1,10 @@
+Run complete. Summary:
+
+**Lane F (#535 "reveal the spec through the spine, not the launch order") — evidenced honest null.**
+
+- Drove the full commander-delegated spine (init→context→understand→plan→execute→reconcile→triage→review→feedback→archive) through the MCP door to terminal, lease released.
+- Measurement: `scripts/run_crew.py`'s CLI-backend spine-only dispatch (handoff-optional, identity derived from `work_id`) is already shipped — this very session was launched exactly that way, live proof. **Zero diff to `scripts/run_crew.py`.**
+- Two real, adjacent gaps found and floated to the Admiral (not built — outside this lane's file ownership): `ExternalBackend` refuses spine-only dispatch by design, blocked by a harness constraint (the `Agent` tool has no env-injection parameter); and Commander-level launch-order content has no spine-carried representation (`spine_open` only compiles implementer/reviewer gate plans). Both staged as triage candidates, not filed as issues.
+- Full suite green in a clean detached worktree: 3352 passed, 6 skipped, 1219 subtests passed, 0 failed.
+- 3 episodes captured; feedback staged (main checkout fenced) at `.agent-work/staged-feedback/567-f/`.
+- **PR #627** opened against `main`, full detail in `.agent-work/epic-567-door/results/lane-f-RETURN.md`.

@@ -1,0 +1,27 @@
+[
+  {
+    "crew_id": "constellation/567-d2/lane-d2/commander-delegated/attempt-1",
+    "work_id": "567-d2",
+    "gate": "lane-d2",
+    "role": "commander-delegated",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/567-d2/lane-d2/commander-delegated/attempt-1",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 2062899,
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-d2-workbench-sunset",
+    "handoff": ".worktrees/567-d2-workbench-sunset/.agent-work/567-d2/LAUNCH_ORDER.md",
+    "result": ".worktrees/567-d2-workbench-sunset/.agent-work/epic-567-door/results/lane-d2-RETURN.md",
+    "spine": ".worktrees/567-d2-workbench-sunset/.agent-work/567-d2/spine.json",
+    "parent": "constellation/epic-567-door",
+    "stdout": ".agent-work/567-d2/crew-runs/lane-d2-commander-delegated-attempt-1.stdout.txt",
+    "stderr": ".agent-work/567-d2/crew-runs/lane-d2-commander-delegated-attempt-1.stderr.txt",
+    "started_at": "2026-08-17T17:20:38.256605+00:00",
+    "last_heartbeat": "2026-08-17T17:20:38.256605+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "model": "sonnet",
+    "scratch_dir": ".agent-work/567-d2/crew-scratch/lane-d2-commander-delegated-attempt-1-7e84370fb920"
+  }
+]

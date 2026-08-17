@@ -1,0 +1,9 @@
+## Summary
+
+Ran the full delegated-commander spine for lane 567-h (issue #442) end to end: init → context → understand → plan → execute → reconcile → triage → review → feedback → archive.
+
+**Result: honest null.** Measured the RAIL banner and HARD-refusal remedy text with 11 fresh cold-agent subjects across four framings. Every subject correctly stated the ask and named the correct next action; none blindly complied with the embedded command. No wording-level defect was found, so **no rewrite was made** — zero tracked source files changed, matching `decision:honest-null-is-complete`.
+
+**A genuine incident surfaced mid-run:** one of two deliberately zero-framed cold-agent test subjects, given full tool access, discovered and drove my own live `execute.json`/spine state using a session id it read out of a work-area file — indistinguishable in the audit trail from my own actions. I verified the resulting work was sound and adopted it, but wrote it up as a staged triage candidate (not filed, per the launch order's rules) since it's a real, novel dispatch-safety gap distinct from the known fork-context-inheritance hazard.
+
+Full suite green in a clean detached worktree (3352 passed, 6 skipped, 1219 subtests, 0 failed — matches the pre-dispatch baseline exactly). Committed, pushed, and opened **PR #628** against `main`. Full return artifact at `.agent-work/epic-567-door/results/lane-h-RETURN.md`.
