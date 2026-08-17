@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g6-local-resync",
+  "mechanical": {
+    "run": "issue-610-stand-up-work-area",
+    "project": "constellation-skills",
+    "spine-step": "g6-local-resync",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-610-stand-up-work-area-g6-local-resync@e80cbf165cf990cbbf08e1d045169260ce9326b1",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "issue-610-stand-up-work-area",
+    "generated_at": "2026-08-17T05:31:50Z"
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "work_id": "issue-610-stand-up-work-area",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-610-stand-up-work-area",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "plan",
+        "context-manifest-ref": "n/a -- no context-manifest artifact produced this run",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "skills/admiral/templates/LAUNCH_ORDER.template.md",
+          "skills/admiral/references/fleet-doctrine.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {"strength": "strong", "statement": "Author a 7-gate plan for issue #610 (retire the Commander's self-scaffolding recipe everywhere it appears) and get it critiqued before execution."},
+        "expected-behavior": {"strength": "medium", "statement": "The issue names one edit spot in LAUNCH_ORDER.template.md's Workspace section for the retired cd+--here recipe."},
+        "observed-behavior": {"strength": "strong", "statement": "A dispatched cold plan critic (fresh agent, mission frame + candidate plan only) greped the actual file and found a second --here reference at line 84 (a return-report evidence clause) the named edit spot did not cover. Following that thread up manually surfaced two more coupled paragraphs (an ordering-hazard callout and a stale-premise paragraph) that also only made sense under the retired recipe -- four spots total, not one, across two files."},
+        "impact-cost": {"strength": "medium", "statement": "One extra investigation pass before execute, plus a widened gate imperative and an explicit scope-note surfaced to the human at plan approval. Caught before any file was edited, not as rework."},
+        "workaround": {"strength": "strong", "statement": "none."}
+      },
+      "diagnosis": [
+        {"kind": "suspected-cause", "strength": "medium", "statement": "An issue's own prose names the one spot the author noticed; a recipe repeated across explanatory/callout/evidence-clause prose in the same doc is easy to under-scope from the issue text alone."},
+        {"kind": "proposed-remedy", "strength": "weak", "statement": "When a plan gate retires an instruction, grep the target file(s) for every mention of the retiring mechanism's own name/flag, not just the one paragraph the issue names, before scoping the gate's postcondition."}
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-610-stand-up-work-area",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": "n/a -- no context-manifest artifact produced this run",
+        "refusals": 2,
+        "reopens": 0,
+        "rework-count": 2,
+        "failed-commands": 2,
+        "artifact-ref": [
+          "scripts/install_constellation.py",
+          ".agent-work/issue-610-stand-up-work-area/execute.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {"strength": "strong", "statement": "Author command-check postconditions for two gates (g2: SKILL_REFERENCE_BUNDLES wiring; g7: check_skill_freshness.py sweep) that verify the underlying edit correctly."},
+        "expected-behavior": {"strength": "medium", "statement": "Running the check commands as authored would exit 0 once the corresponding edit was correct."},
+        "observed-behavior": {"strength": "strong", "statement": "g2's check crashed with an unrelated AttributeError (importing install_constellation.py via importlib.util without registering the module in sys.modules first breaks its @dataclass(frozen=True) decorators) -- the underlying edit was already correct. g7's check ran check_skill_freshness.py's raw exit code, which could never pass: 7 unrelated templates are intentionally left stale (out of scope) and the resynced template correctly reads 'both-changed' rather than 'up-to-date' since updating .baseline/ was explicitly out of scope."},
+        "impact-cost": {"strength": "medium", "statement": "Two advance attempts refused on postconditions that were bugs in the CHECK, not the work. Both fixed in-flight via the engine's own amend --delta retext-check verb (authority human), no rework of the actual edits."},
+        "workaround": {"strength": "strong", "statement": "amend --delta <file> --reason ... --authority human with a retext-check op, per gate, correcting the check command text without marking the condition satisfied by the amendment itself."}
+      },
+      "diagnosis": [
+        {"kind": "suspected-cause", "strength": "medium", "statement": "A postcondition check authored and then never dry-run before being wired into the gate plan can encode an authoring bug (importlib module registration) or an over-broad success criterion (a tool's whole-repo exit code standing in for one file's correctness) that only surfaces at advance time."},
+        {"kind": "proposed-remedy", "strength": "weak", "statement": "Run a postcondition's command by hand once, against the pre-edit state, before wiring it into execute.json -- a check that already fails for reasons unrelated to the work it's meant to gate is cheaper to catch before the gate closes on it."}
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-610-stand-up-work-area",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "triage",
+        "context-manifest-ref": "n/a -- no context-manifest artifact produced this run",
+        "refusals": 0,
+        "reopens": 1,
+        "rework-count": 1,
+        "failed-commands": 0,
+        "artifact-ref": ["tests/test_code_map.py", "map/ids.jsonl", "map/INDEX.md"]
+      },
+      "agent_supplied": {
+        "task-intent": {"strength": "strong", "statement": "Flag map/INDEX.md being unparseable and map/ids.jsonl being empty as a triage candidate (tc1) worth follow-on attention."},
+        "expected-behavior": {"strength": "weak", "statement": "An empty ids.jsonl and an unparseable INDEX.md sounded like a broken/stale map that regenerating or repairing would fix."},
+        "observed-behavior": {"strength": "strong", "statement": "tests/test_code_map.py's own MapTreeFreshnessTests documents and tests this exact state as CORRECT: 'ids.jsonl is empty in this repo -- no anchor id has ever been authored here... Empty is not a defect; a mismatch still is.' The committed map matches a fresh rebuild. The real gap is that no anchor-minting scheme has ever existed in this repo at all -- a substantial standalone initiative across ~1200+ entities, not a bounded bug."},
+        "impact-cost": {"strength": "medium", "statement": "The human asked to dispatch an implementer/reviewer crew at tc1 as originally stated; investigating the actual test suite first (rather than dispatching immediately) caught the overclaim before a crew was sent at a target that was never broken. Required reopening the already-closed execute/reconcile/triage/review chain and redriving it after the correction."},
+        "workaround": {"strength": "strong", "statement": "Surfaced the corrected understanding back to the human before dispatching anything; they confirmed routing the corrected tc1 to episodes instead of a crew."}
+      },
+      "diagnosis": [
+        {"kind": "suspected-cause", "strength": "medium", "statement": "A triage candidate written from a tool's DEGRADED verdict alone ('unparseable', 'empty'), without reading whether the project's own test suite already treats that state as expected, reads as a defect when it may be a documented non-goal."},
+        {"kind": "proposed-remedy", "strength": "weak", "statement": "Before flagging a triage candidate about a file/tool state looking wrong, grep the project's test suite for that exact file path -- an existing test asserting the state is correct is cheap to find and changes the candidate's whole framing."}
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-610-stand-up-work-area",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "triage",
+        "context-manifest-ref": "n/a -- no context-manifest artifact produced this run",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "constellation-admiral/ADMIRAL_SPINE.template.json",
+          "constellation-admiral/LAUNCH_ORDER.template.md",
+          "constellation-commander/EXECUTE_PLAN.template.json",
+          "constellation-commander/IMPLEMENTER_HANDOFF.template.md",
+          "constellation-explorer/EXPLORER_SPINE.template.json",
+          "constellation-interrogator/INTERROGATION.template.json",
+          "constellation-reviewer/REVIEW_SURVEY.template.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {"strength": "medium", "statement": "Note, while resyncing this repo's own stale local COMMANDER_SPINE.template.json, that check_skill_freshness.py flags 7 OTHER project-local templates as upstream-changed too."},
+        "expected-behavior": {"strength": "weak", "statement": "Only the template #610 named would show as stale."},
+        "observed-behavior": {"strength": "strong", "statement": "check_skill_freshness.py --project . --skills-root <installed> reports 8 templates total needing reconciliation; 7 of them are unrelated to #610's scope and were left untouched per explicit human instruction."},
+        "impact-cost": {"strength": "weak", "statement": "None to this run -- purely a follow-on observation, correctly scoped out."},
+        "workaround": {"strength": "strong", "statement": "none -- explicitly deferred."}
+      },
+      "diagnosis": []
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-610-stand-up-work-area",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "triage",
+        "context-manifest-ref": "n/a -- no context-manifest artifact produced this run",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": ["skills/commander/", "skills/admiral/", "skills/commander-delegated/"]
+      },
+      "agent_supplied": {
+        "task-intent": {"strength": "medium", "statement": "Note that this run's shipped skill-source edits do not automatically reach the INSTALLED skill copy at ~/.claude/skills that actually drives agents dispatched in this repo."},
+        "expected-behavior": {"strength": "weak", "statement": "Merging the PR would be sufficient for the fix to take effect for future agents in this repo."},
+        "observed-behavior": {"strength": "medium", "statement": "docs/agents/ORCHESTRATOR_CONTEXT.md's own 'dogfooding' section documents this gap: the installed copy is a snapshot taken at install time, and this repo dogfoods itself via .agent-work/ regardless of which worktree an agent stands in (CLAUDE_PROJECT_DIR resolves once at session launch)."},
+        "impact-cost": {"strength": "weak", "statement": "None to this run -- purely a follow-on reminder."},
+        "workaround": {"strength": "strong", "statement": "none -- a reinstall (install_constellation.py) after merge is the known remedy, just easy to forget."}
+      },
+      "diagnosis": []
+    }
+  ]
+}

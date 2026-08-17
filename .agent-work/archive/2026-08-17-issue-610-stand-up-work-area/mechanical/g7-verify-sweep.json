@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g7-verify-sweep",
+  "mechanical": {
+    "run": "issue-610-stand-up-work-area",
+    "project": "constellation-skills",
+    "spine-step": "g7-verify-sweep",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-610-stand-up-work-area-g7-verify-sweep@694afdc97f12b3bc8af027dfd654551ac67cf8ee",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "issue-610-stand-up-work-area",
+    "generated_at": "2026-08-17T05:32:20Z"
+  }
+}
