@@ -1,0 +1,48 @@
+{
+  "contract": 1,
+  "step": "context",
+  "files": [
+    {
+      "root": "skill",
+      "path": "references/global-orchestrator.md",
+      "rev": "2e6be4d6e162d34f41335b36586565c39c5cbb6b"
+    },
+    {
+      "root": "skill",
+      "path": "references/global-everyone.md",
+      "rev": "9d34d8be6e74007724c60a537001e119f5576ffc"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "rev": "17379bae4d32e7819f54810e5809f19b1a18a397"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/GLOSSARY.md",
+      "rev": "6594c7c8ec53d1c2f450ea24f6e634d4fe1e2629"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/engine-config.json",
+      "rev": null
+    }
+  ],
+  "repo_rev": {
+    "commit": "600de020525b5cce8ce9f3131f4a6f2b49cb4b47"
+  },
+  "run": {
+    "work_id": "epic-567-door/cmdr-a",
+    "generated_at": "2026-08-17T06:09:35Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-commander",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity"
+    }
+  }
+}
