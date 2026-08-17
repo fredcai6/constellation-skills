@@ -235,6 +235,37 @@ def _dominant_newline(path: Path) -> bytes:
     return b"\r\n" if crlf and not bare_lf else b"\n"
 
 
+def _restore_mode(fd: int, tmp_name: str, mode: int) -> None:
+    """Give the temp file the target's existing permissions, on every platform.
+
+    `mkstemp` creates 0600, so a bare rename would silently NARROW a spine's
+    permissions — a behaviour change nobody asked for, on the file the whole fleet
+    reads.
+
+    **`os.fchmod` is Unix-only, and this repo's CI is `windows-latest`.** Calling it
+    unguarded raised `AttributeError` on Windows for every save of an existing file —
+    and since every mutating engine verb ends in `save()`, that is not a failing test,
+    it is a dead engine on that platform. Caught during closeout rather than in CI
+    (issue #567 lane A).
+
+    So: prefer `fchmod` on the FD where it exists, because the temp is already open
+    and an FD cannot be swapped underneath us; fall back to `chmod` on the path, which
+    Windows does implement (honouring only the read-only bit, which is the correct
+    best effort there — Windows has no POSIX mode bits to restore). A failure to
+    restore permissions is deliberately NOT fatal: the document is what matters, and
+    refusing to save because a mode could not be copied would trade a real write for
+    a cosmetic one."""
+    try:
+        os.fchmod(fd, mode)  # POSIX
+        return
+    except (AttributeError, OSError, NotImplementedError):
+        pass
+    try:
+        os.chmod(tmp_name, mode)  # Windows, and any POSIX oddity above
+    except (OSError, NotImplementedError):
+        pass
+
+
 def save(path: Path, data: dict) -> None:
     """Write the checklist as JSON ATOMICALLY, PRESERVING the line ending the file
     already uses, and write BYTES so nothing translates them again.
@@ -286,7 +317,7 @@ def save(path: Path, data: dict) -> None:
     try:
         with os.fdopen(fd, "wb") as f:
             if mode is not None:
-                os.fchmod(f.fileno(), mode)  # mkstemp makes 0600; don't narrow it
+                _restore_mode(f.fileno(), tmp_name, mode)
             f.write(payload)
             f.flush()
             os.fsync(f.fileno())

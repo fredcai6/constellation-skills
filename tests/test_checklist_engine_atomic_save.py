@@ -190,13 +190,38 @@ class AtomicSaveTests(unittest.TestCase):
 
     # -- (4) the target's mode survives the rename -------------------------- #
 
+    @unittest.skipUnless(hasattr(os, "fchmod"), "POSIX mode bits are not a Windows concept")
     def test_existing_file_mode_is_preserved(self):
         """`mkstemp` creates 0600. A bare rename would silently narrow the
-        spine's permissions, which is a behaviour change nobody asked for."""
+        spine's permissions, which is a behaviour change nobody asked for.
+
+        Skipped off POSIX rather than asserted loosely: Windows honours only the
+        read-only bit, so `os.chmod(path, 0o640)` there does not produce a `0o640`
+        stat and an assertion on the bits would fail for a reason that has nothing
+        to do with `save()`. The platform-independent half — that saving does not
+        CRASH where `fchmod` is absent — is
+        `test_save_survives_where_fchmod_is_unavailable` below, which runs
+        everywhere."""
         self.path.write_text("{}\n", encoding="utf-8")
         os.chmod(self.path, 0o640)
         E.save(self.path, SAMPLE)
         self.assertEqual(os.stat(self.path).st_mode & 0o777, 0o640)
+
+    def test_save_survives_where_fchmod_is_unavailable(self):
+        """`os.fchmod` is Unix-only and this repo's CI is `windows-latest`, so an
+        unguarded call raised `AttributeError` for every save of an existing file —
+        a dead engine on that platform, since every mutating verb ends in `save()`.
+
+        Simulates the Windows shape on any host by deleting the attribute, which is
+        exactly what a Windows interpreter presents. Runs everywhere on purpose: a
+        `skipUnless` here would make the guard untested precisely where it matters."""
+        self.path.write_text("{}\n", encoding="utf-8")
+        with mock.patch.object(E.os, "fchmod", side_effect=AttributeError("no fchmod")):
+            E.save(self.path, SAMPLE)
+        self.assertEqual(json.loads(self.path.read_text(encoding="utf-8")), SAMPLE,
+                         "save() must still write the document when fchmod is absent")
+        self.assertEqual(self._tmp_siblings(), [],
+                         "the fchmod fallback path leaked a temp file")
 
     # -- (5) line endings: the behaviour that is easiest to break silently -- #
 
