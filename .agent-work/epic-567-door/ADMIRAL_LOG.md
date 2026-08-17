@@ -155,9 +155,17 @@ Entry grammar (one line of date + tag, then the substance):
 
 ## Merges
 
-- _none yet. Two independent holds, and the second is binding:_
-  - _**hook-code quiescence** — lane C's #620 touches `scripts/hooks/spine_rail.py`, executed by every live session; lanes A and G are still mid-flight._
-  - _**the merge gate itself** — the contract delegates merging "gated on the check exit code", and that exit code is nonzero on every PR because main is red. Merging on the delta measure instead is a change to the gate I was given, so it goes to the human at the W1 checkpoint rather than being taken as delegated._
+All four merged 2026-08-17 under the Linux-green gate, in dependency order, each verified before merge and `origin/main` verified advanced after. Real merge commits per this repo's convention (128 prior); **no branches deleted** — #412 records that deleting a squash-merged branch orphans every commit on it, and this repo pins numbers to revisions.
+
+- `2026-08-17` — `MERGE` **PR #623, lane A** → `600de020` → **`4573ef17`**. `spine_bind` plus atomic `save()`. Gate: 3280 passed, 0 failed, 0 SUBFAILED on Linux at `0115b2c7`, the exact oid the PR carried. First by dependency: it owns `checklist_engine.py` and `mcp_spine_server.py`, and the other three were fenced off both.
+- `2026-08-17` — `MERGE` **PR #621, lane B** → **`6668b7ff`**. ExternalBackend refuses a spineless success. Gate: 3196 passed at `2ac82664`, only the generated map index red.
+- `2026-08-17` — `MERGE` **PR #620, lane C** → **`9e1185af`**. Stop hook outranks the context advisory. Gate re-run **after** merging main into the branch: 3284 passed. #442 stays open, correctly fenced out.
+- `2026-08-17` — `MERGE` **PR #622, lane G** → **`22f9637d`**. `finish_work` and lease-release-on-archive. Gate re-run after merging main: 3344 passed. Its `scripts/spine_lifecycle.py` auto-merged against lane A's engine changes with no conflict, and I re-verified by a **full** suite run post-merge rather than trusting the pre-merge green — the re-validate-after-promotion rule. Merging needed six retries through GitHub 503s; each attempt gated on whether `origin/main` actually advanced, never on the command's own output.
+- `2026-08-17` — `ADMIRAL ERROR` (**my launch orders guaranteed a four-way collision on `main`**): lanes C and G both went `CONFLICTING` the moment lane A landed. The conflict was `RETURN.md` alone — an add/add, because I told **every** lane to write its return at the worktree root, and that path is tracked. Four lanes, one tracked filename, one inevitable collision. Same shape as **#409** (six working-notes files committed to the repo root) and **#544** (a committed generated file conflicting on every parallel branch), and I had both in front of me this wave.
+  - Resolved at integration rather than sent back: the lanes were archived, and this was my instruction's defect found at my own merge step. Each return moved to `.agent-work/epic-567-door/results/lane-<x>-RETURN.md`, which is where this epic's own `STATE_NOTE` had named the expected artifact all along. Lane A's was relocated on the merged tree.
+  - **A second error inside that fix, caught before it shipped:** on the first attempt I took merge stage `:3:` as lane C's own return. In a merge of `main` **into** C, stage 2 is ours and stage 3 is theirs, so I had written lane A's return into `lane-c-RETURN.md`. What exposed it was the byte size matching lane A's exactly — 52,570. Redone after reading each stage's first line to confirm which was which.
+  - Retained item, mine, now done: **`map/INDEX.md` regenerated once on the merged tree** (`python3 -m scripts.code_map build --root .`, 10 insertions / 9 deletions) rather than by each lane, which would have produced exactly the N-way conflict #544 describes.
+- `2026-08-17` — `MERGE` verification, final: merged `main` at **`d437ab63`** runs **3344 passed, 6 skipped, 1218 subtests passed, 0 failed, 0 SUBFAILED** on Linux in 140s. Main was **3191** before this wave, so the epic added 153 passing tests and left the suite green. Audited for `SUBFAILED` as well as `FAILED`, per this wave's own finding.
 
 ## Closeout
 
