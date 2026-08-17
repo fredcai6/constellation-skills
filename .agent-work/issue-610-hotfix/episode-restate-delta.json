@@ -1,0 +1,26 @@
+{
+  "work_id": "issue-610-hotfix",
+  "ops": [
+    {
+      "op": "restate-assertion",
+      "id": "issue-610-stand-up-work-area-001",
+      "assertion": "d2",
+      "statement": "Grepping the target file(s) for every mention of a retiring mechanism's own name/flag, not just the one paragraph the issue names, before scoping the gate's postcondition would have caught this sooner.",
+      "history": "Restated: the original wording opened a clause with a bare imperative verb ('grep'), which the store's episode-observation guard correctly reads as an instruction rather than an observation (constraint: episodes are not prescriptions). Restated in observational form; the claim is unchanged."
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-610-stand-up-work-area-002",
+      "assertion": "d2",
+      "statement": "Running a postcondition's command by hand once, against the pre-edit state, before wiring it into execute.json is cheaper than discovering at advance time that it fails for reasons unrelated to the work it's meant to gate.",
+      "history": "Restated: the original wording opened with a bare imperative verb ('Run'), which the store's episode-observation guard correctly reads as an instruction rather than an observation (constraint: episodes are not prescriptions). Restated in observational form; the claim is unchanged."
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-610-stand-up-work-area-003",
+      "assertion": "d2",
+      "statement": "Before flagging a triage candidate about a file/tool state looking wrong, grepping the project's test suite for that exact file path is cheap and would have surfaced that an existing test already asserts the state is correct, changing the candidate's whole framing.",
+      "history": "Restated: the original wording opened a clause with a bare imperative verb ('grep'), which the store's episode-observation guard correctly reads as an instruction rather than an observation (constraint: episodes are not prescriptions). Restated in observational form; the claim is unchanged."
+    }
+  ]
+}

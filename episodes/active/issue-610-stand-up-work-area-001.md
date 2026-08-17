@@ -59,7 +59,8 @@
 - kind: proposed-remedy
 - strength: weak
 - lifecycle-standing: active
-- statement: When a plan gate retires an instruction, grep the target file(s) for every mention of the retiring mechanism's own name/flag, not just the one paragraph the issue names, before scoping the gate's postcondition.
+- statement: Grepping the target file(s) for every mention of a retiring mechanism's own name/flag, not just the one paragraph the issue names, before scoping the gate's postcondition would have caught this sooner.
+- history: restated — Restated: the original wording opened a clause with a bare imperative verb ('grep'), which the store's episode-observation guard correctly reads as an instruction rather than an observation (constraint: episodes are not prescriptions). Restated in observational form; the claim is unchanged. — original statement was: When a plan gate retires an instruction, grep the target file(s) for every mention of the retiring mechanism's own name/flag, not just the one paragraph the issue names, before scoping the gate's postcondition.
 
 ## Retirement
 - status: active

@@ -94,7 +94,12 @@ ALLOWED_SURVIVOR_SITES = {
 # `verify_worktree_isolation.py --here` and was deleted when worktree isolation
 # became engine-native (`checklist_engine.origin_worktree_refusal`). One fewer
 # command check to examine; the tripwire is unchanged in strength.
-EXPECTED_COMMAND_CHECK_COUNT = 12
+# 12 -> 11 (#610): the Commander spine's `init` postcondition `c1` ran
+# `init_work_area.py` to prove self-scaffolding happened; `init` is now a pure
+# lease-claim (check: null) since the dispatcher -- the Admiral or the human --
+# stands up the work area before handing the Commander its spine, per
+# skills/_shared/stand-up-work-area.md. One fewer command check to examine.
+EXPECTED_COMMAND_CHECK_COUNT = 11
 
 
 def unresolved_offenders(template_name, resolved_commands):

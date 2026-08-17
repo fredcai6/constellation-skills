@@ -3,9 +3,9 @@
 ## packages
 evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
-scripts: 58 modules, 1234 entities
+scripts: 59 modules, 1245 entities
 skills: 1 modules, 18 entities
-tests: 90 modules, 5017 entities
+tests: 90 modules, 5124 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -36,7 +36,7 @@ tests: 90 modules, 5017 entities
 
 - [examples.mcp-interactive-demo.make_demo_spine](examples.mcp-interactive-demo.make_demo_spine/INDEX.md) (4 entities, 2 holes): Generate this directory's throwaway demo spine.
 
-## scripts (58 modules, 1234 entities)
+## scripts (59 modules, 1245 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -77,9 +77,10 @@ tests: 90 modules, 5017 entities
 - [scripts.prove_docstring_only](scripts.prove_docstring_only/INDEX.md) (3 entities, 1 holes): Decide — not assert — whether a Python file's change is docstring-only.
 - [scripts.query_episodes](scripts.query_episodes/INDEX.md) (22 entities, 7 holes): Deterministic retrieval over the episode store (docs/EPISODE_STORE.md section 8).
 - [scripts.recover_crews](scripts.recover_crews/INDEX.md) (8 entities, 3 holes): Recovery classifier over the durable crew-run registry.
-- [scripts.run_crew](scripts.run_crew/INDEX.md) (65 entities, 12 holes): Safe crew launcher with a durable session-recovery registry.
+- [scripts.run_crew](scripts.run_crew/INDEX.md) (66 entities, 12 holes): Safe crew launcher with a durable session-recovery registry.
 - [scripts.run_skill_eval](scripts.run_skill_eval/INDEX.md) (42 entities, 10 holes): Corpus skill-eval runner — the PURE, agent-free core (#106, gate g2).
-- [scripts.spine_lifecycle](scripts.spine_lifecycle/INDEX.md) (21 entities, 3 holes): Open and close Constellation work in one call each: `open_work` builds a worktree, a branch, a scaffolded work area, and a compiled, origin-stamped spine; `clos
+- [scripts.spine_done_cli](scripts.spine_done_cli/INDEX.md) (3 entities, 2 holes): Thin CLI wrapping `spine_lifecycle.finish_work` -- the reachable-today "one door verb" (#574 g3): "I'm done" as one call, usable today without waiting on `mcp_s
+- [scripts.spine_lifecycle](scripts.spine_lifecycle/INDEX.md) (28 entities, 3 holes): Open and close Constellation work in one call each: `open_work` builds a worktree, a branch, a scaffolded work area, and a compiled, origin-stamped spine; `clos
 - [scripts.validate_spine](scripts.validate_spine/INDEX.md) (23 entities, 10 holes): Refuse a spine or spine template the engine cannot read, or that carries a check which cannot fail.
 - [scripts.verify_context_declaration](scripts.verify_context_declaration/INDEX.md) (7 entities, 1 holes): Lint: every declared `context_refs` path must appear verbatim in its own task's `imperative` prose.
 - [scripts.verify_coverage_ledger](scripts.verify_coverage_ledger/INDEX.md) (6 entities, 2 holes): Verify the removability coverage ledger against the installed-externals manifest.
@@ -109,7 +110,7 @@ tests: 90 modules, 5017 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (90 modules, 5017 entities)
+## tests (90 modules, 5124 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -131,7 +132,7 @@ tests: 90 modules, 5017 entities
 - [tests.test_context_manifest](tests.test_context_manifest/INDEX.md) (97 entities, 85 holes): Tests for `scripts/context_manifest.py` — the deterministic projection substrate.
 - [tests.test_crew_delivery_addressing](tests.test_crew_delivery_addressing/INDEX.md) (11 entities, 7 holes): Relaunch acceptance test for #507 / #370 / #413 (crew delivery addressing).
 - [tests.test_crew_dispatch_doctrine](tests.test_crew_dispatch_doctrine/INDEX.md) (3 entities, 2 holes): #611 (cleanup-g-crew-tier) g2-doctrine: crew-dispatch.md must name the 'Suggested Model Tier' handoff field as the thing a Commander resolves --model from, conn
-- [tests.test_crew_launcher](tests.test_crew_launcher/INDEX.md) (294 entities, 226 holes): HOLE: no docstring
+- [tests.test_crew_launcher](tests.test_crew_launcher/INDEX.md) (300 entities, 231 holes): HOLE: no docstring
 - [tests.test_crew_worktree_cwd](tests.test_crew_worktree_cwd/INDEX.md) (19 entities, 13 holes): A dispatched crew runs in ITS OWN worktree (issue #568, the g1b delta).
 - [tests.test_curate_corpus](tests.test_curate_corpus/INDEX.md) (40 entities, 23 holes): Golden-fixture suite for scripts/curate_corpus.py.
 - [tests.test_declared_dispatch](tests.test_declared_dispatch/INDEX.md) (14 entities, 14 holes): Tests for scripts/verify_declared_dispatch.py -- the oracle the generator's injected `[[gate.dispatch]]` postcondition (LIFECYCLE_CONTRACT.md section 5) shells 
@@ -185,10 +186,10 @@ tests: 90 modules, 5017 entities
 - [tests.test_shipped_check_commands_resolve](tests.test_shipped_check_commands_resolve/INDEX.md) (14 entities, 10 holes): Every shipped command check must actually run after instantiation (epic-559/b-instructions-to-checks, rework r3).
 - [tests.test_shipped_examples_are_portable](tests.test_shipped_examples_are_portable/INDEX.md) (18 entities, 6 holes): A shipped example must run for the person who installed it.
 - [tests.test_shipped_template_gates_satisfiable](tests.test_shipped_template_gates_satisfiable/INDEX.md) (8 entities, 7 holes): Prove the shipped EXECUTE_PLAN.template.json's g1-implement gate is actually satisfiable by a real drive of the real engine (epic-559/b-instructions-to-checks, 
-- [tests.test_spine_lifecycle](tests.test_spine_lifecycle/INDEX.md) (113 entities, 102 holes): Tests for scripts/spine_lifecycle.py -- open and close Constellation work in one call each.
+- [tests.test_spine_lifecycle](tests.test_spine_lifecycle/INDEX.md) (214 entities, 190 holes): Tests for scripts/spine_lifecycle.py -- open and close Constellation work in one call each.
 - [tests.test_spine_origin_isolation](tests.test_spine_origin_isolation/INDEX.md) (32 entities, 17 holes): The `origin` stamp is PROVENANCE: written, and read by nothing (#315/#568/#609).
 - [tests.test_spine_provenance_check](tests.test_spine_provenance_check/INDEX.md) (34 entities, 32 holes): Provenance hardening for the eval `spine_completed` process check (issue #127).
-- [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (220 entities, 95 holes): Unit tests for scripts/hooks/spine_rail.py.
+- [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (220 entities, 94 holes): Unit tests for scripts/hooks/spine_rail.py.
 - [tests.test_spine_session_id](tests.test_spine_session_id/INDEX.md) (7 entities, 3 holes): `spine_lifecycle.session_id_for` -- the ONE definition of the lease identity a spine for a `work_id` is driven under (epic #567 lane A, gate g2-implement).
 - [tests.test_state_note](tests.test_state_note/INDEX.md) (15 entities, 15 holes): HOLE: no docstring
 - [tests.test_validate_spine](tests.test_validate_spine/INDEX.md) (85 entities, 77 holes): Tests for scripts/validate_spine.py (epic-559/c1-spine-lint, #518, #562).
