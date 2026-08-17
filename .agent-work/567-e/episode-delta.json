@@ -1,0 +1,203 @@
+{
+  "work_id": "567-e",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-e",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-e-feedback@be5e05c506a177917703e4b66bb31748205dd305",
+        "refusals": 5,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "scripts/mcp_spine_server.py",
+          "tests/data/store_mentions.approved.txt",
+          "tests/test_retirement_guard.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "The gate implemented a new write path into episodes/ inside scripts/mcp_spine_server.py, expected to pass the existing repo-wide test suite unmodified."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A new legitimate write path naming episodes/ was expected to ship without tripping any existing guard, since the write path itself was the change the mission called for."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "tests/test_retirement_guard.py::test_canon_is_clean failed with 11 unapproved-store-mention violations the first time the full suite ran in a clean detached worktree. The guard held a FROZEN approval census (tests/data/store_mentions.approved.txt) of every site allowed to name the store, and a new write path had to be added to that census, with a reason per site, before the guard would pass again."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "One extra suite run and one extra commit were needed after the census was extended with 11 new entries and their reasons."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The census was extended following the guard's own documented mechanism (a `# <reason>` line above each new `<path>:<normalized line>` entry), rather than editing the guard itself."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-e",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-e-feedback@be5e05c506a177917703e4b66bb31748205dd305",
+        "refusals": 5,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "tests/test_crew_launcher.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "The merge-gate check ran the full suite in a clean detached worktree, expecting only the pre-approved MapTreeFreshnessTests failure."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A clean detached worktree of the branch was expected to isolate the suite from this session's own ambient process state."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "tests/test_crew_launcher.py::ScratchDirResumeTests::test_resume_of_legacy_entry_without_worktree_key_does_not_crash_and_leaves_scratch_dir_unbound failed, asserting CREW_SCRATCH_DIR was absent from a launched subprocess's environment. This Commander's own process had CREW_SCRATCH_DIR set in its ambient environment, being itself a dispatched crew, and the test's fake-launch helper inherited the full ambient environment rather than a controlled subset. The same failure reproduced identically on the untouched base commit in a separate fresh detached worktree, with no code from this gate present at all."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "One extra investigation cycle (a second detached worktree at the base commit) was needed to separate a real regression from an environmental artifact before the merge-gate check could be trusted."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The merge-gate check command was corrected, via the engine's own retext-check amend op, to unset CREW_SCRATCH_DIR alongside the SPINE_* variables it already excluded."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-e",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-e-feedback@be5e05c506a177917703e4b66bb31748205dd305",
+        "refusals": 5,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "docs/EPISODE_STORE.md",
+          ".agent-work/567-e/DESIGN_NOTE.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "The design for automatically capturing a door refusal into episodes/ was checked against docs/EPISODE_STORE.md before being built."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The mission's own acceptance criterion (a refusal provable straight out of episodes/ from a single fresh-process trigger, with no separate agent-authored step) was expected to be achievable within the store's existing doctrine."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "docs/EPISODE_STORE.md section 10 stated categorically that nothing should auto-create an episode, reasoning that an auto-created one could only carry fabricated assertions. This reads in real tension with the mission's own acceptance criterion, which required exactly an automatic, no-human-in-the-loop capture."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The tension was not resolved locally: docs/EPISODE_STORE.md was fenced to a different lane for the wave this run belonged to, so the question of whether the categorical doctrine text permits this concrete design was left open rather than decided unilaterally."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The shipped design made every captured field a literal quotation or extraction of data the refusal itself produced, never composed narrative, as a way of satisfying the doctrine's stated concern (fabricated assertions) without contradicting its categorical wording outright. The open question was recorded as a discrepancy and left for a wider-authority ruling."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-e",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-e-feedback@be5e05c506a177917703e4b66bb31748205dd305",
+        "refusals": 5,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/567-e/DESIGN_NOTE.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "A fresh cold critic, with no authoring context, was dispatched against the mission frame and the first candidate design for the capture mechanism, before any implementation began."
+        },
+        "expected-behavior": {
+          "strength": "weak",
+          "statement": "The first candidate design was believed workable going into the critic pass."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The critic found three defects that would have blocked the design at implementation time: the delta writer required a file path rather than inline JSON, a relative store-root argument was a cwd hazard in this module, and one of the five required assertion fields as originally scoped was still composed narrative rather than a literal quotation."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "All three findings were corrected in the design before any code was written, at the cost of one dispatched critic round before the implement gate began."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The corrected design reused three existing module patterns directly rather than inventing new ones: a file-based delta-write shape already present in the module, an existing checkout-resolution helper for an absolute store-root, and the tool's own registered description text as a literal source for the previously-composed field."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-e",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-e-feedback@be5e05c506a177917703e4b66bb31748205dd305",
+        "refusals": 5,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "scripts/episode_capture.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "This run's own feedback-step episode capture called episode_capture.mechanical_fields() directly, passing the worktree root as base_dir, matching how a first attempt at deriving a context-manifest-ref was made."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The function's own docstring described refusing rather than fabricating an unreadable field, so a missing context-manifest-ref was expected to mean no manifest existed for the step."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The context-manifest-ref field was silently absent from the mechanical bin even though a manifest file existed on disk for the step (.agent-work/567-e/context/feedback.json). The cause was base_dir: manifest_root() strips the work-id from base_dir's path to find the work area's root, and the worktree root passed did not end in the work-id (\"567-e\") and also carried no .agent-work ancestor, so the function's own refusal-not-guess branch returned None rather than raising past the caller."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One extra investigation step (reading manifest_root's source) was needed to find the correct base_dir (the spine's own containing directory, .agent-work/567-e, matching what the door's own capture code already passes as SPINE.parent) before the mechanical bin could be completed."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "base_dir was set to the spine's own containing directory rather than the worktree root, after which the context-manifest-ref field resolved correctly."
+        }
+      }
+    }
+  ]
+}

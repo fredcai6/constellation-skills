@@ -296,7 +296,8 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute.json driven to DONE: e0-context, g1-implement, g1-review, g1-integrate all complete with integrated evidence (implementer-result, review-result APPROVE, full-suite-green command check)."
         },
         {
           "id": "c2",
@@ -305,7 +306,8 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id 567-e"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-4"
         }
       ],
       "constraints": [],
@@ -332,7 +334,7 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -368,6 +370,17 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-execute-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id 567-e",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -381,7 +394,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute step complete."
         }
       ],
       "postconditions": [
@@ -389,13 +403,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "No packet map exists in this repo (no docs/architecture/ dir; map/INDEX.md is a flat code-map, DEGRADED-UNPARSEABLE this wave and Admiral-owned -- not regenerated per launch order's map-index-is-admiral-owned ruling). The change touches no doc/schema this lane owns: docs/EPISODE_STORE.md (the natural home for describing the new capture behavior) is fenced to lane D1 this wave. Reasoned no-op: recorded here as compliant per this step's own imperative ('where the change touched neither, record a reasoned no-op as compliant rather than blocking on an absent map'). The change and the open EPISODE_STORE.md sec.10 tension are both named in DESIGN_NOTE.md and REPLAN_INPUT.json's discrepancy D2 for the Admiral to fold into the map at final merge."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -411,7 +426,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile complete."
         }
       ],
       "postconditions": [
@@ -419,7 +435,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Two triage candidates found this run, both routed recommend-and-defer (staged as files, no issue filed): (1) four more MCP TOOLS descriptions carry second-person pronouns and will silently skip episode capture -- .agent-work/567-e/triage-candidates/second-person-tool-descriptions-skip-capture.md; (2) checklist_engine.py's own refusals counter never sees a door-own rejection, fenced to lane H this wave -- .agent-work/567-e/triage-candidates/engine-refusals-counter-blind-to-door-own-rejections.md."
         },
         {
           "id": "c2",
@@ -428,17 +445,29 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Inherited Latitude",
+            "note": "Issue filing is ruled: none this run -- 'Stage candidates locally' (decision:no-issue-filing-mid-run). No issue was filed. Both triage candidates disposed as recommend-and-defer: staged as files under .agent-work/567-e/triage-candidates/ (second-person-tool-descriptions-skip-capture.md, engine-refusals-counter-blind-to-door-own-rejections.md), for the Admiral to pair onto an open issue or record as an episode at epic closeout."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -450,7 +479,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage complete."
         }
       ],
       "postconditions": [
@@ -461,17 +491,29 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape",
+            "note": "Run summary: init/context/understand/plan/execute/reconcile/triage all complete. Delivered issue #541 (scripts/mcp_spine_server.py: _capture_refusal_episode wired into _log_rejection, refusal-text swap at 3 sites) with independently re-verified proof (fresh-process trigger + negative control, twice, by implementer and reviewer separately) and full suite green (3365 passed / 1 sanctioned MapTreeFreshnessTests failure) at commit a34a62a0. Two triage candidates staged, none filed. One doctrine tension (EPISODE_STORE.md sec.10) floated to the Admiral, not decided unilaterally. Accepted under delegated-mode authority; the Admiral ratifies at the epic return boundary."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -483,7 +525,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Run summary presented and accepted (e-review-1, LAUNCH_ORDER:Return Shape)."
         }
       ],
       "postconditions": [
@@ -494,17 +537,30 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py 567-e --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py 567-e --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -516,7 +572,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Workflow feedback recorded at feedback step, 5 episodes captured and verified."
         }
       ],
       "postconditions": [
@@ -594,7 +651,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -610,17 +667,16 @@
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-e-door-rejection-episodes",
     "opened_by": "init_work_area"
   },
-  "refusals": 3,
+  "refusals": 5,
   "engine_session": {
-    "session_id": "constellation/567-e/lane-e/commander-delegated",
-    "status": "released",
-    "claimed_at": "2026-08-17T17:21:08.228903+00:00",
-    "last_heartbeat": "2026-08-17T17:39:09.385969+00:00",
+    "session_id": "constellation/567-e",
+    "status": "active",
+    "claimed_at": "2026-08-17T18:28:11.616686+00:00",
+    "last_heartbeat": "2026-08-17T18:33:57.415625+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null,
-    "released_at": "2026-08-17T17:39:24.511745+00:00"
+    "takeover_reason": null
   },
   "why_trail": [
     {
@@ -650,6 +706,41 @@
       "why": "Plan complete: MISSION_FRAME.md written and verified (FRAME-OK against DEGRADED-substitute anchors), execute.json authored with one crew gate covering both the capture mechanism and the inherited refusal-text swap, both confined to scripts/mcp_spine_server.py. Design-it-twice run as a single-author two-candidate comparison (DESIGN_NOTE.md) with the panel-vs-single choice named as an explicit untaken road. A fresh cold critic (no authoring context) found 3 blocking technical defects in the original candidate design (delta must be a file not inline JSON; relative store-root is a cwd hazard; expected-behavior as originally scoped was still fabricated narrative) -- all corrected and folded into g1-implement's constraints/anchors, reusing existing module patterns (_write_amend_delta's file-write shape, _own_checkout_for_binding() for an absolute store-root, literal quotation of the tool's own registered MCP description for expected-behavior). One finding is NOT resolved by design: EPISODE_STORE.md sec.10 states categorically that nothing should auto-create an episode, which is in real tension with the launch order's own settled/doctrine acceptance criterion (a refusal must be provable straight out of episodes/ from a single fresh-process trigger). That doc is fenced to lane D1 this wave, not mine to reinterpret unilaterally -- floated to the Admiral in this run's return rather than decided here. Plan approved under delegated-mode citing LAUNCH_ORDER:Mission. Context is over the HARD band after this gate's work; stopping here per doctrine rather than beginning execute.",
       "mechanical": false,
       "ts": "2026-08-17T17:37:16.172212+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "execute.json driven to DONE: implementer shipped the capture mechanism + refusal-text swap, reviewer APPROVED after independently re-deriving the fresh-process trigger and negative control, Commander independently re-verified both plus the full suite in two clean detached worktrees (first run surfaced two real-but-resolvable discrepancies -- an unapproved-store-mention census gap, fixed with reasons; a pre-existing CREW_SCRATCH_DIR environmental artifact, confirmed unrelated via a base-commit repro and fixed via retext-check on the check command -- second run showed only the sanctioned MapTreeFreshnessTests failing). REPLAN_INPUT.json written and verified (verify_iterative_role_artifacts.py commander, exit 0): one issue (#541) completed, zero open, three discrepancies classified (D0 blocks_current_wave_exit/fixed, D1 evidence_only/pre-existing artifact, D2 evidence_only/the EPISODE_STORE.md sec.10 tension floated to the Admiral).",
+      "mechanical": false,
+      "ts": "2026-08-17T18:29:54.830435+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-17T18:30:15.884901+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-17T18:30:59.336480+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-17T18:31:13.446672+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Reflected honestly: the launch order's engine-drive doctrine was followed closely -- claim/start/attest/attach/advance at every gate, no hand-edits, execute.json driven via the rebind dance (spine_bind/claim/release) exactly as documented. Two real workflow frictions hit and worked around, not glossed over: (1) the HARD-context-band 'attach refresh-request then stop' recipe, read literally from spine_status's own advisory, actively conflicts with this harness's Stop hook once real gate work remains open -- the Stop hook is authoritative and says so directly, so the correct read is 'stop only at a gate boundary with nothing started', not 'stop whenever the advisory fires', which the doctrine text does state but is easy to mis-apply under HARD-band pressure. (2) episode_capture.mechanical_fields()'s context-manifest-ref requires base_dir to be the spine's OWN containing directory, not the worktree root -- undocumented in the function's own call sites outside the door's internal use, and it fails silently (returns None) rather than raising, so a caller cannot tell 'no manifest' from 'wrong base_dir' without reading manifest_root's source. Both harvested from the crew's own Workflow Feedback sections too (handoff gaps on the file-wide grep scope and the mechanical_fields()/derivable_work_id() precedence question). Five episodes captured for this run's own distinct events (store-mention census gap, CREW_SCRATCH_DIR test artifact, the EPISODE_STORE.md doctrine tension, the cold critic's three pre-implementation catches, the base_dir gotcha in this very feedback step) -- verify_episode_captured.py confirms 9 episodes total for run 567-e (4 from the implementer/reviewer's own acceptance triggers, 5 from this reflection), verify_episode_observations.py --strict shows 0 new offenders.",
+      "mechanical": false,
+      "ts": "2026-08-17T18:33:27.205471+00:00"
     }
   ],
   "trip_ledger": [

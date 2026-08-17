@@ -1,0 +1,30 @@
+{
+  "contract": 1,
+  "step": "review",
+  "mechanical": {
+    "run": "567-e",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 5,
+    "spine-step": "review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-e-review@5c3ece6598b1484a98d066d24f5fc4261e21c3f8",
+    "artifact-ref": [
+      ".agent-work/567-e/REPLAN_INPUT.json",
+      ".agent-work/567-e/execute.json",
+      ".agent-work/567-e/execute.json.journal",
+      ".agent-work/567-e/execute/context/g1-integrate.json",
+      ".agent-work/567-e/execute/mechanical/g1-integrate.json",
+      ".agent-work/567-e/gauge-constellation-567-e-lane-e-comma-551bd842bf91.json",
+      ".agent-work/567-e/mcp_amend_delta_20260817T182258532309.json",
+      ".agent-work/567-e/spine.json"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-e",
+    "generated_at": "2026-08-17T18:31:05Z"
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "the door is the interface (#567), wave 2, lane E",
+      "spec_path": ".agent-work/567-e/LAUNCH_ORDER.md",
+      "intent_and_why": "Capture MCP door refusals into the run's durable episode record instead of letting them vanish, and retire the door's own CLI-recommending refusal text (issue #541, wave 2 lane E)."
+    },
+    "definition_of_done": [
+      "A real door-own refusal, triggered through the door in a fresh process, is readable back out of episodes/ via query_episodes.py.",
+      "A negative control shows the same refusal leaves no trace with the capture removed.",
+      "The two _spine_bind containment-refusal sites (plus a third identical occurrence found in _identity_violation) no longer recommend the CLI to an agent."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Every captured field is a literal derivation from the refusal's own data -- never invented narrative -- honoring docs/EPISODE_STORE.md's refuse-never-fabricate contract.",
+      "sufficient_evidence": "Fresh-process trigger + negative control, re-derived independently by both the reviewer and the Commander, plus the full test suite green in a clean detached worktree.",
+      "appetite": "One bounded gate inside a single-issue Commander lane."
+    },
+    "hard_constraints": [
+      "sole writer this wave: scripts/mcp_spine_server.py, episodes/**",
+      "no-inode-containment stands -- do not close spine_bind's hardlink hole",
+      "do not touch scripts/checklist_engine.py (lane H) or docs/** except docs/agents/CREW_CONTEXT.md (lane D1)"
+    ],
+    "fixed_decisions": [
+      "capture-is-literal-derivation-only: every agent-supplied field is a literal quotation/extraction of real refusal data, never composed narrative"
+    ],
+    "current_wave": {
+      "objective": "Ship the door-refusal episode capture and the inherited refusal-text swap for issue #541.",
+      "exit_criteria": [
+        "g1-implement, g1-review, g1-integrate all complete",
+        "Full suite green in a clean detached worktree (MapTreeFreshnessTests excepted)"
+      ],
+      "issues": [
+        {
+          "id": "541",
+          "title": "MCP door refusals vanish -- capture them into the run's episode",
+          "desired_outcome": "A door refusal is durably captured in episodes/, provable from a fresh process, with a negative control.",
+          "useful_now": "The launch order names two real dispatch-time refusals the Admiral hit this wave that left no trace anywhere a later reader could find.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "Fresh-process trigger reads back from episodes/ via query_episodes.py; negative control shows no trace without the capture.",
+          "implementation_latitude": "Where on the door path to capture, and the record's shape, is the Commander's own to decide (decision:capture-filter-is-yours).",
+          "hard_constraints_no_gos": ["no-inode-containment", "never fabricate a mechanical or agent-supplied field"],
+          "local_unknowns": [
+            "whether apply_episode_delta.py / verify_episode_captured.py is satisfiable from inside the server process -- RESOLVED yes",
+            "whether a refusal with no bound spine has a work-id to attribute to -- RESOLVED no, capture is skipped for that case",
+            "whether capturing every refusal floods the store -- RESOLVED no, filtered to the door-own population plus in-process dedup"
+          ],
+          "anchors": ["scripts/mcp_spine_server.py", "scripts/apply_episode_delta.py", "scripts/episode_capture.py", "docs/EPISODE_STORE.md"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "This lane's PR merges second in the wave (after D2, before D1, per the launch order -- D1's guard covers the refusal string this lane changed).",
+        "why_likely": "Stated explicitly in the launch order's Workspace section.",
+        "entry_conditions": ["D2 merged"]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether docs/EPISODE_STORE.md sec.10's categorical 'nothing should auto-create an episode' permits this change at all.",
+        "affects": "Whether the capture-is-literal-derivation-only design is accepted doctrine or needs a different mechanism.",
+        "settle_by": "Admiral ruling at wave review.",
+        "current_evidence": "This lane's design resolves the tension by making every field a literal quotation/extraction rather than invented judgment, and floats the question rather than deciding it unilaterally (EPISODE_STORE.md is fenced to lane D1 this wave).",
+        "next_probe": "Admiral reads DESIGN_NOTE.md's closing paragraph and rules."
+      }
+    ],
+    "parked_possibilities": [
+      "Auditing the remaining four TOOLS descriptions for second-person pronouns (triage candidate, staged).",
+      "Making scripts/checklist_engine.py's own refusals counter see door-own rejections too (fenced to lane H this wave)."
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "541",
+      "outcome": "Shipped _capture_refusal_episode() in scripts/mcp_spine_server.py, wired into _log_rejection() as a second side effect; retired _THE_CLI_IS_PER_CALL's CLI recommendation at all 3 occurrences; added tests/test_mcp_rejection_episode_capture.py; extended tests/data/store_mentions.approved.txt for the 11 new legitimate write-path store mentions.",
+      "evidence": "episodes/active/567-e-002.md and 567-e-004.md (implementer's and reviewer's independent fresh-process triggers) read back cleanly via query_episodes.py; negative controls (both implementer's and reviewer's own) showed zero new files with the capture bypassed; grep confirms the retired phrase is gone; full suite green in a clean detached worktree at a34a62a0 (1 failed -- MapTreeFreshnessTests, sanctioned -- 3365 passed, 6 skipped, 1219 subtests passed)."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "A door-own refusal, triggered through the door in a fresh process, is readable back out of episodes/.",
+      "expected": "A new episode file under episodes/active/ with all 9 mechanical fields and all 5 agent-supplied assertions.",
+      "observed": "Confirmed twice, independently (implementer's trigger produced 567-e-002.md; reviewer's own independent trigger produced 567-e-004.md), both read back cleanly via query_episodes.py fetch.",
+      "source": "fresh python3 subprocess trigger scripts, run by both the implementer and the reviewer, re-verified in spirit by the Commander via independent test-suite and grep re-runs"
+    },
+    {
+      "claim": "With the capture removed, the same refusal leaves no trace in episodes/.",
+      "expected": "Zero new files under episodes/active/ for the identical trigger.",
+      "observed": "Confirmed twice, independently (implementer and reviewer each bypassed the capture call, re-ran, restored the code cleanly with no residue).",
+      "source": "same fresh-process trigger scripts, capture call temporarily bypassed"
+    },
+    {
+      "claim": "The full suite stays green (module scope, then full repo) after the change.",
+      "expected": "Only MapTreeFreshnessTests fails.",
+      "observed": "First full-suite run at cf6cdaa2 surfaced 2 additional failures -- both diagnosed and resolved (see discrepancies D0, D1 below). Second full-suite run at a34a62a0, with the corrected check, showed only MapTreeFreshnessTests failing: 3365 passed, 6 skipped, 1219 subtests passed.",
+      "source": "python -m pytest -q in a clean git worktree add --detach of the branch, run twice by the Commander"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "The new capture code's docstrings and error messages naming episodes/ tripped tests/test_retirement_guard.py::test_canon_is_clean's unapproved-store-mention leg -- 11 new sites, none previously in the frozen approval census.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "This gate's own merge-gate suite result.",
+      "evidence": "python -m pytest -q tests/test_retirement_guard.py::test_canon_is_clean failed at cf6cdaa2 with 11 unapproved-store-mention violations, all in scripts/mcp_spine_server.py, all legitimate WRITE-path facts (import statement, docstrings, error messages) -- none instructs an agent to read the store and condition behaviour on it.",
+      "reason": "Fixed in-lane by extending tests/data/store_mentions.approved.txt with a reason for each site (commit a34a62a0) -- exactly the mechanism the guard's own doctrine names ('If this is a WRITE path, approve it with a reason'). Not a lane-D1 file-ownership conflict: the census is data the guard's own contract expects every new write-path implementer to extend, not the guard's logic itself."
+    },
+    {
+      "id": "D1",
+      "signal": "tests/test_crew_launcher.py::ScratchDirResumeTests::test_resume_of_legacy_entry_without_worktree_key_does_not_crash_and_leaves_scratch_dir_unbound failed at cf6cdaa2 in the detached-worktree suite run.",
+      "classification": "evidence_only",
+      "affects": "The merge-gate check command's own correctness, not this lane's code.",
+      "evidence": "Reproduces identically on the untouched base commit f05a3d78 in a fresh detached worktree with no code changes at all -- CREW_SCRATCH_DIR leaks from this Commander's own ambient dispatched-crew session into the test's os.environ-inheriting subprocess-launch assertion. Disappears once CREW_SCRATCH_DIR is unset alongside the SPINE_* vars the check command already excluded.",
+      "reason": "Not a code regression -- a pre-existing environmental artifact of running the suite from inside a nested dispatched-crew session. Corrected the g1-integrate.c1 check command via the engine's retext-check amend op to unset CREW_SCRATCH_DIR too, rather than touching the test itself (which lane D1/H do not own either, and which is not actually broken outside this ambient condition)."
+    },
+    {
+      "id": "D2",
+      "signal": "docs/EPISODE_STORE.md section 10 states categorically that nothing should auto-create an episode ('an auto-created one could only carry fabricated assertions'), in real tension with this issue's own launch-order-set acceptance criterion (a refusal must be provable straight out of episodes/ from a single fresh-process trigger, with no human/agent narrative-authoring step in between).",
+      "classification": "evidence_only",
+      "affects": "Whether the shipped design (capture-is-literal-derivation-only) is accepted doctrine, or whether docs/EPISODE_STORE.md needs its own follow-up.",
+      "evidence": "DESIGN_NOTE.md's closing paragraph; the cold critic's finding #3 (surfaced then resolved via literal-quotation sourcing for every field, including expected-behavior sourced from the tool's own registered MCP description); the shipped episode content itself (episodes/active/567-e-002.md, 567-e-004.md), inspectable directly to judge whether any field reads as invented.",
+      "reason": "Not decided here -- docs/EPISODE_STORE.md is fenced to lane D1 this wave and the question is squarely 'does a categorical doctrine text permit this concrete design', which is the Admiral's call per this lane's inherited latitude table ('Production defaults / user-visible behaviour: float to the Admiral')."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {"id": "second-person-tool-descriptions-skip-capture", "kind": "issue"}
+  ],
+  "repo_state": {
+    "anchors": ["scripts/mcp_spine_server.py", "scripts/apply_episode_delta.py", "scripts/episode_capture.py", "tests/data/store_mentions.approved.txt"],
+    "map_status": "DEGRADED-UNPARSEABLE this wave (map/INDEX.md packet directories absent, map/ids.jsonl empty) -- .agent-work/567-e/map-orientation.json. Admiral-owned; not regenerated by this lane."
+  }
+}

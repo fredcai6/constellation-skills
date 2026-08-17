@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "triage",
+  "files": [],
+  "repo_rev": {
+    "commit": "a34a62a026868de8c49bd37f6375ad333c621de8"
+  },
+  "run": {
+    "work_id": "567-e",
+    "generated_at": "2026-08-17T18:30:49Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/567-e-door-rejection-episodes",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-e-door-rejection-episodes",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-e-door-rejection-episodes"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-e-door-rejection-episodes"
+    }
+  }
+}
