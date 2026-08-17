@@ -1,0 +1,450 @@
+{
+  "work_id": "epic-567-door/cmdr-b/g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-dispatch-accepts-spine",
+    "m2-verify-default-refuse",
+    "m3-named-spine-proofs",
+    "m4-cli-wiring",
+    "m5-rewrite-invariant-tests",
+    "m6-full-suite-and-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read references/global-crew.md and references/global-everyone.md (constellation-implementer skill), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the handoff at .agent-work/epic-567-door/cmdr-b/crew-handoffs/g1-implement-IMPLEMENTER_HANDOFF.md. Verify the handoff is complete (task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, return format) -- if incomplete, block and return. Confirm via grep that CliBackend never calls .verify() in production code (only in tests): `grep -n \"\\.verify(\" scripts/run_crew.py tests/test_crew_launcher.py`. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete; CliBackend-never-calls-verify-in-prod confirmed by grep",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-dispatch-accepts-spine": {
+      "id": "m1-dispatch-accepts-spine",
+      "title": "Change 1: ExternalBackend.dispatch() accepts --spine (verification-only)",
+      "imperative": "In tests/test_crew_launcher.py, rewrite test_external_dispatch_refuses_spine (~L2163) to assert --spine is ACCEPTED and RECORDED on the external backend (not refused) -- name this as an intentional scenario change, not scope creep. Run it via `python -m pytest tests/test_crew_launcher.py -k test_external_dispatch_refuses_spine -q` and observe it FAIL against current (pre-fix) ExternalBackend.dispatch(), which still refuses --spine (TDD red -- attest c1, paste the failure output verbatim). Then in scripts/run_crew.py, in ExternalBackend.dispatch() (~L1671) delete the `if spec.spine is not None: raise CrewLaunchError(...)` refusal block -- spine is already threaded through record_external_attempt/CrewSpec/build_entry, nothing else to wire. Rewrite the ExternalBackend class docstring (~L1657-1667) and the unconditional 'UNBOUND MCP door' banner text (~L1709-1716) wherever they claim --spine is refused (that becomes false) -- keep the 'still never bound into an environment / nothing spawns so nothing can be bound' framing intact (spine is verification-only here, not binding). Keep _require_handoff unconditional. Also update build_parser()'s --spine help text (~L1929) which currently says 'REFUSED on the external backend'. Run the rewritten test again and confirm PASS (TDD green -- c2, paste passing output verbatim).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff/context loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: rewritten test_external_dispatch_refuses_spine observed failing against pre-fix ExternalBackend.dispatch() -- manual attest, red output pasted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Rewritten test_external_dispatch_refuses_spine run against pre-fix ExternalBackend.dispatch(): FAILED as expected -- 0 != 1, stderr shows old REFUSED message. Confirmed red."
+        },
+        {
+          "id": "c2",
+          "statement": "dispatch() accepts --spine, records it, docstring/banner/help text rewritten; rewritten test passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_crew_launcher.py -k test_external_dispatch_refuses_spine -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-dispatch-accepts-spine-1"
+        }
+      ],
+      "constraints": [
+        "scripts/run_crew.py and tests/test_crew_launcher.py only",
+        "do not touch checklist_engine.py or mcp_spine_server.py",
+        "do not make --spine mandatory at dispatch time"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-dispatch-accepts-spine-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_crew_launcher.py -k test_external_dispatch_refuses_spine -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-verify-default-refuse": {
+      "id": "m2-verify-default-refuse",
+      "title": "Change 2 (core fix): ExternalBackend.verify() override -- default-refuse without spine evidence",
+      "imperative": "In tests/test_crew_launcher.py, rewrite test_verify_result_absent_then_present_marks_completed's (~L2219) final assertion (currently `code_present == 0`) to assert REFUSE (exit 1) when verifying (neither --verify-spine nor --accept-mtime-only-risk given) a dispatch that has NO --spine and only a fresh result artifact -- name this explicitly as the single most important intentional test change in this gate. Run it via `python -m pytest tests/test_crew_launcher.py -k test_verify_result_absent_then_present_marks_completed -q` and observe it FAIL against current (pre-fix) code, which still returns 0/completed (TDD red -- attest c1, paste failure output verbatim). Then in scripts/run_crew.py add `def verify(self, entries, session, *, root, verify_spine=None, accept_mtime_only_risk=None)` as an OVERRIDE on ExternalBackend (leave CrewBackend.verify untouched) implementing exactly the handoff's verdict logic: read `spine = entry.get('spine')` and gate result_ok/present computation on `entry.get('result') is not None` (never call result_exists/result_fresh with result=None); `effective_spine = verify_spine if verify_spine is not None else spine`; if effective_spine is not None: `drove = spine_terminal(effective_spine, root)`, `entry['spine_verified'] = drove`, `fresh = drove and (result_ok if entry.get('result') is not None else True)` (AND semantics, never OR/rescue); elif accept_mtime_only_risk is not None: `entry['spine_verified'] = None`, `entry['mtime_only_risk_accepted'] = {'reason': accept_mtime_only_risk, 'at': <now ISO>}`, `fresh = result_ok`; else (default): `entry['spine_verified'] = False`, `fresh = False`. On the accept_mtime_only_risk branch reaching fresh=True, print the acceptance to BOTH stdout and stderr, including the word RISK and the reason verbatim. Set entry['result_present']/entry['result_fresh'] from whatever was actually computed (False/False when result is None). On fresh: mark completed (status/completed_at/last_heartbeat) exactly as the base class does; otherwise leave running. Save the registry, return (fresh, entry). verify_spine/accept_mtime_only_risk are not yet CLI-wired in this item (that is m4) -- call the method directly with defaults or via verify_external_result's existing call site. Run the rewritten test again and confirm PASS (TDD green -- c2, paste passing output verbatim).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete: dispatch() accepts --spine",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: rewritten test_verify_result_absent_then_present_marks_completed observed failing (still returns 0) against pre-fix verify() -- manual attest, red output pasted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Rewritten test run against pre-fix code: FAILED as expected (1 != 0) -- old code returned code_present=0/completed for a fresh result with no spine evidence and no override. This IS the #432 bug. Confirmed red."
+        },
+        {
+          "id": "c2",
+          "statement": "ExternalBackend.verify() override implements default-refuse (AND semantics, .get() only); rewritten test passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_crew_launcher.py -k test_verify_result_absent_then_present_marks_completed -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-verify-default-refuse-1"
+        }
+      ],
+      "constraints": [
+        "ExternalBackend.verify is an OVERRIDE, not a CrewBackend base-class edit",
+        "use .get('spine')/.get('result'), never bracket access",
+        "AND semantics, never rescue/OR, when both result and spine are in play",
+        "accepted-risk message must print to BOTH stdout and stderr"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-verify-default-refuse-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_crew_launcher.py -k test_verify_result_absent_then_present_marks_completed -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-named-spine-proofs": {
+      "id": "m3-named-spine-proofs",
+      "title": "Prove named-spine evidence paths: not-terminal refuses, terminal completes, spine-only no-crash",
+      "imperative": "Add new tests to tests/test_crew_launcher.py: (1) test_verify_named_spine_not_terminal_refuses -- dispatch external WITH --spine naming a hand-built spine file that exists but was never advanced past init (mirrors #432's actual evidence; a minimal fixture is fine per spine_terminal's docstring at ~L506, does not need the real engine), fresh result written, --verify-result must REFUSE (exit 1). BEFORE writing the ExternalBackend assertion, demonstrate the pre-fix bug for real: call `RC.CrewBackend().verify(entries, session, root=root)` directly on the SAME entry/result -- this is the literal pre-fix logic, still present unchanged as the base class -- and show it returns fresh=True/completed despite the un-terminal spine (paste this as the red-proof; CrewBackend.verify is untouched by this gate so this is a genuine, not simulated, demonstration). Then assert RC.ExternalBackend().verify(...) on the same fixture REFUSES. (2) test_verify_named_spine_terminal_completes -- same setup but the spine fixture is driven to a genuinely terminal state (every item status complete/skipped, checklist_engine.active_id returns None; for a survey type also set a non-null consolidation) -- --verify-result must report completed. Run both new tests and confirm PASS.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete: ExternalBackend.verify() default-refuse override implemented",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "pre-fix bug demonstrated via CrewBackend.verify() (unchanged base class) on the not-terminal-spine fixture -- manual attest, output pasted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Pre-fix bug demonstrated: RC.CrewBackend().verify() (unchanged base-class logic) on the not-terminal-spine + fresh-result fixture returns fresh=True/status=completed -- wrong, embedded as an in-test assertion inside test_verify_named_spine_not_terminal_refuses, not a separate standalone run. Then ExternalBackend.verify() on the same fixture refuses (fresh=False, status stays running, spine_verified=False)."
+        },
+        {
+          "id": "c2",
+          "statement": "named-spine not-terminal refuses; named-spine terminal completes -- both new tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_crew_launcher.py -k \"test_verify_named_spine_not_terminal_refuses or test_verify_named_spine_terminal_completes\" -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-named-spine-proofs-1"
+        }
+      ],
+      "constraints": [
+        "reuse spine_terminal read-only, do not edit checklist_engine.py",
+        "hand-built fixture is fine, no real engine drive required"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-named-spine-proofs-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_crew_launcher.py -k \"test_verify_named_spine_not_terminal_refuses or test_verify_named_spine_terminal_completes\" -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-cli-wiring": {
+      "id": "m4-cli-wiring",
+      "title": "Change 3: CLI wiring -- --verify-spine, --accept-mtime-only-risk, distinguishable REFUSED messages",
+      "imperative": "In scripts/run_crew.py build_parser() (~L1901), add `--verify-spine PATH` (help: verify this checklist file reached a terminal state, checked independently of any --spine given at dispatch -- use when the crew's actual plan/spine path was only learned after it returned) and `--accept-mtime-only-risk REASON` (help: explicit, recorded override: accept a fresh result artifact alone as completion when no spine target is available to check -- required reason, printed loudly, never silent; see #432). In main()'s `args.verify_result` branch (~L1997) and in verify_external_result (~L1865), thread both new args through to ExternalBackend().verify(...) as new optional kwargs with None defaults (back-compat: verify_external_result's existing signature/callers keep working). Add the new REFUSED message, checked BEFORE falling back to the existing STALE/absent messages: compute `effective_spine_for_message = args.verify_spine or entry.get('spine')`; when `entry.get('spine_verified') is False` and effective_spine_for_message is truthy, print `REFUSED: spine <path> never reached a terminal state ...` naming the path; when `entry.get('spine_verified') is False` and effective_spine_for_message is falsy (the bare default-refuse branch, no evidence and no override), print `REFUSED: no spine evidence and no --accept-mtime-only-risk given ...` naming both flags as the way forward and citing #432. Add three new tests: test_verify_time_spine_override_completes (dispatch NO --spine; verify with --verify-spine naming a spine driven to terminal by then -- must report completed, proving the verify-time flag is consulted independently of dispatch-time state), test_verify_accept_mtime_only_risk_completes (dispatch NO --spine; verify with --accept-mtime-only-risk \"reason text\" and a fresh result -- must report completed; capture BOTH stdout and stderr and assert both contain the reason text and the word RISK; assert registry entry carries mtime_only_risk_accepted), test_verify_spine_only_external_dispatch_no_crash (dispatch with result=None and --spine given, spine driven to terminal -- --verify-result with no result artifact involved at all reports completed, no crash). Also, as evidence for the crash the guard prevents: run a short python -c snippet demonstrating `entry['spine']` (bracket access) raises KeyError on an entry dict built with no 'spine' key at all, contrasted with `entry.get('spine')` returning None -- paste both. Run all new tests and confirm PASS.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 complete: named-spine evidence paths implemented and proven",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "CLI flags + distinguishable REFUSED messages wired; crash-prevention reasoning captured via .get vs bracket-access repro -- manual attest, output pasted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "CLI flags/message wiring already added in m2 (needed for m2's own red/green test). Crash repro: entry['spine'] bracket access on a spine-less entry dict raises KeyError; entry.get('spine') returns None safely. RC.result_exists(None, root) raises TypeError (Path(None) is not a valid path) -- confirms result_exists/result_fresh must never be called with result=None, which is exactly what the has_result guard in ExternalBackend.verify() prevents."
+        },
+        {
+          "id": "c2",
+          "statement": "verify-time override, explicit accepted risk (stdout+stderr RISK), spine-only no-crash -- all three new tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_crew_launcher.py -k \"test_verify_time_spine_override_completes or test_verify_accept_mtime_only_risk_completes or test_verify_spine_only_external_dispatch_no_crash\" -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-cli-wiring-1"
+        }
+      ],
+      "constraints": [
+        "verify_external_result's existing signature stays back-compat via optional kwargs",
+        "REFUSED message cites #432 in the no-evidence case specifically",
+        "accepted-risk message must print to BOTH stdout and stderr"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-cli-wiring-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_crew_launcher.py -k \"test_verify_time_spine_override_completes or test_verify_accept_mtime_only_risk_completes or test_verify_spine_only_external_dispatch_no_crash\" -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-rewrite-invariant-tests": {
+      "id": "m5-rewrite-invariant-tests",
+      "title": "Rewrite the two backend-invariant tests for the intentional narrowing",
+      "imperative": "Rewrite test_verify_is_uniform_across_backends (~L2861) and BackendInvariantContractTests.test_both_backends_verify_exists_and_fresh_identically (~L3138): both currently assert CliBackend().verify() and ExternalBackend().verify() behave identically with no spine evidence given, which is now intentionally false. Rewrite both to assert: the CLI side is unchanged (CliBackend().verify() keeps the old mtime-only base-class behavior -- fresh result alone completes), and the external side now default-refuses without evidence (fresh result alone, no spine, no override -> stays running / not fresh), PLUS add an assertion that the override path (accept_mtime_only_risk) on ExternalBackend brings it back to completed, confirming the divergence is deliberate and the old behavior stays reachable. Name this divergence explicitly as an intentional narrowing of docs/superpowers/specs/2026-07-07-crew-backend-design.md Decision 2 (\"the result contract is backend-invariant ... never forked\") -- the base freshness/existence contract itself stays byte-for-byte shared (unforked); this is an ADDITIONAL gate layered on top for one backend's spine-evidence dimension, not a fork of the base result_exists/result_fresh contract. Do not silently delete the old assertions without saying so in comments. Run both rewritten tests and confirm PASS.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 complete: CLI wiring done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both tests rewritten with explicit in-code comments naming the intentional divergence from Decision 2 -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Both tests rewritten with explicit in-code comments naming the intentional narrowing of Decision 2: base exists-AND-fresh contract (missing/stale cases) stays byte-for-byte shared across backends; only the fresh-result-with-no-spine-evidence case diverges on ExternalBackend, with the old mtime-only-pass reachable via accept_mtime_only_risk override, asserted explicitly in both tests."
+        },
+        {
+          "id": "c2",
+          "statement": "both rewritten tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_crew_launcher.py -k \"test_verify_is_uniform_across_backends or test_both_backends_verify_exists_and_fresh_identically\" -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-rewrite-invariant-tests-1"
+        }
+      ],
+      "constraints": [
+        "state the Decision 2 narrowing explicitly in IMPLEMENTER_RESULT, not just in code comments"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-rewrite-invariant-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_crew_launcher.py -k \"test_verify_is_uniform_across_backends or test_both_backends_verify_exists_and_fresh_identically\" -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-full-suite-and-result": {
+      "id": "m6-full-suite-and-result",
+      "title": "Full suite, wiring grep, IMPLEMENTER_RESULT",
+      "imperative": "Run the full suite: `cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_crew_launcher.py -q` and confirm green except only the tests explicitly named in this plan as intentional rewrites. Run the wiring grep: `grep -rn \"spine_verified\\|verify_spine\\|accept_mtime_only_risk\\|mtime_only_risk_accepted\" scripts/run_crew.py tests/test_crew_launcher.py` and state the count of production write/read sites vs. test assertion sites for each symbol. Write IMPLEMENTER_RESULT per templates/IMPLEMENTER_RESULT.template.md to .agent-work/epic-567-door/cmdr-b/crew-handoffs/g1-implement-implementer-result.md, including: every red-proof's failure output verbatim (pre-fix), every green-proof's passing output verbatim (post-fix), the full-suite summary line, the exact list of every test whose scenario was intentionally changed with a one-line reason each, the Decision 2 narrowing statement, and Workflow Feedback / Map Impact sections per the skill.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m5 complete: invariant tests rewritten",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m5 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT.md written with all required evidence sections -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT.md written to .agent-work/epic-567-door/cmdr-b/crew-handoffs/g1-implement-implementer-result.md with all required evidence: red/green proofs for every close-criteria scenario, wiring grep with counts, the 4 named intentional test-scenario changes, Decision 2 narrowing statement, Workflow Feedback, Map Impact. Full suite: 217 passed."
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green except named intentional rewrites",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_crew_launcher.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-full-suite-and-result-1"
+        }
+      ],
+      "constraints": [
+        "any failure outside the named intentional rewrites is a stop condition"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-full-suite-and-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_crew_launcher.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "implementer-g1-1786945667",
+    "status": "released",
+    "claimed_at": "2026-08-17T05:47:47.954512+00:00",
+    "last_heartbeat": "2026-08-17T05:59:04.609937+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T05:59:14.906518+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff #432 read in full: task/scope/exclusions/evidence/test-mode/stop-conditions/return-format all present. global-crew.md+global-everyone.md+CREW_CONTEXT.md+GLOSSARY.md read. Confirmed via grep that CliBackend.verify() is called only in tests (L2874,2880,3146,3151,3158), production only calls ExternalBackend().verify() at L1870 -- satisfies the handoff's override-not-base-class-edit constraint. py/python/python3 all resolve pytest 9.1.1 on this host.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:48:23.696623+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-dispatch-accepts-spine",
+      "why": "Removed the --spine refusal block in ExternalBackend.dispatch(); rewrote class docstring, --spine CLI help text. Banner text left as-is (never claimed --spine refused, still accurate: spine recorded but never bound). Rewritten test_external_dispatch_refuses_spine passes (1 passed); full ExternalDispatchTests class passes (6 passed), no collateral breakage.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:49:41.637689+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-verify-default-refuse",
+      "why": "Added ExternalBackend.verify() override implementing default-refuse (AND semantics, .get() reads only, never crashes on result=None). Also wired verify_external_result + build_parser + main()'s verify_result branch (new --verify-spine/--accept-mtime-only-risk flags, new distinguishing REFUSED message gated on 'result_deficient' so pre-existing STALE/absent tests stay unchanged while the new fresh-result-but-no-spine-evidence case gets the new #432 message) since m2's own red/green test needed the message wording. Rewritten test_verify_result_absent_then_present_marks_completed passes (1 passed); full ExternalDispatchTests+ResultFreshnessTests sweep passes (14 passed), no collateral breakage on the untouched STALE/absent tests.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:52:47.703456+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-named-spine-proofs",
+      "why": "Added test_verify_named_spine_not_terminal_refuses (embeds the genuine pre-fix red-proof via CrewBackend.verify(), then proves ExternalBackend.verify() refuses, then proves the real RC.main CLI path refuses too) and test_verify_named_spine_terminal_completes (spine driven to terminal via hand-built fixture -> completed, spine_verified=True). Both pass (2 passed).",
+      "mechanical": false,
+      "ts": "2026-08-17T05:53:42.913629+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-cli-wiring",
+      "why": "Three new tests pass (3 passed): verify-time --verify-spine override, --accept-mtime-only-risk with RISK printed to BOTH stdout/stderr + mtime_only_risk_accepted recorded, and spine-only external dispatch (result=None) verifying with no crash. Crash-prevention evidence captured via direct repro.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:54:48.329210+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-rewrite-invariant-tests",
+      "why": "Both rewritten tests pass (2 passed). test_verify_is_uniform_across_backends now shows CliBackend unchanged + ExternalBackend default-refuse + override-reachable. test_both_backends_verify_exists_and_fresh_identically keeps (a)/(b) shared-loop unchanged and splits (c) per-backend with the override assertion for ExternalBackend.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:56:03.489650+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-full-suite-and-result",
+      "why": "Full suite green (217 passed, 0 failed) except the four named intentional scenario rewrites. Wiring grep run and counted per symbol. IMPLEMENTER_RESULT.md written with all required evidence sections.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:59:04.609917+00:00"
+    }
+  ]
+}

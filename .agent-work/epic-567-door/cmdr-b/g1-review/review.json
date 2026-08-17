@@ -1,0 +1,230 @@
+{
+  "work_id": "epic-567-door/cmdr-b",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a-and-semantics",
+    "r4b-override-not-base",
+    "r4c-get-not-bracket"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded references/global-crew.md, references/global-everyone.md (constellation-reviewer skill), docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the handoff (g1-review-REVIEWER_HANDOFF.md), the implementer result (g1-implement-implementer-result.md), MISSION_FRAME.md decision anchors, and the full uncommitted diff to scripts/run_crew.py and tests/test_crew_launcher.py.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All four close-criteria mechanisms confirmed against the diff AND independently reproduced in fresh processes: (1) dispatch() accepts --spine (diff L1671-1671, recorded not bound), (2) verify() default-refuses without spine/override -- reproduced fresh: exit 1, 'REFUSED: no spine evidence...see #432'; (3) AND semantics -- reproduced fresh: fresh result next to non-terminal spine still refuses ('spine ... never reached a terminal state'); (4) --verify-spine independently overrides dispatch-time --spine (test_verify_time_spine_override_completes, verified in diff); (5) --accept-mtime-only-risk is loud on both stdout+stderr -- reproduced fresh, both streams show 'RISK ACCEPTED'; (6) no crash on result=None+spine=<path> -- .get() guards entry.get('result') is not None before calling result_exists/result_fresh (diff L115-122); (7) .get() used throughout new verify() code for spine/result. Full suite: 217 passed, matches pasted evidence exactly (independently re-run).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status --porcelain confirms only scripts/run_crew.py and tests/test_crew_launcher.py are modified -- exactly the Allowed Scope. scripts/checklist_engine.py and scripts/mcp_spine_server.py are absent from git diff --name-only: not touched. spine_terminal is read-only reused (grep confirms no def/reassignment in the diff, only calls). CliBackend.verify() production call count is 0 (only the single ExternalBackend().verify() call site inside verify_external_result, plus two docstring mentions) -- CliBackend behavior byte-for-byte untouched. Untracked .agent-work/567-b/triage-candidates/* and .agent-work/epic-567-door/* are workflow/triage artifacts, not code scope creep.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently reproduced, not just trusted from the pasted transcript: (a) full suite -- py -m pytest tests/test_crew_launcher.py -q -> 217 passed (matches implementer's and Commander's claim exactly); (b) targeted re-run of the 4 named intentional-rewrite tests plus test_verify_named_spine_not_terminal_refuses -- all 5 pass; (c) fresh-process (non-pytest) CLI demonstration via scripts/run_crew.py directly in a scratch --root: dispatch external with no --spine -> write fresh result -> --verify-result with no override -> exit 1, REFUSED message citing #432; then --verify-result --accept-mtime-only-risk '<reason>' -> exit 0, 'RISK ACCEPTED' printed to BOTH stdout and stderr; (d) separate fresh-process repro of AND semantics: dispatch with --spine naming a non-terminal (pending) gated fixture, write fresh result, --verify-result -> still REFUSED ('spine ... never reached a terminal state') despite the fresh result -- confirms AND not OR/rescue. All evidence in the implementer's result reproduces cleanly.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Umbrella check for the handoff's three named constraints; per-rule sub-checks appended as r4a-and-semantics, r4b-override-not-base, r4c-get-not-bracket (visited later in this survey, per engine append-as-sibling semantics).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "One real, already-routed reconciliation item: Decision 2's prose in docs/superpowers/specs/2026-07-07-crew-backend-design.md is now stale (verified the doc still reads 'never forked' at L35, unedited by this diff). The narrowing is intentional, evidence-backed (rewritten BackendInvariantContractTests), and out of this gate's Allowed Scope -- correctly left as a triage candidate rather than silently fixed or dropped. No structural/capability change here diverges from the map without a recorded reason (no docs/architecture map exists in this repo per implementer's Map Impact note, confirmed: no docs/architecture dir present).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/<work-id>/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/<work-id>/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-567-door/cmdr-b/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded at .agent-work/epic-567-door/cmdr-b/FOWLER_PASS.json (all 12 baseline smells visited); verify_fowler_pass.py exits 0 -- flagged=['long-method'] (observation only: main()'s --verify-result branch grows ~30 lines on an already-178-line dispatcher, non-blocking, matches adjacent pre-existing style), overridden=['comments-as-deodorant'] (repo's own decision-fixedness/@grade doctrine + CREW_CONTEXT Verification Discipline require this rationale captured inline; code itself is not confusing). All other 10 smells absent.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-567-door/cmdr-b/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a-and-semantics": {
+      "id": "r4a-and-semantics",
+      "title": "Constraint: AND semantics, never rescue/OR",
+      "imperative": "When both a result and a spine are in play, completion requires BOTH fresh result AND terminal spine -- never OR/rescue. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Diff L1801-1804 (effective_spine branch): fresh = drove and (result_ok if has_result else True) -- pure AND, no or/rescue anywhere in the new code. Independently reproduced fresh-process: dispatch with --spine naming a non-terminal (pending) gated fixture, write a fresh result artifact, --verify-result -> still exit 1, 'REFUSED: spine ... never reached a terminal state' despite the fresh result. Mirrors test_verify_named_spine_not_terminal_refuses, independently re-run and passing.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b-override-not-base": {
+      "id": "r4b-override-not-base",
+      "title": "Constraint: verify() is an override, not a base-class edit",
+      "imperative": "ExternalBackend.verify() must be a new override; CrewBackend.verify (the shared base) must stay byte-for-byte unchanged. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "grep confirms CrewBackend.verify (line 1475, base class) is untouched by the diff -- only ExternalBackend.verify (new, line 1739) and verify_external_result (wrapper, line 1970) changed. git diff scripts/run_crew.py shows zero hunks inside CrewBackend's body. CliBackend never calls .verify() in production (grep: only 1 production call site, inside verify_external_result -> ExternalBackend().verify(); CliBackend uses finalize_from_exit_code instead) -- CliBackend behavior byte-for-byte untouched, confirmed by test_verify_is_uniform_across_backends's own CliBackend assertions (independently re-run, passing).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4c-get-not-bracket": {
+      "id": "r4c-get-not-bracket",
+      "title": "Constraint: .get(...) not bracket access on spine/result",
+      "imperative": "entry.get('spine')/entry.get('result') used, never entry['spine']/entry['result'], for entries that may lack the key entirely. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "New verify() reads spine/result via entry.get('spine') (L1791) and entry.get('result') is not None (L1792); main()'s new message branch reads entry.get('result') (L253-eq) and entry.get('spine') (L258-eq) -- no bare entry['spine']/entry['result'] bracket access exists anywhere that could crash on a missing key. The two entry['result'] bracket reads at L1794-1795 are reached only inside 'if has_result:', which is itself derived from entry.get('result') is not None one line above -- safe by construction, and this is exactly the guarded pattern the close-criteria's own crash-guard evidence (result_exists(None, root) -> TypeError) demonstrates is being avoided. test_verify_spine_only_external_dispatch_no_crash (result=None + spine given) independently re-run, passing, no crash.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "g1 review of #432 ExternalBackend default-refuse fix: all 10 items pass. Independently re-ran full suite (217 passed, matches) and reproduced two fresh-process CLI demonstrations myself (default-refuse -> --accept-mtime-only-risk override; AND-semantics with a non-terminal spine). All four named intentional test-scenario rewrites verified honest -- each OLD scenario is genuinely what #432 forbids/narrows. Scope respected (only scripts/run_crew.py + tests/test_crew_launcher.py touched; checklist_engine.py/mcp_spine_server.py untouched; CliBackend never calls .verify() in production). Fowler pass: 1 non-blocking observation (long-method, main()'s growing dispatcher) and 1 logged override (comments-as-deodorant, subordinate to repo decision-fixedness doctrine). One pre-existing, already-routed triage candidate confirmed (crew-backend-design spec Decision 2 now stale)."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "docs/superpowers/specs/2026-07-07-crew-backend-design.md Decision 2 ('the result contract is backend-invariant ... never forked') is now stale relative to shipped code: ExternalBackend.verify() intentionally narrows this for itself alone. Already surfaced by the implementer and recorded at .agent-work/567-b/triage-candidates/tc1-crew-backend-design-doc-drift.md -- confirming, not duplicating, that routing."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g1-reviewer-1786946643",
+    "status": "released",
+    "claimed_at": "2026-08-17T06:04:03.886664+00:00",
+    "last_heartbeat": "2026-08-17T06:09:45.162344+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T06:10:35.173689+00:00"
+  }
+}

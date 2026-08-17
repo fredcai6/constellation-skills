@@ -1661,28 +1661,37 @@ class ExternalBackend(CrewBackend):
     keeping the `dispatch: "external"` marker) and returns `(None, entry)`; the
     caller verifies the result later. `resume` is unrecoverable-by-wrapper.
 
-    `--spine` is REFUSED here: binding is impossible by construction when
-    nothing is spawned and no environment is built, so accepting the option
-    would record it in the registry and silently bind nothing. There is no
-    out-of-band way to bind a child this backend never launches."""
+    `--spine` is ACCEPTED here (issue #432), but VERIFICATION-ONLY: binding is
+    still impossible by construction when nothing is spawned and no environment
+    is built, so it is never bound into a child's SPINE_FILE/SPINE_SESSION. It
+    is recorded on the entry instead, so a later `verify()` can independently
+    check whether the crew actually drove that spine to a terminal state
+    (`spine_terminal`) rather than trusting a fresh result artifact alone.
+    `handoff` is still always required here (unchanged) -- the external backend
+    never relaxes the handoff requirement the cli backend does, since it still
+    binds nothing regardless of what `--spine` names."""
 
     name = BACKEND_EXTERNAL
 
     def dispatch(self, spec: CrewSpec, *, root: Path, entries: list[dict], launch=None) -> tuple[None, dict]:
-        if spec.spine is not None:
+        # External always needs a handoff, spine or not (unchanged) -- it
+        # cannot bind a spine, so a spine-only dispatch here would leave the
+        # crew with no job. `CrewSpec.__post_init__` only requires ONE of
+        # handoff/spine (the cli backend can go spine-only), so a spec with
+        # `handoff=None` and a `spine` given is legal at construction time --
+        # this backend layers its own, stricter refusal on top. This guard
+        # must run BEFORE `_require_handoff` (which assumes a non-None path
+        # and crashes with `TypeError` on `Path(None)` otherwise -- it is only
+        # ever called elsewhere with an already-guaranteed-non-None handoff).
+        if spec.handoff is None:
             raise CrewLaunchError(
-                f"refusing --spine {spec.spine!r} on the external backend: "
-                f"ExternalBackend spawns no process and builds no environment, so "
-                f"nothing binds the value into a child's SPINE_FILE/SPINE_SESSION. "
-                f"--spine is only meaningful on the cli backend (--backend cli). A "
-                f"spine-only dispatch here would leave the crew with no job at "
-                f"all -- pass --handoff instead."
+                "refusing to record: the external backend always needs a "
+                "--handoff, spine or not -- it spawns no process and builds "
+                "no environment, so it cannot bind a spine either; a "
+                "spine-only dispatch here would leave the crew with no job "
+                "at all."
             )
-        # `spec.spine is None` (checked above) plus `CrewSpec.__post_init__`'s
-        # "needs a job" refusal together guarantee `spec.handoff` is not None by
-        # this point -- the external backend never relaxes the handoff
-        # requirement the cli backend does, since it cannot bind a spine.
-        # Refuses if the handoff is missing, matching the spawn path's
+        # Refuses if the handoff file is missing, matching the spawn path's
         # precondition (with the external path's "record" wording).
         _require_handoff(spec.handoff, root, action="record")
 
@@ -1726,6 +1735,102 @@ class ExternalBackend(CrewBackend):
             f"resume it in place (skills/_shared/windows.md §2), else abandon and "
             f"relaunch it (--abandon {session} --relaunch)."
         )
+
+    def verify(
+        self,
+        entries: list[dict],
+        session: str,
+        *,
+        root: Path,
+        verify_spine: str | None = None,
+        accept_mtime_only_risk: str | None = None,
+    ) -> tuple[bool, dict]:
+        """OVERRIDE (issue #432), not a `CrewBackend.verify` base-class edit --
+        `CliBackend` never calls `.verify()` operationally (it uses
+        `finalize_from_exit_code` instead), so this narrowing is scoped to the
+        one backend that actually relies on `.verify()` in production.
+
+        The base class judges completion on a fresh result artifact ALONE --
+        correct for `CliBackend` (a spawned child that exits 0 has already been
+        supervised). `ExternalBackend` supervises NOTHING: `dispatch()` spawns
+        no process, so a fresh result artifact alone is not evidence the crew
+        actually did the work; it is only evidence a file exists. #432: a crew
+        dispatched on this backend that drove no spine at all must not read as
+        an unqualified `completed` BY DEFAULT.
+
+        Verdict, in order:
+          1. `effective_spine` (verify-time `--verify-spine` wins over the
+             entry's dispatch-time `spine` when both are given -- the
+             dispatcher usually only learns the crew's real plan/spine path
+             after it returns) not None: judged on `spine_terminal` AND
+             (when a result was also given) on `result_ok` -- AND semantics,
+             never OR/rescue: a fresh result must never excuse an undriven
+             spine, and an inverse rescue is likewise never allowed.
+          2. No spine evidence, but `accept_mtime_only_risk` given: an
+             explicit, reasoned, recorded escape hatch back to the OLD
+             mtime-only-pass behavior -- never the default, always loud
+             (printed to BOTH stdout and stderr, `RISK` + the reason).
+          3. Neither: REFUSE. This is the fix -- no evidence, no accepted
+             risk, no clean pass.
+
+        `entry.get(...)`, never bracket access: some fixtures build entry
+        dicts with no `"spine"` key at all, not `None`. `result_exists`/
+        `result_fresh` are NEVER called when `entry.get("result") is None`
+        (both crash on `Path(None)`) -- a spine-only external dispatch
+        (`result=None`, `spine=<path>`, legal per `CrewSpec.__post_init__`,
+        newly reachable on this backend since `dispatch()` stopped refusing
+        `--spine`) is judged solely on the spine.
+
+        Returns (fresh, entry) -- same signature/contract as the base."""
+        entry = find_entry(entries, session)
+        if entry is None:
+            raise CrewLaunchError(f"cannot verify: no crew recorded with session name {session!r}")
+        if is_abandoned(entry):
+            raise CrewLaunchError(f"cannot verify an abandoned crew {session!r}")
+
+        spine = entry.get("spine")
+        has_result = entry.get("result") is not None
+        if has_result:
+            present = result_exists(entry["result"], root)
+            result_ok = result_fresh(entry["result"], root, entry["started_at"])
+        else:
+            present = False
+            result_ok = False
+
+        effective_spine = verify_spine if verify_spine is not None else spine
+        if effective_spine is not None:
+            drove = spine_terminal(effective_spine, root)
+            entry["spine_verified"] = drove
+            fresh = drove and (result_ok if has_result else True)
+        elif accept_mtime_only_risk is not None:
+            entry["spine_verified"] = None
+            entry["mtime_only_risk_accepted"] = {
+                "reason": accept_mtime_only_risk, "at": _now(),
+            }
+            fresh = result_ok  # only reachable with has_result True (CrewSpec.__post_init__
+                                # requires result or spine; effective_spine is None here)
+            if fresh:
+                risk_line = (
+                    f"RISK ACCEPTED: {entry['session_name']!r} marked completed on a "
+                    f"fresh result artifact alone, with no spine evidence to check -- "
+                    f"reason: {accept_mtime_only_risk} (see #432)"
+                )
+                print(risk_line)
+                print(risk_line, file=sys.stderr)
+        else:
+            # DEFAULT: no spine evidence, no explicit accepted risk -- REFUSE.
+            entry["spine_verified"] = False
+            fresh = False
+
+        entry["result_present"] = present
+        entry["result_fresh"] = result_ok if has_result else False
+        if fresh:
+            now = _now()
+            entry["status"] = "completed"
+            entry["completed_at"] = now
+            entry["last_heartbeat"] = now
+        save_registry(registry_path(entry["work_id"], root), entries)
+        return fresh, entry
 
 
 # --------------------------------------------------------------------------- #
@@ -1862,12 +1967,24 @@ def record_external_attempt(
     return entry
 
 
-def verify_external_result(entries: list[dict], session: str, root: Path) -> tuple[bool, dict]:
-    """Verify whether the result artifact is present AND fresh for a recorded
-    attempt and, when fresh, mark it resolved/`completed`. Thin wrapper over the
-    backend-uniform `CrewBackend.verify` (signature + observable behavior
-    preserved). Returns (fresh, entry). Reuses the canonical `result_fresh`."""
-    return ExternalBackend().verify(entries, session, root=root)
+def verify_external_result(
+    entries: list[dict],
+    session: str,
+    root: Path,
+    *,
+    verify_spine: str | None = None,
+    accept_mtime_only_risk: str | None = None,
+) -> tuple[bool, dict]:
+    """Verify a recorded external attempt via `ExternalBackend.verify` (issue
+    #432: default-refuse without spine evidence -- see that method's
+    docstring for the full verdict logic). `verify_spine`/
+    `accept_mtime_only_risk` are optional kwargs with `None` defaults, so
+    existing callers that don't need them keep working unchanged (back-compat).
+    Returns (fresh, entry)."""
+    return ExternalBackend().verify(
+        entries, session, root=root,
+        verify_spine=verify_spine, accept_mtime_only_risk=accept_mtime_only_risk,
+    )
 
 
 def abandon_crew(entries: list[dict], session: str, root: Path) -> dict:
@@ -1932,8 +2049,11 @@ def build_parser() -> argparse.ArgumentParser:
             "door. On the cli backend, bound into the spawned child's SPINE_FILE "
             "(and its assignment-keyed SPINE_SESSION, derived from "
             "--work-id/--gate/--role) so the door resolves to this crew's own spine "
-            "instead of .mcp.json's demo default. REFUSED on the external backend, "
-            "which spawns no process and so binds nothing."
+            "instead of .mcp.json's demo default. On the external backend "
+            "(issue #432), ACCEPTED and RECORDED but never bound (it spawns no "
+            "process and builds no environment) -- verification-only, consulted "
+            "later by --verify-result via spine_terminal; --verify-spine there "
+            "overrides this value at verify time."
         ),
     )
     p.add_argument(
@@ -1985,6 +2105,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="verify the result artifact for an externally-dispatched crew (by session name) "
              "and, if present, mark it completed in the registry",
     )
+    p.add_argument(
+        "--verify-spine",
+        dest="verify_spine",
+        help="verify this checklist file reached a terminal state, checked independently "
+             "of any --spine given at dispatch -- use when the crew's actual plan/spine "
+             "path was only learned after it returned",
+    )
+    p.add_argument(
+        "--accept-mtime-only-risk",
+        dest="accept_mtime_only_risk",
+        metavar="REASON",
+        help="explicit, recorded override: accept a fresh result artifact alone as "
+             "completion when no spine target is available to check -- required reason, "
+             "printed loudly, never silent; see #432",
+    )
     return p
 
 
@@ -1996,12 +2131,47 @@ def main(argv: list[str] | None = None) -> int:
         # --- verify an externally-dispatched crew's result ------------------ #
         if args.verify_result:
             entries = load_registry_for_resume(args.verify_result, root)
-            fresh, entry = verify_external_result(entries, args.verify_result, root)
+            fresh, entry = verify_external_result(
+                entries, args.verify_result, root,
+                verify_spine=args.verify_spine,
+                accept_mtime_only_risk=args.accept_mtime_only_risk,
+            )
             if fresh:
                 print(f"verify {entry['session_name']} -> fresh ({entry['status']})")
                 return 0
-            # Fail visibly, distinguishing the two modes. The entry is left
+            # Fail visibly, distinguishing every refusal mode. The entry is left
             # `running` (verify_external_result only completes on a fresh result).
+            #
+            # issue #432: when the result artifact itself is fine (present AND
+            # fresh) or wasn't required at all (spine-only dispatch), but the
+            # refusal is really about missing/un-terminal spine evidence, name
+            # THAT -- checked before falling back to the pre-existing
+            # STALE/absent messages, which stay exactly as they were for a
+            # genuinely deficient result artifact (independent of any spine
+            # question).
+            has_result = entry.get("result") is not None
+            result_deficient = has_result and not (
+                entry.get("result_present") and entry.get("result_fresh")
+            )
+            if not result_deficient and entry.get("spine_verified") is False:
+                effective_spine_for_message = args.verify_spine or entry.get("spine")
+                if effective_spine_for_message:
+                    print(
+                        f"REFUSED: spine {effective_spine_for_message} never reached a "
+                        f"terminal state ({entry['session_name']} left {entry['status']})",
+                        file=sys.stderr,
+                    )
+                else:
+                    print(
+                        f"REFUSED: no spine evidence and no --accept-mtime-only-risk "
+                        f"given for {entry['session_name']} -- pass --spine (at dispatch) "
+                        f"or --verify-spine naming a checklist driven to terminal, or "
+                        f"--accept-mtime-only-risk \"<reason>\" to explicitly accept a "
+                        f"fresh result artifact alone as completion; see #432 "
+                        f"({entry['session_name']} left {entry['status']})",
+                        file=sys.stderr,
+                    )
+                return 1
             if entry.get("result_present"):
                 print(
                     f"REFUSED: result artifact stale: {entry['result']} predates "
