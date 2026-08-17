@@ -5,7 +5,7 @@
     "run": "cleanup-f-derive-worktree",
     "project": "constellation-skills",
     "role": "reviewer",
-    "refusals": 0,
+    "refusals": 1,
     "spine-step": "r0-context",
     "rework-count": 0,
     "failed-commands": 0,
@@ -16,6 +16,6 @@
   "refused": [],
   "run": {
     "work_id": "cleanup-f-derive-worktree",
-    "generated_at": "2026-08-17T00:26:27Z"
+    "generated_at": "2026-08-17T01:14:52Z"
   }
 }

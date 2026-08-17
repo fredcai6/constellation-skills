@@ -1,0 +1,86 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "diff_ref": "git diff 68d190f7..539ff636 -- scripts/hooks/spine_rail.py tests/test_spine_rail.py (issue #609 lane F, gate g3, rework 4: the scan fallback's RENDER selection obeys the same binding-key-provenance rule as its write; plus prose repair in five places)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md (Verification Discipline; Record Stores Are Never Hand-Edited), docs/agents/GLOSSARY.md, scripts/hooks/spine_rail.py module docstring (frozen DESIGN_SPEC #138 channel B, D3 design contract), references/global-crew.md, references/global-everyone.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "decide_session_start grew again in this rework -- roughly 190 lines, of which about 34 new ones are the B6 block. It now holds three separable decisions: who is withheld from entirely, what the scan RENDERS, and what the scan WRITES. The scan fallback in particular is self-contained (select a candidate, then maybe file it) and would extract cleanly behind a name. Two prior reviews recorded this and it has not been done; the rework made it larger, not smaller. Not a blocker -- no behaviour depends on it -- but it is the structural reason each rework on this gate has had to re-read the whole function to be sure of a one-branch change.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "overridden",
+      "finding": "scripts/hooks/spine_rail.py is ~2000 lines carrying three hook handlers plus the binding store, which by size alone reads as a large class.",
+      "override": {
+        "repo_standard": "The module's own frozen design contract (spine_rail.py docstring: 'One script, dispatched by event name (argv[1]): Stop, SessionStart, PostToolUse ... Stdlib only ... Three registrations only', DESIGN_SPEC #138 channel B, D3), which also names its 'deliberate, spec-accepted LOCALITY COST'.",
+        "reason": "The single-file, stdlib-only, self-dispatching shape is a stated shipping requirement for a Claude Code hook that must run standalone in headless and subagent contexts, not an accident of growth. Splitting the module -- the repair the smell would recommend -- would break the contract the smell is being measured against, and the contract already prices the duplication it causes. The standard wins."
+      }
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "Not duplicated LOGIC -- sharing _attributed_to_another_key across the render and the write is precisely this rework's fix, and it is the right one. Duplicated EXPLANATION: the three-states taxonomy (no binding at all / owns nothing visible / owns an entry whose spine no longer loads) is stated in four places in this file, and the gate's own record shows two of those copies have already gone stale once each. I verified rework 4 repaired the two it touched and added no fifth copy. State it once and point at it; the recurrence rate, not the line count, is the argument.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "The new render loop reads only its own function's locals (matches, owners, own_key) and calls one module-private predicate. It reaches into no other object's data.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "(owners, spine_path, bind_key) is a three-argument predicate, not a recurring group of fields travelling together that wants a parameter object. The (spine_dict, spine_path) tuples the scan returns are consumed immediately at the one call site.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "A binding key is a domain concept encoded as a delimiter-joined string ('<session_id>#<agent_id>'), and a spine identity is a path string compared with normcase+normpath. Both are textbook primitive obsession.",
+      "override": {
+        "repo_standard": "The frozen stdlib-only single-file contract above, together with binding_key()'s documented role as 'the SINGLE place the composite per-agent key is composed anywhere in the codebase (the gauge writer calls this same function through its `_spine_rail` module handle, so the two hooks cannot drift)'.",
+        "reason": "Centralising composition in one named function already buys what a value object would buy -- one definition, no drift between the two hooks that share it -- while a real type would add the import surface and cross-module coupling the hook contract forbids. The comparison is likewise centralised in _same_path. The standard subordinates the smell because the drift risk the smell warns about is the risk the existing design already closes."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "Nothing in the diff exceeds three parameters; _attributed_to_another_key takes three and the new fixture helper takes one.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "The historical signature is real and is this gate's whole story: one ownership rule has needed a NEW call site in each of four consecutive reworks -- selection (B2), the fall-through (B4), the write (B5), and now the render (B6). Recording it because a fifth would be the signal to restructure rather than to add a site. What I measured, though, points the other way for the first time: decide_stop and every shared helper are byte-identical to 68d190f7, and my 48-row topology enumeration finds no remaining selection site where the rule goes unasked. So this rework looks like the one that closes the pattern rather than another instance of it -- which is the evidence behind my answer to the gate's open decision.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "flagged",
+      "finding": "decide_session_start has changed in all four reworks for what read as different reasons -- who gets withheld from, what gets written, what gets rendered. That is the divergent-change signature, and it shares ONE repair with the long-method flag above: extract the scan fallback, which owns two of those three reasons. Flagged separately because the two smells argue for the extraction from different directions, not because there are two repairs to do.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "Nothing in the diff chains. The pre-existing `spine.get('engine_session') or {}` followed by `.get('status')` is two links with a guard between them and is untouched by this rework.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "flagged",
+      "finding": "The render asks _attributed_to_another_key with own_key while the write asks with the bare sid, and the comment says they are 'still named separately here rather than shared, because if one ever does arrive the acting agent is who this selection is for'. That is generality built for an input never observed: tests/fixtures/probe_payloads.jsonl holds six rows, every one a PostToolUse, and no SessionStart payload exists anywhere in the repo -- so binding_key(data) provably yields the bare sid on every payload the project can produce today, and no test can distinguish the two keys. I constructed the missing input (rev5_refusal_set.py C9/C10) to price the generality: it becomes observable the moment an agent-keyed SessionStart arrives, and its answer then is the one this file's identity doctrine already prescribes. So the generality is cheap and defensible -- but it is speculative, it is undertested by construction, and the two comments defending it overstate their evidence (see the recorded triage candidate).",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "flagged",
+      "finding": "The B6 hunk is five lines of code under roughly ninety lines of comment, and the rework's own report counts twelve prose sentences repaired against one behavioural change. The code itself is clear -- a loop with a skip -- so this is not deodorant in the classic sense of prose covering for tangled logic; it is decision history kept inline. What makes it worth flagging anyway is measured rather than aesthetic: on this gate the comments have been wrong more often than the code, twice by the record, and both B3 and B7 were defects in sentences rather than in behaviour. Comment mass at this density is a maintenance liability with a demonstrated failure rate, and CREW_CONTEXT's own rule -- 'assert against behaviour, never against text that describes it' -- means none of it is checked by anything.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

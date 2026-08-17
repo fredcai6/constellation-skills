@@ -1,0 +1,84 @@
+== arms ==
+  PREGATE   999b7663   sha256=37cf424e9711 bytes=74877
+  REWORK3   68d190f7   sha256=4b5cf14d5278 bytes=89859
+  WORKTREE  worktree   sha256=6267b32fdff6 bytes=94930
+  guard ok: 3 distinct arms; render loop only in WORKTREE; write guard in REWORK3+WORKTREE only
+
+== C1 two matches, both the crew's ==
+  PREGATE   {"pick_it_up": true, "renders": ["CREWA"], "wrote_binding": false}
+  REWORK3   {"pick_it_up": true, "renders": ["CREWA"], "wrote_binding": false}
+  WORKTREE  {"pick_it_up": false, "renders": [], "wrote_binding": false}
+  setup asserted: {"all_attributed_to": "crew composite key", "matches": 2}
+== C2 three matches, two the crew's + one unclaimed ==
+  PREGATE   {"pick_it_up": true, "renders": ["CREWA"], "wrote_binding": false}
+  REWORK3   {"pick_it_up": true, "renders": ["FREE1"], "wrote_binding": false}
+  WORKTREE  {"pick_it_up": true, "renders": ["FREE1"], "wrote_binding": false}
+  setup asserted: {"crew": 2, "glob_leads_with": "free", "matches": 3, "unattributed": 1}
+== C3 three matches, ALL the crew's ==
+  PREGATE   {"pick_it_up": true, "renders": ["CREWA"], "wrote_binding": false}
+  REWORK3   {"pick_it_up": true, "renders": ["CREWC"], "wrote_binding": false}
+  WORKTREE  {"pick_it_up": false, "renders": [], "wrote_binding": false}
+  setup asserted: {"all_attributed_to": "crew composite key", "matches": 3}
+== C4 tc1 boundary, 1 match(es) attributed to NOBODY ==
+  PREGATE   {"pick_it_up": true, "renders": ["FREE1"], "wrote_binding": true}
+  REWORK3   {"pick_it_up": true, "renders": ["FREE1"], "wrote_binding": true}
+  WORKTREE  {"pick_it_up": true, "renders": ["FREE1"], "wrote_binding": true}
+  setup asserted: {"attributed_to": "NOBODY", "matches": 1}
+== C4 tc1 boundary, 2 match(es) attributed to NOBODY ==
+  PREGATE   {"pick_it_up": true, "renders": ["FREE2"], "wrote_binding": false}
+  REWORK3   {"pick_it_up": true, "renders": ["FREE2"], "wrote_binding": false}
+  WORKTREE  {"pick_it_up": true, "renders": ["FREE2"], "wrote_binding": false}
+  setup asserted: {"attributed_to": "NOBODY", "matches": 2}
+== C4 tc1 boundary, 3 match(es) attributed to NOBODY ==
+  PREGATE   {"pick_it_up": true, "renders": ["FREE2"], "wrote_binding": false}
+  REWORK3   {"pick_it_up": true, "renders": ["FREE2"], "wrote_binding": false}
+  WORKTREE  {"pick_it_up": true, "renders": ["FREE2"], "wrote_binding": false}
+  setup asserted: {"attributed_to": "NOBODY", "matches": 3}
+== C5 acting session owns one of the matches ==
+  PREGATE   {"pick_it_up": true, "renders": ["CREWA"], "wrote_binding": false}
+  REWORK3   {"pick_it_up": true, "renders": ["CREWA"], "wrote_binding": false}
+  WORKTREE  {"pick_it_up": true, "renders": ["MINE"], "wrote_binding": false}
+  setup asserted: {"glob_leads_with": "crew", "matches": 2, "one_is_mine_bare_sid": true}
+== C6a attribute the glob LEADER, expect the trailer rendered ==
+  PREGATE   {"pick_it_up": true, "renders": ["FREE1"], "wrote_binding": false}
+  REWORK3   {"pick_it_up": true, "renders": ["FREE1"], "wrote_binding": false}
+  WORKTREE  {"pick_it_up": true, "renders": ["CREWA"], "wrote_binding": false}
+  setup asserted: {"attributed": "the glob LEADER", "attributed_marker": "FREE1", "free_marker": "CREWA", "matches": 2}
+== C6b attribute the glob TRAILER, expect the leader rendered ==
+  PREGATE   {"pick_it_up": true, "renders": ["FREE1"], "wrote_binding": false}
+  REWORK3   {"pick_it_up": true, "renders": ["FREE1"], "wrote_binding": false}
+  WORKTREE  {"pick_it_up": true, "renders": ["FREE1"], "wrote_binding": false}
+  setup asserted: {"attributed": "the glob TRAILER", "attributed_marker": "CREWA", "free_marker": "FREE1", "matches": 2}
+== C7 case folding at the new call site ==
+  predicate, linux (measured)     _attributed_to_another_key(UPPER-owned, lower) = False
+  predicate, win32 (simulated)    _attributed_to_another_key(UPPER-owned, lower) = True
+  normcase restored: True
+
+== C7a case variant, linux normcase (identity) ==
+  WORKTREE  {"pick_it_up": true, "renders": ["CREWA"], "wrote_binding": true}
+  setup asserted: {"matches": 1, "owned_key_spelling": "UPPER (constructed)", "scan_spelling": "lower"}
+== C7b case variant, win32 normcase SIMULATED (str.lower) ==
+  WORKTREE  {"pick_it_up": false, "renders": [], "wrote_binding": false}
+  setup asserted: {"matches": 1, "owned_key_spelling": "UPPER (constructed)", "scan_spelling": "lower"}
+  normcase restored: True
+
+== C8 #261 empty store, one match ==
+  PREGATE   {"pick_it_up": true, "renders": ["MINE"], "wrote_binding": true}
+  REWORK3   {"pick_it_up": true, "renders": ["MINE"], "wrote_binding": true}
+  WORKTREE  {"pick_it_up": true, "renders": ["MINE"], "wrote_binding": true}
+  setup asserted: {"binding_store": "empty", "matches": 1}
+== verdicts ==
+  C1 leak on PREGATE/REWORK3, withheld on WORKTREE : True
+  C2 WORKTREE renders the UNCLAIMED spine only      : True (['FREE1'])
+  C3 WORKTREE renders nothing when all are claimed  : True
+  C4 tc1 n=1 ALL ARMS IDENTICAL (no new refusal)    : True ['FREE1']
+  C4 tc1 n=2 ALL ARMS IDENTICAL (no new refusal)    : True ['FREE2']
+  C4 tc1 n=3 ALL ARMS IDENTICAL (no new refusal)    : True ['FREE2']
+  C5 WORKTREE renders the session's OWN spine       : True (['MINE'])
+  C6a leader attributed -> trailer rendered         : ['CREWA']
+  C6b trailer attributed -> leader rendered         : ['FREE1']
+  C7a linux: renders (different files)              : ['CREWA']
+  C7b win32: withheld (same file)                   : []
+  C8 #261 binds and renders own on ALL arms         : True {"pick_it_up": true, "renders": ["MINE"], "wrote_binding": true}
+
+scratch: /tmp/g3rev5-3z6xkajs

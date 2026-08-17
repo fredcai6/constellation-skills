@@ -1,0 +1,21 @@
+=== targeted --collect-only ===
+tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_the_same_answer_when_the_crew_has_its_own_tree_control
+
+23/175 tests collected (152 deselected) in 0.16s
+=== targeted run ===
+.......................               [100%]
+23 passed, 152 deselected, 35 subtests passed in 0.31s
+=== 202 + 261 ===
+.....                                                                  [100%]
+5 passed, 170 deselected, 2 subtests passed in 0.13s
+=== spine_rail + worktree_derivation ===
+........................................................................ [ 93%]
+.............                                                            [100%]
+193 passed, 1 skipped, 35 subtests passed in 1.76s
+=== FULL SUITE ===
+........................................................................ [ 93%]
+........................................................................ [ 95%]
+..............................................ss.................... [ 97%]
+...................................................... [ 99%]
+.......................                                                  [100%]
+3192 passed, 5 skipped, 1218 subtests passed in 128.40s (0:02:08)

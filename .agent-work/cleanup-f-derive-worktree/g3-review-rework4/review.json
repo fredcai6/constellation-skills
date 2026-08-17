@@ -1,0 +1,194 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded: inherited doctrine (global-crew/global-everyone), docs/agents/CREW_CONTEXT.md + GLOSSARY.md, the rework-4 handoff, review-3 result (B6/B7), implementer rework-4 result + handoff, FLOAT_TO_ADMIRAL-3, and the full production diff 68d190f7..539ff636 read whole in spine_rail.py rather than as hunks. All four cited shas resolve (999b7663, 68d190f7, 539ff636, 02f5e37b) and the working tree is byte-identical to 539ff636 for scripts/hooks/spine_rail.py, tests/test_spine_rail.py and map/.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Rework 4 answered B6 and B7 and nothing else. B6: the scan fallback now selects what it RENDERS by binding-key provenance (loop over matches, skip any _attributed_to_another_key). Reproduced the handoff's headline claim with the prior reviewer's committed instrument rev4_c2b.py run UNEDITED -- PREGATE and REWORK2 render a crew gate and 'Pick the run back up', WORKTREE renders neither -- and then went past it on my own arms (PREGATE/REWORK3/WORKTREE, sha256+bytes printed, render loop asserted present only in WORKTREE). B7: every sentence stating the guard's reach now names it as this session's view; the guard is NOT widened across the session boundary, as ordered. The boundary the handoff told the implementer not to cross (tc1) is intact.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "539ff636 touches scripts/hooks/spine_rail.py, tests/test_spine_rail.py, map/INDEX.md and .agent-work crew artifacts only. Every Specific Exclusion holds, checked by path match: no lane A file (mcp_spine_server.py, .mcp.json, examples/**, install_constellation.py, skills/commander/templates/**), no lane E file (run_crew.py, recover_crews.py, test_crew_launcher.py), no scripts/verify_worktree_isolation.py, no template of any kind, no scripts/checklist_engine.py. No fail-closed refusal (ADMIRAL_RULING-1 R2) -- measured, see r3; no cwd threading (R3) -- decide_session_start reads no cwd for the selection. Exclusions naming paths outside this worktree are Commander-verified, not reviewer-verified; noted, not blocked on. One precision observation, not a violation: the engine auto-named the implementer's own plan artifacts crew-handoffs/cleanup-f-derive-worktree-g3-implement-rework4/, which the allowed-scope glob 'crew-handoffs/g3-implement*/**' does not literally cover; the intent plainly does.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every row of the handoff's Evidence Produced table reproduces, re-derived independently rather than inherited. MY OWN INSTRUMENT (g3-review-rework4/rev5_render_selection.py, arms PREGATE 999b7663 / REWORK3 68d190f7 / WORKTREE, each printing sha256+bytes, guard asserting 3 distinct arms and the render loop present only in WORKTREE; differential arm is REWORK3 so a changed row is attributable to rework 4 alone; bindings written only by the production writer handle_post_tool_use from the pinned probe capture): C1 two matches both the crew's -> PREGATE/REWORK3 render a crew gate + 'Pick the run back up', WORKTREE renders nothing. C2 THREE matches, two the crew's + one unclaimed -> WORKTREE renders ONLY the unclaimed one. C3 three matches ALL the crew's -> WORKTREE renders nothing. C5 the ACTING session owns one of the matches -> WORKTREE renders MINE where both older arms rendered the crew's, i.e. strictly better. C6 ORDER INDEPENDENCE measured BOTH ways by running the scan first and attributing relative to the order the filesystem actually returned: attribute the glob leader -> the trailer is rendered; attribute the trailer -> the leader is rendered. Glob order no longer decides, which is B6's whole claim. THE tc1 BOUNDARY (criterion 2, the one the handoff cares most about) HOLDS: C4 at n=1,2,3 matches attributed to NOBODY is byte-identical on all three arms INCLUDING the n=1 binding write, so the repair is not a fail-closed refusal (ADMIRAL_RULING-1 R2). C8 #261 empty store binds and renders its own marker on all three arms. rev4_c2b.py run UNEDITED reproduces the handoff's claim exactly. Suites, __pycache__ cleared and env scrubbed: targeted -k OwnershipIsBindingKeyNotWorktree collected 23 (confirmed via --collect-only, not inferred from a green selector), 23 passed / 35 subtests; full suite 3192 passed, 5 skipped, 0 failed; #202+#261 selectors 5 passed; tests/test_worktree_derivation.py unedited across the WHOLE gate (999b7663..539ff636 empty) and green.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PROSE (criterion 3): I read all five changed prose sites whole and tested each against the code. The module header, _attributed_to_another_key's docstring, _scan_active_spine's docstring, the pre-scan comment and the render/write comments now all name the reach the code actually has -- this session's view (session_view_provenance: the bare sid plus this session's own sid#agent_id keys), never the store. Verified both call sites do pass session_view_provenance. 'On one match by writing a binding as well, on two or more by rendering alone' -- measured true (wrote_binding true only at n=1). No fifth copy of the three-states taxonomy was created. The renamed test's docstring and the two new tests' docstrings are true of the code. GUARD NOT TOO BROAD (criterion 4): enumerated mechanically -- rev5_refusal_set.py, 8 topologies x 3 match-counts x 2 arms = 48 rows, and exactly 4 rows change, all four the B6 repair: 'crew claims ALL' at n=2,3 (rendered the crew's gate -> renders nothing) and 'crew claims the FIRST only' at n=2,3 (rendered the crew's -> renders the UNCLAIMED one). Every #261, B4, tc1 and SELF-claims row is unchanged. The refusal set is exactly: an acting agent whose own visible entry no longer loads, offered a candidate this session's view attributes to one of its own subagents' per-agent keys -- which is the #549 leak class itself. I could NOT find a legitimate resume context that is now withheld. WINDOWS (criterion 8): normcase is the identity here, so I CONSTRUCTED the case expectation at the NEW call site, both as a direct predicate probe and end-to-end, and simulated win32 by substituting str.lower for os.path.normcase with restoration asserted: linux renders (two different files, correct), win32 withholds (one file, correct). Right answer in each direction, not an accident that passes here. REGRESSIONS (criterion 6): decide_stop, _entry_mid_flight_view, _is_own_entry, _own_entries, binding_key, session_view_provenance and _same_path are all BYTE-IDENTICAL to 68d190f7; the nudge counter keyed by session id alone measured 1,2,3,4 across parent/crew stops; stdlib-only imports unchanged; _own_entries still shared by both deciders. SUITE ARITHMETIC (criterion 7): 173 -> 175 def test_ (+2), targeted 21 -> 23, full 3190 -> 3192; the rename is real -- the name-set difference is exactly one removed and three added, and the renamed test's body GREW from 3 to 7 assertion lines with none removed, so no quiet deletion hid in it. map/INDEX.md tests.test_spine_rail 217 -> 220 = 2 tests + 1 fixture helper, scripts.hooks.spine_rail unchanged at 65 because no symbol was added. ONE OBSERVATION, not a blocker: two fresh sentences (lines 1898 and 1939) say 'on every SessionStart payload measured the two are the same string'. The pinned probe capture has 6 rows and NOT ONE is a SessionStart, and no fixture anywhere carries one -- so that universal is true only vacuously, over an empty set, and it reads as evidence for the own_key-vs-sid choice when the adjacent pre-existing comment at line 1820 states the same limit precisely ('Nothing measured says a SessionStart payload carries an agent_id: the pinned probe capture is PostToolUse only'). I measured what turns on it (rev5_refusal_set.py C9/C10, constructed agent-keyed SessionStart): the one row that changes is an agent-keyed session refused a candidate claimed by its OWN session's bare sid -- and that answer is what this file's identity doctrine already prescribes, since _is_own_entry likewise reads bare sid as foreign to sid#agent. So the imprecision costs nothing behavioural today and the behaviour is defensible if the assumption ever fails.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No unreconciled divergence. map/INDEX.md was regenerated in the same commit with py -m scripts.code_map build (#544, never hand-edited) and its entity counts reconcile exactly with the diff: tests.test_spine_rail 217 -> 220 (2 tests + 1 fixture helper), scripts.hooks.spine_rail unchanged at 65 because the fix added no symbol, tests total 4859 -> 4862. MapTreeFreshnessTests is green in the full suite, so the map genuinely matches a fresh build rather than an edited one. Architecture-insignificant: no new symbol, no new boundary, no new contract -- _attributed_to_another_key gains a second caller, which reinforces the recorded decision anchor worktree-is-location-spine-path-is-identity at a third site and makes decision:no-bind-on-ambiguous-scan visibly a statement about the WRITE only. The stale KeyError-era door claims are the Commander's reconcile step and are not findings, as instructed. Durable context routed: two triage candidates recorded above; the B7 cross-session widening and tc1 are already with the Admiral.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a .agent-work/cleanup-f-derive-worktree/FOWLER_PASS-g3-reviewer-attempt-5.json placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like cleanup-f-derive-worktree on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/cleanup-f-derive-worktree/FOWLER_PASS-g3-reviewer-attempt-5.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded at .agent-work/cleanup-f-derive-worktree/FOWLER_PASS-g3-reviewer-attempt-5.json (suffixed per the handoff -- the template path collides across the nine crews on this gate). verify_fowler_pass.py exits 0: 12 smells visited, flagged=[long-method, duplicated-code, shotgun-surgery, divergent-change, speculative-generality, comments-as-deodorant], overridden=[large-class, primitive-obsession] with the frozen DESIGN_SPEC #138 single-file stdlib-only hook contract and binding_key()'s single-composition-point role as the standards that win, each with a logged reason. The pass earned its keep twice: speculative-generality is the Fowler name for the own_key-vs-sid divergence that no test can reach, which is what sent me to construct the agent-keyed SessionStart probe; and shotgun-surgery is the smell that, measured rather than assumed, came back CLOSED for the first time on this gate -- decide_stop and every shared helper byte-identical, and no remaining selection site where the rule goes unasked -- which is the evidence behind my answer to the open decision.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/cleanup-f-derive-worktree/FOWLER_PASS-g3-reviewer-attempt-5.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. Fifth review of g3, scope narrowed to B6 and B7, and this one found nothing that blocks. B6 is fixed and the fix is exactly as wide as claimed: my own three-arm instrument (PREGATE 999b7663 / REWORK3 68d190f7 / WORKTREE, sha256+bytes printed, render loop asserted present only in WORKTREE, bindings written only by the production PostToolUse writer) reproduces the prior reviewer's rev4_c2b result and then goes past it -- three matches, mixed attributed and unattributed, and the acting session owning one of the matches. Glob order is measurably no longer the decider: running the scan first and attributing relative to the order the filesystem actually returned, the render picks the unclaimed candidate whether the claimed one leads or trails. The criterion I was told to care most about holds: the tc1 boundary is byte-identical on all three arms at n=1, 2 and 3 matches attributed to nobody, INCLUDING the n=1 binding write, so this is not the fail-closed refusal ADMIRAL_RULING-1 R2 forbade. A mechanical enumeration of 8 topologies x 3 match-counts x 2 arms = 48 rows changes exactly 4 rows, all four the B6 repair, and I could not find any legitimate resume context newly withheld. B7's sentences are true read whole and no fifth taxonomy copy was created. Suite arithmetic reconciles in four directions (3190->3192, targeted 21->23 confirmed by --collect-only, 173->175 def test_, map 217->220) and the rename hides no deletion -- the renamed test grew from 3 to 7 assertions with none removed. decide_stop and every shared helper are byte-identical to 68d190f7. One quality observation, recorded as a triage candidate rather than a blocker: two fresh comments claim measurement over an empty set (no SessionStart payload exists in the repo's pinned capture), and the choice they defend is untestable by construction -- but I constructed the missing input and the behaviour it produces is what this file's identity doctrine already prescribes."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r4-quality",
+      "statement": "spine_rail.py:1898 and :1939 claim measurement over an empty set: 'on every SessionStart payload measured the two are the same string'. tests/fixtures/probe_payloads.jsonl holds 6 rows, all PostToolUse; no SessionStart payload exists anywhere in the repo. Line 1820 already states the same limit precisely. Restate 1898/1939 in 1820's form, or capture a SessionStart payload and make the claim real."
+    },
+    {
+      "id": "tc2",
+      "from": "r4-quality",
+      "statement": "The own_key-vs-sid divergence at the two scan call sites is untestable by construction: the render asks _attributed_to_another_key with own_key, the write with the bare sid, and no SessionStart payload carrying agent_id exists to tell them apart. Constructed probe (rev5_refusal_set.py C9/C10) shows the divergence becomes observable the moment one arrives. Capture such a payload or record the choice as a decision anchor."
+    },
+    {
+      "id": "tc3",
+      "from": "r6-fowler",
+      "statement": "decide_session_start is ~190 lines holding three separable decisions (withhold entirely / what the scan renders / what the scan writes); the scan fallback would extract cleanly. Flagged by both long-method and divergent-change, one repair. Recorded by three reviews now and growing each rework."
+    },
+    {
+      "id": "tc4",
+      "from": "r6-fowler",
+      "statement": "The three-states taxonomy is stated in four places in spine_rail.py and two copies have already gone stale once each on this gate. State it once and point at it. Rework 4 repaired the two it touched and added no fifth copy (verified), so this is maintenance debt, not a defect."
+    }
+  ],
+  "blockers": [],
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "constellation/cleanup-f-derive-worktree/g3/reviewer/attempt-5",
+    "status": "released",
+    "claimed_at": "2026-08-17T01:14:41.320721+00:00",
+    "last_heartbeat": "2026-08-17T01:27:21.724970+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T01:29:48.393431+00:00"
+  }
+}

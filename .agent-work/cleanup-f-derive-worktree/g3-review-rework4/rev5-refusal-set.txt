@@ -1,0 +1,43 @@
+arms: REWORK3=68d190f7 (89859 bytes) vs WORKTREE (94930 bytes); render loop only in WORKTREE
+
+==============================================================================
+  SAME   n=1  #261 no binding at all                     REWORK3=["CAND0"]+w                  WORKTREE=["CAND0"]+w
+  SAME   n=2  #261 no binding at all                     REWORK3=["CAND0"]                    WORKTREE=["CAND0"]
+  SAME   n=3  #261 no binding at all                     REWORK3=["CAND0"]                    WORKTREE=["CAND0"]
+  SAME   n=1  B4 owns nothing visible; crew claims all   REWORK3=["<nothing>"]                WORKTREE=["<nothing>"]
+  SAME   n=2  B4 owns nothing visible; crew claims all   REWORK3=["<nothing>"]                WORKTREE=["<nothing>"]
+  SAME   n=3  B4 owns nothing visible; crew claims all   REWORK3=["<nothing>"]                WORKTREE=["<nothing>"]
+  SAME   n=1  B5/B6 archived; crew claims ALL            REWORK3=["<nothing>"]                WORKTREE=["<nothing>"]
+  CHANGED n=2  B5/B6 archived; crew claims ALL            REWORK3=["CAND0"]                    WORKTREE=["<nothing>"]
+  CHANGED n=3  B5/B6 archived; crew claims ALL            REWORK3=["CAND0"]                    WORKTREE=["<nothing>"]
+  SAME   n=1  archived; crew claims the FIRST only       REWORK3=["<nothing>"]                WORKTREE=["<nothing>"]
+  CHANGED n=2  archived; crew claims the FIRST only       REWORK3=["CAND0"]                    WORKTREE=["CAND1"]
+  CHANGED n=3  archived; crew claims the FIRST only       REWORK3=["CAND0"]                    WORKTREE=["CAND2"]
+  SAME   n=1  archived; crew claims the LAST only        REWORK3=["<nothing>"]                WORKTREE=["<nothing>"]
+  SAME   n=2  archived; crew claims the LAST only        REWORK3=["CAND0"]                    WORKTREE=["CAND0"]
+  SAME   n=3  archived; crew claims the LAST only        REWORK3=["CAND0"]                    WORKTREE=["CAND0"]
+  SAME   n=1  tc1 archived; claimed by NOBODY            REWORK3=["CAND0"]+w                  WORKTREE=["CAND0"]+w
+  SAME   n=2  tc1 archived; claimed by NOBODY            REWORK3=["CAND0"]                    WORKTREE=["CAND0"]
+  SAME   n=3  tc1 archived; claimed by NOBODY            REWORK3=["CAND0"]                    WORKTREE=["CAND0"]
+  SAME   n=1  archived; SELF claims all (bare sid)       REWORK3=["CAND0"]                    WORKTREE=["CAND0"]
+  SAME   n=2  archived; SELF claims all (bare sid)       REWORK3=["CAND0"]                    WORKTREE=["CAND0"]
+  SAME   n=3  archived; SELF claims all (bare sid)       REWORK3=["CAND0"]                    WORKTREE=["CAND0"]
+  SAME   n=1  archived; SELF first, crew rest            REWORK3=["CAND0"]                    WORKTREE=["CAND0"]
+  SAME   n=2  archived; SELF first, crew rest            REWORK3=["CAND0"]                    WORKTREE=["CAND0"]
+  SAME   n=3  archived; SELF first, crew rest            REWORK3=["CAND0"]                    WORKTREE=["CAND0"]
+
+rows measured: 48   topologies x counts: 24   rows whose answer rework 4 changed: 4
+  CHANGED n=2  B5/B6 archived; crew claims ALL            ['CAND0'] -> ['<nothing>']
+  CHANGED n=3  B5/B6 archived; crew claims ALL            ['CAND0'] -> ['<nothing>']
+  CHANGED n=2  archived; crew claims the FIRST only       ['CAND0'] -> ['CAND1']
+  CHANGED n=3  archived; crew claims the FIRST only       ['CAND0'] -> ['CAND2']
+
+==============================================================================
+C9/C10  a SessionStart carrying `agent_id` (own_key != sid) -- CONSTRUCTED:
+        the pinned probe capture has 6 rows and NO SessionStart payload at all,
+        so this input is unmeasured upstream and cannot be reproduced from it.
+
+  C9  candidate claimed by the SESSION's bare sid   REWORK3={"renders": ["CAND0"], "wrote": false} WORKTREE={"renders": ["<nothing>"], "wrote": false} CHANGED
+  C10 candidate claimed by this agent's OWN key    REWORK3={"renders": ["<nothing>"], "wrote": false} WORKTREE={"renders": ["<nothing>"], "wrote": false} SAME
+
+scratch: /tmp/g3rev5rs-54ajoyx5
