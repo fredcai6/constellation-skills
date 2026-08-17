@@ -46,8 +46,30 @@ found by *attacking*:
 - **A NUL byte in `spine_file` killed the door process** — unhandled `ValueError`,
   `main()` catches only `KeyError` — on the one tool reachable while nothing is bound.
 
-Both are in rework as of this return. **See §9 for the current gate state; do not read this
-as merge-ready until that section says so.**
+**A second reviewer, run independently, reached `BLOCK` on the same two findings by a
+different route** — 13 of 13 attacks correct in a real linked-worktree topology, all 40
+`--file` injections across the nine pass-throughs refused, ten mutations on a mirror all RED,
+and its own reproduction of the root mutation matching mine exactly ("I agree the narrowed
+root is genuinely tested"). Genuine replication rather than corroboration. It sharpened both
+blockers: **B1 is worse than first described** — the door **wrote a live lease into another
+checkout's spine**, not merely bound it — and **B2 is narrower** (the NUL byte kills the door
+only when already bound).
+
+It also found a third gap that changes what this lane may *claim*, and I have taken it:
+**a hardlink defeats any path-based check.** A symlink has a target, so resolution reveals the
+real location; a hardlink is a second *name* for the same inode, so `resolve()` returns what
+you gave it and git correctly answers "our checkout." No amount of resolving fixes that. So
+the property this lane ships is stated with its limit attached:
+
+> **One checkout's work-area tree per process, enforced by path.** An actor who can already
+> create a hardlink inside the door's own `.agent-work/` can present a foreign checkout's
+> spine as a local one.
+
+Less satisfying, and true. Having been caught once claiming a property the code did not have,
+overstating it a second time would be the worse error.
+
+Both blockers are in rework as of this return. **See §9 for the current gate state; do not
+read this as merge-ready until that section says so.**
 
 Four things I would want read even if nothing else is:
 
