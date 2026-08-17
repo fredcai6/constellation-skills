@@ -194,7 +194,8 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-plan-1"
         },
         {
           "id": "c4",
@@ -222,13 +223,14 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-plan-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -241,6 +243,17 @@
             "scope": "Three parts as frozen: the complete sweep (13 clauses, 9 tokens), door vocabulary in specs/*.spine.toml, and the regrowth guard. No issue added, dropped or re-scoped.",
             "panel_choice": "Single cold critic plus two design candidates; rationale surfaced in .agent-work/567-d1/plan-rigor/CONVERGENCE.md",
             "floats": "Three floated to the Admiral, none blocking: (1) the door provably cannot reach a second checklist, which bears on decision:complete-sweep; (2) tests/test_mcp_adoption.py and tests/data/store_mentions.approved.txt are in no lane's ownership list and the sweep is impossible without the first; (3) the guard's failure message must quote the ruling verbatim because this lane may not write docs/agents/* and files no issue, so the ruling has no durable home."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-plan-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/map_orient.py verify-frame --root /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard --work-id 567-d1",
+            "exit": 0,
+            "shell": "posix"
           },
           "produced_by": "engine",
           "ts": ""
@@ -314,7 +327,20 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "execute",
+            "why_ref": "w-4",
+            "note": "Context spent legitimately across init through plan; execute has not been started and its postconditions are untouched. Deliberately NOT advancing execute: closing a gate before doing its work is the infinite-handoff failure the launch order names. A fresh Commander should cold-start from the DIGEST and run execute.json gate by gate, beginning at g1 (author the guard against the dirty tree).",
+            "next_action": "attest execute p1 after reloading the commander skill, write STATE_NOTE.md for p2, then start execute and drive execute.json from g1."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "reconcile": {
@@ -560,7 +586,7 @@
     "session_id": "constellation/567-d1/lane-d1/commander-delegated",
     "status": "active",
     "claimed_at": "2026-08-17T17:20:59.187959+00:00",
-    "last_heartbeat": "2026-08-17T17:54:31.030753+00:00",
+    "last_heartbeat": "2026-08-17T17:55:29.129390+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -587,6 +613,13 @@
       "why": "Three measurements settle the lane's shape. (1) The regrowth has a mechanism and it is a test: tests/test_mcp_adoption.py::TestTier1ImperativeFields::test_field_still_carries_cli_fallback asserts the exact CLI command line survives in all 7 Tier-1 imperative fields, failing with 'the CLI door must stay, never be removed or discouraged' \u2014 that is why #559's text has been deleted twice and grown back twice, and it means the sweep is an inversion of an existing test, not an addition to a green suite. (2) Fresh-process probe: a door holding its own lease is REFUSED when binding a second checklist ('one door drives one spine at a time'), and the only escape (release the lease first) is barred for a Commander by its own archive provenance check \u2014 so 3 of the 13 clauses name a path the door provably cannot reach, and those get reworded to the measured truth rather than deleted. (3) The load-bearing guard-scope unknown is answered with zero exception entries: test_mcp_adoption.py's INSTRUCTION_FILES rglob over skills/ for .md/.json puts all 10 target files IN and both pre-ruled survivors OUT by the structural rule alone.",
       "mechanical": false,
       "ts": "2026-08-17T17:28:44.576653+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "plan",
+      "why": "Plan frozen at commit bd677d7c. The gate plan is guard-FIRST: g1 authors tests/test_cli_retirement_guard.py against the still-dirty tree so its RED is produced by the real corpus (13 clause + 9 token sites), not by a scratch string its own author chose to match; g2 then sweeps and inverts the mandate in the same gate, because doing either alone leaves the suite red, and proves specificity by reintroducing a clause at one of the 3 REWORDED sites; g3 gives specs/*.spine.toml door vocabulary and is covered because g1 extended the walk to specs/**/*.toml; g4 disposes #596/#526 with per-issue evidence files; g5-final is a reasoning gate for the post-rebase whole-corpus run. The guard's scope reuses INSTRUCTION_FILES, exception list length zero, and it matches three patterns, not one spelling, because the clause has three measured surface forms. Three floats to the Admiral, none blocking: the second-checklist finding, the test_mcp_adoption.py ownership gap, and the absence of a durable home for the ruling.",
+      "mechanical": false,
+      "ts": "2026-08-17T17:54:55.583918+00:00"
     }
   ]
 }
