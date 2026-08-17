@@ -463,6 +463,14 @@
       "affects": "The Evidence Produced and How to Inspect the Diff sections of this lane's reviewer handoffs.",
       "evidence": "The g3 review-3 handoff pinned rework 2 at 9b1a551e. That commit was amended into 7d12c29d (same parent, 11 seconds later) and survives only in the reflog. The reviewer detected it, confirmed git diff 9b1a551e 7d12c29d is empty across the whole tree, transferred every number unchanged, and said so in its opening paragraph rather than quietly working around it.",
       "reason": "This is the citation-shelf-life failure ADMIRAL_RULING-3 named -- a line or sha citation is a measurement with a shelf life of one commit -- committed by the Commander who was relaying that very rule to its crews. It cost nothing only because the reviewer measured rather than trusted. The durable form of the fix is the Admiral's: cite by the string to grep for, and treat a sha as an aid. Amending a commit after citing it is a specific way to break that, and worth naming separately."
+    },
+    {
+      "id": "D21",
+      "signal": "Every measuring instrument built on this gate developed a shelf-life defect, in both directions, and two of them produced false readings that were caught only by an independent number",
+      "classification": "evidence_only",
+      "affects": "Any crew-built before/after harness a later role is told to re-run as verification, and the Commander's own practice of re-running a returned instrument to confirm a fix.",
+      "evidence": "Three instruments, three failures. The implementer's m4_differential.py pinned its BEFORE arm with `git rev-parse HEAD`, so it inverted into comparing the change against itself once committed and printed 26 confirming rows -- that was B1, caught only because the reviewer already held a contradicting number. Both reviewers' scratch harnesses pinned SUPERSEDED commits, so re-running them unmodified showed defects still present that were in fact fixed; the Commander hit that twice and had to add working-tree arms with guards asserting the arms genuinely differ. The fifth reviewer's instrument is the answer: it prints the sha256 and byte length of the source each arm actually loaded and guards that all three differ.",
+      "reason": "A pinned arm is not a wrong instrument; an unexamined one is. Both failure directions look identical to a reader -- rows that agree -- and both read as confirmation. The practice that worked, stated by three reviewers independently, is an ordering one: build your own instrument BEFORE running theirs, and make every arm print what it actually loaded. Feeds the feedback step."
     }
   ],
   "open_current_wave_issue_ids": [

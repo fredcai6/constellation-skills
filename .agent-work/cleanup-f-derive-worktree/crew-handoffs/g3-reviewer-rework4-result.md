@@ -495,9 +495,12 @@ this gate no one has measured.
 
 ## On the Stop hook
 
-**I refuse it, and I am recording the refusal as instructed** — stated as a
-commitment about what I will do when it fires, since it fires at the end of my
-turn rather than before this artifact is written.
+**It fired, twice, and I refused it.** Recorded as observed fact, not as a
+prediction: at the end of my turn a `SPINE MID-FLIGHT` hook told me `gate execute
+is still open`, to reload the constellation-commander skill, rewrite
+`STATE_NOTE.md` with a PID, and drive `execute.json` gate by gate — including
+dispatching crews through `run_crew.py` and running `recover_crews.py` against
+this work-id.
 
 `SPINE_FILE` in my environment points at
 `.agent-work/cleanup-f-derive-worktree/spine.json` — the **Commander's** spine,
@@ -517,7 +520,34 @@ is supposed to: as this artifact, at the path your handoff named.
 I authored my own survey at
 `.agent-work/cleanup-f-derive-worktree/g3-review-rework4/review.json`, claimed it
 with my own session id, drove all seven items through the engine, consolidated it
-to `APPROVE`, and release its lease last.
+to `APPROVE`, and released its lease last — after this artifact was written and
+before the hook fired.
+
+**What I wrote, stated precisely rather than as a slogan.** I first wrote
+"nothing in this run wrote to your spine", then checked it instead of leaving it,
+and it was too broad by one file:
+
+- **`spine.json` — untouched.** mtime unchanged since 14:21 local, hours before I
+  started; lease still `commander-cleanup-f-derive-worktree`, `status: active`,
+  `claimed_by: commander`, heartbeat unmoved. Every `checklist_engine.py` command
+  I issued carried `--file .agent-work/cleanup-f-derive-worktree/g3-review-rework4/review.json`.
+- **`execute.json` — written twice, by the harness, not by me.** At
+  `01:30:18Z`, journal `seq 80`: an `attach` of `e-g3-review-2`,
+  `{"type": "review-result", "payload": {"verdict": "APPROVE"}}`, onto task
+  `g3-review`. At `01:30:36Z`, timeline `tl-16`. Both carry `session_id: null`,
+  neither was a command I ran, and the pattern matches `e-g3-review-1` attached
+  at `22:17` for review 4 — this is the launcher recording a crew's verdict into
+  the parent's plan, which is its job. I am naming it because "I touched nothing"
+  and "the only writes under my name are my own survey's" are different claims,
+  and only the second one is true.
+
+**One thing in that write you will want before your next verb:** `tl-16` records
+`gate: g3-review, verb: start, outcome: begin-refused, fill: 0.1946, hard: 0.15`
+— a HARD gauge trip. Per the glossary, HARD refuses the verbs that BEGIN work at
+a gate (`start`, `reopen`) until a refresh-request is pending. So your next
+`start` on `g3-review` will be refused on context fill, not on anything in this
+review. (Its `why_ref` points at `w-16`, which is the g3-implement entry from
+`21:56` — a stale reference, and not mine to repair.)
 
 Ten crews have now refused this nudge on this gate. B6 is the mechanism that
 manufactures it, and rework 4 is the first change that makes the door decline on

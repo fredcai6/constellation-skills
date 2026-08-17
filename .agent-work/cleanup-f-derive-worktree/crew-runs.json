@@ -392,12 +392,14 @@
     "stdout": ".agent-work/cleanup-f-derive-worktree/crew-runs/g3-reviewer-attempt-5.stdout.txt",
     "stderr": ".agent-work/cleanup-f-derive-worktree/crew-runs/g3-reviewer-attempt-5.stderr.txt",
     "started_at": "2026-08-17T01:13:59.037187+00:00",
-    "last_heartbeat": "2026-08-17T01:30:01.889382+00:00",
-    "completed_at": "2026-08-17T01:30:01.889382+00:00",
+    "last_heartbeat": "2026-08-17T01:31:43.163266+00:00",
+    "completed_at": "2026-08-17T01:31:43.163266+00:00",
     "abandoned": false,
     "model": "opus",
     "reasoning_effort": "high",
+    "exit_code": 0,
     "result_present": true,
-    "result_fresh": true
+    "result_fresh": true,
+    "verdict_source": "result"
   }
 ]
