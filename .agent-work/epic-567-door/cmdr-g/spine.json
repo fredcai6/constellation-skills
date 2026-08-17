@@ -317,8 +317,7 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "g1/g2/g3 remain closed with original integrated evidence; this second rework corrects the Group 2 fix's own diagnosis (encoding, not newline) -- still a test-fixture-only change."
+          "satisfied": false
         },
         {
           "id": "c2",
@@ -327,8 +326,7 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id epic-567-door/cmdr-g"
           },
-          "satisfied": true,
-          "satisfied_by": "e-execute-4"
+          "satisfied": false
         }
       ],
       "constraints": [],
@@ -355,9 +353,9 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "complete",
+      "status": "in-progress",
       "status_detail": {
-        "reopen_reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run."
+        "reopen_reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/."
       },
       "result": null,
       "finding": null,
@@ -374,8 +372,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
-            "ts": "2026-08-17T08:09:35.857582+00:00"
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227844+00:00"
           }
         },
         {
@@ -390,8 +388,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
-            "ts": "2026-08-17T08:09:35.857590+00:00"
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227850+00:00"
           }
         },
         {
@@ -406,8 +404,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
-            "ts": "2026-08-17T08:09:35.857592+00:00"
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227852+00:00"
           }
         },
         {
@@ -419,10 +417,15 @@
             "shell": "posix"
           },
           "produced_by": "engine",
-          "ts": ""
+          "ts": "",
+          "superseded": {
+            "by": "reopen:execute",
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227853+00:00"
+          }
         }
       ],
-      "rework_count": 2
+      "rework_count": 3
     },
     "reconcile": {
       "id": "reconcile",
@@ -433,8 +436,7 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "execute complete"
+          "satisfied": false
         }
       ],
       "postconditions": [
@@ -442,14 +444,13 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "Reasoned no-op: fix touches only the test-infra helper _raw_engine_cli, not any documented capability/schema/design doc."
+          "satisfied": false
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "complete",
+      "status": "pending",
       "status_detail": {
         "superseded_by_reopen": "execute"
       },
@@ -467,8 +468,7 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "reconcile complete"
+          "satisfied": false
         }
       ],
       "postconditions": [
@@ -476,8 +476,7 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "Corrected the existing newline-discipline triage candidate's diagnosis in place (it was actually an encoding mismatch, not newline) rather than filing a duplicate; no new candidate this rework."
+          "satisfied": false
         },
         {
           "id": "c2",
@@ -486,14 +485,13 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": true,
-          "satisfied_by": "e-triage-3"
+          "satisfied": false
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "complete",
+      "status": "pending",
       "status_detail": {
         "superseded_by_reopen": "execute"
       },
@@ -510,8 +508,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
-            "ts": "2026-08-17T08:09:35.857600+00:00"
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227860+00:00"
           }
         },
         {
@@ -524,8 +522,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
-            "ts": "2026-08-17T08:09:35.857602+00:00"
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227861+00:00"
           }
         },
         {
@@ -535,7 +533,12 @@
             "cite": "LAUNCH_ORDER:Inherited Latitude (no-issue-filing: decision:no-issue-filing)"
           },
           "produced_by": "engine",
-          "ts": ""
+          "ts": "",
+          "superseded": {
+            "by": "reopen:execute",
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227862+00:00"
+          }
         }
       ],
       "rework_count": 0
@@ -549,8 +552,7 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "triage complete"
+          "satisfied": false
         }
       ],
       "postconditions": [
@@ -561,14 +563,13 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": true,
-          "satisfied_by": "e-review-3"
+          "satisfied": false
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "complete",
+      "status": "pending",
       "status_detail": {
         "superseded_by_reopen": "execute"
       },
@@ -585,8 +586,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
-            "ts": "2026-08-17T08:09:35.857605+00:00"
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227864+00:00"
           }
         },
         {
@@ -599,8 +600,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
-            "ts": "2026-08-17T08:09:35.857607+00:00"
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227865+00:00"
           }
         },
         {
@@ -610,7 +611,12 @@
             "cite": "LAUNCH_ORDER:Return Shape"
           },
           "produced_by": "engine",
-          "ts": ""
+          "ts": "",
+          "superseded": {
+            "by": "reopen:execute",
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227866+00:00"
+          }
         }
       ],
       "rework_count": 0
@@ -624,8 +630,7 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "review complete"
+          "satisfied": false
         }
       ],
       "postconditions": [
@@ -636,14 +641,13 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-567-door/cmdr-g --store-root episodes --phase feedback"
           },
-          "satisfied": true,
-          "satisfied_by": "e-feedback-3"
+          "satisfied": false
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "complete",
+      "status": "pending",
       "status_detail": {
         "superseded_by_reopen": "execute"
       },
@@ -662,8 +666,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
-            "ts": "2026-08-17T08:09:35.857610+00:00"
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227868+00:00"
           }
         },
         {
@@ -678,8 +682,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
-            "ts": "2026-08-17T08:09:35.857611+00:00"
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227869+00:00"
           }
         },
         {
@@ -691,7 +695,12 @@
             "shell": "posix"
           },
           "produced_by": "engine",
-          "ts": ""
+          "ts": "",
+          "superseded": {
+            "by": "reopen:execute",
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227870+00:00"
+          }
         }
       ],
       "rework_count": 0
@@ -705,8 +714,7 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "workflow feedback recorded"
+          "satisfied": false
         }
       ],
       "postconditions": [
@@ -717,15 +725,13 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-567-door/cmdr-g --store-root episodes --phase archive"
           },
-          "satisfied": true,
-          "satisfied_by": "e-archive-7"
+          "satisfied": false
         },
         {
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "committed and pushed (2 more commits this rework)"
+          "satisfied": false
         },
         {
           "id": "c2b",
@@ -734,15 +740,13 @@
             "kind": "command",
             "command": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0"
           },
-          "satisfied": true,
-          "satisfied_by": "e-archive-8"
+          "satisfied": false
         },
         {
           "id": "c3",
           "statement": "engine session lease released",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "will release immediately after this advance"
+          "satisfied": false
         },
         {
           "id": "c4",
@@ -777,19 +781,18 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": true,
+          "satisfied": false,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          },
-          "satisfied_by": "e-archive-9"
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "complete",
+      "status": "pending",
       "status_detail": {
         "superseded_by_reopen": "execute"
       },
@@ -808,8 +811,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
-            "ts": "2026-08-17T08:09:35.857615+00:00"
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227873+00:00"
           }
         },
         {
@@ -824,8 +827,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
-            "ts": "2026-08-17T08:09:35.857616+00:00"
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227874+00:00"
           }
         },
         {
@@ -840,8 +843,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
-            "ts": "2026-08-17T08:09:35.857617+00:00"
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227875+00:00"
           }
         },
         {
@@ -856,8 +859,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
-            "ts": "2026-08-17T08:09:35.857618+00:00"
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227876+00:00"
           }
         },
         {
@@ -872,8 +875,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
-            "ts": "2026-08-17T08:09:35.857619+00:00"
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227877+00:00"
           }
         },
         {
@@ -888,8 +891,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
-            "ts": "2026-08-17T08:09:35.857620+00:00"
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227878+00:00"
           }
         },
         {
@@ -901,7 +904,12 @@
             "shell": "posix"
           },
           "produced_by": "engine",
-          "ts": ""
+          "ts": "",
+          "superseded": {
+            "by": "reopen:execute",
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227879+00:00"
+          }
         },
         {
           "id": "e-archive-8",
@@ -912,7 +920,12 @@
             "shell": "posix"
           },
           "produced_by": "engine",
-          "ts": ""
+          "ts": "",
+          "superseded": {
+            "by": "reopen:execute",
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227880+00:00"
+          }
         },
         {
           "id": "e-archive-9",
@@ -923,7 +936,12 @@
             "files_checked": 0
           },
           "produced_by": "engine",
-          "ts": ""
+          "ts": "",
+          "superseded": {
+            "by": "reopen:execute",
+            "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+            "ts": "2026-08-17T08:27:02.227881+00:00"
+          }
         }
       ],
       "rework_count": 0
@@ -940,14 +958,13 @@
   "refusals": 7,
   "engine_session": {
     "session_id": "cmdr-567-g#main",
-    "status": "released",
-    "claimed_at": "2026-08-17T08:09:35.796794+00:00",
-    "last_heartbeat": "2026-08-17T08:12:08.804074+00:00",
+    "status": "active",
+    "claimed_at": "2026-08-17T08:27:02.157784+00:00",
+    "last_heartbeat": "2026-08-17T08:27:02.227896+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null,
-    "released_at": "2026-08-17T08:12:16.861818+00:00"
+    "takeover_reason": null
   },
   "why_trail": [
     {
@@ -1187,6 +1204,48 @@
       "why": "Second CI-fix rework complete: corrected encoding fix confirmed against real Windows CI re-run. Work area re-archived, episodes captured and tracked, pushed. Releasing lease.",
       "mechanical": false,
       "ts": "2026-08-17T08:12:08.804057+00:00"
+    },
+    {
+      "id": "w-35",
+      "gate": "execute",
+      "reopen": true,
+      "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+      "ts": "2026-08-17T08:27:02.227883+00:00"
+    },
+    {
+      "id": "w-36",
+      "gate": "reconcile",
+      "reopen": true,
+      "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+      "ts": "2026-08-17T08:27:02.227886+00:00"
+    },
+    {
+      "id": "w-37",
+      "gate": "triage",
+      "reopen": true,
+      "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+      "ts": "2026-08-17T08:27:02.227887+00:00"
+    },
+    {
+      "id": "w-38",
+      "gate": "review",
+      "reopen": true,
+      "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+      "ts": "2026-08-17T08:27:02.227888+00:00"
+    },
+    {
+      "id": "w-39",
+      "gate": "feedback",
+      "reopen": true,
+      "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+      "ts": "2026-08-17T08:27:02.227889+00:00"
+    },
+    {
+      "id": "w-40",
+      "gate": "archive",
+      "reopen": true,
+      "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
+      "ts": "2026-08-17T08:27:02.227891+00:00"
     }
   ]
 }
