@@ -686,8 +686,22 @@ confirming the new tests go RED against the reverted source.
 
 **CI expectation, so a red tick is not misread.** `main` is red today — `windows-latest`-only
 CI, baseline ~122 failed / 3070 passed, almost all Windows path-casing. Judge this branch on the
-**failure-set delta**, not absolute green. Linux full suite at this HEAD: **3276 passed, 5
-skipped, 0 failed**, run independently and reconciled against the +13 test delta.
+**failure-set delta**, not absolute green. Linux full suite at this HEAD: **3280 passed, 5
+skipped, 0 failed**, run independently. The figure moved 3276 → 3279 → 3280 across the
+CI-regression fixes, which is the count of tests those fixes added; I re-ran it at each step
+rather than carrying the first number forward, because a figure pinned to a revision it no
+longer describes is the defect `global-everyone.md` §"Pin a claim to the revision you read it
+at" names.
+
+**Audited for `SUBFAILED`, not just `FAILED`** — zero occurrences. A `subTest` body that raises
+is reported `PASSED` with its failure on a separate `SUBFAILED` line, so a `FAILED` grep misses
+it entirely; that is this lane's top triage candidate and the Admiral's own merge-gate
+instrument had the same blind spot until it was raised.
+
+One footnote worth keeping, because it is the same family: the shell command that produced this
+verdict **exited 1** — not because anything failed, but because its last stage was
+`grep -c FAILED`, which returns 1 when the count is **zero**. An exit code that reads as
+failure and means success, in the very command checking for failures.
 `map/INDEX.md` is regenerated here deliberately — this lane is the single writer of that
 generated file by the Admiral's ruling, so lanes B/C/G left it alone.
 
