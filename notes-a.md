@@ -495,6 +495,65 @@ session derived from `work_id` rather than `origin.work_id`. It is A's seam, A's
 containment root, A's refusal set, and one corrected field — where the correction
 is the difference between solving the mission and refusing it.
 
+## F8 — the panel, and why each candidate ended where it did
+
+Full comparison is in `DESIGN_CONVERGENCE.md`; this is the short version and the
+two things I would not have got from a single pass.
+
+- **C (`per-call-identity`, the issue's own filed recommendation) returned a
+  well-argued negative on its own constraint,** which the brief said is a complete
+  deliverable. Its case is arithmetic, not rhetoric: its only viable root exposes
+  **124 spines, 99 of them unleased and therefore writable since #609, and 674
+  files carrying a `consolidation` key** and thus legal `--from-child` targets. Its
+  two *safe* roots either cannot serve an unbound door at all (`SPINE.parent`) or
+  buy nothing a launcher could not buy by setting `SPINE_FILE` in the same breath.
+  Asked what it deletes, it answered "nothing — my only deletion candidate is the
+  security property." **#559's own filed recommendation is now retired with numbers
+  rather than with an argument**, which is the most useful thing the panel bought.
+- **B (`no-new-tool`) self-refuted, in a sentence I want on the record:**
+  > "I rejected the *tighter* design because it broke a test suite, and shipped the
+  > *looser* one because it broke none. A reviewer is entitled to read that as
+  > optimizing for green CI over the security property the CI exists to measure."
+
+  B's rejected sub-shape is still a **result worth keeping**: it measured that
+  resolving a binding from ambient worktree state turns ~10 tests red, including
+  `test_empty_spine_file_refuses_rather_than_binding_the_cwd`
+  (`tests/test_mcp_door_unbound.py:223`). That is independent confirmation that
+  ambient inference is the fail-open defect the previous lane deliberately removed —
+  not a stylistic worry I was asserting.
+- **A won on the boundary, not on elegance.** B beats A on depth and on the caller
+  it inconveniences; A wins because both widen reach and A widens it behind a tool
+  that exists only to widen it, with nine named refusals, while B widens it behind
+  an argument on a tool whose description promises creation, guarded by
+  `_rebind_refusal` — which fails open when no lease is held, and releasing a lease
+  is one call.
+
+### The two things a single pass would have missed
+
+1. **A found a pin I had not.** `tests/test_mcp_identity.py:817`
+   (`test_no_tool_accepts_an_argument_that_could_redirect_the_door`) walks all of
+   `TOOLS` and flags any property name containing `spine`, `session`, `engine`,
+   `checklist_file` or `identity` (`IDENTITY_ARG_MARKERS`, `:754`). `spine_file` is
+   literally that pin's positive control. I had read `test_mcp_lifecycle.py`'s three
+   pins and missed this fourth one entirely. **The winning design cannot ship
+   without confronting it**, and A refused the cheap dodge itself: renaming the
+   argument to `work_file` would pass the pin and is exactly the spelling game
+   `_identity_violation` records losing six times.
+2. **A and B independently proposed the same extraction** — pulling
+   `constellation/<work_id>` out of `open_work`'s inline f-string
+   (`spine_lifecycle.py:357`) into a named `session_id_for(work_id)`. Two
+   independent designs converging on one seam is the deep-module rule's own
+   evidence test: "one adapter = a hypothetical seam; two = a real one." I am
+   taking that extraction on their agreement rather than on my own judgement.
+
+### Method note
+
+I used **fresh general-purpose agents, not forks**, on the strength of lane G's
+incident, and told each one in its prompt that it has no spine and must not run the
+engine or touch any checklist. All three complied; nothing outside their assigned
+output paths was written. Given that lane G lost its mission to exactly this, the
+prohibition is cheap and I would repeat it.
+
 
 
 ## Bootstrap
