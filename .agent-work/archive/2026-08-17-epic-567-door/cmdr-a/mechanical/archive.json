@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "archive",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-a",
+    "project": "constellation-skills",
+    "role": "constellation-commander-delegated",
+    "refusals": 5,
+    "spine-step": "archive",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-a-archive@9de9f84cb8a4875a3d7f2018c99b7ee9f50bec5f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-a",
+    "generated_at": "2026-08-17T08:46:22Z"
+  }
+}

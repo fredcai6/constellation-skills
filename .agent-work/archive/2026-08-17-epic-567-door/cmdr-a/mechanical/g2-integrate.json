@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g2-integrate",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-a",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 5,
+    "spine-step": "g2-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-a-g2-integrate@420d166e0b684f7a77021acf9f50a96f6f49d185",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-a",
+    "generated_at": "2026-08-17T08:30:05Z"
+  }
+}
