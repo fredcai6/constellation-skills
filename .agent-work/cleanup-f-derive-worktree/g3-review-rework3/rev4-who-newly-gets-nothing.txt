@@ -1,0 +1,34 @@
+topology                                                       extra  arm        bound?     renders a gate?
+no binding at all (#261)                                       0      REWORK2    True       True
+                                                               0      WORKTREE   True       True
+
+no binding at all (#261)                                       1      REWORK2    False      True
+                                                               1      WORKTREE   False      True
+
+owns nothing visible; crew claims the scanned spine (B4)       0      REWORK2    False      False
+                                                               0      WORKTREE   False      False
+
+owns nothing visible; crew claims the scanned spine (B4)       1      REWORK2    False      False
+                                                               1      WORKTREE   False      False
+
+owns an ARCHIVED entry; crew claims the scanned spine (B5)     0      REWORK2    True       True
+                                                               0      WORKTREE   False      False
+  ^^ CHANGED BY REWORK 3: owns an ARCHIVED entry; crew claims the scanned spine (B5) (extra=0)
+
+owns an ARCHIVED entry; crew claims the scanned spine (B5)     1      REWORK2    False      True
+                                                               1      WORKTREE   False      True
+
+owns an ARCHIVED entry; scanned spine claimed by NOBODY (tc1)  0      REWORK2    True       True
+                                                               0      WORKTREE   True       True
+
+owns an ARCHIVED entry; scanned spine claimed by NOBODY (tc1)  1      REWORK2    False      True
+                                                               1      WORKTREE   False      True
+
+owns an ARCHIVED entry; scanned spine is its OWN bare claim    0      REWORK2    True       True
+                                                               0      WORKTREE   True       True
+
+owns an ARCHIVED entry; scanned spine is its OWN bare claim    1      REWORK2    False      True
+                                                               1      WORKTREE   False      True
+
+rows measured: 20  topologies x match-counts: 10  rows whose answer rework 3 changed: 1
+scratch: /tmp/g3rev4enum-__8yb6dw

@@ -1,0 +1,12 @@
+PREGATE   {"every_match_owned_by_crew": true, "renders_a_crew_gate": true, "renders_pick_it_up": true, "scan_matches": 2, "wrote_a_binding": false}
+REWORK2   {"every_match_owned_by_crew": true, "renders_a_crew_gate": true, "renders_pick_it_up": true, "scan_matches": 2, "wrote_a_binding": false}
+WORKTREE  {"every_match_owned_by_crew": true, "renders_a_crew_gate": true, "renders_pick_it_up": true, "scan_matches": 2, "wrote_a_binding": false}
+         rendered additionalContext ->
+         RESUMING an active Constellation spine run after a restart or compaction. ENGINE current -> LEASE active: eng-a (by commander, heartbeat 2026-08-16T00:00:00+00:00)
+ACTIVE g3 [in-progress] -- CREWA-MARKER the crew's first
+
+  stop #1 (parent) decision=block     nudge_count=1
+  stop #2 (crew  ) decision=block     nudge_count=2
+  stop #3 (parent) decision=continue  nudge_count=3
+  stop #4 (crew  ) decision=continue  nudge_count=4
+scratch: /tmp/g3rev4c2b-t21021qs

@@ -1,0 +1,398 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a",
+    "r4b",
+    "r4c",
+    "r4d",
+    "r4e",
+    "r4f",
+    "r4g",
+    "r4h",
+    "r4i",
+    "r4j"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded: global-crew.md + global-everyone.md (inherited), docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g3-reviewer-rework3 handoff, the rework-3 diff (89cac7d2..68d190f7, shas re-derived from git log and all resolve), and spine_rail.py's decide_session_start/_own_entries/_attributed_to_another_key/_same_path/session_view_provenance regions.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "The handoff asked for the fix to B5 at the writer, and that landed: B5 is measurably fixed, minimally, with no collateral (r4a, r4d). But two of the ten Close Criteria fail -- CC3 (the guard is not complete: B6, the same door with an ambiguous scan, still RENDERS another keys gate) and CC10 (a fresh sentence that is false about the tree, in three places). Eight pass. The gate asked to be judged against all ten, so the handoff is not satisfied.",
+      "evidence": [
+        {
+          "id": "e-r1-handoff-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "artifact": ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-reviewer-rework3-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No scope drift. Rework 3 (68d190f7) touches scripts/hooks/spine_rail.py, tests/test_spine_rail.py, map/INDEX.md and .agent-work/**/crew-handoffs/g3-implement* -- all four inside the Allowed Scope. Every Specific Exclusion holds: no change to scripts/mcp_spine_server.py, .mcp.json, examples/**, scripts/install_constellation.py, skills/commander/templates/**, scripts/run_crew.py, scripts/recover_crews.py, tests/test_crew_launcher.py, scripts/verify_worktree_isolation.py, any template, or scripts/checklist_engine.py. No fail-closed refusal was added (the guard withholds a write; it never refuses a tool call) and no cwd threading. The exclusions naming paths outside this worktree are Commander-verified, not reviewer-verified -- noted, not blocked on. On the scope note I was invited to challenge: re-opening the bind-on-resume writer is correct and is the minimum that answers B5; this gate is what routes these sessions into that writer. I do NOT think the guard reaches into tc1s territory -- measured, it changes exactly one row of ten and leaves the bind-a-spine-nobody-claimed rows untouched (r4d).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every row of the handoffs Evidence Produced table reproduces, and I re-derived each independently rather than re-running their harness. Targeted selector: 21 collected / 21 passed / 33 subtests. Full suite: 3190 passed, 5 skipped, 0 failed. B5 harness WORKTREE arm: reproduced from scratch (rev4_instrument.py C1) with three arms whose sha256 is printed and asserted distinct -- no bind, no leak, crew keeps its gate. #202 + #261: 4 passed, untouched in the diff. tests/test_worktree_derivation.py: unedited across the whole gate. Shas 999b7663, 53c89ba1, 89cac7d2, 68d190f7, c5ad8d61, 17c2cee5 all resolve. The pinned-arm hazard the handoff warned about is real and confirmed: rev3_production_sequence.py pins its HEAD arm to c5ad8d61, a superseded commit -- I did not rely on it.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Umbrella over r4a..r4j: 8 pass, 2 fail (CC3 completeness, CC10 prose). Against the inherited rules: the change is minimal and test-led (3 new tests, all red before / green after by construction of the new helper fixture), it fails visibly (withholds rather than guessing), it matches the surrounding conventions, and CREW_CONTEXTs verification discipline is honoured -- every loop in the new test asserts what it looped over, and my own instruments do the same. The two fails are quality fails, not process fails.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No unreconciled divergence. map/INDEX.md was regenerated in the same commit and its counts agree with the diff (scripts.hooks.spine_rail 64 -> 65 entities, tests.test_spine_rail 213 -> 217). The known stale KeyError-era door claims are the Commanders reconcile step and are not findings. Map Impact: the change adds one module-private predicate and no new boundary, module, or contract -- architecture-insignificant, so no Cartographer routing is owed. Triage candidates raised instead of fixed: (T1) the ambiguous-scan render path selects by glob order rather than by binding-key provenance (B6, blocking here because it is this gates own rule on the door this rework opened); (T2) the writer guard reads a session-scoped view, so cross-session attributions are invisible (B7) -- this one sits next to the recorded tc1 authority question and is the Admirals call; (T3) the three-states taxonomy is stated in four places and two copies have already gone stale on this gate (Fowler duplicated-code).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a .agent-work/cleanup-f-derive-worktree/FOWLER_PASS-g3-reviewer-attempt-4.json placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like cleanup-f-derive-worktree on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/cleanup-f-derive-worktree/FOWLER_PASS-g3-reviewer-attempt-4.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Pass run and recorded at .agent-work/cleanup-f-derive-worktree/FOWLER_PASS-g3-reviewer-attempt-4.json; verify_fowler_pass.py exits 0 (smells=12, flagged=[long-method, duplicated-code, shotgun-surgery], overridden=[large-class, primitive-obsession, comments-as-deodorant]). The shotgun-surgery flag is the one that fed the review: the same rule has needed a new site in each of three reworks, and it is measurably needed at a fourth -- the render selection -- which is blocker B6. Nothing in the Fowler pass is itself a blocker.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/cleanup-f-derive-worktree/FOWLER_PASS-g3-reviewer-attempt-4.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a": {
+      "id": "r4a",
+      "title": "CC1 B5 is actually fixed",
+      "imperative": "Reproduce B5 independently at 68d190f7; do not trust the pinned-arm harness.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "CONFIRMED independently. My own instrument (rev4_instrument.py, C1), production writers only, real pinned probe payloads, three arms whose sha256 and byte-length are printed and asserted distinct: WORKTREE = no bind, attribution left with the crew key, no CREW-MARKER in the SessionStart render, parent Stop gets foreign-owned wording, and the crew still sees its own gate (true only on WORKTREE -- PREGATE and REWORK2 both answer false). REWORK2 = bound, leaked, crew loses its gate. I did not rely on rev3_production_sequence.py; I verified its HEAD arm is pinned to c5ad8d61 as the handoff warned.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b": {
+      "id": "r4b",
+      "title": "CC2 B4 stays fixed",
+      "imperative": "Re-run the B4 sequence; no door closes as another opens.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "B4 stays fixed. rev4_instrument.py C3: the parent owns nothing visible, only the crew's in-tree spine. WORKTREE and REWORK2 both write no binding and render nothing; PREGATE leaks CREW-MARKER. Also visible as rows 3-4 of the enumeration matrix (rev4-who-newly-gets-nothing.txt), unchanged between arms.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4c": {
+      "id": "r4c",
+      "title": "CC3 the writer guard is correct and complete",
+      "imperative": "Attack it: construct a session still bound to a spine another key holds. Path normalisation, same path under two keys, unusable bind_key.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "FAIL -- two constructions still hand a session a spine another binding key holds. B6 (BLOCKER, same door rework 3 just fixed): the guard sits INSIDE \"if len(matches) == 1 and sid:\" and AFTER \"spine = matches[0][0]\", so it governs only the write, and only on an unambiguous scan. With TWO active spines the scan writes nothing by construction but still RENDERS matches[0] -- chosen by glob order, not by binding-key provenance. rev4_c2b.py removes glob order as a variable by having the crew claim BOTH remaining active spines: on PREGATE, REWORK2 and WORKTREE alike the parents SessionStart returns \"RESUMING ... ACTIVE g3 [in-progress] -- CREWA-MARKER ... Pick the run back up at this gate and drive it through the engine\". That is the #549 failure class this gate exists to end, unchanged by the gate, on the door B5 opened. It is also the Admiral-plus-Commander topology (two spine.json under one .agent-work). B7: at the call site owners is session_view_provenance(binding, sid) -- the ACTING SESSIONS VIEW, not the store. An attribution held by a different harness session_id is invisible to it. rev4_instrument C5: another session claims the crews spine, the parents own entry is archived, one active spine remains -> the parent binds to it and its next Stop renders it as its own gate, identically on all three arms. run_crew.py launches each crew as its own claude -p session, so cross-session claims in one tree are this projects normal case. Path normalisation, same-path-under-two-keys and an unusable bind_key are all handled correctly (see r4g, r4j).",
+      "evidence": [
+        {
+          "id": "e-r4c-1",
+          "type": "measurement",
+          "payload": {
+            "harness": "rev4_c2b.py",
+            "result": "render-leak-confirmed-on-all-three-arms"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4d": {
+      "id": "r4d",
+      "title": "CC4 the guard is not too broad",
+      "imperative": "#202 sibling merge untouched and green; enumerate who newly gets nothing.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Not too broad -- measured, not reasoned. rev4_who_newly_gets_nothing.py runs 5 topologies x 2 scan-match counts = 20 rows on the REWORK2 and WORKTREE arms and prints what each row looped over. Exactly ONE row of ten differs between the arms, and it is B5s own (owns an archived entry; the crew claims the single scanned spine). Untouched: no binding at all (#261), owns nothing visible (B4), owns an archived entry where the scanned spine is claimed by nobody (tc1, the open authority question -- still binds, deliberately), and owns an archived entry where the scanned spine is the sessions own bare claim (still binds). #202s test_session_start_unambiguous_scan_merges_onto_existing_sibling_binding is untouched in the whole-gate diff (999b7663..68d190f7 has no hunk touching it) and green. Nobody legitimate newly gets nothing.",
+      "evidence": [
+        {
+          "id": "e-r4d-1",
+          "type": "measurement",
+          "payload": {
+            "harness": "rev4_who_newly_gets_nothing.py",
+            "rows": "20",
+            "rows_changed_by_rework3": "1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4e": {
+      "id": "r4e",
+      "title": "CC5 #261 bind-on-resume still works",
+      "imperative": "Empty sid_bindings, one active-leased spine, the bind still happens.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "#261 still works. rev4_instrument.py C4: empty binding store, one active-leased spine -> bound on all three arms, and the render carries the session's OWN marker. Also enumeration rows 1-2 (extra=0): bound True on both arms.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4f": {
+      "id": "r4f",
+      "title": "CC6 the return {} on refusal",
+      "imperative": "Is returning right, or does a session lose context it legitimately needed?",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Returning is right. By the time the guard runs, the local variable spine is already matches[0][0], so skipping only the write would still render the foreign gate -- the leak in the other field. Nothing legitimate is lost: the refused session is one whose own spine no longer loads, so the only context on offer was another binding key gate. The shape also matches the B4 branch one level up, which returns {} for the same reason.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4g": {
+      "id": "r4g",
+      "title": "CC7 fail-safe direction",
+      "imperative": "Confirm refuse-on-exception is safe and cannot deadlock a genuine owner. Try to make it raise.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fail-safe direction is right and cannot deadlock. rev4-probes.txt P2: eight adversarial inputs (owners.items() raising, an owner_key whose __eq__ raises, None owners, list owners, None spine_path, None bind_key, a non-str owners key, a None owner_key) -- all eight answer True (refuse) and none raises. No deadlock for a genuine owner: a session whose own spine loads never reaches the fallback at all (the local spine is not None), and if owners were unusable, _own_entries returns [] and the earlier \"sid_bindings and not owned\" branch already returns {}.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4h": {
+      "id": "r4h",
+      "title": "CC8 nothing from any prior review regressed",
+      "imperative": "Stop path, nudge keyed by sid alone, #549 two-way rendering, stdlib-only imports, _own_entries shared, ownership-based selection, test_worktree_derivation.py, the differential's guard.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No prior-review regression found. The rework-3 spine_rail.py diff is 5 hunks: the module header comment, _own_entries docstring x2, the new function, and two blocks in decide_session_start -- decide_stop, _scan_active_spine and _entry_mid_flight_view are byte-unchanged. Nudge still keyed by sid ALONE and shared across agents: measured in rev4-c2b.txt, parent stop -> count 1, crew stop -> 2, parent -> 3 (escape hatch fires, decision continue), crew -> 4. #549 two-way rendering intact: rev4_instrument C1 shows the parent getting foreign-owned wording with the imperative withheld while the crew still gets CREW-MARKER as its own. Imports stdlib-only (errno, json, os, re, shlex, subprocess, sys, tempfile, time, datetime, pathlib, optional msvcrt). _own_entries still called by both sites (decide_stop and decide_session_start). tests/test_worktree_derivation.py unedited across the whole gate and green. The differentials guard (_assert_arms_are_what_they_claim in g3-implement/m4_differential.py) is untouched since rework 1 (6bba3fd2) -- verified by git log, not re-run, since its arms are pinned to superseded revisions.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4i": {
+      "id": "r4i",
+      "title": "CC9 suite arithmetic reconciles against the diff",
+      "imperative": "3187 -> 3190 (+3), targeted 18 -> 21; check for a quiet deletion.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Arithmetic reconciles, no quiet deletion. Full suite at the worktree tree (68d190f7 content): 3190 passed, 5 skipped, 0 failed (rev4-full-suite-HEAD.txt), vs 3187 at rework 2 = +3. Targeted -k OwnershipIsBindingKeyNotWorktree: 21 collected (confirmed with --collect-only, not just a green selector), 21 passed, 33 subtests, vs 18 = +3. Diff-side: the count of test method definitions in tests/test_spine_rail.py goes 170 -> 173; the diff removes two and adds them back renamed, adds three genuinely new tests plus one non-test helper. map/INDEX.md agrees: scripts.hooks.spine_rail 64 -> 65 entities (the one new function), tests.test_spine_rail 213 -> 217 (3 tests + 1 helper).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4j": {
+      "id": "r4j",
+      "title": "CC10 prose",
+      "imperative": "Grep for the claim, not the symbol. Test each sentence in the changed regions against the tree as it stands.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "FAIL -- one fresh sentence is false about the tree as it stands, in both of the places rework 3 writes it. _attributed_to_another_key docstring line 1: \"Whether the store ALREADY attributes spine_path to a binding key other than bind_key\". The call site passes owners = session_view_provenance(binding, sid), which is this SESSIONS VIEW of the store (bare sid plus its own sid#agent keys), never the store. The gap is observable, not pedantic: rev4_instrument C5 measures a real attribution the guard cannot see. The same overstatement is repeated in the call-site comment (\"it may not CONTRADICT an attribution the store already holds\") and in the new tests docstring (\"must not file a spine path the store already attributes to a DIFFERENT binding key\"). Everything else in the changed regions checks out sentence by sentence: last-key-wins damage in both directions (measured, C1 REWORK2 row), _same_path folding normpath (and case only on Windows -- see r4j evidence P1), \"NEVER raises\" (P2, 8 adversarial inputs), the #261/#202 untouched claim (enumeration rows 1-2 and 7-8), and the header blocks \"a SessionStart, blocking nothing, hands out nothing -- and writes nothing\", which is correctly SCOPED to the owns-nothing-visible door and is true there.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r1-handoff: The handoff asked for the fix to B5 at the writer, and that landed: B5 is measurably fixed, minimally, with no collateral (r4a, r4d). But two of the ten Close Criteria fail -- CC3 (the guard is not complete: B6, the same door with an ambiguous scan, still RENDERS another keys gate) and CC10 (a fresh sentence that is false about the tree, in three places). Eight pass. The gate asked to be judged against all ten, so the handoff is not satisfied.",
+      "r4-quality: Umbrella over r4a..r4j: 8 pass, 2 fail (CC3 completeness, CC10 prose). Against the inherited rules: the change is minimal and test-led (3 new tests, all red before / green after by construction of the new helper fixture), it fails visibly (withholds rather than guessing), it matches the surrounding conventions, and CREW_CONTEXTs verification discipline is honoured -- every loop in the new test asserts what it looped over, and my own instruments do the same. The two fails are quality fails, not process fails.",
+      "r4c: FAIL -- two constructions still hand a session a spine another binding key holds. B6 (BLOCKER, same door rework 3 just fixed): the guard sits INSIDE \"if len(matches) == 1 and sid:\" and AFTER \"spine = matches[0][0]\", so it governs only the write, and only on an unambiguous scan. With TWO active spines the scan writes nothing by construction but still RENDERS matches[0] -- chosen by glob order, not by binding-key provenance. rev4_c2b.py removes glob order as a variable by having the crew claim BOTH remaining active spines: on PREGATE, REWORK2 and WORKTREE alike the parents SessionStart returns \"RESUMING ... ACTIVE g3 [in-progress] -- CREWA-MARKER ... Pick the run back up at this gate and drive it through the engine\". That is the #549 failure class this gate exists to end, unchanged by the gate, on the door B5 opened. It is also the Admiral-plus-Commander topology (two spine.json under one .agent-work). B7: at the call site owners is session_view_provenance(binding, sid) -- the ACTING SESSIONS VIEW, not the store. An attribution held by a different harness session_id is invisible to it. rev4_instrument C5: another session claims the crews spine, the parents own entry is archived, one active spine remains -> the parent binds to it and its next Stop renders it as its own gate, identically on all three arms. run_crew.py launches each crew as its own claude -p session, so cross-session claims in one tree are this projects normal case. Path normalisation, same-path-under-two-keys and an unusable bind_key are all handled correctly (see r4g, r4j).",
+      "r4j: FAIL -- one fresh sentence is false about the tree as it stands, in both of the places rework 3 writes it. _attributed_to_another_key docstring line 1: \"Whether the store ALREADY attributes spine_path to a binding key other than bind_key\". The call site passes owners = session_view_provenance(binding, sid), which is this SESSIONS VIEW of the store (bare sid plus its own sid#agent keys), never the store. The gap is observable, not pedantic: rev4_instrument C5 measures a real attribution the guard cannot see. The same overstatement is repeated in the call-site comment (\"it may not CONTRADICT an attribution the store already holds\") and in the new tests docstring (\"must not file a spine path the store already attributes to a DIFFERENT binding key\"). Everything else in the changed regions checks out sentence by sentence: last-key-wins damage in both directions (measured, C1 REWORK2 row), _same_path folding normpath (and case only on Windows -- see r4j evidence P1), \"NEVER raises\" (P2, 8 adversarial inputs), the #261/#202 untouched claim (enumeration rows 1-2 and 7-8), and the header blocks \"a SessionStart, blocking nothing, hands out nothing -- and writes nothing\", which is correctly SCOPED to the owns-nothing-visible door and is true there."
+    ],
+    "summary": "BLOCK. B5 is genuinely fixed, minimally and with no collateral -- reproduced independently, and an enumeration of 5 topologies x 2 scan-match counts shows rework 3 changes exactly ONE row of ten, B5s own. Eight of ten Close Criteria pass. Two fail. B6 (blocker): the guard governs only the WRITE and only on an unambiguous scan, so with two or more active-leased spines a session on the same door still gets another keys gate RENDERED, with \"Pick the run back up at this gate and drive it through the engine\" -- identical on PREGATE, REWORK2 and WORKTREE, with glob order removed as a variable. That is the #549 class this gate exists to end, on the door this rework opened, and it is the Admiral-plus-Commander topology. B7 (blocker, prose + measured gap): owners at the call site is the acting SESSIONS VIEW, not the store, so a cross-session attribution is invisible and the bind proceeds -- while the new docstring, the call-site comment and the new tests docstring all say \"the store\"."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "The ambiguous-scan render path in decide_session_start selects matches[0] by glob order rather than by binding-key provenance, so a session can still be handed another keys gate text plus \"Pick the run back up at this gate\" whenever two or more active-leased spines exist (reviewer B6)."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "The bind-on-resume writer guard reads session_view_provenance(binding, sid) -- the acting sessions view -- so an attribution held by a DIFFERENT harness session_id is invisible to it and the bind proceeds (reviewer B7). Sits next to the recorded tc1 authority question; widening it is an Admiral decision."
+    },
+    {
+      "id": "tc3",
+      "from": "r6-fowler",
+      "statement": "The three-states-of-the-read taxonomy is stated in four places in spine_rail.py; two copies have already gone stale on this gate. State it once and point at it."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/cleanup-f-derive-worktree/g3/reviewer/attempt-4",
+    "status": "released",
+    "claimed_at": "2026-08-17T00:26:23.240296+00:00",
+    "last_heartbeat": "2026-08-17T00:41:27.166021+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T00:41:27.251568+00:00"
+  }
+}

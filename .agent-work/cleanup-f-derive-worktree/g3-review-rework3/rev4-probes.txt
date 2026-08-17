@@ -1,0 +1,33 @@
+==============================================================================
+P1  case folding
+  os.path.normcase is identity on this host: True
+  linux  _same_path(lower, upper)                : False (expect False -- they are two different files here)
+  linux  _attributed_to_another_key -> refuse?   : False (expect False)
+  win32  _same_path(lower, upper)                : True (expect True -- one file under a case-insensitive fs)
+  win32  _attributed_to_another_key -> refuse?   : True (expect True)
+  restored: True
+==============================================================================
+P2  try to make _attributed_to_another_key raise
+  owners.items() raises      -> True
+  owner_key.__eq__ raises    -> True
+  owners is None             -> True
+  owners is a list           -> True
+  spine_path is None         -> True
+  bind_key is None           -> True
+  non-str owners key         -> True
+  owner_key is None          -> True
+==============================================================================
+P3  three-plus call sequence on B5's topology (WORKTREE arm)
+  {"attribution": "c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c", "bound_crew_spine": false, "crew_sees_own_gate": true, "parent_stop": "SPINE MID-FLIGHT (foreign-owned): ", "parent_stop_leaks": false, "round": 1, "start_render": "{}"}
+  {"attribution": "c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c", "bound_crew_spine": false, "crew_sees_own_gate": false, "parent_stop": "", "parent_stop_leaks": false, "round": 2, "start_render": "{}"}
+  rounds identical (idempotent): False
+==============================================================================
+P4  gauge writer in the B5 topology (scoped null 3)
+  after the REFUSED bind:
+    parent key -> ['/tmp/g3rev4p-w_5lailh/p4-elo31k04/.agent-work/run-own/gauge-eng-own-c0ea1e1ce92f.json']
+    crew key   -> ['/tmp/g3rev4p-w_5lailh/p4-elo31k04/.agent-work/run-crew/gauge-eng-crew-6966d8898fc2.json']
+  counterfactual, bind PRESENT (what rework 2 wrote):
+    parent key -> ['/tmp/g3rev4p-w_5lailh/p4b-3r3y16sg/.agent-work/run-own/gauge-eng-own-c0ea1e1ce92f.json', '/tmp/g3rev4p-w_5lailh/p4b-3r3y16sg/.agent-work/run-crew/gauge-eng-crew-6966d8898fc2.json']
+    crew key   -> ['/tmp/g3rev4p-w_5lailh/p4b-3r3y16sg/.agent-work/run-crew/gauge-eng-crew-6966d8898fc2.json']
+==============================================================================
+scratch: /tmp/g3rev4p-w_5lailh

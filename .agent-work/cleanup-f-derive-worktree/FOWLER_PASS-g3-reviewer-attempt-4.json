@@ -1,0 +1,89 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "diff_ref": "g3 rework 3: git diff 89cac7d2..68d190f7 -- scripts/hooks/spine_rail.py tests/test_spine_rail.py (5 hunks: the module header comment block, _own_entries' docstring, the new _attributed_to_another_key, and two blocks in decide_session_start), read against the whole gate 999b7663..68d190f7",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "decide_session_start is now 159 lines -- 62 code, 92 comment (measured) -- and carries three multi-paragraph in-body comment blocks. Rework 3 added 2 lines of code (the guard call and its `return {}`) under 20 lines of comment INSIDE that function. The code is not complex; the function is long because it is where five reworks' worth of rationale has accumulated. Observation, not a blocker: the two candidate extractions (the reader-state taxonomy, and the bind-on-resume writer block as its own function) would each shorten it, and the writer block is the natural one -- it is already a distinct decision with its own guard.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "overridden",
+      "finding": "tests/test_spine_rail.py's OwnershipIsBindingKeyNotWorktree now holds 21 tests in ~700 lines.",
+      "override": {
+        "repo_standard": "docs/agents/CREW_CONTEXT.md 'Verification Discipline' (a check that cannot fail is indistinguishable from one that passed) plus the class's own docstring: this repo ships NO pytest config, so pytest's default python_classes = Test* would collect ZERO tests from a plain class -- the class must be a unittest.TestCase and its exact name is what the gate's selector (-k OwnershipIsBindingKeyNotWorktree) and every handoff's collected-count check address.",
+        "reason": "The class is a single named invariant's evidence set, addressed as a unit by the gate's own verification command. Splitting it would either break the selector every handoff cites or require a second name that no longer states one invariant. Size here is a consequence of a documented collection constraint, not of a class doing several jobs."
+      }
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The three-states-of-the-read taxonomy is now stated in FOUR places -- the module header block (lines ~705-720), _own_entries' docstring (~1562-1571), decide_session_start's pre-branch block (~1837-1847), and the guard's own block (~1864-1881) -- plus a fifth partial in _attributed_to_another_key's docstring. This is prose duplication, and on this gate it has already failed twice in exactly the way duplication fails: rework 2 wrote the taxonomy at 1837 with two states when it had three, and that wrong copy is how B5 was scoped out. Each restatement is a separate thing to keep true. Observation with a concrete remedy: state the taxonomy once (the header block reads as its natural home) and have the other sites point at it.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "_attributed_to_another_key reads only its three parameters and delegates the path comparison to _same_path. It reaches into no other module's data.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "(owners, spine_path, bind_key) is one coherent question, not a clump travelling together across signatures; _own_entries' (candidates, owners, own_key) is the reader-side counterpart and the two deliberately do not share a parameter object -- the diff argues that separation and I agree with it.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "A binding key is a bare str ('sid' or 'sid#agent_id') threaded through every reader and now the writer; its structure lives in a separator constant and string comparison rather than a type.",
+      "override": {
+        "repo_standard": "The file's own documented invariant, stated at decide_stop (~1678): 'binding_key is the one function that composes a key anywhere in this codebase, so the two sides of this comparison cannot drift.' BINDING_KEY_SEP plus that single composer is the repo's sanctioned mitigation, and #419/#441 are the issues that established it.",
+        "reason": "The drift risk primitive obsession warns about is closed by having exactly one composer and one separator constant, both already load-bearing and tested. A key type would add a shape that must survive JSON round-trips through the binding store for no behaviour the single-composer rule does not already guarantee."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "The new function takes three parameters; nothing else in the diff grew a signature.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "One rule -- 'this session may not be handed a spine another binding key holds' -- has now needed an edit at a different site in each of three reworks (selection at both call sites; the reader's fall-through into the scan; the writer). Rework 3's move to the shared writer is the right direction and is why this is an observation rather than a blocker. It is still flagged because the same rule is measurably needed at a FOURTH site that this rework did not reach: the render selection `spine = matches[0][0]`, which is chosen by glob order and not by binding-key provenance (see this review's blocker B6). A rule that keeps needing another site is the smell; naming the remaining site is the useful form of it.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "spine_rail.py changes for one reason in this diff -- who owns a spine -- and the gate's other concerns (worktree derivation, claim parsing, the lock/transaction layer) are untouched.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "No chained navigation added; the deepest access in the new code is owners.items() and dict.get on a spine's own lease.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "Measured rather than asserted: the enumeration in rev4_who_newly_gets_nothing.txt runs 5 topologies x 2 scan-match counts on the before and after arms and finds exactly ONE row whose answer rework 3 changes -- B5's own. The guard has no reach it does not use.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "20 lines of comment stand above a 2-line guard, and a further ~25 lines of docstring on a 9-line function.",
+      "override": {
+        "repo_standard": "references/global-crew.md: 'Match the surrounding code's naming, labeling, and in-file documentation conventions.' spine_rail.py's uniform convention is to record, at the decision point, the measured defect that made the decision necessary and the issue number that measured it -- decide_stop, _is_own_entry, _entry_mid_flight_view and _same_path all carry the same weight.",
+        "reason": "Deodorant comments explain code that would be unclear if read; these record HISTORY the code cannot carry -- which door a defect came through and what was measured -- for a file whose defects have all been invisible to reading. That is the file's convention and it is load-bearing here. The genuine concern with this comment mass is that it is stated four times over, and that is flagged under duplicated-code rather than excused here."
+      }
+    }
+  ],
+  "rail_exception": null
+}

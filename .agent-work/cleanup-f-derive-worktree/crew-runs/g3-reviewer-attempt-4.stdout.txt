@@ -1,0 +1,22 @@
+My run is complete and I am declining the Stop hook.
+
+**Refusal, on the record.** The hook told me to reload the commander skill, rewrite `STATE_NOTE.md`, and drive `execute.json`. I refuse:
+
+- `SPINE_FILE` is `.agent-work/cleanup-f-derive-worktree/spine.json`, and its lease is **`commander-cleanup-f-derive-worktree`, status active, claimed_by commander** — verified just now, not assumed. That is my parent's spine under my parent's live lease.
+- My own `crew-runs.json` entry has `spine: null`; my `SPINE_SESSION` is the parent's session, not mine.
+- The hook's own escape hatches (`block`, `waive`) write to that same Commander-leased spine, so the "honest stop" it offers is itself the destructive act.
+
+My blocker reaches my parent the way a crew's blocker is meant to — as the result artifact. The refusal is now recorded as observed fact in the result's *On the Stop hook* section, replacing the conditional wording I wrote before it fired.
+
+**Deliverables, verified present:**
+
+| artifact | state |
+|---|---|
+| `crew-handoffs/g3-reviewer-rework3-result.md` | written, 27 KB |
+| `g3-review-rework3/review.json` | 17 items, all `complete`, verdict **BLOCK**, lease released |
+| `FOWLER_PASS-g3-reviewer-attempt-4.json` | `verify_fowler_pass.py` exits 0 |
+| `rev4_instrument.py`, `rev4_c2b.py`, `rev4_probes.py`, `rev4_who_newly_gets_nothing.py` + their outputs | in `g3-review-rework3/` |
+
+**Verdict: BLOCK.** B5 is genuinely fixed and the fix is narrow (one changed row in twenty measured). Two blockers remain: **B6**, the same door still *renders* another key's gate when the scan finds ≥2 active spines, because the guard sits after `spine = matches[0][0]` and inside `len(matches) == 1`; and **B7**, `owners` is the acting session's view while three fresh sentences call it "the store", with a cross-session bind measured to prove the difference is real.
+
+There is no further action I can take on this gate without writing to a spine that is not mine.
