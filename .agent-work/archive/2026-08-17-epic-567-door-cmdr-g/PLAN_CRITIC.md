@@ -1,0 +1,16 @@
+# Plan Critic — Candidate B
+
+1. **BLOCKING — `--mechanical` advance can be flatly refused by the engine's own HARD-gauge guard.** `advance()`'s `require_why` (checklist_engine.py:2524) is computed live by `_run_verb` from `_trip_hard_band_reading(...)` (line ~3369), independent of any flag `_advance_and_release` passes. At/over the HARD threshold, `advance --mechanical` raises `EngineError` telling the caller to use `--why` instead. This is plausibly the exact scenario #574 cites ("closeout refused at 23% context"). Neither the plan text nor its test list (only "unmet postcondition" refusal is tested) exercises this refusal path, and there's no `--why` fallback. Fix: detect `require_why`/HARD and either supply a `--why` or explicitly test-and-document the refusal `finish_work` surfaces.
+
+2. **BLOCKING — reap runs before child-plan release, so children stay unreaped.** g3's order is `force_reap -> _release_child_plans -> close_work`. `_reap_binding_entries` only drops an entry whose target's `engine_session.status == "released"`; a child is still `active` at the time `force_reap` runs, so its binding-store entry is skipped and left to the next incidental transaction — reproducing the exact #552 staleness this run exists to fix. Fix: release children before reaping, or reap twice (after parent release and again after child release).
+
+3. **BLOCKING — child-plan release self-authorizes; "never touch a live spine" is unenforced.** `_release_child_plans` reads the child's own `engine_session.session_id` from the file and hands that same value back to `release()` as the caller's id. `release()`'s ownership check (`session_id != sess.get("session_id")`) is then tautological — not proof this run owns the lease. Child identification is "any JSON under `work_dir` with `status == active`," with no lineage check (e.g. via the parent's own item/`from_child` graph) and no heartbeat-recency check. Nothing stops this from seizing a lease a different, still-working agent genuinely holds. "Never touch a live spine" appears only as an author-facing validation-discipline constraint in the mission frame — it is not built into the shipped code path at all.
+
+4. **SHOULD-FIX — in-process `main(argv)` calls aren't guarded against `SystemExit`.** `parse_args` (argparse) calls `sys.exit(2)` on any unparseable argv; `main()`'s own try/except catches only `EngineError`. A flag-shape mismatch (lane A's rewrite, or a plain typo) raises `SystemExit`, not a captured `(stdout, exit code)` pair as the plan assumes. No test in either candidate exercises this.
+
+5. **SHOULD-FIX — A's rejection is argued on the wrong axis.** `PLAN_ALTERNATIVES.md` rejects A because B "isolates" the advance call against future CLI-shape drift — but never weighs finding #1: A never calls `advance` at all, so it structurally cannot hit the HARD-gauge refusal. That's a stronger point in A's favor than the one actually argued, and it's unaddressed.
+
+6. **NIT** — `finish_work`'s return/exception shape when `_advance_and_release`'s advance half refuses isn't specified (re-raise vs. structured refusal dict).
+
+## Verdict
+**approve-with-fixes** — the four-function composition is sound and worth keeping over A, but #1–#3 sit directly on the mission's two named failure modes and its explicit safety constraint; none should ship unaddressed.

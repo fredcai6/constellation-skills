@@ -1,0 +1,42 @@
+{
+  "work_id": "epic-567-door/cmdr-g",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-567-door/cmdr-g",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "artifact-ref": ["PR #622", "tests/test_spine_lifecycle.py"],
+        "context-manifest-ref": ".agent-work/epic-567-door/cmdr-g/context/feedback.json",
+        "refusals": 0,
+        "reopens": 1,
+        "rework-count": 0,
+        "failed-commands": 0
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Fixed a Windows-CI-only test failure (result['refusal'] == expected comparing unequal despite printing identically) by normalizing \\r\\n to \\n in the subprocess-captured comparison value, on the assumption the mismatch was a line-ending difference."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The newline normalization would make both previously-failing tests pass on the next Windows CI run, since the truncated pytest diff ('...e the engine.' == '...e the engine.') looked consistent with two texts differing only in invisible characters."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The re-run Windows CI failed the identical two tests again, with the identical error signature. Reading the FULL diff this time (not the truncated summary) showed the real difference: 'the JSON â€” use' vs 'the JSON — use' -- a UTF-8 em-dash mis-decoded as cp1252 (mojibake), not a newline difference at all. The root cause was subprocess.run(text=True) decoding the child's stdout using the Windows runner's default locale encoding (cp1252) because PYTHONIOENCODING=utf-8 in the child's env governs only the child's write side, never this process's read side."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "A second full reopen-fix-rearchive cycle (identical mechanical shape to the first) was needed because the first fix, while reasonable-looking from the truncated diff alone, did not address the actual cause. The corrected fix (encoding=\"utf-8\" passed explicitly to subprocess.run) was verified against the actual Windows CI run before being reported as done, rather than trusted from local (Linux) test output, which cannot exercise this failure mode at all."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Did not report the first fix as confirmed-working without checking the actual CI result -- re-ran CI, read the full failure log (not just the truncated assertion summary pytest prints by default), diagnosed the real cause from the literal mojibake bytes, and fixed the actual mechanism rather than re-guessing. Kept the (harmless, and independently defensible) newline normalization in place alongside the encoding fix, since a genuine newline difference remains a real possibility for a different comparison even though it was not the cause here."
+        }
+      }
+    }
+  ]
+}

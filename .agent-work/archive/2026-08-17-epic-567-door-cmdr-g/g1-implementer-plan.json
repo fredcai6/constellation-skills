@@ -1,0 +1,352 @@
+{
+  "work_id": "epic-567-door/cmdr-g/g1-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-done-refusal",
+    "m2-engine-call",
+    "m3-advance-release",
+    "m4-hard-band",
+    "m5-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the handoff is complete",
+      "imperative": "Read the inherited global doctrine (constellation-implementer references/global-everyone.md), docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md if present, the g1 handoff in full, and the map substitutes it names: scripts/spine_lifecycle.py's module docstring, scripts/mcp_spine_server.py's in-process call pattern, and the read-only anchors in scripts/checklist_engine.py (advance, release, active_id, _run_verb, parse_args, _trip_hard_band_reading) plus scripts/gauge_reader.py. Verify the handoff carries task, intent, scope, exclusions, required evidence, test mode, stop conditions; block and return if incomplete. Record the pre-change test count. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff read in full and complete; map substitutes read; pre-change test count recorded (59 passed, 1178 lines)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "handoff read in full: task, protected intent, test mode, close criteria, allowed scope, exclusions, constraints, map anchors, required evidence, wiring grep, verification commands, authority, stop conditions all present. Map substitutes read: spine_lifecycle module docstring, mcp_spine_server.run_engine, checklist_engine advance/release/active_id/_run_verb/parse_args/_trip_hard_band_reading/_trip_hard_gate/dispatch/require_session, gauge_reader thresholds_for/owner_key/gauge_filename/_parse_record. Pre-change baseline: 59 passed, tests/test_spine_lifecycle.py 1178 lines."
+        }
+      ],
+      "constraints": [
+        "never edit scripts/checklist_engine.py, scripts/mcp_spine_server.py, scripts/hooks/spine_rail.py",
+        "never run new code against a live spine file; fixtures under tmp_path only",
+        "MCP spine door is UNBOUND: no mcp__spine__* mutating call; CLI only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-done-refusal": {
+      "id": "m1-done-refusal",
+      "title": "done_refusal -- pure, delegates to closeout_refusal",
+      "imperative": "Add `done_refusal(spine, *, tree_clean, episodes_captured, archive_exists) -> str | None` to scripts/spine_lifecycle.py beside the existing pure helpers. Check order exactly: (1) not tree_clean -> 'close refused: the working tree has uncommitted changes'; (2) not episodes_captured -> 'close refused: this run captured no episode'; (3) return closeout_refusal(spine, archive_exists=archive_exists). Pass archive_exists straight through; invent no second archive check. No Path, no open, no subprocess in the body. Add TestDoneRefusal to tests/test_spine_lifecycle.py covering both new refusals in order, the delegation, and purity.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "done_refusal exists, is pure, delegates to closeout_refusal; its tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k DoneRefusal"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-done-refusal-1"
+        }
+      ],
+      "constraints": [
+        "do not modify closeout_refusal or close_work",
+        "test-after allowed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-done-refusal-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k DoneRefusal",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-engine-call": {
+      "id": "m2-engine-call",
+      "title": "_engine_call -- the single in-process engine choke point",
+      "imperative": "Add `_engine_call(argv) -> tuple[str, int]` to scripts/spine_lifecycle.py, mirroring scripts/mcp_spine_server.run_engine: redirect stdout and stderr into io.StringIO via contextlib.redirect_stdout/redirect_stderr, call checklist_engine.main(argv), return (captured_output, exit_code). It MUST catch both checklist_engine.EngineError and SystemExit and never raise; on SystemExit return the captured output with int(exc.code or 0). Add TestEngineCall covering a malformed argv returning a non-zero code rather than raising SystemExit.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 landed: done_refusal present and green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "_engine_call never raises; malformed argv returns non-zero; its tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k EngineCall"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-engine-call-1"
+        }
+      ],
+      "constraints": [
+        "never subprocess the engine from this module",
+        "no edit to mcp_spine_server.py -- it is the pattern reference only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-engine-call-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k EngineCall",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-advance-release": {
+      "id": "m3-advance-release",
+      "title": "_advance_and_release -- advance then release, refusal verbatim",
+      "imperative": "Add `_advance_and_release(spine_path, session_id, *, root, why=None) -> dict` going through _engine_call only. Read the spine, resolve the active/terminal gate with checklist_engine.active_id; start it when pending; advance it when not yet terminal, with --why when why is a non-empty string else --mechanical; then release --session-id. Return {'ok': True, 'output': ...} or {'ok': False, 'refusal': <verbatim engine text>, 'stage': 'advance'|'release'|'start'}. A refused advance returns the engine text verbatim and NEVER attempts the release. Add TestAdvanceAndRelease: a terminal-gate fixture reaching engine_session.status == 'released', and an unmet-postcondition fixture whose refusal text is byte-identical to the engine's own with status still 'active'.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 landed -- _engine_call exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "_engine_call exists and is green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "release happens on success; refusal passes through byte-identical and blocks the release; its tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k AdvanceAndRelease"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-advance-release-1"
+        }
+      ],
+      "constraints": [
+        "fixtures under tmp_path only -- never a live spine",
+        "never re-word or swallow an engine refusal"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-advance-release-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k AdvanceAndRelease",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-hard-band": {
+      "id": "m4-hard-band",
+      "title": "HARD-band test -- the finding this gate exists to cover",
+      "imperative": "Write a gauge record at/over the hard band beside a tmp_path fixture spine, named per gauge_reader.gauge_filename(owner_key(session_id)) with the four required fields (schema_version, fill_fraction, model, observed_at) and observed_at at/after the lease's claimed_at. Assert a why-LESS _advance_and_release returns the engine's why-required refusal verbatim rather than closing silently, and that the SAME fixture closes cleanly once a why is supplied. This test must not be skipped.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 landed -- _advance_and_release exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "_advance_and_release exists and is green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "HARD-band why-less refusal reproduced in a fixture and the same fixture closes with a why; test passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k HardBand"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-hard-band-1"
+        }
+      ],
+      "constraints": [
+        "a measured negative is a real result -- if the refusal cannot be reproduced, say so plainly with what was tried"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-hard-band-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k HardBand",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-verify": {
+      "id": "m5-verify",
+      "title": "Full suite green, fence untouched, wiring grep stated",
+      "imperative": "Run the handoff's verification commands: full tests/test_spine_lifecycle.py suite (state pre and post counts), the fenced-file diff (must be empty), validate_spine.py against the Commander's execute.json read-only, and the wiring grep (state the caller count and name g3 as the production caller). Write the full IMPLEMENTER_RESULT to .agent-work/epic-567-door/cmdr-g/crew-handoffs/g1-implementer-result.md.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 landed: HARD-band reproduced, 6 tests green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green AND no diff to any fenced file",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q && test -z \"$(git diff -- scripts/checklist_engine.py scripts/mcp_spine_server.py scripts/hooks/spine_rail.py)\""
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT written to the handoff's delivery path",
+          "check": {
+            "kind": "command",
+            "command": "test -s /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease/.agent-work/epic-567-door/cmdr-g/crew-handoffs/g1-implementer-result.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Return status lowercase",
+        "Workflow Feedback section mandatory"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "STAND DOWN received mid-gate from the dispatching agent (self-identified as an illegitimate fork subagent colliding with the real cmdr-567-g on this work-id). Ordered to stop editing tracked files, leave the diff in place, release the lease, and return partial. m5's own postconditions were in fact met before the order arrived (102 passed; fenced-file diff empty; result artifact written), but the run is not mine to close.",
+        "authority_needed": "dispatching agent 'fork' stand-down order; adjudication belongs to the Admiral",
+        "next_action": "Admiral adjudicates whether the g1 diff stands. Note the handoff design defect the stand-down names: done_refusal delegating to closeout_refusal refuses whenever the lease is still active, which is the state at every legitimate pre-close verify call from finish_work.",
+        "prior_status": "in-progress"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [
+    {
+      "item": "m5-verify",
+      "blocker": "STAND DOWN received mid-gate from the dispatching agent (self-identified as an illegitimate fork subagent colliding with the real cmdr-567-g on this work-id). Ordered to stop editing tracked files, leave the diff in place, release the lease, and return partial. m5's own postconditions were in fact met before the order arrived (102 passed; fenced-file diff empty; result artifact written), but the run is not mine to close.",
+      "authority_needed": "dispatching agent 'fork' stand-down order; adjudication belongs to the Admiral",
+      "next_action": "Admiral adjudicates whether the g1 diff stands. Note the handoff design defect the stand-down names: done_refusal delegating to closeout_refusal refuses whenever the lease is still active, which is the state at every legitimate pre-close verify call from finish_work."
+    }
+  ],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/epic-567-door/cmdr-g/g1/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-17T05:53:19.608004+00:00",
+    "last_heartbeat": "2026-08-17T06:06:05.465957+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T06:06:13.135358+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff is complete and internally consistent; no blocker. The load-bearing constraint is confirmed by reading the source: advance's require_why comes from _run_verb's live _trip_hard_band_reading call at checklist_engine.py:3369, not from any caller flag, and at/over hard it refuses --mechanical outright (:2524-2532). Also found, and it changes the fixture design: start (not advance) is TRIP_HARD_GUARDED (:83, dispatch :3333), so a hard-band fixture whose gate is still pending would be refused at start with the begin-refused message instead of reaching the why-required refusal -- the HARD-band fixture's gate must therefore already be in-progress. For the gauge to be read at all, the fixture needs an ACTIVE lease (_checklist_owner keys the filename off it), observed_at at/after claimed_at (_reading_predates_claim), a model in gauge_reader._PROFILES, and freshness within 30 minutes.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:53:41.827680+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-done-refusal",
+      "why": "done_refusal lands beside the pure helpers with the two new checks in the handoff's exact order and wording, then delegates to closeout_refusal. Two judgment calls, both toward failing visibly: archive_exists is a REQUIRED keyword (a default could only be False, the permissive answer, so a forgotten argument would silently skip the archive check -- and closeout_refusal's own archive_exists is required for the same reason); and the delegation is pinned by a parametrized differential test over all six of closeout_refusal's outcomes including None, plus a source assertion that the body neither restates engine_session/_TERMINAL_STATUSES/consolidation nor adds a second archive check. 15 new tests green.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:55:02.058473+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-engine-call",
+      "why": "_engine_call lands as the module's one engine choke point, mirroring mcp_spine_server.run_engine: one io.StringIO behind redirect_stdout and redirect_stderr, checklist_engine.main(argv), return (text, code). Four clauses, ordered SystemExit (a BaseException, so no except Exception can stand in for it) then EngineError then a broad Exception -- the broad one is load-bearing, not tidiness, because main() does parse_args and load() BEFORE its own EngineError handler, so a missing or unparseable spine file raises OSError/ValueError straight past every engine-side guard. Two tests had to change shape: the one-choke-point assertion is measured over the AST, not by text search, because the module and the function both DISCUSS checklist_engine.main in prose and prose is not a call site. Also recorded: an external actor reset this worktree to HEAD mid-gate and destroyed the m1 edits (reflog: 'reset: moving to HEAD'); re-applied, and both files are now backed up outside the worktree after every green step. 25 tests green.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:00:17.623287+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-advance-release",
+      "why": "_advance_and_release drives start (only when pending) then advance then release through _engine_call, and returns a refusal verbatim with the stage that produced it. The byte-identity assertion is measured against a SEPARATE PROCESS running the real CLI over the same argv on an identical pristine copy of the fixture, so 'verbatim' is pinned to the engine itself rather than to a second call into the same helper. A spy on _engine_call proves exactly one engine call happens on a refused advance -- no silent retry with a different flag, no release. One test had to be reshaped: a non-owner session is refused by require_session at the ADVANCE, so stage 'release' needs an already-terminal spine where the advance half is skipped; both cases are now pinned separately. 12 tests green.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:01:25.125043+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-hard-band",
+      "why": "The HARD-band refusal is reproduced in a tmp_path fixture, not argued for. Six tests: a negative control that asserts the gauge is genuinely over the line (gauge_reader.read returns a Reading, fill >= thresholds_for's hard, and checklist_engine._trip_hard_band_reading agrees on this exact spine); the why-less close refused with the engine's own wording and NOTHING recorded on the why_trail; byte-identity against the real CLI in a separate process on a pristine copy carrying its own gauge; THE SAME fixture closing cleanly once a why is supplied, with the understanding landing on the why_trail; the innocent counterpart below the line where --mechanical still succeeds, which proves the band and not the fixture causes the refusal; and a spy proving exactly one engine call and no release after the refusal. Four fixture conditions were load-bearing and none of them are guessable from the handoff: an ACTIVE lease (it keys the gauge filename), observed_at not before claimed_at, a model in _PROFILES, and freshness under 30 minutes -- plus the gate having to be in-progress rather than pending, because start and not advance is TRIP_HARD_GUARDED.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:02:32.676863+00:00"
+    }
+  ]
+}

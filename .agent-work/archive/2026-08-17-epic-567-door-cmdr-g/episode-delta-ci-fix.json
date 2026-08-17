@@ -1,0 +1,42 @@
+{
+  "work_id": "epic-567-door/cmdr-g",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-567-door/cmdr-g",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "artifact-ref": ["PR #622", "tests/test_spine_lifecycle.py"],
+        "context-manifest-ref": ".agent-work/epic-567-door/cmdr-g/context/feedback.json",
+        "refusals": 0,
+        "reopens": 1,
+        "rework-count": 0,
+        "failed-commands": 0
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "119 local (Linux) test passes were treated as sufficient evidence at the original archive; no Windows validation was available or attempted before opening PR #622."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A green local run on the same test file the crew gates had already independently re-verified would carry over to CI without platform-specific surprises."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "PR #622's Windows-only CI run failed 7 tests: 4 new tests hit a pre-existing repo/_init_repo fixture gap (no persisted git identity, so a second git commit inside code under test fails 'Author identity unknown' on a Windows runner with no ambient git config -- Linux runs never surfaced it because some ambient identity happened to be configured there); 2 new tests compared a subprocess-captured string against an in-process-captured one without newline normalization, and only differed under CRLF, which only a non-Linux runner introduces; 1 (map/INDEX.md freshness) belonged to a different lane entirely and was correctly left untouched."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One full reopen-fix-rearchive cycle: re-claiming the released lease, reopening execute (cascading reconcile/triage/review/feedback/archive back to pending), moving the work area out of archive and back for work-id-relative tooling to resolve, applying two small fixes, redriving five spine steps, and re-archiving. The fixes themselves were each a few lines."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Independently re-verified every specific test name and error message against the real CI log before touching any code, rather than acting on the report alone. Fixed both defects at their single shared source (the repo/_init_repo fixture; the _raw_engine_cli helper) rather than patching each failing test individually, so the fix covers all current and future callers of the same fixture/helper. Confirmed via the CI log that the git-identity fix's root cause was already present in 5 pre-existing main-branch test failures, and reported that fact without expanding scope to fix those separately."
+        }
+      }
+    }
+  ]
+}

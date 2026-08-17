@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "work_id": "epic-567-door/cmdr-g",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "map/INDEX.md",
+      "content_hash": "111aacd589283742cd12cefd1bf3ce872be6c762dc26dde9ab2990507e6c6204",
+      "source": "agent-declared"
+    },
+    {
+      "path": "scripts/spine_lifecycle.py",
+      "content_hash": "31df077fbd373212c77e84d0f0821ba1b4f95fd8e448e4ba272ababcaefcf87e",
+      "source": "agent-declared"
+    },
+    {
+      "path": "scripts/mcp_spine_server.py",
+      "content_hash": "aaf2895c080f406afe3f37a4ea8126a4508be2058e8a9427c98dab2dc0e4f09a",
+      "source": "agent-declared"
+    },
+    {
+      "path": "scripts/hooks/spine_rail.py",
+      "content_hash": "2ace278660004933bbbbbb1855022a96724274e3d8056da7bab63260b1d2d518",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "4183448e7bd4408b17192f35a3d8abad623553baa6d6fddf9025ce07252c7074",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "no docs/architecture packet map or decision-anchor inventory exists in this repo; read the raw code map (map/INDEX.md, unparseable to map_orient) and source files directly instead"
+  ],
+  "escalation": "none needed -- this repo (constellation-skills, a skill-source repo) has no docs/architecture overlay; ORCHESTRATOR_CONTEXT.md/GLOSSARY.md/CREW_CONTEXT.md are the project-level doctrine substitute, per commander doctrine's explicit allowance for a skill-source repo with no map",
+  "emitted_at": "2026-08-17T05:31:18.031271+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

@@ -1,0 +1,175 @@
+{
+  "work_id": "epic-567-door/cmdr-g",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "i0-context",
+    "q1-baseline",
+    "q2-verify-shape",
+    "q3-close-shape",
+    "q4-reap-shape",
+    "q5-pr-opening",
+    "zc-consolidate"
+  ],
+  "tasks": {
+    "i0-context": {
+      "id": "i0-context",
+      "title": "Load baseline context",
+      "imperative": "Load the handed-in goal (LANE_G_LAUNCH_ORDER.md, epics #574 and #552) and context. Read the glossary and the topic's relevant code. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Launch order and #574/#552 context loaded at Commander context step; glossary/ORCHESTRATOR_CONTEXT.md read.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q1-baseline": {
+      "id": "q1-baseline",
+      "title": "What closeout mechanism already exists on the base commit, and what gap remains?",
+      "kind": "fact",
+      "imperative": "Resolve from code: does scripts/spine_lifecycle.py already have an archive mover, and what does it refuse? Record code evidence.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "scripts/spine_lifecycle.py:close_work already exists (PR #564): moves work area to .agent-work/archive/<date>-<work-id>/, spine+journal last, git commit. closeout_refusal (spine_lifecycle.py:122-161) refuses unless engine_session.status=='released', every items id has terminal task status, and the archive dir does not already exist. It does NOT do reap or dispose; caller must already have advanced/released by hand before calling it. mcp_spine_server.py wires this as the spine_close MCP tool (no arguments, acts on bound spine).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q2-verify-shape": {
+      "id": "q2-verify-shape",
+      "title": "What does the mechanical 'verify' precondition check need to cover?",
+      "kind": "fact",
+      "imperative": "Resolve from the launch order's contract sketch: episodes captured, gates terminal or explicitly waived, tree state clean/staged. Record which existing checks (closeout_refusal, verify_episode_captured.py) already cover which piece.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "closeout_refusal already covers gate-terminality and released-lease-status and archive-not-exists. It does NOT check episodes captured or tree clean/staged -- those are new checks this lane adds (episodes: reuse verify_episode_captured.py's store-scan pattern; tree: git status --porcelain).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q3-close-shape": {
+      "id": "q3-close-shape",
+      "title": "Can 'final advance + release as last journaled action' be built by calling checklist_engine.py's existing verb functions/CLI, without editing checklist_engine.py or mcp_spine_server.py (both fenced, lane A owns/is rewriting)?",
+      "kind": "fact",
+      "imperative": "Resolve from code: checklist_engine.py separates pure verb functions (advance, release) from I/O (load/save/append_journal_entry), and main() composes them; mcp_spine_server.py's existing pass-through tools already call checklist_engine.main(argv) in-process, capturing output, without editing checklist_engine.py's source. spine_lifecycle.py already imports generate_spine/init_work_area/run_crew/validate_spine as libraries without editing them (same pattern). Record whether the same library-call pattern lets a new spine_lifecycle.py function sequence advance then release without touching either fenced file.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Confirmed: advance(cl,...) and release(cl,...) at checklist_engine.py:2468/1133 are pure dict-in functions; main() composes load->dispatch->save->append_journal_entry. mcp_spine_server.py's 9 pass-through tools already call checklist_engine.main(argv) in-process (module docstring). A new spine_lifecycle.py function can call checklist_engine.main([...]) twice (advance then release) exactly as the CLI/door already do, with zero edits to checklist_engine.py or mcp_spine_server.py. Fence does not bite for this sub-step.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q4-reap-shape": {
+      "id": "q4-reap-shape",
+      "title": "What does 'reap' (remove this owner's binding entries and gauge state) require given scripts/hooks/spine_rail.py is not explicitly owned by this lane?",
+      "kind": "fact",
+      "imperative": "Resolve from code: spine_rail.py's _reap_binding_entries already runs lazily inside every _binding_transaction call (self-healing on next touch), dropping any entry whose target spine reads engine_session.status == 'released'. Gauge state lives under the work directory and is swept into the archive by the existing close_work move. Record whether an immediate (not lazily-deferred) reap can be achieved by CALLING spine_rail's existing transaction helper as a library (no edits to spine_rail.py), or whether this needs to be left for lane A / floated.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "spine_rail._binding_transaction (scripts/hooks/spine_rail.py:397) already safe-reaps (_reap_binding_entries, :311) on every call, dropping entries whose target spine reads status=='released'; this fires lazily on the NEXT touch by any session. An immediate reap is achievable by calling _binding_transaction(project_dir, lambda reaped: reaped) as a library call from spine_lifecycle.py with a no-op mutate -- forces persistence of the already-reaped map now rather than waiting on a future unrelated session. No edit to spine_rail.py required. Gauge state under the work dir is already swept into archive by close_work's existing move (not a separate mechanism).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q5-pr-opening": {
+      "id": "q5-pr-opening",
+      "title": "Does PR-opening live in the engine verb or in the wrapper script that manages the worktree?",
+      "kind": "decision",
+      "imperative": "Launch order pre-ruling decision:pr-opening-question-is-not-yours: this is Tommy's open question, reserved -- FLOAT it to the Admiral, do not rule it locally. Design so either answer can be adopted without rework: implement dispose as returning structured result (branch, head, archive path, pushed bool) plus an independently-callable open_pr(...) helper either the verb or an external wrapper can invoke. State the assumption used for THIS implementation (wrapper opens the PR by default, engine verb can opt in via a flag) and why it does not lock in the other answer.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "FLOATED, not ruled locally, per decision:pr-opening-question-is-not-yours. Assumption for this implementation: dispose() pushes the branch (mechanical, uncontroversial) and returns a structured result; PR-opening is exposed as an independently-callable open_pr(work_id, branch, ...) helper NOT invoked by default from finish_work, so a wrapper script can call it today. If Tommy later rules the engine verb owns it, finish_work grows one optional open_pr=True kwarg calling the same helper -- zero rework either way.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "zc-consolidate": {
+      "id": "zc-consolidate",
+      "title": "Consolidate behind the finish gate",
+      "imperative": "Do NOT record this until joint understanding is reached. Write the interrogation record to .agent-work/epic-567-door/cmdr-g/INTERROGATION_RECORD.json (from templates/INTERROGATION_RECORD.template.json; each question typed fact|decision; each resolved decision carrying its human_answer; each resolved fact its code_evidence) and capture the counterpart's explicit sign-off (delegated mode: citing the launch order as the counterpart, per Modes). Run `py /home/tommy/.claude/skills/constellation-interrogator/scripts/verify_interrogation.py .agent-work/epic-567-door/cmdr-g/INTERROGATION_RECORD.json` -- it MUST exit 0. Record pass only after exit 0, then `consolidate`.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_interrogation.py exits 0 on the interrogation record",
+          "check": {
+            "kind": "command",
+            "command": "py /home/tommy/.claude/skills/constellation-interrogator/scripts/verify_interrogation.py .agent-work/epic-567-door/cmdr-g/INTERROGATION_RECORD.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-zc-consolidate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "verify_interrogation.py exits 0; joint understanding satisfied via launch-order citation per delegated mode.",
+      "evidence": [
+        {
+          "id": "e-zc-consolidate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-interrogator/scripts/verify_interrogation.py .agent-work/epic-567-door/cmdr-g/INTERROGATION_RECORD.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "pass",
+    "findings": [],
+    "summary": "Baseline mechanism (close_work) confirmed; verify/close/reap sub-steps all achievable via library reuse of checklist_engine.py and spine_rail.py with zero edits to fenced files; PR-opening floated per pre-ruling, wrapper-opens assumed. Ready to author execute.json."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "cmdr-567-g#interrogation",
+    "status": "released",
+    "claimed_at": "2026-08-17T05:34:30.057012+00:00",
+    "last_heartbeat": "2026-08-17T05:36:01.885516+00:00",
+    "claimed_by": "interrogator",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T05:36:09.507221+00:00"
+  }
+}

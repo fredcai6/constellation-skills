@@ -1,0 +1,194 @@
+{
+  "work_id": "g3-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g3-reviewer-handoff.md, the g3-implementer-handoff.md, the g3-implementer-result.md, and read the finish_work/open_pr diff plus the new test classes and CLI file.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "finish_work and open_pr exist in scripts/spine_lifecycle.py at lines 949 and 1108, matching the handoff's part (a)/(b) signatures exactly (including the tree_clean/episodes_captured gap, independently confirmed genuine -- handoff's headline sig omits them but step 2 and the CLI section both require them; implementer added them as required kwargs and documented the gap inline + in Workflow Feedback, correct handling per Stop Conditions 'a material rule is ambiguous -> report, do not silently resolve'). Composition order in source (read directly, not just the test): verify(done_refusal)->release children->top-level advance+release->reap->archive->push->optional PR -- exactly matches handoff part (a) steps 2-8. Re-ran TestFinishWorkCompositionOrder (spy-based, asserts calls==[release_child_plans,advance_and_release,force_reap,close_work]) standalone: 1 passed. Re-ran TestFinishWorkLeaseProofEndToEnd standalone: 1 passed; read the test body -- it builds a real parent spine + child plan with BOTH engine_session.status=active, asserts census 2->0, and asserts the archived child's engine_session.status==released. Re-ran TestFinishWorkRefusals (5 tests): all pass, confirms finish_work returns structured dicts (never raises) for verify/advance/archive refusals. Re-ran TestOpenPr (5 tests): all pass; open_pr only called when open_pr=True (spy assertion), and source-read confirms --body-file is used via tempfile.mkstemp, --body never appears as a CLI flag. Independently ran scripts/spine_done_cli.py as a genuine subprocess (python3, not py -m pytest) against a fresh mktemp -d repo outside this worktree: refusal path (missing postcondition) returned exit 1 with structured JSON, and a corrected fixture returned exit 0 with archive created -- confirms the CLI is a real fresh-process entry point, not simulated. Full suite: 119 passed (matches implementer's claimed pre 104 -> post 119, +15). Wiring grep confirms finish_work's only non-definition callers are the tests and spine_done_cli.py.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status --porcelain shows only scripts/spine_lifecycle.py (M), tests/test_spine_lifecycle.py (M), scripts/spine_done_cli.py (??, new, exactly the allowed new file) changed -- matches Allowed Scope exactly. Fenced files independently re-confirmed empty: git diff --stat -- scripts/checklist_engine.py scripts/mcp_spine_server.py scripts/hooks/spine_rail.py produced no output. git diff scripts/spine_lifecycle.py has ZERO deletion lines (602 insertions(+), 0 deletions) -- mechanically proves done_refusal/_engine_call/_advance_and_release/force_reap/_release_child_plans/close_work/closeout_refusal (all pre-existing from g1/g2) could not have been altered; finish_work/open_pr are appended after _release_child_plans (949, 1108). git check-ignore scripts/spine_done_cli.py exits 1 (not ignored, correctly a real tracked-eligible deliverable). finish_work not wired as an MCP tool (mcp_spine_server.py untouched, confirmed above) -- matches Specific Exclusions.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All Required Evidence items independently reproduced, not merely accepted from the report: (1) lease-proof e2e test re-run standalone + read; (2) composition-order spy test re-run standalone + source read; (3) fresh-process CLI smoke -- both TestSpineDoneCli (3 tests, subprocess.run against python3) AND my own standalone manual mktemp -d run outside pytest and outside this worktree, both ok/exit0 and refusal/exit1 paths observed; (4) full suite 119 passed, matches claimed pre 104 -> post 119. Confirmatory evidence also reproduced: fenced-file empty diff, open_pr off-by-default spy. No test exercises push=True (all use push=False), avoiding accidental network/git-push side effects during review reproduction -- a reasonable and safe choice; push's ~8-line body (subprocess.run + returncode check) is simple enough that inspection substitutes adequately, matching the git-command pattern close_work already uses elsewhere unmodified in this file. push_error key is an additive, undestructive extension of the handoff's named success-return keys, matching the handoff's own prose ('plus the git error text') -- not a substitution.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Constraints verified: (1) never run against a live spine -- every fixture uses tmp_path or the repo (tmp_path/repo) fixture; grep for 'epic-567-door' across spine_lifecycle.py/spine_done_cli.py/test_spine_lifecycle.py finds it only inside TestSpineDoneCli's own negative-assertion test string, never as an actual path argument; my own standalone CLI run used a fresh mktemp -d repo. (2) open_pr never constructs --body <string> -- confirmed by source read (tempfile.mkstemp + --body-file only, no --body flag anywhere in argv construction) and by test_open_pr_uses_body_file_never_a_body_flag asserting '--body' not in argv. (3) POSIX-form commands, PYTHONIOENCODING=utf-8 used throughout, py confirmed working on this host (3.12.3, pytest 9.1.1). Naming/documentation conventions match the surrounding module (docstring density, PURE/impure classification headers, load-bearing all-caps emphasis on ordering) -- consistent with g1/g2's own established style, reviewed favorably in g1-review/g2-review. finish_work never raises for a normal refusal (mechanically proven: TestFinishWorkRefusals covers all three refusal stages, each asserting a returned dict not a raised exception; SpineLifecycleError is caught explicitly around close_work only).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No docs/architecture map exists in this repo (confirmed: ls docs/architecture -> No such file or directory) -- matches the handoff's own Map Anchors note ('none -- DEGRADED-UNPARSEABLE'), so no structural baseline to reconcile against. Implementer's Map Impact notes verified against the diff: structural anchors (finish_work/open_pr appended after _release_child_plans) match observed line numbers (949, 1108, following 799-932); capability:mechanical-closeout-one-verb claim matches the CLI + finish_work reachability confirmed above; decision:pr-opening-question-is-not-yours honored (open_pr=False default, floated not ruled); decision:new-rot-first-old-rot-maybe correctly untouched -- no code in this diff sweeps or references pre-existing stale leases outside the run's own declared work area. No decision candidates were needed beyond what the handoff already floats. Triage candidates: none raised by the implementer, consistent with the decision anchors already scoping the 41 pre-existing stale leases out.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/<work-id>/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/<work-id>/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-567-door/cmdr-g/g3-review/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded to .agent-work/epic-567-door/cmdr-g/g3-review/FOWLER_PASS.json; verify_fowler_pass.py exits 0 (smells=12, flagged=[], overridden=[primitive-obsession, long-parameter-list]). No blocking smells found. Two documented overrides: primitive-obsession (finish_work/open_pr's plain-dict/str|None return shapes are the handoff's own ratified Success/Refusal Return contract, matching the module's pre-existing sibling functions' convention -- same treatment g1-review/g2-review already gave close_work/_advance_and_release/_release_child_plans) and long-parameter-list (finish_work's 9 params each map 1:1 to a distinct required input of a distinct downstream primitive it composes; the signature is the handoff's ratified Authority-section contract, and inventing a parameter object not asked for would itself violate global-crew.md's no-speculative-abstraction rule). speculative-generality is genuinely absent here (not merely overridden) -- unlike g1/g2 at their own review time, finish_work has a real non-test caller in this same diff: scripts/spine_done_cli.py, independently exercised as a fresh subprocess in r1-handoff/r3-evidence. Amended r6-fowler's c1 postcondition command via engine amend --delta (authority cmdr-g) to correct the same <work-id>-substitution template defect g1-review/g2-review already hit and fixed identically.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/<work-id>/FOWLER_PASS.json",
+            "exit": 2,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-567-door/cmdr-g/g3-review/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "g3 (finish_work composition + dispose + CLI, terminal gate of 3) implemented correctly per the handoff. Composition order independently verified by reading source directly (:1023-1105), not just trusting the test: verify(done_refusal) -> release children -> top-level advance+release -> reap -> archive -> optional push -> optional PR, matching part (a) steps 2-8 exactly. The #552 lease-proof end-to-end test re-run standalone and read in full: builds a real parent spine + child plan with BOTH engine_session.status=active, asserts a structural active-lease census goes 2->0 across one finish_work call, and asserts the archived child's engine_session.status==released -- this is genuine, not simulated. Composition-order spy test re-run standalone: asserts exact call order [release_child_plans, advance_and_release, force_reap, close_work]. finish_work never raises for a normal refusal at any of steps 2/4/6 (TestFinishWorkRefusals, 5 tests, all re-run and read: each returns a structured dict). open_pr is never called by default (spy-confirmed) and its PR body write uses tempfile.mkstemp + --body-file exclusively, confirmed by source read and test. Fenced files (checklist_engine.py, mcp_spine_server.py, spine_rail.py) independently re-confirmed empty diff; spine_lifecycle.py's diff is pure-addition (0 deletions), mechanically proving g1/g2's primitives were composed, not altered. Fresh-process CLI validation independently reproduced TWICE: TestSpineDoneCli's 3 subprocess.run tests re-run, AND my own standalone manual run in a fresh mktemp -d repo outside this worktree and outside pytest entirely, observing both the ok/exit-0 archive-created path and the refusal/exit-1 path. Full suite independently re-run: 119 passed (104 baseline -> 119, +15 new tests, matching the implementer's claim exactly). The one flagged handoff gap (finish_work's headline signature line omitting tree_clean/episodes_captured, though step 2 and the CLI section both require them) was independently confirmed genuine by reading the handoff myself -- correctly handled by the implementer as an add-required-kwargs resolution, documented inline and in Workflow Feedback rather than silently guessed past. Fowler pass: zero flagged smells; two documented overrides (primitive-obsession and long-parameter-list, both tied to the handoff's own ratified Success/Refusal Return signature, matching g1-review/g2-review's identical treatment of this module's sibling functions) -- FOWLER_PASS.json verified by verify_fowler_pass.py exit 0. Hit the same <work-id>-template-substitution defect in r6-fowler's c1 postcondition that g1-review and g2-review already hit and fixed identically; corrected the same way via engine amend --delta (authority cmdr-g)."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g3-reviewer-1786950155",
+    "status": "released",
+    "claimed_at": "2026-08-17T07:02:35.417037+00:00",
+    "last_heartbeat": "2026-08-17T07:09:54.219756+00:00",
+    "claimed_by": "g3-reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T07:10:01.311050+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-17T07:09:23.676651+00:00",
+      "reason": "template's r6-fowler postcondition carried the literal <work-id> placeholder unsubstituted at instantiation time (resolved to a flat .agent-work/g3-review/ path rather than the actual nested .agent-work/epic-567-door/cmdr-g/g3-review/ location this survey lives at); correcting to the survey's real record path per the item's own fixed convention, matching the identical correction g1-review and g2-review made for the same template defect.",
+      "authority": "cmdr-g",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}

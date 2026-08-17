@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "epic-567-door, lane G: #574 one-verb mechanical closeout + #552 archiving releases the lease",
+      "spec_path": ".agent-work/epic-567-door/crew-handoffs/LANE_G_LAUNCH_ORDER.md",
+      "intent_and_why": "Make shutdown the engine's problem, not the agent's: one door verb (finish_work) that verifies, closes, reaps, archives and disposes; and make archiving release the lease, child plans included, so archived runs stop reading active."
+    },
+    "definition_of_done": [
+      "One call (finish_work / scripts/spine_done_cli.py) drives verify+close+reap+archive+dispose.",
+      "A run archived through that call leaves zero active leases, child plans included.",
+      "No edits to the two fenced files (checklist_engine.py, mcp_spine_server.py)."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Every close/reap ordering choice traced to source and independently re-verified, not asserted.",
+      "sufficient_evidence": "An end-to-end fixture test showing the #552 lease census go from N active to 0, plus a fresh-process CLI smoke run.",
+      "appetite": "One bounded lane, three crew gates."
+    },
+    "hard_constraints": [
+      "Never run the new verb against a live spine file.",
+      "File no issues -- triage candidates only.",
+      "Do not rule the PR-opening question -- float it."
+    ],
+    "fixed_decisions": [
+      "decision:the-refusal-half-already-exists -- close_work/closeout_refusal (PR #564) already refuses archival of an unreleased or non-terminal spine; build the half that makes that refusal never fire.",
+      "decision:child-plans-count -- the archive step releases child plans' leases too, not just the top-level spine.",
+      "decision:pr-opening-question-is-not-yours -- float, do not rule."
+    ],
+    "current_wave": {
+      "objective": "Ship finish_work (verify/close/reap/archive/dispose composition) and its CLI door, cold-critic-reviewed and independently verified.",
+      "exit_criteria": [
+        "g1 (verify+close primitives), g2 (reap+child-release), g3 (finish_work composition+CLI) all reviewed APPROVE and integrated.",
+        "The #552 lease-proof end-to-end test passes (2 active leases -> 0).",
+        "Fenced files show empty diff throughout."
+      ],
+      "issues": [
+        {
+          "id": "cmdr-567-g",
+          "title": "Build finish_work: verify+close+reap+archive+dispose in one call",
+          "desired_outcome": "An agent finishing a run makes one call; a run archived through it leaves zero active leases, child plans included.",
+          "useful_now": "Closes the two-sided defect the launch order names: hand-sequenced closeout ritual, and archived spines that never stop reading active.",
+          "appetite": "Three crew gates (verify+close, reap+child-release, composition+CLI).",
+          "acceptance_or_falsification_evidence": "TestFinishWorkLeaseProofEndToEnd (2 active leases -> 0, child archived, released); TestFinishWorkCompositionOrder; fresh-process CLI smoke run; full suite green (119 passed, 59 baseline).",
+          "implementation_latitude": "How much of the sequence the verb absorbs; the refusal's shape and wording; test strategy -- all per the launch order's Inherited Latitude.",
+          "hard_constraints_no_gos": ["never edit checklist_engine.py or mcp_spine_server.py", "never test against a live spine"],
+          "local_unknowns": ["whether PR-opening belongs in the engine verb or a wrapper -- floated, not resolved here"],
+          "anchors": ["scripts/spine_lifecycle.py"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "lane A's mcp_spine_server.py rewrite lands, and finish_work is wired as an actual spine_done MCP tool",
+        "why_likely": "The CLI already exists as a working, reachable-today substitute; wiring it as a door tool is a small, well-specified addition once the fenced file stabilizes.",
+        "entry_conditions": ["lane A's checklist_engine.py/mcp_spine_server.py rewrite merges"]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether PR-opening should live in the engine verb or a wrapper script",
+        "affects": "Whether finish_work's open_pr default ever flips to True",
+        "settle_by": "Tommy's ruling on the floated decision:pr-opening-question-is-not-yours",
+        "current_evidence": "Design supports either answer without rework -- open_pr is a separate, independently-callable helper",
+        "next_probe": "Admiral carries the float to Tommy at the wave checkpoint"
+      },
+      {
+        "unknown": "Whether the 41 pre-existing stale leases (measured at abad896d) should be swept",
+        "affects": "Whether a follow-on lane sweeps old rot or leaves it",
+        "settle_by": "decision:new-rot-first-old-rot-maybe, an explicit later ruling",
+        "current_evidence": "Re-measured this run at 52 active / 50 archived (worse than the original 43/17) -- new rot is confirmed still accruing without this lane's fix",
+        "next_probe": "A dedicated sweep lane, if ruled useful"
+      }
+    ],
+    "parked_possibilities": [
+      "Wiring finish_work as an actual spine_done MCP tool once mcp_spine_server.py's rewrite lands",
+      "Sweeping the 41 pre-existing stale leases"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "cmdr-567-g",
+      "outcome": "finish_work + open_pr + scripts/spine_done_cli.py shipped in scripts/spine_lifecycle.py, composing done_refusal/_advance_and_release (g1) and force_reap/_release_child_plans (g2) with the existing close_work in the load-bearing order (children released -> top-level release -> reap -> archive -> push -> optional PR). Three crew gates (g1, g2, g3), each implemented and independently reviewed APPROVE.",
+      "evidence": "119 tests passing (59 baseline + 60 new across g1/g2/g3); TestFinishWorkLeaseProofEndToEnd shows 2 active leases (parent+declared child) collapse to 0 after one finish_work call, with the child archived reading released; fenced-file diff empty throughout (checklist_engine.py, mcp_spine_server.py, spine_rail.py); two independent cold critiques (PLAN_CRITIQUE.md, PLAN_CRITIC.md) both caught and both had their findings corrected before/during implementation."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "finish_work leaves zero active leases after a successful call, child plans included",
+      "expected": "A structural active-lease census over the work area drops from N (parent + declared children) to 0",
+      "observed": "2 -> 0, reproduced by both the implementer and the independent reviewer",
+      "source": "tests/test_spine_lifecycle.py::TestFinishWorkLeaseProofEndToEnd, re-run independently by the Commander and by the g3 reviewer"
+    },
+    {
+      "claim": "the #552 defect (archiving never releases the lease) is measurably live and worsening in this repo today, not merely historical",
+      "expected": "the launch order's abad896d/2026-08-10 figures (43 active, 17 archived) would be a stable or shrinking baseline if the defect were being organically fixed elsewhere",
+      "observed": "52 active, 50 archived, at this run's base commit 600de020 -- worse on both counts",
+      "source": "read-only census script, run against this worktree's .agent-work tree; full output in RETURN.md section 4"
+    },
+    {
+      "claim": "the composition order (children released before the single final reap) is load-bearing, not cosmetic",
+      "expected": "reaping before children release leaves child binding-store entries stale, reproducing #552 inside finish_work itself",
+      "observed": "confirmed by two independent cold critiques finding the same defect in the original design, and by a passing composition-order spy test asserting the corrected sequence in the shipped code",
+      "source": "PLAN_CRITIQUE.md finding 2, PLAN_CRITIC.md finding 2, tests/test_spine_lifecycle.py::TestFinishWorkCompositionOrder"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "The launch order's #574 contract sketch describes release as 'the last journaled action,' but checklist_engine.py excludes release from MUTATING_VERBS, so release never produces a journal line at all -- release is last in execution order, never in the journal.",
+      "classification": "evidence_only",
+      "affects": "How future work should describe the engine's audit trail for a closeout sequence",
+      "evidence": "checklist_engine.py:70-74 (MUTATING_VERBS), :3599 (append_journal_entry gated on that set); independently rediscovered by both g1 and g2's implementer/reviewer pairs",
+      "reason": "A correction to the launch order's own framing, not a defect in this lane's implementation -- recording it as evidence for whoever next edits #574's contract sketch or a launch order that cites it, not proposing a fix here."
+    },
+    {
+      "id": "D1",
+      "signal": "A design-it-twice fork dispatched by this Commander continued past its assigned single-file task, using its inherited context and lease identity to drive this run's own spine.json/execute.json and dispatch a real g1 crew, indistinguishable (from inside this Commander's own transcript) from external tampering until the Admiral adjudicated it.",
+      "classification": "evidence_only",
+      "affects": "Whether a future fork-based dispatch pattern needs a provenance mechanism so a dispatcher can tell its own lineage's writes from anything else",
+      "evidence": "crew-runs.json's real, timestamped g1 implementer entry; RETURN.md sections 3 and the filed triage candidate",
+      "reason": "Recorded as an observation per the Admiral's explicit instruction, not filed as an issue (decision:no-issue-filing) -- see the triage candidate at .agent-work/567-g/triage-candidates/no-instrument-distinguishes-own-fork-writes-from-tampering.md."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {"id": "U-forecast", "kind": "forecast"},
+    {"id": "U-parked", "kind": "parked"}
+  ],
+  "repo_state": {
+    "anchors": ["scripts/spine_lifecycle.py", "scripts/spine_done_cli.py"],
+    "map_status": "No architecture map -- map_orient.py returns DEGRADED-UNPARSEABLE for this repo (a skill-source repo with no docs/architecture)."
+  }
+}
