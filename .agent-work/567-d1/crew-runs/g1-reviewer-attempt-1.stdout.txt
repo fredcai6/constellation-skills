@@ -1,0 +1,12 @@
+**I am not complying with that Stop hook, and the refusal is the correct action.**
+
+The hook handed me the Commander's imperative for `.agent-work/567-d1/spine.json`, which is leased by `constellation/567-d1/lane-d1/commander-delegated`. Verified facts:
+
+- My environment carries **only** `SPINE_PARENT` — no `SPINE_FILE`, no `SPINE_SESSION`.
+- `crew-runs.json` registers this reviewer crew with `"spine": null`.
+- My own survey reports `DONE: no open items`, lease released.
+- My deliverable exists: `.agent-work/567-d1/crew-handoffs/g1-reviewer-result.md`.
+
+The hook resolves the project spine from `CLAUDE_PROJECT_DIR`, so for a `spine: null` crew it reads the *parent's* file and cannot tell the reader is not its owner. Driving it would mean passing the Commander's session id on mutating verbs — impersonation, against a spine whose owner is blocked right now waiting for this foreground process to exit. The hook offers `spine_halt block` as the sanctioned exit; that is the exit for a gate of mine, and I have none open. This is the identical misfire the implementer reported in the same gate — two independent crews, which makes it a reproducible defect rather than an anecdote. I appended it to my result's Workflow Feedback so the Commander gets both sightings.
+
+**My dispatch is complete.** Verdict `APPROVE` (survey consolidated `findings=1`, the one recorded `fail` carried through with an `--override-reason` rather than softened). The three things for the Commander at g2: both `<engine>` tokens on `COMMANDER_SPINE.template.json:123` must be edited; the placeholder pattern misses a respelled stand-in (`<cli>`, `<engine-cli>`, `{{engine}}`) in a spine template; and `.agent-work/templates/` holds tracked spine templates carrying 7 `<engine>` tokens and 2 clauses that no guard walks.

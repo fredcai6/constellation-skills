@@ -1,0 +1,56 @@
+{
+  "work_id": "567-d1",
+  "diff_ref": "tests/test_cli_retirement_guard.py (new, 321 lines) -- the only file in the g1-implement diff; git status over skills specs docs scripts episodes tests map is exactly one line",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md (Verification Discipline; Editing The Skill Corpus), docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md (Pin a claim to the revision you read it at)",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "global-crew.md 'Make the minimal change that satisfies the handoff; no speculative abstraction', plus the handoff's named exclusion that tests/test_mcp_adoption.py is imported and never edited",
+        "reason": "_walk_spec_files() repeats the rglob-plus-suffix-filter shape of test_mcp_adoption._walk_instruction_files(), about six lines. De-duplicating it means editing the adoption module to add specs/, which the handoff explicitly forbids for this gate. The load-bearing definition -- 'agent-facing instruction text' -- is imported rather than copied, so the duplication is the mechanical shape, not the meaning that could drift."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "global-crew.md 'Match the surrounding code's naming, labeling, and in-file documentation conventions' -- the house idiom for a cross-test import is sys.path.insert + '# noqa: E402', at tests/test_mcp_imperative_equivalence.py:72, which imports another test's private ServerInstance the same way",
+        "reason": "The guard imports test_mcp_adoption._instruction_texts, a private-by-underscore symbol of another module. Read alone that is inappropriate intimacy; read against this directory it is the sanctioned idiom, and the handoff's own constraint is that the two definitions must not be able to drift silently, which only an import gives. The intimacy is deliberate and its failure mode is loud: a rename in g2 breaks collection rather than narrowing the walk."
+      }
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "global-crew.md 'Match the surrounding code's naming, labeling, and in-file documentation conventions'; test_mcp_adoption.py addresses instruction text with the same positional (where, text) tuples",
+        "reason": "The (path, where, text, is_whole_file) 4-tuple travels between _guard_texts() and _sites() and would be a small record type in production code. It is built in one place, consumed in one place, and documented by a docstring naming each element; introducing a dataclass here would depart from the tuple convention the module it imports from already uses."
+      }
+    },
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {
+      "smell": "speculative-generality",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "docs/agents/CREW_CONTEXT.md, Verification Discipline: 'Define a guard by its consumer's behaviour, not by a hand-maintained list' and 'any guard that loops must assert what it looped over'",
+        "reason": "SPEC_SUFFIXES is a one-element tuple ('.toml',) and _walk_spec_files() is a general walk over a corpus that holds two files. Read as code that is a generalization ahead of need; read against the standard it is the required shape, because a file list is exactly what this guard may not contain, and the >=1 floor makes the walk assert its own coverage rather than quietly cover nothing."
+      }
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "flagged",
+      "finding": "The 77-line module docstring is not deodorant -- it carries the human ruling verbatim by design, because this lane may not write docs/agents/* and a pointer would dangle -- but it does carry measured numbers as bare prose: '101 files', '1007 texts', '10 command forms caught, 6 prose mentions left alone', and the assertion messages at lines 220, 234 and 247 say only 'when this guard was written'. global-everyone.md 'Pin a claim to the revision you read it at' requires every number in prose to be bound to the revision it was measured at, and this file is where that rule bites hardest: the guard's whole job is to outlive the sweep, so the census it quotes will be read years after the tree moved. One commit sha in the docstring fixes it. Observation, not a blocker; the numbers are accurate today, re-measured by this review."
+    }
+  ],
+  "rail_exception": null
+}

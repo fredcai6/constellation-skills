@@ -188,3 +188,28 @@ sole-writer list and **not** fenced to any other lane. The sweep is impossible w
 the first (it mandates the text) and the second is generated-approved data holding verbatim
 copies of two imperatives I must edit. No other lane owns them, so there is no collision risk.
 I proceed and float the gap, per "Anything that fits no class above -- float, with one line on why."
+
+## execute / attempt-2 — a plan defect found at g1, and its fix
+
+**g3-integrate c2 and g4-integrate c2 cannot pass before the rebase, and the plan does not say so.**
+Both run `pytest tests/test_cli_retirement_guard.py` and require exit 0. The guard walks the WHOLE
+`skills/` corpus, including `skills/workbench/**` — lane D2's files, which I am fenced from and
+which D2 deletes outright. Measured on `origin/main` at `0dbc6eaf`: lane D2 has **not** merged, so
+`skills/workbench/SKILL.md` and `skills/workbench/references/checklist-engine.md` still carry their
+2 clauses (3 regex matches, counting the `CLI-fallback` prose form) plus 4 command-shaped
+`checklist_engine.py` invocations.
+
+So after my sweep the guard is still RED — on exactly the sites that are not mine. `g5-final`
+anticipates this in prose ("pre-rebase it is expected RED there on exactly lane D2's 2 clauses"),
+but `g3-integrate` and `g4-integrate` were written as if it did not exist. This is the cold
+critic's F5 (a check whose result is governed by another lane's state) surviving into the revision
+at two gates it did not name.
+
+**Fix, through the engine's `amend` verb, not by hand-editing the plan:** rescope both checks to
+assert the corpus is clean *everywhere I own*, by computing the guard's own site lists and
+filtering `skills/workbench/`. That keeps the check falsifiable (a violation I introduce anywhere
+else fails it) while not making my gate depend on another lane's merge. `g5-final` keeps the
+unfiltered whole-corpus run on the rebased tree, which is where that assertion becomes honest.
+
+Not a scope change and not a latitude question: the launch order gives me "the guard's mechanism
+and scope expression". Recorded here and in the return.

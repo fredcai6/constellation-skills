@@ -1,0 +1,261 @@
+{
+  "work_id": "567-d1-g1-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-guard",
+    "m2-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the handoff is complete",
+      "imperative": "Read the inherited global doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, the handoff at .agent-work/567-d1/crew-handoffs/g1-implementer-handoff.md, and the handoff's map anchors (tests/test_mcp_adoption.py walk + TestTier2SpineAlreadyBoundForDispatchedCrews, .agent-work/567-d1/notes-1.md, .agent-work/567-d1/plan-rigor/CONVERGENCE.md). Verify the handoff carries task, intent, scope, exclusions, required evidence, test mode, stop conditions; block and return if incomplete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + map anchors loaded; handoff complete (all seven fields present)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-guard": {
+      "id": "m1-guard",
+      "title": "Author tests/test_cli_retirement_guard.py and observe it RED for the right reason",
+      "imperative": "Create exactly one new file, tests/test_cli_retirement_guard.py: the #559 regrowth guard. Reuse the repo's own INSTRUCTION_FILES walk from tests/test_mcp_adoption.py (import it, so the two cannot drift silently), extended to specs/**/*.toml. Catch three patterns over every walked text: the <engine> placeholder token; 'CLI fallback' case-insensitively in ANY punctuation form (measured: ':' x10, ',' x4, ' ' x1); and a literal command-shaped checklist_engine.py invocation. NO exception list of any length -- every exclusion must be a rule the walk itself applies. Assert the target text's ABSENCE, never a description of the rule. State the scanned file and text counts and assert a floor so the guard cannot pass vacuously. Quote the human ruling verbatim in the failure message rather than citing a location. Then confirm collection with --collect-only (so 'it failed' cannot be a misread import error) and run it: it MUST fail today, naming real sites, with a census consistent with the measured baseline (15 'CLI fallback' occurrences across 11 files under skills/; 9 <engine> sites). Attest c1 with the verbatim RED output; c2 is the gate's own closing check and runs as a command.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the guard is written, collects cleanly, and was OBSERVED failing against the real unswept corpus, naming real target sites and its scan counts -- manual attest; check MUST be null because a command check here would run the by-design-failing test and block the gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the gate's own closing check passes: the guard file exists, pytest on it exits non-zero, and its output names the target text",
+          "check": {
+            "kind": "command",
+            "command": "test -f tests/test_cli_retirement_guard.py && ! python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g1-guard.log 2>&1 && grep -qiE 'CLI fallback|<engine>' /tmp/g1-guard.log"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-guard-2"
+        },
+        {
+          "id": "c3",
+          "statement": "no file outside Allowed Scope was modified: git status --porcelain shows only the new guard file among tracked-repo paths",
+          "check": {
+            "kind": "command",
+            "command": "test -z \"$(git status --porcelain -- skills specs docs scripts episodes tests map)\" || git status --porcelain -- skills specs docs scripts episodes tests map | grep -qxE '\\?\\? tests/test_cli_retirement_guard.py'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-guard-3"
+        }
+      ],
+      "constraints": [
+        "Create only tests/test_cli_retirement_guard.py. Read anything; modify nothing else.",
+        "Do NOT edit tests/test_mcp_adoption.py -- gate g2 inverts it.",
+        "Do NOT edit any file under skills/, specs/, docs/, scripts/, or episodes/.",
+        "Do NOT sweep anything and do NOT make the guard green.",
+        "NO exception list: exclude only by a rule the walk applies, never by naming a file.",
+        "A guard that loops must assert what it looped over: state the count, assert a floor."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-guard-1",
+          "type": "test-output",
+          "payload": {
+            "command": "python3 -m pytest tests/test_cli_retirement_guard.py -q",
+            "exit_code": "1",
+            "result": "3 failed, 6 passed",
+            "census": "1007 texts / 103 files (101 skills, 2 specs)",
+            "engine_placeholder_hits": "10",
+            "cli_fallback_hits": "16",
+            "invocation_hits": "10"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-guard-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f tests/test_cli_retirement_guard.py && ! python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g1-guard.log 2>&1 && grep -qiE 'CLI fallback|<engine>' /tmp/g1-guard.log",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-guard-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -z \"$(git status --porcelain -- skills specs docs scripts episodes tests map)\" || git status --porcelain -- skills specs docs scripts episodes tests map | grep -qxE '\\?\\? tests/test_cli_retirement_guard.py'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-result": {
+      "id": "m2-result",
+      "title": "Deliver IMPLEMENTER_RESULT with the verbatim RED evidence",
+      "imperative": "Write the full IMPLEMENTER_RESULT to .agent-work/567-d1/crew-handoffs/g1-implementer-result.md -- that write is the delivery. Include the verbatim RED output with its stated scan counts and named sites, the exact commands run, how many files and texts the walk covered, a Return status field whose value is exactly 'complete', Map Impact notes reusing the inbound anchor vocabulary, and an honest Workflow Feedback section (what helped, what got in the way, own mistakes). Report every measurement discrepancy against the handoff's stated baseline rather than smoothing it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "guard authored and observed RED for the right reason",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the result artifact exists at the handoff's named path and declares Return status: complete",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/567-d1/crew-handoffs/g1-implementer-result.md && grep -q 'Return status.*complete' .agent-work/567-d1/crew-handoffs/g1-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-result-3"
+        },
+        {
+          "id": "c2",
+          "statement": "the result carries the required evidence sections: verbatim RED output, exact commands, scan counts, Workflow Feedback",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'Workflow Feedback' .agent-work/567-d1/crew-handoffs/g1-implementer-result.md && grep -q 'Map Impact' .agent-work/567-d1/crew-handoffs/g1-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-result-4"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/567-d1/crew-handoffs/g1-implementer-result.md && grep -q 'Return status.*complete' .agent-work/567-d1/crew-handoffs/g1-implementer-result.md",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-result-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'Workflow Feedback' .agent-work/567-d1/crew-handoffs/g1-implementer-result.md && grep -q 'Map Impact' .agent-work/567-d1/crew-handoffs/g1-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-result-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/567-d1/crew-handoffs/g1-implementer-result.md && grep -q 'Return status.*complete' .agent-work/567-d1/crew-handoffs/g1-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-result-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'Workflow Feedback' .agent-work/567-d1/crew-handoffs/g1-implementer-result.md && grep -q 'Map Impact' .agent-work/567-d1/crew-handoffs/g1-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/567-d1/g1/implementer/attempt-2",
+    "status": "released",
+    "claimed_at": "2026-08-17T18:07:40.860647+00:00",
+    "last_heartbeat": "2026-08-17T18:14:49.016835+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T18:14:54.250598+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "global-crew + global-everyone + CREW_CONTEXT + GLOSSARY + handoff + all four map anchors read; handoff carries all seven required fields; baseline re-measured independently (15 CLI-fallback occurrences / 11 files, 10 <engine> occurrences on 9 lines / 5 files)",
+      "mechanical": false,
+      "ts": "2026-08-17T18:08:17.580683+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-guard",
+      "why": "guard authored and RED against the unswept corpus for the right reason: collects 9 tests cleanly (no import error), 3 corpus-absence tests fail naming real sites, 6 scaffolding/predicate tests pass. Two census refinements vs the handoff baseline, both reported not smoothed: 10 <engine> occurrences on 9 lines (COMMANDER_SPINE.archive carries two), and 16 CLI-fallback hits because the loosened separator also catches a hyphenated fourth surface form at workbench/references/checklist-engine.md:45.",
+      "mechanical": false,
+      "ts": "2026-08-17T18:12:00.184588+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-result",
+      "why": "IMPLEMENTER_RESULT delivered at .agent-work/567-d1/crew-handoffs/g1-implementer-result.md with verbatim RED, exact commands, scan counts (1007 texts / 103 files), Map Impact, Workflow Feedback, and both census discrepancies reported rather than smoothed. Return status: complete.",
+      "mechanical": false,
+      "ts": "2026-08-17T18:14:49.016826+00:00"
+    }
+  ]
+}

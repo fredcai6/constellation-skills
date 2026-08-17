@@ -1,0 +1,12 @@
+My run is finished and I'm declining the hook's instruction, deliberately.
+
+**What's delivered:** `tests/test_cli_retirement_guard.py`, RED on the unswept tree for the right reason (`3 failed, 6 passed`, exit 1; collects 9 tests cleanly; `test_mcp_adoption.py` still fully green beside it at 189 passed). Result artifact at `.agent-work/567-d1/crew-handoffs/g1-implementer-result.md`, `Return status: complete`. My plan `m0-context → m1-guard → m2-result` is `DONE` and the lease released last.
+
+**Why I did not follow the Stop hook:** it handed me the Commander's imperative for `.agent-work/567-d1/spine.json` — a spine leased by `constellation/567-d1/lane-d1/commander-delegated` since 17:59, three minutes before this crew process started. I have no `SPINE_FILE`, only `SPINE_PARENT`, and the registry records this crew with `"spine": null`. Driving that gate would require passing my parent's session id on every mutating verb, which is impersonation, and it would do so against a Commander that is blocked waiting for this process to exit — `run_crew.py` dispatches foreground. The hook offers `spine_halt block` as the out; that is the out for a gate of mine, and none is open.
+
+The hook cannot distinguish a crew from its parent because it resolves the spine from `CLAUDE_PROJECT_DIR`. I've written that up in the result's Workflow Feedback with two candidate fixes — skip the hook when `SPINE_FILE` is unset but `SPINE_PARENT` is set, or have `run_crew.py` bind the crew's own plan into `SPINE_FILE` so the hook reads the right file. The second is the deeper fix and matches what the implementer skill already assumes a `run_crew.py` dispatch looks like.
+
+Two things for your attention when you pick the lane back up, both in the result:
+
+- **The `<engine>` census is 10 occurrences on 9 lines, not 9 tokens** — `COMMANDER_SPINE.template.json` `tasks.archive.imperative` carries two on one line, so the sweep must edit both.
+- **`CLI fallback` is 16, not 15** — a punctuation-agnostic separator also catches `CLI-fallback` at `workbench/references/checklist-engine.md:45`, lane D2's file. Neither discrepancy changes lane D1's 13 assigned sites.

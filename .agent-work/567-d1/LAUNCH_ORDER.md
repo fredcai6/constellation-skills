@@ -429,3 +429,101 @@ Include, in this order:
 
 On Windows, write the PR body to a temp file and use `gh pr create -F <file>` — never a heredoc
 or a PowerShell here-string for a PR body. You are on Linux, so a heredoc is fine.
+
+---
+
+# ADMIRAL ADDENDUM — 2026-08-17, for the Commander resuming this lane
+
+Your predecessor reached the context HARD band with `init`→`plan` complete and filed a
+`refresh-request` against `execute`. It did **not** close `execute` to hand off, which was the
+right call and is why you have a real gate to start rather than an empty one. Its measurements,
+plan and design-rigor artifacts are committed at `bd677d7c` and are **not** to be re-derived —
+`.agent-work/567-d1/{notes-1.md, MISSION_FRAME.md, execute.json, plan-rigor/CONVERGENCE.md}`.
+
+It floated three things. All three are answered here so you do not have to float them again.
+
+## RULING on F-1 — the three "second-checklist" sites: sweep all 13, reword those 3. APPROVED.
+
+Your predecessor measured, in a fresh process, that a door **cannot** bind a second checklist
+while it holds its own lease, and that releasing the lease to do so breaks `archive`'s own
+requirement that the lease cover every journaled action. So for a Commander's `execute.json`, an
+Interrogator's `interrogation.json`, and an in-session crew's own plan, **the CLI is the only
+path there is.**
+
+This is confirmed independently by the Admiral, three times over: lanes **F** and **H** each
+drove their `execute.json` under a hand-supplied CLI session id (`commander-567-{f,h}-execute`),
+and lane **E**'s implementer drove `IMPLEMENTER_PLAN.json` the same way. Every child plan in this
+system is driven off-door. It is not one gate type and it is not improvisation.
+
+**So: sweep all 13. No `CLI fallback` clause survives in your files.** For the three
+second-checklist sites, replace the clause with a statement of the measured truth — that this
+checklist is not the one your door is bound to, and naming the path that actually works. Do not
+delete an agent's only path and leave it with nothing; that trades a documentation problem for a
+hidden-fallback problem, and "fail visibly, no hidden fallback" outranks a clause count.
+
+**Your predecessor's framing is correct and worth carrying into the wording:** *"'CLI fallback'
+is the wrong word, because a fallback implies a working primary."* There is no primary here.
+
+This does **not** relitigate the human's `decision:complete-sweep`. That ruling said *"sweep all
+**possible** now"*, and it overrode an Admiral recommendation about the **dispatched-crew** path —
+which a re-measurement showed does have a door, because a crew launched by
+`run_crew.py --backend cli --spine` is its own process bound to its own spine. The
+second-checklist path is a different one the ruling never considered. **The Admiral has surfaced
+this to the human as an overridable call**; proceed as above unless a further addendum appears.
+
+## RULING on F-2 — ownership of the mandating tests. GRANTED.
+
+`tests/test_mcp_adoption.py` and `tests/data/store_mentions.approved.txt` were in no lane's
+sole-writer list and no lane's fence table — an omission in the original order, mine. **You are
+now their sole writer for this wave.** No other lane touches them, so there is no collision risk.
+The sweep is impossible without them, since they are the mechanism that mandates the text.
+
+## RULING on F-3 — a durable home for the ruling. HELD TO THE HUMAN, mitigation accepted.
+
+Promoting the ruling into `docs/agents/*` is the human's call and no lane may take it. Your
+predecessor's mitigation is accepted and should stand: **the guard quotes the ruling verbatim**,
+so it is self-contained and deleting the guard destroys its reason along with it. The Admiral has
+put the question to the human; do not wait on it.
+
+## What your predecessor found that changes the job — carry it
+
+**The regrowth has a mechanism and it is a test.** `tests/test_mcp_adoption.py::TestTier1ImperativeFields::test_field_still_carries_cli_fallback`
+asserts each of 7 imperative fields still carries its exact CLI command line, and fails with
+*"the CLI door must stay, never be removed or discouraged."* **That is why this text has been
+deleted twice and grown back twice**: a lane deleted it, the suite went red on a test whose own
+message said the CLI must stay, and the lane put it back. The blast radius is **nine** mandating
+assertions, not one — `:737`, `:784`, `:834`, `:950`, `:954`, `:1132`, `:1149`, and
+`TestCLIStaysAvailableNotDeprecated`'s `:1324` and `:1345`.
+
+**And the counterweight is already in-tree:** `tests/test_mcp_adoption.py:838`
+(`TestTier2SpineAlreadyBoundForDispatchedCrews`) already asserts *absence* for two files and
+quotes the human verbatim — *"the agents should not know about the CLI. period."* Your guard is
+therefore a **generalization of an existing precedent from 2 files to the whole corpus**, not a
+new invention. Land it that way and say so.
+
+**Three surface forms**, measured: `CLI fallback:` ×10, `CLI fallback,` ×4, `CLI fallback ` ×1. A
+colon-only pattern is blind to a third of them.
+
+## Two hazards your predecessor paid for — do not re-pay them
+
+1. **A headless `claude -p` launched inside this worktree inherits `SPINE_*` and the session's
+   Stop hook**, and your predecessor's probe agent began trying to drive **this lane's spine**
+   before permissions stopped it. **Strip `SPINE_FILE`, `SPINE_SESSION`, `SPINE_PARENT` (and
+   `CREW_SCRATCH_DIR`) from every helper you launch.** This is not hypothetical: lane H had a
+   cold subject read its dispatcher's session id off disk and drive the live run under it.
+2. `claude -p` helpers hit `Warning: no stdin data received in 3s` and one died with a bare
+   `Execution error`. `< /dev/null` fixes it.
+
+**Also inherited from lane F, and it will bite your suite run:** a dispatched crew's own
+`CREW_SCRATCH_DIR` leaks into `fake_launch`'s `os.environ` base and reds
+`tests/test_crew_launcher.py::ScratchDirResumeTests::test_resume_of_legacy_entry_without_worktree_key_does_not_crash_and_leaves_scratch_dir_unbound`
+— a test your change does not touch. Reproduced by the Admiral. Unset those four variables for
+your suite run. **Do not "fix" `run_crew.py` to satisfy it**; that would be a real regression
+introduced to silence a false one.
+
+## Unchanged
+
+Everything above the addendum still binds: file ownership (plus F-2's grant), no issue filing, no
+`docs/agents/*` promotion, `map/INDEX.md` is Admiral-owned, the return path, and the merge
+position — **you merge last**, so rebase on the merged `main` before your final gate. Lane F is
+already merged (`e3b2d41a`).
