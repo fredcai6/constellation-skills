@@ -1,0 +1,405 @@
+{
+  "work_id": "567-d1-g1b-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-widen",
+    "m2-overlay",
+    "m3-cost",
+    "m4-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the handoff is complete",
+      "imperative": "Read the inherited global doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, the handoff at .agent-work/567-d1/crew-handoffs/g1b-implementer-handoff.md, and every inbound map anchor: tests/test_cli_retirement_guard.py in full (especially the docstring's declared non-enforcement list), .agent-work/567-d1/crew-handoffs/g1-reviewer-result.md section 'The review's real work', tests/test_mcp_adoption.py TestCLIStaysAvailableNotDeprecated's docstring (the repo's measured argument against an over-eager predicate) and TestTier2SpineAlreadyBoundForDispatchedCrews, and scripts/init_work_area.py:24. Verify the handoff carries task, intent, allowed scope, exclusions, required evidence, test mode, stop conditions; block and return if incomplete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + all map anchors loaded; handoff complete (all seven fields present)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-widen": {
+      "id": "m1-widen",
+      "title": "Half (a): widen the invocation predicate from the token to the shape, pinned both directions",
+      "imperative": "In tests/test_cli_retirement_guard.py ONLY, generalize the engine-command-line pattern from the literal token <engine> to the SHAPE: a stand-in for the engine (angle-bracketed, brace-templated, or a shell variable) immediately followed by an enumerated engine verb. Pin all three reviewer-verified misses -- '<cli> claim --session-id ...', '<engine-cli> advance g1 ...', '{{engine}} release --session-id ...' -- as caught, in the assertion path. Keep every existing PROSE_ONLY discrimination passing: the reviewed line 'tells an agent how to run it' vs 'names the engine as a component' does not move. Decide the boundary case skills/write-a-skill/SKILL.md:20 ('a templates/*.json checklist driven through checklist_engine.py') and pin the exact string on whichever side it lands. Attest c1 (RED observed) before advancing; c2 is the predicate suite green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the three respelled command lines observed UNCAUGHT by the pre-widening pattern and the new assertions observed failing before the widening lands -- manual attest, check MUST be null so the engine does not run a by-design-failing test",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the predicate and floor suites are green: every command shape (old and the three respellings) caught, every PROSE_ONLY shape including the pinned archetype-table boundary left alone",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-widen-2"
+        }
+      ],
+      "constraints": [
+        "Modify tests/test_cli_retirement_guard.py and nothing else; read anything.",
+        "NO exception list of any length -- exclude by a rule the walk applies, never by naming a file.",
+        "Do not make the guard green; it must stay RED on the corpus.",
+        "Do not edit tests/test_mcp_adoption.py, nor anything under skills/, specs/, docs/, scripts/, episodes/, map/, .agent-work/templates/."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-widen-1",
+          "type": "measurement",
+          "payload": {
+            "respellings_uncaught_by_g1_patterns": "3/3 MISSED by placeholder+fallback+invocation, reproduced before the widening",
+            "widened_pattern": "ENGINE_STANDIN_COMMAND_RE = _ENGINE_STANDIN + [ \\t]+ + engine verb",
+            "new_addresses_added": "0 over 3098 texts (26 matches at 23 addresses, all already reported by <engine>)",
+            "boundary_case": "skills/write-a-skill/SKILL.md:20 archetype cell DECIDED prose-side, pinned in PROSE_ONLY"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-widen-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-overlay": {
+      "id": "m2-overlay",
+      "title": "Half (b): extend the walk to the tracked .agent-work/templates/ overlay by rule",
+      "imperative": "Extend the guard's walk to the tracked .agent-work/templates/ overlay the same way SPEC_SUFFIXES extends it to specs/**/*.toml -- a directory plus suffix rule, never a file list, scoped so this run's own .agent-work/567-d1/** artifacts (launch order, notes, handoffs, crew results -- records, not instruction) stay OUT. Add a vacuity floor for the new surface so a moved or emptied overlay says so instead of silently covering nothing. Verify and record: both pre-ruled survivors (docs/superpowers/plans/2026-06-27-delegated-autonomous-commander.md:59 and scripts/init_work_area.py:24) are still OUT by the structural rule alone and named nowhere; no lane-D2 file enters the walk (confirm .agent-work/templates/.baseline/constellation-workbench/** is clean of both patterns); and the guard's RED now names at least one .agent-work/templates/ site.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the widened predicate is green on the predicate and floor suites",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "predicate + floor suites still green with the new floor for the overlay surface",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-overlay-4"
+        },
+        {
+          "id": "c2",
+          "statement": "the guard proper is RED and its output names at least one .agent-work/templates/ site (the gate's own closing check, run verbatim)",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent' >/dev/null 2>&1 && ! python3 -m pytest tests/test_cli_retirement_guard.py -q -k TestNoSecondPathReachesAnAgent > /tmp/g1b-guard.log 2>&1 && grep -q '.agent-work/templates/' /tmp/g1b-guard.log"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-overlay-5"
+        }
+      ],
+      "constraints": [
+        "Exception list length must stay ZERO.",
+        "Scope the include rule to .agent-work/templates/ specifically; .agent-work/567-d1/** must not enter the walk.",
+        "A guard that loops must assert what it looped over -- keep the census in every failure message."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-overlay-1",
+          "type": "measurement",
+          "payload": {
+            "rule": "_walk_dir('.agent-work/templates', INSTRUCTION_SUFFIXES) -- rglob rooted AT the overlay dir, so .agent-work/567-d1/** is never reachable and no file is ever named",
+            "overlay_files_walked": "113 (.md+.json), floor >=60",
+            "survivors_still_out": "docs/superpowers/plans/...delegated-autonomous-commander.md False; scripts/init_work_area.py False -- structural, named nowhere",
+            "d2_fence": "0 dirty sites under .agent-work/templates/.baseline/constellation-workbench/; no fenced-file dependency added",
+            "red_names_overlay": "58 overlay site lines in the RED output across all four patterns"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-overlay-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-overlay-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "set -o pipefail; python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent' >/dev/null 2>&1 && ! python3 -m pytest tests/test_cli_retirement_guard.py -q -k TestNoSecondPathReachesAnAgent > /tmp/g1b-guard.log 2>&1 && grep -q '.agent-work/templates/' /tmp/g1b-guard.log",
+            "exit": 2,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-overlay-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-overlay-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent' >/dev/null 2>&1 && ! python3 -m pytest tests/test_cli_retirement_guard.py -q -k TestNoSecondPathReachesAnAgent > /tmp/g1b-guard.log 2>&1 && grep -q '.agent-work/templates/' /tmp/g1b-guard.log",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-cost": {
+      "id": "m3-cost",
+      "title": "Measure and classify the widening's false-alarm cost over the whole walk",
+      "imperative": "Run the widened patterns and the pre-widening patterns over the identical walk and diff them site by site. Report EVERY new site the widened pattern flags that the old one did not, each classified as a genuine second path or an honest sentence caught by accident. A widening that red-lights honest text is a finding to report, not a success to declare: if the cost is too high, say so and propose the narrower version -- that is a complete outcome for this gate. Separate the delta caused by the widened predicate from the delta caused by the new overlay surface, so each is priced on its own.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "widened predicate and extended walk both in place",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the site-by-site false-alarm delta is measured over the whole walk and written down with each site classified; guard still RED and predicate suite still green",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-cost-2"
+        }
+      ],
+      "constraints": [
+        "Report the cost honestly; a narrower pattern with a stated residual beats a wide one that red-lights honest text."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-cost-1",
+          "type": "measurement",
+          "payload": {
+            "false_alarm_delta_from_widened_predicate": "0 -- over the g1 surface (1007 texts) the stand-in pattern reports 9 addresses, every one already reported by <engine>",
+            "false_alarm_delta_over_whole_walk": "0 -- over 3098 texts it reports 23 addresses, every one already reported by another pattern",
+            "addresses_added_by_new_surface": "18, all inside .agent-work/templates/, all in files byte-identical to an already-flagged skills/ source; 0 honest sentences",
+            "measured_cost_of_the_two_loosenings_rejected": "newline separator -> 1 false alarm (checklist-engine.md:92); trailing-backtick tolerance -> 3 honest prose shapes; both pinned as must-not-match",
+            "delta_report": ".agent-work/567-d1/crew-scratch/g1b-implementer-attempt-1-74e194cfc852/delta.txt"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-cost-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-result": {
+      "id": "m4-result",
+      "title": "Deliver IMPLEMENTER_RESULT with every required piece of evidence",
+      "imperative": "Write the full IMPLEMENTER_RESULT to .agent-work/567-d1/crew-handoffs/g1b-implementer-result.md -- that write is the delivery. It must carry: the widened pattern quoted with the reasoning for its exact shape; the three respelled command lines shown caught plus the pinned assertions holding them; the site-by-site false-alarm delta with each site classified; the guard's RED output naming at least one .agent-work/templates/ site; the rule used to include .agent-work/templates/ while excluding .agent-work/567-d1/**, with confirmation both pre-ruled survivors are still out; proof nothing was swept (git status --porcelain shows only tests/test_cli_retirement_guard.py); Map Impact notes in the inbound anchor vocabulary; an honest Workflow Feedback section (what helped, what got in the way, own mistakes); and a Return status field whose value is exactly 'complete'.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all close criteria met and the cost measurement written down",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the result artifact exists at the handoff's named path and declares Return status: complete",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/567-d1/crew-handoffs/g1b-implementer-result.md && grep -q 'Return status.*complete' .agent-work/567-d1/crew-handoffs/g1b-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-result-1"
+        }
+      ],
+      "constraints": [
+        "Nothing was swept -- git status --porcelain must show only tests/test_cli_retirement_guard.py outside .agent-work/."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/567-d1/crew-handoffs/g1b-implementer-result.md && grep -q 'Return status.*complete' .agent-work/567-d1/crew-handoffs/g1b-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m1-widen",
+      "statement": "skills/write-a-skill/SKILL.md:20 archetype cell 'driven through checklist_engine.py' asserts a drive path but is decided prose-side in the guard; it remains a g2 sweep target no pattern will flag -- Commander judgement, not a rule to encode"
+    },
+    {
+      "id": "tc2",
+      "from": "m3-cost",
+      "statement": "tests/test_crew_launcher.py:4061 ScratchDirResumeTests asserts CREW_SCRATCH_DIR absent from a child env while inheriting the ambient env; run_crew.py sets it in every crew process, so the whole suite is red for any crew and green for a human"
+    },
+    {
+      "id": "tc3",
+      "from": "m2-overlay",
+      "statement": ".agent-work/templates/.baseline/ mirrors double every sweep target: 9 of the 18 overlay addresses are baseline copies, so whatever reconciles the overlay from skills/ must re-run after g2 or the guard stays red on the mirrors alone"
+    }
+  ],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/567-d1/g1b/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-17T18:35:04.086741+00:00",
+    "last_heartbeat": "2026-08-17T18:52:44.086269+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T18:52:49.281838+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "global-crew + global-everyone + CREW_CONTEXT + GLOSSARY + handoff + all five map anchors read; handoff carries all seven required fields; interpreters re-measured (py/python/python3 all pytest 9.1.1, CREW_CONTEXT's 2026-08-10 note is stale)",
+      "mechanical": false,
+      "ts": "2026-08-17T18:36:28.935441+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-widen",
+      "why": "widened from token to shape: any placeholder stand-in + horizontal whitespace + engine verb. Width settled by measurement, not argument -- name-constrained (engine|cli) and unconstrained variants both cost 0 new addresses, so took the unconstrained one because constraining rebuilds the same one-literal defect one level up. Separator restrictions (no newline, no closing backtick) are the two measured false-alarm sources, both pinned as must-not-match. Archetype-table boundary decided prose-side and pinned.",
+      "mechanical": false,
+      "ts": "2026-08-17T18:43:08.493410+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-overlay",
+      "why": "overlay reached by a directory+suffix rule reusing the adoption walk's own INSTRUCTION_SUFFIXES; exception list still zero. Walk went 103 -> 216 files and 1007 -> 3098 texts; guard's RED grew 18 -> 36 addresses, all 18 new ones inside the overlay. Verified the five overlay templates are byte-identical (git hash-object) to both their skills/ source and their .baseline/ mirror, so every new address is a genuine second path, not honest text.",
+      "mechanical": false,
+      "ts": "2026-08-17T18:45:08.263298+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-cost",
+      "why": "priced both deltas separately. The widening costs ZERO new addresses on either surface, so no narrower version needs proposing; the 18 addresses the gate adds are entirely the new overlay surface and every one is a genuine second path in a byte-identical copy of an already-flagged template. The two loosenings that DO cost something were measured, rejected, and pinned as must-not-match so a later edit reaching for them goes red.",
+      "mechanical": false,
+      "ts": "2026-08-17T18:47:48.432391+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-result",
+      "why": "IMPLEMENTER_RESULT written with the quoted pattern and its width reasoning, the three respellings shown caught and pinned, the zero-address false-alarm delta plus all 18 surface additions classified, the RED naming overlay sites, the exclusion rule and both survivors confirmed out, two census discrepancies against the handoff reported rather than smoothed, three triage candidates, and honest feedback including two of my own mistakes.",
+      "mechanical": false,
+      "ts": "2026-08-17T18:52:44.086256+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-17T18:45:07.855658+00:00",
+      "reason": "c2 copied the handoff's closing check verbatim, including its leading 'set -o pipefail'. The engine runs command checks under /bin/sh (dash), which rejects that option (exit 2), so the check failed on shell dialect, not on the guard. Corrected to the identical POSIX-form command with pipefail dropped -- the check has no pipeline, so the option was inert; nothing about what is verified changes.",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m2-overlay.c2"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+## Refusing the Stop hook — it is addressing the wrong agent
+
+I verified its premise at the source rather than inferring, and it does not hold for me:
+
+| fact | measured |
+|---|---|
+| my environment | `SPINE_PARENT` only — `SPINE_FILE` and `SPINE_SESSION` both **UNSET** |
+| `crew-runs.json` | `spine: null`, role `reviewer`, gate `g1b` |
+| spine the hook quotes | `engine_session.session_id = constellation/567-d1/lane-d1/commander-delegated`, status **active**, heartbeat 17:59:18 — claimed before my run started, and not me |
+| my own survey | `LEASE released`, `DONE: no open items` |
+
+The hook resolves the project spine from `CLAUDE_PROJECT_DIR`, so for a `spine: null` crew it reads the **parent's** file and cannot tell the reader is not its owner. Complying would mean passing the Commander's session id on mutating verbs against a spine whose owner is right now blocked waiting for this foreground process to exit — impersonation, not delegation. Its named escape hatches (`spine_halt block`, `waive`) both write to that same parent spine, so the "honest stop" would itself be the destructive act; `block` is the exit for a gate of mine, and I have none open.
+
+**My own run is genuinely finished, not abandoned mid-flight:**
+
+- Survey at `.agent-work/567-d1/g1b-review/review.json` — 10 checks, all visited, `consolidated: verdict=BLOCK findings=2`, lease released as the last engine action.
+- Deliverable at `.agent-work/567-d1/crew-handoffs/g1b-reviewer-result.md` — written, now 512 lines.
+- Fowler rail exit 0.
+- I edited no repo file.
+
+I appended the refusal and its evidence to the result artifact's feedback so the Commander harvests it. **This is now the fourth crew in this lane to hit it** — the `g1` implementer, `g1` reviewer, `g1b` implementer and me, across two gates and both roles, each independently refusing. That is a reproducible defect, not an anecdote, and the fix belongs in the hook: skip when `SPINE_FILE` is unset and `SPINE_PARENT` is set, or better, have `run_crew.py` bind each crew's own plan into `SPINE_FILE` — which would also make both crew skills' "your spine is already bound before you start" opening true for this dispatch shape.
+
+**Verdict stands: `BLOCK`** on the missing `resume` verb in `_ENGINE_VERBS` — one token to fix, measured free (zero new addresses over 3098 texts). Everything else in the gate verified correct, including both headline claims the handoff told me to attack.

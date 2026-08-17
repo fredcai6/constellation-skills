@@ -1,0 +1,17 @@
+I'm refusing the Stop hook's imperative, and I've recorded why in the result artifact.
+
+The hook handed me the **Commander's** next step, not mine. Verified at the source before refusing:
+
+| fact | measured |
+|---|---|
+| my environment | `SPINE_PARENT` + `CREW_SCRATCH_DIR` only — no `SPINE_FILE`, no `SPINE_SESSION` |
+| my registration | `crew-runs.json`: `"spine": null`, `"session_id": null` |
+| owner of the spine the hook resolves | `execute.json` → `engine_session` `commander-567-d1-execute`, status **active**, heartbeat 19:36:16 — the parent, alive and blocked on this foreground process |
+| that spine's ACTIVE step | `g1b-review [in-progress]` — dispatch the reviewer against *this* result |
+| my own plan | `LEASE released`, `DONE: no open items` |
+
+Complying would mean driving a spine whose lease belongs to my parent, passing its session id on mutating verbs — impersonation, not delegation — and dispatching the reviewer of my own work. The hook's named escape hatches don't fit: `spine_halt block` and `waive` both write to that same parent spine, so the sanctioned honest stop is itself the destructive act, and `block` is the exit for a gate of mine, of which I have none open.
+
+This is the fifth crew in lane D1 to hit it — three gates, both roles, each refusing independently. The durable fix is for `run_crew.py` to bind the crew's own plan into `SPINE_FILE`, which would also make both crew skills' "your spine is already bound before you start" opening true for this dispatch shape.
+
+My dispatch is complete: the rework is delivered, my plan is driven to done through the engine, and my lease is released. The result artifact at `.agent-work/567-d1/crew-handoffs/g1b-implementer-rework-result.md` is the delivery, and it now carries this refusal as its closing section for the Commander to pick up.

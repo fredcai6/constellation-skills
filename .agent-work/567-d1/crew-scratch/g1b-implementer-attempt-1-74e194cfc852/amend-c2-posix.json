@@ -1,0 +1,11 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "m2-overlay",
+      "which": "postconditions",
+      "cond": "c2",
+      "command": "python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent' >/dev/null 2>&1 && ! python3 -m pytest tests/test_cli_retirement_guard.py -q -k TestNoSecondPathReachesAnAgent > /tmp/g1b-guard.log 2>&1 && grep -q '.agent-work/templates/' /tmp/g1b-guard.log"
+    }
+  ]
+}

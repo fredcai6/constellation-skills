@@ -1,0 +1,318 @@
+{
+  "work_id": "567-d1-g1b-implementer-attempt-3",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-derive",
+    "m2-cost",
+    "m3-docstring",
+    "m4-close"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the rework handoff is complete",
+      "imperative": "Read the inherited global doctrine (implementer skill references/global-crew.md, references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, then the rework handoff .agent-work/567-d1/crew-handoffs/g1b-implementer-rework-handoff.md, the original handoff it defers to, and the prior attempt's result .agent-work/567-d1/crew-handoffs/g1b-implementer-result.md. Verify the handoff carries task, intent, allowed scope, exclusions, required evidence, test mode and stop conditions; block and return if incomplete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + rework handoff + prior result loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-crew.md + global-everyone.md (POSIX/reach-up sections) + docs/agents/CREW_CONTEXT.md + docs/agents/GLOSSARY.md read; rework handoff, original g1b handoff and attempt-1 result read. Handoff carries task, intent, allowed scope (tests/test_cli_retirement_guard.py only), exclusions, required evidence, verification commands and stop conditions -- complete."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-derive": {
+      "id": "m1-derive",
+      "title": "Derive the verb set from the engine, pin the tie, pin the resume line",
+      "imperative": "TDD red first: add \"Second path: <cli> resume g1 --reason 'unblocked'.\" to STAND_IN_COMMANDS and a tie assertion that the pattern's verb set equals the engine's, observe both fail against the hand-typed list. Then green: build _ENGINE_VERBS from test_mcp_adoption._engine_verbs(), sorted for determinism and re.escape'd per verb, and add the control-count pin following test_mcp_adoption.py:263's precedent. tests/test_cli_retirement_guard.py only.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the resume fixture and the tie assertion written and observed failing against the hand-typed 17-verb list -- manual attest, check MUST be null so the engine does not run a by-design-failing test",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed against the hand-typed 17-verb alternation, 4 failures naming resume: test_the_verb_set_is_the_engines_own_registry (in the engine, missing here: ['resume']), test_the_engine_has_all_eighteen_verbs_todays_pin_expects (assert 17 == 18), test_every_verb_the_engine_has_is_caught_as_a_stood_in_for_command (the engine registers ['resume'] but this file's pattern does not catch a command line using it), test_catches_every_stand_in_command_shape (missed \"Second path: <cli> resume g1 --reason 'unblocked'.\"). Pre-change all four patterns reported MISS on that line."
+        },
+        {
+          "id": "c2",
+          "statement": "the verb set is derived from _engine_verbs(), the tie and count are pinned, the resume line is caught, and the predicate suite is green",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent' >/dev/null 2>&1"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-derive-1"
+        }
+      ],
+      "constraints": [
+        "allowed scope is tests/test_cli_retirement_guard.py and nothing else",
+        "tests/test_mcp_adoption.py is imported, never modified -- g2 inverts it",
+        "no sweep: nothing under skills/, specs/, docs/, scripts/, episodes/, map/ or .agent-work/templates/",
+        "the four floors, the zero-length exception list and both pre-ruled survivors stay unchanged",
+        "if importing _engine_verbs proves unsafe at import time, fall back to adding resume to the hand-list plus the pinned fixture and say why"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-derive-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent' >/dev/null 2>&1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-cost": {
+      "id": "m2-cost",
+      "title": "Measure the added verb's cost over the whole walk",
+      "imperative": "Re-measure rather than inherit the reviewer's figure: count addresses reported by ENGINE_INVOCATION_RE and ENGINE_STANDIN_COMMAND_RE over all walked texts, before and after the derivation, and report the delta the resume verb adds for each pattern. Confirm in the same measurement that the walk size, the floors, the zero-length exception list and both pre-ruled survivors are unchanged.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the derivation is in and the predicate suite is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-derive complete, predicate suite green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the per-pattern address delta of the added verb is measured over the whole walk and the guard still names overlay sites in its RED",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && ! python3 -m pytest tests/test_cli_retirement_guard.py -q -k TestNoSecondPathReachesAnAgent > /tmp/g1b-a3-guard.log 2>&1 && grep -q '.agent-work/templates/' /tmp/g1b-a3-guard.log"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-cost-1"
+        }
+      ],
+      "constraints": [
+        "do not run the whole suite: tests/test_gauge_chain_writer_to_trip.py snapshots .agent-work/ and this run's own engine records break its containment window"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-cost-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && ! python3 -m pytest tests/test_cli_retirement_guard.py -q -k TestNoSecondPathReachesAnAgent > /tmp/g1b-a3-guard.log 2>&1 && grep -q '.agent-work/templates/' /tmp/g1b-a3-guard.log",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-docstring": {
+      "id": "m3-docstring",
+      "title": "Scope the code-span argument to Markdown and state the census unit",
+      "imperative": "Rewrite the docstring's code-span safety argument so it is scoped to Markdown and says plainly that 13 of the 40 following-word sites sit in JSON template imperatives where backticks are not the house habit, and that what actually holds the measure at zero is that none of those 40 following words is an engine verb -- several verbs being common English. Restate every census in the file as 'N occurrences of X across M files containing X'. Optionally name the three unswept placeholder dialects as accepted residuals; do not implement them.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the cost measurement is recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-cost complete; resume delta measured at zero for both patterns"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "docstring scoped and census unit stated; the file still collects and the predicate suite is still green",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent' >/dev/null 2>&1"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-docstring-1"
+        }
+      ],
+      "constraints": [
+        "prose only in this item -- no predicate change"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-docstring-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent' >/dev/null 2>&1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-close": {
+      "id": "m4-close",
+      "title": "Run the gate's closing check and write the result artifact",
+      "imperative": "Run the gate's closing check in POSIX form, confirm tests/test_mcp_adoption.py is untouched and green and that nothing outside tests/test_cli_retirement_guard.py is dirty, then write the full IMPLEMENTER_RESULT to .agent-work/567-d1/crew-handoffs/g1b-implementer-rework-result.md with a Return status field and a Workflow Feedback section.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "derivation, measurement and docstring items are done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1/m2/m3 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the gate's closing check passes in POSIX form and test_mcp_adoption.py is untouched",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent' >/dev/null 2>&1 && ! python3 -m pytest tests/test_cli_retirement_guard.py -q -k TestNoSecondPathReachesAnAgent > /tmp/g1b-a3-close.log 2>&1 && grep -q '.agent-work/templates/' /tmp/g1b-a3-close.log && git diff --quiet HEAD -- tests/test_mcp_adoption.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-close-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the result artifact exists at the handoff's named path",
+          "check": {
+            "kind": "command",
+            "command": "test -s /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard/.agent-work/567-d1/crew-handoffs/g1b-implementer-rework-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-close-2"
+        }
+      ],
+      "constraints": [
+        "the result artifact write is the delivery -- it must exist before the turn ends"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-close-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent' >/dev/null 2>&1 && ! python3 -m pytest tests/test_cli_retirement_guard.py -q -k TestNoSecondPathReachesAnAgent > /tmp/g1b-a3-close.log 2>&1 && grep -q '.agent-work/templates/' /tmp/g1b-a3-close.log && git diff --quiet HEAD -- tests/test_mcp_adoption.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-close-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard/.agent-work/567-d1/crew-handoffs/g1b-implementer-rework-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/567-d1/g1b/implementer/attempt-3",
+    "status": "released",
+    "claimed_at": "2026-08-17T19:27:22.125724+00:00",
+    "last_heartbeat": "2026-08-17T19:35:51.034415+00:00",
+    "claimed_by": "implementer",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T19:35:55.339624+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "The rework is one blocker plus two prose asks. The guard's _ENGINE_VERBS is a hand-typed 17-verb string while the engine's argparse registers 18; the missing verb is resume, so 'Second path: <cli> resume g1 --reason unblocked' passes all four patterns and that is exactly the class g1b opened to close. CREW_CONTEXT.md's Verification Discipline names this shape directly: define a guard by its consumer's behaviour, not a hand-maintained list. The oracle already exists in-tree at test_mcp_adoption._engine_verbs(), read from argparse's own choices, needing no SPINE_FILE env -- and this file already imports three names from that module, so deriving adds no new import direction. All three interpreters carry pytest 9.1.1 on this host.",
+      "mechanical": false,
+      "ts": "2026-08-17T19:27:53.893709+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-derive",
+      "why": "The durable fix, not the one-token one: _ENGINE_VERBS is now built from test_mcp_adoption._engine_verbs(), sorted and re.escape'd per verb, so both ENGINE_INVOCATION_RE and ENGINE_STANDIN_COMMAND_RE read the engine's own argparse registry. ENGINE_VERBS recovers the set back OUT of the alternation the compiled patterns are built from, so the tie test still bites if a later author replaces the derivation with a literal. Three tie assertions plus the 18-verb control count, and the blocker line is pinned as a STAND_IN_COMMANDS fixture so the specific miss cannot return even if the derivation is replaced. 15 passed, 4 deselected.",
+      "mechanical": false,
+      "ts": "2026-08-17T19:29:57.336167+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-cost",
+      "why": "Cost re-measured on this tree rather than inherited: over 3098 texts across 216 files, adding resume moves ENGINE_INVOCATION_RE from 12 to 12 addresses and ENGINE_STANDIN_COMMAND_RE from 23 to 23 -- delta ZERO for both, nothing added and nothing lost, union over all four patterns 36 either way. The counterfactual is the 17-verb list rebuilt from the engine minus resume, so it prices the verb rather than the derivation. Blocker line: MISS under 17 verbs, MATCH under 18. Floors 101/2/113/3098 unchanged against 60/1/60/1800, zero strays under .agent-work/ outside the overlay, both pre-ruled survivors still out of the walk, exclusion mechanism still the directory-plus-suffix rule with no file list of any length.",
+      "mechanical": false,
+      "ts": "2026-08-17T19:30:39.726916+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-docstring",
+      "why": "The code-span argument is now scoped to Markdown and priced: 40 occurrences of a stand-in followed by whitespace and an ordinary English word, across 25 files containing one, 13 distinct sentences mirrored three ways; 27 sit in JSON template imperatives where backticks are not the house habit and 31 of the 40 are not code-spanned at all, so the argument covers a quarter of the population. What holds the false-alarm count at zero is that none of those 40 following words is an engine verb, and nine verbs are common English -- said plainly so a later author does not over-trust the backtick story. Every census is now written as N occurrences across M files containing X, with the 16-in-6-leaves example showing why occurrences, lines and files differ here. The three unswept placeholder dialects are named as accepted residuals with the oracle-vs-judgement reason.",
+      "mechanical": false,
+      "ts": "2026-08-17T19:33:05.332250+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-close",
+      "why": "Both closing checks pass: the gate's own POSIX form runs clean through /bin/sh (dash) at exit 0, test_mcp_adoption.py is untouched and green at 183 passed, and the only dirty path across skills specs docs scripts episodes tests map .agent-work/templates is tests/test_cli_retirement_guard.py. The IMPLEMENTER_RESULT is written to the handoff's named path with return status complete, carrying the pre-change miss, the derivation, the four tie assertions, the zero-delta cost measurement, the two reported disagreements with the handoff's own figures, and the accepted g2 coupling.",
+      "mechanical": false,
+      "ts": "2026-08-17T19:35:51.034401+00:00"
+    }
+  ]
+}

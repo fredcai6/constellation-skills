@@ -5,8 +5,9 @@ Branch: `feat/567-d1-doctrine-sweep-guard`
 
 ## Gate
 
-`g2-implement` — Sweep the corpus and invert the mandate. **Two halves of one gate**, because
-doing either alone leaves the suite red.
+`g2-implement` — Sweep the corpus **and the tracked overlay**, and invert the mandate. **Three
+halves of one gate**: (a) and (b) because doing either alone leaves the suite red, and (c) because
+it is the only proof in this plan that a wrong pattern would fail.
 
 ## Task
 
@@ -26,8 +27,17 @@ is the single most important fact in this handoff:
 
 So the deletion is not the hard part. Inverting the mandate is. Do both, in this one gate.
 
-The guard from `g1`, `tests/test_cli_retirement_guard.py`, is already in the tree and already RED.
-It is your target state: **your work makes it go green as a consequence**, not by editing it.
+The guard, `tests/test_cli_retirement_guard.py`, is already in the tree and already RED. It is your
+target state: **your work makes it go green as a consequence**, not by editing it.
+
+**It was widened at gate `g1b`, after its own review attacked it, and you need to know both changes:**
+
+1. **A fourth pattern, `ENGINE_STANDIN_COMMAND_RE`.** A spine-template command line never contains
+   the literal `checklist_engine.py` — a placeholder stands in for it — so the guard now catches a
+   placeholder-shaped stand-in (`<engine>`, `<cli>`, `{{engine}}`, `$ENGINE`, `%ENGINE%`, …)
+   followed on the same line by an engine verb. **Your replacement wording must not produce that
+   shape**, whatever placeholder it uses.
+2. **The walk now covers `.agent-work/templates/**`** — see half (a).
 
 ## Protected Intent
 
@@ -72,6 +82,15 @@ carries **two** — `<engine> waive archive --cond c4 ...` **and** `CLI fallback
 `ADMIRAL_SPINE` init and closeout, `commander-core.md:127`, `crew-dispatch.md:35`,
 `COMMANDER_SPINE` init and plan, `EXPLORER_SPINE` init and route.
 
+**One sweep target the guard deliberately will NOT flag, handed to you on purpose.**
+`skills/write-a-skill/SKILL.md:20` is an archetype table cell reading *"a `templates/*.json`
+checklist driven through `checklist_engine.py`"*. It asserts exactly the drive-path belief #559
+removes, so it **is** a target for your reword. The `g1b` crew decided it stays on the prose side of
+the guard's line and pinned that decision, because no predicate separates *"driven through X"* from
+*"Scripts: X"* without reading English — and the repo already measured and deleted that class of
+predicate. So the guard will stay green whether or not you fix this one. **Fix it anyway**, and say
+what you wrote.
+
 **Also swept by the guard's third pattern:** command-shaped `checklist_engine.py` invocations at
 `skills/charter/SKILL.md:12`, `skills/explorer/SKILL.md:31`, `skills/interrogator/SKILL.md:26`,
 `skills/write-a-skill/templates/gated-engine-SKILL.template.md:15`,
@@ -81,6 +100,37 @@ those. What you may not keep is a path, an interpreter, or a flag next to it.
 
 Run the guard to get the live list rather than trusting this table alone:
 `python3 -m pytest tests/test_cli_retirement_guard.py -q`.
+
+### The tracked overlay — 18 more addresses, and the sweep is not done without them
+
+`.agent-work/templates/` is a **tracked** overlay of the skills templates, and workbench doctrine
+tells an agent to **prefer** it over the bundled `skills/` copy when instantiating. Every one of the
+five doctrine-carrying files is **byte-identical** to its `skills/` source right now (verified with
+`git hash-object`), and each is **mirrored again** under `.agent-work/templates/.baseline/<skill>/`.
+
+So a `skills/`-only sweep leaves the copy an agent in this repo actually instantiates still handing
+over the second path. That is precisely what the launch order's acceptance test checks:
+*"after your change, instantiate a fresh spine from your edited template and read its `init` and
+`plan` imperatives. If a `<engine>` token or a CLI-fallback clause still reaches a Commander there,
+the sweep is not done, whatever a grep over the templates says."*
+
+| Overlay file (each also under `.baseline/<skill>/`) | `skills/` source |
+|---|---|
+| `.agent-work/templates/COMMANDER_SPINE.template.json` | `skills/commander/templates/COMMANDER_SPINE.template.json` |
+| `.agent-work/templates/ADMIRAL_SPINE.template.json` | `skills/admiral/templates/ADMIRAL_SPINE.template.json` |
+| `.agent-work/templates/EXPLORER_SPINE.template.json` | `skills/explorer/templates/EXPLORER_SPINE.template.json` |
+| `.agent-work/templates/gated-engine-SKILL.template.md` | `skills/write-a-skill/templates/gated-engine-SKILL.template.md` |
+| `.agent-work/templates/survey-SKILL.template.md` | `skills/write-a-skill/templates/survey-SKILL.template.md` |
+
+**Count by occurrence, not by line, and not by visible file.** Measured at `8ba1334c` by the g1b
+crew: the overlay holds **16** `<engine>` occurrences across **10** files and **18** clause matches
+once the `.baseline/` mirrors are counted — not the 7-across-5 a line count of the visible copies
+suggests. **A sweep that fixes the five visible copies and misses their mirrors leaves the guard
+red.**
+
+Since all ten start byte-identical to their sources, the safest execution is: sweep the `skills/`
+source, then propagate the identical content to the overlay copy and its baseline mirror, then
+prove all three match again with `git hash-object`.
 
 ### The 10 bound-spine clauses — replace with the real agent path
 
@@ -198,27 +248,34 @@ Confirm a clean tree after the revert (`git status --porcelain`).
 
 1. `grep -rn -i 'CLI fallback' skills/ --exclude-dir=workbench` returns **nothing**.
 2. `grep -rn '<engine>' skills/ --exclude-dir=workbench` returns **nothing**.
-3. `python3 -m pytest tests/test_mcp_adoption.py -q` is **green**.
-4. `python3 -m pytest tests/test_cli_retirement_guard.py -q` reports failures **only** at sites
+3. `grep -rn -i 'CLI fallback' .agent-work/templates/` and `grep -rn '<engine>' .agent-work/templates/`
+   both return **nothing** — mirrors included.
+4. `python3 -m pytest tests/test_mcp_adoption.py -q` is **green**.
+5. `python3 -m pytest tests/test_cli_retirement_guard.py -q` reports failures **only** at sites
    under `skills/workbench/` — nothing else. (It cannot be fully green until lane D2 merges; this
    lane merges last and `g5-final` re-runs it on the rebased tree. **This is expected, measured, and
    has a named cause — it is not a defect for you to fix.**) Prove it with:
    ```sh
    python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g2-guard.log 2>&1
-   grep -oE '(skills|specs)/[A-Za-z0-9_./-]+' /tmp/g2-guard.log | grep -v '^skills/workbench/' | sort -u
+   grep -oE '(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g2-guard.log \
+     | grep -v '^skills/workbench/' | sort -u
    ```
    That last command must print **nothing**.
-5. The specificity proof of half (c) is pasted verbatim, both directions, and the scratch edit is
+6. All five overlay files and their `.baseline/` mirrors match their `skills/` sources, shown with
+   `git hash-object`.
+7. The specificity proof of half (c) is pasted verbatim, both directions, and the scratch edit is
    reverted.
-6. `scripts/init_work_area.py:24` and
+8. `scripts/init_work_area.py:24` and
    `docs/superpowers/plans/2026-06-27-delegated-autonomous-commander.md:59` are **untouched**.
-7. Every edited `.json` still parses (`json.load`).
+9. Every edited `.json` still parses (`json.load`).
 
 ## Allowed scope
 
 - `skills/**` **except** `skills/workbench/**`
+- `.agent-work/templates/**` (the overlay and its `.baseline/` mirrors)
 - `tests/test_mcp_adoption.py`, `tests/data/store_mentions.approved.txt`
-- Nothing else.
+- Nothing else. In particular, nothing under `.agent-work/` other than `templates/` — this run's own
+  artifacts are records, not instruction.
 
 ## Fenced — do not edit, another lane owns it this wave
 
@@ -272,20 +329,29 @@ No architecture map exists in this repo (`map_orient` → `DEGRADED-UNPARSEABLE`
 cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard
 grep -rn -i 'CLI fallback' skills/ --exclude-dir=workbench          # expect: nothing
 grep -rn '<engine>' skills/ --exclude-dir=workbench                 # expect: nothing
+grep -rn -i 'CLI fallback' .agent-work/templates/                   # expect: nothing
+grep -rn '<engine>' .agent-work/templates/                          # expect: nothing
 python3 -m pytest tests/test_mcp_adoption.py -q                     # expect: green
 python3 -m pytest tests/test_cli_retirement_guard.py -q             # expect: red ONLY on skills/workbench/
 python3 -c "import json,glob; [json.load(open(p)) for p in glob.glob('skills/**/*.json', recursive=True)]"
+python3 -c "import json,glob; [json.load(open(p)) for p in glob.glob('.agent-work/templates/**/*.json', recursive=True)]"
 git status --porcelain
 ```
 
 The gate's own closing check, which the Commander re-runs independently:
 
 ```sh
-set -o pipefail
 test -z "$(grep -rn -i 'CLI fallback' skills/ --exclude-dir=workbench || true)" \
   && test -z "$(grep -rn '<engine>' skills/ --exclude-dir=workbench || true)" \
+  && test -z "$(grep -rn -i 'CLI fallback' .agent-work/templates/ || true)" \
+  && test -z "$(grep -rn '<engine>' .agent-work/templates/ || true)" \
   && python3 -m pytest tests/test_mcp_adoption.py -q >/dev/null 2>&1
 ```
+
+**Author any shell you hand back in POSIX form.** The engine runs `command` checks through
+`/bin/sh`, which is `dash` on this host, and `set -o pipefail` is rejected outright with exit 2 —
+every check in this plan shipped with that bug and had to be corrected through the engine. Do not
+reintroduce it.
 
 ## Test mode
 

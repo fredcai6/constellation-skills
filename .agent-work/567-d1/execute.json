@@ -455,7 +455,7 @@
           "statement": "no CLI fallback clause and no <engine> token survives in this lane's skills/ files OR in the tracked template overlay, and the inverted adoption suite is green -- checked on EXIT CODE, no pipe swallows it",
           "check": {
             "kind": "command",
-            "command": "set -o pipefail; test -z \"$(grep -rn -i 'CLI fallback' skills/ --exclude-dir=workbench || true)\" && test -z \"$(grep -rn '<engine>' skills/ --exclude-dir=workbench || true)\" && test -z \"$(grep -rn -i 'CLI fallback' .agent-work/templates/ || true)\" && test -z \"$(grep -rn '<engine>' .agent-work/templates/ || true)\" && python3 -m pytest tests/test_mcp_adoption.py -q >/dev/null 2>&1"
+            "command": "test -z \"$(grep -rn -i 'CLI fallback' skills/ --exclude-dir=workbench || true)\" && test -z \"$(grep -rn '<engine>' skills/ --exclude-dir=workbench || true)\" && test -z \"$(grep -rn -i 'CLI fallback' .agent-work/templates/ || true)\" && test -z \"$(grep -rn '<engine>' .agent-work/templates/ || true)\" && python3 -m pytest tests/test_mcp_adoption.py -q >/dev/null 2>&1"
           },
           "satisfied": false
         }
@@ -643,7 +643,7 @@
           "statement": "both specs name the door AND name the second-checklist truth, and the guard reports NO violation anywhere outside lane D2's fenced skills/workbench/ files -- the whole-corpus green is g5-final's, after the rebase",
           "check": {
             "kind": "command",
-            "command": "set -o pipefail; grep -qi 'door' specs/implementer.spine.toml && grep -qi 'door' specs/reviewer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/implementer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/reviewer.spine.toml && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g3-guard.log 2>&1 || true; } && ! grep -oE '(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g3-guard.log | grep -qv '^skills/workbench/'"
+            "command": "grep -qi 'door' specs/implementer.spine.toml && grep -qi 'door' specs/reviewer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/implementer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/reviewer.spine.toml && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g3-guard.log 2>&1 || true; } && ! grep -oE '(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g3-guard.log | grep -qv '^skills/workbench/'"
           },
           "satisfied": false
         }
@@ -826,7 +826,7 @@
           "statement": "both dispositions exist and are non-empty, and the guard reports NO violation anywhere outside lane D2's fenced skills/workbench/ files",
           "check": {
             "kind": "command",
-            "command": "set -o pipefail; test -s .agent-work/567-d1/dispositions/596.md && test -s .agent-work/567-d1/dispositions/526.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard.log 2>&1 || true; } && ! grep -oE '(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard.log | grep -qv '^skills/workbench/'"
+            "command": "test -s .agent-work/567-d1/dispositions/596.md && test -s .agent-work/567-d1/dispositions/526.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard.log 2>&1 || true; } && ! grep -oE '(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard.log | grep -qv '^skills/workbench/'"
           },
           "satisfied": false
         }
@@ -885,7 +885,7 @@
           "statement": "the guard passes over the whole corpus on the rebased tree",
           "check": {
             "kind": "command",
-            "command": "set -o pipefail; python3 -m pytest tests/test_cli_retirement_guard.py -q >/dev/null 2>&1"
+            "command": "python3 -m pytest tests/test_cli_retirement_guard.py -q >/dev/null 2>&1"
           },
           "satisfied": false
         }
@@ -944,7 +944,8 @@
               "status": "complete"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1b-implement-2"
         }
       ],
       "constraints": [
@@ -956,12 +957,38 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
-      "status_detail": {},
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "BLOCK upheld. The reviewer proved against the engine itself -- not against a document -- that _ENGINE_VERBS enumerates 17 verbs where checklist_engine.py's argparse defines 18: 'resume' is missing, so 'Second path: <cli> resume g1 --reason ...' passes all four patterns clean. That is exactly the class this gate was opened to close, it is inside no declared limit, and the fix costs zero new addresses over 3098 texts. It also breaks a documented repo standard verbatim (CREW_CONTEXT.md: 'define a guard by its consumer's behaviour, not by a hand-maintained list ... the gap is silent') -- and the list had already drifted on day one. Reworking rather than overriding, because shipping a widening whose stated invariant is broader than its implementation repeats the exact shape this gate exists to remove. And the durable fix is in reach and is NOT above latitude as the reviewer supposed: tests/test_mcp_adoption.py already has _engine_verbs(), which reads the engine's own argparse and is never hand-typed, so the guard can import it the same way it already imports INSTRUCTION_FILES and _instruction_texts. No new import direction, no new machinery -- the same generalize-an-in-tree-precedent move the whole guard is built on."
+      },
       "result": null,
       "finding": null,
-      "evidence": [],
-      "rework_count": 0
+      "evidence": [
+        {
+          "id": "e-g1b-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g1b-implement",
+            "reason": "BLOCK upheld. The reviewer proved against the engine itself -- not against a document -- that _ENGINE_VERBS enumerates 17 verbs where checklist_engine.py's argparse defines 18: 'resume' is missing, so 'Second path: <cli> resume g1 --reason ...' passes all four patterns clean. That is exactly the class this gate was opened to close, it is inside no declared limit, and the fix costs zero new addresses over 3098 texts. It also breaks a documented repo standard verbatim (CREW_CONTEXT.md: 'define a guard by its consumer's behaviour, not by a hand-maintained list ... the gap is silent') -- and the list had already drifted on day one. Reworking rather than overriding, because shipping a widening whose stated invariant is broader than its implementation repeats the exact shape this gate exists to remove. And the durable fix is in reach and is NOT above latitude as the reviewer supposed: tests/test_mcp_adoption.py already has _engine_verbs(), which reads the engine's own argparse and is never hand-typed, so the guard can import it the same way it already imports INSTRUCTION_FILES and _instruction_texts. No new import direction, no new machinery -- the same generalize-an-in-tree-precedent move the whole guard is built on.",
+            "ts": "2026-08-17T19:13:22.457504+00:00"
+          }
+        },
+        {
+          "id": "e-g1b-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
     },
     "g1b-review": {
       "id": "g1b-review",
@@ -972,7 +999,8 @@
           "id": "p1",
           "statement": "g1b-implement returned complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g1b-implement reworked and closed complete; the BLOCK's finding is fixed at the class (verb set derived from the engine's own argparse, tie pinned in the assertion path) rather than by the one-token patch."
         }
       ],
       "postconditions": [
@@ -994,11 +1022,29 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "in-progress",
+      "status_detail": {
+        "superseded_by_reopen": "g1b-implement"
+      },
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1b-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "blocker": "_ENGINE_VERBS omits the engine verb 'resume', so a stood-in-for command line using it passes all four patterns"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g1b-implement",
+            "reason": "BLOCK upheld. The reviewer proved against the engine itself -- not against a document -- that _ENGINE_VERBS enumerates 17 verbs where checklist_engine.py's argparse defines 18: 'resume' is missing, so 'Second path: <cli> resume g1 --reason ...' passes all four patterns clean. That is exactly the class this gate was opened to close, it is inside no declared limit, and the fix costs zero new addresses over 3098 texts. It also breaks a documented repo standard verbatim (CREW_CONTEXT.md: 'define a guard by its consumer's behaviour, not by a hand-maintained list ... the gap is silent') -- and the list had already drifted on day one. Reworking rather than overriding, because shipping a widening whose stated invariant is broader than its implementation repeats the exact shape this gate exists to remove. And the durable fix is in reach and is NOT above latitude as the reviewer supposed: tests/test_mcp_adoption.py already has _engine_verbs(), which reads the engine's own argparse and is never hand-typed, so the guard can import it the same way it already imports INSTRUCTION_FILES and _instruction_texts. No new import direction, no new machinery -- the same generalize-an-in-tree-precedent move the whole guard is built on.",
+            "ts": "2026-08-17T19:13:22.457518+00:00"
+          }
+        }
+      ],
       "rework_count": 0
     },
     "g1b-integrate": {
@@ -1031,7 +1077,7 @@
           "statement": "the guard's own predicate/floor tests PASS (so the widening did not break them and the three verified misses are now caught), the corpus assertions still FAIL (nothing was swept), and the RED names a .agent-work/templates/ overlay site (so the walk genuinely reached it)",
           "check": {
             "kind": "command",
-            "command": "set -o pipefail; python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent' >/dev/null 2>&1 && ! python3 -m pytest tests/test_cli_retirement_guard.py -q -k TestNoSecondPathReachesAnAgent > /tmp/g1b-guard.log 2>&1 && grep -q '.agent-work/templates/' /tmp/g1b-guard.log"
+            "command": "python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent' >/dev/null 2>&1 && ! python3 -m pytest tests/test_cli_retirement_guard.py -q -k TestNoSecondPathReachesAnAgent > /tmp/g1b-guard.log 2>&1 && grep -q '.agent-work/templates/' /tmp/g1b-guard.log"
           },
           "satisfied": false
         }
@@ -1047,12 +1093,12 @@
       "rework_count": 0
     }
   },
-  "refusals": 1,
+  "refusals": 2,
   "engine_session": {
     "session_id": "commander-567-d1-execute",
     "status": "active",
     "claimed_at": "2026-08-17T18:02:30.383334+00:00",
-    "last_heartbeat": "2026-08-17T18:33:18.977871+00:00",
+    "last_heartbeat": "2026-08-17T19:36:16.858902+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -1086,6 +1132,34 @@
       "why": "Integrated. I re-ran the gate's own exit-code check myself: exit 0. The verdict is APPROVE, the change is one new file, and git diff over the repo minus .agent-work/ is empty, so no fenced file was written. Two triage candidates staged (mcp_spine_server's unwalked CLI-fallback sentence; CREW_CONTEXT's stale Python-invocation measurement, found independently by both crews). Two findings I carry forward into the plan rather than the gate: the reviewer's placeholder-respelling miss, and its measurement that the tracked .agent-work/templates/ overlay -- the copy an agent in THIS repo actually instantiates -- still carries 7 <engine> tokens and 2 CLI fallback clauses that no walk reads. The launch order's own acceptance test is to instantiate a fresh spine and read its imperatives, so that overlay is inside the mission whether or not it is inside the file-ownership list.",
       "mechanical": false,
       "ts": "2026-08-17T18:29:45.133891+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g1b-implement",
+      "why": "The widening cost nothing and closed a real route. ENGINE_STANDIN_COMMAND_RE catches a placeholder-shaped stand-in followed on the same line by an engine verb, so the class no longer rests on the literal token <engine>; the crew deliberately did NOT require the stand-in to spell 'engine' or 'cli', because that rebuilds the same defect one level up and '<script> claim --session-id' would walk through. Measured over 3098 texts: 26 matches at 23 addresses, every one already reported by <engine> -- false-alarm cost ZERO, so no narrower version needs proposing. The separator is horizontal whitespace with nothing between, and both rejected loosenings (\\s, a trailing backtick) are pinned as must-not-match, which is what stops a later author reopening the route by reaching for the obvious. The walk now reaches .agent-work/templates/** by a rule rooted AT the overlay -- this run's own artifacts are not filtered out, they are never reachable -- with a >=60 floor and a new assertion that no walked file is under .agent-work/ but outside the overlay. Exception list still zero; both pre-ruled survivors still out structurally. Two things I carry to g2: the overlay holds 16 <engine> occurrences across 10 files once the .baseline/ mirrors are counted, not 7 across 5, so a sweep of the visible copies alone leaves the guard red; and skills/write-a-skill/SKILL.md:20 is a genuine sweep target the guard deliberately will not catch, decided prose-side because no predicate separates 'driven through X' from 'Scripts: X' without reading English.",
+      "mechanical": false,
+      "ts": "2026-08-17T18:53:48.140945+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g1b-implement",
+      "reopen": true,
+      "reason": "BLOCK upheld. The reviewer proved against the engine itself -- not against a document -- that _ENGINE_VERBS enumerates 17 verbs where checklist_engine.py's argparse defines 18: 'resume' is missing, so 'Second path: <cli> resume g1 --reason ...' passes all four patterns clean. That is exactly the class this gate was opened to close, it is inside no declared limit, and the fix costs zero new addresses over 3098 texts. It also breaks a documented repo standard verbatim (CREW_CONTEXT.md: 'define a guard by its consumer's behaviour, not by a hand-maintained list ... the gap is silent') -- and the list had already drifted on day one. Reworking rather than overriding, because shipping a widening whose stated invariant is broader than its implementation repeats the exact shape this gate exists to remove. And the durable fix is in reach and is NOT above latitude as the reviewer supposed: tests/test_mcp_adoption.py already has _engine_verbs(), which reads the engine's own argparse and is never hand-typed, so the guard can import it the same way it already imports INSTRUCTION_FILES and _instruction_texts. No new import direction, no new machinery -- the same generalize-an-in-tree-precedent move the whole guard is built on.",
+      "ts": "2026-08-17T19:13:22.457525+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g1b-review",
+      "reopen": true,
+      "reason": "BLOCK upheld. The reviewer proved against the engine itself -- not against a document -- that _ENGINE_VERBS enumerates 17 verbs where checklist_engine.py's argparse defines 18: 'resume' is missing, so 'Second path: <cli> resume g1 --reason ...' passes all four patterns clean. That is exactly the class this gate was opened to close, it is inside no declared limit, and the fix costs zero new addresses over 3098 texts. It also breaks a documented repo standard verbatim (CREW_CONTEXT.md: 'define a guard by its consumer's behaviour, not by a hand-maintained list ... the gap is silent') -- and the list had already drifted on day one. Reworking rather than overriding, because shipping a widening whose stated invariant is broader than its implementation repeats the exact shape this gate exists to remove. And the durable fix is in reach and is NOT above latitude as the reviewer supposed: tests/test_mcp_adoption.py already has _engine_verbs(), which reads the engine's own argparse and is never hand-typed, so the guard can import it the same way it already imports INSTRUCTION_FILES and _instruction_texts. No new import direction, no new machinery -- the same generalize-an-in-tree-precedent move the whole guard is built on.",
+      "ts": "2026-08-17T19:13:22.457528+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g1b-implement",
+      "why": "The blocker is closed at the class, not the instance. _ENGINE_VERBS is now built from tests/test_mcp_adoption._engine_verbs(), the repo's existing oracle, which hands checklist_engine.parse_args a bogus verb and reads the choices argparse itself prints -- so the verb set IS the engine's registry rather than a copy of it, and re.escape guards a future verb carrying a regex metacharacter. Verified: 18 verbs, set-equal to the engine, and the reviewer's 'Second path: <cli> resume g1 --reason' line is now caught. The crew went one step past the order in a way worth keeping: the tie test recovers the verb set from the COMPILED alternation rather than from whatever produced it, so it still holds if a later author swaps the derivation for a literal that happens to agree today -- the test pins what the patterns actually apply, not what the source claims. 15 predicate/floor tests pass, 4 corpus tests fail naming 58 overlay lines, gate check exits 0 under dash, adoption suite byte-identical and green.",
+      "mechanical": false,
+      "ts": "2026-08-17T19:36:16.727885+00:00"
     }
   ],
   "amendments": [
@@ -1101,6 +1175,18 @@
         "rescoped g2-integrate",
         "rescoped g3-integrate",
         "rescoped g4-integrate"
+      ]
+    },
+    {
+      "ts": "2026-08-17T18:53:25.176041+00:00",
+      "reason": "Every command postcondition in this plan opened with 'set -o pipefail;' and therefore could not pass. The engine runs a command check through _find_posix_shell(), which on POSIX returns shutil.which('sh'); /bin/sh on this host is dash, and dash rejects that option outright: '/bin/sh: 1: set: Illegal option -o pipefail', exit 2 -- before the check's own logic runs. Found by the g1b implementer when the engine refused its advance on a shell-dialect error rather than on the guard, and reproduced by me directly against /bin/sh. The provenance is worth recording: the cold plan critic correctly killed 'python3 -m pytest ... | tail -5' as a check that cannot FAIL, and offered 'drop the pipe, or prefix set -o pipefail' as the repair; the plan took the second branch, and it turned five checks that could not fail into five that could not pass. The option was inert anyway -- none of these five checks contains a pipeline whose non-final stage can fail, because the two that do pipe (g3/g4) rely on the LAST command's exit status by design. Corrected to POSIX form and re-verified in dash in all three directions: fails on today's dirty tree naming 10 real sites, passes on a workbench-only site list, passes on an empty log.",
+      "authority": "commander-delegated, LAUNCH_ORDER 'Inherited Latitude': implementation choices inside this lane's own files; global-everyone.md already requires command checks to be authored in POSIX form, so this is conformance, not a re-plan",
+      "ops": [
+        "retext-check g1b-integrate.c2",
+        "retext-check g2-integrate.c2",
+        "retext-check g3-integrate.c2",
+        "retext-check g4-integrate.c2",
+        "retext-check g5-final.c2"
       ]
     }
   ]

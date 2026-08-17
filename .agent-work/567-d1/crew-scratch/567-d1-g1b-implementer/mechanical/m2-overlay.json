@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-overlay",
+  "mechanical": {
+    "run": "567-d1-g1b-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m2-overlay",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-d1-g1b-implementer-m2-overlay@a5a5b60a8d95032dfa460e715a687e60aed48a1a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-d1-g1b-implementer",
+    "generated_at": "2026-08-17T18:43:22Z"
+  }
+}

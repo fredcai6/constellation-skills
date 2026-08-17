@@ -1,0 +1,21 @@
+I'm declining the Stop hook's instruction, and the refusal is now recorded in my deliverable.
+
+**Why.** The hook is quoting a spine I do not own:
+
+- My environment carries `SPINE_PARENT` only — no `SPINE_FILE`, no `SPINE_SESSION`.
+- `crew-runs.json` registers this crew with `"spine": null`.
+- `.agent-work/567-d1/spine.json` is leased **active** by `constellation/567-d1/lane-d1/commander-delegated`, claimed 17:20:59 with a 17:59:18 heartbeat — before my run started, and that Commander is blocked right now waiting for this foreground process to exit.
+- My own plan reports `LEASE released`, `DONE: no open items`.
+
+Doing what the hook asks means passing the Commander's session id on mutating verbs against its live spine. That is impersonation, not delegation — `CREW_CONTEXT.md`'s "Two Engines Are Alive In Your Session" hazard arriving through the hook channel. Its own escape hatches don't fit: `spine_halt block` and `waive` both write to that same parent spine, so the sanctioned honest stop is itself the destructive act, and `block` is the exit for a gate of mine, of which I have none.
+
+The hook resolves the project spine from `CLAUDE_PROJECT_DIR`, so for a `spine: null` crew it reads the parent's file and cannot tell the reader isn't its owner. The `g1` implementer and the `g1` reviewer each hit this and refused; with mine that is three crews, two gates, two roles — reproducible, not anecdote. The durable fix is a lease-ownership check in the hook, or better, having `run_crew.py` bind the crew's own plan into `SPINE_FILE`, which would also make both crew skills' "your spine is already bound" opening true for this dispatch shape.
+
+**My run is finished and verified:**
+
+- `.agent-work/567-d1/crew-handoffs/g1b-implementer-result.md` written, `Return status: complete`.
+- Predicate + floor suites: `11 passed, 4 deselected`, exit 0. Guard proper: `4 failed`, exit 1, naming 58 `.agent-work/templates/` site lines. Gate closing check (POSIX form): exit 0.
+- `git status --porcelain` outside `.agent-work/`: one line, `M tests/test_cli_retirement_guard.py`. Nothing swept.
+- Plan driven through all 5 items with evidence attached; lease released as the last journaled action.
+
+The `execute` gate belongs to my parent, and picking it back up is its call, not mine.
