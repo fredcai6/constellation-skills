@@ -1159,6 +1159,24 @@ meaningful); that is the one the crew built `TheRootMustBeTheDoorsOwnWorktreeTes
 the one I asked the reviewer to re-mutate independently, precisely because it is the guard
 whose absence the tests could not previously see.
 
+### F22 — full suite green, in a fresh process, with the count stated
+
+```
+$ py -m pytest tests/ -q
+3263 passed, 5 skipped, 1218 subtests passed in 134.16s
+exit 0
+```
+
+Stating the count rather than "the suite is green", per `global-orchestrator.md`'s
+mechanical detector — a guard that loops must assert what it looped over. Baseline for
+comparison: 3260 passed at the point where three tests were failing (the two tool-count
+pins and the stale code map), so the delta is those three fixed plus the new modules'
+tests already counted.
+
+Zero failures across every suite, including the four the door change could plausibly have
+broken: `test_mcp_identity.py`, `test_mcp_lifecycle.py`, `test_mcp_door_unbound.py`,
+`test_crew_launcher.py`.
+
 ### S9 — accepted as a real double standard, and answered honestly
 
 `decision:net-deletion` is `settled/human`, cited in nine gate anchor blocks, and
