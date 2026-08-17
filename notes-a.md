@@ -810,6 +810,77 @@ So a check the gate could not express caught real drift within minutes of being 
 in a document that had already been reviewed by a cold critic. That is the argument for
 substituting a check when a gate is unsatisfiable, rather than waiving and moving on.
 
+### F13 — the self-hosting proof, after the edit, and the critic's S3 fixed properly
+
+The critic's S3 was that my `g4` self-hosting check "cannot fail for the reason it
+claims": `current` is read-only and **never calls `save()`**, so its exit code is
+identical in the healthy and defective world — an import smoke test dressed as a proof
+of an atomicity change. It also used relative paths, so run from the primary checkout it
+raised `FileNotFoundError` and its verdict was a function of the harness cwd.
+
+Fixed both, and then added the proof that was actually missing.
+
+**Proof 1 — read-only `current` on the LIVE spine, edited engine, absolute paths:**
+```
+$ py <WT>/scripts/checklist_engine.py --file <WT>/.agent-work/epic-567-door/cmdr-a/spine.json current
+exit=0
+LEASE active: cmdr-567-a (by constellation-commander-delegated, heartbeat 2026-08-17T06:55:51Z)
+```
+Matches the pre-edit baseline (F9), so the edit did not break the read path.
+
+**Proof 2 — a MUTATING verb against a COPY, never a live spine.** `advance` refused
+coherently (exit 1, six unmet postconditions named, a recovery line — not a traceback),
+matching the baseline's shape. But a refusal returns *before* writing, so it does not
+exercise `save()` — the critic's point exactly. So I ran a verb that really writes:
+
+```
+$ B=$(stat -c %i spine-copy-after.json)      # 6193176
+$ py <WT>/scripts/checklist_engine.py --file <SCRATCH>/spine-copy-after.json heartbeat --session-id cmdr-567-a
+heartbeat cmdr-567-a @ 2026-08-17T07:01:39Z
+exit=0
+$ A=$(stat -c %i spine-copy-after.json)      # 6193175   -> CHANGED
+```
+
+**The inode changed.** That is the discriminating observation, not the exit code: an
+in-place `write_bytes` keeps the inode, an atomic rename replaces it. So the new write
+path demonstrably engaged, under the edited engine, on a real spine document, driven by
+a real engine verb. The copy still parses, and no `.tmp` sibling survived.
+
+**Proof 3 — the live spine was untouched by any of it.** `git status --short` on
+`.agent-work/epic-567-door/cmdr-a/spine.json` is empty after all three proofs. This is
+the half of `decision:self-hosting-engine-edit` most easily violated by accident, and
+the empty status line is the evidence rather than my assurance.
+
+### F14 — fresh-process validation, done so it cannot be an in-session observation
+
+`decision:in-session-observation-is-not-evidence` and
+`docs/agents/ORCHESTRATOR_CONTEXT.md` §Dogfooding both require validation in a fresh
+process with explicit paths, and both warn specifically against a fixture that
+hand-injects the value it is trying to prove the harness delivers.
+
+So I stripped the environment entirely rather than merely spawning a subprocess:
+
+```
+$ env -i PATH=$PATH HOME=$HOME PYTHONIOENCODING=utf-8 \
+    py <WT>/scripts/checklist_engine.py --file <WT>/.agent-work/.../spine.json current
+exit=0
+
+$ env -i PATH=$PATH HOME=$HOME py -c "..."
+SPINE_* in env: none
+CLAUDE_PROJECT_DIR: (unset)
+```
+
+Both identity variables and `CLAUDE_PROJECT_DIR` are provably absent, every path is
+absolute, and the **worktree** engine still drives the **live** spine correctly. That
+rules out the failure mode the doctrine names: nothing was inherited from my session, so
+the result is not my session's behaviour reported as the world's.
+
+**What this validated and what it did NOT.** It validated the edited *engine* in a fresh
+process. It did **not** validate hook behaviour, because I touched no hooks — and
+`CLAUDE_PROJECT_DIR` resolving once at session launch (#269) means I could not have
+validated hooks from inside this session anyway. Saying so explicitly, because "fresh
+process validated" would otherwise imply more coverage than I bought.
+
 ### Accepted without argument
 
 S4 (the new atomicity module is in no command), S5 (`spine_lifecycle.py` is in g2's
