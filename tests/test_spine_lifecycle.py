@@ -1297,17 +1297,31 @@ def _raw_engine_cli(argv: list[str]) -> str:
     compare against, so "verbatim" is measured against the engine itself rather
     than against another call into the same in-process helper.
 
-    Newline-normalized (\\r\\n -> \\n) before returning: on Windows, output
-    piped through a real subprocess picks up CRLF at the OS/CRT layer that the
-    in-process `_engine_call` capture (an `io.StringIO`, never touching a
-    platform pipe) never introduces. The assertion this feeds is a genuine
-    "same text" check, not a "same line-ending convention" check -- comparing
-    raw strings made it fail on Windows CI for a reason unrelated to what it
-    exists to test (issue #495's family: a newline-sensitive comparison that
-    only a non-Linux runner exposes)."""
+    `encoding="utf-8"` is passed EXPLICITLY to `subprocess.run` -- this is the
+    load-bearing fix, not a style choice. `PYTHONIOENCODING=utf-8` in the
+    child's env only governs how the CHILD encodes its OWN stdout when it
+    writes; it says nothing about how THIS process decodes the bytes it reads
+    back. Without an explicit `encoding=`, `subprocess.run(text=True)` decodes
+    using `locale.getpreferredencoding(False)`, which on Windows is a
+    non-UTF-8 codepage (cp1252) rather than UTF-8 -- so a real UTF-8 em-dash
+    byte sequence the engine writes (`checklist_engine.py`'s rail text uses
+    U+2014 `—` throughout) comes back mis-decoded as mojibake
+    (`â€”` for a single `—`), which a raw-Windows-CI run
+    exposed directly: `assert '...the JSON — use...' == '...the JSON
+    â€” use...'`. This is an encoding-decode mismatch, not a
+    line-ending mismatch -- an earlier version of this fix normalized
+    `\r\n`->`\n` on the mistaken assumption the Windows-only failure was
+    newline-shaped; the newline normalization is harmless and kept below, but
+    it did not and could not fix this. `text=True` still enables universal
+    newlines (so a genuine `\r\n`->`\n` difference, if one exists, is
+    additionally normalized by the `.replace` below), `encoding="utf-8"` on
+    top of it fixes the actual reported failure (issue #495's family: a
+    comparison that passes encoding discipline in the child's write but not
+    in the parent's read -- only a non-Linux runner, whose default locale
+    encoding disagrees with UTF-8, exposes it)."""
     proc = subprocess.run(
         [sys.executable, str(ROOT / "scripts" / "checklist_engine.py"), *argv],
-        capture_output=True, text=True,
+        capture_output=True, text=True, encoding="utf-8",
         env={**os.environ, "PYTHONIOENCODING": "utf-8"},
     )
     return (proc.stdout + proc.stderr).strip().replace("\r\n", "\n")

@@ -318,7 +318,7 @@
           "statement": "every gate closed with integrated evidence",
           "check": null,
           "satisfied": true,
-          "satisfied_by": "All three gates (g1/g2/g3) remain closed with their original integrated evidence -- this rework is a targeted test-fixture/assertion fix (git identity, newline-agnostic comparison), Admiral-diagnosed, not new gate work; g1/g2/g3's shipped code and review verdicts are unaffected."
+          "satisfied_by": "g1/g2/g3 remain closed with original integrated evidence; this second rework corrects the Group 2 fix's own diagnosis (encoding, not newline) -- still a test-fixture-only change."
         },
         {
           "id": "c2",
@@ -328,7 +328,7 @@
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id epic-567-door/cmdr-g"
           },
           "satisfied": true,
-          "satisfied_by": "e-execute-3"
+          "satisfied_by": "e-execute-4"
         }
       ],
       "constraints": [],
@@ -357,7 +357,7 @@
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
       "status": "complete",
       "status_detail": {
-        "reopen_reason": "Admiral CI adjudication: PR #622 carries 7 net regressions on Windows CI, 6 in this lane's scope. Group 1 (4 tests): pre-existing repo/_init_repo test fixture never persists git user.name/user.email, only passes -c on its own init commit -- close_work's internal git commit has no such override and fails 'Author identity unknown' on the identity-less Windows runner (Linux runs never caught it; this exact defect already causes 5 pre-existing baseline failures with the identical root cause). Group 2 (2 tests): byte-identical refusal-text assertions compare a subprocess-captured string (CRLF on Windows) against an in-process-captured one (never CRLF) -- issue #495's newline-discipline family, only visible on a non-Linux runner. Reopening execute to apply both fixes with honest provenance."
+        "reopen_reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run."
       },
       "result": null,
       "finding": null,
@@ -374,8 +374,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "Admiral CI adjudication: PR #622 carries 7 net regressions on Windows CI, 6 in this lane's scope. Group 1 (4 tests): pre-existing repo/_init_repo test fixture never persists git user.name/user.email, only passes -c on its own init commit -- close_work's internal git commit has no such override and fails 'Author identity unknown' on the identity-less Windows runner (Linux runs never caught it; this exact defect already causes 5 pre-existing baseline failures with the identical root cause). Group 2 (2 tests): byte-identical refusal-text assertions compare a subprocess-captured string (CRLF on Windows) against an in-process-captured one (never CRLF) -- issue #495's newline-discipline family, only visible on a non-Linux runner. Reopening execute to apply both fixes with honest provenance.",
-            "ts": "2026-08-17T07:50:31.267274+00:00"
+            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+            "ts": "2026-08-17T08:09:35.857582+00:00"
           }
         },
         {
@@ -390,8 +390,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "Admiral CI adjudication: PR #622 carries 7 net regressions on Windows CI, 6 in this lane's scope. Group 1 (4 tests): pre-existing repo/_init_repo test fixture never persists git user.name/user.email, only passes -c on its own init commit -- close_work's internal git commit has no such override and fails 'Author identity unknown' on the identity-less Windows runner (Linux runs never caught it; this exact defect already causes 5 pre-existing baseline failures with the identical root cause). Group 2 (2 tests): byte-identical refusal-text assertions compare a subprocess-captured string (CRLF on Windows) against an in-process-captured one (never CRLF) -- issue #495's newline-discipline family, only visible on a non-Linux runner. Reopening execute to apply both fixes with honest provenance.",
-            "ts": "2026-08-17T07:50:31.267281+00:00"
+            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+            "ts": "2026-08-17T08:09:35.857590+00:00"
           }
         },
         {
@@ -403,10 +403,26 @@
             "shell": "posix"
           },
           "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:execute",
+            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+            "ts": "2026-08-17T08:09:35.857592+00:00"
+          }
+        },
+        {
+          "id": "e-execute-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id epic-567-door/cmdr-g",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
           "ts": ""
         }
       ],
-      "rework_count": 1
+      "rework_count": 2
     },
     "reconcile": {
       "id": "reconcile",
@@ -427,7 +443,7 @@
           "statement": "map reflects the implemented changes",
           "check": null,
           "satisfied": true,
-          "satisfied_by": "Reasoned no-op: the fix touches only test-infrastructure helpers (_init_repo, _raw_engine_cli) in tests/test_spine_lifecycle.py, not any documented capability, schema, or design doc."
+          "satisfied_by": "Reasoned no-op: fix touches only the test-infra helper _raw_engine_cli, not any documented capability/schema/design doc."
         }
       ],
       "constraints": [],
@@ -461,7 +477,7 @@
           "statement": "every triage candidate routed or recorded",
           "check": null,
           "satisfied": true,
-          "satisfied_by": "1 new candidate (tc5, the newline-discipline observation) routed recommend-and-defer, written to .agent-work/567-g/triage-candidates/newline-sensitive-byte-identity-assertions-windows-ci.md. Prior 4 candidates (tc1-tc4) already routed at the original archive."
+          "satisfied_by": "Corrected the existing newline-discipline triage candidate's diagnosis in place (it was actually an encoding mismatch, not newline) rather than filing a duplicate; no new candidate this rework."
         },
         {
           "id": "c2",
@@ -471,7 +487,7 @@
             "evidence_type": "user-decision"
           },
           "satisfied": true,
-          "satisfied_by": "e-triage-2"
+          "satisfied_by": "e-triage-3"
         }
       ],
       "constraints": [],
@@ -494,12 +510,26 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "Admiral CI adjudication: PR #622 carries 7 net regressions on Windows CI, 6 in this lane's scope. Group 1 (4 tests): pre-existing repo/_init_repo test fixture never persists git user.name/user.email, only passes -c on its own init commit -- close_work's internal git commit has no such override and fails 'Author identity unknown' on the identity-less Windows runner (Linux runs never caught it; this exact defect already causes 5 pre-existing baseline failures with the identical root cause). Group 2 (2 tests): byte-identical refusal-text assertions compare a subprocess-captured string (CRLF on Windows) against an in-process-captured one (never CRLF) -- issue #495's newline-discipline family, only visible on a non-Linux runner. Reopening execute to apply both fixes with honest provenance.",
-            "ts": "2026-08-17T07:50:31.267288+00:00"
+            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+            "ts": "2026-08-17T08:09:35.857600+00:00"
           }
         },
         {
           "id": "e-triage-2",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Inherited Latitude (no-issue-filing: decision:no-issue-filing)"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:execute",
+            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+            "ts": "2026-08-17T08:09:35.857602+00:00"
+          }
+        },
+        {
+          "id": "e-triage-3",
           "type": "user-decision",
           "payload": {
             "cite": "LAUNCH_ORDER:Inherited Latitude (no-issue-filing: decision:no-issue-filing)"
@@ -532,7 +562,7 @@
             "evidence_type": "user-decision"
           },
           "satisfied": true,
-          "satisfied_by": "e-review-2"
+          "satisfied_by": "e-review-3"
         }
       ],
       "constraints": [],
@@ -555,12 +585,26 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "Admiral CI adjudication: PR #622 carries 7 net regressions on Windows CI, 6 in this lane's scope. Group 1 (4 tests): pre-existing repo/_init_repo test fixture never persists git user.name/user.email, only passes -c on its own init commit -- close_work's internal git commit has no such override and fails 'Author identity unknown' on the identity-less Windows runner (Linux runs never caught it; this exact defect already causes 5 pre-existing baseline failures with the identical root cause). Group 2 (2 tests): byte-identical refusal-text assertions compare a subprocess-captured string (CRLF on Windows) against an in-process-captured one (never CRLF) -- issue #495's newline-discipline family, only visible on a non-Linux runner. Reopening execute to apply both fixes with honest provenance.",
-            "ts": "2026-08-17T07:50:31.267292+00:00"
+            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+            "ts": "2026-08-17T08:09:35.857605+00:00"
           }
         },
         {
           "id": "e-review-2",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:execute",
+            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+            "ts": "2026-08-17T08:09:35.857607+00:00"
+          }
+        },
+        {
+          "id": "e-review-3",
           "type": "user-decision",
           "payload": {
             "cite": "LAUNCH_ORDER:Return Shape"
@@ -593,7 +637,7 @@
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-567-door/cmdr-g --store-root episodes --phase feedback"
           },
           "satisfied": true,
-          "satisfied_by": "e-feedback-2"
+          "satisfied_by": "e-feedback-3"
         }
       ],
       "constraints": [],
@@ -618,12 +662,28 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "Admiral CI adjudication: PR #622 carries 7 net regressions on Windows CI, 6 in this lane's scope. Group 1 (4 tests): pre-existing repo/_init_repo test fixture never persists git user.name/user.email, only passes -c on its own init commit -- close_work's internal git commit has no such override and fails 'Author identity unknown' on the identity-less Windows runner (Linux runs never caught it; this exact defect already causes 5 pre-existing baseline failures with the identical root cause). Group 2 (2 tests): byte-identical refusal-text assertions compare a subprocess-captured string (CRLF on Windows) against an in-process-captured one (never CRLF) -- issue #495's newline-discipline family, only visible on a non-Linux runner. Reopening execute to apply both fixes with honest provenance.",
-            "ts": "2026-08-17T07:50:31.267294+00:00"
+            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+            "ts": "2026-08-17T08:09:35.857610+00:00"
           }
         },
         {
           "id": "e-feedback-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-567-door/cmdr-g --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:execute",
+            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+            "ts": "2026-08-17T08:09:35.857611+00:00"
+          }
+        },
+        {
+          "id": "e-feedback-3",
           "type": "command-output",
           "payload": {
             "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-567-door/cmdr-g --store-root episodes --phase feedback",
@@ -657,15 +717,13 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-567-door/cmdr-g --store-root episodes --phase archive"
           },
-          "satisfied": true,
-          "satisfied_by": "e-archive-4"
+          "satisfied": false
         },
         {
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "committed (3 commits: fix, re-archive) and pushed to origin/feat/567-g-closeout-lease"
+          "satisfied": false
         },
         {
           "id": "c2b",
@@ -674,15 +732,13 @@
             "kind": "command",
             "command": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0"
           },
-          "satisfied": true,
-          "satisfied_by": "e-archive-5"
+          "satisfied": false
         },
         {
           "id": "c3",
           "statement": "engine session lease released",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "will release as the very last action, immediately after this advance succeeds"
+          "satisfied": false
         },
         {
           "id": "c4",
@@ -717,19 +773,18 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": true,
+          "satisfied": false,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          },
-          "satisfied_by": "e-archive-6"
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "complete",
+      "status": "in-progress",
       "status_detail": {
         "superseded_by_reopen": "execute"
       },
@@ -748,8 +803,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "Admiral CI adjudication: PR #622 carries 7 net regressions on Windows CI, 6 in this lane's scope. Group 1 (4 tests): pre-existing repo/_init_repo test fixture never persists git user.name/user.email, only passes -c on its own init commit -- close_work's internal git commit has no such override and fails 'Author identity unknown' on the identity-less Windows runner (Linux runs never caught it; this exact defect already causes 5 pre-existing baseline failures with the identical root cause). Group 2 (2 tests): byte-identical refusal-text assertions compare a subprocess-captured string (CRLF on Windows) against an in-process-captured one (never CRLF) -- issue #495's newline-discipline family, only visible on a non-Linux runner. Reopening execute to apply both fixes with honest provenance.",
-            "ts": "2026-08-17T07:50:31.267298+00:00"
+            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+            "ts": "2026-08-17T08:09:35.857615+00:00"
           }
         },
         {
@@ -764,8 +819,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "Admiral CI adjudication: PR #622 carries 7 net regressions on Windows CI, 6 in this lane's scope. Group 1 (4 tests): pre-existing repo/_init_repo test fixture never persists git user.name/user.email, only passes -c on its own init commit -- close_work's internal git commit has no such override and fails 'Author identity unknown' on the identity-less Windows runner (Linux runs never caught it; this exact defect already causes 5 pre-existing baseline failures with the identical root cause). Group 2 (2 tests): byte-identical refusal-text assertions compare a subprocess-captured string (CRLF on Windows) against an in-process-captured one (never CRLF) -- issue #495's newline-discipline family, only visible on a non-Linux runner. Reopening execute to apply both fixes with honest provenance.",
-            "ts": "2026-08-17T07:50:31.267300+00:00"
+            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+            "ts": "2026-08-17T08:09:35.857616+00:00"
           }
         },
         {
@@ -780,8 +835,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "Admiral CI adjudication: PR #622 carries 7 net regressions on Windows CI, 6 in this lane's scope. Group 1 (4 tests): pre-existing repo/_init_repo test fixture never persists git user.name/user.email, only passes -c on its own init commit -- close_work's internal git commit has no such override and fails 'Author identity unknown' on the identity-less Windows runner (Linux runs never caught it; this exact defect already causes 5 pre-existing baseline failures with the identical root cause). Group 2 (2 tests): byte-identical refusal-text assertions compare a subprocess-captured string (CRLF on Windows) against an in-process-captured one (never CRLF) -- issue #495's newline-discipline family, only visible on a non-Linux runner. Reopening execute to apply both fixes with honest provenance.",
-            "ts": "2026-08-17T07:50:31.267302+00:00"
+            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+            "ts": "2026-08-17T08:09:35.857617+00:00"
           }
         },
         {
@@ -793,7 +848,12 @@
             "shell": "posix"
           },
           "produced_by": "engine",
-          "ts": ""
+          "ts": "",
+          "superseded": {
+            "by": "reopen:execute",
+            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+            "ts": "2026-08-17T08:09:35.857618+00:00"
+          }
         },
         {
           "id": "e-archive-5",
@@ -804,7 +864,12 @@
             "shell": "posix"
           },
           "produced_by": "engine",
-          "ts": ""
+          "ts": "",
+          "superseded": {
+            "by": "reopen:execute",
+            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+            "ts": "2026-08-17T08:09:35.857619+00:00"
+          }
         },
         {
           "id": "e-archive-6",
@@ -815,7 +880,12 @@
             "files_checked": 0
           },
           "produced_by": "engine",
-          "ts": ""
+          "ts": "",
+          "superseded": {
+            "by": "reopen:execute",
+            "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+            "ts": "2026-08-17T08:09:35.857620+00:00"
+          }
         }
       ],
       "rework_count": 0
@@ -832,14 +902,13 @@
   "refusals": 7,
   "engine_session": {
     "session_id": "cmdr-567-g#main",
-    "status": "released",
-    "claimed_at": "2026-08-17T07:50:21.743879+00:00",
-    "last_heartbeat": "2026-08-17T07:54:07.028985+00:00",
+    "status": "active",
+    "claimed_at": "2026-08-17T08:09:35.796794+00:00",
+    "last_heartbeat": "2026-08-17T08:11:30.354305+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null,
-    "released_at": "2026-08-17T07:54:12.762964+00:00"
+    "takeover_reason": null
   },
   "why_trail": [
     {
@@ -995,6 +1064,83 @@
       "why": "CI-fix rework complete: 6 of 7 Admiral-reported Windows CI regressions fixed (git identity fixture, newline-agnostic comparison); 7th (map/INDEX.md) correctly left untouched. Work area re-archived, episodes captured and git-tracked, branch committed and pushed. Releasing lease as the immediate next action.",
       "mechanical": false,
       "ts": "2026-08-17T07:54:07.028970+00:00"
+    },
+    {
+      "id": "w-23",
+      "gate": "execute",
+      "reopen": true,
+      "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+      "ts": "2026-08-17T08:09:35.857623+00:00"
+    },
+    {
+      "id": "w-24",
+      "gate": "reconcile",
+      "reopen": true,
+      "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+      "ts": "2026-08-17T08:09:35.857625+00:00"
+    },
+    {
+      "id": "w-25",
+      "gate": "triage",
+      "reopen": true,
+      "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+      "ts": "2026-08-17T08:09:35.857626+00:00"
+    },
+    {
+      "id": "w-26",
+      "gate": "review",
+      "reopen": true,
+      "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+      "ts": "2026-08-17T08:09:35.857627+00:00"
+    },
+    {
+      "id": "w-27",
+      "gate": "feedback",
+      "reopen": true,
+      "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+      "ts": "2026-08-17T08:09:35.857628+00:00"
+    },
+    {
+      "id": "w-28",
+      "gate": "archive",
+      "reopen": true,
+      "reason": "First CI-fix attempt correctly fixed Group 1 (git identity) but misdiagnosed Group 2 as a newline issue -- the actual Windows CI failure is a genuine encoding mismatch (mojibake): subprocess.run(text=True) in _raw_engine_cli decodes the child's UTF-8 output using locale.getpreferredencoding() (cp1252 on Windows) because PYTHONIOENCODING=utf-8 in the child env only governs the child's WRITE side, not this process's READ side. Confirmed directly from the re-run CI log: 'the JSON \u2014 use' vs 'the JSON \u00e2\u20ac\u201d use' (textbook UTF-8-decoded-as-cp1252). Fix: pass encoding=\"utf-8\" explicitly to subprocess.run.",
+      "ts": "2026-08-17T08:09:35.857629+00:00"
+    },
+    {
+      "id": "w-29",
+      "gate": "execute",
+      "why": "Corrected fix: _raw_engine_cli now passes encoding=utf-8 explicitly to subprocess.run, fixing the real root cause (locale-decode mismatch on Windows, not a newline issue). 119 tests still pass locally.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:09:54.527255+00:00"
+    },
+    {
+      "id": "w-30",
+      "gate": "reconcile",
+      "why": "Reasoned no-op accepted.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:10:03.798157+00:00"
+    },
+    {
+      "id": "w-31",
+      "gate": "triage",
+      "why": "Existing candidate corrected, no new issues filed.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:10:45.101654+00:00"
+    },
+    {
+      "id": "w-32",
+      "gate": "review",
+      "why": "Second CI-fix rework: corrected the Group 2 diagnosis from newline to encoding, confirmed by Windows CI re-run. Triage candidate corrected in place.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:10:53.291806+00:00"
+    },
+    {
+      "id": "w-33",
+      "gate": "feedback",
+      "why": "6th episode recorded (the misdiagnosis-then-correction); capture gate passed.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:11:22.702251+00:00"
     }
   ]
 }
