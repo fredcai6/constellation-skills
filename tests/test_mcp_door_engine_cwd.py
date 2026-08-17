@@ -2,13 +2,31 @@
 """The door stands in the bound spine's own worktree for an engine call
 (issue #568, the g1b delta).
 
-`checklist_engine.origin_worktree_refusal` compares a spine's stamped
-`origin.worktree` against the engine's AMBIENT cwd, and `run_engine` calls
+WHY THE CHDIR WAS ADDED, IN THE PAST TENSE. `checklist_engine`
+`origin_worktree_refusal` USED TO compare a spine's stamped `origin.worktree`
+against the engine's AMBIENT cwd, and `run_engine` calls
 `checklist_engine.main(argv)` IN PROCESS. The door's own process is launched
 wherever its caller happened to stand, so before this change the very first
 verb on a spine `spine_open` had just created in a brand-new worktree was
 refused by construction: the door could not already be inside a directory that
 did not exist a moment earlier.
+
+THAT COMPARISON NO LONGER EXISTS. #609 g2 retired stamp-and-compare:
+`origin_worktree_refusal`, the two verb sets that fed it, and the per-verb
+`git rev-parse --show-toplevel` that supplied the other side are deleted, and
+THE ENGINE NOW READS NO LOCATION AT ALL, ambient or derived -- see the
+`checklist_engine.py` module header, which states it in those words.
+`origin.worktree` is still stamped, as provenance, and is read by nothing for a
+decision. Grep confirms it: the only two occurrences of
+`origin_worktree_refusal` left in the engine are in that header, describing its
+removal. This supersedes the 2026-08-15 worktree-identity ruling for the engine
+side; the ruling stays readable, and #609 lane F is what overtook it.
+
+So no test below is a guard against a refusal any more -- there is none left to
+provoke. What they still pin is the `run_engine` contract itself, which stands
+on its own and is unchanged by g2: for the duration of one engine call the
+door's process really stands in the bound spine's own worktree, and it really
+puts the previous directory back afterwards.
 
 `run_engine` now chdirs into the bound spine's worktree for the duration of
 that one call and restores the previous directory in a `finally`. These tests

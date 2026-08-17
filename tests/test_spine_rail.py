@@ -4082,10 +4082,13 @@ def test_post_tool_use_never_raises_on_junk(proj):
 # --- door path: mcp__spine__spine_lease claim/release (#door-binding) -------
 #
 # The MCP door carries no --file: it reads SPINE_FILE/SPINE_SESSION from its
-# OWN environment (scripts/mcp_spine_server.py: SPINE = Path(os.environ
-# ["SPINE_FILE"]).resolve()), and this hook process shares that environment.
-# So the door path resolves the claimed spine from THIS process's own
-# SPINE_FILE, never from tool_input or a candidate-root ladder.
+# OWN environment (scripts/mcp_spine_server.py: SPINE = _spine_from_env(),
+# which strips the value and answers None for unset, empty and whitespace
+# alike instead of resolving "" to the process cwd, and leaves readability to
+# _unbound_refusal per call -- issues #603 and #604), and this hook process
+# shares that environment. So the door path resolves the claimed spine from
+# THIS process's own SPINE_FILE, never from tool_input or a candidate-root
+# ladder.
 
 DOOR_TOOL = "mcp__spine__spine_lease"
 

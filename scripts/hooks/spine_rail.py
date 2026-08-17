@@ -1250,10 +1250,14 @@ def _handle_door_lease(data: dict, project_dir: Path) -> dict:
 
     The door call carries NO `--file`: `SPINE_FILE`/`SPINE_SESSION` are THIS
     hook process's OWN environment, per `scripts/mcp_spine_server.py`'s
-    existing contract (`SPINE = Path(os.environ["SPINE_FILE"]).resolve()`),
-    so the claimed spine's absolute path is resolved from this process's own
-    environment -- never guessed from a candidate-root ladder the way the
-    Bash `--file` path is (decision:door-binding-source-of-truth). Reuses
+    existing contract (`_spine_from_env`, which reads
+    `os.environ.get("SPINE_FILE", "").strip()` and answers `None` -- never
+    raising, never binding a cwd -- when unset, empty or whitespace, with
+    readability asked per call by `_unbound_refusal` rather than once at
+    import; issues #603 and #604), so the claimed spine's absolute path is
+    resolved from this process's own environment -- never guessed from a
+    candidate-root ladder the way the Bash `--file` path is
+    (decision:door-binding-source-of-truth). Reuses
     `_is_valid_claim_target` UNCHANGED (#441's containment/readability
     validator) -- no second validator.
 

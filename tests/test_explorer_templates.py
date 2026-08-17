@@ -336,10 +336,14 @@ class ExplorerSpineCrossCheck(unittest.TestCase):
     def test_instantiates_and_engine_can_claim_and_start(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
-            # A real explorer's tree is a git worktree, and the engine resolves
-            # its cwd to a git toplevel and fails closed when nothing resolves
-            # (2026-08-15 worktree-identity ruling), so the honest fixture is a
-            # real repo, not a bare tempdir.
+            # A real explorer's tree is a git worktree, so the honest fixture is
+            # a real repo, not a bare tempdir. This USED TO be load-bearing --
+            # the engine resolved its cwd to a git toplevel and failed closed
+            # when nothing resolved (2026-08-15 worktree-identity ruling). #609
+            # g2 retired that: the engine reads no location at all, ambient or
+            # derived, and this lane supersedes that ruling for the engine side.
+            # The `git init` stays because the fixture should look like what it
+            # stands for, not because a guard still demands it.
             subprocess.run(["git", "init", "-q"], cwd=str(root), check=True)
             # Resolve script paths against the REAL repo so the command
             # postconditions reference scripts that actually exist. Use POSIX
@@ -359,13 +363,20 @@ class ExplorerSpineCrossCheck(unittest.TestCase):
             self.assertTrue((ROOT / "scripts" / "verify_spec_confirmed.py").is_file())
 
             # The engine can claim the lease and start the first gate.
-            # Run from `root`: the engine enforces worktree isolation natively
-            # against the `origin.worktree` stamped at instantiation (#315/#568),
-            # and a real explorer drives this spine from the tree it was
-            # instantiated into. Without `cwd`, the engine would read the test
-            # runner's cwd and correctly refuse. This test is about the template
-            # being instantiable and drivable, so give it the honest cwd rather
-            # than exempting it from the guard.
+            # Run from `root` because a real explorer drives this spine from the
+            # tree it was instantiated into. It USED TO be a guard: the engine
+            # enforced worktree isolation natively against the `origin.worktree`
+            # stamped at instantiation (#315/#568), and without `cwd` it would
+            # read the test runner's cwd and correctly refuse. #609 g2 deleted
+            # that comparison -- `origin_worktree_refusal` and the per-verb
+            # `git rev-parse --show-toplevel` are gone and the stamp is now
+            # provenance nothing reads for a decision -- so this `cwd` no longer
+            # decides anything. Measured at #609 lane F's reconcile, not
+            # inferred: `claim` from /tmp and `start` from / against a spine
+            # stamped `origin.worktree: /totally/elsewhere` both return rc=0.
+            # It stays as
+            # the honest cwd for what the test is about: the template being
+            # instantiable and drivable by the agent it was written for.
             claim = subprocess.run(
                 [sys.executable, str(ENGINE), "--file", str(out), "claim",
                  "--session-id", "explore-topic", "--claimed-by", "explorer", "--worktree", "."],

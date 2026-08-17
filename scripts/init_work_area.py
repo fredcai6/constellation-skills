@@ -159,10 +159,19 @@ def instantiate_spine(
     """Write .agent-work/<work-id>/spine.json from ``template`` with placeholders resolved.
 
     The written spine carries its own repo reference: a top-level ``origin``
-    block stamped here, at creation (#315/#568). ``checklist_engine`` compares
-    ``origin.worktree`` against its own cwd on every guarded verb, so the
-    expected side of that comparison comes from this stamp rather than from a
-    literal inside a check a spine's own text could edit or omit.
+    block stamped here, at creation (#315/#568). ``checklist_engine`` USED TO
+    compare ``origin.worktree`` against its own cwd on every guarded verb, and
+    the stamp was the expected side of that comparison -- taken from here rather
+    than from a literal inside a check a spine's own text could edit or omit.
+
+    THAT COMPARISON IS GONE. #609 g2 retired stamp-and-compare, and the engine
+    now reads no location at all, ambient or derived, so nothing reads this
+    stamp for a decision. It stays as PROVENANCE -- the tree a spine was opened
+    in, recorded where a later reader can see it -- and it is still written here
+    for the same reason it always was: a value a spine's own text could edit is
+    not provenance. This supersedes the 2026-08-15 worktree-identity ruling for
+    the engine side; that ruling stays readable, and #609 lane F is what
+    overtook it.
 
     Returns the written path, or ``None`` when an existing spine.json is left
     intact because ``force`` was not passed.
