@@ -540,6 +540,22 @@
       "affects": "Any gate whose deliverable is the deletion of a predicate, at any tier.",
       "evidence": "_foreign_worktree was a bad ownership test and deleting it was right. While it stood it also kept a whole class of session out of decide_session_start's fall-through. Four of the five g3 reviews (B4, B5, B6, and the routing half of B2) were each a session arriving somewhere it had never previously reached -- not a mistake in the replacement predicate. Neither the plan, nor the launch order, nor the first two crews enumerated the incidentally-prevented class.",
       "reason": "ADMIRAL_RULING-4 records this as the most valuable thing the lane produced and asks for it as a rule: when a gate removes a guard, enumerate what the guard was incidentally PREVENTING, not only what it was wrongly DECIDING. It cost four cycles and was avoidable by a list."
+    },
+    {
+      "id": "D27",
+      "signal": "The context governor's hard line costs this closeout roughly one agent per remaining gate",
+      "classification": "evidence_only",
+      "affects": "The reconcile -> triage -> review -> feedback -> archive tail of every Commander spine driven under the shipped governor defaults.",
+      "evidence": "thresholds_for('claude-opus-5', headroom=0) returns soft 0.08 / hard 0.15 for every remaining gate, and start/reopen are the hard-guarded verbs. Leg 4 was refused at 0.19 fill and parked; leg 5 was refused at 0.155 fill, at the reconcile boundary, having closed g3-review, g3-integrate, both skips, the execute step and reconcile's whole substance first. Re-orientation is not free: reading the launch order, four rulings, the state note and the returning crew's result costs a leg roughly a tenth of its window before it does any work, so an arriving agent has a narrow band in which it is both oriented and still under 0.15.",
+      "reason": "This is the governor working as configured, not a defect, and the parks it forces have been clean. It is recorded because the arithmetic is a planning fact an Admiral should hold when it budgets a closeout: five remaining steps is closer to five dispatches than to one. Whether the tail steps should carry a larger headroom reserve, or whether close-only legs should be exempt the way advance already is, is the Admiral's call and not this lane's."
+    },
+    {
+      "id": "D28",
+      "signal": "The stale-claim family had a member outside the three files the launch order named, and only a claim-family grep found it",
+      "classification": "evidence_only",
+      "affects": "Any handoff that scopes a prose repair by listing files rather than by naming the claim.",
+      "evidence": "The order named three repairs in four files. Grepping the claim itself -- the engine comparing origin.worktree against an ambient cwd -- turned up a fifth site, scripts/init_work_area.py's instantiate_spine docstring, which said 'checklist_engine compares origin.worktree against its own cwd on every guarded verb'. Falsified by this lane's own g2, same as tc10's two files, and in a file nobody had listed.",
+      "reason": "Same lesson g2 paid three implementer passes for, arriving once more at the last step of the lane: measure the claim family, not the symbol, and not the file list. It is repaired here under the rule that put tc10 in this lane -- the change that falsifies a claim owns the repair -- rather than handed to #610."
     }
   ],
   "open_current_wave_issue_ids": [],

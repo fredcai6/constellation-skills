@@ -1,166 +1,153 @@
-# Commander Result — lane F, issue #609, leg 4
+# Commander result — `cleanup-f-derive-worktree` (#609 lane F), leg 5
 
 ## Assigned
 
-`LAUNCH_ORDER-4.md`, the closeout leg. Resume the held lease, re-measure the
-baseline, run `g3`, then skip g4/g5, reconcile, triage, review, feedback, and
-park at `archive` without merging.
+`LAUNCH_ORDER-5.md` — the closeout. Close `g3` on the APPROVE already attached,
+skip `g4` and `g5` on the recorded rulings, then reconcile → triage → review →
+feedback → archive, parking at `archive` without merging.
 
 ## Return status
 
-`partial` — handed off at the engine's context line, exactly as the order
-sanctions. **The lease is deliberately still held.**
+`partial` — **parked at a clean gate boundary, not blocked and not failed.**
+`execute.json` is terminal, the spine's `execute` step is closed, and
+`reconcile`'s whole substance is done, committed and attested. The engine's
+context governor then refused to **begin** `reconcile` (`start` is hard-guarded;
+fill 0.155 against a hard line of 0.15), so I filed the refresh-request it named
+(`e-reconcile-1`, `seam=reconcile`, `why_ref=w-5`) and parked. **The lease is
+deliberately NOT released** — the run is not done.
 
 ## What this leg completed
 
-**`g3` — the half of #609 that matters — is implemented and independently
-APPROVED.** It took five reviews and four reworks. Its `APPROVE` evidence is
-already attached to `g3-review`; the next leg has only to `start` and `advance`
-that gate, then `g3-integrate`.
+**`g3` is closed.** `g3-review` advanced on review 5 — APPROVE, 0 findings, 8 of
+8 criteria, no blockers (`crew-handoffs/g3-reviewer-rework4-result.md`), which
+`ADMIRAL_RULING-4` made the last round. `g3-integrate` closed with every
+load-bearing number re-measured **by me at this gate**, not cited from leg 4:
 
-**Every review returned a genuine, measured defect. Not one was found by
-reading.**
-
-| review | found | whose |
-|---|---|---|
-| 1 | **B1** the implementer's differential pinned its BEFORE arm with `git rev-parse HEAD`, so it inverted into comparing the change against itself once committed · **B2** `decide_session_start` selected by dict order, not ownership · **B3** false prose survived the symbol's deletion | g3's |
-| 2 | **B4** the B2 fix newly routed "can see entries, owns none" sessions into the scan-bind, whose write then defeated the Stop path's foreign-owner withholding | g3's |
-| 3 | **B5** the B4 fix guarded one of the two routes leaving `spine` `None`; the other bound the session to a spine a sibling agent visibly claimed | g3's |
-| 4 | **B6** the same door still *rendered* another key's gate on an ambiguous scan · **B7** `owners` is a session view and three fresh sentences called it the store | **pre-existing** |
-| 5 | nothing. **APPROVE**, 0 findings, 8/8 criteria | — |
-
-**What g3 ships.** `_foreign_worktree` deleted with both call sites.
-`_entry_mid_flight_view` reads no payload — mid-flight is a property of the
-spine, so every open gate visible to the session blocks. `_own_entries` is the
-shared ownership comparison at both sites. `_attributed_to_another_key` guards
-the bind-on-resume's **write and its render**: neither may contradict an
-attribution `session_view_provenance` already holds. A path attributed to
-**nobody** behaves exactly as before, so `tc1` is untouched and no fail-closed
-refusal was added (`ADMIRAL_RULING-1` R2 respected).
-
-## The finding worth more than the bugs
-
-**This gate removed a guard that was accidentally gating a write.**
-`_foreign_worktree` was a bad ownership test and deleting it was right — but
-while it stood it kept a whole class of session out of `decide_session_start`'s
-fall-through. Every defect after B2 was a session arriving somewhere it had never
-previously reached.
-
-**The rule I would record: when a gate removes a guard, enumerate what the guard
-was incidentally preventing, not only what it was wrongly deciding.** Nobody did
-that here — not the plan, not my handoffs, not the first two crews — and it cost
-four cycles.
-
-## Verification posture
-
-I verified in my own hands rather than accepting a return, at every turn:
-
-- B2's regression, B4's leak and B5's leak all **reproduced by me** with the
-  reviewers' harnesses before I accepted any of the three BLOCKs.
-- Every fix re-verified **only after I added working-tree arms with guards** —
-  because **every instrument on this gate developed a shelf-life defect**. The
-  implementer's differential pinned a *moving* `HEAD` (that was B1, and it
-  printed 26 confirming rows); both reviewers' scratch harnesses pinned
-  *superseded* commits, so re-running them unmodified showed fixed defects as
-  still present. I hit that twice.
-- Both failure directions look identical to a reader — rows that agree — and both
-  read as confirmation. The practice that worked, arrived at independently by
-  three reviewers: **build your own instrument before you run theirs, and make
-  every arm print what it actually loaded.**
-
-## Baselines, all re-measured by this leg
-
-| tree | result |
+| arm | result |
 |---|---|
-| `main` at `17c2cee5`, isolated clone | **3171 passed / 7 skipped / 0 failed** |
-| pre-gate `53c89ba1` | 3170 / 5 / 0 |
-| g3 pass 1 · rework 1 · rework 2 · rework 3 | 3177 · 3183 · 3187 · 3190, all /5/0 |
-| **g3 rework 4 `539ff636`** | **3192 passed / 5 skipped / 0 failed** |
+| `main` at `17c2cee5`, isolated clone named `constellation-skills` | **3171 passed / 7 skipped / 0 failed** |
+| shipped tree, engine's own quiet `c2` run | **3192 passed / 5 skipped / 0 failed** |
+| targeted class `OwnershipIsBindingKeyNotWorktree` | **23 passed**, where the same selector exits 5 on the pre-gate arm |
 
-Failure sets empty in every direction, derived mechanically. The gate's targeted
-check went **0 collected (pytest exit 5)** on the empty diff → **23 passed** —
-genuinely red before the work.
+**Failure-set difference: empty against empty.** The 7→5 skip delta predates the
+gate — the pre-gate arm `53c89ba1` already measured 5. Windows path handling is
+stated explicitly in the `c4` attestation: everything compares through
+`_same_path` (`normcase` + `normpath`, `True` on exception), both call sites fold
+case identically, and because `normcase` is the identity on this host the case
+expectation is **constructed**, not measured.
 
-The `g3` handoff had carried a stale `3195` / `main@e0539903` table; I replaced it
-and named the stale numbers explicitly so the crew would not read ~3170 as a
-regression.
+**`g4` is skipped as WITHDRAWN** (R2), not deferred — nothing re-homes from it.
+The pre-ruling it implemented was itself the defect; the ruled behaviour is
+already shipped, and I verified `_worktree_from_spine` returns `None` for an
+unowned path by reading the function at the skip rather than citing g1.
 
-## Floated to the Admiral — `FLOAT_TO_ADMIRAL-3.md`
+**`g5` is skipped as RE-HOMED** (R3) — #315 stays open and moves to #610's wave.
 
-Three scope questions, **none blocking**. I took a reading on each and said so.
+**`reconcile` is done and attested, awaiting only a fresh agent's `start`.**
 
-1. **I re-opened the bind-on-resume writer**, which earlier handoffs on this gate
-   fenced as `tc1`. Bounded to "may not contradict an existing attribution", under
-   your rule that *the change that falsifies a claim owns the repair*. I checked
-   the `#202` sibling-merge contract myself first — the spine it scans up is
-   attributed to nobody, so a conflict-only guard never fires there.
-2. **Should the guard reach across the session boundary?** (B7) `owners` is
-   session-scoped, so a cross-session attribution is invisible. I ordered the
-   prose honest and did **not** widen. The fifth reviewer named this as yours.
-3. **B6 was pre-existing and I ordered it fixed anyway**, because the rule this
-   gate had already shipped was incomplete without it. Flagged because "we fixed a
-   pre-existing defect because our own rule implied it" is how a bounded gate
-   becomes a sprawling one.
+## Reconcile: four sites named, a fifth found
 
-## The gate's open decision — six crews converged
+All prose. **No executable line moved** — the diff's only non-comment changes are
+docstrings — and the suite is **3192 / 5 / 0**, identical to `g3`'s close.
+Committed at `684502ab`.
 
-> Record it **closed** and retire the refinement: **selection is a binding-key
-> property at every site that selects, full stop.** The fallback was never a
-> counterexample to that rule — it was the one site never held to it — and now
-> that its render and its write ask the same predicate, the asymmetric refinement
-> has nothing left to describe.
+1. `scripts/hooks/spine_rail.py` and 2. `tests/test_spine_rail.py` cited the
+   door's dead import-time contract `SPINE = Path(os.environ["SPINE_FILE"]).resolve()`.
+   Current truth is `mcp_spine_server._spine_from_env`, which strips the value,
+   collapses unset/empty/whitespace into `None`, and leaves readability to
+   `_unbound_refusal` per call (#603/#604). **The test-file copy was wrapped
+   across two lines** — `tc8`'s hazard, and why every citation here is by string.
+3. `tests/test_explorer_templates.py` and 4. `tests/test_mcp_door_engine_cwd.py`
+   asserted the engine still reads its ambient cwd and still enforces the
+   `origin.worktree` comparison (`tc10`). Repaired in the past tense, each citing
+   the 2026-08-15 worktree-identity ruling and saying plainly that **this lane
+   supersedes it**.
 
-## My own errors, recorded
+**The fifth site is the finding.** Grepping the *claim* rather than the named
+files turned up `scripts/init_work_area.py`'s `instantiate_spine` docstring
+saying "`checklist_engine` compares `origin.worktree` against its own cwd on
+every guarded verb" — falsified by this lane's own `g2`, in a file nobody had
+listed. Repaired here under the rule that put `tc10` in this lane: **the change
+that falsifies a claim owns the repair.** Recorded as `D28`. It is one file
+beyond the order's list of three, prose only, and I am naming it rather than
+burying it.
 
-- **I cited a sha I had amended away.** My review-3 handoff named `9b1a551e`,
-  replaced minutes earlier by `7d12c29d`. Content identical, no number moved, and
-  the third reviewer caught it, verified the diff was empty and said so plainly.
-  `ADMIRAL_RULING-3` named this exact failure and I broke it in the same document
-  where I relayed the rule to my crew. **Amending a commit after citing it is a
-  specific way to break "cite by the string, not the line"** and deserves its own
-  line in the practice.
-- **B5 was a defect in the specification I handed the implementer**, not a
-  deviation from it. I prescribed the `not owned` condition; it had a second door.
-- **My first `main` baseline reported a false red.** I cloned to
-  `/tmp/lanef-main-baseline-4`, and `MapTreeFreshnessTests` derives
-  `map/INDEX.md`'s title from the checkout directory name. Cost a full suite
-  re-run. **Name baseline clones `constellation-skills`.**
+**`docs/CHECKLIST_SCHEMA.md` was already right** — `g2` wrote it, and it already
+carries the supersession language. Reconcile here was bringing the *code prose*
+into line with a design doc that was already current, not the reverse.
+
+**One claim I refused to take on trust.** The repaired explorer comment says the
+`cwd` no longer decides anything; rather than infer that from the deletion, I
+measured it — `claim` from `/tmp` and `start` from `/` against a spine stamped
+`origin.worktree: /totally/elsewhere` both return `rc=0` — and the measurement is
+quoted in the comment it justifies.
 
 ## Why this leg stopped
 
-**Not blocked, and not out of work.** The engine's context governor refuses to
-`start` a new gate at 19% fill and named the handoff command itself. I am between
-gates at a clean boundary, so I filed the refresh-request it named
-(`e-g3-review-3`, `seam=g3-review`, `why_ref=w-16`) and parked.
+`start reconcile` was refused: *"context at 15% is at/over the hard limit … finish
+and close the gate you are already in, then request a refresh so a fresh agent
+starts this one."* The shipped defaults are soft `0.08` / hard `0.15` and
+`start`/`reopen` are the hard-guarded verbs. `attest` is not guarded, so
+`reconcile.c1` carries its full evidence already; `advance` refused only because
+a `pending` gate must be `in-progress`. **A fresh agent's first three commands
+close it.**
 
-Per the order: *"Running long to avoid a handoff is the failure mode, not the
-handoff."*
+Recorded as `D27`, because it is a planning fact rather than a complaint: at a
+hard line of `0.15`, with re-orientation alone costing a leg roughly a tenth of
+its window, **five remaining steps is closer to five dispatches than to one.**
+Whether the tail steps deserve a larger headroom reserve, or whether close-only
+legs should be exempt the way `advance` already is, is yours and not this lane's.
 
 ## What the next leg owes
 
 `STATE_NOTE.md` is current and carries the detail. In order:
 
-1. **`g3-review`** — `start`, then `advance` (APPROVE already attached), then
-   **`g3-integrate`**.
-2. **`skip` g4** with **R2**, **`skip` g5** with **R3**.
-3. **reconcile** — three prose repairs, all this lane's debt, including **tc10**
-   in `tests/test_explorer_templates.py` and `tests/test_mcp_door_engine_cwd.py`.
-4. **triage** — `tc1`–`tc12` plus the candidates the g3 crews raised.
-5. **review, feedback, archive.** Park at `archive`. **Do not merge** —
-   publication is yours and nothing is queued behind this lane.
+1. **`reconcile`** — `start`, then `advance`. `c1` is attested with its full
+   evidence and the work is committed at `684502ab`. Nothing to do but close it.
+2. **`triage`** — `tc1`–`tc12` in `execute.json` plus what the `g3` crews raised.
+   Under `ADMIRAL_RULING-4`, **`tc1` (the SessionStart scan-bind) and the
+   cross-session widening (B7) go to #610's wave as ONE package**, carrying the
+   *question* — what the scan-bind is for when nobody has claimed the spine — not
+   just the symptom. **Beware the id collision:** `execute.json`'s `tc1` is the
+   empty `map/ids.jsonl`; the launch order's `tc1` is the scan-bind. They are
+   different findings with the same name, which is `tc7`'s defect biting the
+   closeout. Route by content, never by id.
+3. **`review`**, **`feedback`**, **`archive`**. Park at `archive`, **do not
+   merge**.
+
+**`archive`'s `c2b` wants an OPEN or MERGED PR and there is none** — no upstream
+is configured for this branch. Opening one is outward publication, which
+`LAUNCH_ORDER-5` reserves to you ("Publication is mine"). **I did not push and
+did not open a PR.** That is the one place where the frozen order and the spine's
+own postcondition disagree, and it is yours to settle: authorize the push and PR,
+or waive `c2b` with the fence as the reason.
+
+## Feedback material, harvested for the `feedback` step
+
+- **When a gate removes a guard, enumerate what the guard was incidentally
+  preventing, not only what it was wrongly deciding.** Four of five `g3` reviews
+  trace to nobody doing this.
+- **Build your own instrument before you run theirs.** Every instrument on `g3`
+  developed a shelf-life defect.
+- **Cite content that cannot move under you** — stale line numbers and amended
+  shas are one defect in two forms.
+- **Measure the claim family, not the symbol, and not the file list.** This leg
+  paid for that lesson once more, and got the fifth site for it.
+- **An instrument can measure its observer.** The containment test failed for me
+  and only for me: I polled the run ~15 times, every tool call fires the gauge
+  chain, and the test was snapshotting the `.agent-work/` I was writing to. The
+  identical command, run quiet by the engine, was green. That is `tc11` with a
+  sharper cause than "a crew happened to write" (`D23`).
 
 ## Housekeeping
 
 - **Lease held** at `commander-cleanup-f-derive-worktree`, re-claimed without
   `--force`. Not released — the run is not done.
-- **`REPLAN_INPUT.json` verifies** (`verify_iterative_role_artifacts.py commander`
-  passes). Leg 4 added **D12–D21**; `g3`'s completed-outcome is parked in
-  `g3-outcome-pending.json` until `g3-integrate` closes, because the G2 schema
-  requires completed and open issue ids to be disjoint.
-- **`crew-runs.json` committed at every gate close**, per the #617 mitigation. It
-  saved nothing this leg because nothing crashed, which is the point.
-- **`recover_crews.py` run before every dispatch.** Ten crews, all COMPLETE; only
-  this commander leg is ACTIVE.
-- **`main` has not moved** — still `17c2cee5`.
-- **Nine crews on this gate refused the `SPINE MID-FLIGHT` nudge** and recorded
-  the refusal, exactly as instructed. None wrote to this spine.
+- **`REPLAN_INPUT.json` verifies.** `g3` folded in as a completed outcome, the
+  open-issue set is now empty, 23 wave-evidence rows, `D0`–`D28`. Nothing
+  auto-filed.
+- **`crew-runs.json` committed at every gate close**, per the #617 mitigation.
+- **`recover_crews.py` run before this leg.** No crew dispatched — leg 5 needed
+  none; the only ACTIVE entry is this commander leg, and legs 1–4 are my own
+  parked predecessors, not crews to recover.
+- **`main` has not moved** — still `17c2cee5`, re-measured here.

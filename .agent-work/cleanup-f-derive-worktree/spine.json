@@ -333,7 +333,8 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute.json is terminal: the engine reports DONE, no open items. g1 and g2 closed on independent APPROVEs in earlier legs. g3 closed this leg with review 5's APPROVE (0 findings, 8/8 criteria, no blockers) attached as e-g3-review-2 and referenced into g3-integrate.c3, and with its integrate evidence re-measured in my own hands rather than accepted from the return -- targeted class 23 passed against exit-5 on the empty diff, main re-measured at 17c2cee5 at 3171/7/0 in a clone named constellation-skills, the shipped tree at 3192/5/0 on the engine's own quiet c2 run, failure sets empty both ways, and Windows case folding stated explicitly as constructed rather than measured. g4-implement/review/integrate are skipped with ADMIRAL_RULING-1 R2 recorded as the reason: the pre-ruling the gate implemented was itself the defect, the ruled behaviour is already shipped by g1, and I verified _worktree_from_spine returns None for an unowned path by reading it at the skip. g5-implement/review/integrate are skipped with R3: #315 is descoped and re-homes to #610's wave. Every gate therefore carries integrated evidence or a recorded ruling as its reason for carrying none."
         },
         {
           "id": "c2",
@@ -342,7 +343,8 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id cleanup-f-derive-worktree"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-3"
         }
       ],
       "constraints": [],
@@ -369,7 +371,7 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {
         "blocker": "Three rulings outside this Commander's latitude, each a case the launch order reserves for the Admiral. (1) The removed origin comparison WAS the only guard on a leaseless spine -- measured base-vs-tree from a foreign worktree, every mutating verb went REFUSED to exit 0 on a never-claimed or released spine, because require_session returns early with no lease. This blocks g2, implemented and committed but its gate blocked. (2) The fail-closed refusal (g4) refuses 362 of 429 guarded-verb invocations across 125 tests, three in lane-E-fenced tests/test_crew_launcher.py; the obvious narrowing is closed because it reinstates reading the stamp for a decision. (3) The launch order's premise for #315 (g5) is false -- verify_worktree_isolation has two live tracked template carriers, not zero, one a live command-kind precondition, and the shipped Admiral template itself rules that forcing cwd disarms the check and is not superseded by the engine-native guard. g3 is unblocked on merits but the gated plan will not start it while g2-integrate is blocked.",
         "authority_needed": "admiral-568-cleanup",
@@ -399,6 +401,17 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-execute-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id cleanup-f-derive-worktree",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -420,7 +433,8 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "This repo has no docs/architecture packet map -- orientation was DEGRADED-UNPARSEABLE at context (w-2) and map/ids.jsonl is still 0 bytes -- so the structural record is reconciled directly, as the imperative's second path allows. THE DESIGN DOC THIS CHANGE ACTUALLY TOUCHES IS ALREADY CURRENT: docs/CHECKLIST_SCHEMA.md states that origin.worktree is provenance read by nothing that decides, names the deleted predicate and verb sets, and already says in those words that this supersedes the 2026-08-15 worktree-identity ruling. g2 wrote that. So reconcile is not a doc update here; it is bringing the CODE PROSE into line with a schema doc that was already right. FOUR SITES REPAIRED, ALL PROSE, cited by the string to grep for: (1) scripts/hooks/spine_rail.py and (2) tests/test_spine_rail.py cited the door's dead import-time contract SPINE = Path(os.environ[\"SPINE_FILE\"]).resolve(); current truth is mcp_spine_server._spine_from_env, which strips the value, collapses unset/empty/whitespace into None, and leaves readability to _unbound_refusal per call (#603/#604). The test-file copy was WRAPPED ACROSS TWO LINES, which is tc8's hazard and is why the citation is by string. (3) tests/test_explorer_templates.py and (4) tests/test_mcp_door_engine_cwd.py asserted the engine still reads its ambient cwd and still enforces the origin.worktree comparison; g2 made both false (tc10, ADMIRAL_RULING-3). Each repaired in the past tense, each citing the 2026-08-15 ruling and saying plainly that this lane supersedes it. A FIFTH SITE, NOT IN THE ORDER'S LIST OF THREE, found by grepping the claim family rather than the named files: scripts/init_work_area.py's instantiate_spine docstring carried the same falsified claim. Repaired here under the same rule that put tc10 in this lane -- the change that falsifies a claim owns the repair -- and named in the return rather than left for #610. MEASURED, NOT INFERRED: claim from /tmp and start from / against a spine stamped origin.worktree /totally/elsewhere both return rc=0, so the engine reads no location; that measurement is quoted in the repaired comment. NO EXECUTABLE LINE MOVED: the diff's only non-comment changes are docstring prose, and the full suite measures 3192 passed / 5 skipped / 0 failed -- byte-identical to g3's close. map/INDEX.md needed no regeneration: MapTreeFreshnessTests is green, so the tracked map still matches a fresh build. Committed at 684502ab."
         }
       ],
       "constraints": [],
@@ -430,7 +444,18 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-reconcile-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "reconcile",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "triage": {
@@ -641,12 +666,12 @@
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
     "opened_by": "init_work_area"
   },
-  "refusals": 9,
+  "refusals": 12,
   "engine_session": {
     "session_id": "commander-cleanup-f-derive-worktree",
     "status": "active",
     "claimed_at": "2026-08-17T01:36:26.599038+00:00",
-    "last_heartbeat": "2026-08-17T01:36:26.599038+00:00",
+    "last_heartbeat": "2026-08-17T01:54:04.488122+00:00",
     "claimed_by": "commander",
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
     "previous_session_id": null,
@@ -680,6 +705,13 @@
       "why": "Plan frozen at 5 gates, not 4. The cold critic returned BLOCK with 12 findings; 10 were absorbed into the plan and 2 are floated, because those two are premise failures in the frozen order rather than plan defects. Derivation is now LEXICAL ONLY -- normalize-once was graded settled/measured and three independent measurements contradicted the realpath half, so it was revisited and re-provenanced. Placement is settled by measurement: the single-definition road is closed in BOTH directions (either way needs an entry in the fenced installer), so two copies pinned by a shared case table stands. Every gate now carries a targeted check that is red on an empty diff -- the suite alone passed on zero work. g4 (fail-closed) and g5 (#315) are authored but will not start without an Admiral ruling: g4 refuses 362 of 429 guarded-verb invocations including 3 tests in a lane-E-fenced file, and g5 rests on a launch-order premise I measured to be false.",
       "mechanical": false,
       "ts": "2026-08-16T16:20:00.686946+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "execute is done: three gates closed on independent APPROVEs, two skipped on recorded Admiral rulings, and every closing number re-measured by the leg that closed it. The gate that mattered was g3 -- the worktree stops answering ownership -- and it cost five reviews and four reworks because deleting _foreign_worktree widened the population reaching decide_session_start's fall-through and nobody had enumerated what the bad guard was incidentally preventing. That is the lane's finding and it is recorded as D26. g4 is withdrawn by ADMIRAL_RULING-1 R2 rather than deferred; g5 re-homes #315 to #610's wave under R3. REPLAN_INPUT.json now carries g1, g2 and g3 as completed outcomes, an empty open-issue set, 23 wave-evidence rows and D0-D26, and verify_iterative_role_artifacts.py commander passes on it. Nothing was auto-filed: every discrepancy stays evidence for the Admiral's replan.",
+      "mechanical": false,
+      "ts": "2026-08-17T01:47:40.214415+00:00"
     }
   ],
   "trip_ledger": [
@@ -726,6 +758,17 @@
       "model": "claude-opus-5",
       "why_ref": "w-4",
       "ts": "2026-08-16T16:22:16.575851+00:00"
+    },
+    {
+      "id": "tl-5",
+      "gate": "reconcile",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1538,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-17T01:52:36.615366+00:00"
     }
   ]
 }
