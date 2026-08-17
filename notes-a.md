@@ -1177,6 +1177,80 @@ Zero failures across every suite, including the four the door change could plaus
 broken: `test_mcp_identity.py`, `test_mcp_lifecycle.py`, `test_mcp_door_unbound.py`,
 `test_crew_launcher.py`.
 
+### F25 — the reviewer BLOCKED, and its first finding defeats the property I built
+
+`Verdict: BLOCK`, 1057 lines. Everything the handoff named as a blocking condition
+**passed** — its own root mutation went RED in its hands (7 failures, both spellings,
+including the non-vacuity control), the reach-delta test discriminates, all four pins hold
+with controls verified by planted regressions, the argument is still `spine_file`, the
+`IDENTITY_TRADE.md` amendment is in the same commit, `checklist_engine.py` is untouched by
+this gate, a spine with `origin: None` binds, and the two-door round trip is byte-identical.
+Full suite 3263 passed.
+
+It blocked on two defects it found by **attacking**, which is what the gate exists for.
+
+#### B1 — the isolation property is FALSE as stated, and a symlink is the whole attack
+
+`_spine_bind`'s cross-checkout guard calls `_checkout_containing(candidate.parent)` — the
+**unresolved** parent. So:
+
+- `_resolve_confined` (R4) **does** resolve, sees a path inside `<own checkout>/.agent-work/`,
+  and passes it.
+- the cross-checkout guard (R6) asks git about the *link's own directory*, which is our own
+  work area, and passes it too.
+
+A symlink sitting inside the door's own `.agent-work/` and pointing at a spine in a
+different checkout satisfies both. The reviewer bound **a linked worktree's spine and a
+wholly separate repository's spine** that way, with pasted output.
+
+**This is the guard whose docstring says it is "what makes the isolation claim true rather
+than aspirational."** It was aspirational. And note precisely where the bug lives: not in
+the root derivation the cold critic forced me to narrow, and not in the containment
+predicate — but in the **mismatch between two checks that resolve paths differently.** One
+resolves, one does not, and the attack lives in the gap. `_identity_violation`'s docstring
+records six guards defeated by shapes they had not enumerated; this is the seventh, and it
+is my design's own second guard defeating its own first.
+
+The fix is one token — `candidate.resolve().parent` — which the reviewer verified closes
+both escapes and keeps 116 tests green.
+
+**Scoped honestly, as the reviewer did:** zero such nested checkouts exist in the live tree
+today, and every escape with a *real file* behind it (primary checkout, sibling worktree,
+both symlinked) is correctly refused. So this is not a live breach. It blocks because
+`decision:isolation-not-fencing`'s recorded `settle:` condition **is** the reviewer's
+attack, and the attack succeeded — the property as written is false, and the whole point of
+that decision was to state a property that could be attacked rather than assert one.
+
+#### B2 — a declared argument kills the door process
+
+A NUL byte in `spine_file` raises an unhandled `ValueError` during path resolution;
+`main()` catches only `KeyError`, so **the server dies with exit 1**. On the one tool
+reachable while nothing is bound. It violates the gate's own Protected Intent — "Fail
+closed. A spine that cannot be identified refuses" — and it is **new to this gate**: the
+analogous pre-existing path, `spine_advance(from_child=<NUL>)`, survives.
+
+The reviewer also generalised it into a triage candidate rather than only reporting the
+instance: `main()`'s `except KeyError` means *any* unhandled exception in a lifecycle
+dispatch kills the door, so the whole surface is one broad `except Exception` away from
+being fail-closed.
+
+#### What I take from this about my own review design
+
+I asked the reviewer to attack the property and it did, and the defect it found was in a
+place I had not thought to point it at. My handoff enumerated attacks — traversal, a
+directory, a JSON array, a foreign checkout — and **I ran six of them myself and reported
+them all refused** (F21). Not one of my six used a **symlink**. The reviewer's value was
+not diligence on my list; it was bringing a shape that was not on it.
+
+That is the argument for an independent reviewer stated more precisely than "two pairs of
+eyes": a list of attacks written by the person who wrote the boundary inherits that
+person's blind spots, and the boundary was drawn by someone who was thinking about
+directories rather than about links.
+
+Dispatched as rework. Three required changes, all named in the review's §12: resolve before
+asking git, catch `ValueError` and refuse through `_tool_error`, and correct the three places
+that state the property so none claims something the code does not do.
+
 ### F24 — CORRECTION to F23: the reviewer was ALIVE. I killed a healthy agent's workspace.
 
 **F23 below is wrong in its central claim and I am leaving it standing with this correction
