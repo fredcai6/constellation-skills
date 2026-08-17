@@ -32,3 +32,42 @@ human. Recorded, as that ruling requires.
 
 **Disposition:** `recommend-and-defer`. Pair onto an open issue at epic closeout, or record as an
 episode. **Not filed as an issue** — `decision:no-issue-filing-mid-run`.
+
+---
+
+## Escalation, `g1b-review` round 2 — the misfit is not just wrong prose, it actively pushes a crew to impersonate its dispatcher
+
+The g1b re-reviewer finished its work, wrote its result, consolidated and released its own survey —
+and was then **refused permission to end its turn by the Stop hook**, which told it to drive a spine
+it does not own.
+
+The mechanism: the hook resolves a spine from disk when `SPINE_FILE` is unset. For a handoff-driven
+crew, what it finds is **the dispatcher's** spine — here
+`constellation/567-d1/lane-d1/commander-delegated`, whose lease was active and whose in-progress
+step was `g1b-review`, i.e. **the crew's own dispatch**. Complying would have meant passing the
+Commander's session id on mutating verbs against the parent's spine, closing the gate that is its own
+dispatch, and dispatching the reviewer of its own review.
+
+It refused, in its own words: *"That's impersonation, not delegation."* **The refusal was correct**
+and this lane endorses it.
+
+Worse, the hook's sanctioned escapes do not fit. `spine_halt block` and a human-authority `waive`
+both **write to the parent's spine**, so the prescribed "honest stop" is itself the destructive act —
+and `block` is the exit for a gate of one's own, which a crew with a consolidated, released survey
+does not have.
+
+**This is the sixth independent reproduction in this lane, across three gates and both roles.** It is
+the same root cause as above, one consequence deeper: the lane-H precedent the launch order warned
+about — *"a cold subject read its dispatcher's session id off disk and drive the live run under it"* —
+is not an accident of one agent, it is what the hook instructs.
+
+**Both fixes named by the crews:**
+- **Cheap and exactly detectable:** skip the hook when `SPINE_FILE` is unset **and** `SPINE_PARENT` is
+  set. That is precisely the handoff-driven-crew signature.
+- **Durable:** have `run_crew.py` bind the crew's own plan/survey into `SPINE_FILE`, which makes the
+  skills' opening sentence true instead of needing a caveat, and removes the disk-resolution path
+  entirely.
+
+Hook code and `scripts/run_crew.py` are both outside this lane's ownership, so this stays a
+candidate. **It should be paired onto an open issue with priority** — it is a live impersonation
+hazard, not a documentation nit.

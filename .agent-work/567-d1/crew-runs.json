@@ -211,7 +211,7 @@
     "gate": "g1b",
     "role": "reviewer",
     "attempt": 2,
-    "status": "running",
+    "status": "failed",
     "session_name": "constellation/567-d1/g1b/reviewer/attempt-2",
     "backend": "cli",
     "door_bound": true,
@@ -224,11 +224,15 @@
     "stdout": ".agent-work/567-d1/crew-runs/g1b-reviewer-attempt-2.stdout.txt",
     "stderr": ".agent-work/567-d1/crew-runs/g1b-reviewer-attempt-2.stderr.txt",
     "started_at": "2026-08-17T19:37:06.079205+00:00",
-    "last_heartbeat": "2026-08-17T19:37:06.079205+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-17T19:52:39.922091+00:00",
+    "completed_at": "2026-08-17T19:52:39.922091+00:00",
     "abandoned": false,
     "model": "opus",
     "reasoning_effort": "high",
-    "scratch_dir": ".agent-work/567-d1/crew-scratch/g1b-reviewer-attempt-2-74e194cfc852"
+    "scratch_dir": ".agent-work/567-d1/crew-scratch/g1b-reviewer-attempt-2-74e194cfc852",
+    "exit_code": 0,
+    "result_present": false,
+    "result_fresh": false,
+    "verdict_source": "result"
   }
 ]

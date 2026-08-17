@@ -5,7 +5,7 @@
     "run": "567-d1",
     "project": "constellation-skills",
     "role": "reviewer",
-    "refusals": 0,
+    "refusals": 1,
     "spine-step": "r6-fowler",
     "rework-count": 0,
     "failed-commands": 0,
@@ -16,6 +16,6 @@
   "refused": [],
   "run": {
     "work_id": "567-d1",
-    "generated_at": "2026-08-17T19:08:55Z"
+    "generated_at": "2026-08-17T19:47:49Z"
   }
 }

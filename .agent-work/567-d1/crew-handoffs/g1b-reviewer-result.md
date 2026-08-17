@@ -1,509 +1,433 @@
-# Review Result
+# Review Result — g1b RE-REVIEW (rework 1/3, reviewer attempt 2)
 
 ## Assigned Gate
 `g1b-review` — Widen the guard: placeholder-agnostic command lines, and the tracked template
-overlay: review.
+overlay: review. **Re-review of a reworked gate**, after round 1 returned `BLOCK`.
 
 ## Verdict
-`BLOCK`
+`APPROVE`
 
 ## Result
-`BLOCK`
+`APPROVE`
 
-Recorded through the engine at `.agent-work/567-d1/g1b-review/review.json`
-(`consolidated: verdict=BLOCK findings=2`). Ten checks, all visited: `r0`–`r6` from the template
-plus three I appended for the handoff's "real work" — `r7-attack`, `r8-width`, `r9-overlay`. Two
-recorded **fail**, and they are the *same* finding seen from two angles.
+Recorded through the engine at `.agent-work/567-d1/g1b-review/review-2.json`
+(`consolidated: verdict=APPROVE findings=0`). Twelve checks, all visited, all `pass`: `r0`–`r6` from
+the overlay template plus five I appended for the addendum's named work — `r7-oracle`, `r8-cost`,
+`r9-regression`, `r10-import`, `r11-attack`. Round 1's survey is preserved untouched at
+`review.json`, and its result is preserved in git at `4df66479`; this file supersedes it.
 
-Measured at `8ba1334c`. Every number below is mine, re-derived; where it agrees with the
-implementer's I say so.
+Measured at `4df66479`. Every number below is mine.
 
----
-
-## The finding, in one paragraph
-
-**`_ENGINE_VERBS` enumerates 17 verbs. The engine defines 18.** `resume` is missing, so this line
-passes **all four** patterns clean:
-
-```
-Second path: <cli> resume g1 --reason 'unblocked'.
-```
-
-That is exactly the class this gate was opened to close — a stood-in-for engine command line in a
-spine template — written with a verb the engine really has. It is not inside any of the docstring's
-declared limits.
-
-Proven against the engine itself, not against a document:
-
-```
-$ python3 scripts/checklist_engine.py --help
-usage: checklist_engine.py [-h] --file FILE [--dry-run]
-      {current,claim,heartbeat,release,start,advance,record,consolidate,skip,block,
-       resume,reopen,append,amend,attest,waive,attach,flag-candidate}
-```
-
-`tests/test_cli_retirement_guard.py:229` lists every one of those except `resume`.
-
-**It breaks a documented repo standard verbatim.** `CREW_CONTEXT.md` §Verification Discipline:
-
-> **Define a guard by its consumer's behaviour, not by a hand-maintained list.** A list of
-> characters, filenames or call sites drifts from the predicate the code actually applies, and the
-> gap is silent.
-
-The list has already drifted, on day one. And the docstring's stated invariant — *"a stand-in,
-IMMEDIATELY followed on the SAME LINE by an engine verb"* — is broader than what ships. The same
-string feeds **both** `ENGINE_INVOCATION_RE` and the new `ENGINE_STANDIN_COMMAND_RE`, so the gap is
-doubled by this diff rather than merely inherited by it.
-
-**The fix is free, measured.** Adding `resume` yields **zero** new addresses for the stand-in
-pattern and **zero** for the invocation pattern, over all 3098 texts.
-
-### Why BLOCK and not APPROVE with an override
-
-This gate exists because the `g1` review found the whole class resting on a single 8-character
-literal. Shipping a widening whose stated invariant is broader than its implementation — with a
-named hole that costs nothing to close — repeats the shape the gate was opened to remove. Rework is
-**one token** in `_ENGINE_VERBS` plus one pinned fixture in `STAND_IN_COMMANDS`.
-
-The honest counterweight, so the Commander can overrule me with full information: `resume` was
-already absent from `g1`'s pattern 3, so this is inherited, not introduced; and for the miss to
-matter a future author must write a `resume` command line with a non-`<engine>` stand-in, no "CLI
-fallback" phrase and no `checklist_engine.py`. If the Commander prefers to fold the one-token fix
-into `g2`, that is a defensible call — but it should be a call, not a silence.
-
-I did **not** ask for the guard to be made green and did **not** propose an exception list. It must
-stay RED for `g2`.
+> **This supersedes round 1's `BLOCK` at this path.** That document is recoverable verbatim from
+> `git show 4df66479:.agent-work/567-d1/crew-handoffs/g1b-reviewer-result.md`.
 
 ---
 
-## Handoff compliance — the five close criteria
+## The blocker, closed — and closed at the class
 
-Every one re-run by me with the exit code read. A pasted summary is a pointer, never the evidence.
+Round 1 found `_ENGINE_VERBS` hand-typed with 17 verbs against the engine's 18, missing `resume`, so
+`Second path: <cli> resume g1 --reason 'unblocked'.` passed all four patterns clean. The Commander
+ruled for the durable fix rather than the one-token one. **It landed, and it is genuinely durable.**
+
+### 1. The verb set is the engine's own — checked against two oracles, neither of them the repo's helper
+
+The obvious way to "verify" this is to call `_engine_verbs()` and compare — which is the tautology the
+implementer itself warned about. So I read the engine two other ways:
+
+```
+A. from `checklist_engine.py --help` choices block   : 18
+B. from argparse's own invalid-choice error          : 18
+C. guard's ENGINE_VERBS (recovered from alternation) : 18
+D. repo helper _engine_verbs()                       : 18
+
+A == C : True | missing from guard: [] | extra in guard: []
+B == C : True        D == C : True        'resume' in guard verb set: True
+blocker line vs stand-in pattern: True   (was MISS, is now MATCH)
+```
+
+The compiled alternation, verbatim:
+`advance|amend|append|attach|attest|block|claim|consolidate|current|flag\-candidate|heartbeat|record|release|reopen|resume|skip|start|waive`
+
+### 2. Red-proofed by mutation — four ways, every one red, every one naming the difference
+
+*"A check that cannot fail is indistinguishable from one that passed."* I made the two sides disagree
+in memory rather than trusting the assertion's shape.
+
+| mutation | result |
+|---|---|
+| **engine gains a verb** the guard lacks | tie **RED**: `in the engine, missing here: ['frobnicate']`; behavioural test **RED** |
+| **guard loses `resume`** (the exact historical drift) | tie **RED** naming `resume`; behavioural **RED**; control count **RED** (`17 != 18`); pinned fixture **RED**; and the blocker line goes **MISS** again — the evasion route visibly reopens |
+| **derivation replaced by a literal that agrees today**, then the engine moves | tie **still RED** — the claimed durability property is real, not asserted |
+| **pattern degenerates** to "any word after a stand-in" | negative control **RED** |
+
+And the case the tie *cannot* catch, which is exactly what the control count exists for — both sides
+shrinking together off a broken oracle:
+
+```
+oracle returns 2 verbs      -> tie GREEN (they agree), control count RED   <- only the pin catches it
+oracle returns the EMPTY set -> tie RED and control count RED
+```
+
+The `re.escape` claim also holds: `flag-candidate`'s hyphen survives compile, match, and the
+unescape round-trip.
+
+**This is a stronger closure than "add `resume`" would have been**, and the addendum was right to
+rule for it: the fix now has an oracle behind it, four assertions of different provenance pinning it,
+and a fixture that keeps it closed even if the derivation is later replaced.
+
+### 3. The derivation cost nothing — re-measured after the change
+
+Priced against the right counterfactual (the alternation rebuilt from the engine **minus `resume`**,
+so the number prices the *verb*, not the *derivation*):
+
+```
+walk: 3098 texts across 216 files (101 skills/, 2 specs/, 113 overlay)
+verb set: 18 verbs, derived; == engine argparse: True
+
+ENGINE_INVOCATION_RE       17 verbs -> 12 addr / 14 occ | 18 verbs -> 12 addr / 14 occ | DELTA 0
+ENGINE_STANDIN_COMMAND_RE  17 verbs -> 23 addr / 26 occ | 18 verbs -> 23 addr / 26 occ | DELTA 0
+union over all four patterns: 36 -> 36        added by `resume`: NONE    lost: NONE
+```
+
+The stronger claims still hold after the rework: stand-in addresses **not** reported by `g1`'s three
+patterns = `[]`, and every one of the 23 is also an `<engine>` address — so no honest text is newly
+red-lighted. Per the addendum I did not re-derive the headline census from scratch; it fell out of
+this measurement anyway and reproduces figure for figure.
+
+---
+
+## 4. Nothing regressed
+
+| what | measured |
+|---|---|
+| floors | skills **101**≥60, specs **2**≥1, overlay **113**≥60, texts **3098**≥1800 |
+| exception list | **zero**. `_walk_dir`'s only filter is `p.is_file() and p.suffix in suffixes`; a source scan for any `EXCLUDE/SKIP/ALLOW/IGNORE/EXEMPT` assignment finds **NONE** |
+| both pre-ruled survivors | out **by the walk rule alone** — each appears exactly once in the file, both occurrences inside the module docstring (verified by index against `from __future__`), never in a code path; neither in `GUARDED_FILES` though both files exist |
+| `PROSE_ONLY` / `COMMAND_SHAPED` | all three discriminations still pass; 5 and 6 entries, incl. the `write-a-skill` archetype cell |
+| overlay scope rule | verified **structurally**: `.agent-work/567-d1` is neither ancestor nor descendant of the overlay root; strays **0**; **no symlink** escapes the overlay |
+| lane-D2 fence | `.baseline/constellation-workbench/` = 4 files, 20 texts, **0** matches on all four patterns — still no fenced-file dependency |
+
+## 5. The import is safe at collection time
+
+A guard that dies at collection is a guard that never runs. Four checks:
+
+- **Needs no env.** 19 collected with `SPINE_FILE`/`SPINE_SESSION`/`SPINE_ENGINE`/`SPINE_PARENT`/
+  `CREW_SCRATCH_DIR`/`CLAUDE_PROJECT_DIR` all stripped, exit 0; and `env -i` with only `PATH`/`HOME`
+  → 15 passed.
+- **No shadowing.** All 48 `scripts/*.py` names checked against `sys.stdlib_module_names` → **NONE**,
+  and none resolvable elsewhere on `sys.path` → **NONE**. The `sys.path.insert` cannot hijack a later
+  import.
+- **No ordering dependency.** Guard collected **first** and guard collected **last** against
+  adoption / checklist_engine / mcp_spine_server / generate_spine / spine_lifecycle →
+  **974 passed, 2 skipped, 144 subtests**, byte-identical both ways.
+- **The one global mutation is pre-existing, not introduced.** Importing `checklist_engine` runs
+  `_utf8_stdio()`, which reconfigures `sys.stdout`/`stderr`. But `tests/test_generate_spine.py` and
+  `tests/test_spine_lifecycle.py` **already import it at module level**, so any whole-suite run did
+  this before the rework. The guard only adds it to a guard-only run, where it is harmless
+  (`try/except AttributeError, OSError`).
+
+## 6. Attacked once more — 32 strings, two observations, no findings
+
+The widened verb arm holds. All five `resume` dialects caught (angle, `{{ }}`, `$ENV`, `%WIN%`,
+single-brace), tab and double-space separators caught, trailing punctuation caught, `frobnicate`
+still clean. **No new evasion route of the `resume` class.**
+
+Correctly missed, each inside a declared limit or handing an agent no runnable path: verb on the next
+line, code span, colon or quote between stand-in and verb, capitalized/uppercase verb,
+word-introduced with no stand-in, bare program word.
+
+**Observation A — the separator gap, and I want to be precise about why it is not a second BLOCK.**
+The docstring's invariant says the stand-in must be followed by *"HORIZONTAL whitespace"*; the code
+says `[ \t]`. So NBSP (U+00A0), U+202F and U+2003 all walk through. Priced:
+
+```
+[ \t]        (SHIPPED)                       addresses=23   extra vs shipped=0
+[^\S\r\n]    (horizontal ws incl. unicode)   addresses=23   extra vs shipped=0   <- free
+\s           (the priced loosening)          addresses=24   extra=1  skills/workbench/references/checklist-engine.md:92
+corpus contains non-ASCII whitespace: NONE
+```
+
+It is the same *shape* as the closed blocker — stated broader than implemented — which is why I
+looked hard at it. It is not the same *severity*, and the distinction is the one this gate already
+ruled on: **`resume` had an oracle** (argparse states the verb set, so the gap was drift from a
+definable truth) — **"horizontal whitespace" has none**; no definition says which code points it
+means. The corpus contains no non-ASCII whitespace at all, and NBSP before a command verb is not text
+a future agent restoring this doctrine would write. Flagged as `tc1`, free to fold into `g2` if the
+Commander wants it; I am not blocking on it and would not have blocked round 1 on it either.
+
+**Observation B — the declared false-alarm residual is real, and I confirmed it by writing the text
+rather than reading the claim.** These honest sentences fire on the shipped pattern:
+
+```
+FIRES  'see <skill-dir> release notes for the change'
+FIRES  'after a crash the <run> resume picks up where it stopped'
+FIRES  'the <id> current state is read from the journal'
+clean  'the `<work-id>` resume is written by the engine'      (code span saves it)
+```
+
+This is **not** a finding: the docstring predicts it exactly, names `<skill-dir> release notes`
+verbatim, prices it at 0/3098 today, and names the right repair (require a following *argument*, not
+a looser separator). That is the honest treatment of a residual. 12 of the 18 verbs are ordinary
+English; the docstring names 9 — `resume`, `advance` and `amend` are omitted, and `resume` is the one
+just added (`tc3`).
+
+**On the upheld placeholder-dialect ruling.** I tested it rather than restating the misses. There is a
+partial oracle in the repo — `generate_spine.py:439`'s `_SHIPPED_SPEC_PLACEHOLDER_PARENT_RE =
+^<[A-Za-z0-9-]+>$`, and `init_work_area.py`'s comment naming the prose placeholders as
+`<engine>, <date>, <N>, <path>` — and it says the sanctioned dialect is **angle-bracket**. The guard's
+`_ENGINE_STANDIN` already covers a strict superset of that. So the repo's own oracle, where one
+exists, argues *for* the ruling rather than against it: `[engine]`, `__ENGINE__` and `$(engine)` are
+outside anything this repo's tooling accepts. The line is drawn right.
+
+---
+
+## Handoff compliance — the close criteria
 
 | # | Criterion | Verdict |
 |---|---|---|
-| 1 | Only the guard modified; `test_mcp_adoption.py` byte-identical | **met** — `git status --porcelain` over `skills specs docs scripts episodes tests map .agent-work/templates` is one line, `M tests/test_cli_retirement_guard.py`; `git diff --quiet HEAD -- tests/test_mcp_adoption.py` → exit 0 |
-| 2 | `-k "not TestNoSecondPathReachesAnAgent"` passes | **met** — `11 passed, 4 deselected`, exit **0** |
-| 3 | `-k TestNoSecondPathReachesAnAgent` fails, naming an overlay site | **met** — `4 failed, 11 deselected`, exit **1**; **58** output lines address `.agent-work/templates/` |
-| 4 | Exception list length zero; both survivors out by the walk rule | **met** — no exclusion construct exists in any code path; `_walk_dir` has no filter. Both survivors verified absent from `GUARDED_FILES` by my own walk |
-| 5 | Vacuity floors cover the new surface and the raised count | **met** — `OVERLAY_FILES >= 60` (113), `GUARD_TEXTS >= 1800` (3098), plus the new no-strays assertion |
+| 1 | Only the guard modified; `test_mcp_adoption.py` byte-identical | **met**, in a re-derived frame — see the note below. `git diff --quiet 8ba1334c..HEAD -- tests/test_mcp_adoption.py` → exit 0 |
+| 2 | `-k "not TestNoSecondPathReachesAnAgent"` passes | **met** — 15 passed, 4 deselected, exit **0** |
+| 3 | `-k TestNoSecondPathReachesAnAgent` fails, naming an overlay site | **met** — 4 failed, 15 deselected, exit **1**; **58** lines address `.agent-work/templates/` |
+| 4 | Exception list zero; both survivors out by the walk rule | **met** — no exclusion construct exists in any code path |
+| 5 | Vacuity floors cover the new surface and the raised count | **met** |
+| 9 | Verb set derived from the engine, tie pinned | **met** — verified against two independent oracles and red-proofed four ways |
+| 10 | The `resume` line caught and pinned as a fixture | **met** — `STAND_IN_COMMANDS[9]`; MATCH now, MISS under the 17-verb counterfactual |
+| 11 | The added verb's cost measured over the whole walk | **met** — zero on both patterns, nothing lost |
+| 12 | Code-span argument scoped to Markdown; census unit stated | **met** — and every figure in it reproduces |
 
-`--collect-only -q` → **15 collected**, exit 0. `tests/test_mcp_adoption.py` → **183 passed, 2
-skipped**, exit 0.
-
-The gate's own closing check, re-run by me **verbatim under `/bin/sh`, which is `dash` on this
-host** → **exit 0**:
-
-```sh
-python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent' >/dev/null 2>&1 \
-  && ! python3 -m pytest tests/test_cli_retirement_guard.py -q -k TestNoSecondPathReachesAnAgent > /tmp/g1b-guard-rv.log 2>&1 \
-  && grep -q '.agent-work/templates/' /tmp/g1b-guard-rv.log
-```
-
-**One nuance on criterion 4, reported not smoothed.** The two survivors *are* named — in docstring
-prose at lines 75–76, as documentation of why the walk rule already excludes them. They are named
-in no code path, and there is no exclusion construct to name them in. This is the same text `g1`
-shipped and `g1-review` accepted; I read the criterion as being about the exclusion mechanism, and
-by that reading the exception list is length **zero**.
-
-## Scope drift
-
-None. Nothing under `skills/`, `specs/`, `docs/`, `scripts/`, `episodes/`, `map/` or
-`.agent-work/templates/` was written, so no lane-D2, lane-E, lane-F, lane-H or Admiral fenced file
-was touched. Nothing was swept; the guard is still RED, as the gate requires. I edited nothing — my
-own artifacts are confined to `.agent-work/567-d1/g1b-review/` and `/tmp`.
-
----
-
-## The review's real work
-
-### 1. Attack the widened pattern — 22 strings, 8 missed, one is a finding
-
-I wrote the regrowth a future agent restoring this doctrine would actually write and ran all 22
-against all four patterns.
-
-**The finding** is the `resume` miss above.
-
-**Declared limits, correctly pinned, reported as observations.** The verb on the *next* line, and a
-code span wrapping the whole command. Both are caught in my probes only because they still spell
-`<engine>`; respelled as `<cli>` they walk through. That is not a defect — it is the exact residual
-the implementer names and pins as must-not-match, and it is what pays for the pattern's width.
-
-**Residuals worth recording, not findings.** Three placeholder dialects outside the five
-alternatives walk through:
-
-```
-Second path: [engine] claim --session-id <id>.
-Second path: __ENGINE__ claim --session-id <id>.
-Second path: $(engine) advance g1 --why 'gate closed'.
-```
-
-I measured the cost of adding all three: **zero** new addresses over 3098 texts, so they are free.
-I report them rather than demand them, and the distinction from `resume` is the whole point:
-**`resume` has an oracle** — `parse_args` says what the verb set is, so the omission is drift.
-**Placeholder dialects have none** — which dialects an author reaches for is a judgment call, and
-`test_mcp_adoption.py:1313` is the repo's own argument for treating those two situations
-differently.
-
-**Missed and correctly so:** a command introduced by a word with no stand-in at all (*"run the
-engine with claim --session-id `<id>`"*) hands an agent no program name; and a capitalized verb.
-
-**What the pattern gets right, measured not assumed:** a colon after the stand-in, double-space and
-tab separators, a global flag before the verb, all three `g1`-verified respellings, and the
-`<script>` / `{engine}` / `%ENGINE%` residuals. One caveat worth knowing: `<cli> --file
-<checklist.json> current` is caught only **incidentally**, via the second stand-in
-`<checklist.json>` sitting before the verb, not via the program name.
-
-### 2. The width, judged in both directions — both headline claims hold
-
-I re-derived the census with **my own walk**, written from the stated rules rather than by importing
-the guard:
-
-```
-CENSUS: 3098 texts across 216 files (101 skills/, 2 specs/, 113 overlay)
-placeholder    matches=  26  addresses=  23
-fallback       matches=  34  addresses=  34
-invocation     matches=  14  addresses=  12
-standin        matches=  26  addresses=  23
-```
-
-Identical to the guard's, figure for figure.
-
-**Claim 1 — "the widening adds zero new addresses": CONFIRMED, and in the stronger form the
-implementer actually asserted.**
-
-```
-g1 addresses (3 patterns union): 36
-standin addresses:               23
-NEW addresses the widening adds: 0 -> []
-standin addresses NOT reported by <engine> alone: []
-```
-
-**Claim 2 — "false-alarm rate on honest text: 0/3098": CONFIRMED.** No site the stand-in pattern
-reports is honest text; all 23 are genuine second-path sites already under the other patterns.
-
-**Width decision 1 — the stand-in need not spell `engine` or `cli`.** I built the narrow
-alternative and measured it: on this tree it reports the *identical* 26 matches at the *identical*
-23 addresses. So measurement cannot separate them, and the implementer is right that the choice had
-to rest on the argument. The argument is right, and I verified its consequence by probe:
-`<script> claim --session-id <id>` walks straight through the narrow form and is caught by the
-shipped one. Requiring the token to spell `engine` or `cli` would rebuild the same defect one level
-up — two substrings instead of one token.
-
-**Width decision 2 — horizontal whitespace, nothing between. The claimed `\s` false alarm exists
-exactly where claimed:**
-
-```
-\s separator     extra=1
-      skills/workbench/references/checklist-engine.md:92
-        ...--reason "..."] heartbeat --session-id <id> release --session-id <id> ``` Door equivalen...
-```
-
-`<id>` is a session id, `release` opens the next line. Exactly one extra match, exactly there. The
-trailing-backtick loosening adds **zero** on today's corpus, which matches the implementer's own
-careful phrasing — those three prose shapes are writable tomorrow, not present today. That is an
-honest claim, not an inflated one.
-
-**Judged against the bar at `test_mcp_adoption.py:1268`.** This pattern is *not* the class
-`TestCLIStaysAvailableNotDeprecated` deleted. That predicate fired on **5 of 6** planted honest
-affirmatives — it punished the authors doing the right thing, which is why it was deleted. This one
-fires on **zero** honest texts out of 3098, and every site it names is a real target. The width is
-earned.
-
-**One qualification on the durability argument — observation, not a blocker.** The docstring rests
-the safety case on Markdown code spans: *"a stand-in carrying its own closing backtick is a noun,
-not a program name."* I measured how far that carries. The corpus holds **40** sites where a
-stand-in is followed by horizontal whitespace and an ordinary English word, and **zero of the 40
-are code-spanned** — they are bare:
-
-```
-skills/commander/templates/COMMANDER_SPINE.template.json  ...--session-id <commander-session-id> on every mutating call...
-skills/explorer/templates/EXPLORER_SPINE.template.json    ...recover_crews.py <work-id> before EACH dispatch...
-skills/reviewer/templates/REVIEW_SURVEY.template.json     ...resolves the record path from <work-id> alone...
-skills/cartographer/templates/ARCHITECTURE_INDEX.template.md:23   ...`<struct:<id> or path>`...
-```
-
-**13 of the 40 sit inside JSON template imperatives**, where backticks are not the house habit and
-the code-span argument gives no protection at all. So the measured 0/3098 is real, but what holds
-it at zero is that none of those 40 following words happens to be one of the 17 verbs — several of
-which (`record`, `block`, `append`, `start`, `current`, `release`) are common English. The residual
-is accepted correctly. The docstring should just say the code-span argument covers **Markdown and
-not JSON leaves**, so a later author does not over-trust it.
-
-### 3. The overlay walk's scope rule and census
-
-**The scope rule, verified structurally rather than by reading intent.** The rglob is rooted at
-`ROOT / ".agent-work/templates"`, and `.agent-work/567-d1` is a **sibling** of that root, not a
-descendant — so this run's own launch order, notes, handoffs and crew results are never *reachable*,
-not reached-and-filtered. That is precisely why the exception list can stay at zero: there is
-nothing to name. I also checked for a symlink escape out of the overlay and found none.
-
-The measured value of that decision: a rule rooted at `.agent-work/` instead would have dragged in
-**9107** additional `.md`/`.json` files, every one a record of what was said. The new
-`test_the_overlay_rule_does_not_reach_a_live_runs_own_artifacts` assertion puts the rule in the
-assertion path, which is the right place for it.
-
-**No lane-D2 file enters the walk.** I re-ran the measurement myself over
-`.agent-work/templates/.baseline/constellation-workbench/`: **4 files, 20 texts, clean of all four
-patterns.** The widening creates no fenced-file dependency.
-
-**The census `g2` depends on — right, with one attribution correction.** 16 `<engine>` occurrences
-in the overlay: **confirmed exactly**. But they live across **six** files, not the ten both the
-handoff and the implementer result state:
-
-```
-2  .agent-work/templates/ADMIRAL_SPINE.template.json          (+ 2 in its .baseline mirror)
-4  .agent-work/templates/COMMANDER_SPINE.template.json        (+ 4 in its .baseline mirror)
-2  .agent-work/templates/EXPLORER_SPINE.template.json         (+ 2 in its .baseline mirror)
-```
-
-The **ten** is the count of overlay files carrying *any* sweep target — the other four are
-`gated-engine-SKILL.template.md`, `survey-SKILL.template.md` and their mirrors, which carry
-`CLI fallback` clauses and `checklist_engine.py` invocations but **no `<engine>` token at all**. So
-"16 tokens across 10 files" conflates two counts. This is the same unit slip the implementer
-correctly reported about its *own* handoff, recurring one level up in its own result — which is
-evidence for its "template problem, not author problem" reading.
-
-**The `g2`-actionable content is unharmed, and I confirm it:** ten overlay files need sweeping, the
-`.baseline/` mirrors double every target, and a sweep of the five visible copies alone leaves this
-guard red. Overlay `CLI fallback` matches: **18**, as claimed. All **113** overlay files are tracked
-in git (`git ls-files .agent-work/templates` → 113, not ignored) — the premise the whole extension
-rests on.
-
----
+**One handoff-shape note, not a defect in the work.** The rework was **committed** as `4df66479`
+before I was dispatched, so the handoff's `git diff HEAD -- tests/test_cli_retirement_guard.py` and
+*"expect exactly one modified file"* both return **empty** against a clean tree. I re-derived the
+review diff as `8ba1334c..HEAD` (426 insertions, 28 deletions, one file) and checked criterion 1 in
+that frame: the commit touches exactly one file under the reviewed source paths; everything else in
+it is `.agent-work/567-d1/**` run bookkeeping, outside the fenced set.
 
 ## Evidence verdict
 
-Every claimed side-effect reproduced independently.
+Every claimed side-effect reproduced independently, exit codes read.
 
 ```
---collect-only -q                                     → 15 collected, exit 0
--k 'not TestNoSecondPathReachesAnAgent'               → 11 passed, 4 deselected, exit 0
--k TestNoSecondPathReachesAnAgent                     → 4 failed, 11 deselected, exit 1
+--collect-only -q                                     → 19 collected, exit 0   (was 15; +4 is the tie class)
+-k 'not TestNoSecondPathReachesAnAgent'               → 15 passed, 4 deselected, exit 0
+-k TestNoSecondPathReachesAnAgent                     → 4 failed, 15 deselected, exit 1 (58 overlay lines)
 tests/test_mcp_adoption.py -q                         → 183 passed, 2 skipped, exit 0
-git diff --quiet HEAD -- tests/test_mcp_adoption.py   → exit 0 (untouched)
-gate closing check under /bin/sh (dash)               → exit 0
+the implementer's exact 4-suite command               → 684 passed, 2 skipped, 144 subtests, exit 0
+git diff --quiet 8ba1334c..HEAD -- test_mcp_adoption  → exit 0 (byte-identical)
+gate closing check, verbatim under /bin/sh (→ dash)   → exit 0
 ```
 
 Interpreter checked first per `CREW_CONTEXT.md` §Python Invocation: `py`, `python` **and** `python3`
-all report pytest 9.1.1. That section's 2026-08-10 measurement is stale — the third crew in this
-lane to find so.
+all report pytest 9.1.1. That section's 2026-08-10 measurement is stale — the fifth crew in this lane
+to measure it so.
 
-### The whole suite: I got 7, not 6 — and the 7th was mine
-
-My first `pytest tests/ -q` returned **7 failed, 3361 passed**, against the implementer's claimed 6.
-I traced the extra failure before reporting it as a discrepancy.
-
-`tests/test_gauge_chain_writer_to_trip.py::test_chain_ambiguous_binding_...` fails at its last line,
-`assert _snapshot_repo_agent_work() == before`. That helper snapshots the **size and mtime of every
-file under the repo's `.agent-work/`**. I was recording survey checks through the engine while the
-suite ran, so my own writes broke its containment snapshot.
-
-Re-run with no engine activity during it:
-
-```
-6 failed, 3362 passed, 5 skipped, 1219 subtests passed in 139.35s
-```
-
-**Exactly the implementer's figure.** The claim holds; the discrepancy was mine.
-
-### The two non-guard failures — re-proved, and one better than claimed
-
-Neither is in a file this diff touches, and neither imports the modified file, so neither can be
-caused by it. Beyond that:
-
-- `test_crew_launcher.py::ScratchDirResumeTests::…scratch_dir_unbound` — I proved the mechanism by
-  **controlled experiment** rather than by stashing. It fails under the ambient environment
-  (**exit 1**) and passes under `env -u CREW_SCRATCH_DIR` (**exit 0**), and `CREW_SCRATCH_DIR` **is**
-  set in my environment (`.agent-work/567-d1/crew-scratch/g1b-reviewer-attempt-1-74e194cfc852`). The
-  implementer's environment-leak diagnosis is exactly right, and the handoff's warning that it fails
-  "only when the suite runs inside a dispatched crew, which is what you are" is confirmed.
-- `test_code_map.py::MapTreeFreshnessTests::…matches_a_fresh_build` — fails in isolation too
-  (exit 1). Map freshness; no architecture map exists in this repo.
+**I did not run the whole suite,** per the addendum. `tests/test_gauge_chain_writer_to_trip.py:604`
+snapshots size and mtime of every file under `.agent-work/` and my own engine records would break its
+containment window — round 1 paid for that lesson and `g5-final` owns the whole-suite run in a clean
+detached worktree. I record this as a deliberate omission, not a gap I overlooked.
 
 ## Code/doc quality
 
-Fowler pass recorded at `.agent-work/567-d1/g1b-review/FOWLER_PASS.json`;
-`python scripts/verify_fowler_pass.py` → **exit 0**
-(`smells=12, flagged=['duplicated-code','primitive-obsession','shotgun-surgery'],
+Fowler pass at `.agent-work/567-d1/g1b-review/FOWLER_PASS-2.json`;
+`scripts/verify_fowler_pass.py` → **exit 0** (`smells=12,
+flagged=['duplicated-code','primitive-obsession','shotgun-surgery'],
 overridden=['feature-envy','data-clumps','speculative-generality','comments-as-deodorant']`).
 
-The record path moved off the template's fixed `.agent-work/<work-id>/FOWLER_PASS.json` convention,
-because that path already held the **`g1` review's** record and writing mine there would have
-destroyed that gate's audit evidence. Moved through the engine's sanctioned repair path —
-`amend --delta` with a single `retext-check` op, `--authority
-constellation/567-d1/lane-d1/commander-delegated`, reason recorded — never by hand-editing the
-survey.
+**Round 1's load-bearing `primitive-obsession` flag is the design root the rework actually fixed** —
+`_ENGINE_VERBS` was a pipe-joined *string*, which is precisely why the missing verb was invisible. It
+stays flagged, honestly downgraded: a sliver survives in the split-and-unescape recovery. Measured —
+the round-trip is exact for `.`, a space and `flag-candidate`'s hyphen, and breaks for exactly one
+character, a literal `|` in a verb name, where it **fails safe** (tie goes red naming the difference).
 
-**The load-bearing flag is `primitive-obsession`**, and it is the design root of the blocking
-finding rather than a separate cosmetic point: `_ENGINE_VERBS` is a **pipe-joined regex string**, not
-a collection. Because it is a string, nothing can compare it against the engine's real verb set —
-which is why the missing `resume` was invisible. A tuple joined with `|` at compile time would let
-one assertion pin set-equality against `scripts/checklist_engine.py`'s parser.
+`duplicated-code` and `shotgun-surgery` are round 1's flags, **not taken**, and now marginally worse:
+the `resume` story is told at four sites, and the measured figures are pinned to `8ba1334c` at four
+sites in a file that has moved to `4df66479` — accurate today, citing a revision the file is past.
+Neither is a blocker; both are the cost of this file's deliberate carry-the-reason-inline convention,
+which is also why `comments-as-deodorant` is overridden rather than flagged.
 
-`duplicated-code` and `shotgun-surgery` are one observation seen twice: the two-width-decisions
-argument and its figures are written out three times (module docstring, the `#:` block, the class
-docstring; `3098` appears 3×, `8ba1334c` 4×), so a re-measurement at a later revision touches about
-eight sites — against a file whose own instruction is *"Re-measure before you repeat one."*
-
-Four overrides, each with its standard logged. Notably, the g1 review's one flag — measured numbers
-bound only to *"when this guard was written"* — **was taken**: every figure is now pinned to
-`8ba1334c` and the docstring says so explicitly. That is the right response to a review observation.
+**Record path.** Written to `FOWLER_PASS-2.json`, moved off the template default through the engine's
+sanctioned `amend --delta` repair path (single `retext-check` op, `--authority
+constellation/567-d1/lane-d1/commander-delegated`, reason recorded), never by hand-editing the survey.
+The addendum redirected me to `.agent-work/567-d1/g1b-review/FOWLER_PASS.json` — but **that path
+already held this gate's round-1 record**, so following it literally would have destroyed the audit
+evidence of the BLOCK, for the same reason the addendum gave `review-2.json` its own filename. I
+confirmed round 1's record is intact after my write. Raised as `tc2`.
 
 ## Map impact verdict
 
-- **Evidence supports claimed change:** yes. The walk really widened from 103 files / 1007 texts to
-  216 files / 3098 texts; I reproduced both endpoints.
-- **Constraints not violated:** yes. "The corpus is walked, never listed" holds (no exclusion
-  construct exists), and "any guard that loops must assert what it looped over" holds via four floors
-  plus a census in every message. The overlay floor is well calibrated — the overlay is 57 visible +
-  56 `.baseline/` mirrors, so losing **either** half trips `>= 60`.
-- **Notes match the diff:** yes. The inbound dependency really did widen from two imported names to
-  three (`tests/test_cli_retirement_guard.py:148-152`), and the claimed failure mode is accurate — a
-  rename kills the guard at **collection**, which pytest reports as an error, never as a pass.
-- **Decision candidates surfaced:** yes. The archetype-table cell was decided prose-side and pinned
-  in `PROSE_ONLY`, closing the "hole in the pin" the `g1` review raised, and routed to the Commander
-  as a `g2` sweep target rather than settled by the crew. Correct routing.
-- **Durable context routed:** yes, plus two triage candidates from this review.
+- **Evidence supports claimed change:** yes. The verb set really is the engine's, verified against two
+  oracles and by mutation.
+- **Constraints not violated:** yes. *"The corpus is walked, never listed"* holds — no exclusion
+  construct exists. *"Any guard that loops must assert what it looped over"* holds via four floors plus
+  a census in every message.
+- **Notes match the diff:** yes. The inbound dependency really widened from three imported names to
+  four, and the claimed failure mode is accurate — a rename kills the guard at **collection**, which
+  pytest reports as an error, never as a pass. I verified that collection is otherwise clean.
+- **Decision candidates surfaced:** yes. The placeholder-dialect residual was routed to the Commander
+  as a ruling rather than settled by the crew, and the ruling holds up under test.
+- **Durable context routed:** yes, plus three triage candidates from this review.
 
 ## Reconciliation check
 
-No architecture map exists (`map_orient` → `DEGRADED-UNPARSEABLE`), so there is no structural
-baseline to diverge from. Three items for `g2` to carry:
+No architecture map exists (`map_orient` → `DEGRADED-UNPARSEABLE`). **The census `g2` depends on is
+now correct and in a stated unit** — the slip that ran through three tiers is fixed. Every figure
+reproduces against my own walk:
 
-1. The overlay sweep is **10 files**, not 5 — the `.baseline/` mirrors double every target.
-2. Both `<engine>` tokens on `COMMANDER_SPINE.template.json`'s `archive` imperative, in all four
-   copies of that file.
-3. `skills/write-a-skill/SKILL.md:20` is a real sweep target the guard deliberately will not flag.
+| target | corpus | overlay | `skills/` | `specs/` |
+|---|---|---|---|---|
+| `<engine>` | 26 occ / 11 files | **16 occ / 6 files** | 10 occ / 5 files | 0 |
+| `CLI fallback` | 34 occ / 21 files | 18 occ / 10 files | 16 occ / 11 files | 0 |
 
-The guard walking `skills/workbench/**` is known and expected per handoff constraint 4, and is not
-raised as a defect.
+That reconciles the 10-vs-6 disagreement between the handoff and round 1: **six** files carry
+`<engine>`, **ten** carry a sweep target of some kind, and the docstring now states both correctly.
+
+**What `g2` must sweep for `<engine>`, enumerated** — 16 occurrences in 6 files, every one a JSON
+`.tasks.*.imperative` leaf:
+
+```
+ADMIRAL_SPINE.template.json     init 1, closeout 1     (+ the same 2 in .baseline/)
+COMMANDER_SPINE.template.json   init 1, plan 1, archive 2   (+ the same 4 in .baseline/)
+EXPLORER_SPINE.template.json    init 1, route 1        (+ the same 2 in .baseline/)
+```
+
+`COMMANDER`'s `archive` imperative carries **two** in each copy, so a per-line sweep fixes 6 things
+and leaves 10 — which is the exact point the docstring's census-unit paragraph makes. A sweep of the
+three visible copies alone leaves this guard red on the `.baseline/` mirrors.
 
 ## Blockers
 
-1. **`_ENGINE_VERBS` omits the engine verb `resume`**, so a stood-in-for command line using it
-   passes all four patterns. Fix: add `resume` to `tests/test_cli_retirement_guard.py:229-232` and
-   pin one fixture in `STAND_IN_COMMANDS` (e.g. `"Second path: <cli> resume g1 --reason
-   'unblocked'."`). Measured cost: zero new addresses on either pattern over 3098 texts.
+**None.** The round-1 blocker is closed at the class, verified by mutation rather than by reading the
+diff.
 
 ## Out-of-scope observations
 
-Recorded as triage candidates on the survey (`tc1`, `tc2`).
+Recorded as triage candidates on the survey (`tc1`, `tc2`, `tc3`).
 
-1. **The whole-suite evidence command is unsafe to run concurrently with engine drive.**
-   `tests/test_gauge_chain_writer_to_trip.py:604` asserts `_snapshot_repo_agent_work() == before`,
-   comparing size+mtime of **every** file under the repo's `.agent-work/`. Any crew that runs
-   `pytest tests/ -q` as evidence while recording its own survey sees a failure it did not cause.
-   Reproduced both ways here: 7 failed with concurrent records, 6 when quiet. Either fence the
-   snapshot to the fixture's own subtree, or state the quiescence requirement where crews are told to
-   run the suite. **This will bite every future crew that follows the standard evidence recipe.**
-2. **Derive `_ENGINE_VERBS` from the engine's own argparse instead of hand-listing it.** The parser
-   already enumerates all 18 subcommands, so the guard could assert set-equality against that oracle
-   and never drift again — which is what `CREW_CONTEXT.md`'s "define a guard by its consumer's
-   behaviour" actually asks for. The one-token `resume` addition is the fix for *this* gate; this is
-   the durable one, and it is a design call above crew latitude because it adds a `tests/` → `scripts/`
-   import.
-3. **The docstring's code-span safety argument should be scoped to Markdown.** It gives no protection
-   inside JSON leaves, where 13 of the corpus's 40 bare `<placeholder> word` sites live. One clause,
-   so a later author does not over-trust it.
+1. **`tc1` — the `[ \t]` vs "horizontal whitespace" separator gap.** `[^\S\r\n]` closes it at zero
+   measured cost. Prospective, not live.
+2. **`tc2` — the Fowler record path collides across *rounds*, not just gates.** Round 1 raised the
+   per-work-id default colliding across gates; the fix handed down (write to the gate directory) then
+   collides across rework rounds of the same gate. Both defaults silently destroy prior audit
+   evidence. Defaulting the record to the survey file's own stem would be collision-free by
+   construction.
+3. **`tc3` — the docstring's common-English verb list omits `resume`, `advance`, `amend`** — and
+   `resume` is the verb the rework just added.
+4. Round 1's three triage candidates stand unchanged.
 
 ---
 
 ## Workflow Feedback
 
-**What helped most.** Two things, both structural. First, the handoff named the *bar* rather than the
-answer — `tests/test_mcp_adoption.py:1268` with a line number, and an instruction to read it before
-judging width. That turned "is this too wide?" from taste into a comparison I could run: 5-of-6
-honest affirmatives fired the deleted predicate, 0-of-3098 fire this one. Second, it told me to
-re-derive every quoted figure and named the command that produced each, so when my whole-suite count
-came out at 7 instead of 6 I had a traceable place to look instead of a bare contradiction. The
-instruction "a pasted summary is a pointer to evidence, never the evidence" is what made me chase
-that 7th failure to its assertion rather than report it as a discrepancy — and it was mine.
+**What helped most — and it is a specific, repeatable thing.** The addendum told me what **not** to
+re-derive. *"Your predecessor already re-derived the census and confirmed both headline claims. Do not
+spend your budget re-deriving those."* A re-review that redoes the first review is a second first
+review, and the second look is worth its cost only if it looks somewhere new. Naming the five things
+that were actually open — close the blocker at the class, price the derivation, check for regression,
+check import safety, attack once more — turned my whole budget into mutation testing and collection
+probes, which is where the answer was. **Every rework handoff should carry a "do not re-derive" list.**
 
-**Handoff gaps, two, both small.**
+Second: it handed me the *ruling* on placeholder dialects along with the argument behind it and told
+me to test the line rather than restate the misses. That is a much better instruction than "review
+this", and it is why I went looking for a placeholder oracle in `generate_spine.py` instead of
+re-listing three strings my predecessor already listed.
 
-1. **The overlay census is stated as "16 tokens across 10 files", and those are two different
-   counts.** 16 `<engine>` tokens live in 6 files; 10 files carry a sweep target of *some* kind. The
-   handoff inherited this from the implementer result, which was itself reporting a unit slip in
-   *its* handoff. That is the same defect at three consecutive tiers, which is strong evidence for
-   the implementer's reading that it is a template problem rather than an author problem. Naming the
-   unit — "N occurrences of X across M files containing X" — would end it.
-2. **The Fowler record path collides across gates.** The survey template hard-codes
-   `.agent-work/<work-id>/FOWLER_PASS.json`, which is per-*work-id*, not per-*gate*. The `g1` review's
-   record was already sitting there. The template does sanction a repair path, and I used it, but a
-   second reviewer in the same work-id hits this every time and the default outcome is silently
-   destroying the previous gate's audit evidence. Defaulting the path to the survey's own directory
-   would remove the trap.
+**Handoff gaps, three, all small.**
 
-**Instructions I improvised around — the fourth crew in this lane to report it.** The reviewer skill
-opens: *"A dispatched crew's spine is bound for you before you start (`SPINE_FILE`/`SPINE_SESSION` in
-your environment): `spine_status` is your first call, not survey-building."* Mine is not bound — my
-environment carries only `SPINE_PARENT`. I took the skill's other branch: instantiated
-`REVIEW_SURVEY.template.json` from the project overlay at the handoff's stated path, claimed the
-lease as my first command, and drove it through `scripts/checklist_engine.py`. The `g1` implementer,
-the `g1` reviewer and the `g1b` implementer each reported this independently; with mine that is four
-crews across two gates and both roles. **For this dispatch shape the skill's stated norm is the
-exception, and the skill says the opposite.** The deeper of the two fixes already proposed — have
-`run_crew.py` bind the crew's own plan/survey into `SPINE_FILE` — would make the opening sentence
-true instead of needing a caveat, and would also fix the Stop-hook misfire the other three crews
-recorded.
+1. **The diff was committed before I was dispatched.** The handoff's inspection recipe
+   (`git diff HEAD -- tests/…`, "expect exactly one modified file") returns empty against a clean
+   tree, and criterion 1 as written is unfalsifiable in that state. I re-derived the frame as
+   `8ba1334c..HEAD`, but a reviewer who trusted the recipe would have concluded "no diff" or, worse,
+   "criterion met" from an empty result. **A handoff should name the diff as a revision range, not as
+   a working-tree state**, since whether the implementer's work is committed is not something the
+   reviewer controls.
+2. **The Fowler redirect pointed at an occupied path** (see `tc2`). The addendum was right that the
+   template default collides across gates, and it gave `review-2.json` its own name for exactly this
+   reason — but then sent the Fowler record to a path round 1 had already written. I applied the
+   addendum's own logic instead of its literal instruction and used `-2`, through the engine's repair
+   path, and I am flagging the deviation rather than burying it.
+3. **The result artifact has the same collision** and I could not use the same escape, because the
+   named path is what the dispatch verifies. I overwrote round 1's `BLOCK` at
+   `g1b-reviewer-result.md`. It is preserved in git at `4df66479` and I have said so at the top of
+   this document, but the safe artifact would have been `g1b-reviewer-result-2.md` with the dispatch
+   verifying that name.
+
+**Instructions I improvised around — the sixth crew in this lane.** The reviewer skill opens: *"A
+dispatched crew's spine is bound for you before you start (`SPINE_FILE`/`SPINE_SESSION` in your
+environment): `spine_status` is your first call, not survey-building."* Mine is not bound — my
+environment carries `SPINE_PARENT` and `CREW_SCRATCH_DIR` only. I took the skill's other branch:
+instantiated `REVIEW_SURVEY.template.json` from the project overlay at the handoff's stated path,
+claimed the lease as my first command, drove twelve checks through `scripts/checklist_engine.py`.
+Six crews across three gates and both roles have now reported this independently. **For this dispatch
+shape the skill's stated norm is the exception, and the skill says the opposite.** The deeper fix
+already proposed — have `run_crew.py` bind the crew's own survey into `SPINE_FILE` — is the one that
+makes the sentence true rather than needing a caveat.
+
+One smaller misfit: the reviewer skill says a survey is driven with `advance`, but the engine
+**refuses** `advance` on a survey checklist (`REFUSED: advance is for gated checklists; use record`).
+`record` is the whole transition. The skill's "integrate it, `advance` that check" wording sends a
+first-time reviewer at a verb the engine will not accept.
 
 **My own mistakes, two.**
 
-1. **I ran the whole suite while driving my own survey, and nearly reported the result as a
-   discrepancy in someone else's work.** The 7-vs-6 gap was caused by my engine records mutating
-   `.agent-work/` inside a test's containment window. I caught it only because I went to the failing
-   assertion instead of to the implementer's claim. Had I reported "7, not 6" as a finding, I would
-   have blocked a gate on my own side effect — the exact failure this role exists to catch in others.
-   The lesson is narrow and general: **when your measurement disagrees with a claim, suspect your
-   measurement's side effects before you suspect the claim.**
-2. **My first structural check for "is `.agent-work/567-d1` reachable from the overlay rglob?" was
-   worthless.** I searched for the string `567-d1` in the reachable paths — and the *worktree
-   directory itself* is named `567-d1-doctrine-sweep-guard`, so every one of the 113 overlay files
-   matched and the check appeared to say the opposite of the truth. I noticed because the answer was
-   absurd, not because the check told me. A substring test against a path that contains the work-id
-   in its own root cannot answer a containment question; the ancestry test can, and did.
+1. **I mislabelled my own red-proof output and nearly reported a non-defect.** My mutation harness
+   printed `GREEN (no assertion) <-- would be a hole` for the control-count test under the mutation
+   where the *engine* gains a verb — but the guard's own set is unchanged there, so green is the
+   correct answer and the tie test is what catches that direction. My summary line then computed
+   "every mutation reached a failing state: **False**". The label was mine, not the guard's. I caught
+   it because the claim was too strong for what I had actually mutated, and I then wrote the probe
+   that tests what the control count is genuinely for — both sides shrinking together — which is the
+   check that produced real evidence. **A mutation harness needs its expected result stated per
+   mutation, not one blanket "everything must go red".**
+2. **My first pass at the separator gap almost became a BLOCK on shape rather than substance.** It
+   looks exactly like the finding that produced this gate — stated invariant broader than the
+   implementation — and I had the free fix measured before I asked whether it was the same *kind* of
+   defect. It is not: `resume` had an oracle and NBSP does not, which is the very distinction this
+   gate already ruled on and which I had read an hour earlier. **Pattern-matching on the shape of the
+   last finding is how a re-review manufactures a second one.**
 
-**What would have made this easier.** Default the Fowler record to the survey's own directory, and
-state the census unit. Everything else in this handoff worked.
+**What would have made this easier.** Name the diff as a revision range. And give the Fowler record,
+the survey and the result artifact one collision-free naming rule instead of three ad-hoc redirects —
+the survey's own stem would do for all three.
 
-## Stop-hook refusal — the fourth crew in this lane, across two gates and both roles
+## Stop-hook refusal — the sixth crew in this lane, three gates, both roles
 
-After my survey consolidated, my deliverable was written and I released my lease, the Stop hook
-fired **twice** with `SPINE MID-FLIGHT: gate execute is still open` and handed me the **Commander's**
-next imperative: reload `constellation-commander`, rewrite `STATE_NOTE.md`, drive `execute.json` gate
-by gate, dispatch crews through `run_crew.py`, run `recover_crews.py`, write `REPLAN_INPUT.json`.
+After my survey consolidated `APPROVE`, my deliverable was written and I released my lease, the Stop
+hook fired **twice** with `SPINE MID-FLIGHT: gate execute is still open` and handed me the
+**Commander's** next imperative: reload `constellation-commander`, rewrite `STATE_NOTE.md`, drive
+`execute.json` gate by gate, dispatch crews through `run_crew.py`, run `recover_crews.py`, write
+`REPLAN_INPUT.json`.
 
 **I did not comply.** Verified at the source before refusing, not inferred:
 
 | fact | measured |
 |---|---|
 | my environment | `SPINE_PARENT` only — `SPINE_FILE` and `SPINE_SESSION` both **UNSET** |
-| my registration in `crew-runs.json` | `spine: null`, role `reviewer`, gate `g1b`, parent `constellation/567-d1/lane-d1/commander-delegated` |
-| owner of the spine the hook quotes | `.agent-work/567-d1/spine.json` → `engine_session.session_id = constellation/567-d1/lane-d1/commander-delegated`, **status `active`**, claimed 17:20:59, heartbeat 17:59:18 — before this run started, and not me |
-| my own survey | `LEASE released`, `DONE: no open items`, deliverable written (471 lines, verdict BLOCK) |
+| my registration in `crew-runs.json` | gate `g1b`, role `reviewer`, attempt 2, **`spine: null`**, `session_id: null`, parent `constellation/567-d1/lane-d1/commander-delegated`, status `running` |
+| owner of the spine the hook resolves | `.agent-work/567-d1/spine.json` → `constellation/567-d1/lane-d1/commander-delegated`, status **`active`**, claimed 17:20:59 — before this run started, and not me |
+| what `execute.json` is doing | owner `commander-567-d1-execute`, status **`active`**, and its in-progress step is **`g1b-review`** — the dispatch of *this crew* |
+| my own survey | `LEASE released`, `DONE: no open items`, 12/12 checks pass, deliverable written |
 
-The hook resolves the project spine from `CLAUDE_PROJECT_DIR`, so for a `spine: null` crew it reads
-the **parent's** file and cannot tell that the reader is not its owner. Complying would mean passing
-the Commander's session id on mutating verbs against a spine whose owner is, at that moment, blocked
-waiting for this foreground process to exit — impersonation, not delegation. This is
-`CREW_CONTEXT.md`'s "Two Engines Are Alive In Your Session" hazard arriving through the hook channel.
+Complying would mean passing the Commander's session id on mutating verbs against a spine whose
+owner is, at that moment, alive and blocked waiting for this foreground process to exit —
+impersonation, not delegation. It would also mean driving the very gate whose in-progress step is my
+own dispatch, and dispatching the reviewer of my own review. This is `CREW_CONTEXT.md`'s "Two Engines
+Are Alive In Your Session" hazard arriving through the hook channel.
 
 **Its named escape hatches do not fit either.** The hook offers `spine_halt block` or a
 human-authority `waive`. Both **write to the parent's spine**, so the sanctioned "honest stop" is
-itself the destructive act. `block` is the exit for a gate of *mine*, and my survey has none open.
+itself the destructive act. `block` is the exit for a gate of *mine*, and my survey has none open —
+it is consolidated and released.
 
-**Reproduction count is now four crews, two gates, both roles** — the `g1` implementer, the `g1`
-reviewer, the `g1b` implementer and this crew, each hitting it independently and each refusing. That
-is well past anecdote. The two candidate fixes already proposed still look right, and the second is
-the real one:
+**Reproduction count is now six crews, three gates, both roles** — the `g1` implementer, the `g1`
+reviewer, the `g1b` implementer (attempts 1 and 3), the `g1b` reviewer round 1, and this crew, each
+hitting it independently and each refusing. That is well past anecdote. The two candidate fixes
+already proposed still look right, and the second is the real one:
 
 1. Skip the hook when `SPINE_FILE` is unset and `SPINE_PARENT` is set — the exact signature of a
    `spine: null` crew, and one this run confirms is precisely detectable.
 2. Have `run_crew.py` bind the crew's own plan/survey into `SPINE_FILE`. This is the deeper fix, and
-   it also makes both crew skills' "your spine is already bound before you start" opening **true**
-   for this dispatch shape instead of a sentence every dispatched crew works around — the same
-   misfit all four crews reported separately in their workflow feedback.
+   it also makes both crew skills' *"your spine is already bound before you start"* opening **true**
+   for this dispatch shape instead of a sentence every dispatched crew works around — the same misfit
+   all six crews reported separately in their workflow feedback.
 
 The lease-ownership check belongs in the hook, not in more prose telling crews to be careful.
 

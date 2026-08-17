@@ -298,7 +298,8 @@
           "id": "p1",
           "statement": "g1-integrate closed: the guard exists and FAILS on the unswept corpus",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g1b-integrate closed; the guard is authored, widened, reviewed APPROVE after a correct BLOCK and rework, and RED for the right reason. It is the specification this gate is written against."
         }
       ],
       "postconditions": [
@@ -353,7 +354,7 @@
           "guard GREEN; the specificity proof's RED-then-GREEN at a reworded site; full suite tally with the ^FAILED grep"
         ]
       },
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -1014,7 +1015,8 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1b-review-2"
         }
       ],
       "constraints": [
@@ -1022,7 +1024,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {
         "superseded_by_reopen": "g1b-implement"
       },
@@ -1043,6 +1045,15 @@
             "reason": "BLOCK upheld. The reviewer proved against the engine itself -- not against a document -- that _ENGINE_VERBS enumerates 17 verbs where checklist_engine.py's argparse defines 18: 'resume' is missing, so 'Second path: <cli> resume g1 --reason ...' passes all four patterns clean. That is exactly the class this gate was opened to close, it is inside no declared limit, and the fix costs zero new addresses over 3098 texts. It also breaks a documented repo standard verbatim (CREW_CONTEXT.md: 'define a guard by its consumer's behaviour, not by a hand-maintained list ... the gap is silent') -- and the list had already drifted on day one. Reworking rather than overriding, because shipping a widening whose stated invariant is broader than its implementation repeats the exact shape this gate exists to remove. And the durable fix is in reach and is NOT above latitude as the reviewer supposed: tests/test_mcp_adoption.py already has _engine_verbs(), which reads the engine's own argparse and is never hand-typed, so the guard can import it the same way it already imports INSTRUCTION_FILES and _instruction_texts. No new import direction, no new machinery -- the same generalize-an-in-tree-precedent move the whole guard is built on.",
             "ts": "2026-08-17T19:13:22.457518+00:00"
           }
+        },
+        {
+          "id": "e-g1b-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -1056,7 +1067,8 @@
           "id": "p1",
           "statement": "g1b-review returned a verdict",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g1b-review returned APPROVE at round 2, after a correct BLOCK at round 1; both survey rounds preserved (review.json, review-2.json) and round 1's result artifact preserved in git at 4df66479."
         }
       ],
       "postconditions": [
@@ -1070,7 +1082,8 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1b-integrate-1"
         },
         {
           "id": "c2",
@@ -1079,17 +1092,39 @@
             "kind": "command",
             "command": "python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent' >/dev/null 2>&1 && ! python3 -m pytest tests/test_cli_retirement_guard.py -q -k TestNoSecondPathReachesAnAgent > /tmp/g1b-guard.log 2>&1 && grep -q '.agent-work/templates/' /tmp/g1b-guard.log"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1b-integrate-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1b-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1b-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent' >/dev/null 2>&1 && ! python3 -m pytest tests/test_cli_retirement_guard.py -q -k TestNoSecondPathReachesAnAgent > /tmp/g1b-guard.log 2>&1 && grep -q '.agent-work/templates/' /tmp/g1b-guard.log",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -1098,7 +1133,7 @@
     "session_id": "commander-567-d1-execute",
     "status": "active",
     "claimed_at": "2026-08-17T18:02:30.383334+00:00",
-    "last_heartbeat": "2026-08-17T19:36:16.858902+00:00",
+    "last_heartbeat": "2026-08-17T19:58:37.752703+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -1160,6 +1195,20 @@
       "why": "The blocker is closed at the class, not the instance. _ENGINE_VERBS is now built from tests/test_mcp_adoption._engine_verbs(), the repo's existing oracle, which hands checklist_engine.parse_args a bogus verb and reads the choices argparse itself prints -- so the verb set IS the engine's registry rather than a copy of it, and re.escape guards a future verb carrying a regex metacharacter. Verified: 18 verbs, set-equal to the engine, and the reviewer's 'Second path: <cli> resume g1 --reason' line is now caught. The crew went one step past the order in a way worth keeping: the tie test recovers the verb set from the COMPILED alternation rather than from whatever produced it, so it still holds if a later author swaps the derivation for a literal that happens to agree today -- the test pins what the patterns actually apply, not what the source claims. 15 predicate/floor tests pass, 4 corpus tests fail naming 58 overlay lines, gate check exits 0 under dash, adoption suite byte-identical and green.",
       "mechanical": false,
       "ts": "2026-08-17T19:36:16.727885+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g1b-review",
+      "why": "APPROVE, 12 checks all pass, zero findings, and the re-review is stronger than the round it replaces. It refused to verify the derivation by calling the same helper the guard calls -- that would be a tautology -- and read the engine two independent ways instead (the --help choices block and argparse's own invalid-choice error), getting 18 both times and set-equal to the alternation recovered from the compiled pattern. It then red-proofed by MUTATION, four ways, each red and each naming the difference: engine gains a verb, guard loses resume (the exact historical drift, which visibly reopens the evasion route), derivation swapped for a literal that agrees today and then the engine moves, and the pattern degenerated to any-word-after-a-stand-in. It also found the one case the tie cannot catch -- both sides shrinking together off a broken oracle -- and showed the control count is what catches it. Cost re-measured against the right counterfactual (the alternation rebuilt minus resume, so the number prices the verb and not the derivation): delta zero on both patterns, union 36 to 36.",
+      "mechanical": false,
+      "ts": "2026-08-17T19:58:03.149819+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g1b-integrate",
+      "why": "Integrated. Gate c2 re-run in my own hands under dash: exit 0. The guard is now placeholder-agnostic with its verb set tied to the engine's own registry, walks the tracked overlay, and remains RED for the right reason. Three triage candidates staged from this gate plus one escalation: the g1b re-reviewer finished its work and was then refused permission to end its turn by the Stop hook, which resolved a spine from disk with SPINE_FILE unset and handed it THIS Commander's spine -- whose in-progress step was the crew's own dispatch. It refused, calling it impersonation rather than delegation, and it was right. The hook's sanctioned escapes -- block and waive -- both write to the parent's spine, so the prescribed honest stop is itself the destructive act. Sixth reproduction in this lane across three gates and both roles; the lane-H precedent the launch order warned about is not one agent's accident, it is what the hook instructs. Staged with priority; hook code and run_crew.py are outside this lane.",
+      "mechanical": false,
+      "ts": "2026-08-17T19:58:29.317169+00:00"
     }
   ],
   "amendments": [

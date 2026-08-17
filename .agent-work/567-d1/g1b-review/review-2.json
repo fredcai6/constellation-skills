@@ -1,0 +1,284 @@
+{
+  "work_id": "567-d1",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r7-oracle",
+    "r8-cost",
+    "r9-regression",
+    "r10-import",
+    "r11-attack"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded: reviewer skill doctrine, docs/agents/CREW_CONTEXT.md (Verification Discipline + Python Invocation), the g1b reviewer BLOCK result, the g1b implementer rework result, the reworked handoff, and the full 719-line guard at 4df66479. Interpreter checked first: py/python/python3 ALL report pytest 9.1.1 (CREW_CONTEXT's 2026-08-10 note that python3 lacks pytest is stale -- 4th crew in this lane to measure it so). Note the rework is COMMITTED as 4df66479, not a working-tree diff: git status over skills/specs/docs/scripts/episodes/tests/map/.agent-work/templates is EMPTY, so the review diff is 8ba1334c..HEAD (426 insertions, 28 deletions, one file).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The rework did all four things asked and nothing else. (a) _ENGINE_VERBS derived from _engine_verbs(), sorted, re.escaped per verb -- verified the hyphen in flag-candidate survives compile/match/unescape. (b) TestTheVerbSetIsTheEnginesOwn pins the tie in the assertion path and recovers the verb set from the COMPILED ALTERNATION, going past what was asked; I red-proofed that this durability property is real, not merely asserted. (c) The blocker line pinned as STAND_IN_COMMANDS[9]; it MATCHES now and MISSES under a 17-verb counterfactual. (d) Docstring's code-span argument scoped to Markdown and priced, census unit stated. Close criteria 1-5 met: only tests/test_cli_retirement_guard.py under the reviewed paths (everything else in commit 4df66479 is .agent-work/567-d1/** run bookkeeping, outside the fenced source set); test_mcp_adoption.py byte-identical; predicate suite passes 15; guard fails 4 naming 58 overlay lines; exception list zero; floors cover the new surface. Criteria 9-12 met as measured above. The guard is still RED and nothing was swept, as the gate requires. ONE handoff-shape note, not a defect in the work: the rework was COMMITTED as 4df66479 before I was dispatched, so the handoff's 'git diff HEAD -- tests/...' and 'expect exactly one modified file' instructions both yield EMPTY against a clean tree. I re-derived the review diff as 8ba1334c..HEAD and checked criterion 1 in that frame instead.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No scope drift, in either direction. The change touches exactly one source file, tests/test_cli_retirement_guard.py. Nothing under skills/, specs/, docs/, scripts/, episodes/, map/ or .agent-work/templates/ was written, so no lane-D2, lane-E, lane-F, lane-H or Admiral fenced file was touched; tests/test_mcp_adoption.py is imported and byte-identical. Nothing was swept -- the guard is still RED, which is what this gate requires. The guard walking skills/workbench/** is known and expected per handoff constraint 4 and is NOT raised as a defect. I edited nothing: my own artifacts are confined to .agent-work/567-d1/g1b-review/ (review-2.json, its journal, my Fowler record) and $CREW_SCRATCH_DIR, plus /tmp logs. I did not ask for the guard to be made green and did not propose an exception list.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "EVERY claimed side-effect reproduced by me, exit codes read, none accepted from the report. --collect-only -q -> 19 collected exit 0 (was 15 pre-rework: +4 is TestTheVerbSetIsTheEnginesOwn). -k 'not TestNoSecondPathReachesAnAgent' -> 15 passed, 4 deselected, exit 0. -k TestNoSecondPathReachesAnAgent -> 4 failed, 15 deselected, exit 1, with 58 output lines addressing .agent-work/templates/ (the implementer's figure exactly). tests/test_mcp_adoption.py -> 183 passed, 2 skipped, exit 0. The implementer's exact 4-suite command -> 684 passed, 2 skipped, 4 deselected, 144 subtests, exit 0 -- its 684 figure verbatim. git diff --quiet 8ba1334c..HEAD -- tests/test_mcp_adoption.py -> exit 0, byte-identical across the whole g1b work. The gate's own closing check run VERBATIM through /bin/sh, which is dash on this host (verified: /bin/sh -> dash) -> exit 0, and it is POSIX-clean with no pipefail. Per the addendum I did NOT run the whole suite: tests/test_gauge_chain_writer_to_trip.py:604 snapshots size+mtime of every file under .agent-work/ and my own engine records would break its containment window -- that is my predecessor's paid-for lesson and g5-final owns the whole-suite run in a clean detached worktree.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All five handoff constraints on me honoured, and the two repo standards this gate turns on are met. Constraint 1 (re-run everything, read the exit code): every figure in my result is mine; I ran the predicate suite, the guard suite, the adoption suite, the 4-suite combination, the collection probes and the closing check myself and read each exit code -- no pasted summary was accepted as evidence. Constraint 2 (do not edit): nothing edited. Constraint 3: no request for green, no exception list proposed. Constraint 4: skills/workbench/** walk not raised as a defect. Constraint 5 (POSIX shell): every shell line I ran and every line I hand back is dash-clean -- no 'set -o pipefail'; I verified /bin/sh is dash on this host and ran the gate's closing check through it, exit 0. On the repo standards: CREW_CONTEXT 'define a guard by its consumer's behaviour, not by a hand-maintained list' is now SATISFIED where it was broken -- that was the blocker and the derivation closes it. 'A check that cannot fail is indistinguishable from one that passed' is satisfied by construction and by my mutation testing: I drove all four tie assertions plus the negative control to a failing state. 'Any guard that loops must assert what it looped over' holds via four floors plus a census in every failure message. Measured against the bar at test_mcp_adoption.py:1268, the widened pattern fires on 0 of 3098 honest texts where the DELETED predicate fired on 5 of 6 planted honest affirmatives -- the width is still earned after the verb arm grew by one.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture map exists (map_orient -> DEGRADED-UNPARSEABLE), so there is no structural baseline to diverge from; the reconciliation work here is the census g2 depends on, and the unit slip that has dogged three tiers is now FIXED and correct. Every g2-critical figure in the docstring reproduces against my own walk, exactly: <engine> 26 occ / 11 files corpus, of which the overlay carries 16 occ / 6 files (docstring says 16 of 26 across 6 of 11 -- OK); CLI fallback 34 occ / 21 files corpus, overlay 18 occ / 10 files (docstring says 18 of 34 across 10 of 21 -- OK); specs/ carries none of the four. That reconciles the 10-vs-6 disagreement between the handoff and my predecessor: SIX files carry <engine>, TEN carry a sweep target of some kind, and the docstring now states both in the stated unit rather than conflating them. The code-span figures also reproduce: 40 occurrences across 25 files, 27 in JSON leaves, 31 bare / 9 code-spanned. Only 'the 13 distinct excerpts' differs (I measure 10), and that is my excerpt-normalization window, not a defect -- no load-bearing figure depends on it. g2's actual sweep target, enumerated: 3 visible spine templates (ADMIRAL 2, COMMANDER 4, EXPLORER 2) plus their 3 .baseline mirrors = 16 occurrences in 6 files, all in JSON .tasks.*.imperative leaves; COMMANDER's archive imperative carries TWO in each of its copies, so a per-line sweep fixes 6 things and leaves 10 -- which is exactly the point the docstring's census-unit paragraph makes.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/567-d1/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/567-d1/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from 567-d1 alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/567-d1/g1b-review/FOWLER_PASS-2.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded at .agent-work/567-d1/g1b-review/FOWLER_PASS-2.json; scripts/verify_fowler_pass.py -> exit 0 (smells=12, flagged=['duplicated-code','primitive-obsession','shotgun-surgery'], overridden=['feature-envy','data-clumps','speculative-generality','comments-as-deodorant']). The headline: round 1's load-bearing primitive-obsession flag -- _ENGINE_VERBS was a pipe-joined STRING, which is WHY the missing verb was invisible -- is the design root the rework actually fixed, not worked around. It is still flagged, honestly downgraded: a sliver survives in the split-and-unescape recovery, which I measured as exact for '.', space and flag-candidate's hyphen and broken for exactly one character, a literal '|' in a verb name, where it FAILS SAFE (tie goes red naming the difference). duplicated-code and shotgun-surgery are round 1's flags, NOT taken and now slightly worse: the resume story is told four times and the measured figures are pinned to 8ba1334c at four sites on a file that has moved to 4df66479. All four overrides carry the documented standard that wins plus why it subordinates the smell. Record path moved to FOWLER_PASS-2.json through the engine's amend --delta repair path (single retext-check op, authority constellation/567-d1/lane-d1/commander-delegated) rather than by hand-editing the survey: the addendum's redirect target already held THIS gate's round-1 record, so writing it would have destroyed the audit evidence of the BLOCK. Confirmed round 1's record is intact after my write.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/567-d1/g1b-review/FOWLER_PASS-2.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r7-oracle": {
+      "id": "r7-oracle",
+      "title": "Does the rework close the blocker at the class?",
+      "imperative": "Confirm _ENGINE_VERBS is the engine's own verb set, checked against scripts/checklist_engine.py --help directly. Red-proof the tie assertion: make the two disagree in memory and confirm the test goes red and NAMES the difference. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "BLOCKER CLOSED AT THE CLASS, verified not accepted. (1) The verb set is the engine's own, checked against TWO oracles I read myself and neither of which is _engine_verbs(): the --help choices block and argparse's own invalid-choice error. Both yield the same 18; guard's ENGINE_VERBS (recovered from the compiled alternation) == both == _engine_verbs(); 'resume' present; the blocker line now MATCHES. (2) Red-proofed by mutation, 4 ways, every one reaching a failing state that NAMES the difference: engine gains a verb -> tie red 'in the engine, missing here: [frobnicate]' + behavioural red; guard loses resume -> tie red naming resume, behavioural red, control count red 17!=18, pinned fixture red, and the blocker line goes MISS again (the evasion route reopens exactly as the finding described); derivation replaced by a literal that agrees today then the engine moves -> tie STILL red, so the claimed durability property is real, not asserted; pattern degenerated to 'any word after a stand-in' -> negative control red. (3) The control count's own stated purpose verified: both sides shrunk together (2 verbs, and the empty set the docstring names) -> tie goes green on the 2-verb case and ONLY the count catches it. (4) re.escape claim holds: flag-candidate's hyphen survives compile, match and unescape round-trip.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r8-cost": {
+      "id": "r8-cost",
+      "title": "Did the derivation cost anything?",
+      "imperative": "Measure the delta from adding resume over the whole walk, AFTER the change (predecessor measured zero before it). Confirm zero new addresses on both verb-bearing patterns and nothing lost. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "ZERO, re-measured after the change and priced against the right counterfactual (alternation rebuilt from the engine MINUS resume, so the number prices the VERB, not the derivation). ENGINE_INVOCATION_RE 12 addr/14 occ at both 17 and 18 verbs, DELTA 0, none added, none lost. ENGINE_STANDIN_COMMAND_RE 23 addr/26 occ at both, DELTA 0, none added, none lost. Union over all four patterns 36 -> 36. Census reproduces figure for figure with my own walk: 3098 texts / 216 files / 101 skills / 2 specs / 113 overlay; occurrences placeholder=26 fallback=34 invocation=14 standin=26. The stronger form also holds after the rework: standin addresses NOT reported by g1's three patterns = [] (zero new addresses), and every one of the 23 standin addresses is also an <engine> address, so no honest text is newly red-lighted. The implementer's and my predecessor's figures both reproduce.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r9-regression": {
+      "id": "r9-regression",
+      "title": "Did the rework break what the previous review passed?",
+      "imperative": "Re-verify the four vacuity floors, the zero-length exception list, both pre-ruled survivors out structurally, the PROSE_ONLY discriminations, and the overlay scope rule. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "NOTHING REGRESSED. Four floors intact and none near its floor: skills 101>=60, specs 2>=1, overlay 113>=60, texts 3098>=1800. Exception list still ZERO: _walk_dir's only filter is 'p.is_file() and p.suffix in suffixes', and a source scan for any EXCLUDE/SKIP/ALLOW/IGNORE/EXEMPT assignment finds NONE. Both pre-ruled survivors still out BY THE WALK RULE ALONE -- each appears exactly once in the file and both occurrences are inside the module docstring (verified by index against 'from __future__'), never in a code path; neither is in GUARDED_FILES though both files exist. PROSE_ONLY (5 entries incl. the write-a-skill archetype cell) and COMMAND_SHAPED (6) discriminations all still pass, as does the clause surface-form test. Overlay scope rule verified STRUCTURALLY, not by intent: .agent-work/567-d1 is neither ancestor nor descendant of the overlay root, strays=0, and no symlink escapes the overlay. Lane-D2 fence intact: .baseline/constellation-workbench = 4 files / 20 texts / 0 matches on all four patterns, so this widening still creates no fenced-file dependency.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r10-import": {
+      "id": "r10-import",
+      "title": "Is the import safe at collection time?",
+      "imperative": "_engine_verbs() now runs at module import. Confirm it needs no SPINE_FILE/SPINE_ENGINE, does not mutate global state a later test depends on, and that the guard still collects cleanly. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "SAFE, verified four ways. (1) Needs no env: collection with SPINE_FILE/SPINE_SESSION/SPINE_ENGINE/SPINE_PARENT/CREW_SCRATCH_DIR/CLAUDE_PROJECT_DIR all stripped -> 19 collected, exit 0; and in a bare env -i with only PATH/HOME -> 15 passed. (2) No shadowing: all 48 scripts/*.py names checked against sys.stdlib_module_names -> NONE, and none resolvable elsewhere on sys.path -> NONE, so the sys.path.insert cannot hijack a later import. (3) No ordering dependency: guard collected FIRST and guard collected LAST alongside adoption/checklist_engine/mcp_spine_server/generate_spine/spine_lifecycle -> 974 passed, 2 skipped, 144 subtests, identical both ways. (4) The one global mutation is PRE-EXISTING, not introduced: importing checklist_engine runs _utf8_stdio() which reconfigures sys.stdout/stderr to utf-8 -- but tests/test_generate_spine.py and tests/test_spine_lifecycle.py already import checklist_engine at MODULE level, so any whole-suite run already did this before the rework. The guard only adds it to a run that collects the guard alone, where it is harmless (guarded by try/except AttributeError,OSError). A guard that dies at collection is a guard that never runs; this one does not.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r11-attack": {
+      "id": "r11-attack",
+      "title": "Attack the widened verb arm once more",
+      "imperative": "The verb arm is now wider by one. Write plausible regrowth and report every miss with the exact string; judge each miss as declared-limit observation or as a finding. Test the ruling that placeholder dialects stay a stated residual; do not merely restate the misses. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "32 strings run against all four patterns. The widened verb arm holds: all five resume dialects caught (angle, double-brace, $ENV, %WIN%, single-brace), tab and double-space separators caught, trailing punctuation caught, negative control (frobnicate) still clean. NO new evasion route of the resume class. TWO observations, neither a blocker. (1) SEPARATOR GAP, stated-broader-than-implemented, the same SHAPE as the closed blocker but not its severity: the docstring's invariant says 'HORIZONTAL whitespace' while the code says [ \\t], so NBSP U+00A0, U+202F and U+2003 all walk through. Priced it: [^\\S\\r\\n] costs ZERO extra addresses (23 -> 23) and would close it, vs \\s which costs exactly 1 (skills/workbench/references/checklist-engine.md:92, my predecessor's figure reproduced). Not a BLOCK because unlike resume it has no oracle -- no definition says which code points 'horizontal whitespace' means -- the corpus today contains NO non-ASCII whitespace whatsoever, and nobody writes NBSP before a command verb on purpose. It is the same class as the already-declared backtick/quote residual: something between the stand-in and the verb. Commander's call whether g2 folds in the one-character-class fix. (2) The declared prospective false-alarm residual is REAL, confirmed by writing the text rather than reading the claim: 'see <skill-dir> release notes for the change', 'after a crash the <run> resume picks up', 'the <id> current state is read from the journal' all FIRE on honest prose. The docstring predicts this exactly and names <skill-dir> release notes verbatim, prices it at 0/3098 today, and names the right repair (require a following ARGUMENT, not a looser separator). Honest and correctly declared. 12 of the 18 verbs are ordinary English; the docstring names 9 -- advance, amend and resume are not named. Also MISSED and correctly so, all outside a runnable-path shape or inside a declared limit: colon between stand-in and verb, quote between, capitalized/uppercase verb, verb on the next line, code span, word-introduced with no stand-in, bare program word.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. The blocker is closed AT THE CLASS, not at the token. _ENGINE_VERBS is derived from the engine's own argparse registry; I verified the resulting set against two oracles I read myself and neither of which is the repo's helper (the --help choices block and argparse's invalid-choice error), and both agree on the same 18 with resume present. I red-proofed the tie by mutation four ways -- engine gains a verb, guard loses resume, derivation replaced by a literal that agrees today, pattern degenerated to any-word -- and every one reached a failing state that NAMES the difference; I also confirmed the control count catches the one case the tie cannot, both sides shrinking together. The claimed durability property (recovery from the compiled alternation survives the derivation being swapped for a literal) is real, not asserted. Cost of the derivation: ZERO, re-measured after the change against the right counterfactual -- 12 and 23 addresses at both 17 and 18 verbs, union 36 -> 36, nothing added, nothing lost. Nothing regressed: four floors intact, exception list still zero, both pre-ruled survivors out by the walk rule alone with their only mentions inside the docstring, PROSE_ONLY and COMMAND_SHAPED discriminations still pass, overlay scope rule verified structurally (no ancestry, no strays, no symlink escape), lane-D2 .baseline/constellation-workbench still clean of all four patterns. The import is safe at collection: 19 collected with every spine/crew env var stripped and in a bare env, no name under scripts/ shadows anything, no ordering dependency across six suites in either direction, and the one global mutation (_utf8_stdio) is pre-existing via two other modules that already import checklist_engine at module level. Every evidence figure reproduces exactly: 19 / 15 / 4-with-58-overlay-lines / 183+2 / 684, closing check exit 0 under dash. The g2 census is now correct in a stated unit and I reproduce every load-bearing figure. Two observations, neither blocking and both priced: the [ \\t] vs 'horizontal whitespace' separator gap (free to close, no non-ASCII whitespace in the corpus today, and unlike resume it has no oracle), and the declared prospective false-alarm residual, which I confirmed is real by writing the honest prose rather than reading the claim -- it is exactly what the docstring predicts, prices at 0/3098 and names the right repair for. The guard is still RED and nothing was swept, as the gate requires."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r11-attack",
+      "statement": "The stand-in pattern's separator is [ \\t] while its stated invariant says 'HORIZONTAL whitespace', so NBSP (U+00A0), U+202F and U+2003 walk through. Measured: [^\\S\\r\\n] closes it at ZERO cost (23 addresses -> 23), where the already-priced \\s loosening costs 1. The corpus contains no non-ASCII whitespace today, so this is prospective, not live -- but it is the same stated-broader-than-implemented shape as the resume blocker, one character class from being closed."
+    },
+    {
+      "id": "tc2",
+      "from": "r6-fowler",
+      "statement": "The Fowler record path collides across ROUNDS, not just across gates. Round 1 raised the per-work-id default (.agent-work/<work-id>/FOWLER_PASS.json) colliding across gates; the fix handed down -- write to the gate directory -- then collides across rework rounds of the SAME gate, because round 1's record is already there. Both defaults silently destroy prior audit evidence. Defaulting the record to the survey file's own stem (review-2.json -> FOWLER_PASS-2.json) would make it collision-free by construction."
+    },
+    {
+      "id": "tc3",
+      "from": "r11-attack",
+      "statement": "The guard docstring's list of engine verbs that are also common English names 9 of the 12 that qualify; resume, advance and amend are omitted -- and resume is the verb the rework just added, which is what makes the omission worth a line. One-word fix inside prose the sweep will already touch."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/567-d1/g1b/reviewer/attempt-2",
+    "status": "released",
+    "claimed_at": "2026-08-17T19:38:14.047255+00:00",
+    "last_heartbeat": "2026-08-17T19:49:19.102385+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T19:51:35.965224+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-17T19:47:49.715438+00:00",
+      "reason": "The survey template resolves the Fowler record from <work-id> alone, which is per-work-id not per-gate: .agent-work/567-d1/FOWLER_PASS.json already holds the g1 review's record. The rework addendum redirects it to .agent-work/567-d1/g1b-review/FOWLER_PASS.json -- but that path already holds THIS gate's round-1 record, the audit evidence of the BLOCK. Writing either would destroy another pass's record, so the path takes the -2 suffix for exactly the reason the addendum gave review-2.json its own: preserve the prior round. Moved through the sanctioned repair path, never by hand-editing the survey.",
+      "authority": "constellation/567-d1/lane-d1/commander-delegated",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}
