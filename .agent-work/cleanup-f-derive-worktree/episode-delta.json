@@ -1,0 +1,218 @@
+{
+  "work_id": "cleanup-f-derive-worktree",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-f-derive-worktree",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/cleanup-f-derive-worktree/execute.json",
+        "refusals": 9,
+        "reopens": 0,
+        "rework-count": 4,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-reviewer-rework4-result.md",
+          ".agent-work/cleanup-f-derive-worktree/ADMIRAL_RULING-4.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Delete `_foreign_worktree`, a bad ownership test that answered 'is this spine mine' by comparing worktrees, and replace it at both call sites with binding-key provenance."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Replacing one predicate with a better one at two call sites was scoped as a single gate: the risk was thought to live in the replacement being wrong, so the plan's checks all asked whether the new predicate decided correctly."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The gate cost five reviews and four reworks, and four of the five findings were not wrong decisions by the new predicate at all -- they were sessions arriving somewhere they had never previously reached. While the bad guard stood it was also, incidentally, keeping a whole class of session out of `decide_session_start`'s fall-through; deleting it widened the population reaching code nobody had re-examined. B4 was a withholding that fell through into the scan-bind, B5 was a second route into the same writer, B6 was the render half of a rule that had been shipped for the write half only."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Four rework cycles and five independent reviews, on a change whose final diff at the last rework was five lines. Every one of the four findings was measured rather than read; not one was found by reading the diff."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The four rework cycles each began by enumerating the class of session the deleted guard had been keeping out of `decide_session_start`'s fall-through, and each finding fell out of that list rather than out of re-reading the replacement predicate. ADMIRAL_RULING-4 adopted the practice as a rule for later gates."
+        }
+      },
+      "diagnosis": [
+        {
+          "strength": "strong",
+          "statement": "A predicate has two effects: the decision it returns, and the paths it keeps callers away from. Review attention follows the first because that is what the diff shows; the second is invisible in a diff and is where a deletion's real blast radius lives.",
+          "kind": "suspected-cause"
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-f-derive-worktree",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/cleanup-f-derive-worktree/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/cleanup-f-derive-worktree/REPLAN_INPUT.json",
+          ".agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-reviewer-rework4-result.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Verify each crew's before/after claim by re-running the differential harness the crew itself returned, rather than taking the returned numbers on trust."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A harness that printed a clean before/after table when its author ran it would print the same table when re-run, so re-running it would be a cheap independent confirmation."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Every instrument built on this gate developed a shelf-life defect, in both directions. The implementer's differential pinned its BEFORE arm with `git rev-parse HEAD`, so once the gate was committed it compared the change against itself and printed 26 confirming rows -- that was finding B1, caught only because a reviewer already held a contradicting number. Two reviewer harnesses pinned SUPERSEDED commits, so re-running them unmodified showed already-fixed defects as still live. The Commander also cited a sha it had itself amended away minutes earlier."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "One false-confirming instrument shipped a defect into review, two false-red instruments each cost a re-measurement and a working-tree arm with guards, and one amended-sha citation cost a reviewer a verification of an empty diff before it could start work."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The fifth reviewer built its own instrument before running the crew's, and made every arm print a sha256 and a byte length with a guard asserting all three differed; its clean return was believable for that reason. After the amended-sha incident the Commander cited strings to grep for rather than line numbers or shas, and the later handoffs on this lane carried no stale citation."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-f-derive-worktree",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/cleanup-f-derive-worktree/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": [
+          ".agent-work/cleanup-f-derive-worktree/REPLAN_INPUT.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Re-measure the full suite in the worktree at the integrate gate, in my own hands, rather than citing the previous leg's numbers."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The same command on the same commit would reproduce the previous leg's green result, 3192 passed / 5 skipped / 0 failed."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "It reported 1 failed: `test_containment_repo_agent_work_untouched_by_the_chain`, whose diff was exactly two files -- `gauge.json` and the per-owner gauge -- under the live `.agent-work/`. That test snapshots `.agent-work/` by size and mtime, and every tool call an agent makes fires the gauge chain, which writes there. I had backgrounded the run and polled it about fifteen times, so the tree the test was snapshotting was moving because I was watching it. The identical command run quiet by the engine's own postcondition was green."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "One 128-second suite run wasted, and a red that was indistinguishable from a regression at a gate whose postcondition is a green suite. The same test cost an earlier reviewer on this lane a full run and a false red for the same underlying reason."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The engine's own postcondition re-ran the identical command with no agent tool calls in flight, and it was green; that quiet run became the number of record, and the noisy one was recorded as an instrument defect rather than a regression."
+        }
+      },
+      "diagnosis": [
+        {
+          "strength": "medium",
+          "statement": "A test that asserts over live agent-workspace state measures its observer, not just its subject. Recorded as a triage candidate rather than fixed here: the repair is to exclude the current run's work-id subtree or the gauge files, and it belongs to whoever owns that test.",
+          "kind": "suspected-cause"
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-f-derive-worktree",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "reconcile",
+        "context-manifest-ref": ".agent-work/cleanup-f-derive-worktree/spine.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/cleanup-f-derive-worktree/TRIAGE_RECOMMENDATIONS.md",
+          ".agent-work/cleanup-f-derive-worktree/ADMIRAL_RULING-3.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Repair the stale prose this lane's own changes falsified: three repairs in four files, named by the launch order and by ADMIRAL_RULING-3."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The named files were expected to be the whole set, since two independent readers -- the Admiral and a reviewer -- had each gone looking for the stale claims and had produced that list."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Grepping the CLAIM rather than opening the named files found six sites of one family across five files. Three were not on any list: `scripts/init_work_area.py`'s instantiate_spine docstring, `tests/test_worktree_derivation.py`'s symlink docstring, and the copy in `tests/test_spine_rail.py` that was only findable by a fragment because the claim wrapped across two comment lines."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Cheap here -- three extra prose edits in one gate -- but the same defect cost the earlier g2 gate three implementer passes, because every check anyone wrote keyed on a symbol while the defect lived in a claim wrapped across comment lines."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The sweep was scoped by the claim rather than by the file list: a grep for a fragment short enough to survive line wrapping found all six sites, three of which no list had named, and all six were repaired in one gate."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "cleanup-f-derive-worktree",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "reconcile",
+        "context-manifest-ref": ".agent-work/cleanup-f-derive-worktree/spine.json",
+        "refusals": 9,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/cleanup-f-derive-worktree/STATE_NOTE.md",
+          ".agent-work/cleanup-f-derive-worktree/crew-handoffs/execute-commander-result.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Close the spine's tail -- reconcile, triage, review, feedback, archive -- in one leg after finishing the last crew gate."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "I read the context governor's refusal of `start reconcile` as terminal, wrote the handoff, and parked -- the same reading the previous leg had made at its own gate boundary."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "It is not terminal. The engine's own comment describes the exemption: request the refresh, `start` the pending ACTIVE gate, then `advance --why`. The second `start` is released and recorded as `begin-instructed`, an outcome the compliance selectors deliberately do not count, because branding an agent for obeying the engine was the contradiction that rule was ruled on. The trip ledger already showed the pattern twice -- refused then instructed at `plan` and at `execute` -- and I had read the refusal without reading the ledger under it."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "One unnecessary handoff was written and nearly taken. On this lane the same misreading had already ended a leg one gate earlier, so the cost is one leg per occurrence -- and the tail of a spine is five gates long."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The gate's substance was done, attested and committed while the gate was still pending, because `attest` and `attach` are not governor-guarded. The trip ledger already showed the same refuse-then-instruct pattern twice, at `plan` and at `execute`, and the sanctioned request-start-advance sequence then closed the gate without beginning work it could not finish."
+        }
+      }
+    }
+  ]
+}

@@ -531,7 +531,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage is complete: 21 recommendations recorded in TRIAGE_RECOMMENDATIONS.md, four fixed-now with shas, nineteen recommend-and-defer, nothing unrouted and nothing auto-filed."
         }
       ],
       "postconditions": [
@@ -542,17 +543,39 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape",
+            "summary": "#609 lane F ships one behavioural change and a prose sweep. GATES: g1 landed the lexical derivation, defined twice and pinned equal by a shared case table. g2 retired stamp-and-compare -- origin_worktree_refusal, its two verb sets, the per-verb git rev-parse and the engine-side derivation copy are gone, so the engine now reads no location at all, ambient or derived. g3 stopped the worktree answering ownership: _foreign_worktree deleted with both call sites, _entry_mid_flight_view deciding no ownership because mid-flight is a property of the spine, _own_entries as the one shared comparison, and _attributed_to_another_key guarding the bind-on-resume's write and its render alike. g4 skipped as WITHDRAWN by ADMIRAL_RULING-1 R2; g5 skipped as RE-HOMED to 610's wave by R3. RECONCILE: six stale-claim sites repaired across five files, all prose, no executable line moved. TRIAGE: 21 recommendations, four fixed now, nineteen deferred for want of filing authority, with the scan-bind and B7 packaged to 610's wave carrying their shared question. MEASUREMENTS, all re-taken at the closing gate: main at 17c2cee5 3171/7/0 in a clone named constellation-skills, the shipped tree 3192/5/0, the targeted class 23 passed where the same selector exits 5 on the pre-gate arm, failure sets empty in both directions. COST: five reviews and four reworks on g3, every finding measured and not one found by reading. NOT DONE: not merged, not pushed, no PR -- publication is the Admiral's."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-review-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "review",
+            "why_ref": "w-7"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -564,7 +587,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "review is complete: the run summary is recorded as e-review-1 citing LAUNCH_ORDER:Return Shape, with the Admiral ratifying at the epic return boundary."
         }
       ],
       "postconditions": [
@@ -581,11 +605,22 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "feedback",
+            "why_ref": "w-8"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -696,7 +731,7 @@
     "session_id": "commander-cleanup-f-derive-worktree",
     "status": "active",
     "claimed_at": "2026-08-17T01:36:26.599038+00:00",
-    "last_heartbeat": "2026-08-17T02:00:14.236508+00:00",
+    "last_heartbeat": "2026-08-17T02:03:52.027479+00:00",
     "claimed_by": "commander",
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
     "previous_session_id": null,
@@ -751,6 +786,13 @@
       "why": "Triage closes with 21 recommendations in TRIAGE_RECOMMENDATIONS.md and nothing unrouted. Four fixed-now, all prose in one claim family, all clearing every rung of the ladder; nineteen recommend-and-defer, for the single reason that no issue-filing authority was granted this run -- the deferral is the recorded form of asking, and the user-decision evidence cites the launch order for the deferral itself rather than for an approval nobody gave. The Admiral's package is T13: the SessionStart scan-bind and B7's cross-session blindness go to #610's wave together, written so the wave inherits the question -- what is the scan-bind FOR when nobody has claimed the spine -- with each observation carrying its own measurement and reproduction. The document warns in its opening that two different findings on this lane are both called tc1, and routes by content throughout. The most valuable rows are the cheap ones: T1, because an empty map/ids.jsonl is why every Commander in this repo orients DEGRADED and it will not self-heal; T8, because a claim wrapped across two comment lines defeats every grep this doctrine prescribes; and T11, because a test that measures its own observer is indistinguishable from a regression at a gate whose postcondition is a green suite.",
       "mechanical": false,
       "ts": "2026-08-17T02:00:14.236499+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "The run summary is recorded as e-review-1 and cites LAUNCH_ORDER:Return Shape, the Admiral ratifying at the epic return boundary since no human is reachable. What this lane ships: derivation as one lexical rule pinned by a shared case table (g1); stamp-and-compare retired so the engine reads no location at all (g2); ownership as binding-key provenance rather than the worktree, at every site that selects (g3). What it does not ship: the fail-closed refusal, withdrawn by the ruling that called for it, and #315, re-homed. What it repairs beyond its own change: six sites of one stale claim family across five files, three of which no file list had named. What it leaves open and says so: the SessionStart scan-bind, packaged with the cross-session blindness and the question both turn on. Every closing number was re-measured at the gate that used it, and the one claim I could not measure -- Windows case folding on a host where normcase is the identity -- is stated as constructed rather than measured, twice, in the places a later reader will look.",
+      "mechanical": false,
+      "ts": "2026-08-17T02:00:48.926731+00:00"
     }
   ],
   "trip_ledger": [
@@ -852,6 +894,28 @@
       "model": "claude-opus-5",
       "why_ref": "w-6",
       "ts": "2026-08-17T02:00:05.172554+00:00"
+    },
+    {
+      "id": "tl-10",
+      "gate": "review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2018,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-7",
+      "ts": "2026-08-17T02:00:40.336521+00:00"
+    },
+    {
+      "id": "tl-11",
+      "gate": "feedback",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2238,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-8",
+      "ts": "2026-08-17T02:03:52.000631+00:00"
     }
   ]
 }

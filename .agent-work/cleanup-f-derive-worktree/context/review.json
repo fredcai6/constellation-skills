@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "review",
+  "files": [],
+  "repo_rev": {
+    "commit": "9b07d58ca8589bc5183600c6cadba8b8cb6cae44"
+  },
+  "run": {
+    "work_id": "cleanup-f-derive-worktree",
+    "generated_at": "2026-08-17T02:00:40Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree"
+    }
+  }
+}
