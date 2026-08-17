@@ -46,6 +46,22 @@ mechanical detail — so I recorded the conflict instead of resolving it.
    `crew-handoffs/execute-commander-result.md`; close the spine as part of
    publication.
 
+## The check's own text argues for option 1, and you should know that
+
+`c2b` does not merely demand a PR — it says, in its own words: *"Open the PR even
+if the work is unfinished; declare FINAL or PENDING in its title and **hand the
+merge up**."* On that reading a PENDING PR is not publication competing with
+yours; it is the mechanism for handing the merge to you, and the thing your order
+forbids — merging — stays forbidden either way. Its stated reason is that CI never
+runs on an unopened branch, and that every commander which reached a terminal
+spine without opening one had to be chased for it.
+
+I still did not open it, because your order reserved publication in words that
+cover a push to `origin`, and because an outward-facing action is the wrong place
+for me to resolve an ambiguity in my own favour. But if your intent was "do not
+merge" rather than "do not surface", **option 1 is the one the engine was designed
+around** and one sentence from you closes this lane.
+
 ## One thing to weigh, briefly
 
 The order and the spine disagree here **every time** a lane is told to park at
