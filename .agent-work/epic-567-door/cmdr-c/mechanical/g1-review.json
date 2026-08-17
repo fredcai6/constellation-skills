@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g1-review",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-c",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 0,
+    "spine-step": "g1-review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-c-g1-review@d9b516b0a1d0e0a160ce5dc72c4912492a34c29c",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-c",
+    "generated_at": "2026-08-17T05:42:45Z"
+  }
+}

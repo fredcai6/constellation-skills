@@ -1,0 +1,51 @@
+{
+  "goal": "cmdr-567-g -- #574 one-verb mechanical closeout + #552 archiving releases the lease (LANE_G_LAUNCH_ORDER.md)",
+  "mode": "delegated",
+  "questions": [
+    {
+      "id": "q1-baseline",
+      "kind": "fact",
+      "question": "What closeout mechanism already exists on the base commit, and what gap remains?",
+      "status": "resolved",
+      "resolution": "close_work (spine_lifecycle.py) already exists as the archive-mover half of #574's contract sketch step 4, refusing unless the lease is already released and every gate is terminal. It does not do verify (episodes/tree), close (advance+release), reap, or dispose -- those remain hand-sequenced.",
+      "code_evidence": "scripts/spine_lifecycle.py:122-161 (closeout_refusal), :384-545 (close_work); scripts/mcp_spine_server.py:1045-1064 (_spine_close wiring)"
+    },
+    {
+      "id": "q2-verify-shape",
+      "kind": "fact",
+      "question": "What does the mechanical 'verify' precondition check need to cover?",
+      "status": "resolved",
+      "resolution": "closeout_refusal already covers gate-terminality, released-lease-status, archive-not-exists. Episodes-captured and tree-clean/staged are net-new checks this lane adds, mirroring closeout_refusal's ONE-refusal shape.",
+      "code_evidence": "scripts/spine_lifecycle.py:122-161; constellation-commander/scripts/verify_episode_captured.py (existing store-scan pattern to reuse)"
+    },
+    {
+      "id": "q3-close-shape",
+      "kind": "fact",
+      "question": "Can 'final advance + release as last journaled action' be built without editing checklist_engine.py or mcp_spine_server.py (both fenced)?",
+      "status": "resolved",
+      "resolution": "Yes. advance()/release() are pure dict functions; main() composes load->dispatch->save->journal. A new spine_lifecycle.py function can call checklist_engine.main([...]) twice in-process, exactly mirroring how mcp_spine_server.py's existing pass-through tools already invoke it, and how spine_lifecycle.py already imports generate_spine/init_work_area/run_crew/validate_spine as libraries. Zero edits to either fenced file.",
+      "code_evidence": "scripts/checklist_engine.py:1133 (release), :2468 (advance), :3495 (main); scripts/mcp_spine_server.py module docstring 'Every tool builds an argv and calls checklist_engine.main(argv)'"
+    },
+    {
+      "id": "q4-reap-shape",
+      "kind": "fact",
+      "question": "What does 'reap' (binding entries + gauge state) require, given spine_rail.py is not explicitly owned by this lane?",
+      "status": "resolved",
+      "resolution": "spine_rail._binding_transaction already self-heals (drops released-status entries) on every future touch; this lane forces that pass IMMEDIATELY by calling the existing transaction helper as a library with a no-op mutate -- no edit to spine_rail.py. Gauge state is already swept into the archive by close_work's existing move (it lives under the work directory, not a separate store).",
+      "code_evidence": "scripts/hooks/spine_rail.py:311-366 (_reap_binding_entries), :397-436 (_binding_transaction)"
+    },
+    {
+      "id": "q5-pr-opening",
+      "kind": "decision",
+      "question": "Does PR-opening live in the engine verb or in the wrapper script that manages the worktree (#574 step 5)?",
+      "status": "resolved",
+      "resolution": "Not ruled locally -- floated to the Admiral per decision:pr-opening-question-is-not-yours. This implementation assumes the wrapper opens the PR: dispose() pushes the branch (mechanical) and returns a structured result (branch, head, archive path, pushed); PR-opening is a separately callable open_pr(...) helper not invoked by default. Either ruling adopts without rework -- a future finish_work(open_pr=True) would call the identical helper.",
+      "human_answer": "LAUNCH_ORDER.md Pre-Rulings, decision:pr-opening-question-is-not-yours: 'Float it; do not rule it. Design so either answer can be adopted without rework, and say which you assumed.' -- the counterpart's answer is the instruction to float and assume, not a ruling on engine-vs-wrapper itself."
+    }
+  ],
+  "signoff": {
+    "by": "LANE_G_LAUNCH_ORDER.md (Admiral epic-567, delegated mode -- no reachable human)",
+    "statement": "Understanding satisfied per commander-core.md Modes: delegated `understand`/`plan` checkpoints are satisfied by citing the frozen launch order (Mission, Pre-Rulings, Inherited Context, Inherited Latitude) rather than a live sign-off. All five questions this run needed to plan are resolved or floated per the order's own instruction; no further question blocks planning."
+  },
+  "consolidated": false
+}

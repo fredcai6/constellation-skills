@@ -1,0 +1,252 @@
+{
+  "work_id": "epic-567-door/cmdr-c",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read this skill's references/global-orchestrator.md and references/global-everyone.md, then docs/agents/ORCHESTRATOR_CONTEXT.md and docs/agents/GLOSSARY.md. Confirm the frozen plan's intent and scope (MISSION_FRAME.md, LAUNCH_ORDER Mission/Pre-Rulings/Fence): the only in-latitude deliverable this wave is (a) scripts/hooks/spine_rail.py's Stop hook text stating precedence over the context-trip advisory and pointing at `spine_halt block`, and (b) skills/commander/references/crew-dispatch.md stating the same precedence. scripts/checklist_engine.py and scripts/mcp_spine_server.py are out of reach (Lane A fence). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + mission frame + fence confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context reconfirmed; scope = spine_rail.py + crew-dispatch.md only"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Stop-hook precedence + crew-dispatch.md doctrine: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: task is (1) edit scripts/hooks/spine_rail.py's `_mid_flight_reason` (and `_owning_session_reason` if warranted) to explicitly state the Stop hook is authoritative over the context-trip advisory, and to point an agent that must honestly exit mid-gate at the engine's `spine_halt block` verb (with a reason), never at ending the turn; (2) edit skills/commander/references/crew-dispatch.md to state the same precedence (Stop hook wins; the context-trip advisory is non-binding guidance subordinate to it; the sanctioned mid-run exit is `spine_halt block`) in a place a Commander reads before dispatching/waiting on a crew. Constraints: do NOT touch scripts/checklist_engine.py or scripts/mcp_spine_server.py (Lane A fence -- if the task seems to require it, stop and report a blocker instead); do NOT change WHEN the Stop hook fires, only what it says; keep the two other Stop-hook reason strings (`_owning_session_reason`, the lease-still-active branch) internally consistent with the new wording; follow constellation-how-to-talk (clear, concise, grounded, one name per thing). Net-deletion: the rewritten mid-flight reason should not simply grow -- trim any now-redundant clause it supersedes. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT: attach g1-implement --type implementer-result --field status=<value> (lowercase, verbatim from Return status).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execution context loaded at e0-context"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "fence: scripts/checklist_engine.py and scripts/mcp_spine_server.py are OUT OF SCOPE this wave (Lane A)",
+        "decision:trip-mechanic-untouched",
+        "decision:stop-hook-is-authoritative"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/hooks/spine_rail.py:1479-1520 (_mid_flight_reason, _owning_session_reason)",
+          "skills/commander/references/crew-dispatch.md"
+        ],
+        "capability": [
+          "Stop hook mid-flight refusal text; crew-dispatch precedence doctrine"
+        ],
+        "constraint": [
+          "decision:trip-mechanic-untouched",
+          "fence:no-checklist-engine-edits"
+        ],
+        "decision": [
+          "decision:stop-hook-is-authoritative @grade: settled/human \u00b7 leans g1-implement",
+          "decision:no-third-mechanism @grade: settled/human \u00b7 leans g1-implement"
+        ],
+        "evidence": [
+          "episodes launcher-hygiene-002, stop-hook-door-binding-002"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Stop-hook precedence + crew-dispatch.md doctrine: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff (git diff scripts/hooks/spine_rail.py skills/commander/references/crew-dispatch.md), task statement, close criteria (precedence stated, spine_halt block pointer present, no checklist_engine.py/mcp_spine_server.py touched, trip timing unchanged, net-deletion honored), constraints, the g1-implement anchors, and the IMPLEMENTER_RESULT evidence. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received, verified against the world"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Stop-hook precedence + crew-dispatch.md doctrine: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the fresh-process validation yourself (a NEW subprocess with CLAUDE_PROJECT_DIR set to this worktree, invoking scripts/hooks/spine_rail.py's Stop handler directly against a synthetic mid-flight spine payload -- an in-session read is NOT evidence per decision:in-session-observation-is-not-evidence), confirm the new wording renders, then advance this gate. BLOCK: send the implementer back for rework or raise a blocker. Log any out-of-scope finds as triage candidates under .agent-work/567-c/triage-candidates/ (not filed as issues).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received: APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "fresh-process validation confirms the new Stop-hook wording renders (not an in-session observation)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Fresh-process validation: NEW subprocess (py scripts/hooks/spine_rail.py Stop), CLAUDE_PROJECT_DIR set to this worktree, synthetic mid-flight binding+spine fixture. Output confirmed: 'This Stop hook is authoritative over any SOFT-band context-trip advisory... spine_halt block... do not end your turn to hand off.' Scratch fixtures deleted after."
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "cmdr-567-c-execute",
+    "status": "released",
+    "claimed_at": "2026-08-17T05:34:51.412404+00:00",
+    "last_heartbeat": "2026-08-17T05:51:11.897380+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T05:51:14.378689+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-17T05:34:55.982702+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Implementer delivered complete result: precedence stated in _mid_flight_reason, spine_halt block named, crew-dispatch.md updated, verified diff against the world matches claimed diff, fenced files untouched.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:42:10.123150+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Reviewer independently re-verified diff, parse, exclusions, and trigger-condition unchanged; APPROVE, no blockers, one non-blocking triage candidate (duplicated precedence prose).",
+      "mechanical": false,
+      "ts": "2026-08-17T05:49:42.362504+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Reviewer APPROVE integrated; fresh-process validation confirms new wording renders from the edited worktree file. g1 complete. Triage candidate tc1 (duplicated precedence prose) logged for the triage step.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:51:11.897373+00:00"
+    }
+  ]
+}

@@ -1,0 +1,308 @@
+{
+  "work_id": "epic-567-door/cmdr-c/g1",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-mid-flight-reason",
+    "m2-crew-dispatch-doc",
+    "m3-scope-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (constellation-implementer skill's references/global-crew.md and references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md if present, plus the g1-implementer-handoff.md in full. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Read the two named episodes (launcher-hygiene-002, stop-hook-door-binding-002) for context. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + episodes loaded; handoff verified complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-mid-flight-reason": {
+      "id": "m1-mid-flight-reason",
+      "title": "Add Stop-hook-over-advisory precedence to _mid_flight_reason (and _owning_session_reason if needed)",
+      "imperative": "In scripts/hooks/spine_rail.py, edit ONLY the string(s) returned by _mid_flight_reason (around line 1479-1496) to state explicitly: the Stop hook is authoritative over the SOFT-band context-trip advisory surfaced on spine_status/current (owned by scripts/checklist_engine.py -- do not edit that file); if the agent genuinely cannot continue, the sanctioned mid-run exit is the engine's block verb (spine_halt block) with a reason, not ending the turn to 'hand off'. Trim any now-redundant clause (net-deletion, not pure addition) -- do not restate 'keep working the gate' twice once the precedence framing covers it. Read _owning_session_reason first; only touch it if it needs the same precedence statement for internal consistency (it may already correctly defer to a different session and need no change). Do not touch decide_stop's control flow, the nudge ledger, reconstruct_current, or any other function. Do not touch scripts/checklist_engine.py or scripts/mcp_spine_server.py under any circumstance -- if the task seems to require it, stop and record a blocker instead.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "_mid_flight_reason's returned string states Stop-hook authority over the context-trip advisory and names spine_halt block as the sanctioned mid-gate exit; manually reviewed against the handoff's Close Criteria",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "file still parses as valid Python after the edit",
+          "check": {
+            "kind": "command",
+            "command": "python3 -c \"import ast; ast.parse(open('scripts/hooks/spine_rail.py', encoding='utf-8').read())\" && echo PARSE_OK"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-mid-flight-reason-1"
+        },
+        {
+          "id": "c3",
+          "statement": "only scripts/hooks/spine_rail.py changed so far in this step; checklist_engine.py and mcp_spine_server.py untouched",
+          "check": {
+            "kind": "command",
+            "command": "! git diff --name-only | grep -E 'checklist_engine\\.py|mcp_spine_server\\.py'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-mid-flight-reason-2"
+        }
+      ],
+      "constraints": [
+        "Follow constellation-how-to-talk: clear, concise, grounded, one name per thing (docs/agents/GLOSSARY.md terms: spine, gate, lease, trip)",
+        "Keep the existing SPINE MID-FLIGHT prefix and Next imperative: {imp} substitution mechanics intact",
+        "Self-contained, actionable text without requiring engine-internals knowledge",
+        "Do not change decide_stop's control flow or trip timing -- text only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-mid-flight-reason-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -c \"import ast; ast.parse(open('scripts/hooks/spine_rail.py', encoding='utf-8').read())\" && echo PARSE_OK",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-mid-flight-reason-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! git diff --name-only | grep -E 'checklist_engine\\.py|mcp_spine_server\\.py'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-crew-dispatch-doc": {
+      "id": "m2-crew-dispatch-doc",
+      "title": "Add Stop-hook-over-advisory precedence to crew-dispatch.md",
+      "imperative": "In skills/commander/references/crew-dispatch.md, in or immediately after the section 'A harness-backgrounded command is never awaitable -- do not park' (lines 13-35, existing spine_halt block guidance around line 35), add one or two sentences stating explicitly: the Stop hook is authoritative over the context-trip advisory; the advisory is non-binding guidance, never license to end a mid-gate turn; when the advisory and an open gate conflict, the resolution is spine_halt block, not a turn-end handoff. Only touch this section or text immediately adjacent to it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the do-not-park section now states Stop-hook-over-advisory precedence explicitly, naming spine_halt block as the resolution",
+          "check": {
+            "kind": "command",
+            "command": "grep -qi 'authoritative' skills/commander/references/crew-dispatch.md && grep -qi 'spine_halt block' skills/commander/references/crew-dispatch.md && echo TEXT_PRESENT"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-crew-dispatch-doc-1"
+        },
+        {
+          "id": "c2",
+          "statement": "only the named section (or immediately adjacent text) changed in this file",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "Follow constellation-how-to-talk: clear, concise, grounded",
+        "Do not touch any other section of the file"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-crew-dispatch-doc-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -qi 'authoritative' skills/commander/references/crew-dispatch.md && grep -qi 'spine_halt block' skills/commander/references/crew-dispatch.md && echo TEXT_PRESENT",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-scope-verify": {
+      "id": "m3-scope-verify",
+      "title": "Verify full scope, parse, and produce required evidence",
+      "imperative": "Run the handoff's Verification Commands: git diff --stat scripts/hooks/spine_rail.py skills/commander/references/crew-dispatch.md, and the ast parse check. Run git status --porcelain to confirm no other file changed and that scripts/checklist_engine.py / scripts/mcp_spine_server.py are absent from the diff. Capture the full diff for the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 and m2 done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "git diff --stat shows only the two allowed files changed",
+          "check": {
+            "kind": "command",
+            "command": "test \"$(git diff --name-only | sort)\" = \"$(printf 'scripts/hooks/spine_rail.py\\nskills/commander/references/crew-dispatch.md' | sort)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-scope-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "spine_rail.py still parses as valid Python",
+          "check": {
+            "kind": "command",
+            "command": "python3 -c \"import ast; ast.parse(open('scripts/hooks/spine_rail.py', encoding='utf-8').read())\" && echo PARSE_OK"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-scope-verify-2"
+        },
+        {
+          "id": "c3",
+          "statement": "checklist_engine.py and mcp_spine_server.py confirmed untouched",
+          "check": {
+            "kind": "command",
+            "command": "! git diff --name-only | grep -E 'checklist_engine\\.py|mcp_spine_server\\.py'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-scope-verify-3"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-scope-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(git diff --name-only | sort)\" = \"$(printf 'scripts/hooks/spine_rail.py\\nskills/commander/references/crew-dispatch.md' | sort)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-scope-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -c \"import ast; ast.parse(open('scripts/hooks/spine_rail.py', encoding='utf-8').read())\" && echo PARSE_OK",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-scope-verify-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! git diff --name-only | grep -E 'checklist_engine\\.py|mcp_spine_server\\.py'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g1-impl-1786945140",
+    "status": "released",
+    "claimed_at": "2026-08-17T05:39:05.611800+00:00",
+    "last_heartbeat": "2026-08-17T05:40:54.983482+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T05:41:45.818388+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff g1-implementer-handoff.md verified complete: task, protected intent, close criteria, allowed scope, exclusions (checklist_engine.py, mcp_spine_server.py), required evidence, verification commands all present. Read global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md, and both named episodes (launcher-hygiene-002, stop-hook-door-binding-002) confirming the concrete Stop-hook-vs-advisory fork this gate resolves in text.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:39:44.046945+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-mid-flight-reason",
+      "why": "_mid_flight_reason now states Stop-hook authority over the SOFT-band context-trip advisory explicitly and names spine_halt block as the sanctioned mid-gate exit, replacing the old 'Keep working the gate' duplicate clause (net-deletion). _owning_session_reason read and left unchanged -- it already defers entirely to a different session/agent, a distinct scenario from this agent's own advisory-vs-Stop-hook fork, so the precedence statement does not apply there. checklist_engine.py and mcp_spine_server.py untouched (confirmed by git diff --name-only).",
+      "mechanical": false,
+      "ts": "2026-08-17T05:40:14.812274+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-crew-dispatch-doc",
+      "why": "Added two sentences immediately after the existing spine_halt block guidance in the 'do not park' section, stating Stop-hook-over-advisory precedence and naming spine_halt block as the resolution when advisory and open gate conflict. git diff confirms only that section changed; no other file touched.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:40:39.245781+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-scope-verify",
+      "why": "git diff --stat confirms only scripts/hooks/spine_rail.py and skills/commander/references/crew-dispatch.md changed (11 lines: 9 insertions/4 deletions across both). git status --porcelain shows the same two tracked files modified plus only the untracked .agent-work work area. ast.parse confirms spine_rail.py still parses. checklist_engine.py and mcp_spine_server.py absent from the diff.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:40:54.983465+00:00"
+    }
+  ]
+}

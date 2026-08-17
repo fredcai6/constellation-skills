@@ -1,0 +1,245 @@
+{
+  "work_id": "g1-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a",
+    "r4b",
+    "r4c"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md, g1-reviewer-handoff.md, g1-implementer-handoff.md (corrected, with REWORK NOTE), g1-implementer-result.md, and the diff (git diff -- scripts/spine_lifecycle.py tests/test_spine_lifecycle.py).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Handoff satisfied. Independently reproduced: (1) load-bearing check - 'closeout_refusal' not in inspect.getsource(sl.done_refusal) -> False; (2) mutation red-proof - injecting a closeout_refusal reference into done_refusal makes test_does_not_call_closeout_refusal fail, confirming the guard is real; (3) done_refusal purity - no Path(/open(/subprocess. in source; (4) checklist_engine.main call sites - text grep shows 5 hits but 4 are docstring/comment prose (module docstring, decision-block comment, _engine_call's own docstring x2), the test suite's own AST-based check (test_is_the_only_place_this_module_calls_checklist_engine_main) confirms exactly one real call site at line 658 inside _engine_call's span (621-668); (5) closeout_refusal called from exactly one place (line 513, inside close_work); (6) full suite 59 pre-change -> 95 post-change (36 new), reproduced independently via git stash; (7) HARD-band fixture genuinely trips the band - verified all four preconditions (gate in-progress, active lease, observed_at>=claimed_at, model claude-opus-5 in gauge_reader._PROFILES) plus the test file's own negative-control test; why-less close refused with 'cannot be closed silently' verbatim engine text, same fixture then closes cleanly with why supplied; (8) fenced files (checklist_engine.py, mcp_spine_server.py, spine_rail.py) show empty git diff --stat; (9) validate_spine.py run against cmdr-g/execute.json is read-only (sha256 unchanged before/after, never a live lease file written).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Scope respected. git status --porcelain shows only scripts/spine_lifecycle.py and tests/test_spine_lifecycle.py modified (the two allowed-scope files); .agent-work/*, RETURN.md, notes-g.md are untracked workflow artifacts, not code. Specific exclusions all clean: fenced files (checklist_engine.py, mcp_spine_server.py, hooks/spine_rail.py) show empty git diff --stat; force_reap/_release_child_plans/finish_work/open_pr not defined anywhere (grep empty); closeout_refusal/close_work unchanged (only new prose in surrounding docstrings, function bodies untouched, verified via git diff -U0 change-line grep). Wiring grep confirms done_refusal/_engine_call/_advance_and_release have no production callers outside their own definitions and the test file -- matches the handoff's expectation that g3's finish_work is the intended future caller.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Required evidence present and reproduced independently (not merely trusted from the implementer report): exact refusal strings match the handoff verbatim ('close refused: the working tree has uncommitted changes' / 'close refused: this run captured no episode'), check order tested explicitly (tree before episode), TypeError on archive_exists kwarg confirms the signature has no such param, purity asserted by source-text absence of open(/subprocess./Path(. HARD-band and unmet-postcondition tests independently re-run and green, with a genuine negative control proving the hard-band fixture is really active (not silently declined). 59->95 test count independently reproduced via git stash. All confirmatory evidence (fenced-file empty diff, live-spine read-only check) also independently reproduced.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All three handoff constraints checked individually (r4a-r4c), all pass. Change meets inherited project rules.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No divergence from recorded architecture needing Commander reconciliation. Map Impact notes verified against diff: structural line numbers match (closeout_refusal:141, done_refusal:183, close_work:444 exact; _engine_call ~623 vs actual 621, _advance_and_release ~665 vs actual 670 -- both close approximations, not wrong). decision:library-reuse-over-file-edit honored -- confirmed no edits to fenced files, all engine calls in-process via checklist_engine.main(argv). Capability claim (verify+close primitives, no production caller yet, g3 is intended consumer) matches the wiring grep -- not overstated. No decision candidates requiring authority beyond what the REWORK NOTE already resolved. Out-of-scope observation from the implementer (the abandoned g1-implementer-plan.json 'stand down' collision) is correctly routed as a flag for Commander/Admiral rather than silently resolved -- carried forward as a triage/out-of-scope observation in this review result too.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/<work-id>/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/<work-id>/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-567-door/cmdr-g/g1-review/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass complete over the diff (12/12 smells rendered, recorded to .agent-work/epic-567-door/cmdr-g/g1-review/FOWLER_PASS.json). 10 absent, 1 flagged (duplicated-code: the 3x repeated call/check/return shape in _advance_and_release's start/advance/release sequence -- non-blocking, carried forward as a triage candidate), 1 overridden (primitive-obsession: the dict return shape is mandated by the handoff's Authority section and matches close_work's own pre-existing convention, logged standard+reason). verify_fowler_pass.py exits 0. Note: the survey template's r6-fowler postcondition command carried a literal unsubstituted <work-id> placeholder at instantiation -- corrected via amend --delta (retext-check) before this check could run; see workflow feedback.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-567-door/cmdr-g/g1-review/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a": {
+      "id": "r4a",
+      "title": "Never run against a live spine file",
+      "imperative": "Confirm all new tests use tmp_path fixtures only, never the live cmdr-g execute.json or spine.json; confirm the required validate_spine.py check is read-only.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 36 new tests build fixtures exclusively under tmp_path (grep for live paths like .agent-work/epic-567-door/spine.json or cmdr-g/spine.json in the new test block found none -- only the literal fixture filename 'spine.json' created under tmp_path via root=tmp_path). validate_spine.py .agent-work/epic-567-door/cmdr-g/execute.json independently re-run: sha256 identical before and after, confirming read-only.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b": {
+      "id": "r4b",
+      "title": "Pure/impure split at function granularity",
+      "imperative": "Confirm done_refusal is genuinely pure and _engine_call/_advance_and_release are impure only through _engine_call, matching the module docstring's stated split.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "done_refusal confirmed pure (no Path/open/subprocess in source, red-proofed via mutation earlier). _engine_call and _advance_and_release are impure and route through _engine_call only -- test_advance_and_release_goes_through_the_choke_point_only asserts 'subprocess' not in _advance_and_release's source and 'checklist_engine.main(' not in its source (only via _engine_call). Matches the module docstring's stated pure/impure split, and the new docstring bullets for all three functions state this explicitly.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4c": {
+      "id": "r4c",
+      "title": "POSIX-form commands; PYTHONIOENCODING=utf-8 for captured subprocess output",
+      "imperative": "Confirm no code path shells out via subprocess in the new functions (in-process only, per decision:library-reuse-over-file-edit), and that any real subprocess-based verification the implementer/reviewer ran used PYTHONIOENCODING=utf-8.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No new subprocess call path -- _engine_call/_advance_and_release/done_refusal are in-process only (checklist_engine.main(argv) called directly, per decision:library-reuse-over-file-edit). The module's pre-existing subprocess helpers (git wrappers) are untouched by this diff. All my own subprocess-based verification commands (pytest, git diff, git stash) were run under PYTHONIOENCODING=utf-8 per CREW_CONTEXT.md; the implementer's evidence shows the same for its byte-identity separate-process engine run.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "g1 verify+close primitives (done_refusal, _engine_call, _advance_and_release) implemented correctly per the corrected handoff. Load-bearing check independently reproduced (closeout_refusal not referenced in done_refusal's source, red-proofed via mutation). Fenced files untouched, closeout_refusal/close_work byte-identical, full suite 59->95 (36 new) independently reproduced, HARD-band path genuinely exercised with all four preconditions verified plus a negative control. One non-blocking Fowler observation (duplicated-code in _advance_and_release) carried as a triage candidate, not a blocker."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r6-fowler",
+      "statement": "Non-blocking cleanup candidate: _advance_and_release repeats the same 3-line call/check-code/return-refusal shape three times (start/advance/release stages). Extracting a small private helper (e.g. _call_stage(argv, stage) -> str, raising or returning a sentinel on non-zero exit) would remove the duplication. Low priority; does not affect correctness or the load-bearing behavior this gate exists to verify."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "Carried forward from the implementer's own out-of-scope observation (g1-implementer-result.md): the abandoned earlier attempt's .agent-work/epic-567-door/cmdr-g/g1-implementer-plan.json records a STAND DOWN blocker (a dispatching-fork-identity vs. real-cmdr-g collision on this same work-id) that was never adjudicated. Commander/Admiral should reconcile g1-implementer-plan.json and g1-implementer-plan-attempt2.json before archiving g1's work area -- this reviewer did not adjudicate it, as it is outside g1-review's authority."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g1-reviewer-sess1",
+    "status": "released",
+    "claimed_at": "2026-08-17T06:17:16.817693+00:00",
+    "last_heartbeat": "2026-08-17T06:25:17.849889+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T06:26:10.346159+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-17T06:23:10.656196+00:00",
+      "reason": "template's r6-fowler postcondition carried the literal <work-id> placeholder unsubstituted at instantiation time; resolving it to this survey's actual record path per the item's own fixed convention",
+      "authority": "cmdr-g",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}

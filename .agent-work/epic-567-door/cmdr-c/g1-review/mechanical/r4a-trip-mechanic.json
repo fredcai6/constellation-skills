@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4a-trip-mechanic",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-c/g1-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r4a-trip-mechanic",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-c/g1-review-r4a-trip-mechanic@08449af4987fedc1fce5125074ae02c3875421db",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-c/g1-review",
+    "generated_at": "2026-08-17T05:48:05Z"
+  }
+}

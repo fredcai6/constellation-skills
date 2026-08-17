@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m3-scope-verify",
+  "files": [],
+  "repo_rev": {
+    "commit": "600de020525b5cce8ce9f3131f4a6f2b49cb4b47"
+  },
+  "run": {
+    "work_id": "epic-567-door/cmdr-c/g1",
+    "generated_at": "2026-08-17T05:40:43Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/567-c-rail-readability",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-c-rail-readability",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-c-rail-readability"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-c-rail-readability"
+    }
+  }
+}

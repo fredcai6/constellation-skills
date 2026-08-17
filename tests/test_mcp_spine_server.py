@@ -43,6 +43,16 @@ EXPECTED_TOOLS = {
     "spine_capture", "spine_amend",
 }
 
+#: The LIFECYCLE tools -- `mcp_spine_server.LIFECYCLE_TOOL_NAMES`. None of them
+#: is an engine pass-through (none ever calls `run_engine`), so none covers an
+#: engine verb, and both surface claims below scope themselves off this set the
+#: same way `tests/test_mcp_identity.py`'s runtime sweep does. It is stated ONCE
+#: here rather than hand-copied into each test, because it has now had to grow
+#: twice (issue #559 C3/g3 added `spine_open`/`spine_close`; issue #567 lane A
+#: added `spine_bind`) and two copies of a growing set is two chances to update
+#: one of them.
+LIFECYCLE_TOOLS_COVER_NO_VERB = {"spine_open", "spine_bind", "spine_close"}
+
 #: Every engine verb, and the one tool that reaches it -- the completeness
 #: claim `scripts/mcp_spine_server.py`'s own docstring now makes ("18 of 18
 #: verbs covered"), pinned against the real TOOLS schemas rather than left as
@@ -238,14 +248,16 @@ class ServerProtocolTests(unittest.TestCase):
     def test_tools_list_is_exactly_the_nine_committed_tools(self):
         tools = self.client.rpc("tools/list")["result"]["tools"]
         names = {t["name"] for t in tools}
-        # issue #559, C3/g3 added 2 lifecycle tools (spine_open, spine_close)
-        # that are not engine pass-throughs (see mcp_spine_server.py's module
-        # docstring, "The lifecycle door") -- EXPECTED_TOOLS names the
-        # original 9 engine tools this test was written for, unchanged.
-        self.assertEqual(EXPECTED_TOOLS, names - {"spine_open", "spine_close"})
-        self.assertEqual(11, len(tools),
-                          "9 engine tools + 2 lifecycle tools (issue #559, N1/C3) -- "
-                          "not one tool per verb, and no verb left uncovered")
+        # The lifecycle tools are not engine pass-throughs (see
+        # mcp_spine_server.py's module docstring, "The lifecycle door") --
+        # EXPECTED_TOOLS names the original 9 engine tools this test was written
+        # for, unchanged, and the count is DERIVED from the two sets rather than
+        # written as a literal that has to be remembered.
+        self.assertEqual(EXPECTED_TOOLS, names - LIFECYCLE_TOOLS_COVER_NO_VERB)
+        self.assertEqual(len(EXPECTED_TOOLS) + len(LIFECYCLE_TOOLS_COVER_NO_VERB), len(tools),
+                          "9 engine tools + the lifecycle tools (issue #559 N1/C3, "
+                          "issue #567 lane A) -- not one tool per verb, and no verb "
+                          "left uncovered")
         for t in tools:
             self.assertIn("description", t)
             self.assertIn("inputSchema", t)
@@ -754,13 +766,13 @@ class AllEighteenVerbsCoveredTests(unittest.TestCase):
 
     def test_every_engine_verb_maps_to_a_tool_the_live_door_actually_advertises(self):
         tools = self.client.rpc("tools/list")["result"]["tools"]
-        # issue #559, C3/g3's spine_open/spine_close never call run_engine and so
-        # cover no engine verb by design (see mcp_spine_server.py's module
-        # docstring, "The lifecycle door") -- excluded here the same way
-        # tests/test_mcp_identity.py's runtime sweep scopes itself off
-        # LIFECYCLE_TOOL_NAMES, so this stays a completeness claim about the 9
-        # engine tools, not a claim that a lifecycle tool must map to a verb.
-        advertised = {t["name"] for t in tools} - {"spine_open", "spine_close"}
+        # The lifecycle tools never call run_engine and so cover no engine verb
+        # by design (see mcp_spine_server.py's module docstring, "The lifecycle
+        # door") -- excluded here the same way tests/test_mcp_identity.py's
+        # runtime sweep scopes itself off LIFECYCLE_TOOL_NAMES, so this stays a
+        # completeness claim about the 9 engine tools, not a claim that a
+        # lifecycle tool must map to a verb.
+        advertised = {t["name"] for t in tools} - LIFECYCLE_TOOLS_COVER_NO_VERB
         self.assertEqual(
             18, len(VERB_TO_TOOL),
             "VERB_TO_TOOL must name all 18 engine verbs, or this test is vacuous",

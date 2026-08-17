@@ -21,30 +21,84 @@ Pure/impure split at FUNCTION granularity, matching `generate_spine.py`,
   the work area, compiles the spine (`generate_spine`, imported, never
   re-implemented), injects `origin`, re-validates, and self-verifies isolation --
   rolling back everything it created on any failure at or after `git worktree add`.
+- `done_refusal` is PURE on the same terms and covers the two checks the spine
+  dict cannot answer on its own (a clean tree, a captured episode) -- called on
+  the CURRENT state, before `_advance_and_release` runs, while the lease is
+  still active by definition. It does NOT call `closeout_refusal`:
+  `closeout_refusal`'s own first check refuses unless the lease has already
+  been released, so folding it in here would refuse every legitimate call.
+  `closeout_refusal`'s lease/terminality/archive logic stays exclusively in
+  `close_work`, downstream, after release. One actionable refusal, never a
+  ritual to re-derive (#574).
+- `_engine_call` is impure and is the SINGLE place this module calls
+  `checklist_engine.main(argv)` in-process (the pattern
+  `mcp_spine_server.run_engine` sets), returning `(output, exit_code)` and never
+  raising -- `SystemExit` from `argparse` is caught alongside `EngineError`.
+- `_advance_and_release` is impure and is the CLOSE half: it advances the gate
+  the run is inside (`--why` when one is given, else `--mechanical`) and then
+  releases the lease, through `_engine_call` only. A refused advance comes back
+  verbatim and the release is never attempted.
 - `close_work` is impure: it calls `closeout_refusal` and, if refused, does
   nothing at all; otherwise it `git mv`s every top-level entry under the work
   area except the bound spine and its journal, then `git mv`s those two last,
   then commits. It never advances, releases, opens a PR, or removes a
   worktree -- those are the caller's, before and after this call.
+- `force_reap` is impure and is the REAP half (#552): a library call into
+  `spine_rail._binding_transaction` with an identity mutate, forcing an
+  immediate persist of the already-reaped binding-store map instead of
+  waiting on some future unrelated session's touch. Zero edits to
+  `spine_rail.py` -- it is called, never re-derived.
+- `_release_child_plans` is impure and is the other #552 half: it releases
+  the lease of every CHILD plan a bound spine's tasks declare via
+  `child_checklist` (lineage, never directory proximity), as an explicit
+  forced NON-owner (`--force --reason`, through `_engine_call`, never by
+  echoing a child's own `session_id` back as the caller id), refusing any
+  candidate whose `realpath` escapes the work directory. An undeclared
+  active-leased file is left alone and reported, never seized.
+- `finish_work` is impure and is the ONE-CALL COMPOSITION (#574): verify
+  (`done_refusal`) -> release every child plan (`_release_child_plans`, before
+  anything else) -> release the top-level lease (`_advance_and_release`) ->
+  reap (`force_reap`, only after every release above -- reaping first would
+  leave a still-active child's binding entry stale, reproducing #552 inside
+  this very function) -> archive (`close_work`, unmodified) -> push -> an
+  optional PR. Never raises for a normal closeout refusal; returns a
+  structured `{"ok": False, "refusal": ..., "stage": ...}` instead.
+- `open_pr` is impure, independently callable, and NOT invoked by `finish_work`
+  unless `open_pr=True` is passed explicitly -- the launch order's PR-opening
+  question (`decision:pr-opening-question-is-not-yours`) is floated, not
+  ruled, so this module ships both the default (a wrapper calls `open_pr`
+  itself) and the opt-in (`finish_work(open_pr=True)`) without needing to
+  guess which a later ruling picks. Writes the PR body via a temp file and
+  `--body-file`, never a heredoc `--body` string.
+- `scripts/spine_done_cli.py` (a sibling file, not this module) is the thin,
+  reachable-today CLI door over `finish_work` -- usable without waiting on
+  `mcp_spine_server.py`'s concurrent rewrite to wire an actual `spine_done`
+  MCP tool.
 """
 
 from __future__ import annotations
 
 import contextlib
+import io
 import json
 import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import checklist_engine  # noqa: E402
 import generate_spine  # noqa: E402
 import init_work_area  # noqa: E402
 import run_crew  # noqa: E402
 import validate_spine  # noqa: E402
 import verify_worktree_isolation  # noqa: E402
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "hooks"))
+import spine_rail  # noqa: E402
 
 
 class SpineLifecycleError(Exception):
@@ -68,6 +122,31 @@ def branch_name_for(work_id: str) -> str:
     """The branch name: `work_id` verbatim -- matches every branch in this
     epic."""
     return work_id
+
+
+def session_id_for(work_id: str) -> str:
+    """The lease identity a spine for `work_id` is driven under:
+    `constellation/<work_id>`. **The ONE definition.**
+
+    Two callers, deliberately: `open_work` returns it as `SPINE_SESSION` when it
+    MINTS a spine (step 9 below), and the door's `spine_bind`
+    (`mcp_spine_server.py::_spine_bind`) recovers it from a spine that already
+    exists, so binding a spine yields byte-identical identity to having been
+    launched bound to it. Two copies of one f-string would let "the identity a
+    spine was opened under" and "the identity a spine is bound under" disagree
+    while both looked right, and the engine matches session ids by plain string
+    equality -- there is nothing downstream that would notice.
+
+    Pure on purpose: no clock, no environment, no filesystem. A session id
+    derived from ambient state could not be reproduced by a second process
+    binding the same spine, which is exactly the property `spine_bind` needs.
+
+    NOT `run_crew.assignment_session_name` (`constellation/<work-id>/<gate>/<role>`),
+    which names an ASSIGNMENT and cannot be derived from a spine at all -- `gate`
+    and `role` are knowledge only the dispatcher has. The launch-time path keeps
+    using that one; this is the coarser, spine-shaped identity a door that binds
+    itself must take, because nobody handed it an assignment."""
+    return f"constellation/{work_id}"
 
 
 def archive_name_for(work_id: str, *, today: str) -> str:
@@ -158,6 +237,47 @@ def closeout_refusal(spine: dict, *, archive_exists: bool) -> str | None:
     if archive_exists:
         return "close refused: the archive directory already exists"
 
+    return None
+
+
+def done_refusal(
+    spine: dict, *, tree_clean: bool, episodes_captured: bool,
+) -> str | None:
+    """The two checks a spine dict cannot answer on its own: `None` when both
+    pass, else ONE refusal message naming why. PURE -- dict/bool in,
+    str-or-None out; no `Path`, no `open`, no `subprocess`, so it sits beside
+    its pure siblings above.
+
+    ONE actionable refusal, never a ritual to re-derive (#574). The caller
+    finishing a run gets a single sentence naming the one thing to fix, and the
+    checks run in a fixed order so the message is deterministic:
+
+    1. `tree_clean` -- the working tree has no uncommitted changes.
+    2. `episodes_captured` -- this run captured at least one episode.
+
+    `spine` is accepted (matching the calling convention of the rest of this
+    module's refusal predicates) but is not consulted by either check above --
+    neither the git working tree nor this run's episode capture is derivable
+    from the spine dict, so both are the caller's to resolve and pass in.
+
+    THIS FUNCTION MUST NOT CALL OR FOLD IN THE OTHER REFUSAL PREDICATE FARTHER
+    UP THIS FILE (the one gating the lease/terminality/archive-directory move),
+    and takes no `archive_exists` argument. `done_refusal` is called on the
+    CURRENT state, BEFORE the advance-then-release step runs -- the lease is BY
+    DEFINITION still active at that point (that is the condition that later
+    step exists to fix). That other predicate's own first check refuses unless
+    the lease has already been marked released, so a `done_refusal` that
+    included it would refuse on every legitimate call, before the step that
+    would actually release the lease ever runs. That predicate is not
+    re-derived here and not skipped either -- it still runs, unchanged, exactly
+    once, downstream in the move-to-archive step (unmodified, called after
+    release) -- that is the one and only place lease/terminality/archive-exists
+    gets checked.
+    """
+    if not tree_clean:
+        return "close refused: the working tree has uncommitted changes"
+    if not episodes_captured:
+        return "close refused: this run captured no episode"
     return None
 
 
@@ -354,7 +474,7 @@ def open_work(
     # 9. Return the crew-binding values.
     return {
         "SPINE_FILE": str(spine_path),
-        "SPINE_SESSION": f"constellation/{work_id}",
+        "SPINE_SESSION": session_id_for(work_id),
         "SPINE_PARENT": parent,
         "branch": branch,
         "worktree": worktree,
@@ -543,3 +663,541 @@ def close_work(
             f"archived under {archive_dir} -- ready to PR."
         ),
     }
+
+
+# --------------------------------------------------------------------------- #
+# closeout primitives (#574 g1) -- impure. `_engine_call` is the ONE place this
+# module talks to the engine; `_advance_and_release` is the close half of
+# "finish this run" (the verify half is `done_refusal`, pure, above), and it
+# goes through `_engine_call` and nothing else.
+#
+# LIBRARY REUSE, NOT A FILE EDIT (decision:library-reuse-over-file-edit): these
+# call `checklist_engine.main(argv)` in-process rather than adding anything to
+# `checklist_engine.py`, mirroring how this module already imports
+# `generate_spine`/`init_work_area`/`run_crew`/`validate_spine` instead of
+# re-implementing them.
+# --------------------------------------------------------------------------- #
+
+def _engine_call(argv: list[str]) -> tuple[str, int]:
+    """Call the real engine's `main(argv)` in-process and return
+    `(captured_output, exit_code)`. NEVER RAISES.
+
+    The pattern is `mcp_spine_server.run_engine`'s, deliberately (its module
+    docstring: "Every tool builds an argv and calls `checklist_engine.main(argv)`,
+    capturing stdout, stderr and the exit code"): stdout and stderr are
+    redirected into one `io.StringIO` and the exit code is returned alongside
+    the text. One buffer, not two, because the caller wants the engine's
+    MESSAGE whichever stream carried it -- `main()` prints a success message to
+    stdout and a `REFUSED:` line to stderr, and a caller that has to know which
+    is which is a caller that can drop a refusal.
+
+    THE SINGLE CHOKE POINT, and every caller in this module goes through it, so
+    there is exactly one place where "what the engine said" is captured and one
+    place where its failure modes are handled.
+
+    `SystemExit` is caught as well as `EngineError`, and that is load-bearing
+    rather than defensive tidiness. `argparse` calls `sys.exit(2)` on an argv it
+    cannot parse, and `checklist_engine.main()`'s own try/except catches only
+    `EngineError` -- so an argv-shape mismatch (a typo here, or a flag renamed
+    upstream) escapes as `SystemExit` and would bypass every `(output, code)`
+    check the callers below make. `SystemExit` is a `BaseException`, so no
+    `except Exception` can stand in for this clause. On it, the captured output
+    is returned with `int(exc.code or 0)`.
+
+    The broad clause after it keeps the never-raises promise total: `main()`
+    handles `EngineError` internally, but the work it does BEFORE that handler
+    -- `parse_args`, then `load()` on the path -- can still raise anything from
+    an `OSError` (no such file) to a `ValueError` (unparseable JSON), and a
+    closeout primitive that dies on a missing spine instead of reporting it is
+    the swallowed-refusal defect wearing a different hat. Ordered
+    `EngineError` first, since it is an `Exception` subclass.
+    """
+    buffer = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
+            code = checklist_engine.main(argv)
+    except SystemExit as exc:  # argparse rejected the argv (e.g. an unknown flag)
+        code = int(exc.code or 0)
+    except checklist_engine.EngineError as exc:
+        buffer.write(f"{type(exc).__name__}: {exc}")
+        code = 1
+    except Exception as exc:  # noqa: BLE001 - surface everything, never swallow
+        buffer.write(f"{type(exc).__name__}: {exc}")
+        code = 1
+    return buffer.getvalue().strip(), code
+
+
+def _advance_and_release(
+    spine_path: str | os.PathLike[str], session_id: str, *,
+    root: str | os.PathLike[str], why: str | None = None,
+) -> dict:
+    """Close the gate this run is inside, then release the lease -- the two
+    engine steps `close_work` deliberately does not do, in the one order that
+    is legal.
+
+    Sequence: read the spine; resolve the active gate with
+    `checklist_engine.active_id` (reused, never a second terminality rule);
+    `start` it if it is still `pending`; `advance` it -- with `--why <why>` when
+    `why` is a non-empty string, else `--mechanical`; then `release
+    --session-id`. When `active_id` is `None` every gate is already terminal, so
+    only the release is left.
+
+    Returns `{"ok": True, "output": <every step's output>}` or
+    `{"ok": False, "refusal": <verbatim engine text>, "stage":
+    "start"|"advance"|"release"}`.
+
+    A REFUSAL IS RETURNED VERBATIM AND THE RELEASE IS NOT ATTEMPTED. Not
+    re-worded, not wrapped in a sentence of our own, exit code not swallowed:
+    the engine's message already names the exact fix, and an agent finishing a
+    run needs that one actionable line rather than a ritual to re-derive it
+    (#574). A release that happens after a refused advance is the same defect
+    with worse consequences -- it would leave the lease closed on a gate that
+    never closed.
+
+    `--mechanical` IS NEVER ASSUMED TO SUCCEED. `advance`'s `require_why` is
+    computed live at the engine's CLI boundary from
+    `checklist_engine._trip_hard_band_reading` (`_run_verb`, ~:3369) -- it is
+    not derived from anything passed in here -- and at/over the HARD context
+    band the engine refuses `--mechanical` outright. That refusal comes straight
+    back as `stage: "advance"`, carrying the engine's own instruction to re-run
+    with `--why`, which is plausibly the exact scenario #574 cites ("an
+    Admiral's closeout was refused at 23% context").
+
+    `root` resolves a relative `spine_path`, the same way `close_work` does it,
+    so a caller may hand either form.
+    """
+    root = Path(root).resolve()
+    spine_path = Path(spine_path)
+    absolute_spine_path = spine_path if spine_path.is_absolute() else root / spine_path
+
+    spine = json.loads(absolute_spine_path.read_text(encoding="utf-8"))
+    file_args = ["--file", str(absolute_spine_path)]
+    session_args = ["--session-id", session_id]
+    outputs: list[str] = []
+
+    gate = checklist_engine.active_id(spine)
+    if gate is not None:
+        task = (spine.get("tasks") or {}).get(gate)
+        status = task.get("status") if isinstance(task, dict) else None
+        if status == "pending":
+            output, code = _engine_call([*file_args, "start", gate, *session_args])
+            if code != 0:
+                return {"ok": False, "refusal": output, "stage": "start"}
+            outputs.append(output)
+
+        why_args = ["--why", why.strip()] if (why or "").strip() else ["--mechanical"]
+        output, code = _engine_call([*file_args, "advance", gate, *why_args, *session_args])
+        if code != 0:
+            # Verbatim, and NO release: see the docstring. The engine's own
+            # message is the actionable one.
+            return {"ok": False, "refusal": output, "stage": "advance"}
+        outputs.append(output)
+
+    output, code = _engine_call([*file_args, "release", *session_args])
+    if code != 0:
+        return {"ok": False, "refusal": output, "stage": "release"}
+    outputs.append(output)
+
+    return {"ok": True, "output": "\n".join(outputs)}
+
+
+# --------------------------------------------------------------------------- #
+# force_reap -- reap + child-plan release (#552's mechanism), g2. A LIBRARY
+# call into spine_rail's existing transaction helper, not a re-derivation of
+# it: `spine_rail.py` is edited nowhere in this module.
+# --------------------------------------------------------------------------- #
+
+def force_reap(project_dir: str | os.PathLike[str]) -> dict | None:
+    """Force an immediate persist of the binding store's already-reaped map,
+    rather than waiting on some future unrelated session's touch to trigger
+    it.
+
+    A LIBRARY call into `spine_rail._binding_transaction` with an IDENTITY
+    mutate (`lambda reaped: reaped`) -- `_binding_transaction` already loads
+    the registry, reaps it UNDER THE LOCK (`_reap_binding_entries` drops any
+    entry whose target reads `engine_session.status == "released"`), hands the
+    ALREADY-REAPED map to `mutate`, and persists exactly when the result
+    differs from what it loaded. Handing the reaped map straight back is
+    therefore sufficient to make the reap durable NOW -- an identity mutate
+    is not a no-op here, because what changed is the registry's OWN load-time
+    reap being written out rather than discarded at the end of this call.
+
+    Returns `None` on any fail-open path inside `_binding_transaction` (lock
+    contention, lock timeout, a lock-API error, or a replace failure) -- that
+    IS a real answer on those paths, not an error, and is propagated
+    verbatim; see `_binding_transaction`'s own docstring for the full list.
+
+    `project_dir` is always a `tmp_path` fixture in tests -- never this
+    repo's own root, so no test call can mutate the real
+    `.agent-work/.spine-rail-binding.json`.
+    """
+    return spine_rail._binding_transaction(Path(project_dir), lambda reaped: reaped)
+
+
+# --------------------------------------------------------------------------- #
+# _release_child_plans -- the other half of #552's mechanism: reaping the
+# binding store only removes entries for spines that already read
+# `released`; a child plan whose own lease is still `active` is invisible to
+# that reap and must be released explicitly before an archive can claim zero
+# active leases. Three safety properties, each SHIPPED runtime guard:
+#
+# 1. LINEAGE, not directory proximity -- a child is identified structurally:
+#    a JSON file whose realpath is strictly inside `work_dir` AND which some
+#    task in the parent spine names in its `child_checklist` field.
+# 2. HONEST NON-OWNER RELEASE -- released via `release --force --reason`,
+#    never by echoing the child's own `engine_session.session_id` back as the
+#    caller id (that would make the ownership check tautological).
+# 3. ESCAPE REFUSAL -- every candidate is resolved with `realpath` and
+#    refused unless strictly inside `work_dir`, so a symlink inside the work
+#    area cannot reach a spine outside it.
+# --------------------------------------------------------------------------- #
+
+def _release_child_plans(
+    spine_path: str | os.PathLike[str], work_dir: str | os.PathLike[str], *,
+    root: str | os.PathLike[str], reason: str,
+) -> dict:
+    """Release the lease of every CHILD plan of the spine at `spine_path`,
+    and report what was left alone.
+
+    Returns `{"released": [str, ...], "unclaimed_active": [str, ...]}` --
+    absolute-path strings, in the order `work_dir` is walked.
+
+    A "child" is identified STRUCTURALLY (property 1), never by directory
+    proximity: a `*.json` file under `work_dir`, resolved via
+    `Path.resolve()` and refused unless strictly inside `work_dir`
+    (`is_relative_to`, property 3 -- a symlink escape is refused the same
+    way at both the declaration and the scan), that SOME task in the parent
+    spine's `tasks` names in its `child_checklist` field (resolved relative
+    to `work_dir`, matching the live convention -- `interrogation.json`,
+    `execute.json`, ... sit directly beside the parent spine). The bound
+    spine at `spine_path` itself is excluded from the scan (mirroring
+    `close_work`'s spine/journal exclusion) -- it is not its own child, and
+    at call time its own lease is BY DEFINITION still active (the same
+    reason `done_refusal` runs before `_advance_and_release`, not after).
+
+    Only a declared child whose OWN `engine_session.status == "active"` is
+    touched. An active-leased JSON under `work_dir` that no task declares is
+    left alone entirely and reported in `unclaimed_active` -- releasing it
+    would seize a lease a different, still-working agent genuinely holds,
+    which is explicitly not this function's call to make (widening the
+    child-identification predicate or releasing an `unclaimed_active` file
+    needs authority this run does not have).
+
+    Each declared, active child is released as the explicit NON-OWNER it is
+    (property 2): `release --session-id <caller> --force --reason <reason>`
+    through `_engine_call` -- the SAME single choke point `_advance_and_release`
+    uses, never a second call path. `<caller>` is the PARENT spine's OWN
+    `engine_session.session_id` (falling back to a synthetic label only if
+    the parent carries none) -- NEVER a read of the CHILD's own
+    `session_id`. Echoing the child's id back would make `release`'s
+    ownership check (`session_id != sess.get("session_id")`,
+    `checklist_engine.py:1133-1147`) tautological, forging an ownership this
+    run does not have; it would also falsify the journal's own
+    `session_id` field, the audit trail `--force --reason` exists to keep
+    honest. A release the engine still refuses (e.g. an empty `reason`) is
+    NOT silently dropped -- the child is reported in `unclaimed_active`
+    instead, since its lease did in fact remain active.
+
+    `reason` is passed straight through to `--reason`; naming the parent
+    `work_id` and stating this is a parent closeout is the CALLER's
+    responsibility (`finish_work`, g3), not derived here.
+    """
+    root = Path(root).resolve()
+    spine_path = Path(spine_path)
+    absolute_spine_path = spine_path if spine_path.is_absolute() else root / spine_path
+    resolved_work_dir = Path(work_dir).resolve()
+
+    spine = json.loads(absolute_spine_path.read_text(encoding="utf-8"))
+    tasks = spine.get("tasks")
+    tasks = tasks if isinstance(tasks, dict) else {}
+
+    parent_session = spine.get("engine_session")
+    caller_id = (
+        parent_session.get("session_id")
+        if isinstance(parent_session, dict) and parent_session.get("session_id")
+        else f"parent-closeout:{absolute_spine_path}"
+    )
+
+    excluded: set[Path] = set()
+    try:
+        excluded.add(absolute_spine_path.resolve())
+    except OSError:
+        pass
+
+    declared_children: set[Path] = set()
+    for task in tasks.values():
+        if not isinstance(task, dict):
+            continue
+        child_ref = task.get("child_checklist")
+        if not isinstance(child_ref, str) or not child_ref.strip():
+            continue
+        child_path = Path(child_ref)
+        candidate = child_path if child_path.is_absolute() else resolved_work_dir / child_path
+        try:
+            resolved = candidate.resolve()
+        except OSError:
+            continue
+        if not resolved.is_relative_to(resolved_work_dir):
+            continue  # property 3: escape refusal, even at declaration time
+        declared_children.add(resolved)
+
+    released: list[str] = []
+    unclaimed_active: list[str] = []
+
+    try:
+        candidates = sorted(resolved_work_dir.rglob("*.json"))
+    except OSError:
+        candidates = []
+
+    for candidate in candidates:
+        try:
+            resolved = candidate.resolve()
+        except OSError:
+            continue
+        if not resolved.is_relative_to(resolved_work_dir):
+            continue  # property 3: a symlink walking outside work_dir, refused
+        if resolved in excluded:
+            continue  # the bound spine itself -- not a child
+
+        try:
+            data = json.loads(candidate.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if not isinstance(data, dict):
+            continue
+        session = data.get("engine_session")
+        if not isinstance(session, dict) or session.get("status") != "active":
+            continue  # no active lease here -- nothing to reap
+
+        if resolved not in declared_children:
+            # property 1: proximity alone is not lineage -- leave it alone.
+            unclaimed_active.append(str(candidate))
+            continue
+
+        output, code = _engine_call([
+            "--file", str(candidate),
+            "release", "--session-id", caller_id,
+            "--force", "--reason", reason,
+        ])
+        if code == 0:
+            released.append(str(candidate))
+        else:
+            # A declared child the engine still refused to release keeps its
+            # active lease -- report it rather than silently dropping it.
+            unclaimed_active.append(str(candidate))
+
+    return {"released": released, "unclaimed_active": unclaimed_active}
+
+
+# --------------------------------------------------------------------------- #
+# finish_work + open_pr (#574 g3) -- "I'm done" as one call, composing g1's
+# verify/close primitives (done_refusal, _advance_and_release) and g2's reap +
+# child-plan release (_release_child_plans, force_reap) with close_work
+# (unmodified) in the ONE order the plan critique and its cold-critic
+# duplicate both fix: verify -> release children -> release the top-level
+# lease -> reap -> archive -> push -> (optional) open a PR.
+#
+# NEITHER close_work NOR any of g1/g2's functions is edited here -- this is
+# composition only, through the same _engine_call choke point they already
+# use internally, never a second call path.
+# --------------------------------------------------------------------------- #
+
+def finish_work(
+    spine_path: str | os.PathLike[str], *, root: str | os.PathLike[str],
+    session_id: str, today: str, tree_clean: bool, episodes_captured: bool,
+    why: str | None = None, push: bool = True, open_pr: bool = False,
+) -> dict:
+    """One call: "I'm done." An agent that has genuinely finished a run should
+    never need to hand-sequence release -> reap -> archive -> push, and a run
+    that is NOT ready should get one clean, actionable refusal -- never a
+    partial mutation, never a swallowed exception, never a call into
+    `close_work` that spuriously refuses because the ordering was wrong.
+
+    `tree_clean`/`episodes_captured` are not part of the handoff's headline
+    signature line, but ARE structurally required: step 2 below passes them
+    straight to `done_refusal`, and the CLI (`spine_done_cli.py`) collects
+    them as `--tree-clean`/`--episodes-captured` flags precisely so it has
+    something to pass here. Treated as a signature gap in the handoff, not a
+    license to invent a different check -- see this run's IMPLEMENTER_RESULT.
+
+    THE COMPOSITION ORDER IS LOAD-BEARING (PLAN_CRITIQUE.md finding 1/2,
+    PLAN_CRITIC.md's matching findings 1-3, and g1/g2's own independent
+    re-discoveries of the same facts):
+
+    1. Load the spine dict from `spine_path` (resolved against `root`, the
+       same pattern `close_work`/`_advance_and_release` already use).
+    2. `done_refusal(spine, tree_clean=tree_clean, episodes_captured=episodes_captured)`.
+       If refused: return `{"ok": False, "refusal": ..., "stage": "verify"}`
+       immediately. NOTHING has been touched at this point -- no mutation on
+       this path.
+    3. `_release_child_plans(...)` -- BEFORE the top-level release and BEFORE
+       any reap. Its own refusal path (an engine refusal on one specific
+       child) does not raise; that child comes back in `unclaimed_active`,
+       per its own docstring, and this function does not special-case it.
+    4. `_advance_and_release(...)` -- the top-level spine's own close. A
+       refusal here returns `{"ok": False, "refusal": ..., "stage":
+       f"advance-release:{substage}"}` and STOPS -- but step 3's releases are
+       NOT unwound. A run whose top-level gate isn't ready to close but whose
+       children already finished is a real, valid intermediate state, not a
+       rollback candidate.
+    5. `force_reap(root)` -- AFTER every release in steps 3 and 4, never
+       before: `_reap_binding_entries` only drops an entry whose target
+       already reads `released`, so reaping before children are released
+       would leave every child's binding-store entry stale -- reproducing
+       the exact #552 defect this gate exists to close. A `None` return
+       (`force_reap`'s fail-open path) is not a `finish_work` failure -- it
+       is logged in the return (`"reap": None`) and the run continues.
+    6. `close_work(...)` -- existing, UNMODIFIED. The one and only place
+       `closeout_refusal` (lease/terminality/archive-exists) is checked; by
+       now the lease is already released (step 4), so it will not spuriously
+       refuse. A `SpineLifecycleError` here is caught and returned as
+       `{"ok": False, "refusal": str(exc), "stage": "archive"}` -- NEVER
+       propagated. `finish_work`'s whole contract is "one call, one clean
+       result or one clean refusal," never a raised exception on a normal
+       "not ready yet" outcome.
+    7. `git push origin <branch>` (branch read from `close_work`'s own return)
+       when `push=True`. A push failure is reported (`"pushed": False`, plus
+       `"push_error"` naming the git error text) but does NOT unwind steps
+       1-6 -- the archive move already committed locally; a failed push is a
+       network/auth problem to retry, not a reason to fail the whole call.
+    8. `open_pr(...)` -- called ONLY when `open_pr=True`. Not called by
+       default. `open_pr` is a separate, independently-callable helper
+       (below) -- this is the floated PR-opening question
+       (`decision:pr-opening-question-is-not-yours`): Tommy has not ruled
+       whether PR-opening belongs in the engine verb or a wrapper script,
+       and this design adopts either answer without rework.
+
+    Returns, on success: `{"ok": True, "work_id", "branch", "head", "archive",
+    "pushed": bool, "push_error": str | None, "pr": None | str,
+    "child_plans_released": [...], "unclaimed_active": [...], "reap": dict |
+    None}`. On any of steps 2/4/6 refusing: `{"ok": False, "refusal": <the
+    verbatim engine or closeout text>, "stage": "verify" |
+    "advance-release:<substage>" | "archive"}`. Never raises for a normal
+    closeout refusal -- `SpineLifecycleError` stays reserved for genuine
+    faults elsewhere in the stack (e.g. `close_work`'s own git-command
+    failures), not the ordinary "not ready yet" outcome.
+    """
+    # The module-level `open_pr` function is captured via the module
+    # namespace, NOT the local scope: this function's own `open_pr: bool`
+    # parameter shadows the module-level `open_pr` name for the rest of this
+    # body -- deliberate, per the handoff's own signature (part (b) is
+    # "called only when open_pr=True"). `globals()` reads the module's
+    # namespace dict directly, so it is unaffected by the local shadowing.
+    open_pr_fn = globals()["open_pr"]
+
+    root = Path(root).resolve()
+    given_spine_path = Path(spine_path)
+    absolute_spine_path = given_spine_path if given_spine_path.is_absolute() else root / given_spine_path
+
+    work_dir = absolute_spine_path.resolve().parent
+    agent_work_dir = (root / ".agent-work").resolve()
+    work_id = work_dir.relative_to(agent_work_dir).as_posix()
+
+    # 1. Load the spine dict.
+    spine = json.loads(absolute_spine_path.read_text(encoding="utf-8"))
+
+    # 2. Verify -- refuse and stop; nothing mutated on this path.
+    refusal = done_refusal(spine, tree_clean=tree_clean, episodes_captured=episodes_captured)
+    if refusal is not None:
+        return {"ok": False, "refusal": refusal, "stage": "verify"}
+
+    # 3. Release every declared child plan's lease -- BEFORE the top-level
+    # release and BEFORE any reap.
+    child_result = _release_child_plans(
+        absolute_spine_path, work_dir, root=root,
+        reason=f"closeout: child plan swept by finish_work for {work_id}",
+    )
+
+    # 4. The top-level spine's own close: advance the active gate, then
+    # release the lease. A refusal here is returned verbatim; steps 3's
+    # releases already happened and are NOT unwound (see docstring).
+    advance_result = _advance_and_release(absolute_spine_path, session_id, root=root, why=why)
+    if not advance_result["ok"]:
+        return {
+            "ok": False,
+            "refusal": advance_result["refusal"],
+            "stage": f"advance-release:{advance_result['stage']}",
+        }
+
+    # 5. Reap -- AFTER every release above, never before (#552's ordering
+    # fix). A None return is a real, fail-open answer, not a failure here.
+    reap_result = force_reap(root)
+
+    # 6. Archive -- the one and only place closeout_refusal is checked.
+    # SpineLifecycleError is caught, never propagated: this is a normal
+    # "not ready" outcome, not a fault.
+    try:
+        close_result = close_work(absolute_spine_path, root=root, today=today)
+    except SpineLifecycleError as exc:
+        return {"ok": False, "refusal": str(exc), "stage": "archive"}
+
+    # 7. Push -- reported, never fatal to the already-committed archive move.
+    pushed = False
+    push_error: str | None = None
+    if push:
+        proc = subprocess.run(
+            ["git", "push", "origin", close_result["branch"]],
+            cwd=str(root), capture_output=True, text=True,
+        )
+        pushed = proc.returncode == 0
+        if not pushed:
+            push_error = (proc.stderr or proc.stdout or "").strip()
+
+    # 8. Open a PR -- only when explicitly requested. Not called by default.
+    pr_url = open_pr_fn(work_id, close_result["branch"], root=root) if open_pr else None
+
+    return {
+        "ok": True,
+        "work_id": close_result["work_id"],
+        "branch": close_result["branch"],
+        "head": close_result["head"],
+        "archive": close_result["archive"],
+        "pushed": pushed,
+        "push_error": push_error,
+        "pr": pr_url,
+        "child_plans_released": child_result["released"],
+        "unclaimed_active": child_result["unclaimed_active"],
+        "reap": reap_result,
+    }
+
+
+def open_pr(
+    work_id: str, branch: str, *, root: str | os.PathLike[str],
+    title: str | None = None, body: str | None = None,
+) -> str | None:
+    """A separate, independently-callable helper -- `finish_work` does NOT
+    call this unless `open_pr=True`. Takes no spine path at all, only
+    `work_id`/`branch`, so there is nothing here to accidentally mutate.
+
+    `gh pr create --title <title> --body-file <tmp file> --head <branch>` via
+    `subprocess.run`, cwd `root`. The PR body is ALWAYS written to a
+    `tempfile.NamedTemporaryFile` and passed with `--body-file` -- NEVER a
+    heredoc or a `--body` string -- per this repo's own Windows-shell
+    doctrine (`skills/_shared/windows.md`): a heredoc/here-string fails `gh
+    pr create --body` on at least one platform this repo supports.
+
+    Returns the PR URL parsed from the last non-blank line of `gh`'s stdout
+    (what `gh pr create` prints on success), or `None` if `gh` fails -- NEVER
+    raises. A failed PR-open is a reportable fact, not a fault.
+    """
+    root = Path(root).resolve()
+    pr_title = title if title is not None else f"chore: close {work_id}"
+    pr_body = body if body is not None else ""
+
+    fd, body_file = tempfile.mkstemp(suffix=".md", prefix="spine-pr-body-")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(pr_body)
+        proc = subprocess.run(
+            ["gh", "pr", "create", "--title", pr_title, "--body-file", body_file, "--head", branch],
+            cwd=str(root), capture_output=True, text=True,
+        )
+    finally:
+        with contextlib.suppress(OSError):
+            os.unlink(body_file)
+
+    if proc.returncode != 0:
+        return None
+
+    lines = [line.strip() for line in proc.stdout.splitlines() if line.strip()]
+    return lines[-1] if lines else None

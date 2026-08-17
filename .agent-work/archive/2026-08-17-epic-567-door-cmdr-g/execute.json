@@ -1,0 +1,752 @@
+{
+  "work_id": "epic-567-door/cmdr-g",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read this skill's references/global-orchestrator.md and references/global-everyone.md, then docs/agents/ORCHESTRATOR_CONTEXT.md and docs/agents/GLOSSARY.md (already read at the commander context step). Confirm the frozen plan's intent and scope from MISSION_FRAME.md, PLAN_ALTERNATIVES.md (candidate B) and PLAN_CRITIC.md. All three of the critic's BLOCKING findings were independently verified against source by the Commander and are folded into the g1/g2/g3 imperatives: the HARD-band --mechanical refusal, the reap-before-child-release ordering inversion, and the tautological child-plan ownership check. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context confirmed; converged plan (candidate B, critic findings folded in) is the frozen scope for g1-g3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "doctrine + project deltas loaded at commander context step; frozen scope confirmed = candidate B with all 6 cold-critic findings folded in (PLAN_ALTERNATIVES.md cold-critic disposition)"
+        },
+        {
+          "id": "c2",
+          "statement": "the frozen plan artifacts exist on disk",
+          "check": {
+            "kind": "command",
+            "command": "test -f /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease/.agent-work/epic-567-door/cmdr-g/MISSION_FRAME.md && test -f /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease/.agent-work/epic-567-door/cmdr-g/PLAN_ALTERNATIVES.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-e0-context-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-e0-context-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease/.agent-work/epic-567-door/cmdr-g/MISSION_FRAME.md && test -f /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease/.agent-work/epic-567-door/cmdr-g/PLAN_ALTERNATIVES.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "verify + close primitives: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for g1. THREE functions in scripts/spine_lifecycle.py:\n\n(a) done_refusal(spine, *, tree_clean, episodes_captured) -> str|None -- PURE, ONE refusal string or None, covering ONLY the two genuinely new checks (tree clean/staged, episodes captured). REWORK NOTE (PLAN_CRITIC/PLAN_CRITIQUE finding 1, confirmed against checklist_engine.py -- if a prior attempt's done_refusal delegates to closeout_refusal for terminality/lease/archive-exists, that is the bug to fix, not a shape to keep): do NOT call or fold in closeout_refusal here. The lease is BY DEFINITION still active when this runs -- before _advance_and_release -- so a done_refusal that includes closeout_refusal's lease check (`status != 'released'`) refuses on every legitimate invocation, before the function that would actually release it ever runs. Gate-terminality is verified downstream by advance's own postcondition refusal; lease/terminality/archive-exists is verified exactly once, AFTER release, by close_work's existing unmodified closeout_refusal call -- never duplicated here.\n\n(b) _engine_call(argv) -> tuple[str, int] -- the SINGLE choke point for every in-process checklist_engine.main(argv) call in this module, mirroring the exact pattern scripts/mcp_spine_server.py's existing pass-through tools already use (its module docstring: 'Every tool builds an argv and calls checklist_engine.main(argv), capturing stdout, stderr and the exit code'). It MUST catch BOTH checklist_engine.EngineError AND SystemExit: argparse calls sys.exit(2) on an unparseable argv and checklist_engine.main()'s own try/except catches only EngineError, so an argv-shape mismatch (a typo, or lane A's concurrent rewrite changing a flag) would otherwise escape as SystemExit instead of the captured (output, exit_code) pair every caller here assumes. Returns always; never raises. [PLAN_CRITIC finding 4]\n\n(c) _advance_and_release(spine_path, session_id, *, root, why=None) -> dict -- impure, via _engine_call only. If the terminal gate is 'pending', 'start' it; if it is not yet terminal, 'advance' it passing --why <why> when a why was supplied and --mechanical otherwise; then 'release --session-id <session_id>'.\n\nLOAD-BEARING (PLAN_CRITIC finding 1, independently verified by the Commander against checklist_engine.py:2519-2534 in advance() and _run_verb:3361-3370): advance()'s require_why parameter is computed LIVE at the CLI boundary from _trip_hard_band_reading(...), NOT from any flag the caller passes -- and when it is true the engine REFUSES --mechanical outright ('context is at/over the hard limit, so this gate cannot be closed silently'). So never assume --mechanical works. When the advance half refuses for ANY reason, return that refusal text VERBATIM as the one actionable refusal (the engine's own message already names the fix) and do NOT attempt the release.\n\nTests in tests/test_spine_lifecycle.py: (1) fixture spine at its terminal gate, not yet advanced -> released afterwards; (2) fixture spine with an unmet postcondition -> refusal text passes through unchanged AND engine_session.status is still 'active' (release never attempted); (3) THE HARD-BAND PATH -- write a gauge file at/over the hard band beside a fixture spine (gauge_reader.gauge_filename(owner)/GAUGE_FILENAME shape, fill_fraction high enough to trip), assert a why-less finish attempt returns the engine's why-required refusal instead of silently closing, then assert the SAME fixture closes cleanly once a why is supplied; (4) _engine_call returns a non-zero exit code rather than raising SystemExit on a deliberately malformed argv.\n\nDispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT: attach g1-implement --type implementer-result --field status=<verbatim lowercase Return status>.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete; execution scope frozen"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "Sole writer this wave of scripts/spine_lifecycle.py and its tests -- do not touch scripts/checklist_engine.py or scripts/mcp_spine_server.py (fenced, lane A owns/is rewriting this wave)."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/spine_lifecycle.py -- closeout_refusal (:122-161), open_work/close_work"
+        ],
+        "capability": [
+          "mechanical-closeout-verify: precondition checks for #574 step 1"
+        ],
+        "constraint": [
+          "file-ownership fence: never edit checklist_engine.py or mcp_spine_server.py this wave",
+          "never run the new code against a live spine file (Admiral's epic-567-door/spine.json or any other session's active lease) -- fixtures/copies only"
+        ],
+        "decision": [
+          "library-reuse-over-file-edit -- close/reap sub-steps call checklist_engine.main(argv) in-process rather than editing checklist_engine.py, mirroring spine_lifecycle.py's existing reuse of generate_spine/init_work_area/run_crew/validate_spine. @grade: settled/measured \u00b7 leans g1-implement,g2-implement \u00b7 settle: re-measure if lane A's rewrite lands first"
+        ],
+        "evidence": [
+          "closeout_refusal's existing 3-check refusal order is unchanged and reused, not re-derived"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "verify + close primitives: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from the gate plan and IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for g1, integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "verify + close primitives: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify claimed side-effects against the world (re-run the test command yourself), then advance -- the command postcondition re-runs the check. BLOCK: return for rework or raise a blocker.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received, APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new unit tests for done_refusal and _advance_and_release pass, full suite stays green",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && python3 -m pytest tests/test_spine_lifecycle.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": "review-result verdict APPROVE"
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && python3 -m pytest tests/test_spine_lifecycle.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && python3 -m pytest tests/test_spine_lifecycle.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "reap + child-plan release: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for g2. TWO functions in scripts/spine_lifecycle.py:\n\n(a) force_reap(project_dir) -> dict|None -- a library call into spine_rail's existing _binding_transaction(project_dir, lambda reaped: reaped) (import scripts/hooks/spine_rail.py via spine_lifecycle.py's own sys.path insert, same pattern as its other imports; ZERO edits to spine_rail.py), forcing an immediate persist of the already-reaped map instead of waiting on some future unrelated session's touch.\n\n(b) _release_child_plans(spine_path, work_dir, *, root, reason) -> dict with keys {released: list[str], unclaimed_active: list[str]}.\n\nTHREE safety properties, each a SHIPPED RUNTIME GUARD and not a test-only discipline (PLAN_CRITIC finding 3, independently verified by the Commander against checklist_engine.py:1133-1147 release() and :975-1005 require_session()):\n\n  1. LINEAGE, NOT DIRECTORY PROXIMITY. A child plan is identified STRUCTURALLY: a JSON file whose realpath is strictly inside work_dir AND which some task in the parent spine names in its child_checklist field (resolve each task's child_checklist relative to work_dir). An active-leased JSON under work_dir that NO task claims as its child_checklist is LEFT ALONE and reported in unclaimed_active -- never silently released. 'Any active JSON under work_dir' is explicitly the wrong predicate: it would seize a lease a different, still-working agent genuinely holds.\n\n  2. HONEST NON-OWNER RELEASE. Do NOT read a child's own engine_session.session_id and hand it back to release() as the caller id -- release()'s ownership check is `session_id != sess.get('session_id')`, so that makes the check TAUTOLOGICAL and forges ownership this run does not have. Release each child as the explicit non-owner it is: 'release --force --reason <reason naming the parent work_id and that this is a parent closeout>', which the engine records as a forced non-owner release and so leaves a real audit trail.\n\n  3. ESCAPE REFUSAL. Resolve every candidate with realpath and refuse any whose resolved path is not strictly inside work_dir, so a symlink cannot reach a spine outside the work area.\n\nTests: force_reap fixture (binding-store entry whose target is already released -> gone immediately, asserted via spine_rail.load_binding, not by waiting for another transaction); _release_child_plans with 0/1/2 children DECLARED via child_checklist; NEGATIVE -- a spine outside work_dir sharing the work_id prefix is never touched; NEGATIVE -- an active-leased JSON inside work_dir that no task declares is not released and IS reported in unclaimed_active; NEGATIVE -- a symlink inside work_dir pointing outside it is refused.\n\nDispatch constellation-implementer; integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 primitives integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 integrated and complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "Do not edit scripts/hooks/spine_rail.py -- call its existing _binding_transaction as a library import only.",
+        "Do not edit scripts/checklist_engine.py or scripts/mcp_spine_server.py (fenced, lane A owns/is rewriting this wave).",
+        "Never run against a live spine file -- fixtures/copies only.",
+        "Child-plan identification is lineage-based (declared via a task's child_checklist) plus realpath containment; directory proximity alone is never sufficient.",
+        "Release a child as an explicit non-owner (--force --reason), never by echoing the child's own session id back as the caller id."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/hooks/spine_rail.py -- _reap_binding_entries (:311), _binding_transaction (:397)",
+          "scripts/spine_lifecycle.py -- _active_engine_session_spine (:180-209), the structural pattern to generalize"
+        ],
+        "capability": [
+          "mechanical-closeout-reap: immediate binding-store reap + child-plan lease release for #574 step 3 and #552"
+        ],
+        "constraint": [
+          "do-not-test-on-a-live-lease -- fixtures only",
+          "decision:child-plans-count -- the archive step must release CHILD PLANS' leases too, not just the top-level spine; this is the mechanism half of #552. @grade: settled/issue \u00b7 leans g2-implement,g3-implement"
+        ],
+        "decision": [
+          "child-plans-count (launch order pre-ruling) -- the archive step must release child plans' leases too, not just the top-level spine. @grade: settled/issue \u00b7 leans g2-implement"
+        ],
+        "evidence": [
+          "_reap_binding_entries already drops entries whose target spine reads engine_session.status=='released' -- force_reap must not weaken or duplicate that predicate, only trigger it early"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "reap + child-plan release: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from the gate plan and IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for g2, integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "reap + child-plan release: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify claimed side-effects against the world, then advance. BLOCK: return for rework or raise a blocker.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received, APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new unit tests for force_reap and _release_child_plans pass, full suite stays green",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && python3 -m pytest tests/test_spine_lifecycle.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1",
+          "attested": {
+            "evidence": "e-g2-review-1",
+            "note": "review-result verdict APPROVE"
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && python3 -m pytest tests/test_spine_lifecycle.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "finish_work composition + dispose + CLI: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for g3: add finish_work(spine_path, *, root, session_id, today, why=None, push=True, open_pr=False) -> dict to scripts/spine_lifecycle.py, composing g1+g2's functions.\n\nORDER IS LOAD-BEARING (PLAN_CRITIC finding 2, verified by the Commander against spine_rail.py:311-366 _reap_binding_entries):\n  1. done_refusal on the current state -- refuse-and-stop, ONE actionable message, zero mutation on failure.\n  2. _release_child_plans FIRST -- before any reap.\n  3. _advance_and_release on the top-level spine -- so the top spine's own release is the LAST journaled action on that spine (the lease covers every journaled action on it).\n  4. force_reap -- AFTER every release, never before. _reap_binding_entries only drops an entry whose target reads engine_session.status == 'released', so reaping first leaves every still-active child's binding entry behind for a future incidental transaction -- reproducing the exact #552 staleness this run exists to end.\n  5. close_work (existing, UNMODIFIED) -- the archive move.\n  6. git push when push=True.\n  7. open_pr(...) ONLY when open_pr=True.\n\nopen_pr is a NEW independently-callable helper NOT invoked by default, per the floated PR-opening question (decision:pr-opening-question-is-not-yours): a wrapper script can call spine_lifecycle.open_pr(...) itself today, and finish_work(open_pr=True) is the only change needed if the engine verb is later ruled to own it -- neither ruling costs rework.\n\nREFUSAL SHAPE (PLAN_CRITIC finding 6): finish_work never raises for a closeout refusal. It returns {ok: False, refusal: <verbatim engine or done_refusal text>, stage: <which step refused>} and performs no further step; on success it returns {ok: True, work_id, branch, head, archive, pushed, pr, child_plans_released, unclaimed_active}. SpineLifecycleError stays reserved for genuine faults, not for a refusal that is a normal outcome.\n\nAdd scripts/spine_done_cli.py (NEW file, not fenced) -- a thin CLI over finish_work (--file, --root, --session-id, --today, --why, --no-push, --open-pr) printing the returned dict as JSON and exiting non-zero on a refusal. This is the reachable-today 'one door verb', usable without waiting on lane A's mcp_spine_server.py rewrite.\n\nAdd the #552 LEASE-PROOF end-to-end fixture test: build a fixture work area under tmp_path with a top-level spine AND a nested child plan declared via child_checklist, claim BOTH, drive both to their terminal gate, run the structural active-lease census BEFORE (expect 2 active), run finish_work, run the census AFTER (expect 0 active), and assert the archive contains the child. Fixtures under tmp_path only -- never a live spine.\n\nAlso write to notes-g.md a READ-ONLY re-measurement of the launch order's lease census (every *.json under .agent-work/ whose engine_session.status is 'active', bucketed by age) against today's base commit, updating the abad896d/2026-08-10 figure of 43. Read-only: the census must mutate nothing, and must not touch .agent-work/epic-567-door/spine.json beyond reading it.\n\nDispatch constellation-implementer; integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 reap/child-release integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 integrated and complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "Never run finish_work or the new CLI against a live spine file -- fixtures under tmp_path only.",
+        "open_pr must not be called by default from finish_work.",
+        "Do not edit scripts/checklist_engine.py, scripts/mcp_spine_server.py, or scripts/hooks/spine_rail.py.",
+        "The current-tree lease census is READ-ONLY: it mutates nothing and never touches the Admiral's live epic spine beyond reading it."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/spine_lifecycle.py -- close_work (:384-545), the archive-move this composes on top of"
+        ],
+        "capability": [
+          "mechanical-closeout-one-verb: #574's full contract sketch, steps 1-5, reachable via one CLI call"
+        ],
+        "constraint": [
+          "decision:pr-opening-question-is-not-yours -- FLOAT it, do not rule it; this run assumes the wrapper opens the PR and ships open_pr as an independently-callable helper so either ruling adopts without rework. @grade: settled/human \u00b7 leans g3-implement",
+          "decision:new-rot-first-old-rot-maybe -- stopping NEW stale leases accruing is the deliverable; sweeping the 41 existing ones is a separate question, and the return states which way it lands. @grade: settled/admiral \u00b7 leans g3-implement"
+        ],
+        "decision": [
+          "pr-opening-not-ruled -- dispose() pushes and returns facts; open_pr() is separate and off by default. @grade: settled/human \u00b7 leans g3-implement (Tommy's to rule, not this run's)"
+        ],
+        "evidence": [
+          "lease-proof: a fixture run through finish_work leaves zero active leases, child plans included, shown by a before/after census -- this is the launch order's Return Shape item 5"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "finish_work composition + dispose + CLI: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from the gate plan and IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for g3, integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "finish_work composition + dispose + CLI: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify claimed side-effects against the world, including a FRESH-PROCESS run of the new CLI against a fixture (python3 subprocess, not an in-session import) per the dogfooding rule, then advance. BLOCK: return for rework or raise a blocker.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received, APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full test_spine_lifecycle.py suite green including the new end-to-end lease-proof test; a fresh-process CLI smoke run against a fixture succeeds",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && python3 -m pytest tests/test_spine_lifecycle.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1",
+          "attested": {
+            "evidence": "e-g3-review-1",
+            "note": "review-result verdict APPROVE"
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && python3 -m pytest tests/test_spine_lifecycle.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-review",
+      "statement": "Fowler (non-blocking): _advance_and_release's start/advance/release stages repeat the same call/check/return-refusal shape three times; a small _call_stage(argv, stage) helper would remove the duplication."
+    },
+    {
+      "id": "tc2",
+      "from": "g2-review",
+      "statement": "Fowler (non-blocking): the realpath-resolve-then-containment-check block is duplicated between _release_child_plans's declaration loop and scan loop; a small _resolve_within(path, boundary) helper would give it one implementation."
+    },
+    {
+      "id": "tc3",
+      "from": "g1-review",
+      "statement": "The constellation-reviewer skill's r6-fowler survey-template postcondition command carries a literal unsubstituted <work-id> that assumes a flat .agent-work/<work-id>/ layout; this project's nested .agent-work/epic-567-door/cmdr-g/<gate>-review/ convention breaks it every time. Hit identically at g1-review, g2-review, and g3-review -- fixed each time via the same amend --delta / retext-check workaround."
+    },
+    {
+      "id": "tc4",
+      "from": "g3-integrate",
+      "statement": "finish_work is not wired as an actual spine_done MCP tool (mcp_spine_server.py is fenced this wave, owned by lane A). scripts/spine_done_cli.py is the reachable-today substitute. A follow-on lane should add a third lifecycle-tool dispatch to mcp_spine_server.py mirroring the existing _spine_open/_spine_close pattern once lane A's rewrite lands."
+    },
+    {
+      "id": "tc5",
+      "from": "g3-integrate",
+      "statement": "A byte-identical refusal-text assertion in tests/test_spine_lifecycle.py compared a subprocess-captured string against an in-process-captured one without newline normalization, failing only on Windows CI (CRLF vs LF) -- issue #495's family (repo JSON writers/comparisons that pass encoding discipline but not newline discipline). Fixed in this lane's own test helper (_raw_engine_cli normalizes CRLF->LF); worth checking whether the same class of gap exists elsewhere in the repo's byte-identity assertions."
+    }
+  ],
+  "blockers": [],
+  "refusals": 9,
+  "engine_session": {
+    "session_id": "cmdr-567-g#execute",
+    "status": "released",
+    "claimed_at": "2026-08-17T05:48:32.774300+00:00",
+    "last_heartbeat": "2026-08-17T07:11:11.239508+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T07:11:29.007449+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-17T05:48:32.939691+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "g1 implementer delivered done_refusal/_engine_call/_advance_and_release; the finding-1 delegation bug (self-refusing done_refusal) was found and fixed both by my own critic and independently by the implementer itself; 95 tests pass (36 new), fenced files untouched, verified independently by re-running the suite and reading done_refusal's source myself.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:15:37.833834+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Reviewer APPROVED, independently re-verified every close criterion including red-proofing the no-closeout_refusal-reference guard by mutation testing; re-ran suite myself (95 passed).",
+      "mechanical": false,
+      "ts": "2026-08-17T06:26:48.380929+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "APPROVE verdict confirmed; re-ran the test command myself, 95 passed. g1 closed.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:27:08.815672+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-implement",
+      "why": "g2 implementer delivered force_reap and _release_child_plans with all three safety properties (lineage-based identification, honest non-owner --force --reason release, realpath escape refusal); 104 tests pass (9 new), fenced files untouched, independently re-verified.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:39:16.914776+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-review",
+      "why": "Reviewer APPROVED g2, independently re-verified all three safety properties and negative tests; suite re-run myself (104 passed).",
+      "mechanical": false,
+      "ts": "2026-08-17T06:47:30.928042+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-integrate",
+      "why": "APPROVE verdict confirmed; re-ran the test command myself, 104 passed. g2 closed.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:47:40.635974+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-implement",
+      "why": "g3 implementer delivered finish_work composing g1+g2 in the correct load-bearing order plus open_pr and spine_done_cli.py; 119 tests pass (15 new); the #552 lease-proof end-to-end test genuinely shows 2 active leases (parent+child) collapse to 0 with the child archived; fenced files untouched. Independently re-verified.",
+      "mechanical": false,
+      "ts": "2026-08-17T07:01:05.617874+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g3-review",
+      "why": "Reviewer APPROVED g3, independently re-verified composition order, lease-proof test, and fresh-process CLI; suite re-run myself (119 passed).",
+      "mechanical": false,
+      "ts": "2026-08-17T07:11:02.684197+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g3-integrate",
+      "why": "APPROVE verdict confirmed; re-ran the test command myself, 119 passed. g3 closed. All three gates of execute.json now complete.",
+      "mechanical": false,
+      "ts": "2026-08-17T07:11:11.239487+00:00"
+    }
+  ]
+}

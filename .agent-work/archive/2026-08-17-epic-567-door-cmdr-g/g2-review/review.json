@@ -1,0 +1,233 @@
+{
+  "work_id": "g2-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a",
+    "r4b"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, g2-reviewer-handoff.md, g2-implementer-handoff.md, g2-implementer-result.md, and the full diff (git diff -- scripts/spine_lifecycle.py tests/test_spine_lifecycle.py). Also reviewed g1-review/review.json as the established review pattern for this same gate sequence.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Handoff satisfied, independently reproduced (not merely trusted). force_reap: one-line library call spine_rail._binding_transaction(Path(project_dir), lambda reaped: reaped); zero edits to spine_rail.py (empty git diff --stat). Read spine_rail.py:397-436 directly: _binding_transaction loads raw, computes reaped=_reap_binding_entries(raw, now), calls mutate(reaped), persists only if new_map != raw -- confirming an identity mutate genuinely persists the load-time reap. TestForceReap::test_innocent_a_released_targets_entry_is_gone_immediately re-run in isolation (2 passed): asserts the fixture target reads status=='released' BEFORE force_reap runs (precondition sanity), then the binding entry is gone immediately after, read via spine_rail.load_binding (not a later transaction). Paired negative TestForceReap::test_violating_an_active_targets_entry_is_retained confirms an active target survives -- proving the reap is conditional, not a blanket wipe. _release_child_plans: read the full function body (scripts/spine_lifecycle.py, appended after _advance_and_release) -- all three safety properties present as shipped code: (1) LINEAGE -- declared_children built from task.child_checklist resolved relative to work_dir, both declaration-time and scan-time candidates realpath-resolved and is_relative_to-checked; an active JSON not in declared_children is left alone and appended to unclaimed_active (line ~412-415), never proximity alone. (2) HONEST NON-OWNER RELEASE -- caller_id is read exclusively from the PARENT spine's own engine_session.session_id (loaded from spine_path); the per-candidate scan loop only reads the child's engine_session.status, never its session_id; grep confirms no session.get('session_id') read anywhere in the function. Release goes through _engine_call(['--file',...,'release','--session-id',caller_id,'--force','--reason',reason]) -- the same choke point _advance_and_release uses; checklist_engine.main appears exactly once in the module (line 661, inside _engine_call; grep -n 'checklist_engine.main' shows 4 docstring-prose hits plus the one real call). (3) ESCAPE REFUSAL -- both the child_checklist declaration loop and the work_dir scan loop resolve candidates via Path.resolve() and refuse (continue) unless resolved.is_relative_to(resolved_work_dir); confirmed via the independently re-run symlink negative test. All 9 new tests (2 ForceReap + 7 ReleaseChildPlans) re-run individually and pass; full suite independently re-run: 104 passed (matches claimed 95->104, +9).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Scope respected. git status --porcelain shows only scripts/spine_lifecycle.py and tests/test_spine_lifecycle.py modified (the two allowed-scope files); .agent-work/567-g, .agent-work/epic-567-door, RETURN.md, notes-g.md are untracked workflow artifacts, not code -- and both deliverables are confirmed tracked/not-ignored (git check-ignore exit 1 on both, per the handoff's Deliverable Path Check). Specific exclusions all clean: fenced files (scripts/checklist_engine.py, scripts/mcp_spine_server.py, scripts/hooks/spine_rail.py) independently re-run empty git diff --stat. force_reap/_release_child_plans do not touch finish_work/open_pr/CLI (grep for those names in the diff finds none -- absent as expected, g3's scope). done_refusal/_engine_call/_advance_and_release (g1) are reused, not modified -- confirmed the only new lines around them are module-docstring prose describing the split, not behavior changes to their bodies. closeout_refusal/close_work untouched entirely (no diff hunk touches either function). Wiring grep (grep -rn 'force_reap|_release_child_plans' --include=*.py .) confirms the only non-definition references are inside tests/test_spine_lifecycle.py -- no production caller yet, matching the handoff's stated expectation that g3's finish_work is the intended future consumer.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Required evidence present and independently reproduced, not merely trusted. Load-bearing: all three NEGATIVE tests re-run in isolation by name (-k 'ReleaseChildPlans and violating') -- 3 passed, matching the pasted bodies verbatim in g2-implementer-result.md: outside-work_dir prefix-sharing spine untouched (lease stays active), unclaimed active JSON left alone AND reported in unclaimed_active, symlink escape refused with the real target's lease surviving. force_reap immediacy test re-run alone (-k ForceReap, 2 passed) -- read the test body: it asserts spine_rail.load_spine(target)['engine_session']['status']=='released' as a precondition BEFORE calling force_reap, satisfying the handoff's requirement that the fixture's target genuinely reads released first, not merely assumed. Full suite re-run independently: 104 passed (baseline 95 -> 104, +9: 2 TestForceReap + 7 TestReleaseChildPlans, matching the implementer's claimed count). Confirmatory: git diff --stat on the three fenced files independently re-run, empty. AST-scoped grep of _release_child_plans's own source (via py -c ast.get_source_segment) confirms session_id is read only from the PARENT's engine_session (once, before the loop) and the per-candidate loop reads only .get('status'), never .get('session_id') -- matches the implementer's pasted grep and is not merely a text-grep coincidence. checklist_engine.main independently grepped: exactly one real call site (line 661, inside _engine_call's span); the other 4 hits are docstring/comment prose.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Constraints checked individually (r4a, r4b), both pass. Change meets inherited project rules.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No divergence from recorded architecture needing Commander reconciliation. Map Impact notes verified against the diff: structural claim (two new module-level functions appended after _advance_and_release, plus a new sys.path.insert for hooks/ and a new top-level import spine_rail) matches exactly. Capability claims (capability:force-reap, capability:release-child-plans, both dormant/no production caller) match the wiring grep -- not overstated. Constraint claims (fenced-files-untouched, single-engine-choke-point) independently reproduced true. decision:child-plans-count (the inbound Map Anchor decision) is now implemented as shipped code, not merely designed -- matches. The implementer's trust-limitations note (release is not a MUTATING_VERBS member, so no journal line is written for a release call) is independently verified accurate (grep of checklist_engine.py's MUTATING_VERBS set does not include 'release') -- a genuine, correctly-surfaced finding rather than an overstated audit-trail claim. Two out-of-scope observations from the implementer's own result carried forward as triage candidates (module docstring not yet extended; a directory-symlink traversal variant of property 3, verified non-blocking since realpath resolution still refuses it).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/g2-review/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/g2-review/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from g2-review alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-567-door/cmdr-g/g2-review/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass complete over the g2-specific diff (force_reap, _release_child_plans + their tests), 12/12 smells rendered, recorded to .agent-work/epic-567-door/cmdr-g/g2-review/FOWLER_PASS.json. 10 absent, 1 flagged (duplicated-code: the realpath-containment check is repeated verbatim in _release_child_plans's two loops -- declaration loop and scan loop -- non-blocking, carried forward as a triage candidate, consistent with g1-review's treatment of a similar repeated-shape finding), 1 overridden (primitive-obsession: the dict return shape is mandated by the handoff's Task/Authority sections and matches the module's own close_work/_advance_and_release convention, logged standard+reason) -- also considered speculative-generality (zero non-test callers at gate end) but classified overridden rather than absent, since the handoff's own Wiring Grep section names this as an expected, bounded consequence of the fixed 3-gate plan (g3 wires it up), consistent with how g1's identically-uncalled primitives were treated at g1-review time. verify_fowler_pass.py exits 0 (smells=12, flagged=['duplicated-code'], overridden=['primitive-obsession', 'speculative-generality']).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-567-door/cmdr-g/g2-review/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a": {
+      "id": "r4a",
+      "title": "Never run against a live spine file",
+      "imperative": "Confirm force_reap's tests build fixtures under tmp_path only, never point at this repo's real .agent-work/.spine-rail-binding.json or any live spine; confirm the new tests take project_dir/root as tmp_path consistently.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "grep for live-repo paths (epic-567-door, cmdr-g/spine, cmdr-g/execute) in the new g2 test block found none -- all TestForceReap/TestReleaseChildPlans fixtures build under tmp_path exclusively (_write_binding_target, _write_json, _parent_spine_with_children, _leased_plan all take tmp_path-derived paths). force_reap(project_dir) and _release_child_plans(..., root=..., work_dir=...) are called with tmp_path/tmp_path-derived arguments in every test. No test opens or mutates this repo's real .agent-work/.spine-rail-binding.json or any live spine/execute.json.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b": {
+      "id": "r4b",
+      "title": "work_dir containment is realpath-based, not string-prefix",
+      "imperative": "Confirm _release_child_plans's containment check uses Path.resolve() + is_relative_to, not string prefix matching (e.g. str.startswith).",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "grep -n '.resolve()|is_relative_to|startswith' scripts/spine_lifecycle.py shows Path.resolve() + is_relative_to used at every containment check inside _release_child_plans (declaration loop and scan loop) and no startswith/string-prefix comparison anywhere in the file. The outside-work_dir-sharing-a-prefix negative test (cmdr-g vs cmdr-g2) is exactly the adversarial case a string-prefix check would fail and a realpath+is_relative_to check passes -- independently re-run and green.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "g2 reap + child-plan release (#552's mechanism) implemented correctly per the handoff. force_reap independently confirmed as a genuine 2-line library call into spine_rail._binding_transaction with an identity mutate -- read spine_rail.py:397-436 directly and confirmed persistence is gated on new_map != raw (the ORIGINAL load), so an identity mutate over the already-reaped map genuinely persists the reap now, not eventually. _release_child_plans's three safety properties (lineage via child_checklist structural declaration, honest non-owner release via the parent's own session_id never the child's, realpath escape refusal at both declaration and scan time) verified as shipped code by reading the function body, not just the tests -- and independently reproduced via the three negative tests re-run in isolation plus an AST-scoped source check that session_id is never read from a child. checklist_engine.main confirmed to appear exactly once (inside _engine_call); fenced files (checklist_engine.py, mcp_spine_server.py, spine_rail.py) independently re-confirmed empty diff. Full suite independently re-run: 104 passed (95 baseline -> 104, +9 new tests: 2 TestForceReap + 7 TestReleaseChildPlans). Fowler pass: 1 non-blocking duplicated-code finding (a realpath-containment check repeated across _release_child_plans's two loops) and 2 documented overrides (primitive-obsession -- dict return shape ratified in the handoff; speculative-generality -- zero production callers is an expected, bounded consequence of the fixed g1/g2/g3 gate sequence, matching g1's identical situation at its own review). Three triage candidates carried forward (module docstring not yet extended for g2's new functions; a non-blocking directory-symlink traversal variant of property 3, verified the realpath check still refuses it; the duplicated containment-check block)."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "Non-blocking: scripts/spine_lifecycle.py's module docstring (top of file) narrates the pure/impure split through _advance_and_release but was not extended to describe force_reap/_release_child_plans. Deferred deliberately -- g3 adds a third closeout primitive (finish_work) to the same section, so a single docstring update after g3 lands avoids two touches. Flag for g3/its reviewer so it is not missed."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "Non-blocking variant of property 3 not covered by a named test: _release_child_plans walks work_dir with Path.rglob('*.json'), which can traverse a symlinked DIRECTORY (not just a symlinked file) during recursion. Verified this is not a live safety gap -- every discovered candidate is still realpath-resolved and is_relative_to-checked before any release, so a file reached via a symlinked directory that escapes work_dir is still refused by the same guard. The gap, if any, is only in whether such an escaped file gets reported at all (it would currently surface, correctly refused, same as a symlinked file). Low priority; the handoff's close criteria and required evidence name only the file-symlink case."
+    },
+    {
+      "id": "tc3",
+      "from": "r6-fowler",
+      "statement": "Non-blocking cleanup candidate: _release_child_plans repeats the same realpath-resolve-then-containment-check block in its declaration loop and its scan loop. A small helper (e.g. _resolve_within(path, boundary) -> Path | None) would give property 3 one implementation instead of two kept in sync by hand. Could be combined with g1-review's tc1 (the analogous _advance_and_release duplication) into one later cleanup pass. Low priority; does not affect correctness or either safety property this gate exists to verify."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g2-reviewer-sess1",
+    "status": "released",
+    "claimed_at": "2026-08-17T06:42:07.756820+00:00",
+    "last_heartbeat": "2026-08-17T06:46:21.280388+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T06:46:25.806894+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-17T06:44:24.522472+00:00",
+      "reason": "template's r6-fowler postcondition carried the literal <work-id> placeholder unsubstituted at instantiation time (sed substitution resolved it to a flat .agent-work/g2-review/ path rather than the actual nested .agent-work/epic-567-door/cmdr-g/g2-review/ location this survey lives at); correcting to the survey's real record path per the item's own fixed convention, matching the identical correction g1-review made for the same template defect.",
+      "authority": "cmdr-g",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}
