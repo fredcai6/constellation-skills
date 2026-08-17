@@ -957,6 +957,12 @@ class OwnershipIsBindingKeyNotWorktree(unittest.TestCase):
     cannot reach can see it either, so those cases are SEQUENCES with the spine
     genuinely in-tree.
 
+    Two different states of that read reach the one write, so there are two
+    such fixtures and not one: `_in_tree_crew_only`, where the acting agent owns
+    nothing visible, and `_in_tree_crew_and_the_parents_archived_spine`, where
+    it owns an entry whose spine no longer loads. The second is the one no
+    reader-side rule can see, and it is guarded at the writer.
+
     `unittest.TestCase` rather than this module's function style so pytest
     collects the class under its required name: this repo ships no pytest
     config, so the default `python_classes = Test*` would skip a plain class,
@@ -1482,7 +1488,7 @@ class OwnershipIsBindingKeyNotWorktree(unittest.TestCase):
         self.assertEqual(len(sr._scan_active_spine(self.proj)), 1)  # in-tree and scannable
         return sid, crew_key
 
-    def test_a_restarting_parent_is_never_bound_to_its_in_tree_crews_spine(self):
+    def test_a_restarting_parent_that_owns_nothing_visible_writes_no_binding(self):
         """A SessionStart that owns none of the visible entries must write NO
         binding. Withholding at the selection above is undone one branch later
         if the fallback then manufactures the very ownership that was withheld:
@@ -1492,7 +1498,13 @@ class OwnershipIsBindingKeyNotWorktree(unittest.TestCase):
 
         Asserted on both halves of the sequence, because either alone passes
         while the defect stands: what the FIRST call wrote to the binding
-        store, and what the SECOND call rendered."""
+        store, and what the SECOND call rendered.
+
+        The name states the fixture and not a universal. It read "a restarting
+        parent is NEVER bound to its in-tree crew's spine" until a production
+        sequence falsified exactly that universal one door over (see the B5 case
+        below), and a false test name is the worst place for this defect --
+        the name is what the next reader greps."""
         sid, crew_key = self._in_tree_crew_only()
 
         start = sr.decide_session_start({"session_id": sid, "cwd": str(self.proj)}, self.proj)
@@ -1576,12 +1588,19 @@ class OwnershipIsBindingKeyNotWorktree(unittest.TestCase):
         self.assertEqual(stop["decision"], "block")
         self.assertIn("RESUME-MARKER", stop["reason"])
 
-    def test_bind_on_resume_is_withheld_only_when_the_session_owns_nothing_visible(self):
-        """The discriminator, stated as the two-by-two it actually is: the
-        fallback binds on an EMPTY view and withholds on a non-empty view the
-        session owns none of. The second row is the only one that changes, and
-        both rows are asserted here so the fix cannot drift into "never bind"
-        (which would break #261) or back into "always bind" (which is B4)."""
+    def test_bind_on_resume_binds_an_empty_view_and_withholds_a_wholly_foreign_one(self):
+        """Two of the three states of the read, at the READER's guard: the
+        fallback binds on an EMPTY view (#261) and withholds on a non-empty view
+        the session owns none of (B4). Both are asserted so this guard cannot
+        drift into "never bind", which breaks #261.
+
+        The third state is NOT here and this test does not speak for it: a view
+        the session DOES own, whose spine no longer loads, reaches the same
+        fallback with nothing withheld. It is asserted two cases down, and it is
+        guarded at the writer rather than here -- which is why the drift this
+        test pins cannot be stated as "back into always bind". "Always bind" was
+        never the whole of B4's class, and reading these two rows as the whole
+        discriminator is precisely what left B5 open."""
         rows = [("empty view -> bind (#261)", False, True),
                 ("sees a crew's entry, owns none -> withhold (B4)", True, False)]
         for label, crew_claims, expect_bound in rows:
@@ -1605,6 +1624,170 @@ class OwnershipIsBindingKeyNotWorktree(unittest.TestCase):
                 bound = sid in sr.load_binding(self.proj)
                 self.assertEqual(bound, expect_bound, label)
         self.assertEqual(len(rows), 2)  # a loop that asserts what it looped over
+
+    # -- the SECOND door into the same writer --------------------------------
+
+    def _in_tree_crew_and_the_parents_archived_spine(self):
+        """`_in_tree_crew_only` plus ONE ordinary further event: the parent
+        claims a spine of its OWN, and that spine is later archived at closeout.
+
+        This is the topology `_in_tree_crew_only` cannot reach. There the parent
+        owns nothing, so the selection's withholding fires and the fallback is
+        never entered. Here the parent DOES own a visible entry -- it just no
+        longer loads -- so the selection withholds nothing, `spine` is left None
+        for the other reason, and the SAME bind-on-resume write is reached. Both
+        facts are asserted below rather than described, because which door this
+        fixture uses is the whole point of it.
+
+        Every binding entry is written by the real claim writer from the real
+        captured payloads, so the store shape is production's, not one invented
+        here.
+        """
+        parent = _real_parent_payloads()[0]
+        crew = _real_subagent_payloads()[0]
+        self.assertEqual(crew["session_id"], parent["session_id"])  # one harness session
+        write_spine(
+            self.proj,
+            make_spine([("g3", "in-progress")],
+                       imperatives={"g3": "CREW-MARKER implement the crew gate"}),
+            work="run-crew", journal_lines=1,
+        )
+        write_spine(
+            self.proj,
+            make_spine([("execute", "in-progress")],
+                       imperatives={"execute": "OWN-MARKER drive your own gate"}),
+            work="run-own", journal_lines=1,
+        )
+        sr.handle_post_tool_use(
+            _real_post_tool_use(crew, _claim_cmd("run-crew", "eng-crew"), self.proj), self.proj)
+        sr.handle_post_tool_use(
+            _real_post_tool_use(parent, _claim_cmd("run-own", "eng-own"), self.proj), self.proj)
+
+        sid = parent["session_id"]
+        crew_key = sid + sr.BINDING_KEY_SEP + crew["agent_id"]
+        crew_spine = _abs_spine(self.proj, "run-crew")
+        own_spine = _abs_spine(self.proj, "run-own")
+        self.assertEqual(list(sr.load_binding(self.proj)), [crew_key, sid])
+
+        shutil.rmtree(str(self.proj / ".agent-work" / "run-own"))  # archived at closeout
+
+        binding = sr.load_binding(self.proj)
+        owners = sr.session_view_provenance(binding, sid)
+        # The store still attributes the crew's spine to the CREW, and the
+        # parent still owns its own (now unloadable) entry.
+        self.assertEqual(owners, {crew_spine: crew_key, own_spine: sid})
+        self.assertTrue(sr._own_entries(list(sr.session_view(binding, sid).items()),
+                                        owners, sid))          # B5's door, not B4's
+        self.assertEqual(len(sr._scan_active_spine(self.proj)), 1)  # and the scan fires
+        return sid, crew, crew_key, crew_spine
+
+    def test_a_restarting_parent_is_not_bound_to_a_spine_its_crew_visibly_claims(self):
+        """The bind-on-resume must not file a spine path the store already
+        attributes to a DIFFERENT binding key, and must not overwrite that
+        attribution.
+
+        A session reaches that writer whenever `spine` is left None, and owning
+        nothing visible is only one of the two ways that happens: a session that
+        owns an entry whose spine no longer loads -- archived, deleted, moved --
+        arrives there too, with the withholding above it silent because there is
+        nothing there to withhold. The spine the glob then turns up is whatever
+        single active-leased spine is in the tree, and on this lane that is
+        routinely a crew's.
+
+        The damage runs BOTH ways, so both are asserted: the parent is handed
+        the crew's imperative as its own, AND the manufactured binding takes the
+        crew's gate away from the crew, because provenance is last-key-wins and
+        the parent's bare key is written last."""
+        sid, crew, crew_key, crew_spine = self._in_tree_crew_and_the_parents_archived_spine()
+
+        start = sr.decide_session_start({"session_id": sid, "cwd": str(self.proj)}, self.proj)
+
+        # What the FIRST call WROTE: no ownership of the crew's spine is
+        # manufactured under the parent's bare key, and the attribution the
+        # store already held is left standing.
+        binding = sr.load_binding(self.proj)
+        self.assertNotIn(crew_spine, binding.get(sid) or {})
+        self.assertEqual(sr.session_view_provenance(binding, sid)[crew_spine], crew_key)
+        # ...and what it RENDERED: the resume context ends "Pick the run back up
+        # at this gate and drive it through the engine", so naming the crew's
+        # gate there is the same leak in the other field.
+        self.assertNotIn("CREW-MARKER", json.dumps(start.get("hookSpecificOutput") or {}))
+
+        # DIRECTION 1 -- what the parent's own next Stop is told.
+        out = sr.decide_stop({"session_id": sid, "cwd": str(self.proj)}, self.proj)
+        self.assertEqual(out["decision"], "block")  # an open gate still blocks
+        self.assertIn("foreign-owned", out["reason"])
+        self.assertIn(crew_key, out["reason"])
+        self.assertNotIn("CREW-MARKER", json.dumps(out))  # imperative withheld (#549)
+
+        # DIRECTION 2 -- and the crew still recognises its OWN gate afterwards.
+        crew_stop = sr.decide_stop(
+            {"session_id": sid, "agent_id": crew["agent_id"], "cwd": str(self.proj)}, self.proj)
+        self.assertEqual(crew_stop["decision"], "block")
+        self.assertIn("CREW-MARKER", crew_stop["reason"])
+        self.assertNotIn("foreign-owned", crew_stop["reason"])
+
+    def test_a_parents_restart_does_not_take_the_crews_gate_away_from_the_crew(self):
+        """The same fixture with the parent's SessionStart as the ONLY variable,
+        the two arms asserted EQUAL to each other rather than each against its
+        own expectation. A restart is routine on this lane; it must not be able
+        to move an answer that belongs to another agent entirely."""
+        answers = {}
+        arms = (("no restart", False), ("parent restarts first", True))
+        for label, restart in arms:
+            with self.subTest(arm=label):
+                sr.save_binding(self.proj, {})
+                sr.save_nudges(self.proj, {})  # each arm gets its own strike count
+                shutil.rmtree(str(self.proj / ".agent-work"), True)
+                sid, crew, _crew_key, _crew_spine = \
+                    self._in_tree_crew_and_the_parents_archived_spine()
+                if restart:
+                    sr.decide_session_start({"session_id": sid, "cwd": str(self.proj)},
+                                            self.proj)
+
+                out = sr.decide_stop(
+                    {"session_id": sid, "agent_id": crew["agent_id"], "cwd": str(self.proj)},
+                    self.proj)
+
+                self.assertEqual(out["decision"], "block", label)
+                self.assertIn("CREW-MARKER", out["reason"], label)  # still its own gate
+                answers[label] = out
+        self.assertEqual(len(answers), len(arms))  # assert what the loop looped over
+        self.assertEqual(answers["no restart"], answers["parent restarts first"])
+
+    def test_the_writer_rule_refuses_only_a_contradicting_attribution(self):
+        """The rule the bind-on-resume applies, asked directly, including the
+        two answers that keep it from being broader than it is: a path the store
+        attributes to NOBODY is not a contradiction (that is #202's sibling
+        merge, and #261's resumed session), and neither is one already
+        attributed to the very key the write would file it under.
+
+        Unusable input answers REFUSE, not permit: this guard sits in front of a
+        writer, and the fail-safe direction at a writer is to withhold."""
+        conflict = "/p/.agent-work/run-crew/spine.json"
+        cases = [
+            ("attributed to a sibling's composite key -> refuse",
+             {conflict: "sid#agent"}, conflict, "sid", True),
+            ("attributed to nobody -> allow (#202/#261)",
+             {"/p/.agent-work/other/spine.json": "sid"}, conflict, "sid", False),
+            ("already attributed to the writing key itself -> allow",
+             {conflict: "sid"}, conflict, "sid", False),
+            ("no attributions at all -> allow (#261's empty view)",
+             {}, conflict, "sid", False),
+            ("unusable attributions -> refuse (fail-safe at a writer)",
+             "not-a-mapping", conflict, "sid", True),
+            # A spelling difference must not buy a write past the guard. This
+            # one is `normpath`'s, so it holds on every platform; `normcase`'s
+            # case folding is real only on Windows and is asserted where the
+            # rest of this file asserts it, against the derivation rule itself.
+            ("the same file spelled differently -> refuse",
+             {"/p/.agent-work/./run-crew/spine.json": "sid#agent"}, conflict, "sid", True),
+        ]
+        for label, owners, path, bind_key, expected in cases:
+            with self.subTest(case=label):
+                self.assertEqual(
+                    sr._attributed_to_another_key(owners, path, bind_key), expected, label)
+        self.assertEqual(len(cases), 6)  # a loop that asserts what it looped over
 
 
 def _derived_form(path):

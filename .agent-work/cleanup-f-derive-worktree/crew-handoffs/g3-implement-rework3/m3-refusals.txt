@@ -1,0 +1,15 @@
+HEAD (committed) vs the WORKING TREE, at the bind-on-resume writer
+============================================================================================
+case                                                             HEAD binds  AFTER binds
+--------------------------------------------------------------------------------------------
+no binding at all, one in-tree spine (#261)                            True         True
+non-empty view, owns none of it (B4)                                  False        False
+owns an unloadable entry, target claimed by a sibling (B5)             True        False
+owns an unloadable entry, target claimed by NOBODY (#202's shape)         True         True
+owns an unloadable entry, target already its OWN claim                 True         True
+two in-tree spines -- writer never reached                            False        False
+--------------------------------------------------------------------------------------------
+cells that changed: 1
+  owns an unloadable entry, target claimed by a sibling (B5)
+      provenance of the scanned path, HEAD  : c9b25095-7728-405e-bfe7-69c03d7343b0
+      provenance of the scanned path, AFTER : c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c

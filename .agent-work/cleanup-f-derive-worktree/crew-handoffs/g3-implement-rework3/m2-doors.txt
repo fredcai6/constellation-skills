@@ -1,0 +1,81 @@
+probe capture: probe_payloads.jsonl | sid: c9b25095-7728-405e-bfe7-69c03d7343b0 | crew key: c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c
+arm hashes: {'PREGATE': '37cf424e9711', 'BEFORE-2': 'f0cde2e7b4c6', 'AFTER': '3bd362e80cc3'}
+==============================================================================
+
+### door B4 ###
+  PREGATE  
+      bound to another agent's spine           False
+      provenance(crew spine)                   c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c
+      SessionStart handed it CREWMARK          True
+      its Stop                                 SPINE MID-FLIGHT (foreign-owned): a gate
+      its Stop handed it CREWMARK              False
+      the CREW still sees its own gate         False
+  BEFORE-2 
+      bound to another agent's spine           False
+      provenance(crew spine)                   c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c
+      SessionStart handed it CREWMARK          False
+      its Stop                                 SPINE MID-FLIGHT (foreign-owned): a gate
+      its Stop handed it CREWMARK              False
+      the CREW still sees its own gate         True
+  AFTER    
+      bound to another agent's spine           False
+      provenance(crew spine)                   c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c
+      SessionStart handed it CREWMARK          False
+      its Stop                                 SPINE MID-FLIGHT (foreign-owned): a gate
+      its Stop handed it CREWMARK              False
+      the CREW still sees its own gate         True
+  AFTER     (no SessionStart)
+      bound to another agent's spine           False
+      provenance(crew spine)                   c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c
+      SessionStart handed it CREWMARK          False
+      its Stop                                 SPINE MID-FLIGHT (foreign-owned): a gate
+      its Stop handed it CREWMARK              False
+      the CREW still sees its own gate         True
+
+### door B5 ###
+  PREGATE  
+      bound to another agent's spine           False
+      provenance(crew spine)                   c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c
+      SessionStart handed it CREWMARK          True
+      its Stop                                 SPINE MID-FLIGHT (foreign-owned): a gate
+      its Stop handed it CREWMARK              False
+      the CREW still sees its own gate         False
+  BEFORE-2 
+      bound to another agent's spine           True
+      provenance(crew spine)                   c9b25095-7728-405e-bfe7-69c03d7343b0
+      SessionStart handed it CREWMARK          True
+      its Stop                                 SPINE MID-FLIGHT: gate g3 is still open 
+      its Stop handed it CREWMARK              True
+      the CREW still sees its own gate         False
+  AFTER    
+      bound to another agent's spine           False
+      provenance(crew spine)                   c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c
+      SessionStart handed it CREWMARK          False
+      its Stop                                 SPINE MID-FLIGHT (foreign-owned): a gate
+      its Stop handed it CREWMARK              False
+      the CREW still sees its own gate         True
+  AFTER     (no SessionStart)
+      bound to another agent's spine           False
+      provenance(crew spine)                   c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c
+      SessionStart handed it CREWMARK          False
+      its Stop                                 SPINE MID-FLIGHT (foreign-owned): a gate
+      its Stop handed it CREWMARK              False
+      the CREW still sees its own gate         True
+
+### door 261 ###
+  PREGATE  
+      bound to the one unclaimed spine         True
+      SessionStart handed it SOLOMARK          True
+      the next Stop reads that write as OWN    True
+  BEFORE-2 
+      bound to the one unclaimed spine         True
+      SessionStart handed it SOLOMARK          True
+      the next Stop reads that write as OWN    True
+  AFTER    
+      bound to the one unclaimed spine         True
+      SessionStart handed it SOLOMARK          True
+      the next Stop reads that write as OWN    True
+  AFTER     (no SessionStart)
+      bound to the one unclaimed spine         False
+      SessionStart handed it SOLOMARK          False
+      the next Stop reads that write as OWN    False

@@ -688,21 +688,41 @@ def reconstruct_current(spine: dict) -> str:
 # the same comparison: `_own_entries`, which decide_stop and decide_session_start
 # both call. Stated as one rule -- SELECTION is a property of the binding key at
 # both sites, and BLOCKING, at the one site that blocks, is a property of the
-# spine. The sites differ only in what they do when the acting agent owns
-# nothing visible, and that difference follows from the second half of the rule:
-# a Stop blocks either way, so it still names the leading gate and withholds its
-# imperative, while a SessionStart blocks nothing and so hands out nothing.
+# spine. The sites differ in what they do when the acting agent owns nothing
+# visible, and that difference follows from the second half of the rule: a Stop
+# blocks either way, so it still names the leading gate and withholds its
+# imperative, while a SessionStart, blocking nothing, hands out nothing -- and
+# writes nothing.
 #
-# "Hands out nothing" has to mean the scan too, and that is the correction this
-# rule needed (#609 lane F g3 rework 2). The scan below reads no binding key,
-# but the branch it sits in WRITES one, under the bare `sid` -- the same key
-# this rule reads as OWN. So a SessionStart that withheld at the selection and
-# then fell through to the scan manufactured, one branch later, the ownership
-# it had just withheld, and the next Stop was answered with another agent's
-# gate as its own. A withholding that feeds a writer is not a withholding.
-# `decide_session_start` therefore separates "I own none of what I can see"
-# (hand out nothing, scan included) from "I have no binding at all" (#261's
-# resumed session, whose only route back to its own run is the scan).
+# That last clause has to name the WRITE and not just the render, and getting
+# there took two corrections. `decide_session_start`'s fallback scan reads no
+# binding key, but the branch it sits in WRITES one, under the bare `sid` --
+# the same key this rule reads as OWN -- so a site that withheld at the
+# selection and then fell through manufactured, one branch later, the very
+# ownership it had just withheld, and the next Stop was answered with another
+# agent's gate as its own (#609 lane F g3 rework 2). A withholding that feeds a
+# writer is not a withholding.
+#
+# Withholding at the reader is still not enough, because that one write is
+# reached by THREE states of the read rather than two (rework 3, B5):
+#
+#   - no binding at all: nothing has been claimed under this session, so there
+#     is no attribution to contradict. #261's resumed session, and the scan is
+#     its only route back to its own run. It binds, and must keep binding.
+#   - a non-empty view the agent owns NONE of: withheld at the selection, scan
+#     included, because a spine this session claimed would be in the view and
+#     owned.
+#   - a non-empty view the agent DOES own, whose spine no longer loads --
+#     archived at closeout, deleted, moved, or an entry with no usable `spine`
+#     field. Nothing is withheld there, correctly, and the scan may then hand
+#     that agent whatever single active-leased spine the tree holds, a sibling
+#     agent's included.
+#
+# So the last word belongs to the writer rather than to either reader path:
+# `_attributed_to_another_key` refuses to file a path the store already
+# attributes to a DIFFERENT binding key. That is narrower than the question of
+# whether the scan should bind a session to a spine NOBODY has claimed, which
+# is genuinely open and is not answered anywhere in this file.
 #
 # What remains here compares paths and locates spines, and decides nothing
 # about identity.
@@ -1539,11 +1559,16 @@ def _own_entries(candidates, owners, own_key) -> list:
     withheld. decide_session_start is deciding whether to hand out a gate at
     all, so it hands out nothing.
 
-    The one thing an empty result must NOT do at either site is reach a writer.
-    decide_session_start's fallback scan binds under the bare `sid`, which is
-    the key this comparison reads as OWN, so an empty result there is gated on
-    the view being empty too -- otherwise this function's answer is undone one
-    branch later by a write it caused (#609 lane F g3 rework 2).
+    An empty result at decide_session_start must not fall through into the
+    fallback's bind-on-resume: that write files under the bare `sid`, which is
+    the key this comparison reads as OWN, so falling through would undo this
+    function's own answer one branch later (#609 lane F g3 rework 2).
+
+    That is a rule about THIS result, and it has once been mistaken for the
+    whole guard on that writer, which it is not: the same write is also reached
+    with a NON-empty result here, by an agent that owns an entry whose spine no
+    longer loads. Nothing this function returns can speak for that case. The
+    write is guarded at the write, by `_attributed_to_another_key` (rework 3).
 
     NEVER raises; [] on unusable input, which is the withholding direction at
     both sites.
@@ -1552,6 +1577,41 @@ def _own_entries(candidates, owners, own_key) -> list:
         return [c for c in candidates if _is_own_entry(owners.get(c[0]), own_key)]
     except Exception:
         return []
+
+
+def _attributed_to_another_key(owners, spine_path, bind_key) -> bool:
+    """Whether the store ALREADY attributes `spine_path` to a binding key other
+    than `bind_key` -- the key a write is about to file that path under.
+
+    This is the ownership comparison asked from the WRITER's side. `_is_own_entry`
+    asks a reader "is this entry mine?"; this asks "would filing this path here
+    contradict an attribution the store already holds?" The two are separate
+    questions and the writer's is the one that has to be asked at the
+    bind-on-resume, because that branch is reached by more than one reader path
+    and a reader-side answer only covers the path it was written for (#609 lane F
+    g3 rework 3, B5).
+
+    What it deliberately does NOT decide: whether the scan should bind at all.
+    A path attributed to NOBODY is not a contradiction, so #261's resumed
+    session and #202's sibling merge are both untouched -- the authority
+    question about binding a session to a spine no one claimed is recorded
+    separately and is not settled here.
+
+    Paths are compared with `_same_path`, so a differently-spelled route to the
+    same file still counts as the same attribution. Unusable input answers
+    True: this guards a writer, and withholding a write is the fail-safe
+    direction, exactly as `_same_path`'s own True-on-exception is at the
+    comparison one layer down. NEVER raises.
+    """
+    try:
+        for path, owner_key in owners.items():
+            if owner_key == bind_key:
+                continue
+            if _same_path(path, spine_path):
+                return True
+        return False
+    except Exception:
+        return True
 
 
 def _entry_mid_flight_view(entry: dict):
@@ -1774,11 +1834,17 @@ def decide_session_start(data: dict, project_dir: Path) -> dict:
         #   resumed/compacted session that never itself ran `claim`, and the
         #   scan is its only route back to its own run. Untouched.
         #
-        # An OWN entry whose spine is merely unreadable also lands here with
-        # `spine` None, and it keeps the scan: this agent is contradicting no
-        # one, and whether the scan should bind a session to a spine nobody
-        # claimed is a separate open question about the scan itself, not this
-        # rule's to settle.
+        # An OWN entry whose spine no longer loads also lands here with `spine`
+        # None, and this rule leaves it alone, correctly: the agent owns what it
+        # can see, so there is nothing here to withhold from it.
+        #
+        # What that does NOT mean -- it was written here once and it was wrong,
+        # which is how B5 got scoped out of rework 2 -- is that such an agent
+        # contradicts no one. The scan below can hand it whatever single
+        # active-leased spine the tree holds, and on this lane that is routinely
+        # a spine a sibling agent has visibly claimed. That case is answered at
+        # the WRITE instead, by `_attributed_to_another_key`, because it is the
+        # write and not the read that the two paths have in common.
         if spine is None and sid_bindings and not owned:
             return {}
         if spine is None:
@@ -1796,6 +1862,25 @@ def decide_session_start(data: dict, project_dir: Path) -> dict:
                 # (below) but write NO binding -- ambiguity is not ours to
                 # silently resolve.
                 own_spine, own_spine_path = matches[0]
+                # The WRITER's own guard, and the reason it is here rather than
+                # one branch up with the selection: this write is reached by
+                # more than one reader path. `spine` is left None both when the
+                # agent owns nothing visible AND when it owns an entry whose
+                # spine no longer loads -- archived, deleted, moved, or carrying
+                # no usable `spine` field -- and on that second route there is
+                # nothing above to withhold, so a reader-side rule never sees it
+                # (#609 lane F g3 rework 3, B5). Guarding each reader path in
+                # turn has now missed a door twice.
+                #
+                # The rule is narrow on purpose: the scan may still bind a path
+                # nobody has claimed, but it may not CONTRADICT an attribution
+                # the store already holds. Filing another agent's spine under
+                # this session's bare `sid` does exactly that, and it does it in
+                # both directions at once -- provenance is last-key-wins, so the
+                # write hands this session the other agent's gate as its own AND
+                # takes that gate away from the agent that claimed it.
+                if _attributed_to_another_key(owners, own_spine_path, sid):
+                    return {}
                 lease_for_bind = own_spine.get("engine_session") or {}
                 worktree = _worktree_from_spine(own_spine_path)
                 if not worktree:

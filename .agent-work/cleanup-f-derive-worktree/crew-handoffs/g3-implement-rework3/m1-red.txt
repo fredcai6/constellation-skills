@@ -1,0 +1,283 @@
+.F...F...............                    [100%]
+=================================== FAILURES ===================================
+_ OwnershipIsBindingKeyNotWorktree.test_a_parents_restart_does_not_take_the_crews_gate_away_from_the_crew (arm='parent restarts first') _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_a_parents_restart_does_not_take_the_crews_gate_away_from_the_crew>
+
+    def test_a_parents_restart_does_not_take_the_crews_gate_away_from_the_crew(self):
+        """The same fixture with the parent's SessionStart as the ONLY variable,
+        the two arms asserted EQUAL to each other rather than each against its
+        own expectation. A restart is routine on this lane; it must not be able
+        to move an answer that belongs to another agent entirely."""
+        answers = {}
+        arms = (("no restart", False), ("parent restarts first", True))
+        for label, restart in arms:
+            with self.subTest(arm=label):
+                sr.save_binding(self.proj, {})
+                sr.save_nudges(self.proj, {})  # each arm gets its own strike count
+                shutil.rmtree(str(self.proj / ".agent-work"), True)
+                sid, crew, _crew_key, _crew_spine = \
+                    self._in_tree_crew_and_the_parents_archived_spine()
+                if restart:
+                    sr.decide_session_start({"session_id": sid, "cwd": str(self.proj)},
+                                            self.proj)
+    
+                out = sr.decide_stop(
+                    {"session_id": sid, "agent_id": crew["agent_id"], "cwd": str(self.proj)},
+                    self.proj)
+    
+                self.assertEqual(out["decision"], "block", label)
+>               self.assertIn("CREW-MARKER", out["reason"], label)  # still its own gate
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AssertionError: 'CREW-MARKER' not found in 'SPINE MID-FLIGHT (foreign-owned): a gate on /tmp/ownership-binding-key-7lsbjxo1/.agent-work/run-crew/spine.json is still open under c9b25095-7728-405e-bfe7-69c03d7343b0 -- STILL BLOCKED, but this is not your gate to drive. It belongs to a different session/agent (bound under a per-agent key you merely share a harness session with), so do not act on its next step yourself. Let that session/agent finish or bubble its own blocker; if you believe it has gone silent, investigate that session rather than ending your own turn to wait on it here.' : parent restarts first
+
+tests/test_spine_rail.py:1734: AssertionError
+_ OwnershipIsBindingKeyNotWorktree.test_a_parents_restart_does_not_take_the_crews_gate_away_from_the_crew _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_a_parents_restart_does_not_take_the_crews_gate_away_from_the_crew>
+
+    def test_a_parents_restart_does_not_take_the_crews_gate_away_from_the_crew(self):
+        """The same fixture with the parent's SessionStart as the ONLY variable,
+        the two arms asserted EQUAL to each other rather than each against its
+        own expectation. A restart is routine on this lane; it must not be able
+        to move an answer that belongs to another agent entirely."""
+        answers = {}
+        arms = (("no restart", False), ("parent restarts first", True))
+        for label, restart in arms:
+            with self.subTest(arm=label):
+                sr.save_binding(self.proj, {})
+                sr.save_nudges(self.proj, {})  # each arm gets its own strike count
+                shutil.rmtree(str(self.proj / ".agent-work"), True)
+                sid, crew, _crew_key, _crew_spine = \
+                    self._in_tree_crew_and_the_parents_archived_spine()
+                if restart:
+                    sr.decide_session_start({"session_id": sid, "cwd": str(self.proj)},
+                                            self.proj)
+    
+                out = sr.decide_stop(
+                    {"session_id": sid, "agent_id": crew["agent_id"], "cwd": str(self.proj)},
+                    self.proj)
+    
+                self.assertEqual(out["decision"], "block", label)
+                self.assertIn("CREW-MARKER", out["reason"], label)  # still its own gate
+                answers[label] = out
+>       self.assertEqual(len(answers), len(arms))  # assert what the loop looped over
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: 1 != 2
+
+tests/test_spine_rail.py:1736: AssertionError
+----------------------------- Captured stdout call -----------------------------
+uu
+_ OwnershipIsBindingKeyNotWorktree.test_a_restarting_parent_is_not_bound_to_a_spine_its_crew_visibly_claims _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_a_restarting_parent_is_not_bound_to_a_spine_its_crew_visibly_claims>
+
+    def test_a_restarting_parent_is_not_bound_to_a_spine_its_crew_visibly_claims(self):
+        """The bind-on-resume must not file a spine path the store already
+        attributes to a DIFFERENT binding key, and must not overwrite that
+        attribution.
+    
+        A session reaches that writer whenever `spine` is left None, and owning
+        nothing visible is only one of the two ways that happens: a session that
+        owns an entry whose spine no longer loads -- archived, deleted, moved --
+        arrives there too, with the withholding above it silent because there is
+        nothing there to withhold. The spine the glob then turns up is whatever
+        single active-leased spine is in the tree, and on this lane that is
+        routinely a crew's.
+    
+        The damage runs BOTH ways, so both are asserted: the parent is handed
+        the crew's imperative as its own, AND the manufactured binding takes the
+        crew's gate away from the crew, because provenance is last-key-wins and
+        the parent's bare key is written last."""
+        sid, crew, crew_key, crew_spine = self._in_tree_crew_and_the_parents_archived_spine()
+    
+        start = sr.decide_session_start({"session_id": sid, "cwd": str(self.proj)}, self.proj)
+    
+        # What the FIRST call WROTE: no ownership of the crew's spine is
+        # manufactured under the parent's bare key, and the attribution the
+        # store already held is left standing.
+        binding = sr.load_binding(self.proj)
+>       self.assertNotIn(crew_spine, binding.get(sid) or {})
+E       AssertionError: '/tmp/ownership-binding-key-st_256e6/.agent-work/run-crew/spine.json' unexpectedly found in {'/tmp/ownership-binding-key-st_256e6/.agent-work/run-own/spine.json': {'spine': '/tmp/ownership-binding-key-st_256e6/.agent-work/run-own/spine.json', 'engine_session': 'eng-own', 'worktree': '/tmp/ownership-binding-key-st_256e6', 'claimed_at': '2026-08-17T00:04:41.923420+00:00', 'path_source': 'payload_cwd'}, '/tmp/ownership-binding-key-st_256e6/.agent-work/run-crew/spine.json': {'spine': '/tmp/ownership-binding-key-st_256e6/.agent-work/run-crew/spine.json', 'engine_session': 'eng-1', 'worktree': '/tmp/ownership-binding-key-st_256e6', 'claimed_at': '2026-08-17T00:04:41.929783+00:00'}}
+
+tests/test_spine_rail.py:1690: AssertionError
+_ OwnershipIsBindingKeyNotWorktree.test_the_writer_rule_refuses_only_a_contradicting_attribution (case="attributed to a sibling's composite key -> refuse") _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_the_writer_rule_refuses_only_a_contradicting_attribution>
+
+    def test_the_writer_rule_refuses_only_a_contradicting_attribution(self):
+        """The rule the bind-on-resume applies, asked directly, including the
+        two answers that keep it from being broader than it is: a path the store
+        attributes to NOBODY is not a contradiction (that is #202's sibling
+        merge, and #261's resumed session), and neither is one already
+        attributed to the very key the write would file it under.
+    
+        Unusable input answers REFUSE, not permit: this guard sits in front of a
+        writer, and the fail-safe direction at a writer is to withhold."""
+        conflict = "/p/.agent-work/run-crew/spine.json"
+        cases = [
+            ("attributed to a sibling's composite key -> refuse",
+             {conflict: "sid#agent"}, conflict, "sid", True),
+            ("attributed to nobody -> allow (#202/#261)",
+             {"/p/.agent-work/other/spine.json": "sid"}, conflict, "sid", False),
+            ("already attributed to the writing key itself -> allow",
+             {conflict: "sid"}, conflict, "sid", False),
+            ("no attributions at all -> allow (#261's empty view)",
+             {}, conflict, "sid", False),
+            ("unusable attributions -> refuse (fail-safe at a writer)",
+             "not-a-mapping", conflict, "sid", True),
+        ]
+        for label, owners, path, bind_key, expected in cases:
+            with self.subTest(case=label):
+                self.assertEqual(
+>                   sr._attributed_to_another_key(owners, path, bind_key), expected, label)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AttributeError: module 'spine_rail' has no attribute '_attributed_to_another_key'
+
+tests/test_spine_rail.py:1764: AttributeError
+_ OwnershipIsBindingKeyNotWorktree.test_the_writer_rule_refuses_only_a_contradicting_attribution (case='attributed to nobody -> allow (#202/#261)') _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_the_writer_rule_refuses_only_a_contradicting_attribution>
+
+    def test_the_writer_rule_refuses_only_a_contradicting_attribution(self):
+        """The rule the bind-on-resume applies, asked directly, including the
+        two answers that keep it from being broader than it is: a path the store
+        attributes to NOBODY is not a contradiction (that is #202's sibling
+        merge, and #261's resumed session), and neither is one already
+        attributed to the very key the write would file it under.
+    
+        Unusable input answers REFUSE, not permit: this guard sits in front of a
+        writer, and the fail-safe direction at a writer is to withhold."""
+        conflict = "/p/.agent-work/run-crew/spine.json"
+        cases = [
+            ("attributed to a sibling's composite key -> refuse",
+             {conflict: "sid#agent"}, conflict, "sid", True),
+            ("attributed to nobody -> allow (#202/#261)",
+             {"/p/.agent-work/other/spine.json": "sid"}, conflict, "sid", False),
+            ("already attributed to the writing key itself -> allow",
+             {conflict: "sid"}, conflict, "sid", False),
+            ("no attributions at all -> allow (#261's empty view)",
+             {}, conflict, "sid", False),
+            ("unusable attributions -> refuse (fail-safe at a writer)",
+             "not-a-mapping", conflict, "sid", True),
+        ]
+        for label, owners, path, bind_key, expected in cases:
+            with self.subTest(case=label):
+                self.assertEqual(
+>                   sr._attributed_to_another_key(owners, path, bind_key), expected, label)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AttributeError: module 'spine_rail' has no attribute '_attributed_to_another_key'
+
+tests/test_spine_rail.py:1764: AttributeError
+_ OwnershipIsBindingKeyNotWorktree.test_the_writer_rule_refuses_only_a_contradicting_attribution (case='already attributed to the writing key itself -> allow') _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_the_writer_rule_refuses_only_a_contradicting_attribution>
+
+    def test_the_writer_rule_refuses_only_a_contradicting_attribution(self):
+        """The rule the bind-on-resume applies, asked directly, including the
+        two answers that keep it from being broader than it is: a path the store
+        attributes to NOBODY is not a contradiction (that is #202's sibling
+        merge, and #261's resumed session), and neither is one already
+        attributed to the very key the write would file it under.
+    
+        Unusable input answers REFUSE, not permit: this guard sits in front of a
+        writer, and the fail-safe direction at a writer is to withhold."""
+        conflict = "/p/.agent-work/run-crew/spine.json"
+        cases = [
+            ("attributed to a sibling's composite key -> refuse",
+             {conflict: "sid#agent"}, conflict, "sid", True),
+            ("attributed to nobody -> allow (#202/#261)",
+             {"/p/.agent-work/other/spine.json": "sid"}, conflict, "sid", False),
+            ("already attributed to the writing key itself -> allow",
+             {conflict: "sid"}, conflict, "sid", False),
+            ("no attributions at all -> allow (#261's empty view)",
+             {}, conflict, "sid", False),
+            ("unusable attributions -> refuse (fail-safe at a writer)",
+             "not-a-mapping", conflict, "sid", True),
+        ]
+        for label, owners, path, bind_key, expected in cases:
+            with self.subTest(case=label):
+                self.assertEqual(
+>                   sr._attributed_to_another_key(owners, path, bind_key), expected, label)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AttributeError: module 'spine_rail' has no attribute '_attributed_to_another_key'
+
+tests/test_spine_rail.py:1764: AttributeError
+_ OwnershipIsBindingKeyNotWorktree.test_the_writer_rule_refuses_only_a_contradicting_attribution (case="no attributions at all -> allow (#261's empty view)") _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_the_writer_rule_refuses_only_a_contradicting_attribution>
+
+    def test_the_writer_rule_refuses_only_a_contradicting_attribution(self):
+        """The rule the bind-on-resume applies, asked directly, including the
+        two answers that keep it from being broader than it is: a path the store
+        attributes to NOBODY is not a contradiction (that is #202's sibling
+        merge, and #261's resumed session), and neither is one already
+        attributed to the very key the write would file it under.
+    
+        Unusable input answers REFUSE, not permit: this guard sits in front of a
+        writer, and the fail-safe direction at a writer is to withhold."""
+        conflict = "/p/.agent-work/run-crew/spine.json"
+        cases = [
+            ("attributed to a sibling's composite key -> refuse",
+             {conflict: "sid#agent"}, conflict, "sid", True),
+            ("attributed to nobody -> allow (#202/#261)",
+             {"/p/.agent-work/other/spine.json": "sid"}, conflict, "sid", False),
+            ("already attributed to the writing key itself -> allow",
+             {conflict: "sid"}, conflict, "sid", False),
+            ("no attributions at all -> allow (#261's empty view)",
+             {}, conflict, "sid", False),
+            ("unusable attributions -> refuse (fail-safe at a writer)",
+             "not-a-mapping", conflict, "sid", True),
+        ]
+        for label, owners, path, bind_key, expected in cases:
+            with self.subTest(case=label):
+                self.assertEqual(
+>                   sr._attributed_to_another_key(owners, path, bind_key), expected, label)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AttributeError: module 'spine_rail' has no attribute '_attributed_to_another_key'
+
+tests/test_spine_rail.py:1764: AttributeError
+_ OwnershipIsBindingKeyNotWorktree.test_the_writer_rule_refuses_only_a_contradicting_attribution (case='unusable attributions -> refuse (fail-safe at a writer)') _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_the_writer_rule_refuses_only_a_contradicting_attribution>
+
+    def test_the_writer_rule_refuses_only_a_contradicting_attribution(self):
+        """The rule the bind-on-resume applies, asked directly, including the
+        two answers that keep it from being broader than it is: a path the store
+        attributes to NOBODY is not a contradiction (that is #202's sibling
+        merge, and #261's resumed session), and neither is one already
+        attributed to the very key the write would file it under.
+    
+        Unusable input answers REFUSE, not permit: this guard sits in front of a
+        writer, and the fail-safe direction at a writer is to withhold."""
+        conflict = "/p/.agent-work/run-crew/spine.json"
+        cases = [
+            ("attributed to a sibling's composite key -> refuse",
+             {conflict: "sid#agent"}, conflict, "sid", True),
+            ("attributed to nobody -> allow (#202/#261)",
+             {"/p/.agent-work/other/spine.json": "sid"}, conflict, "sid", False),
+            ("already attributed to the writing key itself -> allow",
+             {conflict: "sid"}, conflict, "sid", False),
+            ("no attributions at all -> allow (#261's empty view)",
+             {}, conflict, "sid", False),
+            ("unusable attributions -> refuse (fail-safe at a writer)",
+             "not-a-mapping", conflict, "sid", True),
+        ]
+        for label, owners, path, bind_key, expected in cases:
+            with self.subTest(case=label):
+                self.assertEqual(
+>                   sr._attributed_to_another_key(owners, path, bind_key), expected, label)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AttributeError: module 'spine_rail' has no attribute '_attributed_to_another_key'
+
+tests/test_spine_rail.py:1764: AttributeError
+=========================== short test summary info ============================
+SUBFAILED(arm='parent restarts first') tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_a_parents_restart_does_not_take_the_crews_gate_away_from_the_crew
+FAILED tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_a_parents_restart_does_not_take_the_crews_gate_away_from_the_crew
+FAILED tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_a_restarting_parent_is_not_bound_to_a_spine_its_crew_visibly_claims
+SUBFAILED(case="attributed to a sibling's composite key -> refuse") tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_the_writer_rule_refuses_only_a_contradicting_attribution
+SUBFAILED(case='attributed to nobody -> allow (#202/#261)') tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_the_writer_rule_refuses_only_a_contradicting_attribution
+SUBFAILED(case='already attributed to the writing key itself -> allow') tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_the_writer_rule_refuses_only_a_contradicting_attribution
+SUBFAILED(case="no attributions at all -> allow (#261's empty view)") tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_the_writer_rule_refuses_only_a_contradicting_attribution
+SUBFAILED(case='unusable attributions -> refuse (fail-safe at a writer)') tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_the_writer_rule_refuses_only_a_contradicting_attribution
+8 failed, 19 passed, 152 deselected, 26 subtests passed in 0.44s

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "cleanup-f-derive-worktree-g3-implement-rework3",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-g3-implement-rework3-m0-context@c48cacdfbdb34689c1ad14468176a2c354b41272",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "cleanup-f-derive-worktree-g3-implement-rework3",
+    "generated_at": "2026-08-17T00:03:27Z"
+  }
+}

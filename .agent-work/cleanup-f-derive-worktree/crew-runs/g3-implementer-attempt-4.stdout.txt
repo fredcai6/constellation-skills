@@ -1,0 +1,15 @@
+**I refuse the hook, as the handoff instructed, and the refusal is recorded.**
+
+Verified at this moment rather than assumed:
+
+- `SPINE_FILE` → the **parent's** spine, `engine_session` = `{"session_id": "commander-cleanup-f-derive-worktree", "status": "active", "claimed_by": "commander"}` — an active lease held by someone else.
+- `SPINE_SESSION` / `SPINE_PARENT` → the commander's `execute` session, not mine.
+- My own plan: lease `released`, **zero** open items.
+- My `crew-runs.json` entry: `spine: null`.
+- `git status` on `spine.json` and `spine.json.journal`: **empty** — I wrote nothing to it.
+
+I did not use the hook's escape hatches either. `block` and `waive` both write to that same spine under the parent's live lease, so the sanctioned "honest stop" would itself be the destructive act — advancing a gate I do not own. Obeying the imperative would mean driving `execute.json`, dispatching crews, and writing `REPLAN_INPUT.json` on behalf of a commander whose lease is active elsewhere.
+
+My honest stop is the one the handoff defines: my plan is DONE through the engine, my lease is released, and the result artifact exists at `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implementer-rework3-result.md` with `Return status` = `complete`. That artifact is the channel my parent reads, and it now carries the refusal as its closing section.
+
+Worth flagging to whoever picks up `tc1`: the mechanism that produced this nudge is one branch away from the one I just fixed. B5 was the scan-bind pointed at a spine a **sibling** had visibly claimed, and the writer now refuses that. The nudge I keep refusing is the same write pointed at a spine **nobody** claimed — deliberately left open, because that is `tc1`'s authority question and not mine to settle. The guard it needs already exists and needs only a second condition.
