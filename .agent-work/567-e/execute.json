@@ -1,0 +1,72 @@
+{
+  "work_id": "567-e/execute",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["e0-context", "g1-implement", "g1-review", "g1-integrate"],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Context already loaded at the outer spine's context/understand/plan steps (see .agent-work/567-e/notes-1.md, MISSION_FRAME.md, DESIGN_NOTE.md). Confirm the frozen plan's intent and scope here, then attest c1.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "plan intent and scope confirmed", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Door-refusal episode capture + refusal-text swap: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate from DESIGN_NOTE.md's Candidate A (corrected) and dispatch a fresh constellation-implementer subagent. Wait for and integrate IMPLEMENTER_RESULT: attach g1-implement --type implementer-result --field status=<value> (lowercase, verbatim from the result's Return status).",
+      "preconditions": [{"id": "p1", "statement": "mission frame, design note and cold-critic findings available", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)", "check": {"kind": "artifact", "evidence_type": "implementer-result", "match": {"status": "complete"}}, "satisfied": false}],
+      "constraints": [
+        "sole writer this wave: scripts/mcp_spine_server.py, episodes/**",
+        "never hand-edit episodes/** -- only scripts/apply_episode_delta.py --store-root episodes writes it",
+        "never fabricate a mechanical field -- skip capture (log why to stderr, never raise) when episode_capture.mechanical_fields() cannot honestly derive all nine MECHANICAL_SCALAR_FIELDS",
+        "every agent-supplied field must be a literal derivation from data the refusal itself produced -- never invented narrative (EPISODE_STORE.md section 10 tension, resolved this way per DESIGN_NOTE.md; state this reasoning in the handoff so the crew does not relitigate it)",
+        "do not touch scripts/checklist_engine.py (lane H owns it this wave) or docs/EPISODE_STORE.md (lane D1 owns docs/** this wave)",
+        "no-inode-containment stands -- do not touch the hardlink hole",
+        "capture only the population already reaching _tool_error with both tool and rejection_class set (the same population _log_rejection already writes to mcp_rejections.jsonl) -- never engine-native refusals through run_engine",
+        "skip capture entirely when SPINE is None (no bound spine, no work-id to attribute to) -- state this plainly, do not invent a sentinel run id",
+        "in-process dedup: capture at most once per (tool, rejection_class) pair per door-process lifetime, to bound a retry-loop"
+      ],
+      "anchors": {
+        "structural": ["scripts/mcp_spine_server.py:_tool_error:797", "scripts/mcp_spine_server.py:_log_rejection:761", "scripts/mcp_spine_server.py:_rejectionlog:297", "scripts/mcp_spine_server.py:_own_checkout_for_binding:946", "scripts/mcp_spine_server.py:_derivable_work_id:1014", "scripts/mcp_spine_server.py:_write_amend_delta:815", "scripts/mcp_spine_server.py:_THE_CLI_IS_PER_CALL:1247", "scripts/mcp_spine_server.py:_spine_bind:1252 (refusal sites :1396,:1437)", "scripts/episode_capture.py:mechanical_fields:407", "scripts/apply_episode_delta.py:_validate_create:1043"],
+        "capability": ["MCP door rejection capture (issue #541)", "episode store single write path (docs/EPISODE_STORE.md)"],
+        "constraint": ["episode-store-single-write-path", "refuse-never-fabricate (episode_capture.py's own naming)", "no-inode-containment"],
+        "decision": ["capture-is-literal-derivation-only -- resolves EPISODE_STORE.md sec.10's categorical no-auto-create stance by making every synthesized field a literal quotation/extraction of real refusal data, never invented judgment; a genuine unresolved tension with sec.10's literal text, floated to the Admiral in the run's return rather than treated as settled. @grade: guess · leans g1-implement,g1-review · settle: run the acceptance trigger, show the five fields against the real captured episode, confirm none reads as invented", "refusal-text-swap-consistent-with-559 -- confirmed against the module's own docstring (issue #559 already overturned any CLI-recommending refusal text fleet-wide) @grade: settled/inherited · leans g1-implement"],
+        "evidence": ["a refusal triggered through the door in a fresh process is readable back out of episodes/ via query_episodes.py", "with the capture call removed/reverted, the same refusal leaves no trace in episodes/ (negative control)", "grep confirms the two _spine_bind sites no longer end in a CLI recommendation"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Door-refusal episode capture + refusal-text swap: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a fresh constellation-reviewer subagent. Wait for and integrate REVIEW_RESULT.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for this gate", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g1-implement anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Door-refusal episode capture + refusal-text swap: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: independently re-run the acceptance trigger + negative control + grep yourself (never trust the report alone), then advance -- c1 re-runs the suite command. BLOCK: rework or raise a blocker. Log out-of-scope finds as triage candidates under .agent-work/567-e/triage-candidates/.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for this gate", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "full suite green on Linux in a clean detached worktree (MapTreeFreshnessTests may fail; nothing else may)", "check": {"kind": "command", "command": "bash -lc 'cd /home/tommy/projects/constellation-skills && tmp=$(mktemp -d) && git worktree add --detach \"$tmp\" feat/567-e-door-rejection-episodes >/dev/null && cd \"$tmp\" && (python -m pytest -q 2>&1 | tee /tmp/567e-suite.log; true) && ! grep -q \"^FAILED\" /tmp/567e-suite.log || (grep \"^FAILED\" /tmp/567e-suite.log | grep -qv MapTreeFreshnessTests && exit 1 || exit 0)'"},
+         "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [],
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}
