@@ -1,12 +1,12 @@
 # IMPLEMENTER_RESULT — g2-implement: `spine_bind`
 
+Return status: complete
+
 **Gate:** `g2-implement` (epic-567-door/cmdr-a, lane A of epic #567)
 **Branch:** `feat/567-a-spine-identity`
 **Commits:** `86109e2f` (the `session_id_for` extraction) and `0189dc26` (`spine_bind`),
 deliberately separate — the design is not human-ratified
 (`decision:convergence-is-human-only`), so the tool reverts on its own.
-
-**Return status:** complete
 
 ---
 
