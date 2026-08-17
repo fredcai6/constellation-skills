@@ -1,11 +1,16 @@
 # constellation-skills map
 
 ## packages
+conftest: 1 modules, 3 entities
 evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
 scripts: 59 modules, 1245 entities
 skills: 1 modules, 18 entities
-tests: 90 modules, 5124 entities
+tests: 91 modules, 5132 entities
+
+## conftest (1 modules, 3 entities)
+
+- [conftest](conftest/INDEX.md) (3 entities, 2 holes): Repo-wide pytest configuration.
 
 ## evals (12 modules, 54 entities)
 
@@ -110,7 +115,7 @@ tests: 90 modules, 5124 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (90 modules, 5124 entities)
+## tests (91 modules, 5132 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -192,6 +197,7 @@ tests: 90 modules, 5124 entities
 - [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (220 entities, 94 holes): Unit tests for scripts/hooks/spine_rail.py.
 - [tests.test_spine_session_id](tests.test_spine_session_id/INDEX.md) (7 entities, 3 holes): `spine_lifecycle.session_id_for` -- the ONE definition of the lease identity a spine for a `work_id` is driven under (epic #567 lane A, gate g2-implement).
 - [tests.test_state_note](tests.test_state_note/INDEX.md) (15 entities, 15 holes): HOLE: no docstring
+- [tests.test_subtest_failures_are_greppable](tests.test_subtest_failures_are_greppable/INDEX.md) (8 entities, 3 holes): A failing subtest must be findable by searching for `FAILED`.
 - [tests.test_validate_spine](tests.test_validate_spine/INDEX.md) (85 entities, 77 holes): Tests for scripts/validate_spine.py (epic-559/c1-spine-lint, #518, #562).
 - [tests.test_verify_coverage_ledger](tests.test_verify_coverage_ledger/INDEX.md) (12 entities, 12 holes): HOLE: no docstring
 - [tests.test_verify_cycles](tests.test_verify_cycles/INDEX.md) (11 entities, 11 holes): HOLE: no docstring
