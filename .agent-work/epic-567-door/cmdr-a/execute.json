@@ -328,7 +328,8 @@
           "id": "p1",
           "statement": "g2-implement closed with a complete implementer result",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g2-implement closed with a complete implementer result; rework also complete after the BLOCK."
         }
       ],
       "postconditions": [
@@ -342,7 +343,12 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1",
+          "attested": {
+            "evidence": "e-g2-review-1",
+            "note": null
+          }
         }
       ],
       "constraints": [
@@ -351,11 +357,21 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "anchors": {
         "structural": [
@@ -401,7 +417,8 @@
           "id": "p1",
           "statement": "g2-review returned a verdict",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g2-review returned a verdict: BLOCK first, then APPROVE after rework."
         }
       ],
       "postconditions": [
@@ -412,7 +429,8 @@
             "kind": "command",
             "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && py -m pytest tests/test_mcp_lifecycle.py tests/test_mcp_identity.py tests/test_mcp_door_unbound.py tests/test_mcp_spine_server.py tests/test_spine_lifecycle.py tests/test_mcp_adoption.py -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
         },
         {
           "id": "c2",
@@ -421,7 +439,8 @@
             "kind": "command",
             "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && test $(py -m pytest tests/ -k spine_bind --collect-only -q 2>/dev/null | grep -c '::') -ge 5"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
         },
         {
           "id": "c3",
@@ -430,13 +449,15 @@
             "kind": "command",
             "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && test $(py -m pytest tests/ -k 'spine_bind and (outside or escape or foreign or checkout or confine)' --collect-only -q 2>/dev/null | grep -c '::') -ge 1"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-3"
         },
         {
           "id": "c4",
           "statement": "the mutation proof is pasted in the review: deleting the confinement argument turns the reach-delta test RED. A green suite is not evidence the reach did not widen.",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Mutation proof pasted in the re-review's discrimination table: eleven symlink spellings run against the REVERTED source, and the new ASymlinkCannotHideAnotherCheckoutTests go RED there. I also ran the root mutation myself (--show-toplevel -> --git-common-dir) and got 7 failures including test_the_two_roots_genuinely_disagree_here, the non-vacuity control. A green suite was explicitly not accepted as evidence: the implementing crew's own M3 mutation came back GREEN on first run because every fixture used a primary checkout where both roots agree, which is how the untestability was found."
         }
       ],
       "constraints": [
@@ -444,11 +465,45 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && py -m pytest tests/test_mcp_lifecycle.py tests/test_mcp_identity.py tests/test_mcp_door_unbound.py tests/test_mcp_spine_server.py tests/test_spine_lifecycle.py tests/test_mcp_adoption.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && test $(py -m pytest tests/ -k spine_bind --collect-only -q 2>/dev/null | grep -c '::') -ge 5",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && test $(py -m pytest tests/ -k 'spine_bind and (outside or escape or foreign or checkout or confine)' --collect-only -q 2>/dev/null | grep -c '::') -ge 1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "anchors": {
         "structural": [
@@ -509,7 +564,8 @@
               "status": "complete"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
         }
       ],
       "constraints": [
@@ -519,7 +575,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -579,7 +635,8 @@
           "id": "p1",
           "statement": "g3-implement closed with a complete implementer result",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g3-implement closed with a complete implementer result."
         }
       ],
       "postconditions": [
@@ -593,7 +650,12 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1",
+          "attested": {
+            "evidence": "e-g3-review-1",
+            "note": null
+          }
         }
       ],
       "constraints": [
@@ -601,11 +663,21 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "anchors": {
         "structural": [
@@ -651,7 +723,8 @@
           "id": "p1",
           "statement": "g3-review returned a verdict",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g3-review returned APPROVE."
         }
       ],
       "postconditions": [
@@ -662,7 +735,8 @@
             "kind": "command",
             "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && py -m pytest tests/test_checklist_engine.py tests/test_crew_launcher.py -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
         },
         {
           "id": "c2",
@@ -671,7 +745,8 @@
             "kind": "command",
             "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && test $(py -m pytest tests/ -k 'atomic or torn or fsync or replace' --collect-only -q 2>/dev/null | grep -c '::') -ge 3"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
         },
         {
           "id": "c3",
@@ -680,13 +755,15 @@
             "kind": "command",
             "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && test $(git diff 600de020..HEAD -- scripts/checklist_engine.py | grep -c '_RAIL_STRINGS\\|_refresh_attach_hint') -eq 0"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-3"
         },
         {
           "id": "c4",
           "statement": "the red-proof is pasted: the new test FAILS against the old bare write_bytes. Its primary assertions are deterministic (save never opens the target for writing; the target inode changes exactly once), not a thread race that could fake its own red.",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Red-proof pasted and re-run by me independently: reverting save() to the old bare write_bytes in the WORKTREE copy only fails 5 of 11 tests -- test_save_never_opens_target_for_writing, test_target_inode_is_replaced_exactly_once, test_save_writes_a_temp_sibling_in_the_same_directory, test_no_temp_sibling_after_a_failed_replace, test_concurrent_reader_never_observes_a_partial_document. Restored from a cp backup; git diff confirmed the restore was exact; 11/11 green again. The primary assertions are DETERMINISTIC (the target is never opened for writing; the inode changes exactly once) rather than a thread race that could fake its own red by coming out green against the old code by luck. The 6 that pass in both worlds are the line-ending preservation tests, which is the correct shape for a red-proof."
         }
       ],
       "constraints": [
@@ -694,11 +771,45 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && py -m pytest tests/test_checklist_engine.py tests/test_crew_launcher.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && test $(py -m pytest tests/ -k 'atomic or torn or fsync or replace' --collect-only -q 2>/dev/null | grep -c '::') -ge 3",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && test $(git diff 600de020..HEAD -- scripts/checklist_engine.py | grep -c '_RAIL_STRINGS\\|_refresh_attach_hint') -eq 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "anchors": {
         "structural": [
@@ -744,7 +855,8 @@
           "id": "p1",
           "statement": "g2 and g3 both integrated",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g2 and g3 both integrated."
         }
       ],
       "postconditions": [
@@ -755,19 +867,22 @@
             "kind": "command",
             "command": "py /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity/scripts/checklist_engine.py --file /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity/.agent-work/epic-567-door/cmdr-a/spine.json current"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-selfhost-3"
         },
         {
           "id": "c2",
           "statement": "a MUTATING verb (advance) run against a COPY of a spine -- never a live spine file -- refuses or succeeds sanely rather than crashing. This is the only proof that exercises save(). Pasted into the return, with git status showing the live spine unmodified.",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "MUTATING verb against a COPY, never a live spine, under the fully edited engine. The launch order's named check (read-only current) is NOT sufficient on its own and a cold critic caught that: current never calls save(), so its exit code is identical in the healthy and defective world. So I measured the discriminating thing. advance on a copy refused coherently (exit 1, six unmet postconditions named, recovery line, not a traceback). Then a verb that really WRITES: heartbeat on the copy, exit 0, inode 6194511 -> 6194512 CHANGED -- an in-place write_bytes keeps the inode, an atomic rename replaces it, so the new write path demonstrably engaged on a real spine document driven by a real engine verb. No temp leaked. git status --short on the live spine is EMPTY after all proofs: the copy test provably did not touch it, which is the half of decision:self-hosting-engine-edit most easily violated by accident."
         },
         {
           "id": "c3",
           "statement": "fresh-process validation recorded with its command and output; NOT an in-session observation and NOT a fixture that hand-injects the value it is trying to prove the harness delivers",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Fresh-process validation done by STRIPPING the environment, not merely spawning a subprocess, because the doctrine's specific warning is against a fixture that hand-injects the value it is trying to prove the harness delivers: env -i PATH=$PATH HOME=$HOME PYTHONIOENCODING=utf-8 py <abs>/scripts/checklist_engine.py --file <abs>/.agent-work/epic-567-door/cmdr-a/spine.json current -> exit 0, with SPINE_* provably absent and CLAUDE_PROJECT_DIR unset. What this did NOT validate, stated so the claim is not read as broader than it is: hook behaviour. I touched no hooks, and CLAUDE_PROJECT_DIR resolving once at session launch (#269) means I could not have validated hooks from inside this session anyway."
         },
         {
           "id": "c4",
@@ -776,7 +891,8 @@
             "kind": "command",
             "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && py -m pytest tests/ -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-selfhost-4"
         }
       ],
       "constraints": [
@@ -785,11 +901,56 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-selfhost-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity/scripts/checklist_engine.py --file /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity/.agent-work/epic-567-door/cmdr-a/spine.json current",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-selfhost-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && py -m pytest tests/ -q",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-selfhost-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity/scripts/checklist_engine.py --file /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity/.agent-work/epic-567-door/cmdr-a/spine.json current",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-selfhost-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && py -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "anchors": {
         "structural": [
@@ -851,12 +1012,12 @@
       ]
     }
   ],
-  "refusals": 3,
+  "refusals": 6,
   "engine_session": {
     "session_id": "cmdr-567-a",
     "status": "active",
     "claimed_at": "2026-08-17T06:57:45.427991+00:00",
-    "last_heartbeat": "2026-08-17T07:18:28.968197+00:00",
+    "last_heartbeat": "2026-08-17T08:39:33.252718+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -883,6 +1044,48 @@
       "why": "spine_bind shipped: a new lifecycle tool that binds the door to a spine that already exists. Containment is <the door's own checkout>/.agent-work/ via --show-toplevel, plus a refusal for any candidate whose own --show-toplevel differs -- the crew found the reason that second guard is necessary and I had not: lexical containment alone would admit a whole separate checkout nested inside the work area, which .worktrees/ proves is not hypothetical. Session derived from origin.work_id else the top-level work_id, so the Admiral's own spine and IMPLEMENTER_PLAN.json both bind. All three pin obligations met honestly: ALLOWED widened by one named dispatch function with its positive control untouched, the identity-pin exemption keyed on the (tool, property) PAIR with a test that spine_bind.session_id would still be an offender, and a 134-line IDENTITY_TRADE.md amendment. 116 door tests green.",
       "mechanical": false,
       "ts": "2026-08-17T07:18:28.968166+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g2-review",
+      "why": "Reviewed twice independently and then re-reviewed after rework. Both original reviewers returned BLOCK on the same two findings by separate routes: the isolation property was false (the cross-checkout guard asked git about the UNRESOLVED candidate.parent, so a symlink inside our own work area pointing at a nested checkout satisfied both guards -- one reviewer showed the door writing a live lease into another checkout's spine), and a NUL byte in spine_file killed the door process. Rework cleared both; the narrow re-review APPROVED after checking eleven symlink spellings in a real multi-checkout topology, verifying the new tests go RED against the reverted source, and confirming the process survives the NUL byte. Its one non-blocking finding (a fourth claim site still stating the property unqualified) is fixed. decision:isolation-not-fencing's settle: condition was 'have the reviewer attack it' -- the attack succeeded, the property was corrected, and it is now stated as 'enforced by path' with the hardlink residual named.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:29:53.581908+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-integrate",
+      "why": "Verified the crew's side-effects against the world rather than on the claim: I reproduced the symlink escape myself at HEAD (my FIRST attempt failed to reproduce, which taught me the real shape -- the foreign checkout must be nested inside the work area), then confirmed the fix refuses it with SPINE left unbound, confirmed the NUL byte refuses with the process alive, and confirmed the legitimate case STILL BINDS so the fix is not a wall. I re-ran the full suite independently at 3276/5/0 and reconciled the +13 delta against the thirteen tests the rework added. Also found and fixed a Windows-only defect the Admiral's warning surfaced: os.fchmod is Unix-only and CI is windows-latest, so every save of an existing file would have raised AttributeError -- a dead engine, not a red test.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:30:24.763780+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g3-implement",
+      "why": "save() writes atomically: unique tempfile.mkstemp sibling, mode restored via _restore_mode (fchmod on the FD where it exists, os.chmod on the path otherwise -- os.fchmod is Unix-only and CI is windows-latest), flush+fsync before the rename, os.replace, temp unlinked in a finally. _dominant_newline still read BEFORE the replace so CRLF files keep CRLF. The docstring carries the atomicity-is-not-mutual-exclusion boundary in spine_rail.py's own words. Deliberately did NOT copy gauge_writer_hook's pattern: the cold critic proved its fixed temp name lets a losing writer's buffered flush write into the inode os.replace just installed, producing a DURABLY unparseable spine -- worse than the transient tear being fixed, and run_crew's parent-heartbeat thread makes two writers a supported case. Filed as its own triage candidate.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:30:40.189333+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g3-review",
+      "why": "Reviewer APPROVED and re-did the red-proof itself rather than accepting mine. It also improved on the spec: it re-proved the temp-follows-target property with a target OUTSIDE /tmp, noting the shipped test could not distinguish a same-directory temp from a system-temp one when the target already lives in the system temp dir. It verified the fenced _RAIL_STRINGS and _refresh_attach_hint are byte-identical for lane C, and confirmed the atomicity-is-not-mutual-exclusion boundary is stated rather than exceeded -- no lock, no compare-and-swap, no version field, no retry in load().",
+      "mechanical": false,
+      "ts": "2026-08-17T08:30:56.422323+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-integrate",
+      "why": "Verified against the world: 680 engine + launcher + atomicity tests green in my hands, the new module's tests collected and run (they were run by NO command in the first draft of this plan -- the critic's S4), and the fenced regions proven byte-identical by a targeted diff rather than by eye. The one sanctioned blast-radius edit landed: tests/test_crew_launcher.py:3250's docstring no longer asserts save writes plain bytes non-atomically, a claim this change falsified.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:31:11.875222+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g4-selfhost",
+      "why": "Both self-hosting proofs recorded against a BEFORE baseline taken at 3e4b0e20 prior to any engine edit, because both required proofs are comparisons and worthless without one. Read-only current on the live spine exits 0 before and after; a writing verb against a COPY now demonstrably goes through the atomic rename (inode changes, no temp leaked, live spine untouched); fresh-process validation with a stripped environment. This gate's own full-suite check REFUSED once and was right to: my Windows fchmod fix had staled map/INDEX.md. Regenerated. That refusal is the amended plan working -- the first draft's four command postconditions all passed at base with zero code written.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:39:33.252692+00:00"
     }
   ]
 }

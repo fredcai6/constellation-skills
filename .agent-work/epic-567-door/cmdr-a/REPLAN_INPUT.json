@@ -119,6 +119,11 @@
       "issue_id": "613",
       "outcome": "save() writes atomically: unique mkstemp sibling, fchmod to the target's mode, flush+fsync, os.replace, temp unlinked in finally. 11 new tests.",
       "evidence": "Commander re-ran the red-proof independently: reverting save() in the worktree copy fails 5 of 11 including all three deterministic assertions; restored exactly (git diff empty); 11/11 green. 668 engine+launcher tests pass."
+    },
+    {
+      "issue_id": "559",
+      "outcome": "spine_bind(spine_file) ships: a door tool that binds this process to a spine that ALREADY EXISTS, confined to <the door's own checkout>/.agent-work/ via git rev-parse --show-toplevel plus a cross-checkout refusal on the RESOLVED path. Session derived from origin.work_id else the spine's top-level work_id, so the Admiral's own spine and IMPLEMENTER_PLAN.json both bind. Property: one checkout's work-area tree per process, enforced by path.",
+      "evidence": "Commander verified in a live process: an unbound door binds a spine with origin: None and derives constellation/<work_id>, moving both identity roots and mirroring both into os.environ; six boundary attacks refused with the boundary named; the symlink escape reproduced at HEAD and refused after the fix; the legitimate case still binds. Two independent reviewers BLOCKed on the same two defects, a rework cleared both, and a narrow re-review APPROVEd after 11 symlink spellings in a real multi-checkout topology and confirming the new tests go RED against the reverted source. Full suite 3276 passed / 5 skipped / 0 failed, run independently. PR #623."
     }
   ],
   "wave_evidence": [
@@ -201,11 +206,49 @@
       "affects": "Any lane where the dispatcher commits from the same worktree its crews edit",
       "evidence": "fe2eb504 carries 48 lines of the g3 crew's save() work under a commit message about the cold critic. Independently reported by the crew.",
       "reason": "Structural: crews hold no lock and cannot ask the dispatcher to wait. Mitigations are explicit-path staging or per-crew worktrees."
+    },
+    {
+      "id": "D6",
+      "signal": "The recommendation's own containment root was ~6x wider than the reach used to disqualify the losing candidate, and the winning candidate's session derivation would have refused the two cases the mission names",
+      "classification": "blocks_current_wave_exit",
+      "affects": "The design pick itself",
+      "evidence": "origin.work_id present in 4 of 52 live spines; absent from .agent-work/epic-567-door/spine.json and IMPLEMENTER_PLAN.json. _primary_checkout_for_lifecycle (--git-common-dir) reaches 4205 candidates, 3505 cross-worktree; --show-toplevel reaches 683, cross-checkout 0.",
+      "reason": "Both repaired inside the wave. decision:isolation-not-fencing is graded guess/admiral, so revisiting it after its settle: experiment (a reviewer attack) is sanctioned; regraded settled/measured."
+    },
+    {
+      "id": "D7",
+      "signal": "The stated isolation property was FALSE: a symlink inside the door's own work area pointing at a nested checkout satisfied both guards, and the door wrote a live lease into another checkout's spine",
+      "classification": "blocks_current_wave_exit",
+      "affects": "The security property this lane exists to establish",
+      "evidence": "Two independent reviewers reproduced it; the Commander reproduced it too (first attempt failed, which revealed the real shape). Cause: R6 asked git about candidate.parent UNRESOLVED while R4 resolves. Fixed with candidate.resolve().parent; 11 spellings now refuse.",
+      "reason": "Not a live breach (zero nested checkouts exist today) but the property as written was untrue, and stating an attackable property was the whole point of the decision. Fixed and re-reviewed."
+    },
+    {
+      "id": "D8",
+      "signal": "os.fchmod is Unix-only and was called unguarded in save(); CI is windows-latest only",
+      "classification": "blocks_current_wave_exit",
+      "affects": "The engine on Windows, i.e. every mutating verb on the only platform CI runs",
+      "evidence": "os.fchmod absent on Windows -> AttributeError on every save of an existing file. Found during closeout on the Admiral's warning to audit new tests for Windows hazards; no Linux run could surface it. Fixed with _restore_mode (fchmod on the FD, else os.chmod on the path); guard test runs on every platform and is proven non-vacuous.",
+      "reason": "Fixed in-lane: bounded defect inside this lane's own file, and shipping it would have been a dead engine rather than a red test."
+    },
+    {
+      "id": "D9",
+      "signal": "A gate plan whose four command postconditions all passed at BASE with zero code written; and a mission frame that cannot satisfy its own verify-frame gate under a degraded map",
+      "classification": "evidence_only",
+      "affects": "How much a green gate is worth as evidence, fleet-wide",
+      "evidence": "Cold critic ran all four checks at 600de020: 61 passed, 456 passed, exit 0. Amended through the engine; the new checks verifiably fail at base. Separately: a five-line frame with zero anchors returns FRAME-OK exit 0 where a 15-anchor frame returns FRAME-REFUSED exit 10.",
+      "reason": "The plan half is fixed in-lane. The verify-frame half is a triage candidate: map_orient.py is not this lane's, and it is a design question about whether a degraded frame may cite anchors backed by pinned substitutes."
+    },
+    {
+      "id": "D10",
+      "signal": "A reviewer's CORRECTION to an earlier finding was itself wrong, and the Commander propagated it without re-deriving it",
+      "classification": "evidence_only",
+      "affects": "How corrections are treated versus how claims are treated",
+      "evidence": "R2 recorded that the NUL byte kills the door 'only when already bound'; the re-review proved the unbound door dies too, via R4's refusal f-string. The Commander had adopted the narrowing into RETURN.md and notes-a.md.",
+      "reason": "Corrected. The lesson is narrow: a run that refuses to accept reviewers' claims without re-deriving them must apply the same rule to their corrections. A correction is a claim."
     }
   ],
-  "open_current_wave_issue_ids": [
-    "559"
-  ],
+  "open_current_wave_issue_ids": [],
   "unlaunched_items": [
     {
       "id": "613-lost-update-half",
@@ -229,6 +272,22 @@
     },
     {
       "id": "gauge-writer-hook-fixed-temp-name",
+      "kind": "parked"
+    },
+    {
+      "id": "hardlinks-defeat-path-based-containment",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "subtest-hides-a-raising-test-body",
+      "kind": "issue"
+    },
+    {
+      "id": "door-main-catches-only-keyerror",
+      "kind": "issue"
+    },
+    {
+      "id": "mutate-a-copy-never-the-tracked-file",
       "kind": "parked"
     }
   ],

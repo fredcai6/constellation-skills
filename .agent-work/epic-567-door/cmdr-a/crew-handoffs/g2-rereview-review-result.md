@@ -557,3 +557,150 @@ variants were `/tmp` copies of the source, the three test-suite mutations went i
 scratch `git worktree add --detach` under the scratchpad and were restored in the same
 process with an md5 equality check, and that worktree is removed
 (`git worktree list` shows only the five real lane worktrees and the primary checkout).
+
+---
+
+# ADDENDUM — written after the Commander acted on this review mid-turn
+
+The Commander read this result, committed it, and landed fixes while I was still
+verifying. Recorded here rather than silently folded in, because the tree I reviewed and
+the tree that now exists are not the same tree. **Verdict unchanged: APPROVE.**
+
+## A1. O1 is CLEARED — verified, not taken on report
+
+`9bd87450 fix(567-a): O1 -- the last unqualified claim site, plus the crew results`
+applied exactly the remedy §4 named, at all three sites I listed:
+
+```
+-  property, in one line: **one checkout's work-area tree per process.** The
++  property, in one line: **one checkout's work-area tree per process, enforced by path.** The
+-  **one checkout's work-area tree per process.**                        (RETURN.md:24)
++  **one checkout's work-area tree per process, enforced by path.**
+-did once. As a property in one line: **one checkout's work-area tree per process.**   (RETURN.md:277)
++did once. As a property in one line: **one checkout's work-area tree per process, enforced by path.**
+```
+
+Every surviving claim site in code and shipped docs now carries the qualifier:
+
+```
+RETURN.md:24                     ... per process, enforced by path.**
+RETURN.md:277                    ... per process, enforced by path.**
+scripts/mcp_spine_server.py:78   ... per process, enforced by path.** The
+scripts/mcp_spine_server.py:992  ... per process, enforced by path** --
+scripts/mcp_spine_server.py:1871 "Confined to one checkout's work-area tree per process, enforced by path -- ..."
+IDENTITY_TRADE.md:352            ... per process, enforced by path.**
+```
+
+The only remaining unqualified instances are `DESIGN_CONVERGENCE.md:306` (a dated
+design-history artifact, correctly left as the record of what was decided at the time) and
+the triage candidate's own quotation of the false pre-fix sentence, which is quoting it in
+order to call it false. Both correct. **O1 needs nothing further.**
+
+## A2. The branch is currently RED, and it is NOT the g2 rework
+
+My §5 regression run (3276 passed, 5 skipped, **0 failed**) was taken at `ad380fa3` and
+stands for the code under review — `md5(scripts/mcp_spine_server.py)` is unchanged
+throughout at `2cfb376ee985761078a9b92f143e550e`.
+
+A later full-suite run at HEAD `9bd87450` gives:
+
+```
+FAILED tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build
+1 failed, 3276 passed, 5 skipped, 1218 subtests passed in 138.24s
+```
+
+**Attributed mechanically to `c70f7e7b fix(613): os.fchmod is Unix-only and CI is
+windows-latest -- guard it`, which is a different gate.** Two independent proofs:
+
+1. A scratch `git worktree add --detach` at `ad380fa3` runs that class **`2 passed`**.
+   Copying in only the `checklist_engine.py` change makes it **`1 failed, 1 passed`**.
+2. `git show c70f7e7b --stat` touches `scripts/checklist_engine.py` and
+   `tests/test_checklist_engine_atomic_save.py` and **not** `map/INDEX.md`. A fresh
+   `python -m scripts.code_map build --root .` produces exactly and only:
+
+```
+scripts: 58 modules, 1232 -> 1233 entities
+tests:   90 modules, 5006 -> 5007 entities
+scripts.checklist_engine            109 -> 110 entities   (the new `_restore_mode`)
+tests.test_checklist_engine_atomic_save  25 -> 26 entities (its new test)
+```
+
+Nothing in that delta comes from `mcp_spine_server.py` or the `spine_bind` test module.
+The freshness gate is stale by exactly the two entities `c70f7e7b` added.
+
+**Remedy, for whoever owns #613 / g3:** `python -m scripts.code_map build --root .` and
+commit `map/INDEX.md` — the same mechanical move the g2 rework already made once for the
+same reason (`5444c45a`), and which the failing test names itself. I did not apply it: it
+is outside this review's fence, it belongs to a gate I was scoped off, and the tree has a
+concurrent writer. I built the fresh index only to measure the delta and restored
+`map/INDEX.md` immediately; `git status --short map/INDEX.md` is empty.
+
+**This does not change my verdict.** The two blockers are cleared, the new tests are
+non-vacuous, and the g2 rework introduces no failure. But the branch should not be merged
+red, so the Commander needs the one-command regeneration above before integrate.
+
+## A3. Workflow feedback this addendum earns
+
+**A reviewer and its Commander writing the same worktree concurrently is a real hazard,
+and I hit three symptoms of it in one turn.** In sequence: two tracked files I had never
+touched appeared as ` M` in my `git status` mid-review; a full-suite failure appeared that
+was not mine; and my own untracked result file vanished from `git status` because the
+Commander had committed it underneath me. I handled all three by attributing rather than
+assuming — a scratch worktree at a known SHA is the tool, and it is non-destructive, which
+matters enormously here: the instinct to `git stash` the unexplained changes would have
+destroyed another agent's live uncommitted work.
+
+Two concrete asks:
+
+1. **A crew instruction: never `stash`, `checkout --`, or `clean` in a shared worktree to
+   explain an unexpected diff — reproduce at a known SHA in a scratch worktree instead.**
+   The dispatch's "never mutate a tracked file" covers deliberate mutation; it does not
+   obviously cover "tidy up something that looks like debris", which is exactly what
+   another lane's uncommitted work looks like.
+2. **A reviewer's regression figure needs the tree state stamped beside it, not just the
+   number.** "3276 passed, 0 failed" is worthless without "at `ad380fa3`, with
+   `md5(server) = 2cfb…`". I only caught the discrepancy because I re-ran the suite after
+   noticing the `git status` drift, and I only trusted the first number afterwards because
+   I had the md5. **Suggest the REVIEW_RESULT template require a `HEAD` + `git status
+   --short` stamp adjacent to every suite figure**, not only once at the end of the
+   document — a single trailing `git status` describes the tree when the review *ended*,
+   which in a live worktree is not the tree any of the evidence was gathered on.
+
+Related to the §12/appendix point above: the Commander fixing O1 within minutes is the
+argument for putting actionable remedies in the finding itself. O1 carried its exact
+substitution, so it was a one-command fix. That is the standard to hold.
+
+## A4. Final tree state, at the end of my turn
+
+```
+$ git log --oneline -3
+9bd87450 fix(567-a): O1 -- the last unqualified claim site, plus the crew results
+c70f7e7b fix(613): os.fchmod is Unix-only and CI is windows-latest -- guard it
+ad380fa3 verify(567-a): post-rework suite re-run independently -- 3276/5/0, delta reconciled
+
+$ git status --short
+ M .agent-work/epic-567-door/cmdr-a/execute.json
+ M .agent-work/epic-567-door/cmdr-a/execute.json.journal
+?? .agent-work/epic-567-door/cmdr-a/context/g2-integrate.json
+?? .agent-work/epic-567-door/cmdr-a/context/g2-review.json
+?? .agent-work/epic-567-door/cmdr-a/context/g3-implement.json
+?? .agent-work/epic-567-door/cmdr-a/context/g3-integrate.json
+?? .agent-work/epic-567-door/cmdr-a/context/g3-review.json
+?? .agent-work/epic-567-door/cmdr-a/context/g4-selfhost.json
+?? .agent-work/epic-567-door/cmdr-a/mechanical/g2-integrate.json
+?? .agent-work/epic-567-door/cmdr-a/mechanical/g2-review.json
+?? .agent-work/epic-567-door/cmdr-a/mechanical/g3-implement.json
+?? .agent-work/epic-567-door/cmdr-a/mechanical/g3-integrate.json
+?? .agent-work/epic-567-door/cmdr-a/mechanical/g3-review.json
+?? .agent-work/epic-567-door/cmdr-a/mechanical/g4-selfhost.json
+```
+
+**None of the above is mine.** Every entry is the Commander's live spine drive
+(`execute.json`, its journal, and the per-gate `context/` and `mechanical/` files) running
+concurrently in this worktree. My own two result files were committed by the Commander in
+`9bd87450`. I hold no lease, drove no engine, and left no scratch behind:
+`git worktree list` shows only the primary checkout and the five real lane worktrees —
+both scratch worktrees I created (`nv` for the mutation runs, `attr` for the failure
+attribution) were removed with `git worktree remove --force`, and every source mutation I
+made lived in a `/tmp` copy or a scratch worktree, restored in the same process with an
+md5 equality check.

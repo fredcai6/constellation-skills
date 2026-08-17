@@ -325,7 +325,8 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "All 9 gates of execute.json closed with integrated evidence: e0-context, g1-converge (user-decision citing the launch order's Pre-Rulings), g2-implement/review/integrate (implementer-result complete, review-result APPROVE after a BLOCK and rework), g3-implement/review/integrate (same shape), g4-selfhost. Every crew result was verified against the world rather than accepted on the claim: I reproduced the symlink escape at HEAD and confirmed its fix, re-ran the save() red-proof independently, and re-ran the full suite myself at 3276/5/0 with the +13 delta reconciled against the tests added."
         },
         {
           "id": "c2",
@@ -334,7 +335,8 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id epic-567-door/cmdr-a"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-2"
         }
       ],
       "constraints": [],
@@ -361,7 +363,7 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -371,6 +373,17 @@
           "type": "command-output",
           "payload": {
             "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_state_note.py epic-567-door/cmdr-a",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id epic-567-door/cmdr-a",
             "exit": 0,
             "shell": "posix"
           },
@@ -389,7 +402,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Upstream (execute) verified: all 9 gates of execute.json complete with integrated evidence, REPLAN_INPUT.json verified by verify_iterative_role_artifacts, full suite 3276/5/0 re-run independently, PR #623 open."
         }
       ],
       "postconditions": [
@@ -397,13 +411,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Reconciled the structural record DIRECTLY, which commander-core sanctions where the run has no packet map -- and this repo has none: map_orient returns DEGRADED-UNPARSEABLE repo-wide because map/ids.jsonl is tracked and 0 bytes. No Cartographer subagent dispatched, and that is the sanctioned path rather than a skip. Three folds, each into the artifact the change actually touched. (1) docs/CHECKLIST_ENGINE_DESIGN.md:296 asserted 'Neither moment is a tool argument: a model still cannot point the door at another spine or another identity mid-conversation.' This lane half-falsifies it, and the split IS the security content, so the doc now states both halves: a model still cannot name an IDENTITY (derived from the spine's own work_id, so IDENTITY_TRADE section 3 option B stands unamended) but CAN now name a SPINE, confined to <own checkout>/.agent-work via --show-toplevel plus a cross-checkout refusal, with the measured reach recorded (683 candidates, no other checkout, against 4205 with 3505 cross-worktree for the wide root). Found by enumerating the blast radius by command per global-everyone.md's authoring-side rule, not by memory. (2) IDENTITY_TRADE.md amended, 134 lines, in the same change as the pin exemption -- which the pin's own failure message demands so the trade cannot be re-opened silently. (3) map/INDEX.md regenerated twice, because my own code changes staled it twice and the freshness test named its own remedy; this lane is the single writer of that generated file by the Admiral's ruling, so lanes B/C/G left it untouched. Checked and deliberately NOT changed: docs/CHECKLIST_SCHEMA.md:115 lists opened_by as 'spine_open or init_work_area' -- binding does not open, so that row stays correct."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -419,7 +434,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Upstream (reconcile) verified: three folds landed, one non-change recorded with its reason."
         }
       ],
       "postconditions": [
@@ -427,7 +443,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Eleven candidates, ALL routed recommend-and-defer, written to .agent-work/567-a/triage-candidates/ in this worktree. NONE filed as issues, per decision:no-issue-filing -- the human ruled filing held for the whole run and the Admiral harvests these at closeout. Two fix-now exceptions taken inside latitude and disclosed rather than deferred: the CREW_ALLOWED_TOOLS grant (without it the new tool is silently denied to every dispatched crew, i.e. shipped inert for the population #559 exists for) and the os.fchmod Windows guard (unguarded it is a dead engine on the only platform CI runs, not a red test). Ranked by value, the top three are not mine: subtest-hides-a-raising-test-body (the g2 implementer measured FOUR of its own tests reporting PASSED while their bodies raised inside subTest -- the check-that-cannot-fail defect applied to the REPORTING layer, and immune to the mutation testing this lane depended on most, so every 'N tests green' figure in this wave including my own 3276 is only as good as that mechanism); write-provenance-on-spine-journal (the actual fix for lane G's incident -- neither the lease nor my atomicity work addresses two writers under one identity, because nothing records who wrote what); and hardlinks-defeat-path-based-containment (a hardlink has no target to resolve, so no path check can see it -- which is why this lane's property ships as 'enforced by path' with the residual named rather than as the unqualified claim a symlink already falsified once)."
         },
         {
           "id": "c2",
@@ -436,17 +453,33 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1",
+          "attested": {
+            "evidence": "e-triage-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Pre-Rulings",
+            "note": "decision:no-issue-filing, verbatim from the order: 'file no issues. Tracking has been ballooning and the human ruled filing held for the whole run. Write triage candidates to .agent-work/567-a/triage-candidates/<slug>.md in your worktree; the Admiral harvests and disposes them at closeout.' So this citation records the DEFERRAL itself, not a filing approval -- none was sought and none was authorized. Zero issues filed. Eleven candidates on disk for the Admiral to pair onto an open issue or record as episodes."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -458,7 +491,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Upstream (triage) verified: 11 candidates routed, 0 filed, deferral citation attached."
         }
       ],
       "postconditions": [
@@ -469,17 +503,34 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1",
+          "attested": {
+            "evidence": "e-review-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape",
+            "artifact": "RETURN.md",
+            "note": "Delegated mode, no reachable human. The run summary is RETURN.md at the worktree root, ratified by the frozen order's Return Shape section with the Admiral as ratifying authority; the human ratifies at the epic return boundary, which the Admiral says it is now assembling. What is explicitly NOT ratified by this attachment: the DESIGN PICK. decision:convergence-is-human-only reserves that to the human, and RETURN.md now opens with a FOR THE HUMAN block stating the one question (is IDENTITY_TRADE section 2's confinement property amendable? if it is settled rather than a recorded trade, this design is dead as written whatever its internals look like) and the one weakness, unsoftened (net line count goes UP; against a settled/human net-deletion ruling the human may reasonably judge one deleted refusal clause insufficient, and I am not going to argue it was secretly net-negative). Both are at the top rather than in a later section, per the Admiral's instruction, and each says what turns on the answer."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -491,7 +542,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Upstream (review) verified: RETURN.md written with the human-facing question and weakness at the top, user-decision attached citing the order's Return Shape."
         }
       ],
       "postconditions": [
@@ -508,7 +560,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -618,14 +670,14 @@
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity",
     "opened_by": "init_work_area"
   },
-  "refusals": 3,
+  "refusals": 4,
   "engine_session": {
     "session_id": "cmdr-567-a",
     "status": "active",
-    "claimed_at": "2026-08-17T06:06:32.744267+00:00",
-    "last_heartbeat": "2026-08-17T06:55:51.723375+00:00",
+    "claimed_at": "2026-08-17T08:40:09.746237+00:00",
+    "last_heartbeat": "2026-08-17T08:42:34.208223+00:00",
     "claimed_by": "constellation-commander-delegated",
-    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity",
+    "worktree": ".",
     "previous_session_id": null,
     "takeover_reason": null
   },
@@ -657,6 +709,34 @@
       "why": "Plan frozen after a design-it-twice panel of 3 and a cold critic that returned 5 blocking findings. The recommendation is a named hybrid: candidate A's spine_bind tool with the session derived from the spine's work_id rather than origin.work_id -- because A's own stated falsifier, when I ran it, showed origin.work_id is absent from 92% of live spines including the Admiral's own and IMPLEMENTER_PLAN.json, the two cases the mission names. The critic then inverted my central argument: I had killed candidate C on a measured 683-file reach and crowned A on an unmeasured one that is actually 4205 with 3505 cross-worktree, because _primary_checkout_for_lifecycle resolves --git-common-dir. Root narrowed to <own checkout>/.agent-work via --show-toplevel plus a cross-checkout refusal: 683, cross-checkout 0. Also amended execute.json through the engine because every one of its command postconditions passed at base with zero code written; the new ones verifiably fail at base. Two implementer crews are running in parallel under file fences (g2 owns mcp_spine_server.py/spine_lifecycle.py, g3 owns checklist_engine.py).",
       "mechanical": false,
       "ts": "2026-08-17T06:54:57.880943+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "Both mission halves shipped and independently verified. spine_bind gives any role a door path to a spine that already exists -- the defect that stopped the Admiral at init and put this lane on the epic's critical path -- and checklist_engine.save() is now atomic. The run's most valuable outputs were not the code: running the winning candidate's own falsifier showed its session derivation would have refused 92% of live spines including the two the mission names; a cold critic inverted my central reach argument with a measurement I had not taken; the implementing crew's own GREEN mutation revealed my security fix was structurally untestable because every fixture used a topology where both roots agree; and two independent reviewers found a symlink hole in the guard I had narrowed, after I had run six boundary attacks and declared it sound with not one symlink among them. PR #623 open, not merged.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:41:02.437849+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "Structural record reconciled directly (no packet map exists in this repo). The load-bearing fold is docs/CHECKLIST_ENGINE_DESIGN.md, which asserted the door cannot be pointed at another spine -- half-false after this lane, and the half that survives (identity is still never a tool argument) is the half worth keeping precise. Also recorded a claim I did NOT change: the schema's opened_by row, because binding does not open.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:41:29.853805+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "Eleven candidates routed recommend-and-defer, zero issues filed. The three highest-value ones came from crews and reviewers rather than from me, and the single most important is a measurement-integrity defect that undercuts every green-suite claim in this wave: four tests reporting PASSED while their bodies raised inside subTest. I flag it as outranking my own deliverables because mutation testing -- the technique that caught this lane's untestable containment root -- cannot see it, since the mutant is never evaluated.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:42:02.778144+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "RETURN.md is the run summary and opens with the human-facing block: the one design question with what turns on each answer, and the one weakness stated without softening. The design pick is deliberately left unratified. Also carries the isolation evidence, the design-it-twice comparison, the self-hosting proofs with their pre-edit baseline, the fresh-process validation with its stated limits, the deletion accounting, the touched-path list with a merge-collision flag on run_crew.py, PR #623, the eleven triage candidates, and a workflow-feedback section that names five of my own mistakes rather than only the tooling's.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:42:26.161059+00:00"
     }
   ]
 }

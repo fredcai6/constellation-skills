@@ -1,0 +1,566 @@
+{
+  "work_id": "epic-567-door/cmdr-a",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-567-door/cmdr-a",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "init",
+        "context-manifest-ref": ".agent-work/epic-567-door/cmdr-a/execute.json",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 2,
+        "artifact-ref": [
+          ".agent-work/epic-567-door/cmdr-a/PROBLEM_STATEMENT.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Claim the engine lease as the first command, using the engine path the launch order named."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The path in the order would resolve to a runnable engine."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The path did not exist: the installed constellation-commander-delegated skill ships only SKILL.md, interpreter.json and references/ -- no scripts/ and no templates/. Its own SKILL.md says it depends on the constellation-commander skill for both."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Two failed commands and a detour at the step the order calls the first command, before any mission work."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Used /home/tommy/.claude/skills/constellation-commander/scripts/checklist_engine.py instead and recorded the substitution."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "The order template names a path by the skill the commander loads rather than by the skill that ships the engine."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-567-door/cmdr-a",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "init",
+        "context-manifest-ref": ".agent-work/epic-567-door/cmdr-a/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": [
+          "notes-a.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Write working notes to notes-a.md, which the order assigned and called me sole writer of."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The assigned filename would be free."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "notes-a.md was already tracked at the base commit: 197 lines written by an earlier lane (cleanup/a-door) and committed at 33dc3086. The first write destroyed all of it in the working tree."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Recovered fully from git; git diff --numstat showed 178 added and 0 removed. No content lost, but the recovery cost a detour and the risk was total."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Restored with git show HEAD:notes-a.md and appended my own record below a separator, keeping both lanes' content in one file."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "The order checked the filename against a harness tool guard (it explains at length why not 'findings-a.md') but never against git ls-files."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-567-door/cmdr-a",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "init",
+        "context-manifest-ref": ".agent-work/epic-567-door/cmdr-a/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": []
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Run verify_worktree_isolation.py --here after cd-ing into the assigned worktree, as the order sequences it."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The two-step sequence would report the worktree as isolated."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "It reported 'wrong worktree: you are in /home/tommy/projects/constellation-skills' and exited 1. The shell's working directory does not persist between tool calls in this harness, so the bare cd in one call had no effect on the check in the next."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Reads as a failed isolation gate when isolation was fine. The previous agent on this lane ran 47 minutes, wrote zero bytes, and its last words were that the bash cwd resets between calls."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "A single compound call, cd <abs> && py ... --here <abs>, which returns 'worktree OK' and exit 0."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "proposed-remedy",
+          "strength": "medium",
+          "statement": "The order could prescribe the compound single-call form rather than a two-step sequence."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-567-door/cmdr-a",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "plan",
+        "context-manifest-ref": ".agent-work/epic-567-door/cmdr-a/execute.json",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-567-door/cmdr-a/MISSION_FRAME.md",
+          ".agent-work/epic-567-door/cmdr-a/map-orientation.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Author a mission frame from the mandated template and satisfy the plan step's verify-frame gate."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A frame following templates/MISSION_FRAME.template.md would pass verify-frame."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "It refused with FRAME-REFUSED, exit 10, problems: 15 -- one per anchor. Under a degraded map, frame_verdict appends a problem for every token matching struct|capability|event|constraint|assumption|claim|decision, unconditionally. The template requires graded decision: anchors, so following it guarantees refusal. Measured the inverse: a five-line frame with zero anchors citing one pinned substitute returns FRAME-OK, exit 0."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The gate prefers the emptier artifact. An author who does not notice learns, correctly from the feedback, to stop writing constraint and decision anchors."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Kept the 15-anchor frame, took the recorded waiver the imperative sanctions, and substituted a check at the same rigor level: every symbol:line anchor must appear on that line of a real source file. That substituted check immediately caught two stale line numbers."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "map/ids.jsonl is tracked and 0 bytes, so every run in this repo orients DEGRADED and reaches this branch."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-567-door/cmdr-a",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "plan",
+        "context-manifest-ref": ".agent-work/epic-567-door/cmdr-a/execute.json",
+        "refusals": 5,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-567-door/cmdr-a/DESIGN_CONVERGENCE.md",
+          ".agent-work/epic-567-door/cmdr-a/crew-handoffs/COLD_PLAN_CRITIC.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Converge a three-candidate design panel to one recommendation and freeze a gate plan."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The comparison would hold up to a cold critic."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The critic returned five blocking findings. Its first inverted the central argument: I disqualified one candidate on a measured 683-target reach and crowned another on an unmeasured one that measured 4205, of which 3505 were other lanes' checkouts. Its third showed all four of my command postconditions passing at the base commit with zero code written."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The recommendation and the gate plan both had to be amended before any code was cut. Without the critic, the lane would have shipped a wider boundary than the one it rejected, behind a plan that could not detect its own success."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Narrowed the containment root to --show-toplevel plus a cross-checkout refusal, and amended execute.json through the engine's amend verb with checks that verifiably fail at base."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "The comparison table measured reach for the rejected candidate and described it in prose for the preferred one, so the deciding axis had a number on only one side."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-567-door/cmdr-a",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-567-door/cmdr-a/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-567-door/cmdr-a/crew-handoffs/g2-implement-implementer-result.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Have the implementer prove the narrowed containment root is tested."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The existing door test suite would discriminate the narrow root from the wide one."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The crew mutation-tested its own work and reported that swapping the wide root back in left the WHOLE SUITE GREEN, because every fixture bound a door in a primary checkout -- where --show-toplevel and --git-common-dir return the same path. They diverge only inside a linked worktree."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The security fix would have shipped untested with 116 door tests passing. The defect was a missing topology, not a missing test, which is harder to notice because the tests look thorough."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The crew added a linked-worktree fixture with a non-vacuity control; all three root mutations then went red. I re-ran the mutation independently and reproduced 7 failures."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "Every pre-existing fixture constructed a primary checkout, the one topology in which the two root derivations are indistinguishable."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-567-door/cmdr-a",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-567-door/cmdr-a/execute.json",
+        "refusals": 2,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-567-door/cmdr-a/crew-handoffs/g2-review-review-result.md",
+          ".agent-work/epic-567-door/cmdr-a/crew-handoffs/g2-rereview-review-result.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Have an independent reviewer attack the stated isolation property, which was decision:isolation-not-fencing's recorded settle condition."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The property -- one checkout's work-area tree per process -- would hold, since I had run six boundary attacks myself and all six refused."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Two independent reviewers returned BLOCK on the same two defects by separate routes. The property was false: the cross-checkout guard asked git about the UNRESOLVED candidate.parent while the containment check resolves, so a symlink inside the door's own work area pointing at a nested checkout satisfied both, and one reviewer showed the door writing a live lease into another checkout's spine."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Two blockers and a rework cycle. Not one of my own six attacks used a symlink."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Rework resolved before asking git (candidate.resolve().parent) and caught the NUL-byte ValueError; a narrow re-review then APPROVED after 11 symlink spellings in a real multi-checkout topology."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "Two guards on the same input resolved paths differently, and the attack lived in the gap between them rather than in either guard."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "medium",
+          "statement": "The one-token fix retires the which-spelling-of-which-checkout question rather than adding a third guard beside the other two."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-567-door/cmdr-a",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-567-door/cmdr-a/execute.json",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "scripts/checklist_engine.py",
+          "tests/test_checklist_engine_atomic_save.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Reuse the repo's own canonical atomic-write pattern for save(), per one-canonical-path."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "Mirroring scripts/hooks/gauge_writer_hook.py:513 _atomic_write_json would be the safe choice."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "A cold critic ran that pattern with two concurrent writers and it installed a DURABLY unparseable document: the fixed temp name means both writers share one temp path, so the loser's buffered flush writes into the inode os.replace just installed as the live file. Today's tear is transient and heals on the next write; an installed corrupt document is permanent."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The handoff as written would have shipped a worse bug than the one being fixed, in a repo where run_crew's parent-heartbeat thread makes two writers a supported case."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Respecified the write directly: unique tempfile.mkstemp, mode restored, flush plus fsync, os.replace, temp unlinked in a finally. Recorded the hook's own hazard as a triage candidate rather than editing a fenced file."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "The pattern is presented as canonical and carries a confident comment, so it invites reuse without being read."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-567-door/cmdr-a",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-567-door/cmdr-a/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "scripts/run_crew.py",
+          "tests/test_crew_launcher.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Fence the two implementer crews by file so they could run in parallel without colliding."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The fences would cover every file the change needed to touch."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Neither fence included scripts/run_crew.py, so neither crew owned CREW_ALLOWED_TOOLS -- a hardcoded tuple passed to --allowedTools on every crew dispatch. Without an entry for the new tool, a dispatched crew is silently denied it, and an ExternalBackend crew's door is unbound by construction, so that tool is its only route to its own plan file."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The feature would have shipped inert for the exact population the issue exists for. The drift-guard test caught it; the comment directly above the tuple describes the same failure from the last time it happened."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Added the grant entry and moved the count control from 11 to 12, both outside my stated file ownership, and flagged the probable collision with another lane rather than resolving it silently."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "I applied the wiring-grep rule to the crews' new symbols and not to the grant that decides whether anyone can reach the tool."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-567-door/cmdr-a",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-567-door/cmdr-a/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": [
+          "scripts/checklist_engine.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Audit the new tests for Windows-only hazards before CI, on the Admiral's warning."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The hazards would be in the tests -- a missing git identity in a fixture, or a byte-for-byte comparison broken by CRLF."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The tests were already clean on both counts. The defect was in the shipped code: save() called os.fchmod unguarded, and os.fchmod is Unix-only while this repo's CI is windows-latest. Every save of an existing file would raise AttributeError, and every mutating engine verb ends in save()."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Not a red test but a dead engine on the only platform CI runs. No Linux run could have surfaced it, and it was found during closeout rather than by any gate."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Added _restore_mode: fchmod on the FD where it exists, os.chmod on the path otherwise, with a failed mode copy deliberately non-fatal. The guard test runs on every platform and is proven non-vacuous."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "The warning pointed at test hazards, and the same platform reasoning applied to the implementation was what actually found it."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-567-door/cmdr-a",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-567-door/cmdr-a/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-567-door/cmdr-a/crew-handoffs/g2-review-review-result.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Judge whether a reviewer that had produced no result artifact was still alive."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A dirty working tree with no writes for several minutes would indicate a crashed agent."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The reviewer was alive and mid-mutation; it went on to deliver a 1651-line review with two real blocking defects. I had used a 6-8 minute no-write threshold and restored a tracked file underneath a working agent, then filed an incident report saying it had died."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "No damage, because the reviewer md5-verified its own restores and its result matched the mutation I ran myself. The reasoning was wrong regardless, and global-orchestrator.md gives ten minutes as the floor precisely because a shorter threshold adjudicates live agents dead."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Corrected the record rather than editing the wrong version away, and reframed the related triage candidate from a crew-discipline point to a handoff-template one."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "Crashed-mid-mutation and working-normally-mid-mutation are byte-identical on disk, so no filesystem probe can distinguish them."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-567-door/cmdr-a",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-567-door/cmdr-a/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "RETURN.md",
+          "notes-a.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Keep the run's records accurate as reviewers refined each other's findings."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A reviewer's correction to an earlier reviewer's finding could be adopted as-is."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The first reviewer narrowed a finding -- the NUL byte kills the door 'only when already bound' -- and I adopted that into two records. A later reviewer disproved the narrowing: the unbound door dies too, through a different code path. My original unconditional statement had been right."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Two records carried a false refinement for part of the run. Small in consequence, and it happened in the one dimension the run was otherwise disciplined about."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Corrected both records and named the asymmetry: I spent the run refusing to accept reviewers' claims without re-deriving them, and accepted a reviewer's correction without re-deriving it."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "A correction reads as a concession rather than as a new claim, so it invites less scrutiny than the claim it corrects."
+        }
+      ]
+    }
+  ]
+}

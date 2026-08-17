@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g2-review",
+  "files": [],
+  "repo_rev": {
+    "commit": "9bd874500cdbede3efa4db422dc10f6009571412"
+  },
+  "run": {
+    "work_id": "epic-567-door/cmdr-a",
+    "generated_at": "2026-08-17T08:29:41Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-commander",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity"
+    }
+  }
+}
