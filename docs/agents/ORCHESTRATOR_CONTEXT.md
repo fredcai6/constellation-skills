@@ -34,6 +34,22 @@ Continuously improve the active Constellation Skills corpus for clarity and prov
 - Solicit lightweight, freeform post-job feedback (“how did it go?”); prompt for positives and negatives where useful.
 - Feedback is advisory and may be brief or absent. Record it when available; do not require immediate interpretation or a per-item disposition.
 
+## Dogfooding: The Engine Under Edit Is Not The Engine In Play
+
+Any lane touching engine or hook code works on tooling its own session is running: hooks
+execute from the main checkout regardless of worktree (`CLAUDE_PROJECT_DIR` resolves once at
+session launch, #269). Orchestrator implications:
+
+- **Plan validation of engine/hook changes as fresh-process runs with explicit paths.** An
+  in-session observation of hook behaviour after an edit is not evidence; strike it from any
+  gate that would accept it.
+- **When a review's subject is the engine, the handoff names the copies:** drive the
+  installed/main copy for the run's own survey; break the worktree copy for red-proofs.
+  Both #433 crews had to derive this unaided — do not make a crew derive it again.
+- **Concurrent lanes editing hook code can break every live session**, since all sessions
+  execute the main checkout's hooks. Sequence hook-touching lanes, or gate their merges on a
+  fresh-process suite, not on the lane's own liveness.
+
 ## The Retired Learning Playbook
 
 `.agent-work/LESSONS.md` and `.agent-work/AGENT_FEEDBACK.md` are **retired** (#447). This

@@ -82,6 +82,29 @@ regenerates those, so an edit there is silently reverted at the next install.
 
 ---
 
+## Two Engines Are Alive In Your Session
+
+When your task touches engine or hook code (`scripts/checklist_engine.py`, `scripts/hooks/*`,
+the MCP door), there are two copies of it alive in your session and they are not the same:
+
+- **The copy you are RUNNING.** Hooks and your own survey state execute from the main
+  checkout — `CLAUDE_PROJECT_DIR` resolves once at session launch (#269), so this holds even
+  when your shell sits in a worktree.
+- **The copy you are EDITING.** Your worktree's files, which nothing in your live session
+  executes until you deliberately run them.
+
+The rule: **drive the installed/main copy; edit and break the worktree copy.** Concretely:
+
+- Validate changed hook or engine code **in a fresh process with an explicit path** — never
+  by watching your own session's hooks fire. Your session runs the old code; a green turn
+  after your edit is evidence of nothing.
+- When a review's red-proof requires breaking the engine, break the **worktree** copy. Your
+  own survey state lives in the copy you're driving; breaking that one corrupts your run.
+- Keep your spine, lease and gauge traffic on the engine you're driving, not the one under
+  edit.
+
+---
+
 ## Verification Discipline
 
 These are the rules that most often separate an accepted change from a reworked one here.

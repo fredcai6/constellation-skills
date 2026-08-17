@@ -75,3 +75,10 @@ map/*
 !map/ids.jsonl
 .claude/skills/
 .claude/settings.local.json
+
+# Codex's MCP wiring is written per machine: it carries an absolute `cwd` and a
+# hardcoded SPINE_FILE/SPINE_SESSION for whatever spine that machine last drove.
+# Same reason .claude/settings.local.json is here, and the same defect #619
+# describes for .mcp.json -- a probed local answer must not become the shipped
+# default.
+.codex/
