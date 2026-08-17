@@ -622,6 +622,34 @@ Also disclosed: the implementing crew edited `tests/test_mcp_spine_server.py`, w
 handoff did not list. It declared the edit as unavoidable and narrowing. I accept it and
 flag it rather than let it pass unmentioned.
 
+## 9. PR
+
+**https://github.com/fredcai6/constellation-skills/pull/623** — `feat/567-a-spine-identity`
+→ `main`, 46 commits. **Not merged**, per the order.
+
+`execute.json` is 9/9 gates complete. The spine's remaining steps — `reconcile`, `triage`,
+`review`, `feedback`, `archive` — are closeout, driven now; the lease releases as the **last**
+journaled action, after the closing advance.
+
+**Review history, more informative than the final green:** two independent reviewers returned
+`BLOCK` on the same two defects by separate routes, a rework cleared both, and a narrow
+re-review `APPROVE`d after building its own multi-checkout topology (11 symlink spellings) and
+confirming the new tests go RED against the reverted source.
+
+**CI expectation, so a red tick is not misread.** `main` is red today — `windows-latest`-only
+CI, baseline ~122 failed / 3070 passed, almost all Windows path-casing. Judge this branch on the
+**failure-set delta**, not absolute green. Linux full suite at this HEAD: **3276 passed, 5
+skipped, 0 failed**, run independently and reconciled against the +13 test delta.
+`map/INDEX.md` is regenerated here deliberately — this lane is the single writer of that
+generated file by the Admiral's ruling, so lanes B/C/G left it alone.
+
+Windows hazards were audited **before** CI rather than discovered in it: the new `git` fixtures
+set an explicit identity, newline assertions use `read_bytes`/`write_bytes` rather than text
+mode, and the one POSIX-mode-bits assertion is skipped off POSIX with its platform-independent
+half kept in a test that runs everywhere. **That audit is what surfaced the `os.fchmod`
+defect** — Unix-only, called unguarded, so every save of an existing file would have raised
+`AttributeError` on the only platform CI runs. A dead engine, not a red test.
+
 ## 10. Triage candidates
 
 Written under `.agent-work/567-a/triage-candidates/`, **not filed as issues**
