@@ -1,0 +1,634 @@
+{
+  "work_id": "issue-610-stand-up-work-area",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-shared-doc",
+    "g2-wire-bundles",
+    "g3-commander-core-and-spine-template",
+    "g4-admiral-docs",
+    "g5-delegated-pointer",
+    "g6-local-resync",
+    "g7-verify-sweep"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Context and understanding are already fully loaded and consolidated (interrogation.json, INTERROGATION_RECORD.json, MISSION_FRAME.md all written and signed off during context/understand). Attest c1 citing those artifacts.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed (already established during understand)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Context/understanding fully consolidated: interrogation.json, INTERROGATION_RECORD.json (Tommy sign-off), MISSION_FRAME.md all written during understand/plan."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-shared-doc": {
+      "id": "g1-shared-doc",
+      "title": "Author skills/_shared/stand-up-work-area.md",
+      "imperative": "REASONING GATE (crew-waived: pure doctrine-prose authorship, no independently-testable runtime behavior, full context already held from the interrogation). Write skills/_shared/stand-up-work-area.md as the single shared instruction set for standing up a worktree and work area: git worktree add, scaffold .agent-work, instantiate spine.json from the appropriate COMMANDER_SPINE.template.json, hand off the spine path. State plainly that the SAME instructions apply whether the dispatcher is the Admiral (delegated Commander) or the human (interactive Commander) -- 'same instructions, different hands'. Match this repo's existing _shared/ doc voice (see global-everyone.md, skill-goodness.md for tone/structure).",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "skills/_shared/stand-up-work-area.md exists and is non-empty",
+          "check": {
+            "kind": "command",
+            "command": "test -s skills/_shared/stand-up-work-area.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-shared-doc-1"
+        }
+      ],
+      "constraints": [
+        "do not restate verify_worktree_isolation.py's gate-mode mechanics here -- that stays owned by fleet-doctrine.md, this doc only covers stand-up"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/_shared/ -- new file, doctrine-prose directory (unmapped by the code map by design)"
+        ],
+        "capability": [
+          "worktree+work-area stand-up, currently duplicated across LAUNCH_ORDER.template.md and fleet-doctrine.md prose"
+        ],
+        "constraint": [],
+        "decision": [
+          "six-part #610 scope, settled/human per MISSION_FRAME.md Decision Anchors"
+        ],
+        "evidence": [],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-shared-doc-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s skills/_shared/stand-up-work-area.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-wire-bundles": {
+      "id": "g2-wire-bundles",
+      "title": "Wire the shared doc into SKILL_REFERENCE_BUNDLES",
+      "imperative": "REASONING GATE (crew-waived: a small dict-literal addition, verified by a command check, not application logic). In scripts/install_constellation.py, SKILL_REFERENCE_BUNDLES['commander'] and ['admiral'] both currently resolve to the SHARED tuple constant _GLOBAL_ORCHESTRATOR, which is also reused verbatim by 9 OTHER skills (commander-delegated, cartographer, docent, scout, triage, explorer, to-initial-issues, replan, diagnose) -- do NOT append to _GLOBAL_ORCHESTRATOR itself, that would silently fan stand-up-work-area.md into all of them. Instead add a new small tuple (e.g. _STAND_UP = (\"stand-up-work-area.md\",)) and change ONLY the 'commander' and 'admiral' entries to _GLOBAL_ORCHESTRATOR + _STAND_UP, leaving commander-delegated and every other entry as plain _GLOBAL_ORCHESTRATOR (unchanged) -- commander-delegated does not stand up its own work area, so per the signed-off scope it does not get this reference bundled. Confirm validate_required_references() would accept it (the file must exist in skills/_shared/, satisfied by g1).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1-shared-doc complete (file exists to bundle)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-shared-doc complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "stand-up-work-area.md present in SKILL_REFERENCE_BUNDLES['commander'] and ['admiral'] ONLY -- no other skill (including commander-delegated) gained it, and install_constellation.py still parses and imports",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import ast,importlib.util,sys; src=open('scripts/install_constellation.py').read(); ast.parse(src); spec=importlib.util.spec_from_file_location('ic','scripts/install_constellation.py'); m=importlib.util.module_from_spec(spec); sys.modules['ic']=m; spec.loader.exec_module(m); b=m.SKILL_REFERENCE_BUNDLES; assert 'stand-up-work-area.md' in b['commander'], 'commander missing'; assert 'stand-up-work-area.md' in b['admiral'], 'admiral missing'; leaked=[k for k,v in b.items() if k not in ('commander','admiral') and 'stand-up-work-area.md' in v]; assert not leaked, f'leaked into {leaked}'\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-wire-bundles-2"
+        }
+      ],
+      "constraints": [
+        "never mutate _GLOBAL_ORCHESTRATOR or _GLOBAL_EVERYONE in place -- both are shared by skills outside this issue's scope"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/install_constellation.py:SKILL_REFERENCE_BUNDLES, _GLOBAL_ORCHESTRATOR"
+        ],
+        "capability": [],
+        "constraint": [
+          "SKILL_REFERENCE_BUNDLES entries reused across skills -- an in-place edit to a shared tuple leaks to every skill that reuses it"
+        ],
+        "decision": [],
+        "evidence": [],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-wire-bundles-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import ast,importlib.util; src=open('scripts/install_constellation.py').read(); ast.parse(src); spec=importlib.util.spec_from_file_location('ic','scripts/install_constellation.py'); m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m); b=m.SKILL_REFERENCE_BUNDLES; assert 'stand-up-work-area.md' in b['commander'], 'commander missing'; assert 'stand-up-work-area.md' in b['admiral'], 'admiral missing'; leaked=[k for k,v in b.items() if k not in ('commander','admiral') and 'stand-up-work-area.md' in v]; assert not leaked, f'leaked into {leaked}'\"",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-wire-bundles-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import ast,importlib.util,sys; src=open('scripts/install_constellation.py').read(); ast.parse(src); spec=importlib.util.spec_from_file_location('ic','scripts/install_constellation.py'); m=importlib.util.module_from_spec(spec); sys.modules['ic']=m; spec.loader.exec_module(m); b=m.SKILL_REFERENCE_BUNDLES; assert 'stand-up-work-area.md' in b['commander'], 'commander missing'; assert 'stand-up-work-area.md' in b['admiral'], 'admiral missing'; leaked=[k for k,v in b.items() if k not in ('commander','admiral') and 'stand-up-work-area.md' in v]; assert not leaked, f'leaked into {leaked}'\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-commander-core-and-spine-template": {
+      "id": "g3-commander-core-and-spine-template",
+      "title": "Commander init goes claim-only (commander-core.md + COMMANDER_SPINE.template.json)",
+      "imperative": "REASONING GATE (crew-waived: doctrine-prose + template-JSON prose edit, no runtime logic). Edit skills/commander/references/commander-core.md's 'Start here' bullet 1: replace the 'instantiate spine.json via init_work_area.py --spine' recipe with 'claim the checklist lease on the spine.json the dispatcher handed you' (cite skills/_shared/stand-up-work-area.md for how that spine came to exist). Edit skills/commander/templates/COMMANDER_SPINE.template.json's init task imperative to match: claim-only, no init_work_area.py self-invocation. Keep init's postconditions meaningful (lease claimed) and drop any postcondition that only made sense for self-scaffolding (the c1 command-check currently re-runs init_work_area.py itself -- retire or replace it with a lease-claimed check).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1-shared-doc complete (commander-core.md's rewritten bullet cites it)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-shared-doc complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "commander-core.md's Start-here bullet 1 no longer instructs running init_work_area.py on oneself",
+          "check": {
+            "kind": "command",
+            "command": "! grep -n 'init_work_area.py' skills/commander/references/commander-core.md | grep -v 'stand-up-work-area'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-commander-core-and-spine-template-1"
+        },
+        {
+          "id": "c2",
+          "statement": "COMMANDER_SPINE.template.json's init imperative is claim-only and the file is still valid JSON",
+          "check": {
+            "kind": "command",
+            "command": "py -m json.tool skills/commander/templates/COMMANDER_SPINE.template.json > /dev/null && ! grep -n 'init_work_area.py' skills/commander/templates/COMMANDER_SPINE.template.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-commander-core-and-spine-template-2"
+        }
+      ],
+      "constraints": [
+        "do not remove or weaken the lease-claim requirement itself -- only the self-scaffolding call retires"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/commander/references/commander-core.md -- mode-neutral doctrine, single source for commander + commander-delegated",
+          "skills/commander/templates/COMMANDER_SPINE.template.json:10-13 -- init task"
+        ],
+        "capability": [
+          "Commander init gate"
+        ],
+        "constraint": [],
+        "decision": [
+          "six-part #610 scope, settled/human"
+        ],
+        "evidence": [],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-commander-core-and-spine-template-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -n 'init_work_area.py' skills/commander/references/commander-core.md | grep -v 'stand-up-work-area'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-commander-core-and-spine-template-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m json.tool skills/commander/templates/COMMANDER_SPINE.template.json > /dev/null && ! grep -n 'init_work_area.py' skills/commander/templates/COMMANDER_SPINE.template.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-admiral-docs": {
+      "id": "g4-admiral-docs",
+      "title": "Admiral cites the shared doc (LAUNCH_ORDER.template.md + fleet-doctrine.md)",
+      "imperative": "REASONING GATE (crew-waived: doctrine-prose edit). SCOPE NOTE (beyond the issue's literal one-line description, found necessary during plan critique -- surfaced to the human at plan approval, not silently expanded): the retired cd+--here-as-first-step recipe is referenced in FOUR places across these two files, not one; all four must move together or the doc contradicts itself. In skills/admiral/templates/LAUNCH_ORDER.template.md: (a) Workspace section line ~43 -- stop instructing cd + verify_worktree_isolation.py --here as the Commander's first step; name the spine path directly as what the Commander was handed, citing skills/_shared/stand-up-work-area.md. (b) the 'Order matters' callout at ~line 45, which only explains --here's cd-ordering hazard, is now dead weight -- remove it. (c) the 'Distinct from, not superseded by, the engine-native guard' paragraph at ~line 47 -- its whole premise is 'this check runs before init_work_area creates a spine at all', which is no longer true once the Commander never runs init_work_area on itself -- remove or rewrite. (d) Return Shape section ~line 84 -- drop the '\"verify_worktree_isolation.py --here\" confirmation ... as evidence you worked in isolation' clause; isolation evidence now comes from the Admiral's own pre-wave gate-mode run (fleet-doctrine.md step 3), already logged per step 1. Leave the separate 'Isolation is git-only -- hook code is not fenced by it' paragraph (~line 50-60) untouched -- unrelated hazard, not tied to this recipe. In skills/admiral/references/fleet-doctrine.md's Admiral-specific process (~line 116-139): replace steps 1-2 (~122-131, worktree provisioning + Commander handoff/arrival-check instruction) with a pointer at skills/_shared/stand-up-work-area.md instead of restating them; leave step 3 (~132-135, verify_worktree_isolation.py gate-mode, the pre-wave check) untouched; also revise the 'The gate is the mechanical guarantee; --here is the Commander's own risk-reduction, surfaced as evidence in its report' paragraph (~137-139), which describes the same retired self-check + return-report evidence pairing as (d) above.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1-shared-doc complete (target of the pointer exists)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-shared-doc complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "LAUNCH_ORDER.template.md no longer references --here anywhere (Workspace first-step instruction, its ordering callout, the engine-native-guard paragraph, and the return-report evidence clause are all gone together)",
+          "check": {
+            "kind": "command",
+            "command": "! grep -n -- '--here' skills/admiral/templates/LAUNCH_ORDER.template.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-admiral-docs-1"
+        },
+        {
+          "id": "c2",
+          "statement": "fleet-doctrine.md steps 1-2 no longer instruct 'cd into that path first'; a pointer to the shared doc is present; step 3's literal gate-mode command (verify_worktree_isolation.py <path1> <path2> ...) is still present and untouched",
+          "check": {
+            "kind": "command",
+            "command": "! grep -q 'cd into that path first' skills/admiral/references/fleet-doctrine.md && grep -q 'stand-up-work-area.md' skills/admiral/references/fleet-doctrine.md && grep -q 'Gate the wave:' skills/admiral/references/fleet-doctrine.md && grep -q 'verify_worktree_isolation.py <path1> <path2>' skills/admiral/references/fleet-doctrine.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-admiral-docs-2"
+        }
+      ],
+      "constraints": [
+        "verify_worktree_isolation.py's gate-mode call (Admiral's pre-wave check across all worktrees) is explicitly NOT removed"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/admiral/templates/LAUNCH_ORDER.template.md:41-47",
+          "skills/admiral/references/fleet-doctrine.md:116-136"
+        ],
+        "capability": [
+          "Admiral worktree provisioning"
+        ],
+        "constraint": [
+          "verify_worktree_isolation.py gate-mode retained -- issue #610 explicit non-removal"
+        ],
+        "decision": [],
+        "evidence": [],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-admiral-docs-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -n -- '--here' skills/admiral/templates/LAUNCH_ORDER.template.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-admiral-docs-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -q 'cd into that path first' skills/admiral/references/fleet-doctrine.md && grep -q 'stand-up-work-area.md' skills/admiral/references/fleet-doctrine.md && grep -q 'Gate the wave:' skills/admiral/references/fleet-doctrine.md && grep -q 'verify_worktree_isolation.py <path1> <path2>' skills/admiral/references/fleet-doctrine.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-delegated-pointer": {
+      "id": "g5-delegated-pointer",
+      "title": "commander-delegated/SKILL.md collapses Start-here to a pointer",
+      "imperative": "REASONING GATE (crew-waived: doctrine-prose edit). Replace commander-delegated/SKILL.md's own 'Start here -- drive the engine before you touch the problem' section (lines ~10-20, a near-verbatim duplicate of commander-core.md including the retired init_work_area.py-on-self wording) with a pointer at references/commander-core.md, matching commander/SKILL.md's existing clean single-source pattern exactly.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3-commander-core-and-spine-template complete (commander-core.md carries the corrected prose this now points at)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g3 complete: commander-core.md carries the corrected claim-only prose this now points at."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "commander-delegated/SKILL.md no longer carries its own Start-here bullet list -- points at commander-core.md instead",
+          "check": {
+            "kind": "command",
+            "command": "! grep -n 'init_work_area.py' skills/commander-delegated/SKILL.md && grep -q 'commander-core.md' skills/commander-delegated/SKILL.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-delegated-pointer-1"
+        }
+      ],
+      "constraints": [
+        "preserve commander-delegated/SKILL.md's other sections (Your principal / The doctrine) unchanged"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/commander-delegated/SKILL.md:10-20",
+          "skills/commander/SKILL.md (pattern to replicate)"
+        ],
+        "capability": [],
+        "constraint": [],
+        "decision": [
+          "collapse duplication into a pointer, settled/human (\"fold it in and push a pointer to both skills\")"
+        ],
+        "evidence": [],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-delegated-pointer-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -n 'init_work_area.py' skills/commander-delegated/SKILL.md && grep -q 'commander-core.md' skills/commander-delegated/SKILL.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g6-local-resync": {
+      "id": "g6-local-resync",
+      "title": "Resync this repo's own .agent-work/templates/COMMANDER_SPINE.template.json",
+      "imperative": "REASONING GATE (crew-waived: mechanical local-overlay resync, confirmed safe by check_skill_freshness.py -- upstream-changed, local==baseline, no genuine local customization to lose). Bring .agent-work/templates/COMMANDER_SPINE.template.json in line with the shipped skills/commander/templates/COMMANDER_SPINE.template.json produced by g3: drop the stale init.c0 precondition (verify_worktree_isolation.py --here <repo-root>) and adopt the new claim-only init imperative. Local-fix only -- do not touch .baseline/ or any of the other 7 unrelated stale templates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3-commander-core-and-spine-template complete (shipped template this resyncs against is final)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g3 complete: shipped template this resyncs against is final."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": ".agent-work/templates/COMMANDER_SPINE.template.json's init task matches the shipped commander template's init task exactly, and has no --here reference",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import json,sys; a=json.load(open('.agent-work/templates/COMMANDER_SPINE.template.json'))['tasks']['init']; b=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json'))['tasks']['init']; sys.exit(0 if a==b else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-local-resync-1"
+        }
+      ],
+      "constraints": [
+        "do not touch .baseline/ or any other project-local template -- this is the one file #610 names"
+      ],
+      "anchors": {
+        "structural": [
+          ".agent-work/templates/COMMANDER_SPINE.template.json -- this repo's own project-local overlay, what every Commander launched in this repo instantiates from"
+        ],
+        "capability": [],
+        "constraint": [
+          "project-local-first template resolution -- checklist-engine.md, install_constellation.py write_template_working_copies"
+        ],
+        "decision": [
+          "resync scope limited to this one file, settled/human"
+        ],
+        "evidence": [],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g6-local-resync-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import json,sys; a=json.load(open('.agent-work/templates/COMMANDER_SPINE.template.json'))['tasks']['init']; b=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json'))['tasks']['init']; sys.exit(0 if a==b else 1)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g7-verify-sweep": {
+      "id": "g7-verify-sweep",
+      "title": "Cross-file verification sweep",
+      "imperative": "REASONING GATE (crew-waived: verification-only, re-running checks already defined in prior gates plus a repo-wide sweep). Confirm: (1) no remaining reference anywhere under skills/commander*/ to the Commander running init_work_area.py on itself; (2) py scripts/check_skill_freshness.py --project . --skills-root ~/.claude/skills reports the commander COMMANDER_SPINE.template.json as up-to-date (or at minimum no longer flags the stale c0); (3) all edited JSON files are valid; (4) the 7 other pre-existing stale templates are untouched (still flagged the same as before this run, not newly changed by it).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 through g6 all complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 through g6 all complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no stray init_work_area.py self-run reference remains under skills/commander*/",
+          "check": {
+            "kind": "command",
+            "command": "! grep -rn 'init_work_area.py' skills/commander/ skills/commander-delegated/ | grep -v 'stand-up-work-area'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g7-verify-sweep-1"
+        },
+        {
+          "id": "c2",
+          "statement": "check_skill_freshness.py no longer flags the local COMMANDER_SPINE.template.json's stale c0",
+          "check": {
+            "kind": "command",
+            "command": "py -c \"import json,sys; a=json.load(open('.agent-work/templates/COMMANDER_SPINE.template.json'))['tasks']['init']; b=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json'))['tasks']['init']; sys.exit(0 if a==b else 1)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g7-verify-sweep-2"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "structural": [],
+        "capability": [],
+        "constraint": [],
+        "decision": [],
+        "evidence": [],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g7-verify-sweep-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -rn 'init_work_area.py' skills/commander/ skills/commander-delegated/ | grep -v 'stand-up-work-area'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g7-verify-sweep-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -c \"import json,sys; a=json.load(open('.agent-work/templates/COMMANDER_SPINE.template.json'))['tasks']['init']; b=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json'))['tasks']['init']; sys.exit(0 if a==b else 1)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g7-verify-sweep",
+      "statement": "Regenerate or repair the procedural code map: map/INDEX.md is unparseable (no citable anchor id) and map/ids.jsonl is empty at HEAD 600de020, forcing every run in this repo into DEGRADED-UNPARSEABLE map orientation. Escalated during context/orient this run (map-orientation.json)."
+    },
+    {
+      "id": "tc2",
+      "from": "g6-local-resync",
+      "statement": "The other 7 project-local templates flagged upstream-changed by check_skill_freshness.py (constellation-admiral/ADMIRAL_SPINE.template.json, constellation-admiral/LAUNCH_ORDER.template.md, constellation-commander/EXECUTE_PLAN.template.json, constellation-commander/IMPLEMENTER_HANDOFF.template.md, constellation-explorer/EXPLORER_SPINE.template.json, constellation-interrogator/INTERROGATION.template.json, constellation-reviewer/REVIEW_SURVEY.template.json) were left untouched per #610's explicit scope -- candidate for a follow-on cleanup issue auditing/resyncing all of them at once."
+    },
+    {
+      "id": "tc3",
+      "from": "g3-commander-core-and-spine-template",
+      "statement": "This run's shipped skill-source edits (skills/commander/, skills/admiral/, skills/commander-delegated/) do not automatically reach the INSTALLED copy at ~/.claude/skills/ that actually drives agents dispatched in this repo (the dogfooding hazard noted in docs/agents/ORCHESTRATOR_CONTEXT.md). A reinstall (install_constellation.py) is needed after merge to propagate the fix; candidate to confirm/track that this happens rather than assuming merge alone is sufficient."
+    }
+  ],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Plan intent and scope confirmed: issue #610 six-part scope, signed off by Tommy, mission frame verified against degraded-map substitutes.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:27:26.321677+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-shared-doc",
+      "why": "skills/_shared/stand-up-work-area.md authored: 4-step provisioning recipe, dual-caller framing (Admiral/human), explicit non-replacement of verify_worktree_isolation.py gate-mode, explicit retirement rationale for the Commander's own --here arrival check.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:27:54.669546+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g2-wire-bundles",
+      "why": "SKILL_REFERENCE_BUNDLES: admiral and commander now get _GLOBAL_ORCHESTRATOR + ('stand-up-work-area.md',), matching the existing curator/write-a-skill idiom for per-skill additions; _GLOBAL_ORCHESTRATOR itself untouched so the other 9 consumers are unaffected. commander-delegated stays plain _GLOBAL_ORCHESTRATOR.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:28:47.631080+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g3-commander-core-and-spine-template",
+      "why": "commander-core.md bullet 1 rewritten claim-only, cites references/stand-up-work-area.md. COMMANDER_SPINE.template.json's init task retitled 'Claim the engine lease', imperative rewritten claim-only citing the same shared doc, c1 (init_work_area.py self-scaffolding check) dropped, single postcondition is the lease-claim (already check:null, unchanged in substance).",
+      "mechanical": false,
+      "ts": "2026-08-17T05:29:37.836740+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g4-admiral-docs",
+      "why": "LAUNCH_ORDER.template.md: Workspace section now names the spine path and points at claiming the lease (citing commander-core.md), the --here recipe, its ordering callout, the stale engine-native-guard paragraph, and the return-report evidence clause are all gone. fleet-doctrine.md: steps 1-2 replaced by a pointer at stand-up-work-area.md, step 3 (gate-mode) untouched, the mechanical-guarantee paragraph revised to explain the Commander no longer self-checks.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:30:43.054908+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g5-delegated-pointer",
+      "why": "commander-delegated/SKILL.md's duplicated Start-here section (bullets 1-5, including the retired init_work_area.py-on-self wording) deleted; 'The doctrine' pointer now explicitly names Start-here as part of what commander-core.md carries, matching commander/SKILL.md's clean single-source pattern. The one genuinely delegated-specific piece (fenced feedback/archive closeout, not present in commander-core.md at all) preserved as its own section rather than lost.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:31:38.058149+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g6-local-resync",
+      "why": ".agent-work/templates/COMMANDER_SPINE.template.json's init task now matches the shipped skills/commander/templates/COMMANDER_SPINE.template.json exactly (verified: dict equality) -- stale c0 precondition (verify_worktree_isolation.py --here) dropped, claim-only imperative adopted. .baseline/ and the other 7 unrelated stale templates untouched.",
+      "mechanical": false,
+      "ts": "2026-08-17T05:32:13.954626+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g7-verify-sweep",
+      "why": "Sweep confirmed: no stray init_work_area.py self-run reference remains under skills/commander*/ (only the new stand-up-work-area.md citations). Local .agent-work/templates/COMMANDER_SPINE.template.json's init task is byte-identical to the shipped skills/commander/templates/COMMANDER_SPINE.template.json's init task. check_skill_freshness.py now correctly classifies it both-changed (was upstream-changed) -- expected, not a regression, since baseline update is out of scope. The other 7 unrelated stale templates are unaffected by this run (same status before and after).",
+      "mechanical": false,
+      "ts": "2026-08-17T05:33:07.793363+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-17T05:28:47.547124+00:00",
+      "reason": "g2's postcondition check had a bug: importlib module-from-spec exec_module fails on this file's @dataclass(frozen=True) decorators because the module was never registered in sys.modules before exec -- fixed the check text (added sys.modules registration), same intent, no condition marked satisfied by this op.",
+      "authority": "human",
+      "ops": [
+        "retext-check g2-wire-bundles.c1"
+      ]
+    },
+    {
+      "ts": "2026-08-17T05:33:07.734692+00:00",
+      "reason": "g7's c2 postcondition originally ran check_skill_freshness.py's raw exit code, which can never pass: 7 unrelated pre-existing templates are intentionally out of scope and stay stale, and the resynced template itself now correctly reads 'both-changed' (local and shipped both moved off the old baseline together), not 'up-to-date' (baseline update is explicitly out of scope per the plan). Retexted to the actual correctness signal: local init task content equals shipped init task content exactly.",
+      "authority": "human",
+      "ops": [
+        "retext-check g7-verify-sweep.c2"
+      ]
+    }
+  ]
+}

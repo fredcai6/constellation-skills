@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "i0-context",
+  "mechanical": {
+    "run": "issue-610-stand-up-work-area",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 0,
+    "spine-step": "i0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-610-stand-up-work-area-i0-context@47f072bce2b3c5bbe0ad3e3ddde8bf6abed2d48e",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-610-stand-up-work-area",
+    "generated_at": "2026-08-17T05:00:16Z"
+  }
+}

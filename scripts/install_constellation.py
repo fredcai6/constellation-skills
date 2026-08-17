@@ -249,10 +249,13 @@ _GLOBAL_ORCHESTRATOR = ("global-everyone.md", "global-orchestrator.md", "design-
 _GLOBAL_CREW = ("global-everyone.md", "global-crew.md", "windows.md")
 _GLOBAL_ALL_TIERS = ("global-everyone.md", "global-orchestrator.md", "global-crew.md", "windows.md")
 SKILL_REFERENCE_BUNDLES: dict[str, tuple[str, ...]] = {
-    "admiral": _GLOBAL_ORCHESTRATOR,
+    # admiral and commander stand up a worktree/work area themselves (issue #610);
+    # commander-delegated never does (the Admiral does it for them), so it stays on
+    # plain _GLOBAL_ORCHESTRATOR like every other consumer of that shared tuple.
+    "admiral": _GLOBAL_ORCHESTRATOR + ("stand-up-work-area.md",),
     "commander-delegated": _GLOBAL_ORCHESTRATOR,
     "charter": _GLOBAL_ALL_TIERS,  # the baseline Charter elicits project deltas from
-    "commander": _GLOBAL_ORCHESTRATOR,
+    "commander": _GLOBAL_ORCHESTRATOR + ("stand-up-work-area.md",),
     "workbench": _GLOBAL_ALL_TIERS,  # generic driver for either tier
     "interrogator": _GLOBAL_EVERYONE,
     "cartographer": _GLOBAL_ORCHESTRATOR,
