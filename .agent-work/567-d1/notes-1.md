@@ -236,3 +236,33 @@ its own plan beside the spine it was launched for"* and *"Interrogator runs in t
 own human-reachable context"*, which is exactly the correct boundary. What was imprecise was my own
 summary language. Recorded rather than quietly dropped, and floated to the Admiral, because F-1's
 supporting sentence is wrong on the record even though its conclusion is right.
+
+## Admiral rulings that arrived on main mid-run (fetched at g3-integrate)
+
+`origin/main` at `5099eea1`. Lane **E has merged** (PR #630); lane **D2 has not** — `skills/workbench/`
+is still present, which is why the guard is still expected RED there until my rebase.
+
+**`5099eea1` — the `.agent-work/templates/` overlay is GRANTED to this lane.** The Admiral reached
+the same conclusion I did, independently and for the same reason, and named the root cause better
+than I did: *"Nobody owned it because I built the ownership table from the lanes' missions rather
+than from the guard's reach."* My float is answered; I was already proceeding, and the grant confirms
+it rather than changing anything.
+
+**It also records a landmine I could not have known, and I avoided it by luck as much as judgement:**
+editing the overlay stales the `.baseline/` mirrors, and the obvious repair —
+`--update-baseline --skills-root ~/.claude/skills` — *"would write this host's absolute paths into up
+to 56 tracked files."* The sanctioned repair is a shadow root populated from repo source. **This lane
+never ran the installer**: g2 propagated the swept content into the overlay and the `.baseline/`
+mirrors as direct byte-identical copies, and I verified all three copies match with `md5sum` after my
+own typo fix. That is the correct end state and it sidesteps the landmine entirely.
+
+**`ab82904d` — a fencing error that lands on my rebase.** The Admiral's F-2 grant gave me
+`tests/data/store_mentions.approved.txt` while lane **E was already writing it**: E's diff adds **33
+lines**, a forced consequence of its own mission. The Admiral's own reading is that ordering saves it
+— E merged first, I rebase before my final gate, so I inherit E's entries and append rather than
+conflict.
+
+**Carry into `g5-final`:** my g2 crew *regenerated* that file against a pre-E tree, so a naive rebase
+resolution could drop E's 33 lines. The correct post-rebase state is **E's entries PLUS my removal of
+the two stale `<engine>`-bearing lines** — not either side wholesale. Resolve it by regenerating
+against the merged tree, then confirm the count moved by exactly what each change accounts for.

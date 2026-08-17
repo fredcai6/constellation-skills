@@ -333,10 +333,34 @@ vocabulary. It adds one line to the predecessor's, and does not restate it:
 
 ---
 
-## 8. Stop-hook note
+## 8. Stop-hook refusal, recorded — and this time the gate was already closed
 
-If the Stop hook fires with `SPINE MID-FLIGHT: gate execute is still open`, the answer is the same
-one the previous two crews recorded: that is the Commander's spine, not mine. My own plan is driven
-to `DONE` and my lease released as the last action. `g3-implement` is `in-progress` because this
-crew is what fills it, and it closes when the Commander verifies this artifact. Recorded here only so
-the count is visible; the durable fix remains a lease-ownership check in the hook.
+It fired, twice, with `SPINE MID-FLIGHT: gate execute is still open`, instructing me to reload the
+**commander** skill, rewrite `.agent-work/567-d1/STATE_NOTE.md`, and drive `execute.json` gate by
+gate. **Refused.** That is my parent's spine, not mine.
+
+Measured at the moment of refusal:
+
+| | |
+|---|---|
+| My plan (`…/g3-implementer-attempt-2-74e194cfc852/IMPLEMENTER_PLAN.json`) | all 4 items `complete`, `engine_session.status: released` at `21:25:39` — terminal |
+| `.agent-work/567-d1/execute.json` → `g3-implement` | **`complete`** — the Commander had already read this artifact and advanced the gate |
+| `execute.json` lease | `commander-567-d1-execute`, **active**, `claimed_by: commander`, heartbeat `21:26:01` — alive, 22 seconds after my release |
+
+**This run is a sharper instance than the previous two.** The g3 implementer (attempt 1) and the g3
+reviewer both recorded the hook firing while their gate was still `in-progress`, so the hook was at
+least pointing at genuinely open work — just not work the running session could act on. Here the gate
+is `complete`. The hook fires at a crew whose own plan is terminal, whose lease is gone, and **whose
+gate the parent has already closed**, because it is keyed on the spine's mid-flight state rather than
+on the running session's identity. There is no reading on which anything is abandoned.
+
+**No sanctioned exit fits, and one of them is the thing this gate is about.** `spine_halt block` on my
+own spine would mark a complete, released plan blocked and enter false state. Pointed at
+`execute.json` it would first require **binding my parent's spine from this process** — a second
+checklist, taken while the Commander holds a live lease on it — which is exactly the prohibition
+whose prose I spent this run repairing, and which I re-measured refusing in §3a. `waive` needs human
+authority, and there is no human on this dispatch.
+
+**This is the sixth run in this repo to hit the misfit, and the third in this gate.** The durable fix
+remains a **lease-ownership check in the hook**: fire only when the running session is the one holding
+the spine's lease. More prose in the crew skills cannot reach it — the hook does not read them.

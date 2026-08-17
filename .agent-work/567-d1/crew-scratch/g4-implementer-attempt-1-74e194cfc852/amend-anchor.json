@@ -1,0 +1,25 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "m1-596",
+      "which": "postconditions",
+      "cond": "c1",
+      "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && test -s .agent-work/567-d1/dispositions/596.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard-m1.log 2>&1 || true; } && ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard-m1.log | sed 's/^E *//' | grep -qv '^skills/workbench/'"
+    },
+    {
+      "op": "retext-check",
+      "id": "m2-526",
+      "which": "postconditions",
+      "cond": "c1",
+      "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && test -s .agent-work/567-d1/dispositions/526.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard-m2.log 2>&1 || true; } && ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard-m2.log | sed 's/^E *//' | grep -qv '^skills/workbench/'"
+    },
+    {
+      "op": "retext-check",
+      "id": "m3-verify-result",
+      "which": "postconditions",
+      "cond": "c1",
+      "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && test -s .agent-work/567-d1/dispositions/596.md && test -s .agent-work/567-d1/dispositions/526.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard.log 2>&1 || true; } && ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard.log | sed 's/^E *//' | grep -qv '^skills/workbench/' && py -m pytest tests/test_mcp_adoption.py tests/test_retirement_guard.py -q > /tmp/g4-mcp.log 2>&1 && test -s .agent-work/567-d1/crew-handoffs/g4-implementer-result.md && grep -q '^`complete`$' .agent-work/567-d1/crew-handoffs/g4-implementer-result.md"
+    }
+  ]
+}

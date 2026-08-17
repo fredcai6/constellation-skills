@@ -1,0 +1,40 @@
+{
+  "work_id": "567-d1-g3r2wt-a",
+  "type": "gated",
+  "items": [
+    "g1"
+  ],
+  "tasks": {
+    "g1": {
+      "id": "g1",
+      "title": "t",
+      "imperative": "do",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/567-d1-g3r2wt-a",
+    "status": "released",
+    "claimed_at": "2026-08-17T21:32:20.372475+00:00",
+    "last_heartbeat": "2026-08-17T21:32:20.372475+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T21:32:20.382579+00:00"
+  }
+}

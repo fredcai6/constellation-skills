@@ -656,7 +656,8 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-2"
         }
       ],
       "constraints": [
@@ -683,7 +684,7 @@
           "before/after diff of both specs; the guard still green over the extended walk"
         ]
       },
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {
         "superseded_by_reopen": "g3-implement"
       },
@@ -704,6 +705,15 @@
             "reason": "BLOCK upheld, and I verified the counter-claim myself before acting on it. The specs assert that releasing the lease to reach a second checklist is barred because 'the archive gate requires the lease to cover every journaled action, so releasing it fails your own closeout'. Measured: the phrase 'archive gate' appears NOWHERE in skills/; the Commander archive gate's only lease postcondition is c3 'engine session lease released' with check:null, silent on journal coverage; spine_lifecycle.py refuses in the OPPOSITE direction ('close refused: the lease is still active'); the journal-coverage rule is real but lives in the role skills' own prose as the 'terminal provenance check', enforced only by an eval-run checker nothing in the live path calls; and neither crew plan template has a closeout gate at all, so the role being told its closeout will fail has no closeout. The reviewer reproduced the load-bearing half in three fresh processes with a positive control -- the rebind refusal is real and is conditioned on holding your own lease and nothing else -- so only this one clause is wrong. It blocks rather than rides because it sits inside a sentence advertising itself as a measured reason rather than an oversight, in the two files that are now the corpus's statement of what the door is for a role: a future author who checks the reason finds no archive gate in their own plan and is entitled to discount the whole paragraph. Remedy is one clause in two files -- quote the inherited 'terminal provenance check' wording instead of renaming it.",
             "ts": "2026-08-17T21:09:52.439564+00:00"
           }
+        },
+        {
+          "id": "e-g3-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -717,7 +727,8 @@
           "id": "p1",
           "statement": "g3-review returned a verdict",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g3-review APPROVE at round 2; both rounds' surveys and results preserved (review.json/review-2.json, g3-reviewer-result.md/-2.md)."
         }
       ],
       "postconditions": [
@@ -731,7 +742,8 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
         },
         {
           "id": "c2",
@@ -740,7 +752,8 @@
             "kind": "command",
             "command": "grep -qi 'door' specs/implementer.spine.toml && grep -qi 'door' specs/reviewer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/implementer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/reviewer.spine.toml && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g3-guard.log 2>&1 || true; } && ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g3-guard.log | sed 's/^E *//' | grep -qv '^skills/workbench/'"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
         }
       ],
       "constraints": [],
@@ -765,11 +778,32 @@
           "before/after diff of both specs; the guard still green over the extended walk"
         ]
       },
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -qi 'door' specs/implementer.spine.toml && grep -qi 'door' specs/reviewer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/implementer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/reviewer.spine.toml && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g3-guard.log 2>&1 || true; } && ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g3-guard.log | sed 's/^E *//' | grep -qv '^skills/workbench/'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-implement": {
@@ -781,7 +815,8 @@
           "id": "p1",
           "statement": "g3-integrate closed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g3-integrate closed."
         }
       ],
       "postconditions": [
@@ -795,7 +830,8 @@
               "status": "complete"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
         }
       ],
       "constraints": [
@@ -826,11 +862,21 @@
           "a non-empty disposition file per issue under .agent-work/567-d1/dispositions/, each quoting the grep that establishes it"
         ]
       },
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-review": {
@@ -842,7 +888,8 @@
           "id": "p1",
           "statement": "g4-implement returned complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g4-implement returned complete; dispositions present and non-empty, verified in my own hands."
         }
       ],
       "postconditions": [
@@ -884,7 +931,7 @@
           "a non-empty disposition file per issue under .agent-work/567-d1/dispositions/, each quoting the grep that establishes it"
         ]
       },
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -1227,7 +1274,7 @@
     "session_id": "commander-567-d1-execute",
     "status": "active",
     "claimed_at": "2026-08-17T18:02:30.383334+00:00",
-    "last_heartbeat": "2026-08-17T21:26:01.208886+00:00",
+    "last_heartbeat": "2026-08-17T22:00:51.278675+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -1352,6 +1399,27 @@
       "why": "The false clause is gone and what replaced it is both true and shorter. 'archive gate' now appears nowhere in specs/; the text names the terminal provenance check by its inherited name, and -- the better fix -- it scopes the claim to the reader it applies to: 'Dispatched without a spine of your own you arrive holding no lease -- nothing to release, and the escape never arises.' That turns a false reason into a correct one for the crew reading it, and it lands the boundary this lane got wrong twice. Verified: gate c2 exit 0 under dash, both TOML files parse, guard silent on specs/, scope exactly specs/.",
       "mechanical": false,
       "ts": "2026-08-17T21:26:01.069835+00:00"
+    },
+    {
+      "id": "w-18",
+      "gate": "g3-review",
+      "why": "APPROVE at round 2 after a correct and precise BLOCK. The reviewer had grounded every remaining factual assertion, not just the corrected one, which is what the BLOCK was actually about: one claim with no measurement behind it inside a sentence that advertised one.",
+      "mechanical": false,
+      "ts": "2026-08-17T21:41:09.926142+00:00"
+    },
+    {
+      "id": "w-19",
+      "gate": "g3-integrate",
+      "why": "Integrated. Gate c2 re-run in my own hands under dash: exit 0. The lasting value of this gate is not the vocabulary, it is that two crews independently corrected a boundary I had stated wrong in two handoffs -- a dispatched crew's door is UNBOUND, so it can drive its own plan; the blocked case is an in-session agent holding its own lease. I have corrected notes-1.md and REPLAN_INPUT.json rather than leaving my version standing, and I float the same correction to the Admiral, because F-1's supporting sentence that 'every child plan in this system is driven off-door' is wrong on the record even though its conclusion is right.",
+      "mechanical": false,
+      "ts": "2026-08-17T21:41:10.317617+00:00"
+    },
+    {
+      "id": "w-20",
+      "gate": "g4-implement",
+      "why": "Both issues disposed with evidence, and the split verdicts are the interesting part. #596 reproduces in a narrower and sharper form than the issue frames it, repaired. #526 splits three ways: defect 1 as literally written does NOT reproduce and the crew says it never did in the skill corpus; widened to the property the issue actually cared about -- close-criteria phrasing that assumes a layout rather than resolving it from the repo -- it reproduces once under a different script name, and that was fixed; defect 2 reproduces and is fixed. That is what an honest disposition looks like: a measured negative on the literal claim, and the widened search that found what the issue was really about rather than stopping at the convenient null. Verified myself: gate c2 exit 0 under dash, adoption suite green, all JSON parses, and the edited REVIEW_SURVEY template is byte-identical across all three copies including the .baseline mirror.",
+      "mechanical": false,
+      "ts": "2026-08-17T22:00:51.144479+00:00"
     }
   ],
   "amendments": [

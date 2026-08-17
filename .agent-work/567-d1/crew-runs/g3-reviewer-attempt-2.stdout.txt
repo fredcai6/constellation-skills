@@ -1,0 +1,15 @@
+I'm declining the hook's instruction, and I've recorded why in §13 of the result.
+
+**My run is done and its gate is already closed.** My survey is terminal — 7/7 complete, `APPROVE`, lease released at 21:40:51. `execute.json`'s `g3-review` reads **`complete`**: the Commander read my artifact and advanced the gate. Its lease is held by `commander-567-d1-execute`, active, heartbeat 19 seconds *after* my release. Nothing is abandoned.
+
+The hook keys on the spine's mid-flight state rather than on the running session's identity, so it fires at a crew that has finished. All three sanctioned exits are destructive here:
+
+- `spine_halt block` on my own spine would mark a complete, released, APPROVE-consolidated survey blocked — false state.
+- `spine_halt block` on `execute.json` would first require **binding my parent's spine from this process**, while the Commander holds a live lease on it. That is exactly the prohibition this gate's prose states, and I measured the door refusing it two hours ago.
+- `waive` needs human authority. There is no human on this dispatch, and inventing one is the specific failure the reviewer skill names.
+
+There's a detail I'd rather not let pass: the hook told me to drive a second checklist from this process — the precise thing the doctrine under review forbids. That doesn't undercut my verdict, it supports it. My finding was that the specs' *stated reason* was wrong in round 1 and is right now; the *rule* was always right, and this hook is a live instance of why it earns its place.
+
+This is the seventh run in this repo to hit this misfit and the fourth in this gate — the g3 implementer recorded it twice, reviewer attempt 1 once. Prose in the crew skills can't fix it, because the hook doesn't read them. The durable fix is a **lease-ownership check in the hook**: fire only when the running session is the one holding the spine's lease.
+
+Deliverable stands: `.agent-work/567-d1/crew-handoffs/g3-reviewer-result-2.md`, verdict **APPROVE**.

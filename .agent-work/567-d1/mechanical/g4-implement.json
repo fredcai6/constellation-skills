@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g4-implement",
+  "mechanical": {
+    "run": "567-d1",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 2,
+    "spine-step": "g4-implement",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 2,
+    "context-manifest-ref": "ctx-567-d1-g4-implement@59530b746b5106971378770673185ffd4d0b69e8",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-d1",
+    "generated_at": "2026-08-17T21:41:10Z"
+  }
+}

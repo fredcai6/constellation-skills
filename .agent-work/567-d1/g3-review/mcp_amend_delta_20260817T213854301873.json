@@ -1,0 +1,1 @@
+{"ops": [{"op": "retext-check", "id": "r6-fowler", "cond": "c1", "which": "postconditions", "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/567-d1/g3-review/FOWLER_PASS-2.json"}]}
