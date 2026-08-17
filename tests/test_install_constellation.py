@@ -307,9 +307,14 @@ class InstallConstellationTests(unittest.TestCase):
             spine = json.loads(spine_text)
 
             self.assertNotIn("<commander-skill-dir>", spine_text)
+            # init's own postcondition is a lease-claim (check: null, no command) since
+            # issue #610 retired the Commander's init_work_area.py self-scaffolding call;
+            # the absolute-path-rewrite mechanism is still exercised below via context's
+            # map_orient.py check, so this test's subject is unaffected.
+            self.assertIsNone(spine["tasks"]["init"]["postconditions"][0]["check"])
             self.assertIn(
-                (commander_root / "scripts" / "init_work_area.py").as_posix(),
-                spine["tasks"]["init"]["postconditions"][0]["check"]["command"],
+                (commander_root / "scripts" / "map_orient.py").as_posix(),
+                spine["tasks"]["context"]["postconditions"][1]["check"]["command"],
             )
             self.assertIn(
                 (commander_root / "scripts" / "verify_episode_captured.py").as_posix(),
@@ -402,16 +407,18 @@ class InstallConstellationTests(unittest.TestCase):
         spine_text, commander_root = self._install_commander_spine(installer, "py")
         # the literal `python <` interpreter prefix is gone; the resolved command
         # now carries the `py` launcher (and the `<…-skill-dir>` token resolved).
+        # Vehicle is context's map_orient.py check, not init's (issue #610 retired
+        # init's own init_work_area.py command check -- it is a lease-claim now).
         self.assertNotIn("python <", spine_text)
         self.assertNotIn("<commander-skill-dir>", spine_text)
-        self.assertIn(f"py {commander_root}/scripts/init_work_area.py", spine_text)
+        self.assertIn(f"py {commander_root}/scripts/map_orient.py", spine_text)
 
     def test_installed_spine_rewrites_interpreter_prefix_on_posix(self):
         installer = load_installer()
         spine_text, commander_root = self._install_commander_spine(installer, "python3")
         self.assertNotIn("python <", spine_text)
         self.assertNotIn("<commander-skill-dir>", spine_text)
-        self.assertIn(f"python3 {commander_root}/scripts/init_work_area.py", spine_text)
+        self.assertIn(f"python3 {commander_root}/scripts/map_orient.py", spine_text)
 
     # PRUNED (#447 g4): test_agent_feedback_verifier_enforces_durable_log_location and
     # test_agent_feedback_verifier_enforces_archive_phase. Both loaded and exercised
