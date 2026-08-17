@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-acceptance-positive",
+  "mechanical": {
+    "run": "567-e-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m4-acceptance-positive",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-e-g1-implement-m4-acceptance-positive@0fc95f2a007412247ce92a81cdf2250417ecb3e5",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-e-g1-implement",
+    "generated_at": "2026-08-17T17:56:16Z"
+  }
+}

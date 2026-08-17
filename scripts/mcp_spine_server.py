@@ -245,6 +245,8 @@ SESSION = os.environ.get("SPINE_SESSION", "")
 sys.path.insert(0, str(ENGINE.parent))
 import checklist_engine  # noqa: E402
 import spine_lifecycle  # noqa: E402
+import episode_capture  # noqa: E402
+import apply_episode_delta  # noqa: E402
 
 PROTOCOL_DEFAULT = "2025-06-18"
 SERVER_NAME = "spine"
@@ -607,7 +609,8 @@ def _identity_violation(argv: list[str]) -> str | None:
                 f"as a review-result, and a review-result is what closes an artifact "
                 f"postcondition -- so a path outside the binding would let any JSON file carrying "
                 f"a `consolidation` key close a gate. Put the child under the spine's work area, "
-                f"or use the CLI, which is per-call by construction."
+                f"or launch a door already bound to the target spine -- a dispatched crew's own "
+                f"run_crew.py --backend cli --spine launch does exactly that before its first call."
             )
 
     # `amend`'s --delta is the SAME hazard as --from-child (a filesystem path the
@@ -758,6 +761,216 @@ def as_result(rec: dict) -> dict:
     return {"content": [{"type": "text", "text": text}], "isError": rec["code"] != 0}
 
 
+#: Door-own rejections already captured into `episodes/` this PROCESS's own
+#: lifetime, keyed `(tool, rejection_class)` -- issue #541's dedup filter.
+#: Bounds a retry loop (an agent hitting the same refusal shape over and over)
+#: from mass-creating near-duplicate episodes: the population this captures is
+#: exactly the population `_log_rejection` already writes once per call to the
+#: JSONL sidecar, so the filter narrows CARDINALITY (one episode per distinct
+#: rejection shape, not per occurrence), never the population itself. A fresh
+#: door process starts with an empty set, same lifetime as `SPINE`/`SESSION`.
+_CAPTURED_REJECTIONS: set[tuple[str, str]] = set()
+
+
+def _tool_description(tool: str) -> str | None:
+    """The `description` this door itself registered for `tool` in `TOOLS`,
+    looked up BY NAME -- never authored fresh. This is the literal source
+    `_capture_refusal_episode` quotes for its `expected-behavior` assertion
+    (issue #541): a real, pre-existing string the door already promises to
+    every MCP client, not invented narrative. `None` when `tool` has no
+    `TOOLS` entry, which should not happen for any door-own-rejection-emitting
+    call site -- the caller skips capture and says why rather than guessing."""
+    for entry in TOOLS:
+        if entry.get("name") == tool:
+            return entry.get("description")
+    return None
+
+
+def _episode_workaround(message: str) -> str:
+    """The refusal's OWN named escape hatch, extracted rather than authored: the
+    LAST sentence of `message`, split on `". "` (period-space), stripped.
+
+    Every refusal in this module already ends with its own escape hatch as a
+    trailing sentence (see `_THE_CLI_IS_PER_CALL`'s own one-sentence-only
+    design, load-bearing for exactly this extraction), so this is a literal
+    substring of data the refusal itself produced, never something this
+    function composes. `"none"` only when the split found no sentence
+    boundary at all -- the extraction returned the whole message unchanged,
+    meaning this particular refusal did not name one."""
+    tail = message.split(". ")[-1].strip()
+    return "none" if tail == message.strip() else tail
+
+
+def _capture_refusal_episode(tool: str, rejection_class: str, message: str) -> None:
+    """Write ONE door-own rejection into the tracked `episodes/` store (issue
+    #541) -- a SECOND side effect alongside `_log_rejection`'s own JSONL
+    append, never a replacement for it: the JSONL sidecar is the only trace
+    left for the unbound-door case this function explicitly skips below.
+
+    **Refuse rather than fabricate** (`docs/EPISODE_STORE.md`'s own
+    `decision:refuse-never-fabricate`, cited in `episode_capture.py`'s
+    `reopen_total` docstring). Every one of the five `agent_supplied`
+    assertions built here is a LITERAL derivation from data this refusal
+    itself produced -- the tool name, the tool's own registered `TOOLS`
+    description, the refusal `message` verbatim, a fixed always-true-for-this-
+    population sentence, and the message's own trailing escape-hatch sentence
+    -- never invented judgment. The whole `## Mechanical` bin comes from
+    `episode_capture.mechanical_fields()`, this repo's one composer for that
+    bin; the ONE exception is `run`, additionally sourced from
+    `_derivable_work_id()` (this module's own, more general helper -- it
+    covers `origin.work_id`-only spines that `mechanical_fields()`'s own
+    top-level-only `run` derivation would refuse) rather than hand-constructed.
+    If any of the nine `MECHANICAL_SCALAR_FIELDS` is still missing after that,
+    capture is SKIPPED entirely -- a stderr diagnostic names which field(s),
+    and `apply_episode_delta.py` is never invoked. There is no placeholder path.
+
+    Never raises past the caller, mirroring `_log_rejection`'s own contract:
+    every failure here -- an unreadable spine, an incomplete mechanical bin, an
+    unresolvable checkout, a failed subprocess -- is reported to `stderr` and
+    returned from. A capture that could crash the door would recreate, one
+    level up, exactly the defect this telemetry exists to end."""
+    if SPINE is None:
+        # No bound spine, hence no work-id `apply_episode_delta.py` could
+        # attribute the episode to -- there is no sentinel run id to invent.
+        # `_rejectionlog()`'s own JSONL sidecar still catches this call when
+        # `SPINE_REJECTION_LOG` is set; when neither is available it is
+        # already a documented no-op, unchanged by this function.
+        return
+
+    key = (tool, rejection_class)
+    if key in _CAPTURED_REJECTIONS:
+        return
+    _CAPTURED_REJECTIONS.add(key)
+
+    try:
+        checklist = json.loads(SPINE.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        sys.stderr.write(
+            f"EPISODE CAPTURE SKIPPED: could not read bound spine {str(SPINE)!r} "
+            f"({type(exc).__name__}: {exc}); tool={tool!r} class={rejection_class!r}\n"
+        )
+        sys.stderr.flush()
+        return
+    if not isinstance(checklist, dict):
+        sys.stderr.write(
+            f"EPISODE CAPTURE SKIPPED: bound spine {str(SPINE)!r} does not hold a JSON "
+            f"object; tool={tool!r} class={rejection_class!r}\n"
+        )
+        sys.stderr.flush()
+        return
+
+    try:
+        fields = dict(episode_capture.mechanical_fields(checklist, SPINE.parent))
+    except Exception as exc:  # noqa: BLE001 - a read-only composer must not take the door down
+        sys.stderr.write(
+            f"EPISODE CAPTURE SKIPPED: episode_capture.mechanical_fields() raised "
+            f"({type(exc).__name__}: {exc}); tool={tool!r} class={rejection_class!r}\n"
+        )
+        sys.stderr.flush()
+        return
+
+    derived_run = _derivable_work_id(checklist)
+    if derived_run is not None:
+        fields["run"] = derived_run
+
+    missing = [f for f in apply_episode_delta.MECHANICAL_SCALAR_FIELDS if f not in fields]
+    if missing:
+        sys.stderr.write(
+            f"EPISODE CAPTURE SKIPPED: mechanical_fields() could not derive required "
+            f"field(s) {missing} for spine {str(SPINE)!r} -- refuse rather than fabricate "
+            f"(docs/EPISODE_STORE.md); tool={tool!r} class={rejection_class!r}\n"
+        )
+        sys.stderr.flush()
+        return
+
+    description = _tool_description(tool)
+    if description is None:
+        sys.stderr.write(
+            f"EPISODE CAPTURE SKIPPED: {tool!r} has no TOOLS entry to quote for "
+            f"expected-behavior; tool={tool!r} class={rejection_class!r}\n"
+        )
+        sys.stderr.flush()
+        return
+
+    delta = {
+        "work_id": fields["run"],
+        "ops": [
+            {
+                "op": "create",
+                "mechanical": {k: fields[k] for k in apply_episode_delta.MECHANICAL_SCALAR_FIELDS},
+                "agent_supplied": {
+                    "task-intent": {
+                        "strength": "strong",
+                        "statement": f"Called `{tool}` through the MCP door.",
+                    },
+                    "expected-behavior": {
+                        "strength": "weak",
+                        "statement": description,
+                    },
+                    "observed-behavior": {
+                        "strength": "strong",
+                        "statement": message,
+                    },
+                    "impact-cost": {
+                        "strength": "strong",
+                        "statement": (
+                            f"The call did not proceed; {tool!r} returned REFUSED before "
+                            "it reached the engine."
+                        ),
+                    },
+                    "workaround": {
+                        "strength": "medium",
+                        "statement": _episode_workaround(message),
+                    },
+                },
+            }
+        ],
+    }
+
+    try:
+        checkout = _own_checkout_for_binding()
+    except (OSError, RuntimeError) as exc:
+        sys.stderr.write(
+            f"EPISODE CAPTURE SKIPPED: could not resolve this door's own checkout "
+            f"({type(exc).__name__}: {exc}); tool={tool!r} class={rejection_class!r}\n"
+        )
+        sys.stderr.flush()
+        return
+    store_root = checkout / "episodes"
+
+    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")
+    delta_path = SPINE.parent / f"mcp_rejection_episode_delta_{ts}.json"
+    try:
+        delta_path.write_text(json.dumps(delta, ensure_ascii=False), encoding="utf-8")
+    except OSError as exc:
+        sys.stderr.write(
+            f"EPISODE CAPTURE FAILED: could not write delta file {str(delta_path)!r} "
+            f"({type(exc).__name__}: {exc}); tool={tool!r} class={rejection_class!r}\n"
+        )
+        sys.stderr.flush()
+        return
+
+    script = Path(__file__).resolve().parent / "apply_episode_delta.py"
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script), "--delta", str(delta_path), "--store-root", str(store_root)],
+            capture_output=True, text=True,
+        )
+    except OSError as exc:
+        sys.stderr.write(
+            f"EPISODE CAPTURE FAILED: could not run apply_episode_delta.py "
+            f"({type(exc).__name__}: {exc}); tool={tool!r} class={rejection_class!r}\n"
+        )
+        sys.stderr.flush()
+        return
+    if proc.returncode != 0:
+        sys.stderr.write(
+            f"EPISODE CAPTURE FAILED: apply_episode_delta.py exited {proc.returncode} for "
+            f"tool={tool!r} class={rejection_class!r}: {(proc.stdout + proc.stderr).strip()}\n"
+        )
+        sys.stderr.flush()
+
+
 def _log_rejection(tool: str, rejection_class: str, detail: str) -> None:
     """Append ONE record for a door-own rejection to `_rejectionlog()` -- never raises.
 
@@ -769,7 +982,24 @@ def _log_rejection(tool: str, rejection_class: str, detail: str) -> None:
     stderr immediately -- no batching, no once-per-run flag, no retry, no silent
     drop. A capture that swallows its own failure would recreate, one level down,
     exactly the defect it exists to end: a diagnosable event turning invisible.
-    """
+
+    **Also captures into `episodes/`** (issue #541), alongside this JSONL append
+    -- `_capture_refusal_episode`, called first so a failure in the JSONL write
+    below can never suppress it. Both are independently guarded and neither can
+    take the other, or the door, down. The call is additionally wrapped in a
+    broad `except Exception` here, on top of `_capture_refusal_episode`'s own
+    narrower per-step guards: this is the outermost net, so a bug in the
+    capture path this function's own guards did not anticipate still cannot
+    reach `_tool_error`'s pinned choke-point."""
+    try:
+        _capture_refusal_episode(tool, rejection_class, detail)
+    except Exception as exc:  # noqa: BLE001 - a capture side effect must never crash the door
+        sys.stderr.write(
+            f"EPISODE CAPTURE FAILED: _capture_refusal_episode raised "
+            f"({type(exc).__name__}: {exc}); tool={tool!r} class={rejection_class!r}\n"
+        )
+        sys.stderr.flush()
+
     record = {
         "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "tool": tool,
@@ -1244,8 +1474,25 @@ def _spine_open(args: dict) -> dict:
 #: caller who is confined meets ONE consistent way out rather than three
 #: differently-worded ones. Lifted from `_identity_violation`'s own escape
 #: hatches for `--from-child` and `--delta`.
+#:
+#: Used to point at the CLI as a per-call escape hatch -- overturned (issue
+#: #559, ratified fleet-wide, cited in this module's own docstring): "the
+#: agents should not know about the cli. period." A model reading this refusal is an
+#: agent, and the path that actually works for one is not the CLI at all --
+#: a DISPATCHED crew already has its spine bound before its first call
+#: (`run_crew.py --backend cli --spine` assigns `SPINE_FILE` and starts the
+#: child inside its own worktree), so there is nothing left for it to name.
+#: The CLI remains real, just not addressed to a model: an operator/debug path
+#: for a human at a terminal, never an instruction this door hands an agent.
+#: One sentence, deliberately: this text is also the literal source the
+#: episode-capture `workaround` field extracts its last sentence from (issue
+#: #541), so a second sentence here would silently truncate that field.
 _THE_CLI_IS_PER_CALL = (
-    "Name a spine under that work area, or use the CLI, which is per-call by construction."
+    "A dispatched crew already has its spine bound before its first call, "
+    "assigned by run_crew.py --backend cli --spine when it launched the child "
+    "into its own worktree, which leaves nothing here for an agent to name -- "
+    "the CLI itself remains an operator/debug path, not an instruction aimed "
+    "at one (issue #559)."
 )
 
 
@@ -1865,7 +2112,7 @@ LIFECYCLE_TOOLS = [
             "drive it with the other tools. Acts on a spine `spine_open` (or the "
             "CLI) already created -- it creates nothing and mints nothing. Call "
             "this when a tool answered 'no spine is bound to this door' and the "
-            "work you need to drive is already on disk. The session identity is "
+            "work needing to be driven is already on disk. The session identity is "
             "NOT an argument: it is derived from the spine's own work id, so "
             "binding a spine yields exactly the identity that spine is driven "
             "under. Confined to one checkout's work-area tree per process, "

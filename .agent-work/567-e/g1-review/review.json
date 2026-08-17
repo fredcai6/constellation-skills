@@ -1,0 +1,179 @@
+{
+  "work_id": "567-e",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g1-reviewer-handoff.md, and the g1-implementer-result.md in full.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Both Task A (_capture_refusal_episode wired into _log_rejection, second side effect alongside JSONL sidecar) and Task B (_THE_CLI_IS_PER_CALL retext + the file-wide grep's third occurrence in _identity_violation) are present in the diff and match the handoff's Task Statement. Independently reproduced: fresh-process trigger via /tmp/reviewer_trigger_567e.py produced episodes/active/567-e-004.md with all 9 mechanical fields + 5 agent-supplied assertions, read back cleanly via query_episodes.py fetch (exit 0), negative control (capture call bypassed) produced zero new files, grep -n 'per-call by construction' returns nothing, full required suite reproduces 291 passed/64 subtests. The spine_bind TOOLS-description second-person rewording is disclosed as an implementer judgment call, meaning-preserving, and necessary for the acceptance population to complete at all -- reasonable latitude, properly flagged rather than silent.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status --porcelain confirms only scripts/mcp_spine_server.py is modified; tests/test_mcp_rejection_episode_capture.py is the only new test file; episodes/active/567-e-00{1,2,3}.md (implementer's acceptance runs) plus 567-e-004.md (this review's own independent trigger) are the only episode byproducts, matching the handoff's allowed-scope carve-out for acceptance-trigger byproducts. None of the fenced files (scripts/checklist_engine.py, scripts/run_crew.py, docs/** outside CREW_CONTEXT.md) appear in git diff --name-only. Confirmed by direct read of _own_checkout_for_binding (mcp_spine_server.py:1176-1241): its body is untouched by the diff -- git diff shows no lines inside that function's definition; only new callers (_capture_refusal_episode) reference it. The hardlink containment hole remains open, unclosed, as required.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All Close Criteria items independently re-derived, not read off the implementer's transcript: (1) fresh-process trigger via a self-authored /tmp/reviewer_trigger_567e.py -> episodes/active/567-e-004.md with all 9 MECHANICAL_SCALAR_FIELDS and all 5 agent_supplied assertions present, no placeholder. (2) query_episodes.py fetch 567-e-004 exits 0, all fields present. (3) negative control: bypassed the _capture_refusal_episode call in-place (if False: guard), re-ran the identical trigger -> zero new files under episodes/active/, restored the file, confirmed git diff --stat shows only the substantive change (251 insertions/4 deletions) with no residue and grep for the bypass marker returns nothing. (4) grep -n 'per-call by construction' scripts/mcp_spine_server.py returns nothing (exit 1). (5) Direct inspection of all five agent_supplied fields in 567-e-004.md: a2 (expected-behavior) is a literal TOOLS-description quote, a3 (observed-behavior) is the literal refusal message, a5 (workaround) is the literal trailing-sentence extraction of that same message -- all three verified byte-for-byte against source. a1 (task-intent) and a4 (impact-cost) are fixed, always-true-for-the-population template sentences with the real tool name interpolated -- not composed narrative or invented judgment, matching the docstring's own stated design. None reads as invented. (6) Exception-handling shape inspected directly (not just the 'never crashes' claim): narrow per-step guards inside _capture_refusal_episode (OSError/ValueError on spine read, broad Exception on mechanical_fields(), OSError on checkout resolution, OSError on delta write, OSError on subprocess launch) plus one outer broad except Exception at the _log_rejection call site -- confirmed the one gap in the narrow guards (json.dumps inside the delta-write try, only caught by OSError) is still caught by the outer guard, so nothing escapes _log_rejection. (7) Full required suite re-run independently: 291 passed, 64 subtests passed, 0 failed.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Each handoff Constraint checked directly against the diff: (1) Never hand-edit episodes/** -- grep of the diff for 'episodes' shows only a docstring reference and 'store_root = checkout / episodes' passed to apply_episode_delta.py's subprocess; delta_path.write_text writes a temp delta file beside the spine (SPINE.parent), mirroring _write_amend_delta's existing pattern, never into episodes/ itself. (2) --store-root absolute: store_root = checkout / 'episodes' where checkout = _own_checkout_for_binding(), which returns _checkout_containing(anchor) -> Path(git_rev_parse(...)).resolve() -- always absolute. (3) --delta is a file path: delta_path (a Path under SPINE.parent) is written then passed as str(delta_path) to subprocess, never inline JSON. (4) Mechanical bin sourced from episode_capture.mechanical_fields(), with the one stated exception (run, additionally from _derivable_work_id() when non-None) -- verified by reading both functions directly: mechanical_fields()'s own run derivation (episode_capture.py) is checklist.get('work_id') only (top-level), while _derivable_work_id() (mcp_spine_server.py:1244) prefers origin.work_id when present, falling back to top-level work_id -- confirms the implementer's own reasoning that it is strictly the more general helper, so overriding with it when non-None cannot disagree with mechanical_fields() in any case where mechanical_fields() would have succeeded. (5) In-process dedup keyed (tool, rejection_class) via module-level _CAPTURED_REJECTIONS set, confirmed by code and by the new test suite's dedup tests. (6) SPINE is None -> capture skipped via the very first guard clause. (7) _tool_error's return shape ({'content': [...], 'isError': ...}) is textually unchanged in the diff; capture happens only inside _log_rejection, itself unconditionally called from _tool_error exactly as before this change -- no second return path introduced.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Implementer's Map Impact notes verified against the diff: structural anchors touched (_log_rejection, _tool_error unchanged, _THE_CLI_IS_PER_CALL, the third _identity_violation call site; new symbols _capture_refusal_episode/_tool_description/_episode_workaround/_CAPTURED_REJECTIONS) match exactly what git diff shows. Capability claim (door-own rejections durably captured into episodes/, issue #541) is backed by the independently-reproduced evidence in r3-evidence. Constraints/assumptions section accurately names episode-store-single-write-path and refuse-never-fabricate as honored (confirmed in r4-quality) and correctly surfaces the new second-person-guard constraint as load-bearing rather than hiding it. Decision candidates (capture-is-literal-derivation-only, the spine_bind description rewording) are both surfaced for review rather than silently resolved -- the rewording is flagged prominently in Workflow Feedback with an explicit note that a disagreeing reviewer should revert just that string. Trust limitation (EPISODE_STORE.md section 10's 'nothing should auto-create an episode' tension) is correctly left for the Admiral, not decided locally. Triage candidates ((1) checklist_engine.py's refusals counter blind to door-own rejections, (2) engine-native refusals uncovered by this seam, (3) four more TOOLS descriptions with second-person pronouns) are routed out rather than fixed silently or dropped, consistent with CREW_CONTEXT.md's 'Evidence You Owe Back'. No architecture divergence needing Commander reconciliation beyond what the implementer already surfaced. Independently re-flagged candidate (3) into this survey's own triage_candidates (tc1) since it is a real latent gap a Commander should route to Triage.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/567-e/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/567-e/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python3 scripts/verify_fowler_pass.py .agent-work/567-e/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass recorded to .agent-work/567-e/FOWLER_PASS.json and verified: python3 scripts/verify_fowler_pass.py .agent-work/567-e/FOWLER_PASS.json exits 0 (smells=12, flagged=[], overridden=['long-method','duplicated-code','comments-as-deodorant']). long-method and comments-as-deodorant are overridden against this same file's own pre-existing convention (_own_checkout_for_binding, _write_amend_delta, _derivable_work_id already long and heavily-documented before this diff). duplicated-code (the repeated sys.stderr.write/flush guard shape) is overridden against the module's pre-existing fail-visibly diagnostic idiom (12 total instances file-wide, 6 pre-existing). All other nine baseline smells (large-class, feature-envy, data-clumps, primitive-obsession, long-parameter-list, shotgun-surgery, divergent-change, message-chains, speculative-generality) are absent. No smell was silently skipped.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 scripts/verify_fowler_pass.py .agent-work/567-e/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "Issue #541 door-refusal episode capture + refusal-text swap (issue #559) both implemented correctly and independently re-verified: a self-authored fresh-process trigger reproduced a real spine_bind containment refusal, produced a new episode with all 9 mechanical fields and all 5 literal-derivation agent-supplied assertions, read back cleanly via query_episodes.py, and a self-run negative control (capture call bypassed in place, then restored clean) produced zero new files. The retired 'per-call by construction' phrase is gone file-wide (3 sites, including the one not explicitly named in the handoff, disclosed and reasonably fixed). All handoff constraints (single-write-path via apply_episode_delta.py, absolute --store-root, delta-as-file-path, mechanical-bin sourcing, in-process dedup, SPINE-None skip, unchanged _tool_error return shape) verified directly against the diff. Scope respected: only scripts/mcp_spine_server.py + one new test file changed; all fenced files and the hardlink containment hole untouched. Full required suite reproduces green (291 passed, 64 subtests). Fowler pass: 3 smells overridden against this same file's own pre-existing conventions (long-method, duplicated-code, comments-as-deodorant), 9 absent, 0 flagged. One triage candidate flagged (tc1): four more TOOLS descriptions still carry second-person pronouns and will silently skip capture once their own rejections are captured."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "Four TOOLS descriptions besides spine_bind (spine_status, spine_lease, spine_halt, and originally spine_bind itself before this gate's fix) still contain second-person pronouns and will hit verify_episode_observations.py's second-person guard the moment any of their door-own rejections are captured -- capture fails safe (stderr SKIPPED diagnostic, no crash) but silently drops the episode. Not fixed here; the implementer already named this in their own Map Impact/Out-of-scope section. Reroute to Triage for a follow-up sweep of all TOOLS descriptions."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/567-e/g1-review/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-17T18:06:26.396575+00:00",
+    "last_heartbeat": "2026-08-17T18:12:41.822568+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T18:13:22.933108+00:00"
+  }
+}

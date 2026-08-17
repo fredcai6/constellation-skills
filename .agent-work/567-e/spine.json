@@ -277,7 +277,8 @@
           "id": "p1",
           "statement": "plan approved; context headroom ensured and commander skill reloaded into this context",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Plan approved (LAUNCH_ORDER:Mission). constellation-commander skill (via constellation-commander-delegated entry) confirmed active in this context -- commander-core.md, global-orchestrator.md, global-everyone.md, crew-dispatch.md already read this session. Context headroom: relying on harness auto-compaction (no explicit compaction command exposed in this environment)."
         },
         {
           "id": "p2",
@@ -286,7 +287,8 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_state_note.py 567-e"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-3"
         }
       ],
       "postconditions": [
@@ -330,7 +332,7 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -341,6 +343,28 @@
           "payload": {
             "seam": "execute",
             "why_ref": "w-4"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_state_note.py 567-e",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_state_note.py 567-e",
+            "exit": 0,
+            "shell": "posix"
           },
           "produced_by": "engine",
           "ts": ""
@@ -586,16 +610,17 @@
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-e-door-rejection-episodes",
     "opened_by": "init_work_area"
   },
-  "refusals": 2,
+  "refusals": 3,
   "engine_session": {
     "session_id": "constellation/567-e/lane-e/commander-delegated",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-17T17:21:08.228903+00:00",
-    "last_heartbeat": "2026-08-17T17:37:58.166661+00:00",
+    "last_heartbeat": "2026-08-17T17:39:09.385969+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-17T17:39:24.511745+00:00"
   },
   "why_trail": [
     {
@@ -649,6 +674,28 @@
       "model": "claude-sonnet-5",
       "why_ref": "w-3",
       "ts": "2026-08-17T17:36:45.754059+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "execute",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2451,
+      "hard": 0.12,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-4",
+      "ts": "2026-08-17T17:38:58.140782+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "execute",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2542,
+      "hard": 0.12,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-4",
+      "ts": "2026-08-17T17:39:09.344688+00:00"
     }
   ]
 }

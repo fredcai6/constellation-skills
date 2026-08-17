@@ -1,0 +1,44 @@
+{
+  "work_id": "567-e",
+  "diff_ref": "git diff scripts/mcp_spine_server.py (uncommitted working tree, issue #541 episode capture + refusal-text swap) plus new tests/test_mcp_rejection_episode_capture.py",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "overridden",
+      "finding": "_capture_refusal_episode is a long sequential-guard function (SPINE-None check, dedup, read spine, derive mechanical fields, derive run, check missing fields, look up tool description, build delta, resolve checkout, write delta file, run subprocess -- each step return-early on its own narrow exception).",
+      "override": {
+        "repo_standard": "This module's own pre-existing convention: _own_checkout_for_binding (scripts/mcp_spine_server.py:1176), _write_amend_delta, and _derivable_work_id are already long, heavily-documented, sequential-guard-clause functions in this exact file, predating this diff.",
+        "reason": "The refuse-never-fabricate design (docs/EPISODE_STORE.md) requires every one of ~6 independent failure points to report a distinct, specific stderr diagnostic and return early rather than being collapsed into a generic try/except -- splitting this into helpers would either lose that per-step specificity or just relocate the same line count one level down. The module's own established style (CREW_CONTEXT.md 'match the surrounding code's conventions') already answers this the same way at _own_checkout_for_binding and _write_amend_delta."
+      }
+    },
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "Six new sys.stderr.write(...); sys.stderr.flush() guard blocks in _capture_refusal_episode repeat the same two-line shape, differing only in the diagnostic message.",
+      "override": {
+        "repo_standard": "The identical two-line sys.stderr.write/flush shape is already used 6 times elsewhere in this same file before this diff (_log_rejection's own OSError handler, etc.) -- grep -c sys.stderr.write scripts/mcp_spine_server.py reads 12 total, 6 pre-existing.",
+        "reason": "This is the module's established fail-visibly diagnostic idiom (references/global-everyone.md 'Fail visibly rather than emit plausible wrong output'), not new duplication introduced by this diff -- each site's message names a different, specific failure (unreadable spine, missing mechanical field, unknown tool, failed subprocess launch, non-zero exit) which a shared helper would either have to parameterize identically (no real simplification) or genericize (losing the specific diagnostic text CREW_CONTEXT.md's 'Evidence You Owe Back' section requires)."
+      }
+    },
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "_capture_refusal_episode, _tool_description, and _episode_workaround each carry docstrings several times longer than their bodies, explaining design rationale (why refuse-never-fabricate, why this field sources from mechanical_fields() vs _derivable_work_id(), why the outer broad except exists).",
+      "override": {
+        "repo_standard": "Every other function in this file follows the identical shape (_own_checkout_for_binding's ~65-line docstring for a 2-line body, _derivable_work_id's ~20-line docstring), and docs/agents/CREW_CONTEXT.md plus references/global-everyone.md's decision-grading doctrine both require durable design rationale to live with the decision it documents.",
+        "reason": "The prose documents WHY (security history, doctrine citations, measured tradeoffs like the mechanical_fields()-vs-_derivable_work_id() precedence choice) that cannot be recovered from the code alone and is not compensating for unclear code -- the guard-clause bodies themselves are short and read cleanly without the docstrings; the docstrings are load-bearing decision records, matching this module's established convention throughout."
+      }
+    }
+  ],
+  "rail_exception": null
+}
