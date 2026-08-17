@@ -4,10 +4,10 @@ Rewrite this **before** launching any detached or multi-hour process, and again
 before **each** new detach (the PID changes every time). If this session dies,
 a fresh agent resumes from exactly these five lines — no forensics.
 
-- **step:** execute · wave 1 dispatch (boundary `w1`) — Admiral spine `.agent-work/epic-567-door/spine.json`, step `execute`
-- **slug:** epic-567-door · main checkout `/home/tommy/projects/constellation-skills` on branch `main` · lane worktrees under `.worktrees/567-{a,b,c,g}-*` on branches `feat/567-{a,b,c,g}-*`
+- **step:** execute · wave 1 **merged and verified**; now harvesting and sweeping the four lane worktrees, then awaiting the human's call on wave 2 versus closeout. Admiral spine `.agent-work/epic-567-door/spine.json`, step `execute`, status in-progress.
+- **slug:** epic-567-door · main checkout `/home/tommy/projects/constellation-skills` on `main` @ `d437ab63` (post-merge, suite green on Linux 3344/0) · lane branches `feat/567-{a,b,c,g}-*` all merged and **kept** (#412 — do not delete) · worktrees `.worktrees/567-{a,b,c,g}-*` pending sweep
 - **next command:** `py /home/tommy/.claude/skills/constellation-admiral/scripts/checklist_engine.py --file .agent-work/epic-567-door/spine.json current --session-id a4704163-34f0-4c9f-aca6-8d68c189ab36`
-- **pid:** none — foreground (Commanders run as in-process Agent-tool subagents, polled inside the Admiral's turn; no OS-detached process)
-- **expected artifact:** `<worktree>/RETURN.md` per lane — `.worktrees/567-a-spine-identity/RETURN.md`, `.worktrees/567-b-external-backend/RETURN.md`, `.worktrees/567-c-rail-readability/RETURN.md`, `.worktrees/567-g-closeout-lease/RETURN.md`. The Admiral polls for these inside its turn and copies each into `.agent-work/epic-567-door/results/`.
+- **pid:** none — foreground (no OS-detached process; all Commanders are finished in-process subagents)
+- **expected artifact:** `.agent-work/epic-567-door/harvest/` holding each lane's feedback export, then the four worktrees gone from `git worktree list`
 
-_Updated: 2026-08-16T05:20:00Z — wave 1 dispatched, four in-process Commanders (no OS-detached PIDs). If this session dies: the four worktrees and their branches survive on disk; adjudicate each from its `RETURN.md` and git state, confirm the original agent dead before launching any continuation into its worktree, and resume the Admiral spine at `execute` via the next-command line above._
+_Updated: 2026-08-17T15:10:00Z — wave 1 is on main. Four merges: #623→4573ef17, #621→6668b7ff, #620→9e1185af, #622→22f9637d, then d437ab63 regenerated the code map and relocated the lane returns out of the repo root. Human ruled q1–q3; q4 (scope of the subTest-reads-PASSED finding, 169 call sites across 25 files) is still open and does not block harvest or sweep. Wave 2 (lanes D/E/F) has not run and needs a fresh latitude contract — this one expired at the W1 checkpoint._
