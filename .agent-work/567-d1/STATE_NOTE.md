@@ -1,8 +1,9 @@
 # Crash-resume state note — 567-d1
 
-- **step:** `execute` · **in-progress**. Child checklist `.agent-work/567-d1/execute.json` is claimed under CLI session id `commander-567-d1-execute`. `e0-context`, `g1-implement`, `g1-review` and `g1-integrate` are **complete**. The plan was amended at g1-integrate (new gate `g1b` widens the guard; `g2`/`g3`/`g4` integrate checks rescoped). `g1`, `g1b` (implement + review + integrate) are **complete** — the guard is authored, widened, reviewed and RED. `g2` is **complete**: the sweep landed, the mandate is inverted, the specificity proof discriminates at adjacent lines. The active gate is **`g3-implement`** (specs door vocabulary), then `g4` (#596/#526), then `g5-final` (rebase + full suite). All five command postconditions were corrected from `set -o pipefail` (illegal in dash, which is what the engine runs checks under) to POSIX form.
+- **step:** `execute` is COMPLETE — `execute.json` driven through `g5-final`, lease released, `verify_iterative_role_artifacts.py commander --work-id 567-d1` ok. The return artifact EXISTS at `.agent-work/epic-567-door/results/lane-d1-RETURN.md`. Remaining spine steps: **reconcile → triage → review → feedback → archive**, plus opening the PR.
 - **slug:** 567-d1 · branch `feat/567-d1-doctrine-sweep-guard` · worktree `/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard`
-- **next command:**
+- **next command:** advance the parent spine from `reconcile`. Branch is rebased on `origin/main` 5099eea1; verified head 1037ab86. **Lane D2 must merge before this lane.**
+- **old next command:**
   ```sh
   cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard
   py /home/tommy/.claude/skills/constellation-commander/scripts/recover_crews.py 567-d1

@@ -1,219 +1,363 @@
-# Lane D1 — `STATUS: INCOMPLETE · REFRESH REQUESTED AT execute`
+# Lane D1 return — the complete doctrine sweep and the regrowth guard (#559, with #596 and #526)
 
-> **This is not a completion return.** The lane reached the context HARD band with `init` →
-> `plan` complete and `execute` **pending, never started**. A `refresh-request` (`e-execute-1`)
-> is filed against `execute`. Per reach-up doctrine the Admiral relaunches a **fresh** Commander
-> that cold-starts from this spine's `current` (`DIGEST:` + the `execute` imperative) — same job
-> file, different agent. **No deliverable of #559 has landed yet: the sweep has not run and the
-> guard does not exist.**
->
-> Resume state: `.agent-work/567-d1/STATE_NOTE.md`. Plan frozen at `bd677d7c`.
+Epic **#567**, wave 2, lane **D1**. Branch `feat/567-d1-doctrine-sweep-guard`, rebased on
+`origin/main` at `5099eea1`. Verified head: **`1037ab86`** (the suite run below); current head
+carries only the return artifact and closeout on top.
+
+---
 
 ## 1. Verdict
 
-**Incomplete — handed off mid-run, with the lane's hard analytical work done and committed.**
-What exists is the plan and the measurements it rests on; what does not exist is the sweep, the
-guard, the specs work, and the #596/#526 dispositions.
+**Delivered.** #559 is closed by a guard, not by a deletion. Every `CLI fallback` clause and every
+agent-facing `<engine>` token is gone from this lane's files *and* from the tracked overlay an agent
+in this repo actually instantiates; the test that mandated the text is inverted; and the guard is
+red-proofed at the hardest place available — a reintroduction one line below the reworded text that
+says the same thing in the same words.
 
-I did not close `execute` to hand off. The engine's context advisory instructed
-`start execute` → `advance execute --why` → stop, but `execute`'s postconditions are genuinely
-unmet, and the launch order names that exact move as the infinite-handoff failure: each
-successor arrives over the band, reads the same line, hands off again, and no deliverable is
-ever written. `execute` is left **pending** — no gate is open, so the Stop hook is satisfied.
+**The launch order's own acceptance test passes.** The order said the sweep is not done if a token
+still reaches a Commander from a freshly instantiated spine, *"whatever a grep over the templates
+says."* I instantiated one with `init_work_area.py` in a clean detached worktree and read the `init`,
+`plan` and `archive` imperatives a Commander is handed:
 
-## 2. The sweep table — measured at `f05a3d78`, nothing swept yet
+```
+init    <engine>: False | CLI fallback: False | checklist_engine.py: False
+plan    <engine>: False | CLI fallback: False | checklist_engine.py: False
+archive <engine>: False | CLI fallback: False | checklist_engine.py: False
+```
 
-Baseline **matches the launch order exactly**: 15 `CLI fallback` clauses (13 mine, 2 lane D2's),
-11 `<engine>` tokens across 7 files. Verified by command, not by memory.
+**One thing is not finished and it is not mine to finish:** lane **D2 has not merged**. The guard is
+green everywhere except `skills/workbench/SKILL.md` and
+`skills/workbench/references/checklist-engine.md` — 10 addresses, 2 files, both D2's, which D2
+deletes. I proved rather than promised that this residual is the whole of it: **with
+`skills/workbench/` removed in a scratch copy, the guard is fully green, 19 passed.** See §6.
 
-Census refinement that matters for the guard: the clause has **three surface forms** —
-`CLI fallback:` ×10, `CLI fallback,` ×4, `CLI fallback ` ×1. A colon-only pattern misses a third
-of them. (A design candidate that pinned only the colon form would have shipped a guard blind to
-5 of 15 occurrences.)
+---
 
-### The 13 clauses, and the split the measurement forced
+## 2. The sweep table
 
-| # | Site | Kind | Planned disposition |
-|---|---|---|---|
-| 1 | `skills/admiral/templates/ADMIRAL_SPINE.template.json:10` | bound-spine | sweep, name the real path |
-| 2 | `skills/admiral/templates/ADMIRAL_SPINE.template.json:52` | bound-spine | sweep |
-| 3 | `skills/charter/SKILL.md:12` | bound-spine | sweep |
-| 4 | `skills/commander/references/commander-core.md:127` | bound-spine | sweep |
-| 5 | `skills/commander/templates/COMMANDER_SPINE.template.json:10` | bound-spine | sweep |
-| 6 | `skills/commander/templates/COMMANDER_SPINE.template.json:49` | bound-spine | sweep |
-| 7 | `skills/commander/templates/COMMANDER_SPINE.template.json:123` | bound-spine | sweep |
-| 8 | `skills/explorer/SKILL.md:31` | bound-spine | sweep |
-| 9 | `skills/explorer/templates/EXPLORER_SPINE.template.json:12` | bound-spine | sweep |
-| 10 | `skills/explorer/templates/EXPLORER_SPINE.template.json:78` | bound-spine | sweep |
-| 11 | `skills/interrogator/SKILL.md:26` | **second-checklist** | reword to the measured truth |
-| 12 | `skills/write-a-skill/templates/gated-engine-SKILL.template.md:15` | **second-checklist** | reword |
-| 13 | `skills/write-a-skill/templates/survey-SKILL.template.md:11` | **second-checklist** | reword |
+### `CLI fallback` clauses — 13 in this lane's files, all gone
 
-Not mine: `skills/workbench/references/checklist-engine.md:5`, `skills/workbench/SKILL.md:37`
-(lane D2, which deletes those files outright).
+| # | Site | Disposition |
+|---|---|---|
+| 1 | `skills/admiral/templates/ADMIRAL_SPINE.template.json` `.tasks.init.imperative` | swept — door named as the path |
+| 2 | `ADMIRAL_SPINE` `.tasks.closeout.imperative` | swept |
+| 3 | `skills/charter/SKILL.md:12` | swept |
+| 4 | `skills/commander/references/commander-core.md:127` | swept |
+| 5 | `COMMANDER_SPINE.template.json` `.tasks.init.imperative` | swept |
+| 6 | `COMMANDER_SPINE` `.tasks.plan.imperative` | swept |
+| 7 | `COMMANDER_SPINE` `.tasks.archive.imperative` | swept |
+| 8 | `skills/explorer/SKILL.md:31` | swept |
+| 9 | `EXPLORER_SPINE.template.json` `.tasks.init.imperative` | swept |
+| 10 | `EXPLORER_SPINE` `.tasks.route.imperative` | swept |
+| 11 | `skills/interrogator/SKILL.md` | **reworded** — second-checklist site |
+| 12 | `skills/write-a-skill/templates/gated-engine-SKILL.template.md` | **reworded** |
+| 13 | `skills/write-a-skill/templates/survey-SKILL.template.md` | **reworded** |
+| — | `skills/workbench/SKILL.md:37`, `…/checklist-engine.md:5`, `:45` | **lane D2's** — not swept, deliberately |
+
+For the 10 bound-spine sites the replacement names the path that works. For the 3 second-checklist
+sites the clause is reworded to the measured truth, per the Admiral's F-1 ruling and the framing it
+endorsed: *"'CLI fallback' is the wrong word, because a fallback implies a working primary."*
+
+The sweep also removed the *"by default … otherwise"* framings around the deleted clauses. Leaving
+them keeps the two-path idea alive in the grammar after the second path is gone.
 
 ### All 11 `<engine>` sites classified, including the two that survive
 
-| # | Site | Class |
-|---|---|---|
-| 1 | `docs/superpowers/plans/2026-06-27-delegated-autonomous-commander.md:59` | **SURVIVES** — historical plan record. Read it: it is a dated record of the delegated-commander design, not instruction. Editing it to make a count come out right would falsify the record |
-| 2 | `scripts/init_work_area.py:24` | **SURVIVES** — a comment naming `<engine>` as an example of a token the resolver *deliberately never resolves*. Deleting it would delete the documentation of the convention itself |
-| 3–4 | `skills/admiral/templates/ADMIRAL_SPINE.template.json:10,52` | target |
-| 5 | `skills/commander/references/commander-core.md:127` | target |
-| 6 | `skills/commander/references/crew-dispatch.md:35` | target — arrived in **wave 1** via lane C; the target set moved under this epic |
-| 7–9 | `skills/commander/templates/COMMANDER_SPINE.template.json:10,49,123` | target |
-| 10–11 | `skills/explorer/templates/EXPLORER_SPINE.template.json:12,78` | target |
+| # | Site | Class | Disposition |
+|---|---|---|---|
+| 1 | `docs/superpowers/plans/2026-06-27-delegated-autonomous-commander.md:59` | historical plan record | **survives** — pre-ruled, and **out of the guard's walk by the walk rule alone**, named nowhere |
+| 2 | `scripts/init_work_area.py:24` | comment documenting the never-resolved-placeholder convention | **survives** — same, structurally out |
+| 3–4 | `ADMIRAL_SPINE` init, closeout | agent-facing | swept |
+| 5 | `commander-core.md:127` | agent-facing | swept |
+| 6 | `crew-dispatch.md:35` | agent-facing (arrived in wave 1 via lane C) | swept |
+| 7–9 | `COMMANDER_SPINE` init, plan, archive | agent-facing | swept |
+| 10–11 | `EXPLORER_SPINE` init, route | agent-facing | swept |
 
-## 3. The evidence the launch order asked me to carry
+**Two census refinements the crews reported rather than smoothed**, both of which changed the work:
 
-**The target reached this Commander in the first thing it read.** My own spine's `init`
-imperative, verbatim from `spine_status`:
+- `<engine>` is **10 occurrences on 9 lines**. `COMMANDER_SPINE` `.tasks.archive.imperative` carries
+  **two** on one line. A one-edit-per-line sweep would have left one behind.
+- `CLI fallback` matched **16**, not 15: the pattern's loosened separator also catches `CLI-fallback`
+  at `skills/workbench/references/checklist-engine.md:45`, prose that *forbids* the thing while
+  quoting it. Accepted as a declared false-alarm class rather than narrowing the pattern to duck it —
+  a hyphen respelling is the cheapest way to defeat a space-only pattern.
 
-> …this is your own spine…, so the door needs no session id argument. **CLI fallback:
-> `<engine> claim --session-id commander-567-d1 --claimed-by commander --worktree .`** … From
-> here on, pass `--session-id commander-567-d1` on every mutating CLI call against this spine.
+### A surface the order did not know about, and without it #559 is not closed
 
-Note the asymmetry: `init_work_area.py` resolved `<commander-session-id>` → `commander-567-d1`
-but left `<engine>` unresolved, so the agent is handed a command line it cannot run.
+`.agent-work/templates/` is a **tracked overlay** of the skills templates that workbench doctrine
+tells agents to **prefer** when instantiating. It carried the same doctrine, byte-identical, and
+**mirrored again** under `.baseline/<skill>/`. Nothing in the repo read it.
 
-**And the door worked.** Every gate of this run was driven through the MCP verbs — `spine_lease`,
-`spine_status`, `spine_start`, `spine_evidence`, `spine_advance` — with **no CLI invocation at
-any point**. The epic's definition-of-done item "a dispatched crew drives its own spine through
-the door end to end" is satisfied for `init` → `plan`.
+Measured: **16 `<engine>` occurrences and 18 clause matches across 10 files.** All swept, all three
+copies of each template verified byte-identical afterwards.
 
-## 4. THE FINDING: the regrowth has a mechanism, and it is a test
+I floated the ownership gap; **the Admiral independently granted it at `5099eea1`** and named the
+root cause better than I did: *"Nobody owned it because I built the ownership table from the lanes'
+missions rather than from the guard's reach."* Its landmine warning — that the obvious repair would
+write this host's absolute paths into up to 56 tracked files — did not bite: this lane never ran the
+installer, it propagated content directly.
 
-`tests/test_mcp_adoption.py` **mandates the text #559 deletes.**
-`TestTier1ImperativeFields::test_field_still_carries_cli_fallback` asserts each of 7 imperative
-fields still carries its exact CLI command line, failing with:
+---
 
-> *"lost its exact CLI command line … the CLI door must stay, never be removed or discouraged"*
+## 3. The guard, red-proofed — the item that closes #559
 
-**That is why the text has been deleted twice and grown back twice.** A lane deleted the clauses,
-the suite went red on a test whose failure message says the CLI must stay, and the lane restored
-the text believing it had broken a rule. The deletion was never the hard part.
+`tests/test_cli_retirement_guard.py`, 718 lines. **It is a generalization of an in-tree precedent**
+(`test_mcp_adoption.py:838`, which already asserted absence for 2 files and already pinned the human
+ruling verbatim), widened from 2 files to **216 files / 3098 texts**.
 
-Measured blast radius: **nine** mandating assertions, not one — `:737`, `:784`, `:834`, `:950`,
-`:954`, `:1132`, `:1149`, and `TestCLIStaysAvailableNotDeprecated`'s `:1324` and `:1345`.
-A sweep that inverted only the obvious one would have left eight red.
+**Scope has an exception list of length zero.** It reuses the repo's own `INSTRUCTION_FILES` walk —
+imported, not re-derived, so the repo holds one definition of "agent-facing text" — extended to
+`specs/**/*.toml` and `.agent-work/templates/**`. Both pre-ruled survivors are out **because of what
+they are**, named nowhere. The overlay walk is rooted *at* the overlay, so this run's own artifacts
+are never reachable rather than reached-and-filtered — which is why no exception is needed.
 
-**The counterweight, also in-tree:** `tests/test_mcp_adoption.py:838`
-(`TestTier2SpineAlreadyBoundForDispatchedCrews`) already asserts *absence* for two files and
-quotes the human verbatim — *"the agents should not know about the CLI. period."* **The guard is
-a generalization of an existing precedent from 2 files to the whole corpus, not a new
-invention.** That is a materially stronger thing to land, and it is the shape I planned.
+**Four patterns, because the behaviour has four shapes**, not one spelling. Every failure message
+carries the scan census and quotes the ruling verbatim — this lane may not write `docs/agents/*` and
+files no issue, so a pointer would dangle; carrying the ruling inline means deleting the guard
+deletes its reason.
 
-## 5. Floats to the Admiral — three, none blocking
+### The red-proof
 
-### F-1. The door provably cannot reach a *second checklist* — bears on `decision:complete-sweep`
+The specificity proof is at the hardest available place: a genuine clause reintroduced at
+`skills/interrogator/SKILL.md:28`, **one line below** the reworded text at `:27` that describes the
+same mechanism in the same words.
 
-Measured in a **fresh process** with explicit paths (per the Dogfooding rule), on two
-engine-materialized spines:
+```
+$ python3 -m pytest tests/test_cli_retirement_guard.py -q ; echo "exit: $?"
+exit: 1
+E             skills/interrogator/SKILL.md:28
+E                 ...checklist engine, and by nothing else. CLI fallback, always available: the absolute path to...
+FAILED …::test_no_cli_fallback_clause_reaches_an_agent
+FAILED …::test_no_engine_invocation_reaches_an_agent
 
-| Step | Result |
+$ # scratch edit reverted, tree clean
+$ python3 -m pytest tests/test_cli_retirement_guard.py -q
+### site addresses, non-workbench only:
+### (empty)
+```
+
+`:27` is flagged by nothing in either direction. **The guard separates the two sentences, not the two
+files.** A pattern that merely banned the phrase would fail this.
+
+### It was reviewed BLOCK twice, and both were right
+
+- **`g1b` round 1** — the verb list enumerated **17** of the engine's **18** verbs; `resume` was
+  missing, so `<cli> resume g1 --reason '…'` passed all four patterns. Fixed **at the class**: the
+  verb set is now derived from `test_mcp_adoption._engine_verbs()`, which reads the engine's own
+  argparse, and the tie is pinned by recovering the set from the **compiled alternation** — so it
+  holds even if a later author swaps the derivation for a literal that agrees today. The re-reviewer
+  red-proofed that four ways by mutation, each red and each naming the difference.
+- **`g3` round 1** — see §4.
+
+---
+
+## 4. `specs/*.spine.toml`
+
+**Before:** both files carried **zero** door mentions, and these two are the only role specs that
+exist. **After:** +41 and +44 lines. Schema question settled as **prose, no new keys**, reasoned from
+`generate_spine.py`'s `_compile_gate` rather than from taste.
+
+The vocabulary states both halves: the door is the interface for the spine you were launched against,
+and *"what you may not do is drive a second checklist from this process"* — with the reason, so a
+future author cannot "fix" the rule.
+
+**This gate produced the run's most useful correction, and it is a correction to me.** Round 1 was
+BLOCKed because the prose justified the rule with *"the **archive gate** requires the lease to cover
+every journaled action."* Measured: `archive gate` appears **nowhere** in `skills/`; the Commander
+archive gate's only lease postcondition is `c3` "engine session lease released" with `check: null`;
+`spine_lifecycle.py` refuses in the **opposite** direction; and **neither crew plan template has a
+closeout gate at all**.
+
+The repair is better than the correction I asked for — it scopes the claim to its reader:
+
+> *"Dispatched without a spine of your own you arrive holding no lease — nothing to release, and the
+> escape never arises."*
+
+---
+
+## 5. #596 and #526
+
+**#596 — reproduces, in a narrower and sharper form than the issue frames it. Repaired.** The issue's
+crux held: the `feedback` gate's only postcondition asks for an **episode**, so
+`commander-delegated/SKILL.md`'s *"a `FENCE.md` citation without the staged export still fails the
+gate"* was **false as written** — a clause teaching a false model of what a gate enforces, which the
+issue records agents propagating into launch orders. Four mandate sites reconciled against
+`ORCHESTRATOR_CONTEXT.md`'s Retired Learning Playbook, which was read-only throughout.
+
+**#526 — splits three ways, and the honest null is the interesting part.**
+
+| | Verdict |
 |---|---|
-| `spine_lease claim` on own spine | OK |
-| `spine_bind` to a second checklist, **lease held** | **REFUSED** — *"this door still holds an active lease … one door drives one spine at a time. Rebinding this door now would leave that lease held by nobody."* |
-| release lease, then `spine_bind` | succeeds |
+| Defect 1, as literally written (`python scripts/code_map/build.py`) | **does not reproduce** — and, per the crew's widened search, never did in the skill corpus |
+| Defect 1, widened to the property the issue cared about — close-criteria phrasing that *assumes* a layout rather than resolving it | **reproduces once**, under a different script name — **fixed** |
+| Defect 2 — no survey-reuse convention across review rounds | **reproduces** — **fixed** |
 
-The escape is unavailable to the agents in question: `COMMANDER_SPINE.archive` requires the lease
-to "cover every journaled action", so a Commander that released its lease to bind `execute.json`
-fails its own closeout.
+The widening is why this is a disposition and not a shrug: stopping at the convenient null would have
+closed the issue while leaving what it was actually about. **And this run was its own evidence** —
+gates `g1b` and `g3` were each reviewed twice, and round 2 used a new round file on *my instruction*
+rather than on doctrine, which is precisely the gap.
 
-So for a Commander's `execute.json`, an Interrogator's `interrogation.json`, and an in-session
-crew's own plan, **the CLI is the only path** — and "CLI *fallback*" is the wrong word, because a
-fallback implies a working primary.
+---
 
-**Why this is not relitigating the human's ruling.** The ruling was *"sweep all **possible** now"*,
-and it overrode an Admiral recommendation about the **dispatched-crew** path — which the
-re-measurement correctly showed *does* have a door (a crew launched by
-`run_crew.py --backend cli --spine` is its own process, bound to its own spine). My finding is a
-**different** path the ruling never considered. I therefore still sweep all 13 — **no `CLI
-fallback` clause survives anywhere in my files** — but reword those 3 to state the measured truth
-rather than delete an agent's only path, which would violate "fail visibly; no hidden fallback."
-Replacement wording is explicitly my latitude. Flagging because it touches a `settled/human` line.
+## 6. Suite result
 
-### F-2. Ownership gap: `tests/test_mcp_adoption.py` belongs to no lane
+Full suite on **Linux**, in a **clean detached worktree** of the branch (`git worktree add --detach
+/tmp/d1-verify 1037ab86`), never the working copy, with `SPINE_FILE`/`SPINE_SESSION`/`SPINE_PARENT`/
+`CREW_SCRATCH_DIR` unset (per the Admiral's warning about the `CREW_SCRATCH_DIR` leak).
 
-It is in **no** lane's sole-writer list and **no** lane's fence table, and **the sweep is
-impossible without editing it** (it mandates the text). Same for
-`tests/data/store_mentions.approved.txt`, which holds verbatim copies of two imperatives under
-edit. No other lane owns them, so there is no collision risk. Proceeding; flagging per "anything
-that fits no class above — float, with one line on why."
+**Commit verified: `1037ab867dbc197fc2629602a18ccdc53cb1d735`.**
 
-### F-3. The ruling has no durable home
+```
+3 failed, 3371 passed, 6 skipped, 1219 subtests passed in 140.23s
+```
 
-The guard's failure message should tell a future agent why the text must not return. But this
-lane may not write `docs/agents/*` (human's call) and files no issue, and `.agent-work/` is
-scratch — so any pointer dangles. **Mitigation taken:** the guard quotes the ruling *verbatim*,
-so it is self-contained and deleting the guard destroys the reason with it. **Ask:** whether the
-ruling should get a durable home in `docs/agents/ORCHESTRATOR_CONTEXT.md`, which only the human
-can authorize.
+`grep '^FAILED'` returns exactly three lines:
 
-## 6. Not yet done
+```
+FAILED tests/test_cli_retirement_guard.py::TestNoSecondPathReachesAnAgent::test_no_cli_fallback_clause_reaches_an_agent
+FAILED tests/test_cli_retirement_guard.py::TestNoSecondPathReachesAnAgent::test_no_engine_invocation_reaches_an_agent
+FAILED tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build
+```
 
-`specs/*.spine.toml` door vocabulary (measured: **zero** door mentions today; both specs also set
-`config_ref = docs/agents/engine-config.json`, **which does not exist in this repo**), #596, #526,
-the sweep itself, the guard, the red-proof, and the full-suite run. All are planned as gates
-g1–g5 in `.agent-work/567-d1/execute.json`.
+- `MapTreeFreshnessTests` — **permitted**, Admiral-owned and stale by construction on every parallel
+  branch (#544).
+- The two guard failures — **entirely lane D2's**, and proven so:
+
+```
+$ # residual, addressed:
+6  skills/workbench/references/checklist-engine.md
+4  skills/workbench/SKILL.md
+$ # non-workbench addresses: NONE
+$ # with skills/workbench/ removed in a scratch copy:
+19 passed          exit 0
+```
+
+`test_no_engine_placeholder_token_reaches_an_agent` **passes**, so every `<engine>` token is gone
+corpus-wide *including* workbench.
+
+**`g5-final`'s postcondition was rewritten to measure this rather than assert it** — two falsifiable
+conjuncts, verified in both directions, and it becomes the original whole-corpus check automatically
+once D2 lands.
+
+---
 
 ## 7. Touched paths
 
-Only this lane's own work area, plus this file:
+`tests/test_cli_retirement_guard.py` (new, 718) · `tests/test_mcp_adoption.py` ·
+`tests/data/store_mentions.approved.txt` · `skills/{admiral/SKILL.md, admiral/references/fleet-doctrine.md,
+admiral/templates/ADMIRAL_SPINE.template.json, charter/SKILL.md, commander-delegated/SKILL.md,
+commander/references/commander-core.md, commander/references/crew-dispatch.md,
+commander/templates/COMMANDER_SPINE.template.json, explorer/SKILL.md,
+explorer/templates/EXPLORER_SPINE.template.json, interrogator/SKILL.md, reviewer/SKILL.md,
+reviewer/templates/REVIEW_SURVEY.template.json, write-a-skill/SKILL.md,
+write-a-skill/templates/{gated-engine,survey}-SKILL.template.md}` · `specs/{implementer,reviewer}.spine.toml` ·
+`.agent-work/templates/` — 6 templates × (overlay + `.baseline/` mirror) · `.agent-work/567-d1/**`.
 
-- `.agent-work/567-d1/{notes-1.md, MISSION_FRAME.md, decision-anchors.md, execute.json, STATE_NOTE.md, map-orientation.json}`
-- `.agent-work/567-d1/plan-rigor/` (briefs, two design candidates, the cold critique, `CONVERGENCE.md`)
-- `.agent-work/epic-567-door/results/lane-d1-RETURN.md` (this file — my own results file, the one exception to the Admiral's fence)
+**Wanted but did not touch, because another lane owns it:**
+`skills/workbench/SKILL.md` and `skills/workbench/references/checklist-engine.md` (D2 — the 2
+surviving clauses); `docs/agents/CREW_CONTEXT.md` (D2 — a stale measurement, staged);
+`scripts/mcp_spine_server.py` (E — a `CLI-fallback` sentence no walk reads);
+`scripts/checklist_engine.py` (H); `scripts/run_crew.py` (F); `map/INDEX.md` (Admiral).
 
-**No source file has been modified.** Nothing another lane owns was touched.
+**Deliberately not fixed:** `.agent-work/templates/TEMPLATES_MANIFEST.json`'s five now-stale hashes.
+It is an **install lockfile** carrying `generated: 2026-08-10` and a `source_commit`; hand-editing
+hashes into it would make it claim bytes were installed at a commit where they were not — the
+falsification `decision:records-are-not-instruction` forbids. A stale lockfile is honest.
+
+---
 
 ## 8. Map impact
 
-No indexed source touched yet. Separately: **this repo has no architecture map at all** —
-`map_orient` returns `DEGRADED-UNPARSEABLE` (`docs/architecture` absent, `map/INDEX.md` carries no
-citable anchor id, `map/ids.jsonl` **empty**), so `map_orient` can never RESOLVE here for *any*
-lane. Discharged with five hash-pinned substitutes; escalated, not acted on, since `map/INDEX.md`
-is Admiral-owned.
+**Yes, this touches indexed source** — `tests/`, `skills/`, `specs/`. **Not acted on.** `map/INDEX.md`
+is Admiral-owned (#544) and `MapTreeFreshnessTests` is accepted red. `map_orient` returns
+`DEGRADED-UNPARSEABLE` for this repo (no `docs/architecture` packet, empty `map/ids.jsonl`); the
+mission frame was authored against five hash-pinned substitutes and that gap is staged.
 
-## 9. Triage candidates
+New structure worth recording: `.agent-work/templates/**` is now agent-facing instruction text with a
+machine check on it, where before it was read by no walk in the repo.
 
-Staged as files, none filed as issues: the `verify-frame` vs decision-grading conflict (under
-DEGRADED the frame check refuses the very `decision:<id>` bullets doctrine requires); `map/ids.jsonl`
-empty; `docs/agents/engine-config.json` referenced by both specs and by `execute.json` but absent;
-`docs/agents/GLOSSARY.md` has no entry for **door**, the term this epic makes load-bearing;
-per-task `anchors` duplication in `execute.json`.
+---
+
+## 9. Triage candidates — 19 files under `.agent-work/567-d1/triage-candidates/`, none filed as issues
+
+Per `decision:no-issue-filing-mid-run`. **One should be paired with priority:**
+
+- **`dispatched-crew-spine-is-not-bound.md`** — a live **impersonation hazard**, reproduced **six
+  times** across three gates and both roles. The crew skills say a dispatched crew's spine is bound
+  before it starts; for a handoff-driven `run_crew.py` dispatch it is not. Worse, the g1b re-reviewer
+  finished its work and was then **refused permission to end its turn by the Stop hook**, which
+  resolved a spine from disk and handed it **this Commander's** spine — whose in-progress step was the
+  crew's own dispatch. It refused: *"That's impersonation, not delegation."* It was right. The hook's
+  sanctioned escapes (`block`, `waive`) both **write to the parent's spine**, so the prescribed honest
+  stop is itself the destructive act. Cheap fix: skip the hook when `SPINE_FILE` is unset and
+  `SPINE_PARENT` is set. Durable fix: have `run_crew.py` bind the crew's own plan.
+
+Others: `pipefail-in-command-checks-cannot-pass` · `whole-suite-evidence-is-unsafe-during-engine-drive`
+· `corpus-never-names-the-doors-binding-call` · `overlay-baseline-mirror-doubles-every-target` ·
+`templates-manifest-is-a-fourth-copy` · `doctrine-asserts-spine-postconditions-with-no-tie` ·
+`crew-launcher-scratch-dir-test-fails-inside-a-crew` · `fowler-record-path-collides-across-gates` ·
+`crew-context-python-invocation-stale` · `mcp-spine-server-cli-fallback-sentence` ·
+`glossary-has-no-door-entry` · plus 7 inherited from the plan step.
+
+---
 
 ## 10. Workflow feedback, including my own mistakes
 
-**My mistakes.**
-1. **I authored the defect this epic is about.** My first gate plan had four world-facing
-   postconditions and the cold critic proved **three could not fail** — a `| tail -5` swallowing
-   pytest's exit code (so the gate delivering #559 would close green when the guard *did not
-   exist*), a `test -d` that passed before the run began, and a specificity proof over
-   directories the guard structurally cannot read. A fourth was passable only by violating a
-   fence. I wrote all four while holding the doctrine that names this exact failure, in a lane
-   whose subject *is* checks that cannot fail. I now run every command postcondition against the
-   pre-work tree and require non-zero before freezing a plan; all five in the revision do.
-2. **I nearly shipped a guard blind to a third of its targets.** I measured "15 clauses" and
-   moved on without measuring the *shape* of the string. Only a candidate's self-attack made me
-   census it: three surface forms.
-3. **I under-measured the blast radius** — I found one mandating test and treated it as the
-   mechanism; there are nine.
+**What worked.** Authoring the guard **before** the sweep, which the cold plan critic argued for and
+which was the single best decision in the plan: the red-proof came from the real corpus instead of
+from a scratch string its own author chose. And handing crews the **bar** rather than the answer —
+pointing the g1b implementer at `TestCLIStaysAvailableNotDeprecated:1268` with a line number turned
+"how wide should this pattern be?" from taste into a measurement it ran four candidates through.
 
-**What helped.** The cold `claude -p` critic was the highest-value spend of the run by a wide
-margin. The design-it-twice pair earned its keep in an unexpected way: not by producing a design I
-adopted wholesale, but because both candidates were required to attack *themselves*, and their
-self-attacks were where the real findings were.
+**My own mistakes, and they cluster into one shape.**
 
-**What got in the way.** (a) The `verify-frame` / decision-grading conflict above — I had to move
-graded decisions out of the frame to satisfy a check, which is compliance shaped like a
-workaround. (b) A headless `claude -p` launched in this worktree **inherits the session's Stop
-hook and `SPINE_*`**, and my probe agent began trying to drive *this* lane's spine before
-permissions stopped it; I stripped `SPINE_FILE`/`SPINE_SESSION`/`SPINE_PARENT` for every
-subsequent dispatch, and that should be the documented default. (c) Two `claude -p` helpers hit
-`Warning: no stdin data received in 3s` and one died with a bare `Execution error`; `< /dev/null`
-fixed it.
+1. **Three of my own checks were defective, in the same way each time: authored from what the output
+   *should* say rather than run against what it *does* say.** (a) Every command postcondition in this
+   plan opened with `set -o pipefail`, which dash rejects with exit 2 — **five checks that could not
+   pass**, and the provenance is the sharp part: the cold critic correctly killed `| tail -5` as *a
+   check that cannot fail* and offered `set -o pipefail` as the repair. **The repair for a check that
+   cannot fail produced five that cannot pass**, and neither the plan author, the critic, nor I
+   noticed — a crew that tried to run one found it. (b) My rescoped `g3`/`g4` checks matched the
+   guard's own **census line** as a violation, so they would have failed on a correctly-swept tree.
+   (c) `g3`/`g4` originally required a whole-corpus green that lane D2's un-merged files made
+   unobtainable.
+2. **I stated the second-checklist boundary wrong in two handoffs**, repeating the Admiral's F-1
+   phrasing that *"every child plan in this system is driven off-door."* A dispatched crew's door is
+   **unbound**, so it can drive its own plan. The g3 implementer refused my premise and measured it;
+   the g3 reviewer reproduced the correction and was itself the live case. I have corrected
+   `notes-1.md` and `REPLAN_INPUT.json` rather than leaving my version standing.
+3. **I dispatched the g1b re-reviewer with a `--result` path the handoff document did not name**, so
+   it followed the document and overwrote round 1's BLOCK result. Recoverable only because I had
+   committed it at `4df66479` — which the reviewer itself checked and noted.
+
+**What the crews did better than they were asked.** Two BLOCKs, both correct, both on things I had
+approved. The g1b reviewer refused to verify a derivation by calling the same helper the guard calls
+— *"that would be a tautology"* — and read the engine two other ways. The g2 reviewer checked its
+absence-greps for **non-vacuity** before believing them. The g1b re-reviewer traced a 7-vs-6 suite
+discrepancy to **its own** side effect rather than reporting it as someone else's defect, and wrote
+the lesson down: *"when your measurement disagrees with a claim, suspect your measurement's side
+effects before you suspect the claim."*
+
+**A float, non-blocking.** `docs/agents/GLOSSARY.md` still has **no entry for "door"** — the term this
+epic makes load-bearing. Staged, not taken: `docs/agents/*` is the human's call.
+
+---
 
 ## 11. PR
 
-**None opened.** No source change exists to review.
+**Not yet opened at the time of writing** — see the handoff note below. Branch
+`feat/567-d1-doctrine-sweep-guard`, rebased on `origin/main` `5099eea1`, verified head `1037ab86`.
+
+**Merge sequencing, which is the Admiral's call and the one thing this lane cannot do for itself:**
+this lane merges **last**, and **lane D2 must merge first**. Until it does, the guard is red on
+exactly D2's two files. The moment D2 lands, `g5-final`'s check becomes the unfiltered whole-corpus
+check with no edit required.
+
+---
+
+## Handoff — what remains
+
+The `execute` step is complete: `execute.json` is driven to `g5-final`, its lease released, and
+`verify_iterative_role_artifacts.py commander --work-id 567-d1` returns ok. The remaining spine steps
+are **reconcile → triage → review → feedback → archive**, plus opening the PR. A fresh Commander picks
+these up from this artifact and from `.agent-work/567-d1/{notes-1.md, STATE_NOTE.md, REPLAN_INPUT.json}`.
