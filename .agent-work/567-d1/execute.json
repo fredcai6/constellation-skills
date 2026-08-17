@@ -1047,7 +1047,8 @@
           "id": "p1",
           "statement": "g4-integrate closed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g1, g1b, g2, g3 and g4 all closed with integrated crew evidence: 6 implementer results, 6 review results, two correct BLOCKs reworked to APPROVE."
         }
       ],
       "postconditions": [
@@ -1090,7 +1091,7 @@
           "the tally and the ^FAILED grep output, with the sha"
         ]
       },
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -1304,12 +1305,12 @@
       "rework_count": 0
     }
   },
-  "refusals": 2,
+  "refusals": 3,
   "engine_session": {
     "session_id": "commander-567-d1-execute",
     "status": "active",
     "claimed_at": "2026-08-17T18:02:30.383334+00:00",
-    "last_heartbeat": "2026-08-17T22:14:36.188114+00:00",
+    "last_heartbeat": "2026-08-17T22:15:01.278549+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
