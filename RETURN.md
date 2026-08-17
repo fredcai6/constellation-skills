@@ -501,6 +501,45 @@ Restored; `git diff --stat` confirms the restore was exact; 11/11 green again. T
 pass in both worlds are the line-ending-preservation tests, which *should* — that is the
 correct shape for a red-proof, not a weakness.
 
+## 5b. GROUP 3 — atomic `save()` is NOT unconditionally atomic on Windows
+
+Added after CI. **This is a real portability defect, not a test artifact**, and it narrows
+what #613's atomicity half may claim.
+
+CI reported one writer failing with `PermissionError(13, 'Access denied')` while three
+readers held the spine open. The question was whether the test's reader held the handle in a
+way real readers do not. **It does not** — the test's reader is
+`json.loads(self.path.read_text(encoding="utf-8"))`, which is byte-for-byte what
+`checklist_engine.load()` does, and `scripts/run_crew.py:1440`'s parent-lease heartbeat reads
+a spine another process writes, which is #613's own scenario.
+
+**The mechanism.** POSIX `rename(2)` replaces a destination regardless of who has it open —
+an existing reader keeps reading the old inode and never sees a torn document, which is the
+entire property `save()` was rewritten to obtain. Windows `MoveFileEx` instead **fails** when
+the destination is open without `FILE_SHARE_DELETE`, and CPython's `open()` does not pass that
+flag. So the atomicity design rests on a rename semantic Windows does not share.
+
+**What `save()` now guarantees, stated honestly and in its own docstring:**
+
+| platform | guarantee |
+|---|---|
+| POSIX | **Atomic.** A concurrent reader sees the complete old document or the complete new one, never a torn one, and the writer always completes. |
+| Windows | **Atomic when it succeeds, and fails loudly rather than tearing.** A reader's open handle can block the install; on exhaustion the `PermissionError` propagates. |
+
+**Mitigation: a bounded retry**, ~120 ms, because engine readers hold the file only for the
+duration of one `read_text()`. Retrying cannot weaken atomicity — the temp already holds the
+complete document, so an attempt installs all of it or none of it, and a retry is idempotent.
+The retry is deliberately narrow: only `ERROR_ACCESS_DENIED` and `ERROR_SHARING_VIOLATION`,
+matched by `winerror`, so a real permission problem or a vanished directory still fails on the
+first attempt rather than turning a clear failure into a slow one.
+
+**Fail-loud is the right trade and it is still a behavioural change.** The old
+`write_bytes` would have *completed* here, by overwriting in place — at the cost of being the
+torn-read bug this replaced. So Windows callers gain "the write did not land, and you were
+told" and lose "the write always lands." Three new tests pin it: retry-then-succeed,
+persistent-failure-**raises** with the previous document intact, and
+non-busy-`OSError`-is-not-retried.
+
 ## 6. Fresh-process validation
 
 Done by **stripping the environment**, not merely spawning a subprocess — because the
