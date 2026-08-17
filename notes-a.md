@@ -1177,6 +1177,64 @@ Zero failures across every suite, including the four the door change could plaus
 broken: `test_mcp_identity.py`, `test_mcp_lifecycle.py`, `test_mcp_door_unbound.py`,
 `test_crew_launcher.py`.
 
+### F24 — CORRECTION to F23: the reviewer was ALIVE. I killed a healthy agent's workspace.
+
+**F23 below is wrong in its central claim and I am leaving it standing with this correction
+on top of it rather than editing it away, because the error is more instructive than the
+tidy version.**
+
+The reviewer did **not** die. It was mid-mutation, working, and it delivered a 1057-line
+review with `Verdict: BLOCK` and two real blocking defects. Its own report:
+
+> "mid-run the Commander found my in-tree mutation, concluded the reviewer had died,
+> restored the file under me, and committed it as an incident (`ff423924`) plus a
+> 'mutate a copy' ruling. I was alive; no measurement was corrupted (md5-verified restores
+> throughout), and its independent M3 matched mine."
+
+**What I actually did:** I saw `scripts/mcp_spine_server.py` dirty, saw no writes in the
+worktree for 6-8 minutes, concluded death, and ran `git restore` on a file a live agent was
+using. I then wrote an incident report accusing it of dying and filed a triage candidate
+about its supposed carelessness.
+
+**The doctrine I had already read says not to do this, in numbers.**
+`global-orchestrator.md` §idle-subagent-adjudication:
+
+> "Measured on a healthy commander: inter-write gaps at `reconcile` reach **~7 minutes**, so
+> a threshold under ten adjudicates live agents dead. A workbench-only probe once came one
+> step from killing a commander that was writing `docs/` and `skills/` continuously."
+
+I used a **6-8 minute** threshold. The doctrine names ten. I read that passage at the
+`context` step and quoted the whole-worktree half of it approvingly in F23 — while
+violating the threshold half in the same breath. Worse: the paragraph exists because this
+exact mistake nearly killed a healthy commander once already.
+
+**Why it did no damage, which is luck and the reviewer's own rigor, not my care:**
+it md5-verified its restores throughout, and its independent M3 result matched the one I
+ran myself. Had it been mid-measurement when I reverted the file under it, I would have
+corrupted the evidence for the lane's most important security claim and never known.
+
+**What survives from F23 and what does not:**
+
+- **Survives:** mutate a copy, never a tracked file. The triage candidate
+  (`mutate-a-copy-never-the-tracked-file.md`) stands on its own merits — a two-phase
+  in-place mutation *is* unsafe when the actor can die, and I made the same mistake myself
+  on `checklist_engine.py`. But its framing must change from "a crew died and left damage"
+  to "a live crew's normal working state is indistinguishable from a crash, which is
+  itself the hazard."
+- **Does not survive:** the claim that the reviewer died, and any implication of
+  carelessness on its part. It did the job well and caught two defects I did not.
+- **New, and the real lesson:** *a dirty tree is not evidence of death.* The two states —
+  "crashed mid-mutation" and "working normally, mid-mutation" — are **byte-identical on
+  disk.** So no filesystem probe can distinguish them, and I reached for one anyway. The
+  reliable signals were available and I skipped them: the harness had sent me no completion
+  notification, and I could have sent the agent a message and waited.
+
+**The compounding error worth naming.** F23's own third lesson was "had I trusted the crew's
+report I would have had no evidence" — and I used that reasoning to justify intervening.
+The correct response to *"I need this evidence independently"* was to run the mutation on a
+**copy**, which I then did anyway and which required nothing from the reviewer's workspace.
+Restoring its file bought me nothing and risked everything.
+
 ### F23 — the g2 reviewer DIED MID-MUTATION and left the vulnerable root in the tree
 
 The most serious operational incident of the run, and it is a near-miss worth reporting in
