@@ -165,5 +165,6 @@ with `FENCE.md` citing the Data Locations rule. Two mistakes worth naming here d
 
 ## 11. PR
 
-Opened against `main` from `feat/567-f-spec-through-spine` — number and head sha filled in
-immediately below once `gh pr create` returns.
+Opened against `main` from `feat/567-f-spec-through-spine`: **PR #627**,
+<https://github.com/fredcai6/constellation-skills/pull/627>, head sha
+`3bb00674010134dc0ff3c2d017d1e3f8a9f0a25a`.
