@@ -75,7 +75,7 @@ discovered.
   RESOLVED path: while the second half asked about the argument's own parent, a
   symlink inside this work area pointing at a nested checkout satisfied both at
   once, and the door bound another repository's spine. The replacement isolation
-  property, in one line: **one checkout's work-area tree per process.** The
+  property, in one line: **one checkout's work-area tree per process, enforced by path.** The
   identity it confers is the spine's own, never the caller's. See
   IDENTITY_TRADE.md §7 for the measured reach delta this bought.
 

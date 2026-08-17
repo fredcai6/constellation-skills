@@ -21,7 +21,7 @@ Shipped:
 
 - **`spine_bind(spine_file)`** — a door tool that binds to an existing spine, confined to
   `<the door's own checkout>/.agent-work/` with a cross-checkout refusal. Property:
-  **one checkout's work-area tree per process.**
+  **one checkout's work-area tree per process, enforced by path.**
 - **`checklist_engine.save()` is atomic** — unique `mkstemp` sibling, mode preserved,
   `fsync` before the rename, temp unlinked in a `finally`. #613's atomicity half, and only
   that half.
@@ -274,7 +274,7 @@ which the census says is currently never but remains the right fail-closed postu
 binding to a spine that already exists inside the door's own checkout's work-area tree,
 whose session identity the spine itself dictates.** The count never rises above one. Only
 the moment of decision moves — exactly what `decision:bind-on-open-over-new-verb` already
-did once. As a property in one line: **one checkout's work-area tree per process.**
+did once. As a property in one line: **one checkout's work-area tree per process, enforced by path.**
 
 **What an agent can reach that it could not before, with the number beside it:** any
 readable spine-shaped JSON object carrying a `work_id`, under
