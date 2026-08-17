@@ -638,6 +638,15 @@ CREW_ALLOWED_TOOLS = (
     # failure this tuple's own drift-guard test (test_crew_launcher.py) exists
     # to catch.
     "mcp__spine__spine_open", "mcp__spine__spine_close",
+    # `spine_bind` (issue #559 lane A) is the tool a dispatched crew needs MOST,
+    # so leaving it out is the worst version of the drift above. An
+    # ExternalBackend crew's door is unbound by construction -- that backend
+    # spawns no process and builds no environment, and it refuses `--spine` for
+    # exactly that reason -- so `spine_bind` is the only way such a crew reaches
+    # its own plan file. Denied here, the tool would be shipped inert for the
+    # population it was built for, and the failure would be silent: the crew
+    # would see a tool-not-permitted error, not a refusal explaining why.
+    "mcp__spine__spine_bind",
 )
 
 # Ruling (human, verbatim): "agent cannot waive itself. I'll allow commander to
