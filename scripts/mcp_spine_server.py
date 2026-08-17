@@ -27,15 +27,21 @@ cwd-independent, and the helpers that ask git a question still pass `cwd`
 explicitly -- more strictly than before, since the process's own cwd is now a
 thing that moves.
 
-Ambient state is bound at launch OR at `spine_open` -- at launch from the
-environment, and thereafter by `_bind_process_to`, the one place `SPINE` and
-`SESSION` are assigned outside module scope, when a successful `spine_open`
-binds this process to the spine it just minted
-(`decision:bind-on-open-over-new-verb`, issue #603). What did NOT change is
-that neither is ever exposed as a tool argument, so a model still cannot point
-the door at a different spine or identity mid-conversation, and `_rebind_refusal`
-still blocks the swap while this process holds an active lease -- one spine per
-process stands. The values:
+Ambient state is bound at launch, at `spine_open`, OR at `spine_bind` -- at
+launch from the environment, and thereafter by `_bind_process_to`, the one place
+`SPINE` and `SESSION` are assigned outside module scope: when a successful
+`spine_open` binds this process to the spine it just minted
+(`decision:bind-on-open-over-new-verb`, issue #603), and when `spine_bind` binds
+it to a spine that already exists (issue #567). Only the MOMENT of decision
+moves; the count never rises above one, and `_rebind_refusal` still blocks the
+swap while this process holds an active lease -- `decision:one-spine-per-process-stands`.
+
+The SESSION is never a tool argument in either case: `spine_open` takes it from
+what it minted, and `spine_bind` derives it from the spine's own work id
+(`spine_lifecycle.session_id_for`, the one definition, shared with `open_work`).
+So a model still cannot NAME an identity. What it can now do, stated plainly
+rather than left for the tests to certify, is name a SPINE -- see the second
+declared path property below. The values:
   SPINE_FILE    -- the --file every engine call needs
   SPINE_ENGINE  -- path to checklist_engine.py (this repo's own copy; dogfooding
                    convention -- see checklist-engine.md "Dogfooding on the
@@ -46,14 +52,29 @@ process stands. The values:
                    is what sets it on a real dispatch; the server just uses
                    whatever string it is handed)
 
-Exactly ONE declared tool property carries a filesystem path:
-`spine_advance.from_child`. It does not redirect the door -- the call still
-addresses the bound spine -- but the child's `consolidation` is attached to
-that spine as a `review-result`, which is the evidence type an artifact
-postcondition consumes, so an unconfined path would let any JSON file carrying
-a `consolidation` key close a gate. `_identity_violation` therefore CONFINES it
-to the bound spine's own directory tree, the containment every real use in this
-repo already satisfies. See IDENTITY_TRADE.md §2.
+TWO declared tool properties carry a filesystem path, and they are different in
+kind. This sentence used to read "exactly ONE" and was stated in the singular
+because that one exception cost a measured gate closure on a fabricated APPROVE;
+the second one arrived with issue #567 and is named here rather than left to be
+discovered.
+
+* `spine_advance.from_child` does not redirect the door -- the call still
+  addresses the bound spine -- but the child's `consolidation` is attached to
+  that spine as a `review-result`, which is the evidence type an artifact
+  postcondition consumes, so an unconfined path would let any JSON file carrying
+  a `consolidation` key close a gate. `_identity_violation` therefore CONFINES it
+  to the bound spine's own directory tree, the containment every real use in this
+  repo already satisfies. See IDENTITY_TRADE.md §2.
+* `spine_bind.spine_file` DOES decide which spine is bound -- that is its whole
+  job -- which makes it the wider of the two and the reason `spine_bind` exists as
+  its own tool rather than as an argument on one that promises creation. It is
+  confined to `<this door's own checkout>/.agent-work/`, by
+  `_own_checkout_for_binding` plus the SAME `_resolve_confined` predicate, and a
+  candidate whose own `git rev-parse --show-toplevel` differs from this door's is
+  refused even when its path is lexically inside. The replacement isolation
+  property, in one line: **one checkout's work-area tree per process.** The
+  identity it confers is the spine's own, never the caller's. See
+  IDENTITY_TRADE.md §7 for the measured reach delta this bought.
 
 --------------------------------------------------------------------------- #
 Tool surface: 9 tools covering all 18 of the engine's verbs
@@ -114,7 +135,7 @@ predicate `spine_advance.from_child` already used) before the engine ever
 sees it.
 
 --------------------------------------------------------------------------- #
-The lifecycle door: 2 more tools, dispatched OUTSIDE call_tool
+The lifecycle door: 3 more tools, dispatched OUTSIDE call_tool
 --------------------------------------------------------------------------- #
 
 `spine_open` and `spine_close` (issue #559, C3/g3) wire `scripts/spine_lifecycle.py`'s
@@ -141,6 +162,23 @@ what the ban buys is that no ARGUMENT on the call can redirect the open onto
 the bound spine -- never that the bound spine is invisible to the tool.
 `spine_close` takes no arguments at all and acts on `SPINE` alone, because
 there is no field to redirect.
+
+`spine_bind` (issue #567, lane A) is the third, and it is a third posture rather
+than a copy of either: it acts on a spine that already exists and is NOT the one
+this door is bound to. So it reads `SPINE` -- for the idempotency short-circuit,
+for its containment anchor, and for `_rebind_refusal` -- and the `_spine_open`
+identifier ban does not reach it, which is deliberate and pinned: the ban is
+resolved against `_spine_open`'s own `ast.FunctionDef` by name, and
+`test_spine_close_is_not_held_to_the_same_ban` already pins that the scoping is
+per-function rather than a module sweep.
+
+The two roots do not agree, and must not. `spine_open` confines against
+`_primary_checkout_for_lifecycle()` (`--git-common-dir`) because it must CREATE a
+worktree, and worktrees nest under the primary checkout. `spine_bind` confines
+against `_own_checkout_for_binding()` (`--show-toplevel`) because it must not
+REACH one: the primary-checkout root admits every sibling worktree nested under
+it, measured at 6102 candidate files against 1014. One flag, two questions, both
+named -- do not "simplify" them into one helper.
 """
 from __future__ import annotations
 
@@ -381,13 +419,41 @@ def _resolve_confined(
 
 
 _HOW_TO_BIND = (
-    "Call `spine_open` to mint a spine and bind this process to it, or relaunch this "
-    "door with SPINE_FILE set to an existing spine file."
+    "Call `spine_bind` with the path to a spine that already exists, or `spine_open` to "
+    "mint a spine and bind this process to it."
 )
 _HOW_TO_REBIND = (
-    "Call `spine_open` to mint a spine and rebind this process to it, or relaunch this "
-    "door with SPINE_FILE set to an existing spine file."
+    "Call `spine_bind` with the path to a spine that already exists, or `spine_open` to "
+    "mint a spine and rebind this process to it."
 )
+
+
+def _unusable_spine_reason(spine: Path) -> str | None:
+    """Why `spine` is not a readable spine FILE, or None when it is.
+
+    Three of `_unbound_refusal`'s five inputs, extracted so they can be asked
+    about ANY candidate path rather than only the bound one -- `spine_bind` needs
+    exactly this question about the path it was handed. Extracted rather than
+    copied: two ladders would drift in wording, and a caller who meets two
+    different phrasings of one condition learns to distrust the words. The other
+    two inputs (`SPINE_FILE` unset/empty/whitespace) are not here because they
+    are questions about the ENVIRONMENT, which `_spine_from_env` already
+    collapsed to `None`; there is no path to ask about.
+
+    The read is a one-byte open, not `os.access`: `access` answers about the
+    permission bits, while the caller's next act is to READ the file, and those
+    two questions disagree under ACLs, read-only mounts and a file being replaced
+    underneath. Ask the question the caller is about to ask."""
+    try:
+        if spine.is_dir():
+            return "that path is a directory, not a spine file"
+        if not spine.exists():
+            return "no file exists at that path"
+        with spine.open("rb") as fh:
+            fh.read(1)
+    except OSError as exc:
+        return f"that file cannot be read ({type(exc).__name__})"
+    return None
 
 
 def _unbound_refusal() -> str | None:
@@ -405,35 +471,32 @@ def _unbound_refusal() -> str | None:
     no path to name, so a single message that promises to name one is
     unsatisfiable there and invites a fabricated path. So: unbound says nothing
     is bound and how to bind; named-but-unusable NAMES the path and says how to
-    rebind. Both name `spine_open`, because since this gate that is the way out
-    of either state without relaunching.
+    rebind. Both name `spine_bind` AND `spine_open`, because since these gates
+    those are the two ways out of either state without relaunching: `spine_open`
+    for work that does not exist yet, `spine_bind` for work that already does
+    (issue #567). Before `spine_bind` existed, both messages had to end
+    "or relaunch this door with SPINE_FILE set to an existing spine file" --
+    advice a model running INSIDE that door usually cannot follow. That clause is
+    gone; the way out is now a call.
 
     **Asked per call, never cached.** The bound spine's directory can be removed
-    while this process runs (issue #604), and `spine_open` can rebind this
-    process to a different spine mid-life, so the answer is not a property of
-    server-launch time.
+    while this process runs (issue #604), and `spine_open`/`spine_bind` can
+    rebind this process to a different spine mid-life, so the answer is not a
+    property of server-launch time.
 
-    The read is a one-byte open, not `os.access`: `access` answers about the
-    permission bits, while the caller's next act is to READ the file, and those
-    two questions disagree under ACLs, read-only mounts and a file being
-    replaced underneath. Ask the question the caller is about to ask."""
+    The last three of the five inputs live in `_unusable_spine_reason`, shared
+    with `_spine_bind` rather than inlined here -- one ladder, so the `why` a
+    caller meets is byte-identical whichever refusal produced it. See that
+    function for why the read is a one-byte open."""
     spine = SPINE
     if spine is None:
         return (
             f"REFUSED: no spine is bound to this door, so there is nothing for this tool "
             f"to act on. {_HOW_TO_BIND}"
         )
-    try:
-        if spine.is_dir():
-            why = "that path is a directory, not a spine file"
-        elif not spine.exists():
-            why = "no file exists at that path"
-        else:
-            with spine.open("rb") as fh:
-                fh.read(1)
-            return None
-    except OSError as exc:
-        why = f"that file cannot be read ({type(exc).__name__})"
+    why = _unusable_spine_reason(spine)
+    if why is None:
+        return None
     return (
         f"REFUSED: this door was pointed at {str(spine)!r}, but {why} -- so no spine is "
         f"bound that this tool could act on. {_HOW_TO_REBIND}"
@@ -861,6 +924,103 @@ def _primary_checkout_for_lifecycle() -> Path:
     return common.resolve().parent
 
 
+def _checkout_containing(directory: Path) -> Path:
+    """The checkout `directory` belongs to -- `git rev-parse --show-toplevel`,
+    resolved. A LINKED worktree answers with itself, not with the primary
+    checkout; that is the whole difference from `--git-common-dir`.
+
+    One derivation, three anchors, each named by its caller: the bound spine's
+    own directory (`_worktree_root_for_lifecycle`, for standing in the tree and
+    for `close_work`'s `root`), and either that or this script's own directory
+    (`_own_checkout_for_binding`, for `spine_bind`'s containment). Extracted so
+    those questions cannot be answered by two subtly different derivations --
+    the failure `_identity_violation`'s own docstring records six times over.
+    `cwd` is explicit here, as everywhere: this process's own cwd moves for the
+    length of an engine call (`_standing_in_the_bound_spines_worktree`)."""
+    return Path(_git_rev_parse("--show-toplevel", cwd=directory)).resolve()
+
+
+def _own_checkout_for_binding() -> Path:
+    """The ONE checkout this door may bind a spine within: **its own** -- the
+    bound spine's when there is one, and THIS SCRIPT's own when there is not.
+
+    **Deliberately NOT `_primary_checkout_for_lifecycle()`, and that distinction
+    is this gate's whole security content.** That helper resolves
+    `--git-common-dir`, which jumps from any worktree to the PRIMARY checkout --
+    and `.worktrees/` nests INSIDE the primary checkout, so a root derived that
+    way admits every sibling lane's work area. Measured in the live tree when
+    this was written, counting readable JSON objects under an `.agent-work/`
+    carrying a derivable `work_id`:
+
+      --git-common-dir root  6102 candidates, 307 under an active lease
+      --show-toplevel  root  1014 candidates,  51 under an active lease
+
+    The 5088-file difference is other lanes' work. `_primary_checkout_for_lifecycle`
+    is right for `spine_open`, which must CREATE a worktree and therefore must
+    nest it under the primary checkout; it is wrong for `spine_bind`, which must
+    not reach one. Two questions, two roots, both named.
+
+    The property, stated so it can be attacked: **one checkout's work-area tree
+    per process.** `_spine_bind` confines to `<this>/.agent-work/` and
+    additionally refuses any candidate whose OWN `--show-toplevel` differs from
+    this one, which is what makes the isolation claim true rather than
+    aspirational -- lexical containment alone would admit a checkout nested
+    inside the work area.
+
+    Unbound, the anchor is `Path(__file__).resolve().parent`, which is the same
+    fallback `_primary_checkout_for_lifecycle` uses and for the same reason: it
+    is the only anchor an unbound door has that is not ambient. NOT the process
+    cwd -- `_spine_from_env`'s docstring records that `Path("").resolve()` once
+    "silently bound the door to whatever directory it was standing in", and that
+    cwd now MOVES mid-call. And not a new environment variable: a launcher that
+    knows the work area's path can set `SPINE_FILE` in the same breath, so the
+    variable would buy nothing (`IDENTITY_TRADE.md` §3).
+
+    `.mcp.json` launches the door as the project-relative
+    `scripts/mcp_spine_server.py`, so a crew running inside a linked worktree
+    runs THAT worktree's copy and this resolves to that worktree -- which is
+    exactly where its own `IMPLEMENTER_PLAN.json` lives. An Admiral in the
+    primary checkout resolves to the primary checkout, where its own
+    `spine.json` lives. Both real cases are inside their own answer."""
+    anchor = SPINE.parent if SPINE is not None else Path(__file__).resolve().parent
+    return _checkout_containing(anchor)
+
+
+def _derivable_work_id(spine: dict) -> str | None:
+    """The `work_id` a spine dictates for itself: `origin.work_id` when present,
+    else the spine's own top-level `work_id`. None when neither is there.
+
+    **The fallback is not a convenience, it is the correction this gate exists
+    for.** `origin` is stamped only by `open_work` (via `build_origin`), so
+    deriving from `origin.work_id` alone refuses every spine minted another way
+    -- `init_work_area.py`, `generate_spine.py`, a hand-compiled plan. Measured
+    over the live population (spine-shaped files under `.agent-work/` and
+    `.worktrees/*/.agent-work/`, excluding `archive/` and `templates/`): 5 of 60
+    carry `origin.work_id`, 55 carry only the top-level `work_id`, 0 carry
+    neither. The 55 include `.agent-work/epic-567-door/spine.json` -- an
+    Admiral's own live spine -- and
+    `.agent-work/implementer-315-native-g1/IMPLEMENTER_PLAN.json`, which are the
+    two cases this tool exists for. A door that could bind neither of them would
+    be theatre.
+
+    `origin.work_id` still WINS where present, so a spine `open_work` minted
+    yields byte-identical identity through either field.
+
+    Whitespace-only and non-string values are read as absent, not as an identity:
+    `checklist_engine.claim` refuses an empty `--session-id`, so a session of
+    `constellation/` is a door that cannot claim, and a door that cannot claim is
+    not bound. Fail closed."""
+    origin = spine.get("origin")
+    if isinstance(origin, dict):
+        stamped = origin.get("work_id")
+        if isinstance(stamped, str) and stamped.strip():
+            return stamped
+    own = spine.get("work_id")
+    if isinstance(own, str) and own.strip():
+        return own
+    return None
+
+
 def _worktree_root_for_lifecycle() -> Path:
     """The worktree `SPINE` itself lives in -- its own toplevel, NOT the
     primary checkout. This is `close_work`'s own `root`: it computes
@@ -871,8 +1031,12 @@ def _worktree_root_for_lifecycle() -> Path:
     worktree, never the repo it was opened from) -- so this is deliberately
     NOT `_primary_checkout_for_lifecycle`, a different derivation for a
     different question. Safe to read `SPINE` here: unlike `_spine_open`,
-    `_spine_close` acts on the bound spine by design."""
-    return Path(_git_rev_parse("--show-toplevel", cwd=SPINE.parent))
+    `_spine_close` acts on the bound spine by design.
+
+    The `--show-toplevel` resolution itself lives in `_checkout_containing`,
+    shared with `spine_bind`'s containment root; this function's own content is
+    the choice of ANCHOR, which is the part that differs."""
+    return _checkout_containing(SPINE.parent)
 
 
 def _bind_process_to(spine_file: str, session: str) -> None:
@@ -917,8 +1081,17 @@ def _bind_process_to(spine_file: str, session: str) -> None:
     os.environ["SPINE_SESSION"] = session
 
 
-def _rebind_refusal() -> str | None:
+def _rebind_refusal(acting_tool: str = "spine_open") -> str | None:
     """May this process rebind? None when it may, else the refusal.
+
+    `acting_tool` exists because the refusal names the tool to retry, and there
+    are now two tools that rebind (`spine_open` mints and binds; `spine_bind`
+    binds a spine that already exists). ONE parameter on ONE text, never a second
+    refusal function answering the same question in different words -- the
+    failure `_identity_violation`'s own docstring records six times over. The
+    sentence is "Rebinding this door now", which is accurate for both: even for
+    `spine_open` the check runs before anything is minted, precisely because the
+    REBIND is what it protects.
 
     **Ruled for gate g3:** a rebind is refused while this process still HOLDS an
     active lease on its current spine. A lease records who is driving; rebinding
@@ -951,9 +1124,9 @@ def _rebind_refusal() -> str | None:
         return None
     return (
         f"REFUSED: this door still holds an active lease on {str(spine)!r} as "
-        f"{SESSION!r}, and one door drives one spine at a time. Opening new work now "
+        f"{SESSION!r}, and one door drives one spine at a time. Rebinding this door now "
         f"would leave that lease held by nobody. Release it first (`spine_lease` with "
-        f"action 'release'), then call `spine_open` again."
+        f"action 'release'), then call `{acting_tool}` again."
     )
 
 
@@ -1042,6 +1215,216 @@ def _spine_open(args: dict) -> dict:
     return _lifecycle_result(opened)
 
 
+#: The closing clause every containment refusal in this module ends with, so a
+#: caller who is confined meets ONE consistent way out rather than three
+#: differently-worded ones. Lifted from `_identity_violation`'s own escape
+#: hatches for `--from-child` and `--delta`.
+_THE_CLI_IS_PER_CALL = (
+    "Name a spine under that work area, or use the CLI, which is per-call by construction."
+)
+
+
+def _spine_bind(args: dict) -> dict:
+    """`spine_bind`'s own dispatch path: bind this door to a spine that ALREADY
+    EXISTS (issue #567, lane A).
+
+    **Why this exists.** The previous lane made rebinding SAFE -- one named binder
+    (`_bind_process_to`), an AST pin over it, late-bound telemetry, an uncached
+    `_unbound_refusal` -- and left it with one trigger: `spine_open`, which MINTS.
+    So an unbound door faced with work that already exists had nothing to call.
+    `decision:bind-on-open-over-new-verb` already moved WHEN the binding is
+    decided; this adds one more moment, before any verb runs, and never a second
+    live binding. `decision:one-spine-per-process-stands`: the count never rises
+    above one.
+
+    **This function assigns neither `SPINE` nor `SESSION`.** It calls
+    `_bind_process_to` and lets that function move both roots together, which is
+    what keeps the module-wide AST pin
+    (`tests/test_mcp_lifecycle.py::OneBinderPinTests`) expressible. Binding the
+    spine without the session yields a door that cannot `claim`, which is not a
+    bound door.
+
+    **The identity is the SPINE's, never the caller's.** Derived through
+    `_derivable_work_id` and `spine_lifecycle.session_id_for` -- the same function
+    `open_work` returns `SPINE_SESSION` from -- so after this returns, this door
+    is indistinguishable from a door LAUNCHED bound to that spine. A `session`
+    argument was settled against in `IDENTITY_TRADE.md` §3 Option B: "any string
+    it can supply, it can supply its parent's."
+
+    Nine refusals, in dispatch order, each a pure function of `(args, SPINE,
+    filesystem)` and each reachable on its own
+    (`tests/test_mcp_spine_bind.py`). Each returns through `_tool_error` with a
+    `rejection_class`, so every one lands in the rejection log:
+
+      R1 missing-required-argument   no `spine_file`
+      R2 bad-argument-type          not a non-empty string
+      R0 (SUCCESS)                  already bound to this exact path -- a no-op
+      R3 root-resolution-failed     this door's own checkout will not resolve
+      R4 path-escape                outside `<own checkout>/.agent-work/`
+      R5 no-spine-there             nothing readable at that path
+      R6 cross-checkout             the candidate's own checkout is not ours
+      R7 not-a-spine                not a JSON object
+      R8 no-derivable-identity      neither `origin.work_id` nor `work_id`
+      R9 identity-held              that identity is live somewhere else
+      R10 lease-held                this door still holds a lease of its own
+
+    **R0 is FIRST, and the ordering is easy to get backwards.**
+    `_rebind_refusal` refuses whenever this process holds an active lease -- so an
+    agent that binds, claims, then calls `spine_bind` again with the SAME path (a
+    retry, a resumed transcript, a re-read of its own state) would be refused for
+    rebinding to where it already is, and told to release a lease it correctly
+    holds. R0 makes the second call a no-op that succeeds and changes nothing: no
+    `_bind_process_to`, no environment write, no engine contact. Comparison is on
+    `resolve()`, matching `_bind_process_to`'s own, so a relative path, a symlink
+    or a trailing-slash spelling of the bound spine reads as the same spine.
+
+    **R6 is what makes the isolation claim true rather than aspirational.** R4 is
+    lexical, and a checkout can be NESTED under `.agent-work/`, at which point a
+    path inside the boundary is still in another repository. So the candidate's
+    OWN `--show-toplevel` is asked and compared. See
+    `_own_checkout_for_binding` for the measured reach delta this pair buys.
+
+    Reuse, never a second notion: `_resolve_confined` for containment (the same
+    predicate `_identity_violation` and `_spine_open` already use, with a
+    different `bound_dir`), `_unusable_spine_reason` for the usability ladder
+    shared with `_unbound_refusal`, `checklist_engine._active_lease`/`_is_stale`/
+    `load_config` for "is this identity live", `_rebind_refusal` for "may this
+    door rebind at all"."""
+    err = _require(args, "spine_file")
+    if err:
+        return _tool_error(
+            f"spine_bind: {err}", tool="spine_bind",
+            rejection_class="missing-required-argument",
+        )
+    raw = args["spine_file"]
+    # `bool` is excluded explicitly: `True` is an `int`, not a `str`, but a
+    # truthy non-string reaching `Path()` would raise rather than refuse.
+    if not isinstance(raw, str) or not raw.strip():
+        return _tool_error(
+            "spine_bind: spine_file must be a non-empty path to an existing spine file",
+            tool="spine_bind", rejection_class="bad-argument-type",
+        )
+
+    # R0 -- already bound here. Asked before ANYTHING else, including the root:
+    # a no-op cannot escape a boundary it does not cross.
+    if SPINE is not None and Path(raw).resolve() == SPINE:
+        return _lifecycle_result({
+            "SPINE_FILE": str(SPINE), "SPINE_SESSION": SESSION,
+            "already_bound": True,
+            "note": "this door was already bound to that spine; nothing changed",
+        })
+
+    try:
+        checkout = _own_checkout_for_binding()
+    except (OSError, RuntimeError) as exc:
+        return _tool_error(
+            f"spine_bind: could not resolve the checkout this door may bind within: {exc}",
+            tool="spine_bind", rejection_class="root-resolution-failed",
+        )
+    work_area = checkout / ".agent-work"
+
+    candidate, escapes = _resolve_confined(raw, join_relative_to=None, bound_dir=work_area)
+    if escapes:
+        return _tool_error(
+            f"REFUSED: this door may only bind a spine inside its OWN checkout's work area "
+            f"({str(work_area)!r}); spine_file resolves to {str(candidate.resolve() if candidate.is_absolute() else candidate)!r}, "
+            f"which is outside. One checkout's work-area tree per process: a spine elsewhere "
+            f"-- including a sibling worktree of this same repository -- belongs to work whose "
+            f"worktrees, hooks and tests this door knows nothing about, and binding it would "
+            f"make this process the driver of a run it cannot see. {_THE_CLI_IS_PER_CALL}",
+            tool="spine_bind", rejection_class="path-escape",
+        )
+
+    why = _unusable_spine_reason(candidate)
+    if why is not None:
+        return _tool_error(
+            f"REFUSED: spine_bind was given {str(candidate)!r}, but {why} -- so there is no "
+            f"spine there to bind. Name a spine file that exists, or call `spine_open` to "
+            f"mint one.",
+            tool="spine_bind", rejection_class="no-spine-there",
+        )
+
+    try:
+        candidate_checkout = _checkout_containing(candidate.parent)
+    except (OSError, RuntimeError) as exc:
+        return _tool_error(
+            f"spine_bind: could not resolve which checkout {str(candidate)!r} belongs to: {exc}",
+            tool="spine_bind", rejection_class="root-resolution-failed",
+        )
+    if candidate_checkout != checkout:
+        return _tool_error(
+            f"REFUSED: {str(candidate)!r} sits inside a DIFFERENT checkout "
+            f"({str(candidate_checkout)!r}) than this door's own ({str(checkout)!r}), even "
+            f"though its path is under this door's work area -- a checkout nested there is "
+            f"still another repository. One checkout's work-area tree per process. "
+            f"{_THE_CLI_IS_PER_CALL}",
+            tool="spine_bind", rejection_class="cross-checkout",
+        )
+
+    try:
+        payload = json.loads(candidate.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return _tool_error(
+            f"REFUSED: {str(candidate)!r} does not hold a JSON object, so it is not a spine "
+            f"this door could drive ({type(exc).__name__}). Name the SPINE_FILE `spine_open` "
+            f"returned, or call `spine_open` to mint one.",
+            tool="spine_bind", rejection_class="not-a-spine",
+        )
+    if not isinstance(payload, dict):
+        return _tool_error(
+            f"REFUSED: {str(candidate)!r} does not hold a JSON object (it holds a "
+            f"{type(payload).__name__}), so it is not a spine this door could drive. Name the "
+            f"SPINE_FILE `spine_open` returned, or call `spine_open` to mint one.",
+            tool="spine_bind", rejection_class="not-a-spine",
+        )
+
+    work_id = _derivable_work_id(payload)
+    if work_id is None:
+        return _tool_error(
+            f"REFUSED: {str(candidate)!r} carries neither `origin.work_id` nor a top-level "
+            f"`work_id`, so this door cannot derive the session identity that spine is driven "
+            f"under -- and a door bound with no session cannot `claim` "
+            f"(`checklist_engine.claim` refuses an empty --session-id), which means it would "
+            f"not be a bound door at all. Every spine the engine drives carries a `work_id`; "
+            f"a fragment or a hand-written JSON file does not. Drive that one through the CLI, "
+            f"which takes --session-id per call.",
+            tool="spine_bind", rejection_class="no-derivable-identity",
+        )
+    session = spine_lifecycle.session_id_for(work_id)
+
+    # R9 -- the identity this bind would ASSUME is live somewhere else. Scoped to
+    # that identity, not to any active lease at all: another session's lease is
+    # not this door's to collide with, and refusing on it would let an unrelated
+    # agent's lease block a legitimate bind. Staleness preserves the legitimate
+    # case -- `run_crew.assignment_session_name`'s docstring records that a
+    # respawn MUST reproduce its predecessor's session string, and a genuine
+    # respawn follows a DEAD predecessor.
+    lease = checklist_engine._active_lease(payload)
+    if lease is not None and lease.get("session_id") == session:
+        config = checklist_engine.load_config(payload, candidate.parent)
+        if not checklist_engine._is_stale(lease, config):
+            return _tool_error(
+                f"REFUSED: {str(candidate)!r} is under an active lease held as {session!r}, and "
+                f"that is the very identity this bind would take (it is derived from the "
+                f"spine's own work id, never supplied). Two processes under one session id are "
+                f"indistinguishable to the engine, so this bind would put two agents on one "
+                f"lease. Whoever holds it must release it first (`spine_lease` with action "
+                f"'release'), or its lease must go stale.",
+                tool="spine_bind", rejection_class="identity-held",
+            )
+
+    blocked = _rebind_refusal("spine_bind")
+    if blocked is not None:
+        return _tool_error(blocked, tool="spine_bind", rejection_class="lease-held")
+
+    _bind_process_to(str(candidate), session)
+    return _lifecycle_result({
+        "SPINE_FILE": str(candidate.resolve()), "SPINE_SESSION": session,
+        "work_id": work_id, "already_bound": False,
+        "note": "this door now drives that spine; call spine_status to see where it is",
+    })
+
+
 def _spine_close(args: dict) -> dict:  # noqa: ARG001 - spine_close takes no arguments; args always {}
     """`spine_close`'s own dispatch path. Acts on `SPINE` -- the spine THIS
     door is bound to -- and nothing else; there is no field to redirect
@@ -1092,6 +1475,8 @@ def call_lifecycle_tool(name: str, args: dict) -> dict:
     function does nothing but route to one of them by name."""
     if name == "spine_open":
         return _spine_open(args)
+    if name == "spine_bind":
+        return _spine_bind(args)
     if name == "spine_close":
         return _spine_close(args)
     raise KeyError(name)
@@ -1397,6 +1782,42 @@ LIFECYCLE_TOOLS = [
         },
     },
     {
+        "name": "spine_bind",
+        "description": (
+            "Bind this door to a spine that ALREADY EXISTS, so this process can "
+            "drive it with the other tools. Acts on a spine `spine_open` (or the "
+            "CLI) already created -- it creates nothing and mints nothing. Call "
+            "this when a tool answered 'no spine is bound to this door' and the "
+            "work you need to drive is already on disk. The session identity is "
+            "NOT an argument: it is derived from the spine's own work id, so "
+            "binding a spine yields exactly the identity that spine is driven "
+            "under. Confined to one checkout's work-area tree per process -- "
+            "refused for a spine outside this door's own checkout's "
+            "`.agent-work/`, including a sibling worktree of the same repository. "
+            "Also refused while this door still holds an active lease on a "
+            "different spine (release it first), and while the identity it would "
+            "take is live somewhere else. Binding the spine this door is already "
+            "bound to is a no-op that succeeds."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "spine_file": {
+                    "type": "string",
+                    "description": (
+                        "path to the existing spine file -- the SPINE_FILE value "
+                        "`spine_open` returned. Must resolve inside this door's own "
+                        "checkout's `.agent-work/`. Pass an absolute path: this door's "
+                        "cwd moves for the length of an engine call, so a relative one "
+                        "is resolved against a directory you cannot predict."
+                    ),
+                },
+            },
+            "required": ["spine_file"],
+            "additionalProperties": False,
+        },
+    },
+    {
         "name": "spine_close",
         "description": (
             "Close the spine THIS door is bound to: moves the work area and "
@@ -1415,14 +1836,20 @@ TOOLS = TOOLS + LIFECYCLE_TOOLS
 TOOL_NAMES = {t["name"] for t in TOOLS}
 
 # The tools reachable with NO usable spine bound -- every other tool refuses
-# (issue #603, `_unbound_refusal`). `spine_open` is here because it is the way
-# OUT of that state: it acts on a spine that does not exist yet and, since this
-# gate, binds this process to the one it mints. Exactly one name, and it is a
-# SET rather than an `!=` so the exemption is a listed fact a reader can find,
-# not a comparison buried in a dispatch chain. `spine_close` is deliberately
-# NOT here: it acts on the bound spine, so with nothing bound it has nothing to
-# close and must refuse like the rest.
-BINDS_WITHOUT_A_BOUND_SPINE = {"spine_open"}
+# (issue #603, `_unbound_refusal`). Both names here are ways OUT of that state,
+# and they split on whether the work exists yet: `spine_open` acts on a spine
+# that does not exist and binds this process to the one it mints; `spine_bind`
+# (issue #567) acts on a spine that already does. Exactly two names, and it is a
+# SET rather than an `!=`/`in (a, b)` so each exemption is a listed fact a reader
+# can find, not a comparison buried in a dispatch chain. `spine_close` is
+# deliberately NOT here: it acts on the bound spine, so with nothing bound it has
+# nothing to close and must refuse like the rest.
+#
+# Adding a name here is the load-bearing half of shipping a bind tool: without
+# it, `main()`'s uniform gate refuses the call before `call_lifecycle_tool` is
+# ever reached, and the result is a bind tool that only works on an already-bound
+# door -- the inverse of its purpose.
+BINDS_WITHOUT_A_BOUND_SPINE = {"spine_open", "spine_bind"}
 
 
 def _require(args: dict, *names: str) -> str | None:

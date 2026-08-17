@@ -52,11 +52,12 @@ ROOT = Path(__file__).resolve().parents[1]
 SERVER = ROOT / "scripts" / "mcp_spine_server.py"
 ENGINE = ROOT / "scripts" / "checklist_engine.py"
 
-# The one tool that is REACHABLE with nothing bound, because it is the way out:
-# `spine_open` mints a spine and binds this process to it. Every other tool
-# refuses. Kept here as data so the enumeration test below can assert a COUNT
-# rather than a hand-copied list.
-BINDS_WITHOUT_A_BOUND_SPINE = {"spine_open"}
+# The tools that are REACHABLE with nothing bound, because they are the ways
+# out. They split on whether the work exists yet: `spine_open` MINTS a spine and
+# binds this process to it; `spine_bind` (issue #567 lane A) binds a spine that
+# ALREADY exists. Every other tool refuses. Kept here as data so the enumeration
+# test below can assert a COUNT rather than a hand-copied list.
+BINDS_WITHOUT_A_BOUND_SPINE = {"spine_open", "spine_bind"}
 
 # Anchors, deliberately short: the wording may be improved, but a refusal that
 # stops saying "no spine is bound" or stops naming `spine_open` has stopped
@@ -320,6 +321,41 @@ class EveryToolRefusesWhenUnboundTests(unittest.TestCase):
             len(should_refuse), len(refused),
             f"refused {len(refused)} of {len(should_refuse)}: "
             f"{sorted(set(should_refuse) - set(refused))} did not")
+
+    def test_the_exempt_tools_are_genuinely_reachable_when_unbound(self):
+        """The OTHER side of the enumeration above, and the reason removing a
+        name from `BINDS_WITHOUT_A_BOUND_SPINE` here is not a silent coverage
+        loss. That set is a hand copy of the door's own constant; the test above
+        would catch a name it lists that the door still refuses only as an
+        unexplained pass. So each exempt tool is driven unbound and asserted to
+        reach its OWN dispatch -- proved by the refusal being about the ARGUMENTS
+        rather than about nothing being bound.
+
+        Together the two tests are two-sided: a name the door exempts but this
+        set does not fails the test above; a name this set exempts but the door
+        refuses fails here. Neither can drift alone."""
+        # Deliberately bad arguments: what is measured is WHICH refusal arrives,
+        # so each tool must get past the uniform gate and refuse on its own
+        # grounds. `spine_open` gets an empty spec; `spine_bind` an empty path.
+        probes = {
+            "spine_open": {"work_id": "x", "spec": {}},
+            "spine_bind": {"spine_file": ""},
+        }
+        exempt = sorted(BINDS_WITHOUT_A_BOUND_SPINE)
+        self.assertEqual(sorted(probes), exempt,
+                         "an exempt tool has no probe here, so it is unmeasured")
+        calls = [(40 + i, name, probes[name]) for i, name in enumerate(exempt)]
+        run = drive_door(unbound_env(), calls)
+        self.assertEqual(0, run.returncode, f"the door died; stderr:\n{run.stderr}")
+        for mid, name, _ in calls:
+            text = run.tool_text(mid)
+            self.assertTrue(run.is_error(mid), f"{name} should still refuse bad arguments: {text}")
+            self.assertNotIn(
+                "no spine is bound", text,
+                f"{name} is listed as reachable with nothing bound, but the uniform gate "
+                f"refused it before its own dispatch was reached -- it only works on an "
+                f"already-bound door, which is the inverse of its purpose")
+            self.assertIn(name, text, f"{name}'s own refusal does not name the tool: {text}")
 
     def test_stdout_stays_pure_json_rpc_while_refusing(self):
         """`constraint:stdout-is-the-protocol-channel`. A refusal printed to

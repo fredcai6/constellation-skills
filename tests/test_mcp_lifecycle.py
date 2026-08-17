@@ -132,7 +132,21 @@ class CallLifecycleToolChokePointPinTests(unittest.TestCase):
     leak, an inlined dict literal, a read from somewhere the two dispatch
     functions never touched) with nothing to catch it."""
 
-    ALLOWED = {"_spine_open", "_spine_close"}
+    #: The named top-level dispatch functions `call_lifecycle_tool` may answer
+    #: through. **This is an ALLOW-LIST that grows, not a ban that loosens.** The
+    #: pin forbids a SHAPE -- a mutate-then-return, an inlined dict literal, a
+    #: read from somewhere the dispatch functions never touch -- and a third
+    #: named dispatch function preserves that property exactly; the pin's own
+    #: failure message below says so ("Route new lifecycle logic through its own
+    #: top-level dispatch function"). `_spine_bind` joined it with issue #567
+    #: lane A. The positive control at the bottom of this class is untouched and
+    #: must still FAIL on a mutate-then-return; if it ever goes green, something
+    #: here was weakened rather than widened.
+    #:
+    #: The previous lane's record contains a SUPERSEDED passage where it first
+    #: proposed to "extend a pin" and a cold critic corrected it as the dangerous
+    #: direction. The distinction is drawn here deliberately, not glossed.
+    ALLOWED = {"_spine_open", "_spine_bind", "_spine_close"}
 
     def test_call_lifecycle_tool_can_only_produce_content_two_ways(self):
         tree = ast.parse(SOURCE)

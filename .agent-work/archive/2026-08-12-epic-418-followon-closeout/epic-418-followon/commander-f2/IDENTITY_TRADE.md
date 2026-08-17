@@ -306,3 +306,137 @@ Whether Task-tool-dispatched crews *should* eventually get distinct spine identi
 `docs/CHECKLIST_ENGINE_DESIGN.md` already records that it "would need its own design," and
 nothing here changes that. This document says what the fleet does **until** such a design
 exists, not that one is unnecessary.
+
+---
+
+## 7. Amendment — §2's confinement property, re-opened deliberately (issue #567 lane A)
+
+**Added by gate `g2-implement` of epic #567 lane A, in the same change that added
+`spine_bind`.** `tests/test_mcp_identity.py::IdentityBindingPinTests`'s failure message
+demands exactly this pairing "so that cannot happen silently," and the pairing is the point:
+the pin now carries a `(tool, property)`-keyed exemption
+(`BINDS_THIS_DOOR = {"spine_bind": ("spine_file",)}`), and an exemption with no amendment
+here would be the silent move this document exists to prevent.
+
+**This amendment is NOT human-ratified.** `decision:convergence-is-human-only`: the
+Commander converged the design from a three-candidate panel and the human has not ruled.
+The `spine_bind` addition ships as its own commit, separate from the `session_id_for`
+extraction, so it is cleanly revertible; if the human reads §2's sentence as settled rather
+than as a recorded trade, this candidate is dead as written and this section reverts with it.
+That question — *is §2's confinement property amendable at all?* — is the one the design run
+most wanted ruled, and it is still open.
+
+### What changed
+
+§2 said, of the door, "the door cannot be pointed at another run's spine — no tool
+**declares** an argument that would let it." **That is now false as written, and it is false
+on purpose.** `spine_bind` declares `spine_file`, a filesystem path that decides which spine
+this door drives. It is the SECOND declared path property on this surface, and it is wider in
+kind than the first: `spine_advance.from_child` can only feed evidence *into* the bound
+spine, whereas `spine_file` decides *which spine is bound*.
+
+The argument was **not** renamed to `work_file` or `plan_path` to pass the pin untouched.
+That is precisely the spelling game `_identity_violation`'s own docstring records losing six
+times, and playing it against our own test would have bought a green suite and no property.
+
+### What the property becomes
+
+**Before:** one spine per process, decided at launch (`SPINE_FILE`) or at a successful
+`spine_open` (mint).
+
+**After:** one spine per process, decided at launch, at mint, **or by one confined binding to
+a spine that already exists inside this door's OWN checkout's `.agent-work/`, whose session
+identity the spine itself dictates.** The count never rises above one. Only the moment of
+decision moves — which is what `decision:bind-on-open-over-new-verb` already did once.
+
+Stated so it can be attacked, in one line: **one checkout's work-area tree per process.**
+
+### The reach delta, measured
+
+`decision:isolation-not-fencing` requires the number, not the adjective. Counting readable
+JSON objects under an `.agent-work/` carrying a derivable `work_id` — which is exactly what
+`spine_bind` will accept — from this door's own script location in the live tree:
+
+| containment root | candidates | of those, under an active lease |
+|---|---|---|
+| `_primary_checkout_for_lifecycle()` — `--git-common-dir` | **6102** | 307 |
+| of those, inside OTHER worktrees' `.agent-work/` | 5088 | — |
+| `_own_checkout_for_binding()` — `--show-toplevel` (**shipped**) | **1014** | 51 |
+
+The design document originally named the first root. It is wrong for this tool by a factor of
+six: `--git-common-dir` jumps from any worktree to the **primary** checkout, and `.worktrees/`
+nests *inside* the primary checkout, so that root admits every sibling lane's work area. The
+same document then asserted, eighteen lines apart, both "including a sibling worktree's live
+spine may become the spine this process drives" **and** "what an agent still cannot do: drive
+a spine in another checkout." A linked worktree *is* another checkout, so the second sentence
+was false under the root it named. The shipped root is what makes it true.
+
+`_primary_checkout_for_lifecycle` is still right for `spine_open`, which must CREATE a
+worktree and therefore must nest it under the primary checkout. Two questions, two roots,
+both named in the module docstring so nobody "simplifies" them into one.
+
+### What still holds it in — four things, and where each lives
+
+1. **The root confines WHICH spines.** `_own_checkout_for_binding()` plus the same
+   `_resolve_confined` predicate `from_child` and `spine_open` already use, with
+   `<own checkout>/.agent-work/` as `bound_dir`. **Plus** a cross-checkout refusal: a
+   candidate whose own `git rev-parse --show-toplevel` differs from this door's is refused
+   even when its path is lexically inside, because a checkout can be *nested* under
+   `.agent-work/` and lexical containment alone would admit it. That second clause is what
+   makes the isolation claim true rather than aspirational.
+2. **`work_id` confines WHICH identities.** Identity is a function of the spine, never of a
+   model-supplied string — derived through `spine_lifecycle.session_id_for`, the same
+   function `open_work` returns `SPINE_SESSION` from. §3 Option B settled that a
+   caller-supplied identity buys nothing: "any string it can supply, it can supply its
+   parent's." Because the session is derived, **the set of identities this door can assume is
+   a function of the spines it may bind**, and those are confined by (1). That composition is
+   the whole argument.
+3. **A bind onto a demonstrably LIVE identity is refused.** The candidate's own active,
+   non-stale lease under the identity this bind would take refuses the bind — the "two agents
+   on one lease" failure §3 Option A names, closed rather than inherited. Staleness (the
+   engine's own `_active_lease`/`_is_stale`, never a second notion) is what keeps the
+   legitimate case open: a genuine respawn must reproduce its predecessor's session string,
+   and a genuine respawn follows a dead predecessor.
+4. **`_rebind_refusal` still forbids orphaning a lease this process holds** — now with the
+   acting tool as a parameter on the one text, never a second refusal function for the same
+   question.
+
+**What an agent still cannot do:** drive two spines at once; drive a spine in another
+checkout, *including a sibling worktree of the same repository*; name its own identity; or
+point any of the nine pass-through tools anywhere. `_identity_violation` is untouched and is
+still an equality check against `SPINE` at call time, so it follows a binding change for free.
+
+### Which side of the trade this takes
+
+The **env-binding** side, unchanged. Identity stays process state — two module globals, one
+binder, one equality check — and does not become a per-call argument for any engine verb. The
+composition failure this document records is env-isolation composed with per-call **paths**;
+the nine verbs that carry the engine's real power gain no path and no session argument. After
+`spine_bind` returns, this door is indistinguishable from a door launched bound to that
+spine: same `SPINE`, same `SESSION`, same `os.environ` mirror.
+
+### What §2's capability loss becomes
+
+§2 named the price: "an in-session dispatched crew member cannot drive its own plan through
+the door," so `IMPLEMENTER_PLAN.json` and `REVIEW_SURVEY.json` were CLI-only. That price is
+**partly refunded**, and only partly: a crew whose door was launched unbound can now bind its
+own plan, because the plan sits inside its own worktree's `.agent-work/`. A crew sharing its
+*parent's* process still cannot, because that process is already bound and `_rebind_refusal`
+refuses the swap while it holds a lease — which is the case §2 was actually about. "The CLI is
+the only path for a whole class of agent" is therefore narrowed, not deleted, and
+`the-cli-door-stays` is untouched.
+
+### Two honest residuals
+
+- **The strongest argument against the whole tool**, from its own design candidate: every
+  dispatch that *can* call `spine_bind` is one that could have been launched bound, since
+  `run_crew --spine` already puts that exact pair into the child's environment. So the tool's
+  real population is dispatches where the launch path was broken or bypassed, and the fix for
+  a broken launcher is to fix the launcher — which would delete the tool. What defeats the
+  objection is the **Admiral's** case, which is not a dispatch at all: a top-tier orchestrator
+  in its own process, with no launcher above it to fix, and a spine that already exists. That
+  refusal was reproduced live at step one of the design run.
+- **The lease-staleness dependency.** Refusing a bind onto a live identity measures ownership
+  in *time* as well as identity, and `checklist_engine.py` already records that lease
+  ownership measured in time rather than identity is a known defect with issue #600 against
+  it. That refusal is correct today and inherits #600 tomorrow.
