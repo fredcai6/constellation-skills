@@ -194,7 +194,8 @@
           "id": "p1",
           "statement": "ask confirmed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Upstream (understand) verified: PROBLEM_STATEMENT.md written and reconciled against the frozen order, user-decision e-understand-1 attached citing LAUNCH_ORDER:Mission. The order's assumed baseline was checked against code and found half-false -- _bind_process_to already exists as the one named rebinder with a module-wide AST pin; only a verb that binds an EXISTING spine is missing. Order counts re-measured at 600de020 and match (15 CLI-fallback clauses, 11 <engine> tokens)."
         }
       ],
       "postconditions": [
@@ -249,7 +250,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -563,12 +564,12 @@
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity",
     "opened_by": "init_work_area"
   },
-  "refusals": 2,
+  "refusals": 3,
   "engine_session": {
     "session_id": "cmdr-567-a",
     "status": "active",
     "claimed_at": "2026-08-17T06:06:32.744267+00:00",
-    "last_heartbeat": "2026-08-17T06:14:09.566446+00:00",
+    "last_heartbeat": "2026-08-17T06:29:17.496730+00:00",
     "claimed_by": "constellation-commander-delegated",
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity",
     "previous_session_id": null,
