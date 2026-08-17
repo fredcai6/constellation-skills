@@ -60,7 +60,8 @@
 - kind: proposed-remedy
 - strength: weak
 - lifecycle-standing: active
-- statement: Before flagging a triage candidate about a file/tool state looking wrong, grep the project's test suite for that exact file path -- an existing test asserting the state is correct is cheap to find and changes the candidate's whole framing.
+- statement: Before flagging a triage candidate about a file/tool state looking wrong, grepping the project's test suite for that exact file path is cheap and would have surfaced that an existing test already asserts the state is correct, changing the candidate's whole framing.
+- history: restated — Restated: the original wording opened a clause with a bare imperative verb ('grep'), which the store's episode-observation guard correctly reads as an instruction rather than an observation (constraint: episodes are not prescriptions). Restated in observational form; the claim is unchanged. — original statement was: Before flagging a triage candidate about a file/tool state looking wrong, grep the project's test suite for that exact file path -- an existing test asserting the state is correct is cheap to find and changes the candidate's whole framing.
 
 ## Retirement
 - status: active

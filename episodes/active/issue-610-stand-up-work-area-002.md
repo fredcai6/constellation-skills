@@ -59,7 +59,8 @@
 - kind: proposed-remedy
 - strength: weak
 - lifecycle-standing: active
-- statement: Run a postcondition's command by hand once, against the pre-edit state, before wiring it into execute.json -- a check that already fails for reasons unrelated to the work it's meant to gate is cheaper to catch before the gate closes on it.
+- statement: Running a postcondition's command by hand once, against the pre-edit state, before wiring it into execute.json is cheaper than discovering at advance time that it fails for reasons unrelated to the work it's meant to gate.
+- history: restated — Restated: the original wording opened with a bare imperative verb ('Run'), which the store's episode-observation guard correctly reads as an instruction rather than an observation (constraint: episodes are not prescriptions). Restated in observational form; the claim is unchanged. — original statement was: Run a postcondition's command by hand once, against the pre-edit state, before wiring it into execute.json -- a check that already fails for reasons unrelated to the work it's meant to gate is cheaper to catch before the gate closes on it.
 
 ## Retirement
 - status: active
