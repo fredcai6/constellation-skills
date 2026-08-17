@@ -989,6 +989,50 @@ guess rather than a dependency claim. Recording it as workflow feedback rather t
 proposing an engine change — `add`/`drop`/`rescope` on a gated plan is mechanism I am not
 authorized to redesign.
 
+### F18 — a fence gap in MY OWN handoffs: without one line, the new tool is inert for crews
+
+The full suite came back with three failures. One was the code map (mine, regenerated).
+The other two are a drift guard doing exactly its job, and they expose a gap I left:
+
+```
+FAILED tests/test_crew_launcher.py::CrewGrantTiesToDoorTests::test_crew_grant_mcp_entries_equal_the_doors_own_tool_names
+FAILED tests/test_crew_launcher.py::CrewGrantTiesToDoorTests::test_door_has_all_nine_tools_todays_grant_expects
+        AssertionError: 11 != 12
+```
+
+`CREW_ALLOWED_TOOLS` (`scripts/run_crew.py:629`) is a hardcoded tuple passed straight to
+`--allowedTools` when a crew is dispatched (`:824`). The door now advertises 12 tools; the
+grant lists 11. **A dispatched crew would be silently denied `spine_bind`** — and
+dispatched crews are the primary population #559 is about. The fix would be shipped-inert
+for the exact case it was built for.
+
+The comment sitting directly above that tuple describes this failure by name, from the
+last time it happened:
+
+> "The lifecycle door (issue #559, C3/g3): without these, a dispatched crew is silently
+> denied `spine_open`/`spine_close` even though the door itself advertises them — exactly
+> the 'two tools silently denied to every crew' failure this tuple's own drift-guard test
+> exists to catch."
+
+So the repo already learned this lesson once, wrote it down next to the exact line, and
+**I still authored two handoffs that fenced `run_crew.py` out of both of them.** Neither
+crew owns the tuple. g3's fence included `test_crew_launcher.py` for one docstring only;
+g2's fence did not include the file at all. The guard caught what my handoffs did not.
+
+**This is the wiring-grep principle biting the Commander instead of the crew.** My own g2
+handoff demanded "zero external call sites is a stop condition, not a note — a symbol that
+only its own definition references is shipped-inert." I applied that to the crew's new
+functions and not to the *grant* that decides whether anyone can reach the tool.
+
+**Disposition, and it needs the Admiral's attention.** The one-line addition is
+mechanically required by my change, so I will make it at the integrate gate rather than
+hand over a red suite and an inert feature. But `scripts/run_crew.py` is **not** in my File
+Ownership, and lane B this wave is `567-b-external-backend` — a name that strongly suggests
+it owns `run_crew.py`'s backends. So this is a **probable merge collision I am flagging
+rather than resolving silently**: the change is one entry appended to a tuple at
+`scripts/run_crew.py:629`, `"mcp__spine__spine_bind"`, and a conflict there should be
+trivial for the Admiral to take in either direction as long as the final tuple contains it.
+
 ### S9 — accepted as a real double standard, and answered honestly
 
 `decision:net-deletion` is `settled/human`, cited in nine gate anchor blocks, and
