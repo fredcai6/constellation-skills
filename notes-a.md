@@ -1159,6 +1159,20 @@ meaningful); that is the one the crew built `TheRootMustBeTheDoorsOwnWorktreeTes
 the one I asked the reviewer to re-mutate independently, precisely because it is the guard
 whose absence the tests could not previously see.
 
+### F22b — post-rework suite, re-run by me, matching the crew's claim exactly
+
+```
+$ py -m pytest tests/ -q
+3276 passed, 5 skipped, 1218 subtests passed in 134.83s
+exit 0
+```
+
+The rework claimed 3276/5/0 and I got 3276/5/0 independently. The delta from the
+pre-rework 3263 is +13, which reconciles with the nine new symlink tests and four new
+NUL-byte tests the rework added — so the count moved by exactly the number of tests
+added, with nothing quietly dropped. Reconciling the *delta* rather than just matching
+the total is the part that would have caught a silent removal.
+
 ### F22 — full suite green, in a fresh process, with the count stated
 
 ```
