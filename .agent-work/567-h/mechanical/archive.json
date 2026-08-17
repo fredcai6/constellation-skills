@@ -1,0 +1,25 @@
+{
+  "contract": 1,
+  "step": "archive",
+  "mechanical": {
+    "run": "567-h",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 6,
+    "spine-step": "archive",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-h-archive@3dffac3cd7424f7e97e66e2d7aa3d6d446399eef",
+    "artifact-ref": [
+      "episodes/active/567-h-001.md",
+      "episodes/active/567-h-002.md",
+      "episodes/active/567-h-003.md"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-h",
+    "generated_at": "2026-08-17T17:55:56Z"
+  }
+}

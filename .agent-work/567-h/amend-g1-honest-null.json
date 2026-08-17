@@ -1,0 +1,9 @@
+{
+  "ops": [
+    {"op": "drop", "id": "g2-implement"},
+    {"op": "drop", "id": "g2-review"},
+    {"op": "drop", "id": "g2-integrate"},
+    {"op": "drop", "id": "g3-measure-post"},
+    {"op": "drop", "id": "g4-validate"}
+  ]
+}
