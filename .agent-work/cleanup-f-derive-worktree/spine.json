@@ -425,7 +425,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute is complete: the spine's execute step advanced this leg, and execute.json is terminal -- the engine reports DONE, no open items. g1, g2 and g3 closed on independent APPROVEs; g4's three tasks are skipped with ADMIRAL_RULING-1 R2 recorded, g5's with R3."
         }
       ],
       "postconditions": [
@@ -671,7 +672,7 @@
     "session_id": "commander-cleanup-f-derive-worktree",
     "status": "active",
     "claimed_at": "2026-08-17T01:36:26.599038+00:00",
-    "last_heartbeat": "2026-08-17T01:54:04.488122+00:00",
+    "last_heartbeat": "2026-08-17T01:56:03.495235+00:00",
     "claimed_by": "commander",
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
     "previous_session_id": null,
