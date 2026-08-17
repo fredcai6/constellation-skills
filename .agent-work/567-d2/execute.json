@@ -284,13 +284,14 @@
           "id": "c1",
           "statement": "full suite green except MapTreeFreshnessTests, in a clean detached worktree, commit sha stated",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Full suite in a clean detached worktree at commit b33f3353 (git worktree add --detach /tmp/567d2-suite-check b33f3353): 3352 passed, 6 skipped, 1219 subtests passed, 0 failed -- exactly matching the pre-dispatch baseline (origin/main f05a3d78: 3352 passed, 6 skipped, 1219 subtests passed, 0 failed, 0 SUBFAILED). grep '^FAILED' returns nothing (exit 1). MapTreeFreshnessTests not among any failure (none occurred). Two transient failures were found and resolved before this final run: (1) tests/test_retirement_guard.py's approved-mentions census pinned a sentence from workbench/SKILL.md's deleted Layout section -- fixed by restoring that one sentence verbatim (unrelated to the checklist-engine mechanism, so restoring it does not reopen the redundant-teaching-content question). (2) tests/test_crew_launcher.py::ScratchDirResumeTests::test_resume_of_legacy_entry... failed only when CREW_SCRATCH_DIR leaked from this session's own dispatch-time environment into the subprocess env the test inspects -- confirmed environmental (passes in isolation with CREW_SCRATCH_DIR unset), not a regression from this change; reported as a triage candidate, not fixed (out of this lane's ownership)."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -304,13 +305,14 @@
   "refusals": 0,
   "engine_session": {
     "session_id": "commander-567-d2-execute",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-17T17:48:28.764034+00:00",
-    "last_heartbeat": "2026-08-17T18:13:57.122203+00:00",
+    "last_heartbeat": "2026-08-17T18:21:47.124429+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-17T18:21:51.394687+00:00"
   },
   "why_trail": [
     {
@@ -347,6 +349,13 @@
       "why": "All evidence gathered and recorded: install succeeds and ships correctly, verify_skill_registered's refusal is confirmed pre-existing and unrelated to this change, measure_overread unaffected, and every named spine type reaches its first gate in a fresh process.",
       "mechanical": false,
       "ts": "2026-08-17T18:13:52.314704+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g3-suite-green",
+      "why": "Full suite green in a clean detached worktree, commit b33f3353, matching the pre-dispatch baseline exactly. Two transient failures investigated and resolved/explained.",
+      "mechanical": false,
+      "ts": "2026-08-17T18:21:47.124422+00:00"
     }
   ]
 }

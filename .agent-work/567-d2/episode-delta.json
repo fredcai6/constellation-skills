@@ -1,0 +1,153 @@
+{
+  "work_id": "567-d2",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-d2",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "understand",
+        "context-manifest-ref": ".agent-work/567-d2/INTERROGATION_RECORD.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [".agent-work/567-d2/MISSION_FRAME.md", ".agent-work/567-d2/PLAN_ALTERNATIVES.md"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Establish whether the MCP door's tool schemas fully carry what skills/workbench's checklist-engine.md and status-model.md taught, per the launch order's decision:establish-the-door-carries-it instruction, before authoring a deletion plan."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Expected the door's tool schemas to carry the mechanism fully enough that the two reference files could be deleted outright, matching the launch order's per-file line-count framing (SKILL.md 43, checklist-engine.md 181/188, status-model.md 58)."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Two independent, pre-existing test suites (tests/test_mcp_adoption.py Tier2+Tier3, tests/test_install_constellation.py) hard-pin specific sections of both files as the corpus's sole written authority for door-vs-CLI coexistence doctrine the door's own tool descriptions do not restate, including a byte-exact sentence. Full deletion would have broken both suites."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Reshaped the entire plan before any file was touched: the deliverable became a partial, evidenced deletion (165 of 289 teaching-half lines) rather than a full one. Caught before execute, at zero rework cost, because the investigation happened at understand."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Retained the proven load-bearing sections verbatim (MCP door, Session lease, plus Refresh after a cold plan critic found a third citation) and deleted everything else; reported the deviation from the literal line-count framing explicitly as an honest-null rather than silently matching the original estimate."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-d2",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/567-d2/crew-handoffs/g1-review-reviewer-result.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [".agent-work/567-d2/g1-target-content.md"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Author g1-target-content.md as the exact, byte-precise specification an implementer would apply verbatim, so retained sections would not risk failing the two test suites that pin exact text."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Expected copying the retained sections verbatim from the original file into the spec would be mechanical enough to not need independent verification."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The spec's checklist-engine.md Session lease section was paraphrased from memory instead of copy-pasted, shortening 5 bullets/2255 chars to 2 bullets/1336 chars with reworded surviving text -- a real defect the mechanical test suite did not catch (it only pins substrings there, not exact text), but the dispatched reviewer's independent byte-comparison did, correctly issuing BLOCK on attempt-1."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One extra review round (attempt-2) to confirm the fix; caught before merge, not after."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Restored the original bullets verbatim in both the actual file and the spec file, then dispatched a targeted re-review that independently re-extracted and byte-compared the section before issuing APPROVE."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-d2",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/567-d2/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 2,
+        "artifact-ref": []
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Run the full suite in a clean detached worktree (g3) as the merge gate, after the three targeted test files (test_mcp_adoption.py, test_commander_evidence_convention.py, test_install_constellation.py) were already green."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Expected the full suite to be green, since the three files most directly touched by the deletion were already verified."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Two failures surfaced that the targeted three-file run never could have caught: tests/test_retirement_guard.py's approved-mentions census pinned an exact line from workbench/SKILL.md's deleted Layout section (an entirely different doctrine -- episode retirement -- that happened to live in the same file), and tests/test_crew_launcher.py's scratch-dir test failed only because this session's own CREW_SCRATCH_DIR env var leaked into the subprocess the test inspects."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "A targeted-file-only verification would have shipped a merge-breaking regression. The full-suite-in-a-clean-worktree step is not redundant with targeted test runs, even when the targeted files are the ones most directly touched."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Restored the retirement-guard-pinned sentence (a real fix, in-scope). Confirmed the crew-launcher failure was pure environment leakage by re-running with CREW_SCRATCH_DIR unset in the same clean worktree at the same commit (not a regression from this change; staged as a triage candidate, not fixed, since it is outside this lane's file ownership)."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-d2",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/567-d2/triage-candidates/2-install-constellation-mutates-caller-mcp-json.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": []
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "medium",
+          "statement": "Run a real (non-dry-run) scripts/install_constellation.py invocation with --dest pointing outside the repo, to inspect the installed workbench copy's token-substitution as part of g2's registration evidence."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Expected the invocation's side effects to be confined to --dest, since that is the flag that names the install target."
+        },
+        "observed-behavior": {
+          "strength": "medium",
+          "statement": "The invocation also rewrote this worktree's own .mcp.json ('python3' -> 'py', the probed interpreter), regardless of --dest -- caught immediately by a routine git status check, before staging or committing."
+        },
+        "impact-cost": {
+          "strength": "weak",
+          "statement": "No lasting impact this run (caught and reverted before commit), but the habit of checking git status immediately after any verification command with unknown side effects, not just before a commit, is what caught it."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "git checkout -- .mcp.json before staging; staged as a triage candidate rather than investigating/fixing the installer's own behavior, which was out of this lane's bounded mission."
+        }
+      }
+    }
+  ]
+}

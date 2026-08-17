@@ -306,7 +306,8 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute.json fully driven: e0-context, g1-implement, g1-review (attempt-1 BLOCK -> fix-now triage -> attempt-2 APPROVE), g1-integrate, g2-verify-registration, g3-suite-green all complete with integrated evidence. Lease released."
         },
         {
           "id": "c2",
@@ -315,7 +316,8 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id 567-d2"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-4"
         }
       ],
       "constraints": [],
@@ -342,7 +344,7 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -378,6 +380,17 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-execute-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id 567-d2",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -391,7 +404,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute gate complete."
         }
       ],
       "postconditions": [
@@ -399,17 +413,29 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "No docs/architecture packet map exists (DEGRADED-UNPARSEABLE, confirmed at context). Reasoned no-op: this run's changes are entirely within self-describing prose files (skills/workbench/SKILL.md, references/checklist-engine.md, references/status-model.md, docs/agents/CREW_CONTEXT.md) -- there is no separate schema or design doc elsewhere describing workbench's content that these changes leave stale. Checked docs/agents/GLOSSARY.md and ORCHESTRATOR_CONTEXT.md: neither references checklist-engine.md/status-model.md content specifically. map/INDEX.md (the Admiral-owned code map) never indexed skills/workbench/** prose at all (only scripts/*.py modules), so it is unaffected and untouched, per decision:map-index-is-admiral-owned."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-reconcile-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "reconcile",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "triage": {
@@ -421,7 +447,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile complete."
         }
       ],
       "postconditions": [
@@ -429,7 +456,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "4 triage candidates staged under .agent-work/567-d2/triage-candidates/, all routed to recommend-and-defer per decision:no-issue-filing-mid-run (LAUNCH_ORDER Standing Pre-Rulings): (1) crew-launcher scratch-dir env leak, (2) install_constellation.py mutates caller's own .mcp.json on real (non-dry-run) install, (3) corpus-wide pointer sweep once wave-2 lanes merge, (4) first-class 'retired skill' installer state. None filed as issues."
         },
         {
           "id": "c2",
@@ -438,17 +466,39 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "triage",
+            "why_ref": "w-6"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-triage-2",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Inherited Latitude",
+            "note": "Issue filing is ruled out for this lane (decision:no-issue-filing-mid-run, 'you file no issue... a lane that wants to file is not floating a decision -- the answer is already ruled'). All 4 candidates staged as files under .agent-work/567-d2/triage-candidates/, none filed."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -460,7 +510,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage complete."
         }
       ],
       "postconditions": [
@@ -471,17 +522,39 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "review",
+            "why_ref": "w-7"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-review-2",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape",
+            "note": "Full run summary written to .agent-work/epic-567-door/results/lane-d2-RETURN.md, all 11 required sections. Admiral ratifies at the epic return boundary per delegated mode."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -493,7 +566,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Run summary accepted at review."
         }
       ],
       "postconditions": [
@@ -504,17 +578,40 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py 567-d2 --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "feedback",
+            "why_ref": "w-8"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-feedback-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py 567-d2 --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -526,7 +623,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Workflow feedback recorded at feedback gate."
         }
       ],
       "postconditions": [
@@ -604,11 +702,22 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "archive",
+            "why_ref": "w-9"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -625,7 +734,7 @@
     "session_id": "constellation/567-d2/lane-d2/commander-delegated",
     "status": "active",
     "claimed_at": "2026-08-17T17:21:17.177310+00:00",
-    "last_heartbeat": "2026-08-17T17:48:23.030673+00:00",
+    "last_heartbeat": "2026-08-17T18:29:49.927748+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -659,6 +768,41 @@
       "why": "Mission frame authored (DEGRADED-mode, verify-frame PASSES), execute.json authored (6 gates), plan-alternatives run (2 candidates, converged on partial-evidenced-deletion), cold plan critic dispatched and 2 real findings folded in (Refresh section + Review Verdict section retention, both cited by name from files this lane does not own). Plan approved via user-decision citing LAUNCH_ORDER:Mission. Key override recorded: the plan deviates from the launch order's literal per-file line-count framing because two independent, pre-existing test suites (test_mcp_adoption.py, test_install_constellation.py) prove full deletion is not achievable without breaking the merge gate -- this is taken within the explicit 'yours' latitude for deregistration mechanism and replacement wording, not a scope change.",
       "mechanical": false,
       "ts": "2026-08-17T17:47:36.697091+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "All 6 execute.json gates closed with integrated evidence. Fixed 2 findings mid-run: a cold-plan-critic-caught retention gap (Refresh/Review Verdict sections) folded into the plan before dispatch, and a g1-review attempt-1 BLOCK (Session lease section not byte-identical) fixed via fix-now triage then re-approved attempt-2. g3 full suite green in a clean detached worktree at b33f3353, matching the pre-dispatch baseline exactly (3352/6/1219/0). REPLAN_INPUT.json written and verify_iterative_role_artifacts.py commander exits 0.",
+      "mechanical": false,
+      "ts": "2026-08-17T18:23:18.379634+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "No packet map exists for this repo (skill-source repo, DEGRADED-UNPARSEABLE at context). Reconciled directly: confirmed no separate schema/design doc (GLOSSARY.md, ORCHESTRATOR_CONTEXT.md) references the specific content changed, and the Admiral-owned map/INDEX.md never indexed skills/workbench/** prose. Recorded as a reasoned no-op, not a blocked step.",
+      "mechanical": false,
+      "ts": "2026-08-17T18:23:43.108348+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "4 triage candidates staged as files, all routed recommend-and-defer per the launch order's no-issue-filing ruling. Citation attached.",
+      "mechanical": false,
+      "ts": "2026-08-17T18:24:52.867209+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Run summary complete: all 6 execute.json gates closed, 4 triage candidates staged, reconcile recorded as reasoned no-op. Full return artifact written per LAUNCH_ORDER Return Shape.",
+      "mechanical": false,
+      "ts": "2026-08-17T18:26:51.390806+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Reflected honestly on the run (captured in the return artifact's \u00a710 and 4 episodes). 4 episodes created and applied (567-d2-001..004), verify_episode_captured.py --phase feedback exits 0. Delegated-specific closeout: episodes written normally (tracked in-worktree); CONSTELLATION_FEEDBACK.md export staged under .agent-work/staged-feedback/567-d2/ with a FENCE.md, per the main-checkout write fence -- not waived.",
+      "mechanical": false,
+      "ts": "2026-08-17T18:29:25.812242+00:00"
     }
   ],
   "trip_ledger": [
@@ -738,6 +882,61 @@
       "model": "claude-sonnet-5",
       "why_ref": "w-4",
       "ts": "2026-08-17T17:48:22.996997+00:00"
+    },
+    {
+      "id": "tl-8",
+      "gate": "reconcile",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.4454,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-17T18:23:29.228574+00:00"
+    },
+    {
+      "id": "tl-9",
+      "gate": "triage",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.4544,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-17T18:24:42.382803+00:00"
+    },
+    {
+      "id": "tl-10",
+      "gate": "review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.4688,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-7",
+      "ts": "2026-08-17T18:26:44.879448+00:00"
+    },
+    {
+      "id": "tl-11",
+      "gate": "feedback",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.49,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-8",
+      "ts": "2026-08-17T18:28:44.183887+00:00"
+    },
+    {
+      "id": "tl-12",
+      "gate": "archive",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.5003,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-9",
+      "ts": "2026-08-17T18:29:49.893965+00:00"
     }
   ]
 }

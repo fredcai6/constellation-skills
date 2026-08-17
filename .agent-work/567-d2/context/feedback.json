@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "feedback",
+  "files": [],
+  "repo_rev": {
+    "commit": "b33f3353caacff83eab1e2455807542362b97087"
+  },
+  "run": {
+    "work_id": "567-d2",
+    "generated_at": "2026-08-17T18:28:44Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/567-d2-workbench-sunset",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-d2-workbench-sunset",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-d2-workbench-sunset"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-d2-workbench-sunset"
+    }
+  }
+}

@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "epic-567-door: the door is the interface",
+      "spec_path": ".agent-work/567-d2/LAUNCH_ORDER.md",
+      "intent_and_why": "The MCP door's tool descriptions now carry what the workbench skill's teaching half taught; sunset the redundant part, keep the templates, without new installer mechanism."
+    },
+    "definition_of_done": [
+      "skills/workbench's teaching content shrunk to only what is genuinely load-bearing.",
+      "skills/workbench/templates/** unmoved.",
+      "docs/agents/CREW_CONTEXT.md's #561 Python Invocation staleness fixed.",
+      "Full suite green in a clean detached worktree.",
+      "Every named spine (Admiral/Commander/Explorer) still reaches its first gate."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Byte-exact retention of the sections two pre-existing test suites pin.",
+      "sufficient_evidence": "The named test suites green; the three named scripts' real output recorded; a clean-detached-worktree full suite run.",
+      "appetite": "One focused session (lane D2, wave 2)."
+    },
+    "hard_constraints": [
+      "No template under skills/workbench/templates/ may move.",
+      "No new install_constellation.py mechanism without floating it first.",
+      "No file outside skills/workbench/** and docs/agents/CREW_CONTEXT.md may be edited."
+    ],
+    "fixed_decisions": [
+      "workbench stays a template package (settled/human)",
+      "deregistration mechanism and replacement wording are this lane's own latitude"
+    ],
+    "current_wave": {
+      "objective": "Sunset workbench's teaching half; keep templates; fix #561.",
+      "exit_criteria": [
+        "skills/workbench/SKILL.md, references/checklist-engine.md, references/status-model.md shrunk to evidenced-minimal content.",
+        "docs/agents/CREW_CONTEXT.md's Python Invocation section corrected.",
+        "install_constellation.py, verify_skill_registered.py, measure_overread.py all run against the post-change tree with real, recorded output.",
+        "Admiral, Commander, Explorer spines each reach their first gate in a fresh process.",
+        "Full suite green (except MapTreeFreshnessTests) in a clean detached worktree."
+      ],
+      "issues": [
+        {
+          "id": "565",
+          "title": "sunset the workbench skill's teaching half",
+          "desired_outcome": "The redundant teaching content is gone; templates untouched; the skill is deregistered as a taught procedure.",
+          "useful_now": "The door's own tool descriptions now teach the mechanism, so the CLI/prose duplicate keeps growing back.",
+          "appetite": "One gate (g1) plus two verification gates (g2, g3).",
+          "acceptance_or_falsification_evidence": "tests/test_mcp_adoption.py, tests/test_commander_evidence_convention.py, tests/test_install_constellation.py, tests/test_retirement_guard.py all green; full suite green.",
+          "implementation_latitude": "How workbench is deregistered; replacement wording where a reference pointed into the teaching half.",
+          "hard_constraints_no_gos": ["move no template", "no new installer mechanism"],
+          "local_unknowns": [
+            "Whether deregistering a skill that still ships templates is a supported install_constellation.py state -- RESOLVED at understand (q3): not supported; a minimal-but-present SKILL.md is required.",
+            "Whether the tracked .agent-work/templates/ overlay references the teaching half -- not investigated this run (out of scope; the overlay is a separate reconciliation surface, not this lane's edit target).",
+            "Whether #482's workbench-vs-reviewer dogfooding collision disappears with the teaching half or survives it -- not investigated this run; no evidence either way surfaced."
+          ],
+          "anchors": ["skills/workbench/SKILL.md", "skills/workbench/references/checklist-engine.md", "skills/workbench/references/status-model.md", "docs/agents/CREW_CONTEXT.md"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "561",
+          "title": "CREW_CONTEXT.md's Python Invocation section is wrong on the Linux dev host",
+          "desired_outcome": "The measured claim matches current reality.",
+          "useful_now": "A stale measurement misleads a future agent into skipping the check-before-you-run step.",
+          "appetite": "One paragraph edit, folded into gate g1.",
+          "acceptance_or_falsification_evidence": "which py python python3 + X -m pytest --version, measured this run.",
+          "implementation_latitude": "Wording of the corrected measurement.",
+          "hard_constraints_no_gos": [],
+          "local_unknowns": [],
+          "anchors": ["docs/agents/CREW_CONTEXT.md"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Lane D1's regrowth guard authored against a tree where the teaching half is already gone.",
+        "why_likely": "This lane merges first in the wave, per the launch order's explicit sequencing.",
+        "entry_conditions": ["This PR merged to main."]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether the corpus-wide pointer sentences into checklist-engine.md's now-deleted sections (outside this lane's ownership) will be noticed/fixed by their owning lanes.",
+        "affects": "Documentation completeness across skills/_shared/global-everyone.md, skills/commander/templates/*.template.md, skills/reviewer/templates/*.template.md.",
+        "settle_by": "Admiral epic-close sweep, or a future triage-filed issue.",
+        "current_evidence": "This run confirmed the pointers still resolve (the files/sections they point at still exist, just shrunk) except for the ones this run explicitly restored (Refresh section, Review Verdict section) after the cold plan critic caught them.",
+        "next_probe": "grep the corpus for 'checklist-engine.md' and 'status-model.md' citations once every lane in this wave has merged."
+      }
+    ],
+    "parked_possibilities": [
+      "A first-class 'retired skill' state in install_constellation.py, so a skill can ship templates/scripts with no taught-procedure SKILL.md at all -- named at understand (q4), not built this run."
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "565",
+      "outcome": "skills/workbench/SKILL.md (43->20 lines), references/checklist-engine.md (188->65 lines), references/status-model.md (58->39 lines) shrunk to evidenced-minimal content. Templates untouched.",
+      "evidence": "git diff --name-only scoped to exactly 4 files; tests/test_mcp_adoption.py, tests/test_commander_evidence_convention.py, tests/test_install_constellation.py green both before and after; full suite green in a clean detached worktree at b33f3353."
+    },
+    {
+      "issue_id": "561",
+      "outcome": "docs/agents/CREW_CONTEXT.md's Python Invocation section measurement updated to 2026-08-17 (py/python/python3 all resolve pytest 9.1.1 on this host).",
+      "evidence": "which py python python3 + X -m pytest --version, run twice (understand and g1-implement)."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The MCP door's own tool descriptions carry what checklist-engine.md and status-model.md taught.",
+      "expected": "Full redundancy -- the whole teaching half deletable.",
+      "observed": "Partial redundancy. Two pre-existing test suites (test_mcp_adoption.py Tier2+Tier3, test_install_constellation.py) and files outside this lane's ownership (commander-core.md, REVIEW_RESULT.template.md, IMPLEMENTER_RESULT.template.md, IMPLEMENTER_HANDOFF.template.md) hard-pin specific sections as the sole written authority for content the door's tool schemas do not restate.",
+      "source": "understand interrogation q2, cold plan critic pass, g1-review attempt-1 BLOCK finding"
+    },
+    {
+      "claim": "Deregistering workbench needs no new installer mechanism.",
+      "expected": "Unknown going in (a Local Unknown named in the launch order).",
+      "observed": "True only if the file stays present with minimal content -- discover_skills() requires a parseable SKILL.md for every non-underscore skills/* directory or the WHOLE installer raises, not just workbench's install.",
+      "source": "understand interrogation q3, scripts/install_constellation.py:312-339"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D-line-count",
+      "signal": "The issue's original per-file line counts (SKILL.md 43, checklist-engine.md 181, status-model.md 58 = 282; Admiral re-measured 289 on f05a3d78) assumed full deletion was achievable.",
+      "classification": "evidence_only",
+      "affects": "How future line-count-style deliverables in this epic should be framed -- as a starting estimate to re-measure, not a fixed target.",
+      "evidence": "Actual result: SKILL.md 20, checklist-engine.md 65, status-model.md 39 = 124 lines retained (vs. 289 measured before this run); 165 lines actually deleted, not 289.",
+      "reason": "Reported as the honest-null result per Stop Conditions/Honest-Null Clause -- not an issue-filing trigger, not fixed to match the original estimate."
+    },
+    {
+      "id": "D-crew-launcher-env-leak",
+      "signal": "tests/test_crew_launcher.py::ScratchDirResumeTests::test_resume_of_legacy_entry_without_worktree_key_does_not_crash_and_leaves_scratch_dir_unbound fails when run from a process whose own environment already carries CREW_SCRATCH_DIR (true for any dispatched crew, including this Commander itself under the epic's own dispatch).",
+      "classification": "later_only",
+      "affects": "Suite reliability for any dispatched-crew-driven CI/local run, not specific to this lane's change.",
+      "evidence": "Fails in this session's own shell (CREW_SCRATCH_DIR set); passes with `env -u CREW_SCRATCH_DIR` in the same clean detached worktree at the same commit.",
+      "reason": "A test-isolation gap (the test's fake_launch does not scrub CREW_SCRATCH_DIR before asserting its absence), unrelated to workbench content -- staged as a triage candidate, not fixed here (outside this lane's file ownership: tests/test_crew_launcher.py is not skills/workbench/**)."
+    },
+    {
+      "id": "D-mcp-json-side-effect",
+      "signal": "Running scripts/install_constellation.py without --dry-run (to inspect the installed workbench copy for g2's evidence) mutated this worktree's own .mcp.json (rewrote 'python3' -> 'py' as the probed MCP server command).",
+      "classification": "evidence_only",
+      "affects": "Any future verification step that runs a real (non-dry-run) install against the CURRENT worktree rather than an isolated target.",
+      "evidence": "git diff .mcp.json showed the rewrite; reverted with git checkout -- .mcp.json before committing.",
+      "reason": "Caught and reverted before commit; reported as a workflow-feedback item, not filed."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": ["skills/workbench/SKILL.md", "skills/workbench/references/checklist-engine.md", "skills/workbench/references/status-model.md", "docs/agents/CREW_CONTEXT.md"],
+    "map_status": "No docs/architecture packet map exists in this repo (skill-source repo); map/INDEX.md is a generated AST code map with no decision-anchor ids -- DEGRADED-UNPARSEABLE, discharged with hash-pinned substitutes at context. Not the Admiral's map/INDEX.md itself -- untouched, per decision:map-index-is-admiral-owned."
+  }
+}
