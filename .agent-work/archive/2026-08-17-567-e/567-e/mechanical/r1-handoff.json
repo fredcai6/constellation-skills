@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r1-handoff",
+  "mechanical": {
+    "run": "567-e",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r1-handoff",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-e-r1-handoff@07332727a32a81b16bcd8680ad0f6978f5eca151",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-e",
+    "generated_at": "2026-08-17T18:10:59Z"
+  }
+}

@@ -221,3 +221,36 @@ scripts/install_constellation.py:# bundled script that imports query_episodes wo
 
 # episode-guard-at-write: the actual companion declaration -- the writer's own SCRIPT_RUNTIME_COMPANIONS entry, a WRITE-path bundling fact, not advice to read the store
 scripts/install_constellation.py:"apply_episode_delta.py": ("verify_episode_observations.py", "query_episodes.py"),
+
+# door-refusal-capture (#541): the new write path's own import of the writer module -- a WRITE-path bundling fact, not advice to read the store
+scripts/mcp_spine_server.py:import apply_episode_delta # noqa: E402
+
+# door-refusal-capture (#541): the dedup filter's own comment, describing WHERE this run's own captures land -- names the store's write-side membership, instructs no agent to read it
+scripts/mcp_spine_server.py:#: Door-own rejections already captured into `episodes/` this PROCESS's own
+
+# door-refusal-capture (#541): the write function's own docstring, naming what it writes into -- a WRITE-path fact about this function, not advice to an agent
+scripts/mcp_spine_server.py:"""Write ONE door-own rejection into the tracked `episodes/` store (issue
+
+# door-refusal-capture (#541): docstring naming the writer script this function calls -- a WRITE-path fact, not advice to read
+scripts/mcp_spine_server.py:and `apply_episode_delta.py` is never invoked. There is no placeholder path.
+
+# door-refusal-capture (#541): a code comment explaining why the unbound-door case skips the WRITE -- names the writer, prescribes no read
+scripts/mcp_spine_server.py:# No bound spine, hence no work-id `apply_episode_delta.py` could
+
+# door-refusal-capture (#541): reads the writer's own MECHANICAL_SCALAR_FIELDS constant to validate a WRITE payload before calling it -- a write-path mechanism, not advice to read the store
+scripts/mcp_spine_server.py:missing = [f for f in apply_episode_delta.MECHANICAL_SCALAR_FIELDS if f not in fields]
+
+# door-refusal-capture (#541): builds the WRITE delta's own mechanical bin from the writer's own field-name constant -- write-path mechanism, not advice to read
+scripts/mcp_spine_server.py:"mechanical": {k: fields[k] for k in apply_episode_delta.MECHANICAL_SCALAR_FIELDS},
+
+# door-refusal-capture (#541): resolves the path to the writer script this function subprocess-invokes -- a WRITE-path fact
+scripts/mcp_spine_server.py:script = Path(__file__).resolve().parent / "apply_episode_delta.py"
+
+# door-refusal-capture (#541): a stderr diagnostic naming the writer script that failed to launch -- a WRITE-path failure message, not advice to read the store
+scripts/mcp_spine_server.py:f"EPISODE CAPTURE FAILED: could not run apply_episode_delta.py "
+
+# door-refusal-capture (#541): a stderr diagnostic naming the writer script that exited non-zero -- a WRITE-path failure message, not advice to read the store
+scripts/mcp_spine_server.py:f"EPISODE CAPTURE FAILED: apply_episode_delta.py exited {proc.returncode} for "
+
+# door-refusal-capture (#541): the JSONL-append function's own docstring, describing that it ALSO now writes into episodes/ -- a WRITE-path fact about this function, not advice to an agent
+scripts/mcp_spine_server.py:**Also captures into `episodes/`** (issue #541), alongside this JSONL append

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r3-evidence",
+  "mechanical": {
+    "run": "567-e",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r3-evidence",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-e-r3-evidence@9d61b180b482013ddf5770aca9736f205eb1cece",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-e",
+    "generated_at": "2026-08-17T18:11:22Z"
+  }
+}

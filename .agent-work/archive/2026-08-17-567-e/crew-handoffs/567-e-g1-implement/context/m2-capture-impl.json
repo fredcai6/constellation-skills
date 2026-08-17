@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m2-capture-impl",
+  "files": [],
+  "repo_rev": {
+    "commit": "d2838c1b22d50f1337f5897d5a4e141ec86f5d79"
+  },
+  "run": {
+    "work_id": "567-e-g1-implement",
+    "generated_at": "2026-08-17T17:50:35Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/567-e-door-rejection-episodes",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-e-door-rejection-episodes",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-e-door-rejection-episodes"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-e-door-rejection-episodes"
+    }
+  }
+}

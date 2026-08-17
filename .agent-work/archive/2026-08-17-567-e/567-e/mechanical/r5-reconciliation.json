@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r5-reconciliation",
+  "mechanical": {
+    "run": "567-e",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r5-reconciliation",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-e-r5-reconciliation@dfe07f312e8433e12ce4ea140c5e00cdf652e5c6",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-e",
+    "generated_at": "2026-08-17T18:12:06Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r2-scope",
+  "mechanical": {
+    "run": "567-e",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r2-scope",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-e-r2-scope@d5b4026a36bde0962bf226bf089bd1c7ef36d867",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-e",
+    "generated_at": "2026-08-17T18:11:13Z"
+  }
+}

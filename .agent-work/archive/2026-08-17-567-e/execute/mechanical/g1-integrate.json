@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g1-integrate",
+  "mechanical": {
+    "run": "567-e/execute",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 2,
+    "spine-step": "g1-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-e/execute-g1-integrate@6f6ef3ff5e42de4786ccece853f4703475a871f6",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-e/execute",
+    "generated_at": "2026-08-17T18:14:45Z"
+  }
+}
