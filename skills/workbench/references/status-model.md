@@ -1,18 +1,13 @@
 # Constellation Status Model
 
-## Gate Status
-
-Use for checklist/controller gates:
-
-```text
-pending | in-progress | blocked | complete | skipped
-```
-
-Rules:
-
-- `skipped` requires `skipped because <reason>`.
-- `blocked` requires blocker, owner/authority needed, and next action.
-- `complete` requires evidence or note.
+Retired as a taught procedure (issue #565) except for the two sections below, which stay
+load-bearing: `Crew Return Status` is pinned verbatim by `tests/test_commander_evidence_convention.py`
+and cited by `skills/commander/templates/IMPLEMENTER_HANDOFF.template.md`; `Review Verdict` is
+the field `skills/reviewer/templates/REVIEW_RESULT.template.md` and
+`skills/implementer/templates/IMPLEMENTER_RESULT.template.md` both point at by name. Gate status
+is directly observable from the engine's own `current` output (`global-everyone.md`, "Engine
+output is the state channel") and needs no separate table; Commander Gate Decision vocabulary
+is uncited internal prose, not an engine-enforced convention.
 
 ## Crew Return Status
 
@@ -42,17 +37,3 @@ Rules:
 - `APPROVE` means no blockers found against handoff, evidence, scope, and project rules.
 - `BLOCK` requires blockers.
 - `COMMENT` means observations only; gate may still need Commander decision.
-
-## Commander Gate Decision
-
-Use for evidence integration and gate control:
-
-```text
-continue | ask user | revise plan | send back to Crew | request Cartographer | collect Triage candidate | close out
-```
-
-Rules:
-
-- Reviewer approval alone does not close a gate.
-- Commander closes gates only after required evidence is integrated.
-- Any decision that changes scope, authority, architecture, or evidence requires recorded authority.

@@ -1,0 +1,213 @@
+{
+  "work_id": "567-d2-g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-baseline",
+    "m2-apply",
+    "m3-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read global-everyone.md, global-crew.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g1-implement-handoff.md, and g1-target-content.md. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format all present). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + target-content loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-everyone.md, global-crew.md, CREW_CONTEXT.md, GLOSSARY.md, g1-implement-handoff.md, g1-target-content.md all read; handoff has task/intent/scope/exclusions/evidence/test-mode/stop-conditions/return-format present and complete"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-baseline": {
+      "id": "m1-baseline",
+      "title": "Capture pre-edit baseline",
+      "imperative": "Before touching any file, run `py -m pytest tests/test_mcp_adoption.py tests/test_commander_evidence_convention.py tests/test_install_constellation.py -q` and record the result as the baseline, and capture `wc -l` on all four target files pre-edit. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded and handoff verified complete in m0-context"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "baseline pytest output captured; pre-edit wc -l captured for all four files",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/test_mcp_adoption.py tests/test_commander_evidence_convention.py tests/test_install_constellation.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-baseline-1"
+        }
+      ],
+      "constraints": [
+        "read-only this step; no file edits yet"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-baseline-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/test_mcp_adoption.py tests/test_commander_evidence_convention.py tests/test_install_constellation.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-apply": {
+      "id": "m2-apply",
+      "title": "Apply the four target-content edits verbatim",
+      "imperative": "Replace skills/workbench/SKILL.md, skills/workbench/references/checklist-engine.md, and skills/workbench/references/status-model.md with the exact 'full replacement' blocks from .agent-work/567-d2/g1-target-content.md byte-for-byte. Apply the single-paragraph find-and-replace to docs/agents/CREW_CONTEXT.md's Python Invocation section only, per the same file. Do not touch skills/workbench/templates/** or any other file. Attest c1 after applying.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "baseline captured in m1-baseline"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all four files match target content exactly; no other file touched; templates/** untouched",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All three full-replacement files verified byte-exact against g1-target-content.md via programmatic diff; CREW_CONTEXT.md diff shows only the Python Invocation paragraph changed; git diff --name-only shows exactly the four allowed files; no templates/** in diff"
+        }
+      ],
+      "constraints": [
+        "byte-exact application of full-replacement blocks; no paraphrase",
+        "CREW_CONTEXT.md: single paragraph only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-verify": {
+      "id": "m3-verify",
+      "title": "Run required verification and evidence commands",
+      "imperative": "Run the handoff's Verification Commands block: the pytest suite, git diff --stat, git diff --name-only, wc -l on all four files, and the grep -c check. Confirm git diff --name-only shows exactly the four allowed files and no templates/** entries. Attest c1 once green and scope-confirmed.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "edits applied",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "edits applied in m2-apply"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "post-edit suite green (or matches reproduced baseline failure); diff scope exactly the four allowed files; grep -c count is 1",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/test_mcp_adoption.py tests/test_commander_evidence_convention.py tests/test_install_constellation.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-verify-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/test_mcp_adoption.py tests/test_commander_evidence_convention.py tests/test_install_constellation.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "constellation/567-d2/g1-implement/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-17T17:53:02.999362+00:00",
+    "last_heartbeat": "2026-08-17T17:55:12.746440+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T17:55:26.395877+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "This is a partial shrink of 3 workbench files to evidenced-minimal content plus one CREW_CONTEXT.md paragraph fix; target content is fully specified byte-for-byte in g1-target-content.md, and two pre-existing test suites pin the retained sections, so no improvisation is needed -- next step is capturing the pre-edit baseline.",
+      "mechanical": false,
+      "ts": "2026-08-17T17:53:17.002384+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-baseline",
+      "why": "Baseline captured pre-edit: pytest suite green (388 passed, 2 skipped, 506 subtests); wc -l recorded for all four target files (43/188/58/142 lines) before any edit.",
+      "mechanical": false,
+      "ts": "2026-08-17T17:53:30.330046+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-apply",
+      "why": "All four target files applied byte-for-byte (three full replacements verified via programmatic string equality against g1-target-content.md's extracted blocks; CREW_CONTEXT.md's single paragraph swapped exactly). Diff scope confirmed to the four allowed files only, templates/** untouched. Next: run the full verification suite post-edit.",
+      "mechanical": false,
+      "ts": "2026-08-17T17:54:55.216910+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-verify",
+      "why": "Post-edit suite matches baseline exactly (388 passed, 2 skipped, 506 subtests, both runs); git diff --name-only shows exactly the four allowed files; wc -l recorded post-edit (18/62/39/144); grep -c on the MCP-door sentinel line returns 1. All Close Criteria satisfied.",
+      "mechanical": false,
+      "ts": "2026-08-17T17:55:12.746420+00:00"
+    }
+  ]
+}

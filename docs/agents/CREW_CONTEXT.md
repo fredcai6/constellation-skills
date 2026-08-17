@@ -30,11 +30,13 @@ One of these will run pytest; at least one other will fail with `No module named
 and read as a silently green run if you don't check first. Use whichever name actually
 answers with a pytest version on this host.
 
-Measured on this host on 2026-08-10: `py` and `python` both resolve to
-`/home/tommy/.local/bin/{py,python}`, both report Python 3.12.3, and both have pytest
-9.1.1. `python3` resolves to `/usr/bin/python3.12`, also Python 3.12.3, but has no pytest
-installed. None of this is guaranteed to match CI's pin — a local green is evidence,
-never the gate.
+Measured on this host on 2026-08-17: `py`, `python`, and `python3` all resolve to
+Python 3.12.3 with pytest 9.1.1 installed (`py` and `python` at
+`/home/tommy/.local/bin/{py,python}`; `python3` at `/usr/bin/python3.12`). This superseded
+an earlier 2026-08-10 measurement on this same host that found `python3` without pytest --
+the interpreter-to-pytest mapping on a given host is not fixed over time, which is exactly
+why the check-before-you-run instruction above stands regardless of any measurement here.
+None of this is guaranteed to match CI's pin — a local green is evidence, never the gate.
 
 ---
 

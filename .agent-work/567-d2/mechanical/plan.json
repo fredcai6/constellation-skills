@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "plan",
+  "mechanical": {
+    "run": "567-d2",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 2,
+    "spine-step": "plan",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-d2-plan@52fed12334dc1d2bb6f281dc9442245580699297",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-d2",
+    "generated_at": "2026-08-17T17:47:13Z"
+  }
+}

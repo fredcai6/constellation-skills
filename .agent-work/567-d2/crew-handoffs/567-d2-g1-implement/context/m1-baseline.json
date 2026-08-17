@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1-baseline",
+  "files": [],
+  "repo_rev": {
+    "commit": "f05a3d78e4e57c0ed6730e2feef9e903fba635c4"
+  },
+  "run": {
+    "work_id": "567-d2-g1-implement",
+    "generated_at": "2026-08-17T17:53:22Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-implementer",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-d2-workbench-sunset",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-d2-workbench-sunset"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-d2-workbench-sunset"
+    }
+  }
+}

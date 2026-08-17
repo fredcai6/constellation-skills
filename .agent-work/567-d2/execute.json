@@ -1,0 +1,352 @@
+{
+  "work_id": "567-d2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-verify-registration",
+    "g3-suite-green"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope from MISSION_FRAME.md and PLAN_ALTERNATIVES.md (Candidate B). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Shrink workbench teaching files + fix #561: implement",
+      "imperative": "Fill IMPLEMENTER_HANDOFF.template.md and dispatch via run_crew.py. Exact scope, per PLAN_ALTERNATIVES.md Candidate B: (1) skills/workbench/SKILL.md -- keep frontmatter, a short retired/template-only notice, and the one paragraph naming a door tool + checklist_engine.py + asserting the door is the default (tests/test_mcp_adoption.py TIER2_SKILL_FILES pins this file); delete Layout/Controller-prose/Closeout sections. (2) skills/workbench/references/checklist-engine.md -- keep the opening paragraph naming the CLI with the <skill-dir> token, the '## MCP door' section verbatim (9 door tool names, the default-path sentence, the dispatched-subagent-uses-CLI-for-its-own-plan sentence with 'MCP scope', and the byte-exact sentence 'Nothing here removes or discourages the CLI.'), the '## Session lease' section verbatim (claim/heartbeat/release + spine_lease within 2000 chars of the heading), AND the '## Refresh: reach-up without a handoff doc' section verbatim -- cold-critic finding: skills/commander/references/commander-core.md:81 (a file this lane does not own) cites 'workbench references/checklist-engine.md \u00a7refresh' by name, untested by any suite but a real dangling-pointer risk if deleted; docs/superpowers/drills/symmetric-recovery-refresh.md also cites it. Delete the TOC and the remaining sections (Instantiate from project template, Dispatch subagent vs own context, One agent one plan, Two types, Verb loop, Obey refusals, Waive, Mechanism the engine guarantees, Bubble-up channels, Context-read step, Template set). (3) skills/workbench/references/status-model.md -- keep 'Crew Return Status' (needed verbatim by tests/test_commander_evidence_convention.py) AND 'Review Verdict' (cold-critic finding: skills/reviewer/templates/REVIEW_RESULT.template.md:5 and skills/implementer/templates/IMPLEMENTER_RESULT.template.md:5, both outside this lane's ownership, carry a generic 'Status values follow skills/workbench/references/status-model.md' pointer, and REVIEW_RESULT's own field is exactly the APPROVE|BLOCK|COMMENT enum that section defines); delete Gate Status and Commander Gate Decision (no external citation found for either). (4) docs/agents/CREW_CONTEXT.md -- update the Python Invocation section's stale 2026-08-10 measurement (python3 claimed to lack pytest) to the current 2026-08-17 measurement (py/python/python3 all resolve Python 3.12.3 with pytest 9.1.1); keep the check-before-you-run instruction. Do NOT touch skills/workbench/templates/** (move nothing). Do NOT touch any file outside skills/workbench/** and docs/agents/CREW_CONTEXT.md. Verification commands: `py -m pytest tests/test_mcp_adoption.py tests/test_commander_evidence_convention.py tests/test_install_constellation.py -q` must be green (or match the pre-existing baseline exactly, named explicitly if not 100% green pre-change). Wait for and integrate IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "mission frame and plan alternatives confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Confirmed from MISSION_FRAME.md and PLAN_ALTERNATIVES.md, both attested/approved at the plan gate."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "move no template",
+        "touch no file outside skills/workbench/** and docs/agents/CREW_CONTEXT.md"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/workbench/SKILL.md",
+          "skills/workbench/references/checklist-engine.md",
+          "skills/workbench/references/status-model.md",
+          "docs/agents/CREW_CONTEXT.md"
+        ],
+        "capability": [
+          "checklist-engine documentation surface vs MCP door tool schemas"
+        ],
+        "constraint": [
+          "templates move nowhere (settled/human)",
+          "discover_skills() requires a parseable SKILL.md per skills/* dir"
+        ],
+        "decision": [
+          "workbench stays a template package @grade: settled/human \u00b7 leans g1-implement",
+          "partial not full deletion, evidenced at understand @grade: settled/measured \u00b7 leans g1-implement,g1-review \u00b7 settle: full suite green post-change"
+        ],
+        "evidence": [
+          "tests/test_mcp_adoption.py Tier2+Tier3 stay green",
+          "tests/test_install_constellation.py post-install read-back stays green",
+          "tests/test_commander_evidence_convention.py stays green"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Shrink workbench teaching files + fix #561: review",
+      "imperative": "Fill REVIEWER_HANDOFF.template.md from the gate plan and IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer. Reviewer independently re-runs: `py -m pytest tests/test_mcp_adoption.py tests/test_commander_evidence_convention.py tests/test_install_constellation.py -q`, greps the retained sections against the exact requirements named in g1-implement's imperative, and confirms no file outside skills/workbench/** and docs/agents/CREW_CONTEXT.md changed (`git diff --name-only`). Wait for and integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT attached and integrated at g1-implement."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/567-d2/crew-handoffs/g1-review-reviewer-result-attempt2.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Shrink workbench teaching files + fix #561: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify claimed side-effects yourself (diff, re-run the three test files) then advance -- the command postcondition re-runs the check. BLOCK: rework or raise a blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT (attempt-2) attached and integrated at g1-review, verdict APPROVE."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "targeted tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d2-workbench-sunset && py -m pytest tests/test_mcp_adoption.py tests/test_commander_evidence_convention.py tests/test_install_constellation.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d2-workbench-sunset && py -m pytest tests/test_mcp_adoption.py tests/test_commander_evidence_convention.py tests/test_install_constellation.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-verify-registration": {
+      "id": "g2-verify-registration",
+      "title": "Verify the three named scripts + every spine still starts (reasoning gate)",
+      "imperative": "REASONING GATE, crew-waived: this is evidence-gathering I must hold firsthand, not a design artifact -- dispatching a crew would just relay claims I would still have to re-verify myself. Run and record real output (fresh process, explicit paths, per decision:in-session-hook-observation-is-not-evidence): (1) `py scripts/install_constellation.py --dry-run --skills workbench commander cartographer --scope user --agent codex --dest <tmp>` (or the direct dry-run path verify_skill_registered.py uses); (2) `py scripts/verify_skill_registered.py --skill workbench`; (3) `py scripts/measure_overread.py --help` plus any workbench-specific invocation it supports. (4) Instantiate an Admiral, a Commander, and an Explorer spine each in a fresh process and confirm each reaches its first gate; run `py scripts/verify_state_note.py <work-id>` and confirm exit 0. Attest c1 with the pasted output.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-integrate complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all three scripts' real output recorded against the post-change tree; every spine (Admiral/Commander/Explorer) reaches its first gate in a fresh process; verify_state_note.py exits 0",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "(1) install_constellation.py: dry-run exit 0, real install to /tmp/567d2-realinstall exit 0, workbench ships all 4 templates + shrunk SKILL.md/checklist-engine.md/status-model.md, <skill-dir> token substituted (0 remaining, absolute checklist_engine.py path present). (2) verify_skill_registered.py --skill workbench: REFUSED, 'invoker: missing invoker tag' -- CONFIRMED pre-existing (identical on base commit f05a3d78, and shared by ~12 other skills incl. commander itself per test_write_a_skill.py's own comment) -- not introduced by this change, reported honestly per honest-null doctrine, not silently fixed (out of this lane's scope; fixing it would touch skills this lane does not own the pattern for). (3) measure_overread.py: --help exit 0; default-corpus run exit 0, 4 transcripts scanned, unaffected by this change. (4) Fresh-process spine starts: admiral, commander, explorer spine templates each instantiated to /tmp/567d2-spine-check/, claimed lease, and started 'init' (their first gate) cleanly -- all 3 exit 0. verify_state_note.py 567-d2 exits 0."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-suite-green": {
+      "id": "g3-suite-green",
+      "title": "Full suite green in a clean detached worktree (reasoning/merge gate)",
+      "imperative": "REASONING GATE, crew-waived: this is the merge gate itself and must be evidence I gather directly. `git worktree add --detach <tmp> <branch-sha>`, run the full suite there, tally, grep `^FAILED`. MapTreeFreshnessTests may fail; nothing else may. Attest c1 with the commit sha, tally, and grep output.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 verified",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2-verify-registration complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green except MapTreeFreshnessTests, in a clean detached worktree, commit sha stated",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "commander-567-d2-execute",
+    "status": "active",
+    "claimed_at": "2026-08-17T17:48:28.764034+00:00",
+    "last_heartbeat": "2026-08-17T18:13:57.122203+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-17T17:48:28.954667+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "IMPLEMENTER_RESULT complete, verified fresh via run_crew.py --verify-result (spine-driven, terminal). Independently re-verified: git diff scope exactly the 4 allowed files, templates untouched, targeted tests green (388 passed, 2 skipped, 506 subtests), canonical CLI sentence present exactly once.",
+      "mechanical": false,
+      "ts": "2026-08-17T17:56:47.818440+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "First reviewer pass (attempt-1) found a real, narrow defect: g1-target-content.md's Session lease section had been paraphrased instead of kept byte-identical, violating the handoff's own constraint (test suite didn't catch it, only pins substrings there). Fixed directly under 'fix-now triage inside your own worktree' latitude: restored the original 5 bullets verbatim in both the actual file and the spec. Attempt-2 targeted re-review independently confirmed the fix (byte-identical section extraction, both files re-checked against target-content, tests re-run green, diff scope re-confirmed) and issued a fresh APPROVE.",
+      "mechanical": false,
+      "ts": "2026-08-17T18:12:10.393309+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "REVIEW_RESULT APPROVE (attempt-2) integrated. Command postcondition re-ran the targeted pytest command directly against the current tree.",
+      "mechanical": false,
+      "ts": "2026-08-17T18:12:35.213094+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-verify-registration",
+      "why": "All evidence gathered and recorded: install succeeds and ships correctly, verify_skill_registered's refusal is confirmed pre-existing and unrelated to this change, measure_overread unaffected, and every named spine type reaches its first gate in a fresh process.",
+      "mechanical": false,
+      "ts": "2026-08-17T18:13:52.314704+00:00"
+    }
+  ]
+}

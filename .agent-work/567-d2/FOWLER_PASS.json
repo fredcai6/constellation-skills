@@ -1,0 +1,20 @@
+{
+  "work_id": "567-d2",
+  "diff_ref": "working-tree diff: docs/agents/CREW_CONTEXT.md, skills/workbench/SKILL.md, skills/workbench/references/checklist-engine.md, skills/workbench/references/status-model.md",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "Docs-only diff, no functions/methods in the changed content.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "No classes; markdown prose files only.", "override": null},
+    {"smell": "duplicated-code", "verdict": "overridden", "finding": "SKILL.md's new '## Checklist engine' paragraph and checklist-engine.md's opening 'Tool, by default...' paragraph both describe the MCP-door-vs-CLI-fallback choice in overlapping wording.", "override": {"repo_standard": "This repo's own documented SKILL.md-as-thin-pointer + references/-as-detail convention (visible in checklist-engine.md's own retired 'Context-read step' section and used corpus-wide: SKILL.md is the always-loaded entry point that names the pointer, references/ carries the elaborated version for whoever follows the link).", "reason": "The repeat is a short index-line plus its detailed reference, not copy-pasted logic; collapsing it would remove the entry-point summary SKILL.md exists to provide. This is the intended index/detail split, not accidental duplication."}},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "No code/objects; not applicable to prose.", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "No code; not applicable.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "No code; not applicable.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "No functions; not applicable to prose.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "Four files touched, but as one cohesive, scoped shrink (three workbench files retired per issue #565) plus one unrelated single-paragraph factual refresh (#561) -- not an uncontrolled ripple from a single conceptual change.", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "Each touched file changes for one reason (the #565 retirement, or the #561 measurement refresh) -- not multiple unrelated reasons converging on one file.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "No code; not applicable to prose.", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "The diff shrinks content toward what is proven load-bearing; it adds no new abstraction or hook for imagined future use.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The retirement preambles at the top of each shrunk file transparently state what was removed and why (issue #565), and are matched by real deletions, not prose covering for a problem left in place.", "override": null}
+  ],
+  "rail_exception": null
+}
