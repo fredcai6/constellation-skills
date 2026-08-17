@@ -1,0 +1,37 @@
+Leg 4 is parked cleanly. Everything committed, working tree clean, lease still held.
+
+## What happened
+
+**`g3` — the half of #609 that matters — is implemented and independently APPROVED.** Its APPROVE evidence is already attached; the next leg only has to `start` and `advance` `g3-review`, then `g3-integrate`.
+
+It cost **five reviews and four reworks, and every review returned a genuine, measured defect. Not one was found by reading.**
+
+| review | found | whose |
+|---|---|---|
+| 1 | B1 a differential that compared the change against itself · B2 selection by dict order · B3 false prose surviving the symbol's deletion | g3's |
+| 2 | **B4** — the B2 fix routed sessions into the scan-bind, whose write defeated the Stop path's withholding | g3's |
+| 3 | **B5** — the B4 fix guarded one of two routes; the other bound to a spine a sibling claimed | g3's |
+| 4 | B6, B7 — both measure identical on the pre-gate arm | **pre-existing** |
+| 5 | nothing. APPROVE, 0 findings | — |
+
+I reproduced B2, B4 and B5 in my own hands before accepting any BLOCK, and re-verified each fix only after adding working-tree arms — because **every instrument on this gate developed a shelf-life defect**. The implementer's differential pinned a *moving* `HEAD` (that was B1); both reviewers' harnesses pinned *superseded* commits, so re-running them unmodified showed fixed defects as still present. I hit that twice. Both directions look identical to a reader: rows that agree.
+
+**The finding worth more than the bugs:** this gate removed a guard that was *accidentally gating a write*. Deleting `_foreign_worktree` was right, but while it stood it kept a class of session out of `decide_session_start`'s fall-through — every defect after B2 was a session arriving somewhere it had never previously reached. Nobody enumerated what the guard was incidentally preventing, and that cost four cycles.
+
+Suite: **3192 / 5 / 0** at `539ff636`, from a 3170 pre-gate floor and 3171 on `main`; failure sets empty in every direction; targeted check genuinely red (exit 5) before the work, 23 passed after.
+
+## Three things I sent up, none blocking
+
+`FLOAT_TO_ADMIRAL-3.md`: that I re-opened the bind-on-resume writer (bounded to "may not contradict an existing attribution"); whether the guard should reach across the session boundary — I ordered the prose honest and did *not* widen; and a sanity check on repairing a pre-existing defect because our own rule implied it.
+
+## My own errors
+
+- **I cited a sha I had amended away** — `9b1a551e`, replaced by `7d12c29d` minutes earlier. Content identical, and the third reviewer caught it. That's `ADMIRAL_RULING-3`'s exact failure, in the document where I was relaying the rule.
+- **B5 was a defect in the spec I wrote**, not a deviation from it.
+- **My first `main` baseline reported a false red** — I cloned to a directory not named `constellation-skills`, and the map's title derives from the checkout directory name. Cost a full suite re-run.
+
+## Why I stopped
+
+The engine's governor refuses to `start` a new gate at 19% fill and named the handoff command itself. I'm between gates at a clean boundary, so I filed the refresh-request it specified and parked. **The lease is deliberately still held** — the run is not done, and re-claiming must never use `--force`.
+
+Remaining: `g3-review`/`g3-integrate`, `skip` g4 (R2) and g5 (R3), reconcile (three prose repairs including tc10), triage, review, feedback, archive. Park at `archive`; do not merge.
