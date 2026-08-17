@@ -1177,6 +1177,91 @@ Zero failures across every suite, including the four the door change could plaus
 broken: `test_mcp_identity.py`, `test_mcp_lifecycle.py`, `test_mcp_door_unbound.py`,
 `test_crew_launcher.py`.
 
+### F23 — the g2 reviewer DIED MID-MUTATION and left the vulnerable root in the tree
+
+The most serious operational incident of the run, and it is a near-miss worth reporting in
+full.
+
+I asked the g2 reviewer to independently re-run the root mutation — swap the narrowed
+`--show-toplevel` root back to the wide `--git-common-dir` one, confirm the suite goes red,
+then restore. It never delivered a `REVIEW_RESULT`. When I checked the tree for liveness
+rather than waiting on a signal, I found:
+
+```
+$ git status --short
+ M scripts/mcp_spine_server.py
+
+$ git diff scripts/mcp_spine_server.py
+-    return Path(_git_rev_parse("--show-toplevel", cwd=directory)).resolve()
++    # REVIEWER MUTATION M3c -- the one flag swapped, nothing else.
++    common = Path(_git_rev_parse("--git-common-dir", cwd=directory))
+...
+```
+
+**It died between mutating and restoring, leaving the door's containment root reverted to
+the wide, vulnerable form in the working tree** — the exact defect the cold critic's B1
+identified and the exact thing this lane narrowed.
+
+**Why the branch was never in danger, verified rather than assumed:**
+
+```
+$ git log --oneline -S'REVIEWER MUTATION' --all
+(empty)
+```
+
+The mutation was never committed anywhere. It was unstaged working-tree state only, so
+`HEAD` always carried the correct root and a PR built from these commits was never
+affected. I restored with `git restore` and confirmed the tree is clean and the correct
+line is back.
+
+**Three things this teaches, and the third is the uncomfortable one.**
+
+1. **"Mutate, then restore" is an unsafe instruction to hand a crew that can die.** I gave
+   it to two crews and got away with it once. The safe form is to mutate a *copy* —
+   which is what I did for my own `save()` red-proof, where I took `cp` to a scratch file
+   first, and which is what `decision:self-hosting-engine-edit` was already telling me by
+   saying "against a COPY, never a live spine file." I applied that rule to spine files and
+   not to source files.
+2. **Liveness must be measured over the whole worktree, not over the result artifact.**
+   `global-orchestrator.md` says this for the opposite reason (don't kill a live agent by
+   probing only its workbench). Here the same rule caught a *dead* agent's damage: the
+   missing artifact told me nothing, and `git status` told me everything.
+3. **Had I trusted the crew's own report of its mutation, I would have had no evidence at
+   all.** The reviewer's whole purpose was to be the second pair of eyes on the security
+   fix, and it produced no verdict. If I had taken the *implementer's* word that the
+   mutation goes red — the implementer being the agent that wrote both the fix and the test
+   — the security-critical claim of this lane would rest entirely on self-report.
+
+**So I ran the mutation myself, on a `cp` backup, and got the evidence:**
+
+```
+$ # swap --show-toplevel -> --git-common-dir, nothing else
+$ py -m pytest tests/test_mcp_spine_bind.py tests/test_mcp_identity.py \
+      tests/test_mcp_lifecycle.py tests/test_mcp_door_unbound.py -q
+FAILED ...TheRootMustBeTheDoorsOwnWorktreeTests::test_a_spine_in_a_SIBLING_worktree_is_refused
+FAILED ...TheRootMustBeTheDoorsOwnWorktreeTests::test_a_spine_in_the_PRIMARY_checkout_is_refused
+FAILED ...TheRootMustBeTheDoorsOwnWorktreeTests::test_the_doors_own_worktree_work_area_is_bindable
+FAILED ...TheRootMustBeTheDoorsOwnWorktreeTests::test_the_measured_reach_is_the_narrow_set_not_the_wide_one
+FAILED ...TheRootMustBeTheDoorsOwnWorktreeTests::test_the_two_roots_genuinely_disagree_here
+FAILED ...TwoDoorRoundTripTests::test_door_two_binds_what_door_one_minted_and_drives_it
+FAILED ...FullStdioRoundTripTests::test_open_drive_close_round_trip_names_branch_commit_and_ready_to_pr
+7 failed, 109 passed
+$ # restored from the cp; git status clean; 116 passed
+```
+
+**7 red, including `test_the_two_roots_genuinely_disagree_here` — the non-vacuity control.**
+That control is the one that matters: it asserts the fixture is a topology where the two
+roots actually differ, so the other four cannot silently stop discriminating the way the
+old fixtures did (F19). This is the independent confirmation that my answer to the critic's
+worst finding is genuinely tested, and it is now mine rather than the implementer's.
+
+**Disposition of the gate.** Per `global-orchestrator.md`'s idle-subagent adjudication:
+missing artifact plus incomplete work is *stalled*, not done — so this is **not** an
+approval, and I will not record one. What I have instead is the reviewer's single most
+important check, performed by me, plus the six boundary attacks I ran independently in F21.
+I relaunch a fresh reviewer for the remainder rather than close a security gate on my own
+verification.
+
 ### S9 — accepted as a real double standard, and answered honestly
 
 `decision:net-deletion` is `settled/human`, cited in nine gate anchor blocks, and
