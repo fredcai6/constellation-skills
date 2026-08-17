@@ -627,9 +627,18 @@ flag it rather than let it pass unmentioned.
 **https://github.com/fredcai6/constellation-skills/pull/623** — `feat/567-a-spine-identity`
 → `main`, 46 commits. **Not merged**, per the order.
 
-`execute.json` is 9/9 gates complete. The spine's remaining steps — `reconcile`, `triage`,
-`review`, `feedback`, `archive` — are closeout, driven now; the lease releases as the **last**
-journaled action, after the closing advance.
+**The spine is terminal: all 10 steps complete, lease released.** `execute.json` closed 9/9,
+then `reconcile` → `triage` → `review` → `feedback` → `archive`. The release is journal entry
+**49** and nothing follows it, so the lease covered every journaled action — releasing earlier
+would have left archive's own closeout entries after it and failed the terminal provenance
+check.
+
+Closeout artifacts: work area archived to
+`.agent-work/archive/2026-08-17-epic-567-door/cmdr-a/`; **12 episodes** committed under the
+tracked `episodes/` path so the record outlives this worktree
+(`verify_episode_captured.py --phase archive`, exit 0); the durable-root feedback export
+**staged** at `.agent-work/staged-feedback/epic-567-door/cmdr-a/` with a `FENCE.md` citing the
+order — staged rather than waived, because a citation without the export still fails the gate.
 
 **Review history, more informative than the final green:** two independent reviewers returned
 `BLOCK` on the same two defects by separate routes, a rework cleared both, and a narrow
