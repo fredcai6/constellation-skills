@@ -1,7 +1,7 @@
 {
   "generated": "2026-08-10",
   "source_commit": "3697e12c99ea3e7673bae675faf40c824598d452",
-  "baseline_origin": "baseline-from-install",
+  "baseline_origin": "baseline-promoted",
   "templates": [
     {
       "skill": "constellation-admiral",
@@ -11,7 +11,7 @@
     {
       "skill": "constellation-admiral",
       "template": "ADMIRAL_SPINE.template.json",
-      "sha256": "a4c6377aa4cc2a4f9f6e54907fd419236150e8431c1d14769e1ddb0788b208e9"
+      "sha256": "6fb0d457d745db5bc033330663f381a1c5a3f75ed0a2fc74dc686f204734b4c8"
     },
     {
       "skill": "constellation-admiral",
@@ -21,7 +21,7 @@
     {
       "skill": "constellation-admiral",
       "template": "LAUNCH_ORDER.template.md",
-      "sha256": "960545da3fbcf7bb9fce92e705aa06b88627305c9a35ff6dbaed2fbbd2628bca"
+      "sha256": "d1a8eb3411ac6b4ac1eb5da8f7df03f66929d910ac3db2d62feabc87efc15195"
     },
     {
       "skill": "constellation-cartographer",
@@ -101,7 +101,7 @@
     {
       "skill": "constellation-commander",
       "template": "COMMANDER_SPINE.template.json",
-      "sha256": "7f7e50139e3829a3c290e353ca9eb5ed7f370a3ac2c2dc604a9db976f59ca232"
+      "sha256": "a307ee96456b40090770c920eb63306ad770441ae891adb52cea4c2cef8c0d92"
     },
     {
       "skill": "constellation-commander",
@@ -111,12 +111,12 @@
     {
       "skill": "constellation-commander",
       "template": "EXECUTE_PLAN.template.json",
-      "sha256": "a503f2461b8fe8d10c5aa05d20c90e507d3f7d8bf94a9d29e1fc0d96c3b704ba"
+      "sha256": "ba72b8a46f1b5195469adfb830733a2d4fdbdd72178b51b0946a7eda5679821b"
     },
     {
       "skill": "constellation-commander",
       "template": "IMPLEMENTER_HANDOFF.template.md",
-      "sha256": "66d3b864836a6ca95e2e61951d2d8758f5098ecdc68cd9360058641519de0478"
+      "sha256": "87a460a8ef6ac1f93cafb8c41f749b0e625c1cfb8338f96c006ced3b800a135a"
     },
     {
       "skill": "constellation-commander",
@@ -156,7 +156,7 @@
     {
       "skill": "constellation-explorer",
       "template": "EXPLORER_SPINE.template.json",
-      "sha256": "e541d4f1430d8f870a389ea8a236ab9b63789b9aa35545d6309eae80f1affc6b"
+      "sha256": "5a0c774bb9c9d9ce02a21fc7d27aebd8b3e1c996a19066057008e3234497b7d3"
     },
     {
       "skill": "constellation-explorer",
@@ -181,7 +181,7 @@
     {
       "skill": "constellation-interrogator",
       "template": "INTERROGATION.template.json",
-      "sha256": "93fec9d26564c411fa1d81f1e0ad7260ad8d5226ba71fc082036788f6dc3d3fc"
+      "sha256": "6735a15e1336f9f4630a56485f133e1033afb44258ea6daa3fadbd0ba124d582"
     },
     {
       "skill": "constellation-interrogator",
@@ -221,7 +221,7 @@
     {
       "skill": "constellation-reviewer",
       "template": "REVIEW_SURVEY.template.json",
-      "sha256": "1212e8864e60a53f19941b4de867bd65aa9d0f6724fb8d33345eb62de25a3c80"
+      "sha256": "264be9fc86369806e2fef63ec23668e3200bd6fa1ef45af395bc357d932a58dd"
     },
     {
       "skill": "constellation-scout",

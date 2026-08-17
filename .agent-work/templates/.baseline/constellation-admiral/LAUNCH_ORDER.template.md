@@ -39,8 +39,9 @@ A measured negative on the stated question is a complete, successful deliverable
 > heredoc. The guard is not ours to change; the word is.
 
 ## Workspace
-`<absolute worktree path, provisioned for you via "git worktree add" — branch name, base commit, and the exact add command that created it. Verify main freshness before dispatch. Worktrees lack untracked inputs; see Data Locations.>`
-First step, before any git operation: run `python <admiral-skill-dir>/scripts/verify_worktree_isolation.py --here <absolute worktree path>` — it must exit 0, proving you are in your own worktree and not the shared checkout. Paste its output into your return report.
+`<absolute spine path — the worktree, .agent-work directory, and spine.json were already provisioned for you per references/stand-up-work-area.md; name the spine path here, plus the branch name, base commit, and the exact "git worktree add" command that created the worktree. Verify main freshness before dispatch. Worktrees lack untracked inputs; see Data Locations.>`
+Your first command is to `claim` the engine lease on the spine above — see the commander skill's `references/commander-core.md`. You do not scaffold anything; that work is already done.
+
 NOTE: PR integration defaults to **server-side merge** (the GitHub merge on the PR itself, not a local merge that would diverge your worktree from main).
 
 **Isolation is git-only — hook code is not fenced by it.** `verify_worktree_isolation.py` proves your git
@@ -72,7 +73,11 @@ fixture that hand-injects the value you are trying to prove the harness delivers
 ## Stop Conditions
 Stop and return when: `<conditions — scope exceeded, decision outside inherited latitude needed, budget crossed, evidence impossible>`, or when you need **context the launch order does not cover and cannot safely proceed without** — return-and-query the Admiral (it answers and continues you). Asking up is always sanctioned.
 
+**Arriving over the context HARD band is not a stop condition.** The band is an absolute token cap, not a share of your window (150K on a 1M-window model), so a Commander that has loaded its skill, its references, its templates and this order can be over it on its first turn, having done no work. The engine refuses only the verbs that BEGIN work at a gate — `start` and `reopen` — and only until a refresh-request exists for that gate. The legal sequence is therefore: **attach the refresh-request against the current why-record, then `start`, then do the work.** Attaching first sends the guard down its release path; starting first is what gets refused.
+
+Do not read a HARD advisory, or a `REFRESH REQUESTED:` line you inherited from a predecessor, as an instruction to `advance --why` and hand off on turn one. A fresh agent that closes its gate before doing the gate's work produces an infinite handoff chain — each successor arrives over the band, reads the same line, and hands off again, with the gate's postconditions never met and no deliverable ever written. Hand off when you have actually spent the context, not when you inherit the reading.
+
 ## Return Shape
-`<the required form of the final report: verdict + evidence + map impact + triage candidates + workflow feedback; where the verdict gets posted. Include your "verify_worktree_isolation.py --here" confirmation (the matched worktree path) as evidence you worked in isolation.>`
+`<the required form of the final report: verdict + evidence + map impact + triage candidates + workflow feedback; where the verdict gets posted. Isolation evidence is the Admiral's own pre-wave gate (references/fleet-doctrine.md), not something the Commander re-proves in its report.>`
 Write your result artifact and send your verdict **before** going idle: an idle notification with no artifact reads as stalled, not done, so deliver first — the Admiral judges completion from what you produced, not from a message that arrives after you've already gone quiet.
 When you open the PR on Windows, write the body to a temp file and use `gh pr create -F <file>` — never a heredoc or a PowerShell `@'...'@` here-string `--body` (both fail for PR bodies; here-strings work for `git commit -m` only). See `references/fleet-doctrine.md`, "Windows shell hazards".
