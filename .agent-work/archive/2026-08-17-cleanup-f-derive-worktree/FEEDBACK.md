@@ -38,6 +38,17 @@ and what the crews said about the handoffs they were given.
 
 ## What was ambiguous, missing or contradictory
 
+- **A prose repair scoped by a file list is what let three stale claims survive.**
+  The launch order and `ADMIRAL_RULING-3` each named the files to repair, and both
+  lists were built by a reader who had gone looking. Grepping the *claim* instead
+  found six sites of one family across five files; the three no list named were
+  falsified by this lane's own `g2`. The rule belongs beside the citation rule
+  (*cite by the string to grep for* — `LAUNCH_ORDER-5`): **scope a prose repair by
+  the claim family, not by the file list**, and grep a fragment short enough to
+  survive line wrapping, because the site that no symbol-keyed check could find was
+  the one whose claim wrapped across two comment lines. `ADMIRAL_RULING-5` confirms
+  the diagnosis — the list was the defect, not carelessness in following it.
+  Episode `-004`.
 - **Two different findings on this lane are both called `tc1`** — `execute.json`'s
   is the empty `map/ids.jsonl`, the launch order's is the SessionStart scan-bind.
   Survey `flag-candidate` ids restart per file, so this will recur (T7). The

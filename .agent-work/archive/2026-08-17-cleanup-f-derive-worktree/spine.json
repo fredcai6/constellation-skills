@@ -656,13 +656,21 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py cleanup-f-derive-worktree --store-root episodes --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-4"
         },
         {
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-2",
+          "waived": {
+            "authority": "admiral-568-cleanup",
+            "reason": "Publication executed by the Admiral: cleanup/f-derive-worktree fast-forward merged to main at f367cb7d and pushed to origin/main, after a full merge gate (3171/7/0 -> 3191/6/0, failure set empty both arms). The branch content is published; a pull request would be retrospective. Waived by admiral-568-cleanup, not by the lane.",
+            "evidence": "e-archive-2",
+            "forced": true
+          }
         },
         {
           "id": "c2b",
@@ -671,13 +679,21 @@
             "kind": "command",
             "command": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-3",
+          "waived": {
+            "authority": "admiral-568-cleanup",
+            "reason": "Publication executed by the Admiral: cleanup/f-derive-worktree fast-forward merged to main at f367cb7d and pushed to origin/main, after a full merge gate (3171/7/0 -> 3191/6/0, failure set empty both arms). The branch content is published; a pull request would be retrospective. Waived by admiral-568-cleanup, not by the lane.",
+            "evidence": "e-archive-3",
+            "forced": true
+          }
         },
         {
           "id": "c3",
           "statement": "engine session lease released",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Committing to release the engine session lease as the immediate next action after this advance completes -- release is the final journal entry, called right after this advance with nothing in between. LAUNCH_ORDER-6 step 5 and ADMIRAL_RULING-5 both hold release last by construction; the work-area move follows the release, and only the git commit comes after it."
         },
         {
           "id": "c4",
@@ -712,23 +728,24 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-5"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "blocked",
+      "status": "complete",
       "status_detail": {
         "blocker": "Publication authority. archive.c2 requires the branch PUSHED, c2b requires an OPEN or MERGED pull request, and c3 requires the lease released after the closing advance. LAUNCH_ORDER-5 says: 'Park at archive. Do not merge. Publication is mine and nothing is queued behind you.' This branch has no upstream and no PR. A push to origin and a PR are both outward-facing publication of the Admiral's epic work, so I did not push, did not open one, did not waive c2/c2b to manufacture a terminal spine, and did not move the work area (spine.json lives in it and moving it while the spine is non-terminal would strand the next leg's --file path). Everything else is done: nine of ten steps complete, branch clean, code through 684502ab, five episodes tracked under episodes/active/, REPLAN_INPUT.json verifying, 21 triage recommendations routed and none filed. Worth the Admiral's attention when ruling: c2b's OWN text says 'Open the PR even if the work is unfinished; declare FINAL or PENDING in its title and hand the merge up', so a PENDING PR may be the mechanism for handing the merge UP rather than publication competing with the Admiral's -- but resolving that ambiguity in my own favour on an outward-facing action is not mine to do.",
         "authority_needed": "admiral-568-cleanup",
         "next_action": "Rule one of three, all cheap: (1) authorize publication and a leg pushes, opens a PENDING PR, moves the work area, advances archive and releases the lease; (2) waive c2 and c2b with the fence as the recorded reason and the same leg finishes the rest; or (3) take the branch and close the spine as part of publication. Then resume archive. Full statement in .agent-work/cleanup-f-derive-worktree/FLOAT_TO_ADMIRAL-4.md; the return is crew-handoffs/execute-commander-result.md.",
-        "prior_status": "in-progress"
+        "resume_reason": "ADMIRAL_RULING-5 cleared the blocker: publication was the Admiral's to do and they executed it -- cleanup/f-derive-worktree fast-forwarded into main at f367cb7d and pushed to origin/main after a full merge gate. LAUNCH_ORDER-6 grants the c2/c2b waive on the Admiral's authority, so the local half of archive can finish."
       },
       "result": null,
       "finding": null,
@@ -742,6 +759,52 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "waiver",
+          "payload": {
+            "cond": "c2",
+            "authority": "admiral-568-cleanup",
+            "reason": "Publication executed by the Admiral: cleanup/f-derive-worktree fast-forward merged to main at f367cb7d and pushed to origin/main, after a full merge gate (3171/7/0 -> 3191/6/0, failure set empty both arms). The branch content is published; a pull request would be retrospective. Waived by admiral-568-cleanup, not by the lane.",
+            "forced": true
+          },
+          "produced_by": "human",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-3",
+          "type": "waiver",
+          "payload": {
+            "cond": "c2b",
+            "authority": "admiral-568-cleanup",
+            "reason": "Publication executed by the Admiral: cleanup/f-derive-worktree fast-forward merged to main at f367cb7d and pushed to origin/main, after a full merge gate (3171/7/0 -> 3191/6/0, failure set empty both arms). The branch content is published; a pull request would be retrospective. Waived by admiral-568-cleanup, not by the lane.",
+            "forced": true
+          },
+          "produced_by": "human",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py cleanup-f-derive-worktree --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-5",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 7
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -749,29 +812,23 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [
-    {
-      "item": "archive",
-      "blocker": "Publication authority. archive.c2 requires the branch PUSHED, c2b requires an OPEN or MERGED pull request, and c3 requires the lease released after the closing advance. LAUNCH_ORDER-5 says: 'Park at archive. Do not merge. Publication is mine and nothing is queued behind you.' This branch has no upstream and no PR. A push to origin and a PR are both outward-facing publication of the Admiral's epic work, so I did not push, did not open one, did not waive c2/c2b to manufacture a terminal spine, and did not move the work area (spine.json lives in it and moving it while the spine is non-terminal would strand the next leg's --file path). Everything else is done: nine of ten steps complete, branch clean, code through 684502ab, five episodes tracked under episodes/active/, REPLAN_INPUT.json verifying, 21 triage recommendations routed and none filed. Worth the Admiral's attention when ruling: c2b's OWN text says 'Open the PR even if the work is unfinished; declare FINAL or PENDING in its title and hand the merge up', so a PENDING PR may be the mechanism for handing the merge UP rather than publication competing with the Admiral's -- but resolving that ambiguity in my own favour on an outward-facing action is not mine to do.",
-      "authority_needed": "admiral-568-cleanup",
-      "next_action": "Rule one of three, all cheap: (1) authorize publication and a leg pushes, opens a PENDING PR, moves the work area, advances archive and releases the lease; (2) waive c2 and c2b with the fence as the recorded reason and the same leg finishes the rest; or (3) take the branch and close the spine as part of publication. Then resume archive. Full statement in .agent-work/cleanup-f-derive-worktree/FLOAT_TO_ADMIRAL-4.md; the return is crew-handoffs/execute-commander-result.md."
-    }
-  ],
+  "blockers": [],
   "origin": {
     "work_id": "cleanup-f-derive-worktree",
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
     "opened_by": "init_work_area"
   },
-  "refusals": 14,
+  "refusals": 16,
   "engine_session": {
     "session_id": "commander-cleanup-f-derive-worktree",
-    "status": "active",
-    "claimed_at": "2026-08-17T01:36:26.599038+00:00",
-    "last_heartbeat": "2026-08-17T02:06:54.999686+00:00",
+    "status": "released",
+    "claimed_at": "2026-08-17T02:18:11.437143+00:00",
+    "last_heartbeat": "2026-08-17T02:20:19.656252+00:00",
     "claimed_by": "commander",
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-17T02:20:32.399317+00:00"
   },
   "why_trail": [
     {
@@ -836,6 +893,13 @@
       "why": "Five episodes, one per distinct thing that happened, written through apply_episode_delta.py and proved by verify_episode_captured.py: the guard whose deletion widened the population reaching the code behind it (the finding ADMIRAL_RULING-4 asked to be recorded as a rule); every instrument on the gate developing a shelf-life defect, in both directions; the containment test measuring its own observer, because every tool call fires the gauge chain into the tree it snapshots; a claim family whose six sites spanned five files whlie the lists named three; and my own misreading of the context governor's refusal as terminal, one gate after the previous leg made the same misreading. FEEDBACK.md carries what the episode grammar does not hold -- the two departures from the order, both recorded rather than quiet, and the crews' own Workflow Feedback, whose sharpest item is that review 4's best advice reached review 5 through a result artifact it happened to read rather than through the handoff I wrote it. No durable-root CONSTELLATION_FEEDBACK.md exists in this repo, so nothing was staged against a fence that does not apply; the episodes are tracked under episodes/ and the commit is what carries them out of this worktree.",
       "mechanical": false,
       "ts": "2026-08-17T02:04:03.834414+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "Archive is closable because the record now outlives the worktree and publication is settled by the authority that owned it. Five episodes under episodes/ are tracked by git, so the durable record travels in a fresh clone rather than in this checkout (c1, re-verified at this gate). Publication was the Admiral's: the branch fast-forwarded into main at f367cb7d and was pushed to origin/main after a full merge gate, so c2 and c2b are waived on admiral-568-cleanup's authority with the reason recorded verbatim -- a waive of the mechanism, not of the intent, which is better evidenced by the merge than a retrospective PR would have shown. The staged diff is this run's own bookkeeping under .agent-work/ and nothing else (c4). The lease stays held through this advance and is released immediately after it, and the work-area move to .agent-work/archive/2026-08-17-cleanup-f-derive-worktree/ follows the release, because spine.json lives inside the directory being moved and the engine reads it at its original path.",
+      "mechanical": false,
+      "ts": "2026-08-17T02:20:19.656235+00:00"
     }
   ],
   "trip_ledger": [
