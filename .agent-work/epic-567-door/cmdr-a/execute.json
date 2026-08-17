@@ -196,7 +196,8 @@
           "id": "p1",
           "statement": "g1-converge closed with a recommendation to implement",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g1-converge closed with one recommendation (named hybrid) plus a user-decision citing the launch order's Pre-Rulings. The recommendation was then amended after the cold critic, and the amendment was carried into the g2 handoff as an explicit AMENDMENT section that overrides the design document in three places."
         }
       ],
       "postconditions": [
@@ -210,7 +211,12 @@
               "status": "complete"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1",
+          "attested": {
+            "evidence": "e-g2-implement-1",
+            "note": null
+          }
         },
         {
           "id": "c2",
@@ -219,16 +225,18 @@
             "kind": "command",
             "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && git diff 600de020..HEAD --stat -- '*IDENTITY_TRADE.md' | grep -q IDENTITY_TRADE"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-2"
         },
         {
           "id": "c3",
           "statement": "the identity-pin exemption is keyed on (tool, property), proven by a test asserting a spine_bind.session_id property would STILL be an offender (S6: a tool-wide skip would let a future identity argument through unseen)",
           "check": {
             "kind": "command",
-            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && py -m pytest tests/test_mcp_identity.py -k 'session_id' --collect-only -q 2>/dev/null | grep -q '::'"
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && py -m pytest 'tests/test_mcp_identity.py::IdentityBindingPinTests::test_the_exemption_is_keyed_on_tool_and_property_not_on_the_tool' -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-3"
         }
       ],
       "constraints": [
@@ -238,11 +246,43 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-implement-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && git diff 600de020..HEAD --stat -- '*IDENTITY_TRADE.md' | grep -q IDENTITY_TRADE",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-implement-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && py -m pytest 'tests/test_mcp_identity.py::IdentityBindingPinTests::test_the_exemption_is_keyed_on_tool_and_property_not_on_the_tool' -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "anchors": {
         "structural": [
@@ -454,7 +494,8 @@
           "id": "p1",
           "statement": "no dependency on g2 \u2014 different file, parallel-safe",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "No dependency on g2 -- different file (checklist_engine.py vs mcp_spine_server.py), confirmed parallel-safe in practice: the g2 crew's diff never touched checklist_engine.py."
         }
       ],
       "postconditions": [
@@ -482,7 +523,17 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "anchors": {
         "structural": [
@@ -790,14 +841,22 @@
         "rescoped g3-integrate",
         "rescoped g4-selfhost"
       ]
+    },
+    {
+      "ts": "2026-08-17T07:17:59.755798+00:00",
+      "reason": "My check text was wrong, not the work. I wrote c3 as a -k 'session_id' collection grep, guessing the test would be NAMED for the property it guards. The crew wrote test_the_exemption_is_keyed_on_tool_and_property_not_on_the_tool instead, which is STRONGER than my check asked for: it asserts both halves (a hypothetical spine_bind.session_id must still be an offender, AND a spine_file on any other tool must still be an offender) and records that either half alone is satisfiable by the wrong implementation. Retexting to run that test by node id -- which is what this plan's own B3 lesson says a check should do: name the test so it exits non-zero when the test is absent, rather than pattern-matching a name I do not control.",
+      "authority": "commander cmdr-567-a under LAUNCH_ORDER Inherited Latitude (test strategy and evidence shape are mine to decide)",
+      "ops": [
+        "retext-check g2-implement.c3"
+      ]
     }
   ],
-  "refusals": 0,
+  "refusals": 3,
   "engine_session": {
     "session_id": "cmdr-567-a",
     "status": "active",
     "claimed_at": "2026-08-17T06:57:45.427991+00:00",
-    "last_heartbeat": "2026-08-17T06:58:04.982963+00:00",
+    "last_heartbeat": "2026-08-17T07:18:28.968197+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -817,6 +876,13 @@
       "why": "Converged the 3-candidate panel to one named hybrid: candidate A's spine_bind with the session derived from work_id rather than origin.work_id, after running A's own stated falsifier and finding origin.work_id absent from 92% of live spines including the Admiral's own and IMPLEMENTER_PLAN.json. Then a cold critic inverted the central argument -- I had killed C on a measured 683-file reach and crowned A on an unmeasured 4205-file one -- so the containment root is narrowed to <own checkout>/.agent-work via --show-toplevel plus a cross-checkout refusal (683, cross-checkout 0), which also makes the isolation section's 'cannot drive a spine in another checkout' claim true where it had been false. The pick remains the human's.",
       "mechanical": false,
       "ts": "2026-08-17T06:58:04.982955+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g2-implement",
+      "why": "spine_bind shipped: a new lifecycle tool that binds the door to a spine that already exists. Containment is <the door's own checkout>/.agent-work/ via --show-toplevel, plus a refusal for any candidate whose own --show-toplevel differs -- the crew found the reason that second guard is necessary and I had not: lexical containment alone would admit a whole separate checkout nested inside the work area, which .worktrees/ proves is not hypothetical. Session derived from origin.work_id else the top-level work_id, so the Admiral's own spine and IMPLEMENTER_PLAN.json both bind. All three pin obligations met honestly: ALLOWED widened by one named dispatch function with its positive control untouched, the identity-pin exemption keyed on the (tool, property) PAIR with a test that spine_bind.session_id would still be an offender, and a 134-line IDENTITY_TRADE.md amendment. 116 door tests green.",
+      "mechanical": false,
+      "ts": "2026-08-17T07:18:28.968166+00:00"
     }
   ]
 }

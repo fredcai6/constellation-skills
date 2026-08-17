@@ -554,12 +554,24 @@ class CrewGrantTiesToDoorTests(unittest.TestCase):
         # CONTROL for the tie test above: pins the count so a future door
         # regression (e.g. a tool silently dropped) cannot slip through by
         # shrinking BOTH sides of the comparison in lockstep. 9 engine tools +
-        # 2 lifecycle tools (spine_open, spine_close -- issue #559, C3/g3) = 11;
-        # unlike test_mcp_adoption.py's Tier3-doc-tied pin, CREW_ALLOWED_TOOLS
-        # has no doc dependency, so this one is NOT scoped down.
+        # 3 lifecycle tools (spine_open, spine_close -- issue #559, C3/g3; and
+        # spine_bind -- issue #559 lane A, which binds the door to a spine that
+        # already exists) = 12; unlike test_mcp_adoption.py's Tier3-doc-tied pin,
+        # CREW_ALLOWED_TOOLS has no doc dependency, so this one is NOT scoped down.
+        #
+        # The method name says "nine" and the count has been 11 and is now 12.
+        # The name is historical and deliberately left alone: renaming it would
+        # churn a control whose whole value is that it is hard to change by
+        # accident. Read the assertion, not the name.
+        #
+        # This control did its job. When lane A added spine_bind, the tie test
+        # above went green on its own (both sides moved together, which is
+        # exactly the lockstep failure it cannot see) and only this count
+        # assertion went red -- forcing the change to be acknowledged here in
+        # writing rather than absorbed silently.
         with tempfile.TemporaryDirectory() as tmp:
             server = self._load_mcp_spine_server(Path(tmp))
-        self.assertEqual(11, len(server.TOOL_NAMES))
+        self.assertEqual(12, len(server.TOOL_NAMES))
 
 
 class CliDriftHintTests(unittest.TestCase):
