@@ -951,7 +951,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
         }
       ],
       "constraints": [],
@@ -960,7 +961,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -1005,7 +1006,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT for review 5 is at crew-handoffs/g3-reviewer-rework4-result.md: consolidated APPROVE, 0 findings, 8/8 criteria, 4 triage candidates, no blockers. I read it in this leg rather than citing leg 4's summary of it. It is the fifth and, under ADMIRAL_RULING-4, the last review round on g3; g3-review is complete with e-g3-review-2 (review-result, verdict=APPROVE) attached."
         }
       ],
       "postconditions": [
@@ -1021,7 +1023,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
         },
         {
           "id": "c2",
@@ -1035,7 +1038,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
         },
         {
           "id": "c3",
@@ -1047,23 +1051,52 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-2",
+          "attested": {
+            "evidence": "e-g3-review-2",
+            "note": "Review 5's verdict is APPROVE with 0 findings and no blockers (crew-handoffs/g3-reviewer-rework4-result.md, 'consolidated APPROVE, 0 findings, 4 triage candidates'). Satisfied by reference to g3-review's e-g3-review-2 rather than re-attaching the same artifact. The four out-of-scope observations it returned are triage candidates and are carried into the triage step, not findings against this gate."
+          }
         },
         {
           "id": "c4",
           "statement": "main baseline RE-MEASURED at this gate's close and the failure-set difference against it stated; and what this gate did about Windows path handling (separators, case folding) stated explicitly, since the one windows-latest CI job is red at baseline and cannot tell us",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "MAIN RE-MEASURED AT THIS GATE'S CLOSE, by me, not cited from leg 4. main is still 17c2cee5 (git rev-parse). Cloned to /tmp/leg5-baseline/constellation-skills -- the directory name matters, because tests/test_code_map.py::MapTreeFreshnessTests derives map/INDEX.md's title from the checkout directory name and a clone named anything else reports a false red. Clean env, caches cleared: 3171 passed / 7 skipped / 0 failed, exit 0, 125s. FAILURE-SET DIFFERENCE: empty against empty. main's failure set is {} and this gate's is {} -- g3 neither introduces nor repairs a failure. The g3 tree at 539ff636 measures 3192 collected-and-passing / 5 skipped in my own hands, +21 tests over main and +22 over the pre-gate arm 53c89ba1 (3170/5/0, leg 4's measurement, cited as leg 4's). The 7->5 skip delta is a branch-vs-main property that predates this gate: the pre-gate arm already measured 5. ONE INSTRUMENT DEFECT, NOT A REGRESSION: my own run reported 1 failed -- tests/test_gauge_chain_writer_to_trip.py::test_containment_repo_agent_work_untouched_by_the_chain -- and its diff is the two gauge files gauge.json and gauge-commander-cleanup-f-derive-workt-da24d471888a.json under the live .agent-work/. That test snapshots the live .agent-work by size and mtime, and I made ~15 polling tool calls while it ran; every tool call fires the gauge chain, so the tree it was snapshotting was mine, moving under it. That is tc11 exactly. c2's own re-run on advance measures it quiet and is the authoritative number. WINDOWS PATH HANDLING, STATED EXPLICITLY: this gate compares paths only through _same_path, which normalizes with os.path.normcase + os.path.normpath -- normpath folds separators, normcase folds case and separators on win32 and is the identity on posix -- and returns True on any exception, the fail-safe direction for a guard that withholds. Both of _attributed_to_another_key's call sites (the bind-on-resume write, and since rework 4 the render selection) go through it, so the second site folds case exactly as the first does. Nothing in this gate compares raw strings or uses pathlib's platform-native semantics. Because normcase is the identity on this Linux host, the case expectation cannot be measured here and was CONSTRUCTED by the fifth reviewer, at the predicate and again end-to-end through the new call site, with os.path.normcase monkeypatched to str.lower and restored in a finally whose restoration is asserted: linux predicate False and both files render (correct -- two different files); simulated win32 predicate True and the render is withheld (correct -- one file). The one windows-latest CI job is red at baseline and cannot tell us, which is why this is constructed rather than cited."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q tests/test_spine_rail.py -k OwnershipIsBindingKeyNotWorktree",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT py -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-implement": {
@@ -1126,8 +1159,10 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "skipped",
+      "status_detail": {
+        "reason": "ADMIRAL_RULING-1 R2 withdrew this gate's deliverable before it was built. The pre-ruling this gate implements -- nearest-ancestor-fail-closed -- was itself the defect: the Admiral ruled that an unowned spine path yields NO derived worktree and the engine behaves exactly as it does today, no refusal, because what was wanted was 'do not guess a root' and what was written was 'refuse'. That behaviour is already shipped: spine_rail._worktree_from_spine returns None for a path with no .agent-work ancestor and raises nothing, which I verified by reading the function at this gate rather than citing it -- 'No .agent-work ancestor at all means unowned', the absolute-path precondition returns None, and the walk returns None when it runs out of ancestors. Returning None IS the complete answer; there is no second half left to implement. Building the refusal anyway would refuse 362 of 429 measured guarded-verb invocations, including 3 tests in a lane-E-fenced file this gate may not touch, and its only exit would be a human override on the very suite check that is the plan's regression floor. Skipped as withdrawn, not as deferred: nothing re-homes to another wave from here."
+      },
       "result": null,
       "finding": null,
       "evidence": [],
@@ -1162,8 +1197,10 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "skipped",
+      "status_detail": {
+        "reason": "ADMIRAL_RULING-1 R2 withdrew this gate's deliverable before it was built. The pre-ruling this gate implements -- nearest-ancestor-fail-closed -- was itself the defect: the Admiral ruled that an unowned spine path yields NO derived worktree and the engine behaves exactly as it does today, no refusal, because what was wanted was 'do not guess a root' and what was written was 'refuse'. That behaviour is already shipped: spine_rail._worktree_from_spine returns None for a path with no .agent-work ancestor and raises nothing, which I verified by reading the function at this gate rather than citing it -- 'No .agent-work ancestor at all means unowned', the absolute-path precondition returns None, and the walk returns None when it runs out of ancestors. Returning None IS the complete answer; there is no second half left to implement. Building the refusal anyway would refuse 362 of 429 measured guarded-verb invocations, including 3 tests in a lane-E-fenced file this gate may not touch, and its only exit would be a human override on the very suite check that is the plan's regression floor. Skipped as withdrawn, not as deferred: nothing re-homes to another wave from here."
+      },
       "result": null,
       "finding": null,
       "evidence": [],
@@ -1232,8 +1269,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "skipped",
+      "status_detail": {
+        "reason": "ADMIRAL_RULING-1 R2 withdrew this gate's deliverable before it was built. The pre-ruling this gate implements -- nearest-ancestor-fail-closed -- was itself the defect: the Admiral ruled that an unowned spine path yields NO derived worktree and the engine behaves exactly as it does today, no refusal, because what was wanted was 'do not guess a root' and what was written was 'refuse'. That behaviour is already shipped: spine_rail._worktree_from_spine returns None for a path with no .agent-work ancestor and raises nothing, which I verified by reading the function at this gate rather than citing it -- 'No .agent-work ancestor at all means unowned', the absolute-path precondition returns None, and the walk returns None when it runs out of ancestors. Returning None IS the complete answer; there is no second half left to implement. Building the refusal anyway would refuse 362 of 429 measured guarded-verb invocations, including 3 tests in a lane-E-fenced file this gate may not touch, and its only exit would be a human override on the very suite check that is the plan's regression floor. Skipped as withdrawn, not as deferred: nothing re-homes to another wave from here."
+      },
       "result": null,
       "finding": null,
       "evidence": [],
@@ -1303,8 +1342,10 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "skipped",
+      "status_detail": {
+        "reason": "ADMIRAL_RULING-1 R3 descopes #315 from this lane, on a premise the Admiral measured false itself: the launch order said zero occurrences of verify_worktree_isolation.py --here survive in any template or spec, but .agent-work/templates/COMMANDER_SPINE.template.json carries a live command-kind precondition c0 running it, and that project-local overlay -- not the shipped skills/commander/templates/ copy, which has zero -- is the one this repo's own runs resolve. Two reasons the Admiral gave: the overlay is a stale copy of a shipped template that dropped c0 during epic 568 and never re-synced, which is template hygiene and belongs to #610, already queued to touch the commander spine's init; and threading cwd while a live c0 still runs --here is exactly the disarming PR #576 measured. This gate is also structurally mutually exclusive with IsolationGateSurvivesThroughTheCLI, since any cwd inside the worktree makes --here compare EXPECTED==EXPECTED. #315 stays open and RE-HOMES to #610's wave -- this is a deferral, not a withdrawal, and it is recorded as such in triage."
+      },
       "result": null,
       "finding": null,
       "evidence": [],
@@ -1339,8 +1380,10 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "skipped",
+      "status_detail": {
+        "reason": "ADMIRAL_RULING-1 R3 descopes #315 from this lane, on a premise the Admiral measured false itself: the launch order said zero occurrences of verify_worktree_isolation.py --here survive in any template or spec, but .agent-work/templates/COMMANDER_SPINE.template.json carries a live command-kind precondition c0 running it, and that project-local overlay -- not the shipped skills/commander/templates/ copy, which has zero -- is the one this repo's own runs resolve. Two reasons the Admiral gave: the overlay is a stale copy of a shipped template that dropped c0 during epic 568 and never re-synced, which is template hygiene and belongs to #610, already queued to touch the commander spine's init; and threading cwd while a live c0 still runs --here is exactly the disarming PR #576 measured. This gate is also structurally mutually exclusive with IsolationGateSurvivesThroughTheCLI, since any cwd inside the worktree makes --here compare EXPECTED==EXPECTED. #315 stays open and RE-HOMES to #610's wave -- this is a deferral, not a withdrawal, and it is recorded as such in triage."
+      },
       "result": null,
       "finding": null,
       "evidence": [],
@@ -1409,8 +1452,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "skipped",
+      "status_detail": {
+        "reason": "ADMIRAL_RULING-1 R3 descopes #315 from this lane, on a premise the Admiral measured false itself: the launch order said zero occurrences of verify_worktree_isolation.py --here survive in any template or spec, but .agent-work/templates/COMMANDER_SPINE.template.json carries a live command-kind precondition c0 running it, and that project-local overlay -- not the shipped skills/commander/templates/ copy, which has zero -- is the one this repo's own runs resolve. Two reasons the Admiral gave: the overlay is a stale copy of a shipped template that dropped c0 during epic 568 and never re-synced, which is template hygiene and belongs to #610, already queued to touch the commander spine's init; and threading cwd while a live c0 still runs --here is exactly the disarming PR #576 measured. This gate is also structurally mutually exclusive with IsolationGateSurvivesThroughTheCLI, since any cwd inside the worktree makes --here compare EXPECTED==EXPECTED. #315 stays open and RE-HOMES to #610's wave -- this is a deferral, not a withdrawal, and it is recorded as such in triage."
+      },
       "result": null,
       "finding": null,
       "evidence": [],
@@ -1766,6 +1811,20 @@
       "why": "Verified in my own hands, not from the return: targeted class 8 passed where the empty diff exited 5; full suite 3177/5/0 against the 3170/5/0 baseline I measured at 53c89ba1, and the +7 accounts exactly (8 new methods + the deletion pin - 2 deleted _foreign_worktree unit tests); result artifact fresh per --verify-result; worktree_from_spine_path is 0/0 in the two files; test_worktree_derivation.py unedited. The gate's own claim holds asymmetrically, as the plan demanded: _entry_mid_flight_view now decides no ownership at all and ownership moved UP into decide_stop, which compares session_view_provenance against binding_key(payload) rather than the bare sid, while decide_session_start simply stopped testing the tree because SessionStart carries no agent_id and membership in the merged view IS the binding-key answer. Three newly-blocking classes are enumerated and each is intended; nothing newly stops blocking; the nudge stays keyed by sid alone. Fail-safe survives - six garbage rows block on both sides, and the new uncertainty (malformed agent_id) blocks with the imperative withheld. The crew returned one finding this gate cannot reach: SessionStart's scan-bind writes a binding for an unbound session onto the single active-leased spine it finds, which is how five crews on this issue were handed their parent's gate. It is a triage candidate, not a defect in this change.",
       "mechanical": false,
       "ts": "2026-08-16T21:56:10.389959+00:00"
+    },
+    {
+      "id": "w-17",
+      "gate": "g3-review",
+      "why": "Review 5 returned APPROVE with 0 findings against 8 of 8 criteria and is attached as e-g3-review-2 (review-result, verdict=APPROVE). Under ADMIRAL_RULING-4, review 5 was the last review round on g3: a finding this gate caused would reopen it, a finding that measures identical on the pre-gate arm is a triage candidate for #610's wave. Review 5 returned neither, so the gate closes. Four earlier rounds (B1-B7) were each fixed and re-reviewed; the fifth reviewer built its own instrument, printing sha256 and byte length per arm and asserting all three differ, which is why its clean return is believable where a pinned-commit harness would not have been.",
+      "mechanical": false,
+      "ts": "2026-08-17T01:37:45.815868+00:00"
+    },
+    {
+      "id": "w-18",
+      "gate": "g3-integrate",
+      "why": "g3 closes. Review 5 returned APPROVE with 0 findings on 8 of 8 criteria, and under ADMIRAL_RULING-4 it was the last review round: a finding this gate caused reopens it, a finding that measures identical on the pre-gate arm is a triage candidate for #610's wave, and review 5 returned neither. What ships: _foreign_worktree is deleted with both call sites; _entry_mid_flight_view decides no ownership at all because mid-flight is a property of the spine; _own_entries is the one ownership comparison at both sites; and _attributed_to_another_key guards the bind-on-resume's write AND, since rework 4, its render -- neither may contradict an attribution session_view_provenance already holds. A path attributed to NOBODY behaves exactly as before, so tc1 is untouched and stays the Admiral's. Verified in my own hands rather than from the return: targeted class OwnershipIsBindingKeyNotWorktree 23 passed where the same selector exited 5 on an empty diff; main re-measured at 17c2cee5 in a correctly-named isolated clone at 3171/7/0; the g3 tree at 539ff636 at 3192 passing / 5 skipped with an empty failure set both ways. The single red in my own run was tc11's containment instrument snapshotting an .agent-work I was writing to while it ran, not a regression. Five reviews, four reworks, every finding measured rather than read, and the one worth more than the bugs: this gate removed a guard that was accidentally gating a write, and every defect since was a session arriving somewhere it had never previously reached.",
+      "mechanical": false,
+      "ts": "2026-08-17T01:45:16.543300+00:00"
     }
   ]
 }

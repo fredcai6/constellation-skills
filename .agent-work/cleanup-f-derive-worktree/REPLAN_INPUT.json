@@ -177,6 +177,11 @@
       "issue_id": "g2",
       "outcome": "Stamp-and-compare retired: origin_worktree_refusal, its two verb sets and the per-guarded-verb git rev-parse --show-toplevel are gone; origin.worktree is written as provenance and read by nothing for a decision FINAL SHAPE after ADMIRAL_RULING-2 N2: the engine-side worktree_from_spine_path and the AGENT_WORK_DIR constant it was the sole user of are deleted too, so the engine now reads no location at all -- neither ambient nor derived. The shared case table survives whole, re-scoped to spine_rail._worktree_from_spine as the rule's specification for #315 to re-derive against; test_the_two_copies_agree goes with the second copy, since a drift test over one implementation cannot fail. CLOSED with an independent APPROVE on the third review dispatch, after two correct BLOCKs. Final state: the engine reads no location at all, ambient or derived; the retired mechanism's prose is repaired across five files, swept by CLAIM rather than by symbol.",
       "evidence": "Committed b8557ff4; reworked under ADMIRAL_RULING-1 R1 (see D5). Reviewer verified by command that no rev-parse --show-toplevel remains in checklist_engine.py and that origin has exactly 2 references under scripts/, both writes; the provenance pin was mutation-tested in both directions. Rework 2 (commit 84d949eb): pure deletion under scripts/ -- 68 lines removed, 13 added and all comments; top-level names 122 -> 120 removing exactly {AGENT_WORK_DIR, worktree_from_spine_path} with no other top-level node changed; refusal vocabulary unchanged (REFUSED 8, raise EngineError 82, sys.exit 1). Suite 3204 -> 3170 passed / 5 skipped / 0 failed, the fall of 34 accounted for as collection (16 engine-parametrized cases, the 16-case drift test, 2 engine-only singletons) and cross-checked against whole-suite collection totals (3209 - 34 = 3175) so 'another file also lost tests' is excluded rather than assumed. Gate close: targeted check green (no rev-parse --show-toplevel in checklist_engine.py, and the provenance test passes by name -- 5 passed, 9 deselected); full suite on the committed tree 3170 passed / 5 skipped / 0 failed with subtests back to 1183; main at 17c2cee5 re-measured independently in an isolated clone at 3171 / 7 / 0; failure-set difference empty in both directions."
+    },
+    {
+      "issue_id": "g3",
+      "outcome": "The worktree stops answering ownership, and the rule reaches every site that selects. _foreign_worktree is deleted with both call sites. The two replacements are ASYMMETRIC by design: _entry_mid_flight_view decides no ownership at all -- mid-flight is a property of the spine, so every such entry visible to the session blocks -- while ownership moved UP into decide_stop, which compares session_view_provenance against binding_key(payload), the acting agent's own key, instead of the bare sid; decide_session_start stops testing the tree, because SessionStart carries no agent_id and membership in the merged view IS the binding-key answer. Four reworks then closed what the deleted guard had been incidentally preventing: _own_entries is the one shared ownership comparison at both sites (B2/B3), the withholding no longer falls through into the scan-bind (B4), and _attributed_to_another_key guards the bind-on-resume's WRITE (B5) and, since rework 4, its RENDER (B6) -- neither may contradict an attribution session_view_provenance already holds. A path attributed to NOBODY is not a contradiction and behaves exactly as before, so tc1 -- whether the SessionStart scan should bind at all -- is untouched and remains the Admiral's. The guard is session-scoped and its prose now says so (B7); widening it across the session boundary is ADMIRAL_RULING-4 Q2's call and re-homes to #610's wave with tc1, as one package.",
+      "evidence": "Committed through 539ff636. Five reviews, four reworks; review 5 returned APPROVE, 0 findings, 8 of 8 criteria, no blockers (crew-handoffs/g3-reviewer-rework4-result.md), and under ADMIRAL_RULING-4 it was the last round. Every load-bearing number RE-MEASURED by the closing Commander leg rather than accepted from the return: targeted class OwnershipIsBindingKeyNotWorktree 23 passed, where the same selector exited 5 (no tests collected) on the empty diff; main re-measured at 17c2cee5 in an isolated clone NAMED constellation-skills at 3171 passed / 7 skipped / 0 failed; the g3 tree at 3192 passed / 5 skipped / 0 failed on the engine's own quiet c2 run. Failure sets empty in both directions -- this gate neither introduces nor repairs a failure. Windows case folding is CONSTRUCTED, not measured: normcase is the identity on this Linux host, so the fifth reviewer monkeypatched os.path.normcase to str.lower at the predicate and end-to-end through the new call site, restoring it in a finally whose restoration is asserted -- linux renders two different files, simulated win32 withholds one. Scope held: 539ff636 touches only scripts/hooks/spine_rail.py, tests/test_spine_rail.py, map/INDEX.md and .agent-work artifacts; no lane A or lane E file, no fail-closed refusal (R2), no cwd threading (R3)."
     }
   ],
   "wave_evidence": [
@@ -293,6 +298,30 @@
       "expected": "cloning main at 17c2cee5 into any temp directory reproduces leg 3's 3171/7/0",
       "observed": "it did not -- 1 failed / 3170 passed, the failure being tests/test_code_map.py::MapTreeFreshnessTests, because map/INDEX.md's title line derives from the CHECKOUT DIRECTORY NAME. Re-cloning into a directory named constellation-skills reproduced 3171/7/0 exactly. The measurement is sensitive to the directory it is taken in.",
       "source": "Commander, two clones, same commit, differing only in directory name"
+    },
+    {
+      "claim": "main has not moved and the gate's baseline is still comparable",
+      "expected": "main at 17c2cee5 reproduces 3171 passed / 7 skipped / 0 failed in an isolated clone",
+      "observed": "it did -- 3171/7/0, exit 0, 125s, in a clone named constellation-skills at /tmp/leg5-baseline. Re-measured at g3's close by the closing leg rather than cited from the leg that opened the gate.",
+      "source": "Commander leg 5, fresh clone of main at 17c2cee5"
+    },
+    {
+      "claim": "g3's shipped tree is green and its failure set matches main's",
+      "expected": "the g3 tree at 539ff636 measures a green full suite with an empty failure set",
+      "observed": "3192 passed / 5 skipped / 0 failed on the engine's own c2 run at g3-integrate. Both failure sets are empty, so the difference against main is empty-against-empty. The 7->5 skip delta is a branch-vs-main property that predates this gate: the pre-gate arm 53c89ba1 already measured 5.",
+      "source": "checklist_engine advance g3-integrate, postcondition c2, run quiet"
+    },
+    {
+      "claim": "the targeted check is still red on an empty diff, as the plan demanded of every gate",
+      "expected": "OwnershipIsBindingKeyNotWorktree selects tests that exist only because of this gate",
+      "observed": "23 passed on the shipped tree; the same selector exits 5, no tests collected, against the pre-gate arm.",
+      "source": "Commander leg 5, run in its own hands at the integrate gate"
+    },
+    {
+      "claim": "a suite run measures the tree it is standing in, including the agent standing in it",
+      "expected": "re-running the full suite in the worktree reproduces the green result",
+      "observed": "it reported 1 failed -- test_containment_repo_agent_work_untouched_by_the_chain -- whose diff was the two gauge files under the live .agent-work. The agent polling the run had fired the gauge chain ~15 times while the test's own snapshot was open. The engine's quiet re-run of the identical command was green. The instrument measured the observer.",
+      "source": "Commander leg 5, two runs of the same command, differing only in whether the agent was making tool calls during it"
     }
   ],
   "discrepancies": [
@@ -471,11 +500,49 @@
       "affects": "Any crew-built before/after harness a later role is told to re-run as verification, and the Commander's own practice of re-running a returned instrument to confirm a fix.",
       "evidence": "Three instruments, three failures. The implementer's m4_differential.py pinned its BEFORE arm with `git rev-parse HEAD`, so it inverted into comparing the change against itself once committed and printed 26 confirming rows -- that was B1, caught only because the reviewer already held a contradicting number. Both reviewers' scratch harnesses pinned SUPERSEDED commits, so re-running them unmodified showed defects still present that were in fact fixed; the Commander hit that twice and had to add working-tree arms with guards asserting the arms genuinely differ. The fifth reviewer's instrument is the answer: it prints the sha256 and byte length of the source each arm actually loaded and guards that all three differ.",
       "reason": "A pinned arm is not a wrong instrument; an unexamined one is. Both failure directions look identical to a reader -- rows that agree -- and both read as confirmation. The practice that worked, stated by three reviewers independently, is an ordering one: build your own instrument BEFORE running theirs, and make every arm print what it actually loaded. Feeds the feedback step."
+    },
+    {
+      "id": "D22",
+      "signal": "A gate closed with an APPROVE while run_crew.py recorded the leg that closed it as failed",
+      "classification": "evidence_only",
+      "affects": "Any Admiral or successor leg reading crew-runs.json to decide whether a lane is healthy.",
+      "evidence": "run_crew.py records attempt-4 -> failed because the result artifact's Return status is 'partial'. The status is correct -- leg 4 parked at a clean gate boundary with work remaining -- and the launcher's reading of it is wrong. g3 review 5 had already returned APPROVE with 0 findings and the evidence was attached as e-g3-review-2. The Admiral has taken this as its own defect to file.",
+      "reason": "A registry that reports a correctly-parked leg as a failure teaches the next reader to distrust the registry, which is the durable store the #617 mitigation depends on. Recorded, not filed: the filing authority is the Admiral's."
+    },
+    {
+      "id": "D23",
+      "signal": "The containment test fails for whichever agent is driving the run, and only for that agent",
+      "classification": "evidence_only",
+      "affects": "Every crew and Commander told to close a gate on a green full suite while working under .agent-work/.",
+      "evidence": "tests/test_gauge_chain_writer_to_trip.py::test_containment_repo_agent_work_untouched_by_the_chain snapshots the live .agent-work/ by size and mtime. Leg 5 ran the identical command twice: once while polling the run with ~15 tool calls (1 failed, the diff being gauge.json and gauge-commander-*.json, both written by the gauge chain that every tool call fires), and once quietly through the engine's own postcondition (3192/5/0, green). Same tree, same command, same commit.",
+      "reason": "This is tc11 with a second, sharper measurement: the failure is not 'a crew happened to write' but 'the observer's own instrumentation writes', so it reproduces for any agent that watches its own suite run. It cost the g2 rework-3 reviewer a full 128s run and a false red that looked exactly like a regression, and it cost leg 5 one too."
+    },
+    {
+      "id": "D24",
+      "signal": "A gate was authored, measured, and then withdrawn by the ruling that had called for it",
+      "classification": "evidence_only",
+      "affects": "g4, and the nearest-ancestor-fail-closed pre-ruling in the frozen launch order.",
+      "evidence": "g4 implemented the pre-ruling's shape refusal. The dynamic probe measured 429 guarded-verb engine invocations, 67 with an .agent-work ancestor and 362 without -- every one of those 362 refused, across 125 tests in 7 files, three of them in a lane-E-fenced file the gate could not fix. ADMIRAL_RULING-1 R2 then replaced the pre-ruling: 'an unowned spine path yields NO derived worktree, and the engine behaves exactly as it does today.' spine_rail._worktree_from_spine already returns None for such a path and raises nothing, verified by reading the function at g4's skip.",
+      "reason": "The measurement is the finding: the Admiral ruled about a population it had not measured, and the probe showed the ruled-about case was the majority. The gate is skipped as WITHDRAWN, not deferred -- nothing re-homes from it to another wave."
+    },
+    {
+      "id": "D25",
+      "signal": "#315 leaves this lane on a launch-order premise the Admiral verified false itself",
+      "classification": "later_only",
+      "affects": "g5, #315, and #610's wave, which already touches the commander spine's init.",
+      "evidence": "The order said zero occurrences of 'verify_worktree_isolation.py --here' survive in any template or spec. .agent-work/templates/COMMANDER_SPINE.template.json:12 carries a live command-kind precondition c0 running exactly that, and the project-local overlay -- not the shipped skills/commander/templates/ copy, which has zero -- is the one this repo's own runs resolve. Independently, IsolationGateSurvivesThroughTheCLI and the #315 cwd thread are structurally mutually exclusive: any cwd inside the worktree makes --here compare EXPECTED against EXPECTED.",
+      "reason": "ADMIRAL_RULING-1 R3 descopes it: the overlay is a stale copy that dropped c0 during epic 568 and never re-synced, which is template hygiene and belongs to #610; and threading cwd while a live c0 still runs --here is the disarming PR #576 measured. #315 stays open and re-homes rather than being dropped."
+    },
+    {
+      "id": "D26",
+      "signal": "Removing a guard silently widened the population reaching the code behind it, and nobody enumerated that population",
+      "classification": "evidence_only",
+      "affects": "Any gate whose deliverable is the deletion of a predicate, at any tier.",
+      "evidence": "_foreign_worktree was a bad ownership test and deleting it was right. While it stood it also kept a whole class of session out of decide_session_start's fall-through. Four of the five g3 reviews (B4, B5, B6, and the routing half of B2) were each a session arriving somewhere it had never previously reached -- not a mistake in the replacement predicate. Neither the plan, nor the launch order, nor the first two crews enumerated the incidentally-prevented class.",
+      "reason": "ADMIRAL_RULING-4 records this as the most valuable thing the lane produced and asks for it as a rule: when a gate removes a guard, enumerate what the guard was incidentally PREVENTING, not only what it was wrongly DECIDING. It cost four cycles and was avoidable by a list."
     }
   ],
-  "open_current_wave_issue_ids": [
-    "g3"
-  ],
+  "open_current_wave_issue_ids": [],
   "unlaunched_items": [
     {
       "id": "g4",

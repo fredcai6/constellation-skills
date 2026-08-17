@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g3-review",
+  "mechanical": {
+    "run": "cleanup-f-derive-worktree",
+    "project": "constellation-skills",
+    "spine-step": "g3-review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 2,
+    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-g3-review@c398ff434ed393afad69b79239ca4a29536bdcf1",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "cleanup-f-derive-worktree",
+    "generated_at": "2026-08-17T01:37:38Z"
+  }
+}

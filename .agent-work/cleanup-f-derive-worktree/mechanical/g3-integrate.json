@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g3-integrate",
+  "mechanical": {
+    "run": "cleanup-f-derive-worktree",
+    "project": "constellation-skills",
+    "spine-step": "g3-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 2,
+    "context-manifest-ref": "ctx-cleanup-f-derive-worktree-g3-integrate@b71c246b6908bb3bb9ae20b39ba743e1327d6557",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "cleanup-f-derive-worktree",
+    "generated_at": "2026-08-17T01:38:10Z"
+  }
+}
