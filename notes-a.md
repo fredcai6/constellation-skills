@@ -327,6 +327,29 @@ Triage candidate, not a fix: `map_orient.py` is not mine this wave, and this is 
 design question (should a degraded frame be allowed anchor ids backed by pinned
 substitutes?) rather than a mechanical defect I may settle alone.
 
+### L3 addendum — the inversion is now measured, not inferred
+
+I had reasoned that the gate would pass an anchor-free frame. Reasoning about a
+check is exactly the thing this repo's doctrine tells me not to substitute for
+running it, so I ran it. Scratch work id, a copy of the same DEGRADED receipt, and a
+five-line frame with zero anchor-id tokens citing one hash-pinned substitute:
+
+```
+FRAME-OK
+frame citations resolve -- contract SATISFIED
+problems: 0
+exit 0
+```
+
+against my real frame's `FRAME-REFUSED / problems: 15 / exit 10`. The scratch area
+was deleted afterwards.
+
+**The gate prefers the emptier artifact.** That is a stronger claim than "the gate is
+broken", and it is the one worth reporting: an author who does not notice will learn,
+correctly from the gate's feedback, to write frames without constraints or decision
+anchors. Taking the recorded waiver is therefore not a rigor dodge — it is declining
+to make the artifact worse in order to satisfy a matcher.
+
 ## F5 — the atomic-write pattern already exists in this repo, three times
 
 I do not have to design the `save()` fix. `global-everyone.md` says "one canonical

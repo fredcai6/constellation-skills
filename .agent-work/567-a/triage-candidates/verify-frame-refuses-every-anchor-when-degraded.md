@@ -43,13 +43,59 @@ describes the `backing` path-citation check. An author reading it reasonably
 concludes that anchors backed by a pinned substitute resolve. They do not — the
 anchor loop refuses them regardless.
 
-## Measured
+## Measured — both halves, by experiment rather than by reading the code
 
-`cmdr-567-a`'s frame cites 15 anchors. `verify-frame` returned `FRAME-REFUSED`,
-exit **10**, `problems: 15` — one per anchor, all with the identical message. The
-previous lane A (`cleanup/a-door`) hit the same wall at `a69bbac4` and recorded it
-as "cannot be satisfied by any frame", which is close but not exact: it *can* be
-satisfied, by a worse frame.
+**The rigorous frame is refused.** `cmdr-567-a`'s frame cites 15 anchors:
+
+```
+FRAME-REFUSED
+frame: .agent-work/epic-567-door/cmdr-a/MISSION_FRAME.md
+orientation: DEGRADED-UNPARSEABLE
+frame citations do NOT resolve -- REFUSED
+problems: 15
+  - constraint:one-spine-per-process cannot resolve: this run oriented
+    DEGRADED-UNPARSEABLE, so no map was read and there is nothing for a map
+    anchor to be a member of
+  ... (15 identical-shaped problems, one per anchor)
+exit 10
+```
+
+**The empty frame passes.** To confirm the inversion rather than infer it, I wrote a
+five-line throwaway frame under a scratch work id, with a copy of the same DEGRADED
+receipt, **zero anchor-id tokens**, and one citation of a hash-pinned substitute:
+
+```
+# Mission Frame
+
+## Intent
+Prove what verify-frame accepts under a DEGRADED receipt.
+
+## Structural Anchors
+Read docs/agents/ORCHESTRATOR_CONTEXT.md as the declared substitute.
+
+## Governing Constraints
+Stated in prose only, with no anchor-id syntax anywhere.
+```
+
+Result:
+
+```
+FRAME-OK
+orientation: DEGRADED-UNPARSEABLE
+frame citations resolve -- contract SATISFIED
+problems: 0
+exit 0
+```
+
+So the gate is not merely broken under a degraded map — **it actively prefers the
+emptier artifact.** A five-line frame naming no constraints and no decisions passes;
+a frame carrying 15 governing constraints and graded decision anchors is refused. The
+scratch work area was removed after the measurement.
+
+The previous lane A (`cleanup/a-door`) hit the same wall at `a69bbac4` and recorded
+it as "cannot be satisfied by any frame", which is close but not exact, and the
+inexactness matters: it *can* be satisfied — by a worse frame. That is a sharper and
+more actionable statement than "the gate is broken."
 
 ## The rigor inversion, which is the real point
 
