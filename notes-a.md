@@ -1234,6 +1234,43 @@ instance: `main()`'s `except KeyError` means *any* unhandled exception in a life
 dispatch kills the door, so the whole surface is one broad `except Exception` away from
 being fail-closed.
 
+#### F26 — I reproduced B1 myself, and my first attempt FAILED to reproduce it
+
+I did not take the escape on the reviewer's word. My **first** attempt was refused:
+a symlink in `.agent-work/` pointing at a spine in a wholly separate repo under `/tmp`.
+`_resolve_confined` resolves, sees `/tmp/...` outside the boundary, and refuses correctly.
+
+That failure taught me the shape of the real attack. The target must resolve **inside** the
+boundary lexically while belonging to a **different checkout** — so the foreign checkout has
+to be *nested inside the work area*. Second attempt, with a `git init` repo at
+`<own checkout>/.agent-work/zz-nested-repo/`:
+
+```
+direct path into the nested checkout
+    REFUSED=True
+    REFUSED: '.../.agent-work/zz-nested-repo/spine.json' sits inside a DIFFERENT checkout...
+
+via a symlink whose parent is our own work area
+    REFUSED=False
+    *** ESCAPED *** bound: .../.agent-work/zz-nested-repo/spine.json
+```
+
+**The same file. Refused by path, bound by symlink.** That asymmetry is the proof of the
+diagnosis: the guard asks git about the *link's* parent, which is our own work area, and
+never about the *target's*. Probe artifacts removed; tree clean.
+
+Two things worth keeping from having done this myself rather than accepting the report:
+
+- **My failed first attempt is the more useful half.** It shows the guard *does* work against
+  the obvious symlink attack, which is why nobody caught the subtle one — you have to
+  construct a nested checkout, and nobody creates those by accident. It also confirms the
+  reviewer's scoping (no live breach) rather than taking it on trust: the reachable version
+  needs an attacker who can already write a git repo inside the work area.
+- **It is the difference between "the reviewer says X" and "X".** I had reported six
+  refusals in F21 and concluded the boundary held. The seventh case reverses that
+  conclusion, and I would not have believed how narrow the gap was without watching the same
+  path succeed one way and fail the other.
+
 #### What I take from this about my own review design
 
 I asked the reviewer to attack the property and it did, and the defect it found was in a
