@@ -976,8 +976,21 @@ def _own_checkout_for_binding() -> Path:
     containment (which resolves) passed, and the cross-checkout check asked git
     about the LINK's parent -- this door's own directory -- rather than the
     target's, so it passed too. A nested linked worktree's spine and an unrelated
-    repository's spine were both bound that way. The property now holds by any
-    spelling of the path, which is the only form of it worth stating.
+    repository's spine were both bound that way.
+
+    **The property carries a limit, stated rather than implied: it is enforced by
+    PATH.** A hardlink has no target to resolve -- it is a second name for the
+    same inode, and both names are equally real -- so a hardlink planted inside
+    this work area onto a nested checkout's spine answers every path-shaped
+    question correctly and is still a foreign spine. Closing that needs inode
+    identity, a different mechanism rather than a third path check, and adding
+    more path-shaped checks is the exact failure `_identity_violation`'s docstring
+    records six times over. Recorded in
+    `.agent-work/567-a/triage-candidates/hardlinks-defeat-path-based-containment.md`
+    and accepted deliberately: an actor who can write inside this `.agent-work/`
+    can already put an ordinary spine there and have it bound. So the honest
+    sentence is **one checkout's work-area tree per process, enforced by path** --
+    less satisfying than the unqualified version, and true.
 
     Unbound, the anchor is `Path(__file__).resolve().parent`, which is the same
     fallback `_primary_checkout_for_lifecycle` uses and for the same reason: it
@@ -1855,8 +1868,8 @@ LIFECYCLE_TOOLS = [
             "work you need to drive is already on disk. The session identity is "
             "NOT an argument: it is derived from the spine's own work id, so "
             "binding a spine yields exactly the identity that spine is driven "
-            "under. Confined to one checkout's work-area tree per process -- "
-            "refused for a spine outside this door's own checkout's "
+            "under. Confined to one checkout's work-area tree per process, "
+            "enforced by path -- refused for a spine outside this door's own checkout's "
             "`.agent-work/`, including a sibling worktree of the same repository, "
             "and refused for a spine in a checkout NESTED inside that "
             "`.agent-work/`. The path is judged after resolution, so a symlink is "

@@ -349,11 +349,13 @@ a spine that already exists inside this door's OWN checkout's `.agent-work/`, wh
 identity the spine itself dictates.** The count never rises above one. Only the moment of
 decision moves — which is what `decision:bind-on-open-over-new-verb` already did once.
 
-Stated so it can be attacked, in one line: **one checkout's work-area tree per process.**
+Stated so it can be attacked, in one line: **one checkout's work-area tree per process,
+enforced by path.**
 
-It **was** attacked, and as first shipped it was false: a symlink defeated the cross-checkout
-guard. See "The property was false as first shipped" at the end of this section before relying
-on any sentence above it.
+It **was** attacked, and as first shipped the unqualified version was false: a symlink defeated
+the cross-checkout guard, and a hardlink still defeats any path-based check. Both halves of that
+correction are at the end of this section, under "The property was false as first shipped" —
+read it before relying on any sentence above it.
 
 ### The reach delta, measured
 
@@ -482,6 +484,18 @@ fixture where the escape target is a *genuine* checkout nested inside the work a
 direct and symlinked spellings of one path get the same answer *and* are refused by the same
 guard, plus two non-vacuity controls (the door's own work area still binds; a symlink to the
 bound spine is still an idempotent no-op).
+
+**And the limit that survives the fix: the property is enforced by PATH.** A hardlink has no
+target to resolve — it is a second name for one inode, and both names are equally real — so a
+hardlink planted inside this door's own `.agent-work/` onto a nested checkout's spine answers
+every path-shaped question correctly and is still a foreign spine. Closing it needs containment
+by inode, a *different mechanism* rather than a third path-shaped check; adding another path
+check is the exact failure `_identity_violation` records six times over. Accepted deliberately
+and recorded in
+`.agent-work/567-a/triage-candidates/hardlinks-defeat-path-based-containment.md`, because an
+actor who can write inside that `.agent-work/` can already place an ordinary spine there and
+have it bound. Hence the qualified one-liner above: overstating this property a second time,
+immediately after being corrected for overstating it the first time, would be the worse error.
 
 **Scope of the live exposure, stated honestly:** the escape reached only checkouts nested
 inside the door's own `.agent-work/`, of which the live tree had zero, and creating one
