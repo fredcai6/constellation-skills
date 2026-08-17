@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-release-child-plans-happy",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-g/g2-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m2-release-child-plans-happy",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-g/g2-implementer-m2-release-child-plans-happy@766424d9fba594c12a63dc57b61cf619a6fcac8e",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-g/g2-implementer",
+    "generated_at": "2026-08-17T06:36:05Z"
+  }
+}

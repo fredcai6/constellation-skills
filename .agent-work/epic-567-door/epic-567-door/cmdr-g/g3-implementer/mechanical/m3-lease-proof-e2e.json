@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-lease-proof-e2e",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-g/g3-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m3-lease-proof-e2e",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-g/g3-implementer-m3-lease-proof-e2e@397544cf59291948cb9acd8a3dc106e1a154990f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-g/g3-implementer",
+    "generated_at": "2026-08-17T06:58:46Z"
+  }
+}

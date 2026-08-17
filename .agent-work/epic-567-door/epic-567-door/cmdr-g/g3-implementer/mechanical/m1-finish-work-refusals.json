@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-finish-work-refusals",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-g/g3-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m1-finish-work-refusals",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-g/g3-implementer-m1-finish-work-refusals@f1fc622d8e0321f7434a87ecc1a5263cf82eb06e",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-g/g3-implementer",
+    "generated_at": "2026-08-17T06:58:29Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-advance-release",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-g/g1-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m3-advance-release",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-g/g1-implementer-m3-advance-release@e764885b9d3e0022369042d65cf6a02d912fac55",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-g/g1-implementer",
+    "generated_at": "2026-08-17T06:00:23Z"
+  }
+}

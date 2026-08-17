@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m6-verify",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-g/g3-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m6-verify",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-g/g3-implementer-m6-verify@93e3743dfcb2fdc96eb3d23ad5f1c6e3908b82b5",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-g/g3-implementer",
+    "generated_at": "2026-08-17T06:59:09Z"
+  }
+}

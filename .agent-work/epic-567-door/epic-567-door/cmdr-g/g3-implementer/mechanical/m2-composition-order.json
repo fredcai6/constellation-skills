@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-composition-order",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-g/g3-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m2-composition-order",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-g/g3-implementer-m2-composition-order@8caf8afa32cbd44e59cedf1f4b62fca21dc48b37",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-g/g3-implementer",
+    "generated_at": "2026-08-17T06:58:37Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-verify",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-g/g2-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m4-verify",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-g/g2-implementer-m4-verify@d9db9e5369b2e1030f2c4fa97caa0a2b10076483",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-g/g2-implementer",
+    "generated_at": "2026-08-17T06:36:57Z"
+  }
+}

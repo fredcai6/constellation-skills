@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-open-pr",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-g/g3-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m4-open-pr",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-g/g3-implementer-m4-open-pr@f743ce7633fa7175772eb9e8c2a8776192bdf4ae",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-g/g3-implementer",
+    "generated_at": "2026-08-17T06:58:54Z"
+  }
+}

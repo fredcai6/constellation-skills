@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-force-reap",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-g/g2-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m1-force-reap",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-g/g2-implementer-m1-force-reap@0dc096b4064658f7e976c88cf96bee9224d1bff3",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-g/g2-implementer",
+    "generated_at": "2026-08-17T06:33:39Z"
+  }
+}
