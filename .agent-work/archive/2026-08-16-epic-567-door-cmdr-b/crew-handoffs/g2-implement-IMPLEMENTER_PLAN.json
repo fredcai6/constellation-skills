@@ -1,0 +1,258 @@
+{
+  "work_id": "epic-567-door/cmdr-b/g2-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-fix-nesting-tests",
+    "m2-fix-delivery-test",
+    "m3-full-suite-and-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read references/global-crew.md and references/global-everyone.md (constellation-implementer skill), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the handoff at .agent-work/epic-567-door/cmdr-b/crew-handoffs/g2-implement-IMPLEMENTER_HANDOFF.md. Verify the handoff is complete (task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions, return format) -- if incomplete, block and return. Read scripts/run_crew.py's verify_external_result signature (~L1970) and confirm it already accepts accept_mtime_only_risk as an optional kwarg (g1's own fix, PR #621) -- this gate is test-file-only, no production edit. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete; verify_external_result's accept_mtime_only_risk kwarg confirmed present",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-crew.md + global-everyone.md read (engine-drive compliance, deep-module vocab, decision grading). docs/agents/CREW_CONTEXT.md read: py resolves pytest 9.1.1 on this host; two-engines note N/A (no engine/hook edits this gate). docs/agents/GLOSSARY.md exists. Handoff g2-implement-IMPLEMENTER_HANDOFF.md confirmed complete: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, map anchors, deliverable path check, required evidence, wiring grep, verification commands, suggested model tier, authority, stop conditions, return format all present. Confirmed via grep -n def_verify_external_result scripts/run_crew.py -> L1970, signature already accepts verify_spine/accept_mtime_only_risk optional kwargs (g1 PR 621) -- this gate is test-file-only, no production edit needed."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-fix-nesting-tests": {
+      "id": "m1-fix-nesting-tests",
+      "title": "Fix tests/test_work_id_nesting.py::CrewRegistryAddressingTests (both tests via shared helper)",
+      "imperative": "First observe RED: run `python -m pytest tests/test_work_id_nesting.py -k 'test_flat_work_id_finalizes_identically or test_nested_work_id_finalizes_its_own_registry' -q` against the current (pre-fix) tree and confirm both fail on `self.assertTrue(fresh, \"the result artifact was written, so it must read fresh\")` inside `_verify_round_trip` (~L108-109) -- paste the failure output verbatim, attest c1. Then edit `_verify_round_trip` (~L108) to change the call `fresh, verified = RC.verify_external_result(entries, entry[\"session_name\"], root)` to pass the new keyword: `fresh, verified = RC.verify_external_result(entries, entry[\"session_name\"], root, accept_mtime_only_risk=\"test: exercising registry addressing (nested vs flat work_id), not spine-driving\")`. Do not touch any other test in this file. Run the same two tests again and confirm PASS (c2, paste passing output verbatim).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff/context loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED: both tests observed failing on the mtime-only assertTrue(fresh,...) against pre-fix _verify_round_trip -- manual attest, red output pasted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Both tests confirmed RED against pre-fix _verify_round_trip: FAILED as expected -- AssertionError: False is not true : the result artifact was written, so it must read fresh, at tests/test_work_id_nesting.py:109 (assertTrue(fresh, ...)). 2 failed, 26 deselected."
+        },
+        {
+          "id": "c2",
+          "statement": "_verify_round_trip passes accept_mtime_only_risk kwarg with an honest reason naming registry-addressing, not spine-driving; both tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_work_id_nesting.py -k \"test_flat_work_id_finalizes_identically or test_nested_work_id_finalizes_its_own_registry\" -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-fix-nesting-tests-1"
+        }
+      ],
+      "constraints": [
+        "tests/test_work_id_nesting.py only",
+        "exact keyword name accept_mtime_only_risk",
+        "no production code change in scripts/run_crew.py",
+        "do not touch any other test in this file"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-fix-nesting-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_work_id_nesting.py -k \"test_flat_work_id_finalizes_identically or test_nested_work_id_finalizes_its_own_registry\" -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-fix-delivery-test": {
+      "id": "m2-fix-delivery-test",
+      "title": "Fix tests/test_crew_delivery_addressing.py::JobAddressedDeliverySurvivesRelaunch::test_b_relaunched_commander_discovers_a_completed_crew_with_no_shared_identity",
+      "imperative": "First observe RED: run `python -m pytest tests/test_crew_delivery_addressing.py -k test_b_relaunched_commander_discovers_a_completed_crew_with_no_shared_identity -q` against the current (pre-fix) tree and confirm it fails on the `self.assertTrue(fresh, f\"{asking_instance}: run_crew.verify_external_result did not find the result fresh\")` assertion (~L181-184) inside the `for asking_instance in (...)` loop (~L175) -- paste the failure output verbatim, attest c1. Then edit the `RC.verify_external_result(...)` call (~L178-180) inside that loop to add the same keyword, naming what THIS test actually proves: `fresh, verified_entry = RC.verify_external_result(reloaded_entries, session, root, accept_mtime_only_risk=f\"test: {asking_instance} proving identity-free delivery discovery (job-file-not-agent-file), not spine-driving\")`. Confirm the kwarg lands on the ONE call site inside the loop body (so it is exercised on both loop iterations), not duplicated outside the loop. Do not touch any other test in this file. Run the same test again and confirm PASS (c2, paste passing output verbatim).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete: nesting tests fixed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete: nesting tests fixed, 2 passed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED: test observed failing on the mtime-only assertTrue(fresh,...) inside the asking_instance loop against pre-fix call -- manual attest, red output pasted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Confirmed RED against pre-fix call inside the asking_instance loop: AssertionError: False is not true : commander-w4-467-i: run_crew.verify_external_result did not find the result fresh, at tests/test_crew_delivery_addressing.py:181. 1 failed, 3 deselected."
+        },
+        {
+          "id": "c2",
+          "statement": "the loop's single verify_external_result call passes accept_mtime_only_risk with an f-string reason naming identity-free delivery discovery, present on both loop iterations; test passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_crew_delivery_addressing.py -k test_b_relaunched_commander_discovers_a_completed_crew_with_no_shared_identity -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fix-delivery-test-1"
+        }
+      ],
+      "constraints": [
+        "tests/test_crew_delivery_addressing.py only",
+        "exact keyword name accept_mtime_only_risk",
+        "no production code change in scripts/run_crew.py",
+        "kwarg present on the one in-loop call site, not duplicated outside the loop",
+        "do not touch any other test in this file"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-fix-delivery-test-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_crew_delivery_addressing.py -k test_b_relaunched_commander_discovers_a_completed_crew_with_no_shared_identity -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-full-suite-and-result": {
+      "id": "m3-full-suite-and-result",
+      "title": "Full file runs, g1 suite regression check, wiring grep, IMPLEMENTER_RESULT",
+      "imperative": "Run `cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_work_id_nesting.py tests/test_crew_delivery_addressing.py -q` and confirm the full pass count is exactly the pre-edit count (green already) plus these 3 now-fixed tests, with no other test's behavior changed. Run `python -m pytest tests/test_crew_launcher.py -q` and confirm still 217 passed (g1's suite unaffected -- no production code was touched). Run the wiring grep `grep -n \"accept_mtime_only_risk\" tests/test_work_id_nesting.py tests/test_crew_delivery_addressing.py` and state the count found in each file (expect exactly 1 in each, at the two call sites). Confirm via `git diff --stat` that only tests/test_work_id_nesting.py and tests/test_crew_delivery_addressing.py changed, and `git check-ignore` exits 1 for both (they are committed-path files, not ignored). Write IMPLEMENTER_RESULT per templates/IMPLEMENTER_RESULT.template.md to .agent-work/epic-567-door/cmdr-b/crew-handoffs/g2-implement-implementer-result.md, including every RED/GREEN pair verbatim, the full-file-run summaries before and after, the test_crew_launcher.py 217-passed confirmation, the wiring grep counts, and Workflow Feedback / Map Impact sections per the skill.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete: delivery-addressing test fixed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete: delivery-addressing test fixed, 1 passed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT.md written with all required evidence sections -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT.md written to .agent-work/epic-567-door/cmdr-b/crew-handoffs/g2-implement-implementer-result.md with all required evidence: RED/GREEN pairs for all 3 named tests verbatim, full-file-run summary (32 passed, 18 subtests passed), test_crew_launcher.py regression check (217 passed), wiring grep (exactly 1 hit per file, confirmed below), Map Impact, Workflow Feedback."
+        },
+        {
+          "id": "c2",
+          "statement": "both target files green together, g1 suite still 217 passed, wiring grep shows exactly 1 hit per file, diff scope confirmed to the two allowed files only",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_work_id_nesting.py tests/test_crew_delivery_addressing.py tests/test_crew_launcher.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-full-suite-and-result-1"
+        }
+      ],
+      "constraints": [
+        "any failure outside the three named intentional fixes is a stop condition",
+        "no production code changed anywhere (git diff --stat confirms only the two test files)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-full-suite-and-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_work_id_nesting.py tests/test_crew_delivery_addressing.py tests/test_crew_launcher.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "implementer-g2-1786949130",
+    "status": "released",
+    "claimed_at": "2026-08-17T06:45:31.010905+00:00",
+    "last_heartbeat": "2026-08-17T06:48:32.738765+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T06:48:37.671300+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Baseline context loaded: global-crew.md/global-everyone.md (skill), docs/agents/CREW_CONTEXT.md (py resolves pytest 9.1.1 on this host, two-engines note N/A), docs/agents/GLOSSARY.md present. Handoff g2-implement-IMPLEMENTER_HANDOFF.md read in full and confirmed complete. verify_external_result (scripts/run_crew.py:1970) confirmed to already accept accept_mtime_only_risk as optional kwarg (g1 PR #621) -- this gate is test-file-only.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:46:11.356717+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-fix-nesting-tests",
+      "why": "Edited tests/test_work_id_nesting.py:_verify_round_trip's single RC.verify_external_result call to pass accept_mtime_only_risk with a reason naming registry addressing (nested vs flat work_id), not spine-driving. Both test_flat_work_id_finalizes_identically and test_nested_work_id_finalizes_its_own_registry share this one helper and both now pass (2 passed, 26 deselected). No other test in the file touched.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:46:38.473997+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-fix-delivery-test",
+      "why": "Edited the single RC.verify_external_result call inside the asking_instance loop (L178-181) to pass accept_mtime_only_risk with an f-string reason naming identity-free delivery discovery, not spine-driving. Confirmed exactly one call site via grep (L180), inside the loop body so both loop iterations exercise it. Test now passes (1 passed, 3 deselected). No other test in the file touched.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:47:05.954525+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-full-suite-and-result",
+      "why": "Full pair run: tests/test_work_id_nesting.py + tests/test_crew_delivery_addressing.py -> 32 passed, 18 subtests passed. tests/test_crew_launcher.py (g1's own suite, unaffected since no production code touched) -> 217 passed. Wiring grep 'accept_mtime_only_risk' across both changed files: exactly 1 hit in each, at the two call sites named in the handoff. git check-ignore exits 1 for both files (committed paths, not ignored); git diff --stat confirms only these two test files changed for this gate's scope (other repo-wide diffs belong to concurrent Commander-tier work area files, untouched by this gate). IMPLEMENTER_RESULT.md written with full evidence.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:48:32.738747+00:00"
+    }
+  ]
+}

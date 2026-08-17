@@ -70,6 +70,31 @@ def branch_name_for(work_id: str) -> str:
     return work_id
 
 
+def session_id_for(work_id: str) -> str:
+    """The lease identity a spine for `work_id` is driven under:
+    `constellation/<work_id>`. **The ONE definition.**
+
+    Two callers, deliberately: `open_work` returns it as `SPINE_SESSION` when it
+    MINTS a spine (step 9 below), and the door's `spine_bind`
+    (`mcp_spine_server.py::_spine_bind`) recovers it from a spine that already
+    exists, so binding a spine yields byte-identical identity to having been
+    launched bound to it. Two copies of one f-string would let "the identity a
+    spine was opened under" and "the identity a spine is bound under" disagree
+    while both looked right, and the engine matches session ids by plain string
+    equality -- there is nothing downstream that would notice.
+
+    Pure on purpose: no clock, no environment, no filesystem. A session id
+    derived from ambient state could not be reproduced by a second process
+    binding the same spine, which is exactly the property `spine_bind` needs.
+
+    NOT `run_crew.assignment_session_name` (`constellation/<work-id>/<gate>/<role>`),
+    which names an ASSIGNMENT and cannot be derived from a spine at all -- `gate`
+    and `role` are knowledge only the dispatcher has. The launch-time path keeps
+    using that one; this is the coarser, spine-shaped identity a door that binds
+    itself must take, because nobody handed it an assignment."""
+    return f"constellation/{work_id}"
+
+
 def archive_name_for(work_id: str, *, today: str) -> str:
     """The archive directory name: `<today>-<work_id with "/" replaced by "-">`.
 
@@ -354,7 +379,7 @@ def open_work(
     # 9. Return the crew-binding values.
     return {
         "SPINE_FILE": str(spine_path),
-        "SPINE_SESSION": f"constellation/{work_id}",
+        "SPINE_SESSION": session_id_for(work_id),
         "SPINE_PARENT": parent,
         "branch": branch,
         "worktree": worktree,

@@ -1,0 +1,304 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic #567 \u2014 the door is the interface; finish the MCP migration",
+      "spec_path": ".agent-work/epic-567-door/crew-handoffs/LANE_A_LAUNCH_ORDER.md",
+      "intent_and_why": "Delete the CLI-fallback paths so the MCP door is the only interface. Lane A is the anchor: you cannot delete a fallback that is currently the only path."
+    },
+    "definition_of_done": [
+      "A role agent that did not launch its own door can reach its own spine through the door.",
+      "checklist_engine.save() cannot expose a torn spine or leave a corrupt one.",
+      "The replacement isolation property is stated explicitly, with its reach delta measured."
+    ],
+    "good_enough": {
+      "mandatory_quality": "No silent widening of the door's security boundary; every new refusal named and tested.",
+      "sufficient_evidence": "Fresh-process tests plus a red-proof that the new tests fail against the old implementation.",
+      "appetite": "One wave, lane A of four."
+    },
+    "hard_constraints": [
+      "One spine per process (decision:one-spine-per-process-stands).",
+      "Assignments to SPINE/SESSION stay exactly {module scope, _bind_process_to} (module-wide AST pin).",
+      "scripts/hooks/* untouched \u2014 hooks execute from the main checkout for every live session.",
+      "_RAIL_STRINGS and _refresh_attach_hint byte-identical \u2014 lane C needs their text.",
+      "File no issues (decision:no-issue-filing)."
+    ],
+    "fixed_decisions": [
+      "decision:convergence-is-human-only \u2014 the Commander compares; the human picks.",
+      "decision:solve-the-general-case \u2014 any role reaching its own spine, not the crew case alone.",
+      "decision:atomicity-is-not-mutual-exclusion \u2014 the atomicity fix does not address lost updates.",
+      "Launched identities remain stable: lane id cmdr-567-a, work-id epic-567-door/cmdr-a."
+    ],
+    "current_wave": {
+      "objective": "Unblock the epic by giving the door a path to an existing spine, and make the spine write atomic.",
+      "exit_criteria": [
+        "The bind path exists and is proven on a spine the process did not mint.",
+        "save() is atomic, proven by a red-proof against the old implementation.",
+        "The reach delta is measured and stated, not asserted."
+      ],
+      "issues": [
+        {
+          "id": "559",
+          "title": "The door does not reach a dispatched subagent's own spine",
+          "desired_outcome": "A door bound to no spine, or to another, can bind an existing one under a stated containment property.",
+          "useful_now": "Every other lane's deletion work is blocked behind it.",
+          "appetite": "One crew gate",
+          "acceptance_or_falsification_evidence": "Two-door round trip plus a reach-delta negative test that goes red when the confinement argument is removed.",
+          "implementation_latitude": "Mechanism inside the converged design; the design pick itself is the human's.",
+          "hard_constraints_no_gos": [
+            "No caller-supplied session identity.",
+            "No new environment variable.",
+            "No renaming the argument to dodge the identity pin."
+          ],
+          "local_unknowns": [
+            "Whether IDENTITY_TRADE.md section 2's confinement property is amendable at all."
+          ],
+          "anchors": [
+            "scripts/mcp_spine_server.py",
+            "tests/test_mcp_identity.py",
+            "tests/test_mcp_lifecycle.py"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "613",
+          "title": "save() is not atomic",
+          "desired_outcome": "A concurrent reader sees the complete old or complete new document; a crash cannot leave a corrupt spine.",
+          "useful_now": "Same seam as the identity work, and the defect is already worked around in the test suite.",
+          "appetite": "One crew gate",
+          "acceptance_or_falsification_evidence": "Deterministic tests (target never write-opened; inode replaced exactly once) that FAIL against the old bare write_bytes.",
+          "implementation_latitude": "How much of the atomicity half is in scope.",
+          "hard_constraints_no_gos": [
+            "Do NOT implement the lost-update half \u2014 no locking, no compare-and-swap."
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/checklist_engine.py"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Wave 2 deletes the 15 CLI-fallback clauses and 11 <engine> tokens",
+        "why_likely": "Both counts re-measured at 600de020 and match the order's table; they are blocked only by the absence of a door path.",
+        "entry_conditions": [
+          "Lane A's bind path merged",
+          "The human ratifies the design pick"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether the door half should ship at all, or whether a better refusal message plus a launcher fix is enough",
+        "affects": "Whether wave 2's premise holds",
+        "settle_by": "Human ruling at the epic return boundary",
+        "current_evidence": "Measured: ExternalBackend REFUSES --spine and ships a permanent unbound-door warning; an orchestrator that mints its spine mid-session cannot be launched bound at all. So the population is structural, not broken launchers.",
+        "next_probe": "Human ruling on whether IDENTITY_TRADE.md section 2 is amendable"
+      },
+      {
+        "unknown": "Whether the containment root should exclude archive/",
+        "affects": "Reach: 683 targets versus 32",
+        "settle_by": "Reviewer attack plus human ruling",
+        "current_evidence": "651 of the 683 reachable files are archived closed records, never legitimate bind targets.",
+        "next_probe": "Ask the reviewer to attack the narrowed root"
+      }
+    ],
+    "parked_possibilities": [
+      "Write-provenance on spine journal entries \u2014 the actual fix for lane G's incident.",
+      "#613's lost-update half (compare-and-swap on save).",
+      "A refusal on load() for a missing or malformed spine, instead of an unhandled traceback."
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "613",
+      "outcome": "save() writes atomically: unique mkstemp sibling, fchmod to the target's mode, flush+fsync, os.replace, temp unlinked in finally. 11 new tests.",
+      "evidence": "Commander re-ran the red-proof independently: reverting save() in the worktree copy fails 5 of 11 including all three deterministic assertions; restored exactly (git diff empty); 11/11 green. 668 engine+launcher tests pass."
+    },
+    {
+      "issue_id": "559",
+      "outcome": "spine_bind(spine_file) ships: a door tool that binds this process to a spine that ALREADY EXISTS, confined to <the door's own checkout>/.agent-work/ via git rev-parse --show-toplevel plus a cross-checkout refusal on the RESOLVED path. Session derived from origin.work_id else the spine's top-level work_id, so the Admiral's own spine and IMPLEMENTER_PLAN.json both bind. Property: one checkout's work-area tree per process, enforced by path.",
+      "evidence": "Commander verified in a live process: an unbound door binds a spine with origin: None and derives constellation/<work_id>, moving both identity roots and mirroring both into os.environ; six boundary attacks refused with the boundary named; the symlink escape reproduced at HEAD and refused after the fix; the legitimate case still binds. Two independent reviewers BLOCKed on the same two defects, a rework cleared both, and a narrow re-review APPROVEd after 11 symlink spellings in a real multi-checkout topology and confirming the new tests go RED against the reverted source. Full suite 3276 passed / 5 skipped / 0 failed, run independently. PR #623."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The bind-own-spine gap is real and general, not confined to Task-tool crew",
+      "expected": "The order predicted a dispatched-subagent-only defect",
+      "observed": "Reproduced in the Commander's OWN process at step one, with its spine on disk and its lease held. main()'s unbound gate is uniform, so 10 of 11 door tools refuse and the only reachable one mints.",
+      "source": "live mcp__spine__spine_status and spine_lease calls; scripts/mcp_spine_server.py:1723"
+    },
+    {
+      "claim": "The mechanism to fix it already existed; only a trigger was missing",
+      "expected": "The order assumed SPINE_FILE is bound as an immutable launch-time constant",
+      "observed": "Half false. The previous lane already shipped _bind_process_to as the one named rebinder, late-bound all four import-time derivations, and pinned the assignment set. Its only caller mints.",
+      "source": "scripts/mcp_spine_server.py:878, :1041; tests/test_mcp_lifecycle.py:563"
+    },
+    {
+      "claim": "The winning candidate's own session derivation would have refused the mission's two named cases",
+      "expected": "origin.work_id is a reliable identity source",
+      "observed": "4 of 52 live spines carry it. The Admiral's own spine and IMPLEMENTER_PLAN.json both have origin: None. Deriving from the top-level work_id instead covers 52/52.",
+      "source": "Commander census, independently reproduced by the cold critic at 53/4/49/0"
+    },
+    {
+      "claim": "The gate plan could not detect its own success",
+      "expected": "Command postconditions gate the work",
+      "observed": "All four passed at BASE with zero code written. Amended through the engine; the new checks verifiably fail at base.",
+      "source": "cold plan critic B3, reproduced by the Commander"
+    },
+    {
+      "claim": "The atomic-write pattern the plan mandated by name is defective",
+      "expected": "Reusing the repo's canonical pattern is the safe choice",
+      "observed": "gauge_writer_hook's fixed temp name lets a losing writer's buffered flush write into the inode os.replace just installed, producing a DURABLY unparseable spine \u2014 worse than the transient tear being fixed.",
+      "source": "cold plan critic B5, with corrupted-bytes output"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "The launch order's engine path does not exist (constellation-commander-delegated ships no scripts/)",
+      "classification": "evidence_only",
+      "affects": "Any future delegated launch order using the same template",
+      "evidence": "python3: can't open file '.../constellation-commander-delegated/scripts/checklist_engine.py'. The real engine is the constellation-commander copy.",
+      "reason": "Bootstrap-blocking for the next commander, but this lane worked around it; recorded as a triage candidate, not filed."
+    },
+    {
+      "id": "D1",
+      "signal": "The assigned working-notes filename was already a tracked artifact of an earlier lane",
+      "classification": "evidence_only",
+      "affects": "Lane B this same wave has the same trap set",
+      "evidence": "notes-a.md tracked at 600de020, 197 lines from lane cleanup/a-door; clobbered on first write and restored, git diff --numstat 178 0.",
+      "reason": "Recovered with zero loss; the order template should assign a name git ls-files says is absent."
+    },
+    {
+      "id": "D2",
+      "signal": "verify-frame refuses every anchor id under a degraded map, so the mandated MISSION_FRAME template cannot pass",
+      "classification": "evidence_only",
+      "affects": "Every run in this repo while map/ids.jsonl is empty",
+      "evidence": "My 15-anchor frame: FRAME-REFUSED exit 10 problems:15. A five-line frame with zero anchors citing one pinned substitute: FRAME-OK exit 0.",
+      "reason": "The gate prefers the emptier artifact. Waived with a substituted anchor check that immediately caught real line drift."
+    },
+    {
+      "id": "D3",
+      "signal": "tests/test_code_map.py is 148-green against a 0-byte map/ids.jsonl",
+      "classification": "evidence_only",
+      "affects": "Why the empty-map defect survived a full epic after being reported twice",
+      "evidence": "py -m pytest tests/test_code_map.py -q -> 148 passed, 63 subtests passed.",
+      "reason": "A guard vacuous on an empty set. Triage candidate; map/ is not this lane's."
+    },
+    {
+      "id": "D4",
+      "signal": "The recommendation's containment root was 34x wider than the reach used to disqualify the losing candidate",
+      "classification": "blocks_current_wave_exit",
+      "affects": "The design pick itself",
+      "evidence": "_primary_checkout_for_lifecycle resolves --git-common-dir: 4205 reachable spine-shaped files, 3505 in other lanes' checkouts. Narrowed to 683 with 0 cross-checkout.",
+      "reason": "Repaired inside the wave. decision:isolation-not-fencing is graded guess/admiral, so revisiting it freely after its settle: experiment (a reviewer attack) is sanctioned; regraded settled/measured."
+    },
+    {
+      "id": "D5",
+      "signal": "A Commander committing with git add -A swept a live crew's in-progress work into its own commit",
+      "classification": "evidence_only",
+      "affects": "Any lane where the dispatcher commits from the same worktree its crews edit",
+      "evidence": "fe2eb504 carries 48 lines of the g3 crew's save() work under a commit message about the cold critic. Independently reported by the crew.",
+      "reason": "Structural: crews hold no lock and cannot ask the dispatcher to wait. Mitigations are explicit-path staging or per-crew worktrees."
+    },
+    {
+      "id": "D6",
+      "signal": "The recommendation's own containment root was ~6x wider than the reach used to disqualify the losing candidate, and the winning candidate's session derivation would have refused the two cases the mission names",
+      "classification": "blocks_current_wave_exit",
+      "affects": "The design pick itself",
+      "evidence": "origin.work_id present in 4 of 52 live spines; absent from .agent-work/epic-567-door/spine.json and IMPLEMENTER_PLAN.json. _primary_checkout_for_lifecycle (--git-common-dir) reaches 4205 candidates, 3505 cross-worktree; --show-toplevel reaches 683, cross-checkout 0.",
+      "reason": "Both repaired inside the wave. decision:isolation-not-fencing is graded guess/admiral, so revisiting it after its settle: experiment (a reviewer attack) is sanctioned; regraded settled/measured."
+    },
+    {
+      "id": "D7",
+      "signal": "The stated isolation property was FALSE: a symlink inside the door's own work area pointing at a nested checkout satisfied both guards, and the door wrote a live lease into another checkout's spine",
+      "classification": "blocks_current_wave_exit",
+      "affects": "The security property this lane exists to establish",
+      "evidence": "Two independent reviewers reproduced it; the Commander reproduced it too (first attempt failed, which revealed the real shape). Cause: R6 asked git about candidate.parent UNRESOLVED while R4 resolves. Fixed with candidate.resolve().parent; 11 spellings now refuse.",
+      "reason": "Not a live breach (zero nested checkouts exist today) but the property as written was untrue, and stating an attackable property was the whole point of the decision. Fixed and re-reviewed."
+    },
+    {
+      "id": "D8",
+      "signal": "os.fchmod is Unix-only and was called unguarded in save(); CI is windows-latest only",
+      "classification": "blocks_current_wave_exit",
+      "affects": "The engine on Windows, i.e. every mutating verb on the only platform CI runs",
+      "evidence": "os.fchmod absent on Windows -> AttributeError on every save of an existing file. Found during closeout on the Admiral's warning to audit new tests for Windows hazards; no Linux run could surface it. Fixed with _restore_mode (fchmod on the FD, else os.chmod on the path); guard test runs on every platform and is proven non-vacuous.",
+      "reason": "Fixed in-lane: bounded defect inside this lane's own file, and shipping it would have been a dead engine rather than a red test."
+    },
+    {
+      "id": "D9",
+      "signal": "A gate plan whose four command postconditions all passed at BASE with zero code written; and a mission frame that cannot satisfy its own verify-frame gate under a degraded map",
+      "classification": "evidence_only",
+      "affects": "How much a green gate is worth as evidence, fleet-wide",
+      "evidence": "Cold critic ran all four checks at 600de020: 61 passed, 456 passed, exit 0. Amended through the engine; the new checks verifiably fail at base. Separately: a five-line frame with zero anchors returns FRAME-OK exit 0 where a 15-anchor frame returns FRAME-REFUSED exit 10.",
+      "reason": "The plan half is fixed in-lane. The verify-frame half is a triage candidate: map_orient.py is not this lane's, and it is a design question about whether a degraded frame may cite anchors backed by pinned substitutes."
+    },
+    {
+      "id": "D10",
+      "signal": "A reviewer's CORRECTION to an earlier finding was itself wrong, and the Commander propagated it without re-deriving it",
+      "classification": "evidence_only",
+      "affects": "How corrections are treated versus how claims are treated",
+      "evidence": "R2 recorded that the NUL byte kills the door 'only when already bound'; the re-review proved the unbound door dies too, via R4's refusal f-string. The Commander had adopted the narrowing into RETURN.md and notes-a.md.",
+      "reason": "Corrected. The lesson is narrow: a run that refuses to accept reviewers' claims without re-deriving them must apply the same rule to their corrections. A correction is a claim."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {
+      "id": "613-lost-update-half",
+      "kind": "issue"
+    },
+    {
+      "id": "write-provenance-on-spine-journal",
+      "kind": "issue"
+    },
+    {
+      "id": "wave-2-fallback-deletion",
+      "kind": "forecast"
+    },
+    {
+      "id": "is-IDENTITY_TRADE-section-2-amendable",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "narrow-the-root-further-by-excluding-archive",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "gauge-writer-hook-fixed-temp-name",
+      "kind": "parked"
+    },
+    {
+      "id": "hardlinks-defeat-path-based-containment",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "subtest-hides-a-raising-test-body",
+      "kind": "issue"
+    },
+    {
+      "id": "door-main-catches-only-keyerror",
+      "kind": "issue"
+    },
+    {
+      "id": "mutate-a-copy-never-the-tracked-file",
+      "kind": "parked"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/mcp_spine_server.py",
+      "scripts/checklist_engine.py",
+      "scripts/spine_lifecycle.py",
+      "tests/test_mcp_identity.py",
+      "tests/test_mcp_lifecycle.py"
+    ],
+    "map_status": "DEGRADED-UNPARSEABLE repo-wide: map/ids.jsonl tracked and 0 bytes, map/INDEX.md 29449 bytes with no citable anchor id. Discharged with five hash-pinned substitutes; escalated to the Admiral."
+  }
+}

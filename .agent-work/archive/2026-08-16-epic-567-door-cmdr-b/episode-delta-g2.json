@@ -1,0 +1,12 @@
+{
+  "work_id": "epic-567-door/cmdr-b",
+  "ops": [
+    {
+      "op": "restate-assertion",
+      "id": "epic-567-door_cmdr-b-003",
+      "assertion": "a5",
+      "statement": "Iteratively ran verify_iterative_role_artifacts.py commander after each edit, reading its exact error text, and adjusted the JSON field-by-field until it passed, rather than reading the schema validator source directly.",
+      "history": "Admiral (post-return diagnosis) flagged this assertion as OFFENDER epic-567-door_cmdr-b-003 a5 under the imperative-detector guard: the original wording 'read its exact error text' is the past-tense/imperative homograph of 'read', and the detector cannot distinguish the two. Rephrased 'read' -> 'reading' to remove the homograph while preserving the original meaning exactly (still a past-tense observation of what was done, not an instruction to a future agent)."
+    }
+  ]
+}

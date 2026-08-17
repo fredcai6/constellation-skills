@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-named-spine-proofs",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-b/g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m3-named-spine-proofs",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-b/g1-implement-m3-named-spine-proofs@f94ad80b6099de9702c6269cca8aa0310b8cb455",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-b/g1-implement",
+    "generated_at": "2026-08-17T05:52:54Z"
+  }
+}

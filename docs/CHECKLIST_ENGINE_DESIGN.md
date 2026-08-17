@@ -293,11 +293,29 @@ every shipped template (`tests/test_mcp_imperative_equivalence.py`, 61 gates acr
 enumerated by walking the tree so a template added later is covered automatically).
 
 **Identity rides the environment, not a generated file.** The server binds `SPINE_FILE`,
-`SPINE_ENGINE` and `SPINE_SESSION` from its environment when it launches, and — since issue #603 —
-again when a successful `spine_open` binds the process to the spine it just minted
-(`_bind_process_to`, `decision:bind-on-open-over-new-verb`). Neither moment is a tool argument:
-a model still cannot point the door at another spine or another identity mid-conversation, and
-`_rebind_refusal` blocks the swap while the process holds an active lease.
+`SPINE_ENGINE` and `SPINE_SESSION` from its environment when it launches; since issue #603 again
+when a successful `spine_open` binds the process to the spine it just minted
+(`_bind_process_to`, `decision:bind-on-open-over-new-verb`); and since issue #567 lane A again
+when `spine_bind` binds it to a spine that **already exists**. Only the MOMENT of decision moves —
+the count never rises above one (`decision:one-spine-per-process-stands`), and `_rebind_refusal`
+blocks the swap while the process holds an active lease, for `spine_bind` exactly as for
+`spine_open`.
+
+**The identity half and the spine half now differ, and the split is the whole security content.**
+A model still **cannot name an identity**: `spine_open` takes the session from what it minted and
+`spine_bind` derives it from the spine's own work id (`spine_lifecycle.session_id_for`, the one
+definition, shared by both), so `IDENTITY_TRADE.md` §3 Option B — a caller-supplied identity buys
+nothing, because any string a subagent can supply it can supply its parent's — still stands
+unamended. A model **can** now name a **spine**, which is a real widening of a security boundary
+and is recorded rather than left for the tests to certify: `spine_bind`'s one declared property is
+a filesystem path, confined to `<the door's own checkout>/.agent-work/` (resolved with
+`git rev-parse --show-toplevel`, deliberately **not** `--git-common-dir`, which lands on the
+primary checkout with `.worktrees/` nested inside it) **and** additionally refused when the
+candidate's own toplevel differs from the door's — because lexical containment alone would admit a
+separate checkout nested inside the work area. Measured when this was written: the narrow root
+reaches 683 spine-shaped candidates and no other checkout; the wide one reached 4205, of which
+3505 were other lanes' work. The property, stated so it can be attacked: **one checkout's
+work-area tree per process.** `IDENTITY_TRADE.md` carries the amendment.
 The committed project-scope `.mcp.json` uses `${VAR:-default}` expansion, so each dispatch supplies
 its own values and each gets its own server instance and its own reading. This is measured, not
 assumed: two `claude -p` dispatches from one directory through one committed config, differing only

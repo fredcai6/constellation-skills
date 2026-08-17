@@ -713,6 +713,47 @@ if __name__ == "__main__":
 # =============================================================================
 
 
+def identity_arg_offenders(tools, *, markers, addresses_within, binds_this_door):
+    """Every `<tool>.<property>` in `tools` that could redirect the door, as the
+    pin below defines it. **One detector, module-level, called by the pin AND by
+    its positive control.**
+
+    Extracted at issue #567 lane A, and the extraction is a fix rather than a
+    tidy-up. The control used to REIMPLEMENT this loop inline over a planted
+    tool, and it reimplemented only part of it -- it applied `markers` and
+    neither exemption. So the moment the real pin gained a `binds_this_door`
+    entry, the control would have kept passing while no longer controlling for
+    the thing that had changed: a detector blind to the new exemption cannot
+    demonstrate that the exemption is narrow. Sharing the function makes the
+    control fail if the exemption is ever widened to swallow the planted case.
+
+    `addresses_within` is matched on the PROPERTY NAME alone, across every tool:
+    those are structural ids inside the bound spine (`task_id`), plus
+    `from_child`, whose path is confined at RUNTIME by
+    `_identity_violation` -- delete that clause and the entry becomes false.
+
+    `binds_this_door` is keyed on `(tool, property)`, deliberately NOT on the
+    tool: `{"spine_bind": ("spine_file",)}` exempts exactly one property of
+    exactly one tool, so `spine_advance.spine_file` is still an offender and so
+    is a `spine_bind.session_id` added later. A tool-wide skip would let a future
+    identity argument onto the one tool whose whole job is moving the binding,
+    unseen. `tests/test_mcp_spine_bind.py` carries the runtime half: that
+    property is confined to this door's own checkout's `.agent-work/` and confers
+    only the identity the spine itself dictates. Delete that confinement and this
+    entry becomes false, exactly as with `from_child`.
+    """
+    offenders = []
+    for tool in tools:
+        schema = tool.get("inputSchema") or {}
+        exempt_here = binds_this_door.get(tool["name"], ())
+        for prop in (schema.get("properties") or {}):
+            if prop in addresses_within or prop in exempt_here:
+                continue
+            if any(marker in prop.lower() for marker in markers):
+                offenders.append(f"{tool['name']}.{prop}")
+    return offenders
+
+
 class IdentityBindingPinTests(unittest.TestCase):
     """Pin the identity binding that `IDENTITY_TRADE.md` selects, so a later
     change cannot move it silently.
@@ -775,6 +816,34 @@ class IdentityBindingPinTests(unittest.TestCase):
     #: Delete that clause and this entry becomes false again.
     ADDRESSES_WITHIN_BOUND_SPINE = ("task_id", "condition_id", "evidence_ref", "from_child")
 
+    #: The ONE exemption that is not a structural id, keyed on `(tool, property)`
+    #: rather than on the tool -- issue #567 lane A, `spine_bind`.
+    #:
+    #: `spine_bind.spine_file` is a declared property that DOES redirect the
+    #: door; that is the tool's entire purpose, and it is the wider of the two
+    #: path properties on this surface (`from_child` can only feed evidence INTO
+    #: the bound spine; this one decides WHICH spine is bound). So the identity
+    #: trade was deliberately re-opened, and the amendment this pin's failure
+    #: message demands ships in the same change -- IDENTITY_TRADE.md §7.
+    #:
+    #: Keyed on the PAIR on purpose. A tool-wide skip (`"spine_bind"` alone)
+    #: would silently admit a `spine_bind.session_id` added later, on the one tool
+    #: whose job is moving the binding -- which is the worst possible place for a
+    #: blind spot. `test_the_exemption_is_keyed_on_tool_and_property` measures
+    #: that. And the argument is NOT renamed to `work_file`/`plan_path` to pass
+    #: this pin untouched: that is the spelling game
+    #: `_identity_violation`'s docstring records losing six times, and it would be
+    #: the author playing it against his own test.
+    #:
+    #: What holds it in, at RUNTIME and not in CI (delete either and this entry
+    #: becomes false): `_own_checkout_for_binding` confines the path to this
+    #: door's OWN checkout's `.agent-work/`, a candidate in another checkout is
+    #: refused even when lexically inside, and the SESSION is derived from the
+    #: spine's own `work_id` rather than supplied -- so the set of identities this
+    #: door can assume is a function of the spines it may bind, and those are
+    #: confined. Pinned by `tests/test_mcp_spine_bind.py`.
+    BINDS_THIS_DOOR = {"spine_bind": ("spine_file",)}
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
@@ -814,20 +883,22 @@ class IdentityBindingPinTests(unittest.TestCase):
                 else:
                     os.environ[key] = value
 
+    def _offenders(self, tools):
+        """The one detector, with THIS class's constants. Both the pin and its
+        positive control go through here, so a change to either constant is felt
+        by both -- see `identity_arg_offenders`."""
+        return identity_arg_offenders(
+            tools, markers=self.IDENTITY_ARG_MARKERS,
+            addresses_within=self.ADDRESSES_WITHIN_BOUND_SPINE,
+            binds_this_door=self.BINDS_THIS_DOOR,
+        )
+
     def test_no_tool_accepts_an_argument_that_could_redirect_the_door(self):
         """THE pin. Identity is not per-call, so no tool may take an argument
         naming a spine, a session or an engine. A future change that adds one
         has moved the binding and must say so in IDENTITY_TRADE.md."""
         module = self._load_module(self.spine, "pin-session#pin-agent")
-        offenders = []
-        for tool in module.TOOLS:
-            schema = tool.get("inputSchema") or {}
-            for prop in (schema.get("properties") or {}):
-                if prop in self.ADDRESSES_WITHIN_BOUND_SPINE:
-                    continue
-                lowered = prop.lower()
-                if any(marker in lowered for marker in self.IDENTITY_ARG_MARKERS):
-                    offenders.append(f"{tool['name']}.{prop}")
+        offenders = self._offenders(module.TOOLS)
         self.assertEqual(
             [], offenders,
             "a tool now accepts an argument that could point the door at a different "
@@ -839,22 +910,67 @@ class IdentityBindingPinTests(unittest.TestCase):
     def test_the_pin_can_fail(self):
         """Positive control, in the assertion path. A tool schema carrying a
         spine argument MUST be detected -- otherwise the test above is green
-        for the wrong reason and proves nothing."""
+        for the wrong reason and proves nothing.
+
+        It calls the SAME detector the pin calls, rather than reimplementing the
+        loop as it used to. The planted property is `spine_file` and the exempt
+        pair is `("spine_bind", "spine_file")`, so this controls for the exemption
+        being narrow: plant it on any OTHER tool and it must still be caught. If
+        the exemption were ever widened to the property alone, this goes red."""
         module = self._load_module(self.spine, "pin-control#pin-agent")
         planted = dict(module.TOOLS[0])
+        self.assertNotIn(planted["name"], self.BINDS_THIS_DOOR,
+                         "the control plants on an EXEMPT tool, so it controls for nothing")
         planted["inputSchema"] = {
             "type": "object",
             "properties": {"spine_file": {"type": "string"}},
         }
-        offenders = []
-        for tool in [planted]:
-            for prop in (tool["inputSchema"].get("properties") or {}):
-                if any(m in prop.lower() for m in self.IDENTITY_ARG_MARKERS):
-                    offenders.append(f"{tool['name']}.{prop}")
+        offenders = self._offenders([planted])
         self.assertTrue(
             offenders,
             "the detector did not flag a planted `spine_file` tool argument -- the "
             "pin above is incapable of failing and is therefore not evidence",
+        )
+
+    def test_the_exemption_is_keyed_on_tool_and_property_not_on_the_tool(self):
+        """A3. The exemption `spine_bind` needs is for ONE property. A tool-wide
+        skip would let a future identity argument onto the one tool whose job is
+        moving the binding, unseen -- so a hypothetical `spine_bind.session_id`
+        must STILL be an offender, and so must a `spine_file` on any other tool.
+
+        Both halves are asserted, because either alone is satisfiable by the
+        wrong implementation: a tool-wide skip passes the second, and a
+        property-wide skip passes the first."""
+        module = self._load_module(self.spine, "pin-keying#pin-agent")
+        real = next(t for t in module.TOOLS if t["name"] == "spine_bind")
+        self.assertEqual([], self._offenders([real]),
+                         "the real spine_bind is not exempt at all, so this test's own "
+                         "premise is wrong")
+
+        widened = dict(real)
+        widened["inputSchema"] = {
+            "type": "object",
+            "properties": {"spine_file": {"type": "string"},
+                           "session_id": {"type": "string"}},
+        }
+        self.assertEqual(
+            ["spine_bind.session_id"], self._offenders([widened]),
+            "a `session_id` argument on `spine_bind` was NOT flagged -- the exemption is "
+            "keyed on the tool rather than on the (tool, property) pair, so the one tool "
+            "that moves this door's binding could grow a caller-supplied identity with "
+            "nothing to catch it. IDENTITY_TRADE.md §3 Option B: any string a caller can "
+            "supply, it can supply its parent's.",
+        )
+
+        elsewhere = dict(next(t for t in module.TOOLS if t["name"] == "spine_advance"))
+        elsewhere["inputSchema"] = {
+            "type": "object", "properties": {"spine_file": {"type": "string"}},
+        }
+        self.assertEqual(
+            ["spine_advance.spine_file"], self._offenders([elsewhere]),
+            "`spine_file` on spine_advance was not flagged -- the exemption leaked to the "
+            "property name across all tools, which would let any engine pass-through be "
+            "pointed at another spine",
         )
 
     def test_identity_is_bound_at_import_and_is_immune_to_later_environment_change(self):

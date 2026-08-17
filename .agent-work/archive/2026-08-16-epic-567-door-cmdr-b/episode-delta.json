@@ -1,0 +1,122 @@
+{
+  "work_id": "epic-567-door/cmdr-b",
+  "ops": [
+    {
+      "mechanical": {
+        "run": "epic-567-door/cmdr-b",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "plan",
+        "context-manifest-ref": ".agent-work/epic-567-door/cmdr-b/MISSION_FRAME.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-567-door/cmdr-b/PLAN_ALTERNATIVES.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Author a design for ExternalBackend to default-refuse a spineless-but-fresh crew dispatch (#432), then send it through a cold plan critic (fresh agent, no authoring context, given only the mission frame and candidate plan) before dispatching any implementer."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The first-draft design (optional --spine, mtime-only-plus-warning when absent) would be sound enough to hand to an implementer largely as written."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The cold critic found 2 CRITICAL findings: (1) accepting --spine newly legalized result=None + spine=<path> on the external path, and the draft's verify() sketch would call result_exists(None, root), a TypeError; (2) the dominant real-world case (dispatcher does not know the spine path at dispatch time) was left as mtime-only-plus-a-stderr-warning -- still an unqualified clean pass, missing the mission's own bar of 'impossible ... to return a clean success.'"
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Caught before any implementer dispatch: the design was revised (verify-time --verify-spine independent of dispatch-time --spine, default-refuse instead of default-warn, an explicit --accept-mtime-only-risk escape hatch, and a result=None guard) in the plan step, at the cost of one extra planning pass, versus what would otherwise have been an implementer building a fix that still left the mission's actual bar unmet for the common case, caught only much later at review or after merge."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Rewrote MISSION_FRAME.md's decision anchors, PLAN_ALTERNATIVES.md (added a 'Revision after cold critic' section naming both findings and their fix), and execute.json's g1-implement anchors/constraints before authoring the IMPLEMENTER_HANDOFF, so the handoff the crew actually received already carried the corrected design."
+        }
+      },
+      "op": "create"
+    },
+    {
+      "mechanical": {
+        "run": "epic-567-door/cmdr-b",
+        "project": "constellation-skills",
+        "role": "implementer",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-567-door/cmdr-b/crew-handoffs/g1-implement-IMPLEMENTER_HANDOFF.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "scripts/run_crew.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Remove ExternalBackend.dispatch()'s old refusal of --spine so a caller could supply it for verification purposes, per the handoff's change 1."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Removing the refusal block would be a clean, isolated deletion with no other code path affected."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Removing the refusal exposed a latent crash: _require_handoff(spec.handoff, ...) calls Path(handoff) with no None-guard, previously unreachable with handoff=None because the old --spine refusal always fired first whenever spine was given alongside handoff=None. The full suite would have failed test_external_backend_refuses_spine_only_with_no_handoff (a crash, not the expected refusal message) had this gone unnoticed."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Caught by the implementer itself during its own TDD pass (test-first per the handoff's Test Mode), before returning IMPLEMENTER_RESULT -- fixed in the same gate with a two-line explicit handoff-is-None guard, at the cost of one extra self-check cycle; not caught by the handoff's own three-change list, which did not anticipate this specific interaction."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Added 'if spec.handoff is None: raise CrewLaunchError(...)' in ExternalBackend.dispatch() before the _require_handoff call, restoring the original test's passing scenario and message contract unchanged; documented explicitly in IMPLEMENTER_RESULT's Out-of-scope observations rather than silently folding it into the main diff."
+        }
+      },
+      "op": "create"
+    },
+    {
+      "mechanical": {
+        "run": "epic-567-door/cmdr-b",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-567-door/cmdr-b/REPLAN_INPUT.json",
+        "refusals": 3,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 3,
+        "artifact-ref": [
+          ".agent-work/epic-567-door/cmdr-b/REPLAN_INPUT.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Populate REPLAN_INPUT.json (via the ../constellation-replan/templates/REPLAN_INPUT.template.json shape) with this run's completed_outcomes so the execute gate's verify_iterative_role_artifacts.py commander check would pass."
+        },
+        "expected-behavior": {
+          "strength": "weak",
+          "statement": "The template's own completed_outcomes: [] (empty in the template, with no worked example) plus the schema_version:1/current_plan example elsewhere would be enough to infer the correct object shape for a completed_outcomes entry on the first attempt."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Three sequential G2 schema refusals from verify_iterative_role_artifacts.py before it passed: (1) 'wave_evidence must be a nonempty array' (the template ships it non-empty but this run's initial draft, written early with wave_evidence:[], did not carry that forward), (2) completed_outcomes[0] missing required field(s): evidence, issue_id (the template's completed_outcomes array is empty, so its member shape is not demonstrated anywhere in the template file itself), (3) completed_outcomes[0] has unknown field(s): id (a natural first guess -- 'id' is used as the key elsewhere in the same template, e.g. current_wave.issues[].id and discrepancies[].id -- but completed_outcomes uses issue_id instead, an inconsistent naming choice across sibling arrays in the same schema)."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Three refusal-fix-retry cycles at the very end of execute, after all real implementation/review work was already done -- pure schema-shape friction, not a substantive problem with the run's evidence. Low cost in this run (a few minutes), but the same friction would recur for any commander populating this file for the first time without an example completed_outcomes entry to copy from."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Iteratively ran verify_iterative_role_artifacts.py commander after each edit, read its exact error text, and adjusted the JSON field-by-field until it passed, rather than reading the schema validator source directly."
+        }
+      },
+      "op": "create"
+    }
+  ]
+}

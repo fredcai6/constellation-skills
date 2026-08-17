@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "work_id": "epic-567-door/cmdr-a",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "4183448e7bd4408b17192f35a3d8abad623553baa6d6fddf9025ce07252c7074",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/GLOSSARY.md",
+      "content_hash": "574e9ef4f494522653ea8d62cb58a1138f5bf385a17e95a75629bccd3c0340ee",
+      "source": "agent-declared"
+    },
+    {
+      "path": "map/INDEX.md",
+      "content_hash": "111aacd589283742cd12cefd1bf3ce872be6c762dc26dde9ab2990507e6c6204",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/CHECKLIST_ENGINE_DESIGN.md",
+      "content_hash": "5c567ce8ef5632bd21cd7930fd9fdfd5aec56781bf4a221d94446faac1a6d4e4",
+      "source": "agent-declared"
+    },
+    {
+      "path": "notes-a.md",
+      "content_hash": "7b75470d21746a4e2ec651877c2a1f66a59ee445e2d387fa0373b250d50c397d",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "map/ids.jsonl is tracked but 0 bytes, so map_orient can resolve no anchor id for ANY area of this repo, not just mine. map/INDEX.md carries 29KB of generated structure but no citable anchor id (unfilled template). This is repo-wide, not lane-specific.",
+    "The door/engine identity area (scripts/mcp_spine_server.py, scripts/checklist_engine.py) has no map packet, overlay or decision anchor. The nearest thing to a decision-anchor record for my area is prose in notes-a.md from the previous lane A (cleanup/a-door), which settles decision:bind-on-open-over-new-verb and names the two AST pins in tests/test_mcp_lifecycle.py that constrain where a rebind may sit. I am using that as my frame.",
+    "Because no frame can carry an anchor id, the plan step's verify-frame anchor gate cannot be satisfied by any frame and will be taken as a recorded waiver, exactly as the previous lane A recorded."
+  ],
+  "escalation": "To the Admiral: map orientation is DEGRADED repo-wide (empty map/ids.jsonl), already reported by lane cleanup/a-door as a triage candidate and still unfixed at 600de020. map/ is not mine this wave; I am not fixing it. Re-raising as a triage candidate rather than a second unfiled issue, per decision:no-issue-filing.",
+  "emitted_at": "2026-08-17T06:11:22.921761+00:00",
+  "root_proof": "positive: .git entry present at root"
+}
