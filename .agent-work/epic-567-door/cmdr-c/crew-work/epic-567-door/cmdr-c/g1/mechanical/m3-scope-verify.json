@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-scope-verify",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-c/g1",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m3-scope-verify",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-c/g1-m3-scope-verify@f598cc5524762ee86ee49bb9f8008909219d85ea",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-c/g1",
+    "generated_at": "2026-08-17T05:40:43Z"
+  }
+}

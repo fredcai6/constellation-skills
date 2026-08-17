@@ -1488,11 +1488,14 @@ def _mid_flight_reason(spine: dict, aid) -> str:
     return (
         "SPINE MID-FLIGHT: gate {aid} is still open -- you are in the MIDDLE of "
         "the spine, not at its end, so ending your turn now abandons an active "
-        "run. Keep working the gate -- do not end your turn to wait. "
+        "run. This Stop hook is authoritative over any SOFT-band context-trip "
+        "advisory you saw on spine_status/current -- that advisory is "
+        "non-binding guidance, never license to end this turn. "
         "Next imperative: {imp} "
-        "If this is an honest stop (genuinely blocked or out of scope), use the "
-        "engine's block verb to bubble the blocker to the parent, or waive the "
-        "check with human authority -- do not just stop."
+        "If you genuinely cannot continue (context exhausted, truly blocked), "
+        "the sanctioned exit is the engine's block verb -- spine_halt block -- "
+        "with a reason, or waive the check with human authority; do not end "
+        "your turn to \"hand off.\""
     ).format(aid=aid, imp=imperative)
 
 

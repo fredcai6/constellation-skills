@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "epic-567-door lane C: RAIL/refusal readability + advisory authority",
+      "spec_path": ".agent-work/epic-567-door/crew-handoffs/LANE_C_LAUNCH_ORDER.md",
+      "intent_and_why": "Make the engine's RAIL banner and HARD refusal actionable to a cold agent (#442), and settle that the Stop hook outranks the context-trip advisory in shipped text, pointing the advisory at spine_halt block (#595)."
+    },
+    "definition_of_done": [
+      "A cold agent shown only the rail and a HARD refusal can state what it is being asked to do and do it (#442), measured on real agents.",
+      "The Stop hook is stated as authoritative over the context-trip advisory in shipped text, and the sanctioned mid-run exit points at spine_halt block (#595)."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Text changes only inside the lane's sole-owned file (scripts/hooks/spine_rail.py) and shipped skill doctrine (crew-dispatch.md); no touch to fenced scripts/checklist_engine.py or scripts/mcp_spine_server.py; no change to when the Stop hook fires.",
+      "sufficient_evidence": "Independent implementer+reviewer crew verification against the working tree, plus fresh-process validation of the hook edit (in-session observation does not count, #269).",
+      "appetite": "One bounded wave, Sonnet tier."
+    },
+    "hard_constraints": [
+      "Never edit scripts/checklist_engine.py or scripts/mcp_spine_server.py this wave (Lane A fence).",
+      "Never redesign the trip mechanic (change what it says, not when it fires).",
+      "File no issues; write triage candidates only.",
+      "Do not merge; open the PR and return."
+    ],
+    "fixed_decisions": [
+      "decision:stop-hook-is-authoritative -- the Stop hook outranks the context-trip advisory.",
+      "decision:no-third-mechanism -- subordinate an existing mechanism in text, never add a new advisory surface.",
+      "decision:trip-mechanic-untouched -- change wording, never timing.",
+      "decision:measure-on-real-agents -- #442 acceptance is measured on real cold agents, not author judgement."
+    ],
+    "current_wave": {
+      "objective": "Ship the in-latitude half of the mission (Stop-hook precedence text + crew-dispatch.md doctrine) and surface the fence-blocked half (#442's RAIL/HARD-refusal text, and the advisory's own wording) as a discrepancy for the Admiral to sequence.",
+      "exit_criteria": [
+        "scripts/hooks/spine_rail.py's Stop-hook refusal states Stop-hook-over-advisory precedence and names spine_halt block.",
+        "skills/commander/references/crew-dispatch.md states the same precedence.",
+        "Fresh-process validation confirms the new wording renders from the edited worktree file.",
+        "The #442 fence block is recorded as wave evidence/discrepancy, not silently absorbed or silently dropped."
+      ],
+      "issues": [
+        {
+          "id": "g1-stop-hook-precedence",
+          "title": "State Stop-hook authority over the context-trip advisory; point the sanctioned mid-run exit at spine_halt block",
+          "desired_outcome": "A Commander caught between the Stop hook's refusal and the context-trip advisory has a stated, principled answer in shipped text (spine_rail.py's own refusal message and crew-dispatch.md), instead of inferring it from which mechanism happens to bite.",
+          "useful_now": "Two 2026-08-15 episodes (launcher-hygiene-002, stop-hook-door-binding-002) show real lanes hit this fork with no textual basis to resolve it; the cost is asymmetric (a wrongly-distrusted Stop hook can abandon a live run silently).",
+          "appetite": "One crew gate.",
+          "acceptance_or_falsification_evidence": "Independent reviewer re-verification of the diff plus a fresh subprocess (CLAUDE_PROJECT_DIR pointed at this worktree) invoking the edited Stop hook against a synthetic mid-flight fixture, confirming the new wording renders.",
+          "implementation_latitude": "Wording of both edits; whether to also touch _owning_session_reason (decided: left unchanged, different scenario).",
+          "hard_constraints_no_gos": [
+            "Never touch scripts/checklist_engine.py or scripts/mcp_spine_server.py.",
+            "Never change when decide_stop fires."
+          ],
+          "local_unknowns": [],
+          "anchors": ["scripts/hooks/spine_rail.py:1479-1499", "skills/commander/references/crew-dispatch.md"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Once Lane A's fence on scripts/checklist_engine.py lifts, a follow-up wave rewrites _RAIL_STRINGS (the RAIL banner + HARD refusal remedy string, #442) and _trip_advisory's SOFT-band wording (#595) to be actionable to a cold agent and to carry the same stated precedence, then re-measures on real cold agents.",
+        "why_likely": "The launch order itself names this exact collision as expected ('a genuine possibility for your mission; expect it and ask early rather than late'), and the pre-ruling decision:measure-on-real-agents already anticipates a real-agent measurement step once text exists to measure.",
+        "entry_conditions": ["Lane A's checklist_engine.py edits this wave are merged or the fence is explicitly lifted for this file."]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether stating precedence in spine_rail.py + crew-dispatch.md alone (without touching the SOFT advisory's own wording in checklist_engine.py) is a sufficient 'settled in shipped text' deliverable for #595, or whether the Admiral wants the advisory's own wording changed too.",
+        "affects": "Whether #595 is considered fully closed by this wave or needs a follow-up gate once the fence lifts.",
+        "settle_by": "Admiral review of this lane's RETURN.md.",
+        "current_evidence": "Precedence is stated in both files this lane owns; the advisory's own text (checklist_engine.py) is unedited.",
+        "next_probe": "Admiral reads RETURN.md and either accepts the partial deliverable or schedules a follow-up wave."
+      }
+    ],
+    "parked_possibilities": [
+      "A single source of truth for the precedence sentence instead of duplicating it across spine_rail.py and crew-dispatch.md (reviewer's triage candidate tc1)."
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "g1-stop-hook-precedence",
+      "outcome": "scripts/hooks/spine_rail.py's _mid_flight_reason now states the Stop hook is authoritative over the context-trip advisory and names spine_halt block as the sanctioned mid-run exit; skills/commander/references/crew-dispatch.md states the same precedence next to its existing spine_halt block guidance.",
+      "evidence": "Implementer/reviewer crew results at .agent-work/epic-567-door/cmdr-c/crew-handoffs/g1-{implementer,reviewer}-result.md; diff independently re-verified by the Commander; fresh-process subprocess (CLAUDE_PROJECT_DIR set to this worktree) confirmed the new wording renders."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The RAIL banner text, the HARD refusal's remedy string, and the context-trip SOFT advisory's own wording are all authored in scripts/checklist_engine.py, not in this lane's sole-owned scripts/hooks/spine_rail.py.",
+      "expected": "The launch order's File Ownership section implied these strings were reachable ('wherever they are authored'), while its own Fence section separately warned this was 'a genuine possibility.'",
+      "observed": "grep-confirmed: _RAIL_STRINGS (RAIL banner text) at scripts/checklist_engine.py:310-326, the HARD refusal remedy string _refresh_attach_hint at line 1542-1543, and the SOFT advisory text at line 1858-1861 -- all in checklist_engine.py, fenced to Lane A this wave and marked FROZEN/verbatim ('do not paraphrase', a measurement precondition for #145). scripts/hooks/spine_rail.py contains only the Stop hook's own SPINE MID-FLIGHT text.",
+      "source": "Direct grep/read of scripts/checklist_engine.py and scripts/hooks/spine_rail.py at base commit 600de020, recorded in MISSION_FRAME.md and notes-c.md."
+    },
+    {
+      "claim": "The Stop-hook-precedence text change renders correctly when the edited worktree file is executed, not merely when read in-session.",
+      "expected": "A fresh subprocess invoking the edited scripts/hooks/spine_rail.py against a synthetic mid-flight binding+spine fixture should print the new precedence sentence and the spine_halt block pointer.",
+      "observed": "It did: the Stop event's JSON reason field contained 'This Stop hook is authoritative over any SOFT-band context-trip advisory ... spine_halt block ... do not end your turn to \"hand off.\"' exactly as edited.",
+      "source": "CLAUDE_PROJECT_DIR=<worktree> py scripts/hooks/spine_rail.py Stop < synthetic-stdin, run as a new OS process from this worktree; scratch fixtures deleted after."
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D-442-fenced-out",
+      "signal": "#442's two problem instances (the RAIL: banner text and the HARD refusal's attach-refresh-request remedy string) are both authored in scripts/checklist_engine.py, fenced to Lane A this wave -- this lane cannot deliver #442's acceptance criterion (a cold agent acting correctly on the actual banner/refusal text) at all, because it cannot legally edit the text the criterion is measured against.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "Whether #442 can be closed this wave, or must roll into a follow-up wave once the checklist_engine.py fence lifts.",
+      "evidence": "grep/read of scripts/checklist_engine.py lines 294-326 (RAIL_STRINGS, marked FROZEN/verbatim, measurement precondition #145) and 1520-1545 (_refresh_attach_hint); cross-checked against LANE_A_LAUNCH_ORDER.md, whose own mission (#559 per-dispatch spine identity) does not plan to touch these specific strings either -- the fence is a wave-sequencing artifact, not a competing intent.",
+      "reason": "This is evidence for the Admiral to sequence a follow-up wave, not a defect in this lane's execution -- the launch order itself flagged this exact collision as expected and instructed floating it rather than guessing past it."
+    },
+    {
+      "id": "D-595-advisory-wording-unedited",
+      "signal": "The context-trip SOFT advisory's own wording ('hand off here... advisory -- decline with a reason if you're nearly done') also lives in scripts/checklist_engine.py and was not edited by this lane, even though #595's suggested resolution point 2 names changing the advisory's own wording as one option.",
+      "classification": "later_only",
+      "affects": "Whether #595 is fully closed or partially closed this wave.",
+      "evidence": "scripts/checklist_engine.py:1858-1861 (_trip_advisory SOFT branch).",
+      "reason": "The pre-ruling decision:stop-hook-is-authoritative is satisfied by stating precedence in shipped text this lane DOES own (spine_rail.py + crew-dispatch.md); the advisory's own wording is a nice-to-have follow-up once the fence lifts, not a blocker to closing #595's core ask (a stated, actionable precedence)."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {"id": "issue-442-rail-hard-refusal-text", "kind": "issue"},
+    {"id": "issue-595-advisory-wording-edit", "kind": "issue"}
+  ],
+  "repo_state": {
+    "anchors": ["scripts/hooks/spine_rail.py", "scripts/checklist_engine.py", "skills/commander/references/crew-dispatch.md"],
+    "map_status": "No architecture map (docs/architecture absent); context step returned DEGRADED-UNPARSEABLE, discharged with file-path substitutes."
+  }
+}

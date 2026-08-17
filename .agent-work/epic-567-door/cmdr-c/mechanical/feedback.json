@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "feedback",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-c",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 1,
+    "spine-step": "feedback",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-c-feedback@b5f7663cbaa3d05b045dde5b21dc4c86ea288030",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-c",
+    "generated_at": "2026-08-17T05:55:26Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r3-evidence",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-c/g1-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r3-evidence",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-c/g1-review-r3-evidence@6c20ab17c737f683c19fbd6c199f57c912598096",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-c/g1-review",
+    "generated_at": "2026-08-17T05:45:51Z"
+  }
+}

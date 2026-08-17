@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-crew-dispatch-doc",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-c/g1",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m2-crew-dispatch-doc",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-c/g1-m2-crew-dispatch-doc@b50b6529ba3cf3e4cc0cda50acce92d3baeb2f98",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-c/g1",
+    "generated_at": "2026-08-17T05:40:22Z"
+  }
+}

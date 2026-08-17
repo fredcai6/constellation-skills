@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "work_id": "epic-567-door/cmdr-c",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/567-c-rail-readability",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "scripts/hooks/spine_rail.py",
+      "content_hash": "2ace278660004933bbbbbb1855022a96724274e3d8056da7bab63260b1d2d518",
+      "source": "agent-declared"
+    },
+    {
+      "path": "skills/commander/references/crew-dispatch.md",
+      "content_hash": "49a491e2f6d305fc400f2d9236e26c3396f06b1c5391fe99484d3b1d8485a190",
+      "source": "agent-declared"
+    },
+    {
+      "path": "skills/_shared/global-everyone.md",
+      "content_hash": "1c80a127d75c92de68f434a49bea4b8f838cbeb5bf5048f1709fc298c15b0520",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "4183448e7bd4408b17192f35a3d8abad623553baa6d6fddf9025ce07252c7074",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "no docs/architecture map exists in this skill-source repo; scripts/hooks/spine_rail.py (rail banner + Stop hook + HARD refusal strings) and skills/commander/references/crew-dispatch.md (advisory precedence) read directly as the entry points for this lane's mission"
+  ],
+  "escalation": "none required -- read-no-map path is expected for this skill-source repo per commander-core.md Architecture bookend (no packet map -> reconcile the schema/doc directly)",
+  "emitted_at": "2026-08-17T05:27:30.444636+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

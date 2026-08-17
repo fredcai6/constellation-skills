@@ -2111,16 +2111,30 @@ def test_stop_blocked_status_honest_stop_allows(proj):
 
 
 def test_stop_mid_flight_blocks_with_substrings(proj):
+    """Asserts the CLASS of refusal, not one pinned phrase (#522, #595): a
+    literal-wording pin breaks the moment anyone improves the string without
+    changing what it must guarantee. The three properties below are the
+    guarantee -- (a) identifies itself as mid-flight, naming the gate; (b)
+    states this Stop hook outranks the context-trip advisory
+    (decision:stop-hook-is-authoritative, #595); (c) names `spine_halt block`
+    as the sanctioned mid-run exit, in place of ending the turn. Any wording
+    that keeps these three true is a passing rewrite; the literal string is
+    not the contract."""
     spine = make_spine([("g1", "in-progress")], imperatives={"g1": "finish the feature"})
     sp = write_spine(proj, spine, journal_lines=2)
     bind(proj, "s1", sp)
     out = sr.decide_stop({"session_id": "s1"}, proj)
     assert out["decision"] == "block"
     reason = out["reason"]
+    # (a) identifies itself as mid-flight, naming the open gate
     assert "SPINE MID-FLIGHT" in reason
     assert "g1" in reason
     assert "the MIDDLE" in reason
-    assert "do not end your turn to wait" in reason
+    # (b) states precedence over the context-trip advisory
+    assert "advisory" in reason.lower()
+    assert "authoritative" in reason.lower()
+    # (c) names spine_halt block as the sanctioned mid-run exit
+    assert "spine_halt block" in reason
     assert "finish the feature" in reason  # next imperative surfaced
     assert "block" in reason and "waive" in reason  # honest-stop hatches
     hso = out["hookSpecificOutput"]
