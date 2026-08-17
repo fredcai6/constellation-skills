@@ -1,0 +1,691 @@
+{
+  "work_id": "epic-567-door/cmdr-a",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-converge",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-selfhost"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Re-confirm the frozen plan's intent and scope against LANE_A_LAUNCH_ORDER.md and the mission frame at .agent-work/epic-567-door/cmdr-a/MISSION_FRAME.md. Doctrine and project deltas were already read at the spine's context step (global-orchestrator.md, global-everyone.md, design-it-twice-brief.md, commander-core.md, docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md); the map is DEGRADED repo-wide and discharged with five hash-pinned substitutes. Do not re-derive the baseline: the order's counts (15 CLI-fallback clauses, 11 <engine> tokens) were re-measured at 600de020 and match. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope re-confirmed against the launch order and mission frame",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Cite the launch order rather than re-litigating ratified scope."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": {
+        "structural": [
+          "scripts/mcp_spine_server.py \u2014 the door; _bind_process_to(:878) is the one sanctioned identity mutator, _unbound_refusal(:393), _rebind_refusal(:920), _identity_violation(:443), _resolve_confined(:~330-380), BINDS_WITHOUT_A_BOUND_SPINE(:1425), LIFECYCLE_TOOLS(:1368), call_lifecycle_tool(:1067) \u2014 module level",
+          "scripts/checklist_engine.py \u2014 the engine; save(:237) ends in a bare write_bytes, load(:220) a bare read_text \u2014 module level",
+          "tests/test_mcp_lifecycle.py \u2014 the AST pins: ALLOWED(:135), the _spine_open identifier ban(:194), the module-wide one-binder pin(:563) \u2014 test module",
+          "tests/test_mcp_identity.py \u2014 IDENTITY_ARG_MARKERS(:754) and test_no_tool_accepts_an_argument_that_could_redirect_the_door(:817) \u2014 test module"
+        ],
+        "capability": [
+          "door-binding \u2014 how the door decides which spine it drives; today only at launch or at spine_open (mint)",
+          "door-identity-guard \u2014 _identity_violation, compares argv against SPINE at CALL time so it follows a rebind",
+          "spine-state-persistence \u2014 checklist_engine.load/save, the only read and write path for spine state"
+        ],
+        "constraint": [
+          "constraint:one-spine-per-process \u2014 the count of live spines per process stays one; only WHEN the binding is decided may move",
+          "constraint:ast-pin-on-identity-assignment \u2014 assignments to SPINE/SESSION must remain exactly {module scope, _bind_process_to}",
+          "constraint:lifecycle-return-pin \u2014 call_lifecycle_tool may only return a call to a named dispatch function; adding a literal to ALLOWED is widening an allow-list, NOT loosening the ban, and must be argued as such",
+          "constraint:fail-closed-binding \u2014 an unnamed spine refuses; never resolve a binding from ambient cwd (_spine_from_env:156 records that defect)",
+          "constraint:rail-strings-untouched \u2014 _RAIL_STRINGS and _refresh_attach_hint in checklist_engine.py are fenced to this lane but needed intact by lane C; no gratuitous churn",
+          "constraint:no-hooks \u2014 scripts/hooks/* is untouched (Admiral merge sequencing)"
+        ],
+        "decision": [
+          "decision:convergence-is-human-only \u2014 the human picks the winner; my recommendation is not ratified by my having made it",
+          "decision:isolation-not-fencing \u2014 name the replacement isolation property and the reach delta explicitly",
+          "decision:net-deletion \u2014 the lane ends with something deleted",
+          "decision:atomicity-is-not-mutual-exclusion \u2014 atomic replace fixes torn reads and crash corruption, NOT lost updates; say so",
+          "decision:in-session-observation-is-not-evidence \u2014 validate in a fresh process with explicit paths (#269)"
+        ],
+        "evidence": [
+          "claim: an agent that did not launch its own door can drive its own spine \u2014 fresh-process test binding a spine it did not mint",
+          "claim: reach did not silently widen \u2014 negative test, a path outside the boundary refused with the boundary named",
+          "claim: save() cannot expose or leave a torn spine \u2014 concurrent reader sees old or new complete document, never partial",
+          "claim: the engine under edit still drives a live spine \u2014 read-only current on the live spine exits 0; mutating advance against a COPY"
+        ]
+      }
+    },
+    "g1-converge": {
+      "id": "g1-converge",
+      "title": "Converge the design-it-twice panel into one recommendation",
+      "imperative": "Reasoning gate \u2014 the deliverable is a document and the context is already held, so no crew is dispatched (crew waiver: a crew on a pure design comparison is shallower, not safer; commander-core 'Crew gate vs reasoning gate'). Read all three candidates in crew-handoffs/ (CANDIDATE_A_minimal-interface.md, CANDIDATE_B_no-new-tool.md, CANDIDATE_C_per-call-identity.md). Score them like-for-like on depth, locality, seam placement and testability. Write DESIGN_CONVERGENCE.md carrying the four-axis comparison, ONE opinionated recommendation or named hybrid (never a menu), the replacement isolation property with its reach delta, and what would have to be true for the recommendation to be wrong. decision:convergence-is-human-only governs: this gate produces a defended recommendation for the human, and closing it does NOT ratify the pick. Attach a user-decision citing the launch order's design pre-rulings.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all three candidates delivered to crew-handoffs/",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "DESIGN_CONVERGENCE.md exists and carries the four-axis comparison plus one recommendation",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/epic-567-door/cmdr-a/DESIGN_CONVERGENCE.md && grep -q 'Recommendation' .agent-work/epic-567-door/cmdr-a/DESIGN_CONVERGENCE.md"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the recommendation is surfaced to the human as a decision, not treated as ratified",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision",
+            "match": {
+              "cite": "LAUNCH_ORDER:Pre-Rulings"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Never hand back a menu \u2014 the comparison IS the deliverable.",
+        "State the reach delta explicitly per decision:isolation-not-fencing.",
+        "Record the panel-vs-single choice and every untaken road."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": {
+        "structural": [
+          "scripts/mcp_spine_server.py \u2014 the door; _bind_process_to(:878) is the one sanctioned identity mutator, _unbound_refusal(:393), _rebind_refusal(:920), _identity_violation(:443), _resolve_confined(:~330-380), BINDS_WITHOUT_A_BOUND_SPINE(:1425), LIFECYCLE_TOOLS(:1368), call_lifecycle_tool(:1067) \u2014 module level",
+          "scripts/checklist_engine.py \u2014 the engine; save(:237) ends in a bare write_bytes, load(:220) a bare read_text \u2014 module level",
+          "tests/test_mcp_lifecycle.py \u2014 the AST pins: ALLOWED(:135), the _spine_open identifier ban(:194), the module-wide one-binder pin(:563) \u2014 test module",
+          "tests/test_mcp_identity.py \u2014 IDENTITY_ARG_MARKERS(:754) and test_no_tool_accepts_an_argument_that_could_redirect_the_door(:817) \u2014 test module"
+        ],
+        "capability": [
+          "door-binding \u2014 how the door decides which spine it drives; today only at launch or at spine_open (mint)",
+          "door-identity-guard \u2014 _identity_violation, compares argv against SPINE at CALL time so it follows a rebind",
+          "spine-state-persistence \u2014 checklist_engine.load/save, the only read and write path for spine state"
+        ],
+        "constraint": [
+          "constraint:one-spine-per-process \u2014 the count of live spines per process stays one; only WHEN the binding is decided may move",
+          "constraint:ast-pin-on-identity-assignment \u2014 assignments to SPINE/SESSION must remain exactly {module scope, _bind_process_to}",
+          "constraint:lifecycle-return-pin \u2014 call_lifecycle_tool may only return a call to a named dispatch function; adding a literal to ALLOWED is widening an allow-list, NOT loosening the ban, and must be argued as such",
+          "constraint:fail-closed-binding \u2014 an unnamed spine refuses; never resolve a binding from ambient cwd (_spine_from_env:156 records that defect)",
+          "constraint:rail-strings-untouched \u2014 _RAIL_STRINGS and _refresh_attach_hint in checklist_engine.py are fenced to this lane but needed intact by lane C; no gratuitous churn",
+          "constraint:no-hooks \u2014 scripts/hooks/* is untouched (Admiral merge sequencing)"
+        ],
+        "decision": [
+          "decision:convergence-is-human-only \u2014 the human picks the winner; my recommendation is not ratified by my having made it",
+          "decision:isolation-not-fencing \u2014 name the replacement isolation property and the reach delta explicitly",
+          "decision:net-deletion \u2014 the lane ends with something deleted",
+          "decision:atomicity-is-not-mutual-exclusion \u2014 atomic replace fixes torn reads and crash corruption, NOT lost updates; say so",
+          "decision:in-session-observation-is-not-evidence \u2014 validate in a fresh process with explicit paths (#269)"
+        ],
+        "evidence": [
+          "claim: an agent that did not launch its own door can drive its own spine \u2014 fresh-process test binding a spine it did not mint",
+          "claim: reach did not silently widen \u2014 negative test, a path outside the boundary refused with the boundary named",
+          "claim: save() cannot expose or leave a torn spine \u2014 concurrent reader sees old or new complete document, never partial",
+          "claim: the engine under edit still drives a live spine \u2014 read-only current on the live spine exits 0; mutating advance against a COPY"
+        ]
+      }
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Binding verb: implement the converged design in the door",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md from DESIGN_CONVERGENCE.md and this gate's anchors. Dispatch a subagent invoking constellation-implementer. FILE FENCE for this gate: scripts/mcp_spine_server.py, scripts/spine_lifecycle.py, tests/test_mcp_*.py only \u2014 scripts/checklist_engine.py belongs to g3 and scripts/hooks/* is out of scope for the whole lane. The handoff must carry, as protected intent: the module-wide AST pin keeps assignments to SPINE/SESSION at exactly {module scope, _bind_process_to}; the new dispatch function assigns neither; adding a name to ALLOWED in tests/test_mcp_lifecycle.py:135 is widening an allow-list and must be argued as NOT loosening the ban, with the positive control at :156 left untouched and still red on a mutate-then-return; the session is derived from origin.work_id when present and else the spine's top-level work_id (measured: 4 of 52 live spines carry origin.work_id, 48 carry only top-level work_id, 0 carry neither \u2014 deriving from origin alone refuses the Admiral's own spine and IMPLEMENTER_PLAN.json, which are the two cases the mission names). Integrate the returned IMPLEMENTER_RESULT with `attach g2-implement --type implementer-result --field status=complete` (lowercase, verbatim).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1-converge closed with a recommendation to implement",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Do not weaken any AST pin; widen an allow-list only with the argument recorded.",
+        "Do not touch scripts/checklist_engine.py (g3 owns it) or scripts/hooks/*.",
+        "Every new refusal names the problem then the remedy, matching the voice of _unbound_refusal."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": {
+        "structural": [
+          "scripts/mcp_spine_server.py \u2014 the door; _bind_process_to(:878) is the one sanctioned identity mutator, _unbound_refusal(:393), _rebind_refusal(:920), _identity_violation(:443), _resolve_confined(:~330-380), BINDS_WITHOUT_A_BOUND_SPINE(:1425), LIFECYCLE_TOOLS(:1368), call_lifecycle_tool(:1067) \u2014 module level",
+          "scripts/checklist_engine.py \u2014 the engine; save(:237) ends in a bare write_bytes, load(:220) a bare read_text \u2014 module level",
+          "tests/test_mcp_lifecycle.py \u2014 the AST pins: ALLOWED(:135), the _spine_open identifier ban(:194), the module-wide one-binder pin(:563) \u2014 test module",
+          "tests/test_mcp_identity.py \u2014 IDENTITY_ARG_MARKERS(:754) and test_no_tool_accepts_an_argument_that_could_redirect_the_door(:817) \u2014 test module"
+        ],
+        "capability": [
+          "door-binding \u2014 how the door decides which spine it drives; today only at launch or at spine_open (mint)",
+          "door-identity-guard \u2014 _identity_violation, compares argv against SPINE at CALL time so it follows a rebind",
+          "spine-state-persistence \u2014 checklist_engine.load/save, the only read and write path for spine state"
+        ],
+        "constraint": [
+          "constraint:one-spine-per-process \u2014 the count of live spines per process stays one; only WHEN the binding is decided may move",
+          "constraint:ast-pin-on-identity-assignment \u2014 assignments to SPINE/SESSION must remain exactly {module scope, _bind_process_to}",
+          "constraint:lifecycle-return-pin \u2014 call_lifecycle_tool may only return a call to a named dispatch function; adding a literal to ALLOWED is widening an allow-list, NOT loosening the ban, and must be argued as such",
+          "constraint:fail-closed-binding \u2014 an unnamed spine refuses; never resolve a binding from ambient cwd (_spine_from_env:156 records that defect)",
+          "constraint:rail-strings-untouched \u2014 _RAIL_STRINGS and _refresh_attach_hint in checklist_engine.py are fenced to this lane but needed intact by lane C; no gratuitous churn",
+          "constraint:no-hooks \u2014 scripts/hooks/* is untouched (Admiral merge sequencing)"
+        ],
+        "decision": [
+          "decision:convergence-is-human-only \u2014 the human picks the winner; my recommendation is not ratified by my having made it",
+          "decision:isolation-not-fencing \u2014 name the replacement isolation property and the reach delta explicitly",
+          "decision:net-deletion \u2014 the lane ends with something deleted",
+          "decision:atomicity-is-not-mutual-exclusion \u2014 atomic replace fixes torn reads and crash corruption, NOT lost updates; say so",
+          "decision:in-session-observation-is-not-evidence \u2014 validate in a fresh process with explicit paths (#269)"
+        ],
+        "evidence": [
+          "claim: an agent that did not launch its own door can drive its own spine \u2014 fresh-process test binding a spine it did not mint",
+          "claim: reach did not silently widen \u2014 negative test, a path outside the boundary refused with the boundary named",
+          "claim: save() cannot expose or leave a torn spine \u2014 concurrent reader sees old or new complete document, never partial",
+          "claim: the engine under edit still drives a live spine \u2014 read-only current on the live spine exits 0; mutating advance against a COPY"
+        ]
+      }
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Binding verb: independent review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from the gate plan and the IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer. The reviewer is instructed to ATTACK the isolation property specifically (decision:isolation-not-fencing is graded guess/admiral and its settle: condition is literally 'name the property in the design doc and have the reviewer attack it'), and to confirm by command that the three AST pins in tests/test_mcp_lifecycle.py and the identity-arg pin in tests/test_mcp_identity.py all still pass and that their positive controls still fail on planted regressions. Integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2-implement closed with a complete implementer result",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "The reviewer must attack the isolation property, not just confirm the tests pass.",
+        "A green suite is not evidence the reach did not widen \u2014 require the negative test."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": {
+        "structural": [
+          "scripts/mcp_spine_server.py \u2014 the door; _bind_process_to(:878) is the one sanctioned identity mutator, _unbound_refusal(:393), _rebind_refusal(:920), _identity_violation(:443), _resolve_confined(:~330-380), BINDS_WITHOUT_A_BOUND_SPINE(:1425), LIFECYCLE_TOOLS(:1368), call_lifecycle_tool(:1067) \u2014 module level",
+          "scripts/checklist_engine.py \u2014 the engine; save(:237) ends in a bare write_bytes, load(:220) a bare read_text \u2014 module level",
+          "tests/test_mcp_lifecycle.py \u2014 the AST pins: ALLOWED(:135), the _spine_open identifier ban(:194), the module-wide one-binder pin(:563) \u2014 test module",
+          "tests/test_mcp_identity.py \u2014 IDENTITY_ARG_MARKERS(:754) and test_no_tool_accepts_an_argument_that_could_redirect_the_door(:817) \u2014 test module"
+        ],
+        "capability": [
+          "door-binding \u2014 how the door decides which spine it drives; today only at launch or at spine_open (mint)",
+          "door-identity-guard \u2014 _identity_violation, compares argv against SPINE at CALL time so it follows a rebind",
+          "spine-state-persistence \u2014 checklist_engine.load/save, the only read and write path for spine state"
+        ],
+        "constraint": [
+          "constraint:one-spine-per-process \u2014 the count of live spines per process stays one; only WHEN the binding is decided may move",
+          "constraint:ast-pin-on-identity-assignment \u2014 assignments to SPINE/SESSION must remain exactly {module scope, _bind_process_to}",
+          "constraint:lifecycle-return-pin \u2014 call_lifecycle_tool may only return a call to a named dispatch function; adding a literal to ALLOWED is widening an allow-list, NOT loosening the ban, and must be argued as such",
+          "constraint:fail-closed-binding \u2014 an unnamed spine refuses; never resolve a binding from ambient cwd (_spine_from_env:156 records that defect)",
+          "constraint:rail-strings-untouched \u2014 _RAIL_STRINGS and _refresh_attach_hint in checklist_engine.py are fenced to this lane but needed intact by lane C; no gratuitous churn",
+          "constraint:no-hooks \u2014 scripts/hooks/* is untouched (Admiral merge sequencing)"
+        ],
+        "decision": [
+          "decision:convergence-is-human-only \u2014 the human picks the winner; my recommendation is not ratified by my having made it",
+          "decision:isolation-not-fencing \u2014 name the replacement isolation property and the reach delta explicitly",
+          "decision:net-deletion \u2014 the lane ends with something deleted",
+          "decision:atomicity-is-not-mutual-exclusion \u2014 atomic replace fixes torn reads and crash corruption, NOT lost updates; say so",
+          "decision:in-session-observation-is-not-evidence \u2014 validate in a fresh process with explicit paths (#269)"
+        ],
+        "evidence": [
+          "claim: an agent that did not launch its own door can drive its own spine \u2014 fresh-process test binding a spine it did not mint",
+          "claim: reach did not silently widen \u2014 negative test, a path outside the boundary refused with the boundary named",
+          "claim: save() cannot expose or leave a torn spine \u2014 concurrent reader sees old or new complete document, never partial",
+          "claim: the engine under edit still drives a live spine \u2014 read-only current on the live spine exits 0; mutating advance against a COPY"
+        ]
+      }
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Binding verb: integrate and verify against the world",
+      "imperative": "Check the verdict. On APPROVE, verify the crew's side-effects yourself rather than on the strength of the claim (global-everyone.md 'Verify claimed side-effects against the world'): re-run the pasted evidence, confirm the result artifact is fresh from this attempt, and confirm the postconditions pass in your hands. On BLOCK, return for rework or raise a blocker. Log out-of-scope finds as triage candidates under .agent-work/567-a/triage-candidates/ \u2014 file no issues (decision:no-issue-filing).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2-review returned a verdict",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the door's own suites pass in a fresh process",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/test_mcp_lifecycle.py tests/test_mcp_identity.py tests/test_mcp_door_unbound.py -q"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the reach-delta negative test exists and is named in the review",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Re-run the evidence; do not accept a claim."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": {
+        "structural": [
+          "scripts/mcp_spine_server.py \u2014 the door; _bind_process_to(:878) is the one sanctioned identity mutator, _unbound_refusal(:393), _rebind_refusal(:920), _identity_violation(:443), _resolve_confined(:~330-380), BINDS_WITHOUT_A_BOUND_SPINE(:1425), LIFECYCLE_TOOLS(:1368), call_lifecycle_tool(:1067) \u2014 module level",
+          "scripts/checklist_engine.py \u2014 the engine; save(:237) ends in a bare write_bytes, load(:220) a bare read_text \u2014 module level",
+          "tests/test_mcp_lifecycle.py \u2014 the AST pins: ALLOWED(:135), the _spine_open identifier ban(:194), the module-wide one-binder pin(:563) \u2014 test module",
+          "tests/test_mcp_identity.py \u2014 IDENTITY_ARG_MARKERS(:754) and test_no_tool_accepts_an_argument_that_could_redirect_the_door(:817) \u2014 test module"
+        ],
+        "capability": [
+          "door-binding \u2014 how the door decides which spine it drives; today only at launch or at spine_open (mint)",
+          "door-identity-guard \u2014 _identity_violation, compares argv against SPINE at CALL time so it follows a rebind",
+          "spine-state-persistence \u2014 checklist_engine.load/save, the only read and write path for spine state"
+        ],
+        "constraint": [
+          "constraint:one-spine-per-process \u2014 the count of live spines per process stays one; only WHEN the binding is decided may move",
+          "constraint:ast-pin-on-identity-assignment \u2014 assignments to SPINE/SESSION must remain exactly {module scope, _bind_process_to}",
+          "constraint:lifecycle-return-pin \u2014 call_lifecycle_tool may only return a call to a named dispatch function; adding a literal to ALLOWED is widening an allow-list, NOT loosening the ban, and must be argued as such",
+          "constraint:fail-closed-binding \u2014 an unnamed spine refuses; never resolve a binding from ambient cwd (_spine_from_env:156 records that defect)",
+          "constraint:rail-strings-untouched \u2014 _RAIL_STRINGS and _refresh_attach_hint in checklist_engine.py are fenced to this lane but needed intact by lane C; no gratuitous churn",
+          "constraint:no-hooks \u2014 scripts/hooks/* is untouched (Admiral merge sequencing)"
+        ],
+        "decision": [
+          "decision:convergence-is-human-only \u2014 the human picks the winner; my recommendation is not ratified by my having made it",
+          "decision:isolation-not-fencing \u2014 name the replacement isolation property and the reach delta explicitly",
+          "decision:net-deletion \u2014 the lane ends with something deleted",
+          "decision:atomicity-is-not-mutual-exclusion \u2014 atomic replace fixes torn reads and crash corruption, NOT lost updates; say so",
+          "decision:in-session-observation-is-not-evidence \u2014 validate in a fresh process with explicit paths (#269)"
+        ],
+        "evidence": [
+          "claim: an agent that did not launch its own door can drive its own spine \u2014 fresh-process test binding a spine it did not mint",
+          "claim: reach did not silently widen \u2014 negative test, a path outside the boundary refused with the boundary named",
+          "claim: save() cannot expose or leave a torn spine \u2014 concurrent reader sees old or new complete document, never partial",
+          "claim: the engine under edit still drives a live spine \u2014 read-only current on the live spine exits 0; mutating advance against a COPY"
+        ]
+      }
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "save() atomicity: make the spine write atomic",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. FILE FENCE for this gate: scripts/checklist_engine.py plus a NEW test module, and the one stale docstring at tests/test_crew_launcher.py:3250 \u2014 nothing else. scripts/mcp_spine_server.py belongs to g2. Task: checklist_engine.save (:237) ends in a bare Path(path).write_bytes(payload), which truncates then writes, so a concurrent reader can observe a partial spine and a crash mid-write can leave one permanently corrupt. Replace with the repo's OWN canonical pattern, do not invent one: mirror scripts/hooks/gauge_writer_hook.py:513 _atomic_write_json \u2014 write a temp sibling in the SAME directory, then os.replace(tmp, path), which is atomic on POSIX and Windows alike. Preserve save()'s existing line-ending behaviour exactly (_dominant_newline must still be consulted BEFORE the original file is replaced) and clean up the temp file on failure. PROTECTED INTENT, must appear in the docstring: atomic replace fixes torn reads and crash corruption, it does NOT fix lost updates \u2014 two writers that each load-mutate-save still clobber each other and leave a well-formed file. That is #613's other half and is out of scope. Do NOT touch _RAIL_STRINGS or _refresh_attach_hint (fenced, lane C needs their text).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "no dependency on g2 \u2014 different file, parallel-safe",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Reuse the repo's existing atomic-write pattern; no new abstraction.",
+        "Do not silently widen scope into the lost-update half.",
+        "_RAIL_STRINGS and _refresh_attach_hint stay byte-identical."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": {
+        "structural": [
+          "scripts/mcp_spine_server.py \u2014 the door; _bind_process_to(:878) is the one sanctioned identity mutator, _unbound_refusal(:393), _rebind_refusal(:920), _identity_violation(:443), _resolve_confined(:~330-380), BINDS_WITHOUT_A_BOUND_SPINE(:1425), LIFECYCLE_TOOLS(:1368), call_lifecycle_tool(:1067) \u2014 module level",
+          "scripts/checklist_engine.py \u2014 the engine; save(:237) ends in a bare write_bytes, load(:220) a bare read_text \u2014 module level",
+          "tests/test_mcp_lifecycle.py \u2014 the AST pins: ALLOWED(:135), the _spine_open identifier ban(:194), the module-wide one-binder pin(:563) \u2014 test module",
+          "tests/test_mcp_identity.py \u2014 IDENTITY_ARG_MARKERS(:754) and test_no_tool_accepts_an_argument_that_could_redirect_the_door(:817) \u2014 test module"
+        ],
+        "capability": [
+          "door-binding \u2014 how the door decides which spine it drives; today only at launch or at spine_open (mint)",
+          "door-identity-guard \u2014 _identity_violation, compares argv against SPINE at CALL time so it follows a rebind",
+          "spine-state-persistence \u2014 checklist_engine.load/save, the only read and write path for spine state"
+        ],
+        "constraint": [
+          "constraint:one-spine-per-process \u2014 the count of live spines per process stays one; only WHEN the binding is decided may move",
+          "constraint:ast-pin-on-identity-assignment \u2014 assignments to SPINE/SESSION must remain exactly {module scope, _bind_process_to}",
+          "constraint:lifecycle-return-pin \u2014 call_lifecycle_tool may only return a call to a named dispatch function; adding a literal to ALLOWED is widening an allow-list, NOT loosening the ban, and must be argued as such",
+          "constraint:fail-closed-binding \u2014 an unnamed spine refuses; never resolve a binding from ambient cwd (_spine_from_env:156 records that defect)",
+          "constraint:rail-strings-untouched \u2014 _RAIL_STRINGS and _refresh_attach_hint in checklist_engine.py are fenced to this lane but needed intact by lane C; no gratuitous churn",
+          "constraint:no-hooks \u2014 scripts/hooks/* is untouched (Admiral merge sequencing)"
+        ],
+        "decision": [
+          "decision:convergence-is-human-only \u2014 the human picks the winner; my recommendation is not ratified by my having made it",
+          "decision:isolation-not-fencing \u2014 name the replacement isolation property and the reach delta explicitly",
+          "decision:net-deletion \u2014 the lane ends with something deleted",
+          "decision:atomicity-is-not-mutual-exclusion \u2014 atomic replace fixes torn reads and crash corruption, NOT lost updates; say so",
+          "decision:in-session-observation-is-not-evidence \u2014 validate in a fresh process with explicit paths (#269)"
+        ],
+        "evidence": [
+          "claim: an agent that did not launch its own door can drive its own spine \u2014 fresh-process test binding a spine it did not mint",
+          "claim: reach did not silently widen \u2014 negative test, a path outside the boundary refused with the boundary named",
+          "claim: save() cannot expose or leave a torn spine \u2014 concurrent reader sees old or new complete document, never partial",
+          "claim: the engine under edit still drives a live spine \u2014 read-only current on the live spine exits 0; mutating advance against a COPY"
+        ]
+      }
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "save() atomicity: independent review",
+      "imperative": "Dispatch constellation-reviewer. Require a test that actually discriminates: a reader concurrent with a writer must be shown to see either the old or the new COMPLETE document and never a partial one, and the test must be proven non-vacuous (it fails against the old bare-write_bytes implementation). A test that passes in both the healthy and the defective world is a check that cannot fail (global-orchestrator.md). Also require: no temp file left behind on the success path, line endings preserved for an existing CRLF file, and the docstring's atomicity-is-not-mutual-exclusion boundary present. Integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3-implement closed with a complete implementer result",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Demand the red-proof: the new test must fail against the OLD save()."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": {
+        "structural": [
+          "scripts/mcp_spine_server.py \u2014 the door; _bind_process_to(:878) is the one sanctioned identity mutator, _unbound_refusal(:393), _rebind_refusal(:920), _identity_violation(:443), _resolve_confined(:~330-380), BINDS_WITHOUT_A_BOUND_SPINE(:1425), LIFECYCLE_TOOLS(:1368), call_lifecycle_tool(:1067) \u2014 module level",
+          "scripts/checklist_engine.py \u2014 the engine; save(:237) ends in a bare write_bytes, load(:220) a bare read_text \u2014 module level",
+          "tests/test_mcp_lifecycle.py \u2014 the AST pins: ALLOWED(:135), the _spine_open identifier ban(:194), the module-wide one-binder pin(:563) \u2014 test module",
+          "tests/test_mcp_identity.py \u2014 IDENTITY_ARG_MARKERS(:754) and test_no_tool_accepts_an_argument_that_could_redirect_the_door(:817) \u2014 test module"
+        ],
+        "capability": [
+          "door-binding \u2014 how the door decides which spine it drives; today only at launch or at spine_open (mint)",
+          "door-identity-guard \u2014 _identity_violation, compares argv against SPINE at CALL time so it follows a rebind",
+          "spine-state-persistence \u2014 checklist_engine.load/save, the only read and write path for spine state"
+        ],
+        "constraint": [
+          "constraint:one-spine-per-process \u2014 the count of live spines per process stays one; only WHEN the binding is decided may move",
+          "constraint:ast-pin-on-identity-assignment \u2014 assignments to SPINE/SESSION must remain exactly {module scope, _bind_process_to}",
+          "constraint:lifecycle-return-pin \u2014 call_lifecycle_tool may only return a call to a named dispatch function; adding a literal to ALLOWED is widening an allow-list, NOT loosening the ban, and must be argued as such",
+          "constraint:fail-closed-binding \u2014 an unnamed spine refuses; never resolve a binding from ambient cwd (_spine_from_env:156 records that defect)",
+          "constraint:rail-strings-untouched \u2014 _RAIL_STRINGS and _refresh_attach_hint in checklist_engine.py are fenced to this lane but needed intact by lane C; no gratuitous churn",
+          "constraint:no-hooks \u2014 scripts/hooks/* is untouched (Admiral merge sequencing)"
+        ],
+        "decision": [
+          "decision:convergence-is-human-only \u2014 the human picks the winner; my recommendation is not ratified by my having made it",
+          "decision:isolation-not-fencing \u2014 name the replacement isolation property and the reach delta explicitly",
+          "decision:net-deletion \u2014 the lane ends with something deleted",
+          "decision:atomicity-is-not-mutual-exclusion \u2014 atomic replace fixes torn reads and crash corruption, NOT lost updates; say so",
+          "decision:in-session-observation-is-not-evidence \u2014 validate in a fresh process with explicit paths (#269)"
+        ],
+        "evidence": [
+          "claim: an agent that did not launch its own door can drive its own spine \u2014 fresh-process test binding a spine it did not mint",
+          "claim: reach did not silently widen \u2014 negative test, a path outside the boundary refused with the boundary named",
+          "claim: save() cannot expose or leave a torn spine \u2014 concurrent reader sees old or new complete document, never partial",
+          "claim: the engine under edit still drives a live spine \u2014 read-only current on the live spine exits 0; mutating advance against a COPY"
+        ]
+      }
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "save() atomicity: integrate and verify",
+      "imperative": "Verify the crew's side-effects yourself. Re-run the engine suite and the new atomicity test. Confirm the red-proof was actually performed against the worktree copy (the engine under edit is not the engine in play \u2014 break the worktree copy for red-proofs, drive the installed copy for this run's own spine).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3-review returned a verdict",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the engine suite passes in a fresh process",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/test_checklist_engine.py -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Re-run the evidence; do not accept a claim."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": {
+        "structural": [
+          "scripts/mcp_spine_server.py \u2014 the door; _bind_process_to(:878) is the one sanctioned identity mutator, _unbound_refusal(:393), _rebind_refusal(:920), _identity_violation(:443), _resolve_confined(:~330-380), BINDS_WITHOUT_A_BOUND_SPINE(:1425), LIFECYCLE_TOOLS(:1368), call_lifecycle_tool(:1067) \u2014 module level",
+          "scripts/checklist_engine.py \u2014 the engine; save(:237) ends in a bare write_bytes, load(:220) a bare read_text \u2014 module level",
+          "tests/test_mcp_lifecycle.py \u2014 the AST pins: ALLOWED(:135), the _spine_open identifier ban(:194), the module-wide one-binder pin(:563) \u2014 test module",
+          "tests/test_mcp_identity.py \u2014 IDENTITY_ARG_MARKERS(:754) and test_no_tool_accepts_an_argument_that_could_redirect_the_door(:817) \u2014 test module"
+        ],
+        "capability": [
+          "door-binding \u2014 how the door decides which spine it drives; today only at launch or at spine_open (mint)",
+          "door-identity-guard \u2014 _identity_violation, compares argv against SPINE at CALL time so it follows a rebind",
+          "spine-state-persistence \u2014 checklist_engine.load/save, the only read and write path for spine state"
+        ],
+        "constraint": [
+          "constraint:one-spine-per-process \u2014 the count of live spines per process stays one; only WHEN the binding is decided may move",
+          "constraint:ast-pin-on-identity-assignment \u2014 assignments to SPINE/SESSION must remain exactly {module scope, _bind_process_to}",
+          "constraint:lifecycle-return-pin \u2014 call_lifecycle_tool may only return a call to a named dispatch function; adding a literal to ALLOWED is widening an allow-list, NOT loosening the ban, and must be argued as such",
+          "constraint:fail-closed-binding \u2014 an unnamed spine refuses; never resolve a binding from ambient cwd (_spine_from_env:156 records that defect)",
+          "constraint:rail-strings-untouched \u2014 _RAIL_STRINGS and _refresh_attach_hint in checklist_engine.py are fenced to this lane but needed intact by lane C; no gratuitous churn",
+          "constraint:no-hooks \u2014 scripts/hooks/* is untouched (Admiral merge sequencing)"
+        ],
+        "decision": [
+          "decision:convergence-is-human-only \u2014 the human picks the winner; my recommendation is not ratified by my having made it",
+          "decision:isolation-not-fencing \u2014 name the replacement isolation property and the reach delta explicitly",
+          "decision:net-deletion \u2014 the lane ends with something deleted",
+          "decision:atomicity-is-not-mutual-exclusion \u2014 atomic replace fixes torn reads and crash corruption, NOT lost updates; say so",
+          "decision:in-session-observation-is-not-evidence \u2014 validate in a fresh process with explicit paths (#269)"
+        ],
+        "evidence": [
+          "claim: an agent that did not launch its own door can drive its own spine \u2014 fresh-process test binding a spine it did not mint",
+          "claim: reach did not silently widen \u2014 negative test, a path outside the boundary refused with the boundary named",
+          "claim: save() cannot expose or leave a torn spine \u2014 concurrent reader sees old or new complete document, never partial",
+          "claim: the engine under edit still drives a live spine \u2014 read-only current on the live spine exits 0; mutating advance against a COPY"
+        ]
+      }
+    },
+    "g4-selfhost": {
+      "id": "g4-selfhost",
+      "title": "Self-hosting and fresh-process proof",
+      "imperative": "Reasoning gate, driven in this context (no crew: the deliverable is evidence, and the launch order names the exact commands). decision:self-hosting-engine-edit requires, BEFORE the PR opens: (1) a read-only `current` on the LIVE spine exits 0 under the new engine; (2) a MUTATING verb (`advance`) run against a COPY of a spine \u2014 never a live spine file \u2014 refuses or succeeds sanely rather than crashing. Paste both into the return. Then satisfy decision:in-session-observation-is-not-evidence: validate in a FRESH process with explicit paths, never an in-session observation and never a fixture that hand-injects the value it is trying to prove the harness delivers. Record what was validated and what was NOT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 and g3 both integrated",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "read-only current on the live spine exits 0 under the edited engine",
+          "check": {
+            "kind": "command",
+            "command": "py scripts/checklist_engine.py --file .agent-work/epic-567-door/cmdr-a/spine.json current >/dev/null"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "a mutating advance against a COPY behaves sanely; pasted into the return",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "fresh-process validation recorded with its command and output",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "the full suite passes in a fresh process",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/test_mcp_lifecycle.py tests/test_mcp_identity.py tests/test_mcp_door_unbound.py tests/test_checklist_engine.py tests/test_crew_launcher.py -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Never run a mutating verb against a live spine file \u2014 use a copy.",
+        "An in-session observation of engine behaviour after the edit is not evidence."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "anchors": {
+        "structural": [
+          "scripts/mcp_spine_server.py \u2014 the door; _bind_process_to(:878) is the one sanctioned identity mutator, _unbound_refusal(:393), _rebind_refusal(:920), _identity_violation(:443), _resolve_confined(:~330-380), BINDS_WITHOUT_A_BOUND_SPINE(:1425), LIFECYCLE_TOOLS(:1368), call_lifecycle_tool(:1067) \u2014 module level",
+          "scripts/checklist_engine.py \u2014 the engine; save(:237) ends in a bare write_bytes, load(:220) a bare read_text \u2014 module level",
+          "tests/test_mcp_lifecycle.py \u2014 the AST pins: ALLOWED(:135), the _spine_open identifier ban(:194), the module-wide one-binder pin(:563) \u2014 test module",
+          "tests/test_mcp_identity.py \u2014 IDENTITY_ARG_MARKERS(:754) and test_no_tool_accepts_an_argument_that_could_redirect_the_door(:817) \u2014 test module"
+        ],
+        "capability": [
+          "door-binding \u2014 how the door decides which spine it drives; today only at launch or at spine_open (mint)",
+          "door-identity-guard \u2014 _identity_violation, compares argv against SPINE at CALL time so it follows a rebind",
+          "spine-state-persistence \u2014 checklist_engine.load/save, the only read and write path for spine state"
+        ],
+        "constraint": [
+          "constraint:one-spine-per-process \u2014 the count of live spines per process stays one; only WHEN the binding is decided may move",
+          "constraint:ast-pin-on-identity-assignment \u2014 assignments to SPINE/SESSION must remain exactly {module scope, _bind_process_to}",
+          "constraint:lifecycle-return-pin \u2014 call_lifecycle_tool may only return a call to a named dispatch function; adding a literal to ALLOWED is widening an allow-list, NOT loosening the ban, and must be argued as such",
+          "constraint:fail-closed-binding \u2014 an unnamed spine refuses; never resolve a binding from ambient cwd (_spine_from_env:156 records that defect)",
+          "constraint:rail-strings-untouched \u2014 _RAIL_STRINGS and _refresh_attach_hint in checklist_engine.py are fenced to this lane but needed intact by lane C; no gratuitous churn",
+          "constraint:no-hooks \u2014 scripts/hooks/* is untouched (Admiral merge sequencing)"
+        ],
+        "decision": [
+          "decision:convergence-is-human-only \u2014 the human picks the winner; my recommendation is not ratified by my having made it",
+          "decision:isolation-not-fencing \u2014 name the replacement isolation property and the reach delta explicitly",
+          "decision:net-deletion \u2014 the lane ends with something deleted",
+          "decision:atomicity-is-not-mutual-exclusion \u2014 atomic replace fixes torn reads and crash corruption, NOT lost updates; say so",
+          "decision:in-session-observation-is-not-evidence \u2014 validate in a fresh process with explicit paths (#269)"
+        ],
+        "evidence": [
+          "claim: an agent that did not launch its own door can drive its own spine \u2014 fresh-process test binding a spine it did not mint",
+          "claim: reach did not silently widen \u2014 negative test, a path outside the boundary refused with the boundary named",
+          "claim: save() cannot expose or leave a torn spine \u2014 concurrent reader sees old or new complete document, never partial",
+          "claim: the engine under edit still drives a live spine \u2014 read-only current on the live spine exits 0; mutating advance against a COPY"
+        ]
+      }
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

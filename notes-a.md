@@ -327,6 +327,174 @@ Triage candidate, not a fix: `map_orient.py` is not mine this wave, and this is 
 design question (should a degraded frame be allowed anchor ids backed by pinned
 substitutes?) rather than a mechanical defect I may settle alone.
 
+## F5 — the atomic-write pattern already exists in this repo, three times
+
+I do not have to design the `save()` fix. `global-everyone.md` says "one canonical
+path; no speculative abstraction", and the canonical path is already here:
+
+- `scripts/hooks/gauge_writer_hook.py:513` — `_atomic_write_json`: `mkdir(parents,
+  exist_ok)` → write a `.tmp` sibling → `os.replace(tmp, path)`, with the comment
+  "atomic on POSIX and Windows alike". This is the cleanest instance and the one to
+  mirror.
+- `scripts/hooks/spine_rail.py:369` — `_replace_binding_atomically`: unique-temp
+  atomic replace under a lock, described at `:1359` as "closing the
+  lost-update/torn-write window".
+- `scripts/apply_episode_delta.py:1201` — "A single `os.replace()` is atomic on ..."
+
+`spine_rail.py:163-170` even states my scope boundary in the repo's own words:
+"load-modify-save is atomic on the WRITE but not across the read-modify-write."
+That is exactly the distinction I am holding — and it means the boundary is already
+repo doctrine, not a caveat I invented to limit my scope.
+
+Both hook files are **out of my scope** (`scripts/hooks/*` is untouched, and
+concurrent lanes editing hooks can break every live session). I read them for the
+pattern only.
+
+### Blast radius of the `save()` change, enumerated by command with a count
+
+Per `global-everyone.md`'s authoring-side rule — "enumerate by command, never by
+memory, every artifact that asserts something about what you changed, and state the
+count." `grep -rn` for atomicity claims across `scripts/ tests/ docs/ skills/`
+returns **13 files**. Of those, exactly **one** asserts something about
+`checklist_engine.save` that my change falsifies:
+
+- `tests/test_crew_launcher.py:3250`, inside `_wait_until`'s docstring:
+  > "A transient exception (the predicate reads the SAME spine file the heartbeat
+  > thread is mid-write to — `checklist_engine.save` writes plain bytes,
+  > non-atomically) is treated as 'not yet', not a failure"
+
+Two things about that, and both are worth reporting:
+
+1. **The repo's own test suite already documents this bug and works around it.**
+   That docstring is a written record of a torn read being observed in practice, in
+   the parent-heartbeat test — which is #613's exact scenario. It is the strongest
+   corroboration available that the defect is real and not theoretical, and it was
+   sitting in the tests the whole time.
+2. **It is a stale claim the moment I land the fix.** The `except (OSError,
+   ValueError)` tolerance becomes unnecessary, though harmless. I will correct the
+   docstring rather than leave a comment asserting a property the code no longer
+   has — a stranger reading it would conclude `save()` is still non-atomic.
+
+`save()` has **3 call sites** in `checklist_engine.py` (`:3580`, `:3595`, plus the
+definition at `:237`) and **one** external caller, `scripts/run_crew.py:1433`,
+paired with a `load` at `:1431` — that pair IS the parent-heartbeat second writer
+from #613. It gets the atomicity benefit for free and keeps the lost-update
+exposure, which is the boundary again.
+
+## F6 — the extension points for a binding verb are already built and named
+
+Continuing F2. Beyond `_bind_process_to` itself, the door already carries every
+seam a new binding verb would need, each one deliberately factored and commented:
+
+- **`BINDS_WITHOUT_A_BOUND_SPINE = {"spine_open"}`** (`:1425`) — the set of tools
+  reachable with no usable spine bound. Its comment says: "Exactly one name, and it
+  is a SET rather than an `!=` so the exemption is a listed fact a reader can find,
+  not a comparison buried in a dispatch chain." A second binding verb is a
+  one-element addition to a set that was *built* to be added to.
+- **`LIFECYCLE_TOOLS`** (`:1368`) — a separate schema list from `TOOLS`, with
+  `LIFECYCLE_TOOL_NAMES` derived from it (`:1412`) and merged at `:1414`. New
+  lifecycle tools have a declared home.
+- **`call_lifecycle_tool`** (`:1067`) — a name router that "does nothing but route
+  to one of them by name", explicitly a module-level sibling of `call_tool` so
+  `call_tool`'s choke-point AST pin stays strict.
+- **`_HOW_TO_BIND` / `_HOW_TO_REBIND`** (`:383`, `:387`) — the two remedy strings,
+  already extracted as named constants, which is exactly the edit a new verb needs.
+
+**One constraint the candidates must respect, and it is sharp.** The AST pin at
+`tests/test_mcp_lifecycle.py:137` restricts every `return` in `call_lifecycle_tool`
+to literally `_spine_open(args)` / `_spine_close(args)`. A third route means
+extending that pin's literal list. The previous lane's own record contains a
+**superseded** passage where it first proposed to "extend a pin" and the cold critic
+corrected it as "the dangerous direction", because extending a pin reads naturally
+as replacing a hard identifier ban with a softer intent-shaped statement. So:
+adding a third *literal* to an allow-list is not the same act as loosening a ban,
+and if a candidate proposes it, the distinction has to be made explicitly, with the
+pin left strictly as narrow as before. I will hold any winning candidate to that.
+
+`call_lifecycle_tool`'s docstring also rules out one shape in advance: "Two tools,
+never one `action` switch", because folding tools with opposite identity postures
+into one body is "exactly the 'a guard written for one hazard covers the other by
+accident' failure". A candidate that adds an `action: "adopt"` to `spine_open`
+collides with a documented, reasoned decision — worth weighing against candidate B.
+
+Read together with F2, the honest summary of my lane's code change is: **one new
+route through machinery that was already built for it, plus one line added to a set
+that documents itself as a list to add to.** That is a small change on a
+well-prepared seam, and it is the strongest argument that the previous lane left
+this deliberately one step from done.
+
+## F7 — Candidate A's own falsification test, run, and it FAILS as designed
+
+This is the most important measurement of the run.
+
+Candidate A derives the session identity from the spine's stamped
+`origin.work_id`, via a new single-definition `spine_lifecycle.session_id_for()`.
+It refuses (its refusal `R7`) any spine that carries no `origin.work_id`. And it
+names, in its own §7, the measurement that would prove it wrong:
+
+> "If `origin.work_id` is commonly absent from the spines that need binding, R7
+> refuses in the main case and the tool is theatre. ... count spines under
+> `.agent-work/` and `.worktrees/*/.agent-work/` with and without a stamped
+> `origin.work_id`."
+
+I ran exactly that census. Live population — spine-shaped JSON under `.agent-work/`
+and `.worktrees/*/.agent-work/`, excluding `archive/` and `templates/`:
+
+| | count |
+|---|---|
+| live spine-shaped files | **52** |
+| carrying `origin.work_id` | **4** |
+| **not** carrying `origin.work_id` | **48** |
+
+**8%.** Candidate A's session derivation refuses 92% of the live population. Two
+of the refusals are fatal to the mission specifically:
+
+- **`.agent-work/epic-567-door/spine.json` — the Admiral's own live spine — has
+  `origin: None`.** The Admiral's `spine_status` refusal is the grounding the
+  launch order gives for `decision:solve-the-general-case`. So Candidate A as
+  written **cannot bind the one spine the pre-ruling was written about.**
+- **`.agent-work/implementer-315-native-g1/IMPLEMENTER_PLAN.json` — `origin: None`.**
+  That is the file type #559 is *literally about*: "the tools ... stay pointed at
+  the Commander's `spine.json`, never the Implementer's own `IMPLEMENTER_PLAN.json`."
+  A's R7 refuses it.
+
+`execute.json` and `g1-review/review.json` are also `origin: None`. My own
+`cmdr-a/spine.json` DOES carry `origin.work_id='epic-567-door/cmdr-a'`, because
+`init_work_area.py --spine` stamps it — which is precisely why this defect would
+have survived a self-test. **An implementer testing the feature on its own spine
+would see it work, and it would fail on every spine the issue names.** That is a
+check that cannot fail, and I only caught it because the candidate was honest
+enough to name its own falsifier.
+
+### The repair, measured, and it is complete
+
+`origin.work_id` is the wrong field. The right one is the spine's **top-level
+`work_id`**, which is a required field on every spine the engine drives:
+
+| | count |
+|---|---|
+| live spine-shaped files | **52** |
+| `origin.work_id` present | 4 |
+| no origin, but top-level `work_id` present | **48** |
+| **neither** | **0** |
+
+**Deriving the session from `origin.work_id` when present, else the top-level
+`work_id`, covers 52/52 — 100% of the live population**, including the Admiral's
+spine and `IMPLEMENTER_PLAN.json`. Nothing else about Candidate A has to change:
+`session_id_for(work_id)` keeps its single definition and `open_work` keeps
+calling it, so a spine minted by `open_work` still yields a byte-identical
+session; the fallback only adds coverage for spines minted another way
+(`init_work_area.py`, `generate_spine.py`, a hand-compiled plan).
+
+R7 does not disappear, it narrows: refuse only when **neither** field is present,
+which the census says is currently never but is still the right fail-closed
+posture for a hand-written JSON file that is not a spine at all.
+
+This is what I will recommend as a **named hybrid**: Candidate A's design with the
+session derived from `work_id` rather than `origin.work_id`. It is A's seam, A's
+containment root, A's refusal set, and one corrected field — where the correction
+is the difference between solving the mission and refusing it.
+
 
 
 ## Bootstrap
