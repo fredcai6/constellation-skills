@@ -317,7 +317,8 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g1/g2/g3 unaffected; this third rework fixes a self-inflicted episode-guard regression via the sanctioned restate-assertion write path plus a git-mv path correction."
         },
         {
           "id": "c2",
@@ -326,7 +327,8 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id epic-567-door/cmdr-g"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-5"
         }
       ],
       "constraints": [],
@@ -353,7 +355,7 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {
         "reopen_reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/."
       },
@@ -423,6 +425,17 @@
             "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
             "ts": "2026-08-17T08:27:02.227853+00:00"
           }
+        },
+        {
+          "id": "e-execute-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id epic-567-door/cmdr-g",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 3
@@ -436,7 +449,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute complete"
         }
       ],
       "postconditions": [
@@ -444,13 +458,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Reasoned no-op: fix touches only the episode-observation store and a test-infra path-correction, not a documented capability/schema/design doc."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {
         "superseded_by_reopen": "execute"
       },
@@ -468,7 +483,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile complete"
         }
       ],
       "postconditions": [
@@ -476,7 +492,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "No new triage candidates this rework -- the episode-guard trip and git-mv mishap were both self-inflicted-and-self-corrected within this same run, captured as an episode (feedback step) rather than a forward-looking candidate for someone else."
         },
         {
           "id": "c2",
@@ -485,13 +502,14 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-4"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {
         "superseded_by_reopen": "execute"
       },
@@ -539,6 +557,15 @@
             "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
             "ts": "2026-08-17T08:27:02.227862+00:00"
           }
+        },
+        {
+          "id": "e-triage-4",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Inherited Latitude (no-issue-filing: decision:no-issue-filing)"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -552,7 +579,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage complete"
         }
       ],
       "postconditions": [
@@ -563,13 +591,14 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-4"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {
         "superseded_by_reopen": "execute"
       },
@@ -617,6 +646,15 @@
             "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
             "ts": "2026-08-17T08:27:02.227866+00:00"
           }
+        },
+        {
+          "id": "e-review-4",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -630,7 +668,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "review complete"
         }
       ],
       "postconditions": [
@@ -641,13 +680,14 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-567-door/cmdr-g --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-4"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {
         "superseded_by_reopen": "execute"
       },
@@ -701,6 +741,17 @@
             "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
             "ts": "2026-08-17T08:27:02.227870+00:00"
           }
+        },
+        {
+          "id": "e-feedback-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-567-door/cmdr-g --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -714,7 +765,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "workflow feedback recorded"
         }
       ],
       "postconditions": [
@@ -792,7 +844,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {
         "superseded_by_reopen": "execute"
       },
@@ -960,7 +1012,7 @@
     "session_id": "cmdr-567-g#main",
     "status": "active",
     "claimed_at": "2026-08-17T08:27:02.157784+00:00",
-    "last_heartbeat": "2026-08-17T08:27:02.227896+00:00",
+    "last_heartbeat": "2026-08-17T08:30:06.038086+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -1246,6 +1298,41 @@
       "reopen": true,
       "reason": "The two prior CI-fix pushes each introduced their own uncommitted episode into episodes/active/ without re-running the episode-observation guard suite locally (only tests/test_spine_lifecycle.py was checked). Episode epic-567-door_cmdr-g-006's workaround (a5) statement used 'read the full failure log' as a comma-separated clause; the guard's clause-opening-imperative heuristic (tests/test_episode_observations.py) flags 'read' there because it is spelled identically to its own imperative. This is a genuine, if narrow, self-inflicted regression this lane introduced (2 new CI failures beyond the reported 7, confirmed absent from the very first CI run). Fixing via the only sanctioned write path -- apply_episode_delta.py's restate-assertion op -- never a hand-edit under episodes/.",
       "ts": "2026-08-17T08:27:02.227891+00:00"
+    },
+    {
+      "id": "w-41",
+      "gate": "execute",
+      "why": "Third and final rework: fixed a self-inflicted episode-observation-guard regression (restate-assertion, not a hand-edit) and a git-mv path error from a stray earlier temp file. 139 tests pass locally across both affected files.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:28:52.223017+00:00"
+    },
+    {
+      "id": "w-42",
+      "gate": "reconcile",
+      "why": "Reasoned no-op accepted.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:29:02.712037+00:00"
+    },
+    {
+      "id": "w-43",
+      "gate": "triage",
+      "why": "No new candidates, no issues filed.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:29:14.906552+00:00"
+    },
+    {
+      "id": "w-44",
+      "gate": "review",
+      "why": "Third CI-fix rework: fixed a self-inflicted episode-guard regression (restate-assertion) and a git-mv path error, both confirmed against real Windows CI. All 6 originally-reported tests plus the 5 baseline Author-identity tests now clear; map/INDEX.md correctly still red (not mine).",
+      "mechanical": false,
+      "ts": "2026-08-17T08:29:24.658638+00:00"
+    },
+    {
+      "id": "w-45",
+      "gate": "feedback",
+      "why": "7th episode recorded (the episode-guard trip and git-mv mishap), verified against the guard suite before this advance. Capture gate passed.",
+      "mechanical": false,
+      "ts": "2026-08-17T08:29:57.780794+00:00"
     }
   ]
 }
