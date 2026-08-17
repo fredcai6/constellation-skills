@@ -1,0 +1,36 @@
+{
+  "contract": 1,
+  "step": "feedback",
+  "mechanical": {
+    "run": "567-d1",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 5,
+    "spine-step": "feedback",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-d1-feedback@92fc39c6a8da4e444c7935fe02df15fb847d8949",
+    "artifact-ref": [
+      ".agent-work/567-d1/FEEDBACK.md",
+      ".agent-work/567-d1/context/review.json",
+      ".agent-work/567-d1/episode-delta.json",
+      ".agent-work/567-d1/gauge-constellation-567-d1-lane-d1-com-eee1f9997d14.json",
+      ".agent-work/567-d1/mechanical/review.json",
+      ".agent-work/567-d1/spine.json",
+      ".agent-work/567-d1/spine.json.journal",
+      "episodes/active/567-d1-001.md",
+      "episodes/active/567-d1-002.md",
+      "episodes/active/567-d1-003.md",
+      "episodes/active/567-d1-004.md",
+      "episodes/active/567-d1-005.md",
+      "episodes/active/567-d1-006.md",
+      "episodes/active/567-d1-007.md"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-d1",
+    "generated_at": "2026-08-17T22:28:03Z"
+  }
+}

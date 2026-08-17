@@ -431,7 +431,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "All 19 candidates routed and recorded in .agent-work/567-d1/TRIAGE.md, each as a tracked file under .agent-work/567-d1/triage-candidates/ with its own disposition line. Every one is recommend-and-defer; none filed. The three fix-now items this run took were taken inside their own gates and are in the diff: the '.:' typo in ADMIRAL_SPINE across all three copies, the re-review convention tightened in skills/reviewer/SKILL.md to what this run actually did, and five POSIX repairs to command postconditions. Ranked for the Admiral with dispatched-crew-spine-is-not-bound.md first, as a live impersonation hazard with six reproductions rather than a documentation nit."
         },
         {
           "id": "c2",
@@ -440,13 +441,14 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -458,6 +460,17 @@
             "seam": "triage",
             "why_ref": "w-6",
             "note": "Filed per the engine's own recovery instruction at the hard band. The Stop hook is authoritative over the context-trip advisory (#595, settled by lane C), so this run continues rather than handing off: the legal sequence is attach-then-start, which is what follows."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-triage-2",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Inherited Latitude",
+            "decision": "no issues filed",
+            "detail": "The launch order's Inherited Latitude table rules Issue filing as 'ruled: none. Stage candidates locally', and decision:no-issue-filing-mid-run is graded settled/human with the reason verbatim: 'we've been ballooning out tracking.' All 19 candidates are dispositioned recommend-and-defer and staged as tracked files under .agent-work/567-d1/triage-candidates/, listed and ranked in .agent-work/567-d1/TRIAGE.md. No approval was sought because none was needed and none would have been authorized; the citation records the deferral itself, not a filing approval."
           },
           "produced_by": "engine",
           "ts": ""
@@ -474,7 +487,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage closed complete; TRIAGE.md committed with all 19 candidates routed."
         }
       ],
       "postconditions": [
@@ -485,17 +499,41 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "review",
+            "why_ref": "w-7",
+            "note": "Filed per the engine's hard-band recovery instruction so start is permitted; the Stop hook is authoritative over the context advisory (#595), so the run continues rather than handing off."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-review-2",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape",
+            "decision": "run summary accepted",
+            "detail": "No human is reachable on a delegated dispatch, so the run summary is the return artifact the launch order's Return Shape section specifies: .agent-work/epic-567-door/results/lane-d1-RETURN.md, committed at ef3eddfd, carrying all 11 required sections in order. Gates closed: init, context, understand, plan, execute (e0-context, g1, g1b, g2, g3, g4, g5-final, all with integrated crew evidence), reconcile, triage. Changes implemented: the complete sweep across skills/, specs/ and the tracked .agent-work/templates/ overlay with its .baseline/ mirrors; the mandate inverted in tests/test_mcp_adoption.py; tests/test_cli_retirement_guard.py landed and red-proofed; door vocabulary in both role specs; #596 repaired and #526 dispositioned three ways. Architecture reconciled directly per RECONCILE.md, no packet map existing. Triage: 19 candidates routed recommend-and-defer, none filed. The Admiral ratifies at the epic return boundary."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -507,7 +545,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "review closed complete; the run summary is the return artifact at .agent-work/epic-567-door/results/lane-d1-RETURN.md, accepted via a user-decision citing LAUNCH_ORDER:Return Shape."
         }
       ],
       "postconditions": [
@@ -518,17 +557,41 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py 567-d1 --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "feedback",
+            "why_ref": "w-8",
+            "note": "Filed per the engine's hard-band recovery instruction so start is permitted. The gate's work is already done and on disk -- FEEDBACK.md and seven episodes applied through apply_episode_delta.py, capture gate exit 0 -- so this start opens a gate whose deliverable exists rather than beginning fresh work at the band."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-feedback-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py 567-d1 --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -639,7 +702,7 @@
     "session_id": "constellation/567-d1/lane-d1/commander-delegated",
     "status": "active",
     "claimed_at": "2026-08-17T17:20:59.187959+00:00",
-    "last_heartbeat": "2026-08-17T22:24:38.747761+00:00",
+    "last_heartbeat": "2026-08-17T22:28:11.542780+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -687,6 +750,27 @@
       "why": "Reconciled directly, because there is no packet map to dispatch a Cartographer against and the step's own imperative sanctions that path. The reconcile is not a no-op: specs/*.spine.toml ARE the structural record of what a role plan is, and g3 folded the door boundary into both; test_mcp_adoption.py's header is this repo's written definition of agent-facing instruction text, and g2 inverted the nine mandating assertions while leaving its two self-rules intact, with the walk now imported rather than re-derived so the repo holds one definition instead of two that drift. The one structural fact no existing doc owns is recorded in RECONCILE.md: .agent-work/templates/** is now agent-facing instruction text with a machine check on it, where before no walk in the repo read it at all \u2014 which is the durable half of what this lane found. The residual, that the same doctrine now lives in four tracked copies with no automatic reconciler, is staged as triage rather than fixed, because the generator is another lane's and the question is architecture.",
       "mechanical": false,
       "ts": "2026-08-17T22:24:20.297631+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "Nineteen candidates, all recommend-and-defer, none filed \u2014 and that is a ruling rather than a judgement call: decision:no-issue-filing-mid-run is settled/human with the reason verbatim, \"we've been ballooning out tracking.\" The c2 user-decision cites LAUNCH_ORDER:Inherited Latitude and records the deferral itself, not a filing approval, because none was sought and none would have been authorized. Every candidate is a tracked file on this branch, so it reaches main at merge and is available to be paired onto an open issue at epic closeout. The ranking matters more than the count: dispatched-crew-spine-is-not-bound is first because it is a live impersonation hazard with six reproductions across three gates and both roles, not a documentation nit, and because the hook's own sanctioned escapes write to the parent's spine, which makes the prescribed honest stop the destructive act.",
+      "mechanical": false,
+      "ts": "2026-08-17T22:25:23.230544+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "The run summary is the return artifact, and it already exists rather than being composed at this gate: .agent-work/epic-567-door/results/lane-d1-RETURN.md, committed at ef3eddfd with all 11 sections the launch order's Return Shape names, in order. Nine spine steps closed, seven execute gates closed with integrated crew evidence, two correct BLOCKs reworked to APPROVE through reopen rather than override, architecture reconciled directly because no packet map exists, and 19 triage candidates routed with none filed. c1 is satisfied by a user-decision citing LAUNCH_ORDER:Return Shape because no human is reachable on a delegated dispatch; the Admiral ratifies at the epic return boundary. The one thing the summary states plainly rather than smoothing is that this lane cannot finish alone: lane D2 must merge first, and until it does the guard is red on exactly its two files -- a residual measured, not assumed, by removing skills/workbench/ in a scratch copy and getting 19 passed.",
+      "mechanical": false,
+      "ts": "2026-08-17T22:25:53.033173+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Seven episodes recorded through apply_episode_delta.py --store-root episodes, the only write path, capture gate exit 0, and the store guards re-run green (test_retirement_guard 16 passed; 288 episode-related tests passed). One episode per distinct thing that happened, not a summary: the regrowth mechanism being a test; five command postconditions that could not pass because dash rejects set -o pipefail, where the cold critic's repair for a check that cannot fail produced checks that cannot pass; a dispatched crew handed its own dispatcher's spine by the Stop hook and refusing it as impersonation; a hand-maintained verb list that had drifted from the engine's registry on day one; a tracked template overlay that no walk read, where a skills/-only sweep would have reported success; a doctrine clause naming a gate that does not exist; and a reviewer whose own engine writes broke a containment test it nearly attributed to someone else's work. Each is written as a record, not a rule -- no imperative for a future agent, because a rule to follow belongs in docs/agents/* and is the human's call. FEEDBACK.md carries the reflection, including the crew feedback harvested at each integrate and my own errors, which cluster into one shape: checks authored from what the output should say rather than run against what it does say.",
+      "mechanical": false,
+      "ts": "2026-08-17T22:28:11.542765+00:00"
     }
   ],
   "trip_ledger": [
@@ -755,6 +839,28 @@
       "model": "claude-opus-5",
       "why_ref": "w-6",
       "ts": "2026-08-17T22:24:38.718896+00:00"
+    },
+    {
+      "id": "tl-7",
+      "gate": "review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.5073,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-7",
+      "ts": "2026-08-17T22:25:36.946004+00:00"
+    },
+    {
+      "id": "tl-8",
+      "gate": "feedback",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.5215,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-8",
+      "ts": "2026-08-17T22:28:03.315755+00:00"
     }
   ]
 }
