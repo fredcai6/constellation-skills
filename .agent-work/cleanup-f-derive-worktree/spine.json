@@ -599,13 +599,14 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py cleanup-f-derive-worktree --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -616,6 +617,17 @@
           "payload": {
             "seam": "feedback",
             "why_ref": "w-8"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-feedback-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py cleanup-f-derive-worktree --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
           },
           "produced_by": "engine",
           "ts": ""
@@ -632,7 +644,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "workflow feedback recorded: five episodes under episodes/active/cleanup-f-derive-worktree-001..005, committed, plus FEEDBACK.md carrying the run reflection and the harvested crew Workflow Feedback."
         }
       ],
       "postconditions": [
@@ -710,11 +723,22 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "archive",
+            "why_ref": "w-9"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -731,7 +755,7 @@
     "session_id": "commander-cleanup-f-derive-worktree",
     "status": "active",
     "claimed_at": "2026-08-17T01:36:26.599038+00:00",
-    "last_heartbeat": "2026-08-17T02:03:52.027479+00:00",
+    "last_heartbeat": "2026-08-17T02:04:21.762565+00:00",
     "claimed_by": "commander",
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
     "previous_session_id": null,
@@ -793,6 +817,13 @@
       "why": "The run summary is recorded as e-review-1 and cites LAUNCH_ORDER:Return Shape, the Admiral ratifying at the epic return boundary since no human is reachable. What this lane ships: derivation as one lexical rule pinned by a shared case table (g1); stamp-and-compare retired so the engine reads no location at all (g2); ownership as binding-key provenance rather than the worktree, at every site that selects (g3). What it does not ship: the fail-closed refusal, withdrawn by the ruling that called for it, and #315, re-homed. What it repairs beyond its own change: six sites of one stale claim family across five files, three of which no file list had named. What it leaves open and says so: the SessionStart scan-bind, packaged with the cross-session blindness and the question both turn on. Every closing number was re-measured at the gate that used it, and the one claim I could not measure -- Windows case folding on a host where normcase is the identity -- is stated as constructed rather than measured, twice, in the places a later reader will look.",
       "mechanical": false,
       "ts": "2026-08-17T02:00:48.926731+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Five episodes, one per distinct thing that happened, written through apply_episode_delta.py and proved by verify_episode_captured.py: the guard whose deletion widened the population reaching the code behind it (the finding ADMIRAL_RULING-4 asked to be recorded as a rule); every instrument on the gate developing a shelf-life defect, in both directions; the containment test measuring its own observer, because every tool call fires the gauge chain into the tree it snapshots; a claim family whose six sites spanned five files whlie the lists named three; and my own misreading of the context governor's refusal as terminal, one gate after the previous leg made the same misreading. FEEDBACK.md carries what the episode grammar does not hold -- the two departures from the order, both recorded rather than quiet, and the crews' own Workflow Feedback, whose sharpest item is that review 4's best advice reached review 5 through a result artifact it happened to read rather than through the handoff I wrote it. No durable-root CONSTELLATION_FEEDBACK.md exists in this repo, so nothing was staged against a fence that does not apply; the episodes are tracked under episodes/ and the commit is what carries them out of this worktree.",
+      "mechanical": false,
+      "ts": "2026-08-17T02:04:03.834414+00:00"
     }
   ],
   "trip_ledger": [
@@ -916,6 +947,17 @@
       "model": "claude-opus-5",
       "why_ref": "w-8",
       "ts": "2026-08-17T02:03:52.000631+00:00"
+    },
+    {
+      "id": "tl-12",
+      "gate": "archive",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2273,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-9",
+      "ts": "2026-08-17T02:04:21.735209+00:00"
     }
   ]
 }

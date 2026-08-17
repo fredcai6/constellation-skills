@@ -1,112 +1,57 @@
 # Crash-resume state note — cleanup-f-derive-worktree
 
-- **step:** **`reconcile`**, and it is nearly free. Leg 5 did reconcile's whole
-  substance, committed it at `684502ab`, and attested `c1` with its full evidence.
-  The engine then refused to **begin** the gate — `start` is hard-guarded and this
-  leg was at 0.155 fill against a 0.15 hard line — so a refresh-request is filed
-  (`e-reconcile-1`, `seam=reconcile`, `why_ref=w-5`) and the gate is waiting for a
-  fresh agent to `start` and immediately `advance` it. `execute.json` is
-  **terminal** and the spine's `execute` step is **complete**.
+- **step:** **`archive`, `in-progress`** — nine of ten spine steps complete. The
+  local half of archive is done (everything committed; five episodes tracked under
+  `episodes/active/`; the archive-phase capture gate passes). The publication half
+  is **deliberately untouched** and is with the Admiral: see
+  **`FLOAT_TO_ADMIRAL-4.md`**.
 - **slug:** cleanup-f-derive-worktree · branch `cleanup/f-derive-worktree` ·
   worktree `/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree`
-  · code committed through **`684502ab`** · `main` at **`17c2cee5`**, re-measured
-  by leg 5 and unmoved.
+  · code through **`684502ab`** · `main` at **`17c2cee5`**, re-measured and unmoved.
 - **next command:** `env -u CREW_SCRATCH_DIR py scripts/checklist_engine.py --file .agent-work/cleanup-f-derive-worktree/spine.json current`
-  then `start reconcile --session-id commander-cleanup-f-derive-worktree`, then
-  `advance reconcile --why "..."`.
-- **pid:** none — foreground, no crew running and none needed. Leg 5 dispatched no
-  implementer or reviewer. `recover_crews.py` reports only this commander leg
-  (`attempt-5`) ACTIVE; legs 1–4 show `NEEDS-ABANDON` and are my own parked
-  predecessors, **not crews to recover**.
-- **expected artifact:** the spine driven through `archive`; this leg's result
-  artifact is `.agent-work/cleanup-f-derive-worktree/crew-handoffs/execute-commander-result.md`,
-  **written and current** — read it first.
+- **pid:** none — foreground, no crew running and none needed.
+- **expected artifact:** `crew-handoffs/execute-commander-result.md` — **written and
+  current**; read it first.
 
-**Read first on resume:** `crew-handoffs/execute-commander-result.md` (leg 5's
-return), then `LAUNCH_ORDER-5.md`, then `ADMIRAL_RULING-4.md` (the boundary that
-closed `g3`), then `-3.md`, `-2.md`, `-1.md` (R1/R2/R3 and N2).
+**Read first on resume:** `crew-handoffs/execute-commander-result.md`, then
+`FLOAT_TO_ADMIRAL-4.md`, then `LAUNCH_ORDER-5.md` and `ADMIRAL_RULING-4.md`.
 
-## Re-claim, never `--force`
+## What is done
 
-Re-claim as `commander-cleanup-f-derive-worktree`. The lease is **deliberately
-held** — the run is not done. An owner is never blocked by its own stale
-heartbeat.
+`execute.json` terminal (g1/g2/g3 closed on independent APPROVEs; g4 skipped as
+withdrawn under R2; g5 skipped as re-homed under R3) · `execute` · `reconcile`
+(six stale-claim sites, all prose, suite unchanged at 3192/5/0) · `triage` (21
+recommendations in `TRIAGE_RECOMMENDATIONS.md`, four fixed-now, nineteen
+recommend-and-defer, nothing filed) · `review` · `feedback` (five episodes +
+`FEEDBACK.md`). `REPLAN_INPUT.json` verifies with `D0`–`D28`.
 
-## What is already done
+## What remains — all of it the Admiral's call
 
-- **`execute.json` terminal.** `g3` closed on review 5's APPROVE (0 findings, 8/8
-  criteria). `g4` skipped as **withdrawn** (R2 — the pre-ruling was itself the
-  defect and `_worktree_from_spine` returning `None` is already the whole answer).
-  `g5` skipped as **re-homed** (R3 — #315 moves to #610's wave).
-- **Every number re-measured by leg 5, not cited:** `main` at `17c2cee5` in a clone
-  named `constellation-skills` → **3171 / 7 / 0**; shipped tree → **3192 / 5 / 0**;
-  targeted class **23 passed** where the same selector exits 5 on the pre-gate arm.
-  Failure sets empty both ways.
-- **`reconcile`'s work, committed at `684502ab`.** Four stale-claim sites repaired
-  plus a fifth found by grepping the claim family: the door's dead
-  `SPINE = Path(os.environ["SPINE_FILE"]).resolve()` citation in
-  `scripts/hooks/spine_rail.py` and `tests/test_spine_rail.py` (current truth is
-  `mcp_spine_server._spine_from_env`); `tc10`'s two files
-  (`tests/test_explorer_templates.py`, `tests/test_mcp_door_engine_cwd.py`); and
-  `scripts/init_work_area.py`'s `instantiate_spine` docstring. All prose, no
-  executable line moved, suite unchanged at 3192/5/0.
-- **`REPLAN_INPUT.json` verifies** — `g3` folded in as a completed outcome, open
-  set empty, 23 wave-evidence rows, `D0`–`D28`, nothing auto-filed.
+`archive.c2` (push), `c2b` (an OPEN or MERGED PR), `c3` (release the lease, which
+must come **after** the closing `advance`), plus the `git mv` of this work area to
+`.agent-work/archive/<date>-cleanup-f-derive-worktree/`. **Do not open a PR or
+push on your own authority** — `LAUNCH_ORDER-5` reserves publication to the
+Admiral, and `FLOAT_TO_ADMIRAL-4.md` sets out the three ways to close it.
 
-## What remains
+Re-claim as `commander-cleanup-f-derive-worktree`, **never `--force`**. The lease
+is deliberately held; release is the final journal entry or the provenance check
+fails.
 
-1. **`reconcile`** — `start`, then `advance`. `c1` is already attested.
-2. **`triage`** — `tc1`–`tc12` plus what the `g3` crews raised. Under
-   `ADMIRAL_RULING-4`, **`tc1` (the SessionStart scan-bind) and the cross-session
-   widening (B7) go to #610's wave as ONE package**, carrying the *question* —
-   what the scan-bind is for when nobody has claimed the spine — not just the
-   symptom. **Route by content, never by id:** `execute.json`'s `tc1` is the empty
-   `map/ids.jsonl`, while the launch order's `tc1` is the scan-bind. Two different
-   findings, one name — that is `tc7`'s id collision reaching the closeout.
-   Satisfy `c2` in delegated mode with
-   `attach triage --type user-decision --field cite='LAUNCH_ORDER:Inherited Latitude'`.
-3. **`review`** — satisfy `c1` with
-   `attach review --type user-decision --field cite='LAUNCH_ORDER:Return Shape'`.
-4. **`feedback`** — episodes via `scripts/apply_episode_delta.py --store-root
-   episodes`, proved by `verify_episode_captured.py`. The material is in leg 5's
-   result artifact under "Feedback material".
-5. **`archive`** — park. **Do not merge.**
+## The two hazards most likely to bite the next agent
 
-## The one thing the next leg must take up, not decide alone
+- **A governor refusal is not terminal.** The documented sequence is: attach a
+  `refresh-request` for the seam, `start` the pending ACTIVE gate (recorded as
+  `begin-instructed`, which the compliance selectors do not count), then
+  `advance --why`. Better still: **do the gate's substance while it is still
+  pending** — `attest` and `attach` are not governor-guarded — so the start begins
+  no work it cannot finish. Two legs on this lane parked on the opposite reading.
+- **Never poll your own suite run.** Every tool call fires the gauge chain into
+  the `.agent-work/` that `test_containment_repo_agent_work_untouched_by_the_chain`
+  snapshots, so watching a run turns it red in a way that looks exactly like a
+  regression. Run it quiet, or let the engine's postcondition run it.
 
-**`archive.c2b` requires an OPEN or MERGED PR and there is none.** This branch has
-no upstream configured. Opening a PR is outward publication, which
-`LAUNCH_ORDER-5` reserves to the Admiral ("Publication is mine"). Leg 5 did not
-push and did not open one. Either the Admiral authorizes the push and PR, or
-`c2b` is waived with the fence as the recorded reason. **Do not open a PR on your
-own authority to satisfy a postcondition.**
+Also standing: `env -u CREW_SCRATCH_DIR` on every engine call (`tc12`); commit
+`crew-runs.json` as each gate closes (#617); name any baseline clone
+`constellation-skills` or `MapTreeFreshnessTests` reports a false red.
 
-## Hazards that cost this lane measurable time
-
-- **The context governor ends a leg roughly every gate.** Defaults are soft 0.08 /
-  hard 0.15, and `start`/`reopen` are hard-guarded. Leg 4 was refused at 0.19, leg
-  5 at 0.155. Do the *substance* of the gate you cannot start — `attest` is not
-  guarded — so your successor's first three commands close it. That is `D27`.
-- **The containment test measures its observer.** `test_containment_repo_agent_work_untouched_by_the_chain`
-  snapshots the live `.agent-work/` by size and mtime, and **every tool call fires
-  the gauge chain**, which writes `gauge.json` under it. Leg 5 polled its own
-  suite run ~15 times and got a false red; the identical command run quiet by the
-  engine was green. **Run the suite and stay silent while it runs.** That is
-  `tc11`/`D23`.
-- **`CREW_SCRATCH_DIR`.** The engine's own gate-close suite command scrubs
-  `SPINE_FILE`/`SPINE_SESSION`/`SPINE_PARENT` but **not** this, and a Commander is
-  itself launched through `run_crew.py`. Always
-  `env -u CREW_SCRATCH_DIR py scripts/checklist_engine.py …`. That is `tc12`.
-- **The registry clobber (#617, folded into #574).** Git is the only durable store:
-  **commit `crew-runs.json` as each gate closes**, and on resume check the working
-  copy against `HEAD` before trusting `recover_crews.py`.
-- **Baseline clones must be named `constellation-skills`** —
-  `MapTreeFreshnessTests` derives `map/INDEX.md`'s title from the checkout
-  directory name, so a clone anywhere else reports a false red.
-- **`run_crew.py` records a `partial` result as `failed`.** Leg 4 and leg 5 both
-  parked correctly at clean boundaries; the registry calls both failures. The
-  Admiral has taken that as its own defect (`D22`).
-- **Nine crews on this gate refused the `SPINE MID-FLIGHT` nudge** and recorded the
-  refusal. None wrote to this spine. The mechanism is the scan-bind `tc1`.
-
-_Updated: 2026-08-17T02:35:00+00:00 (leg 5, parking at the reconcile boundary)_
+_Updated: 2026-08-17T03:05:00+00:00 (leg 5, parked at archive with the publication decision floated)_
