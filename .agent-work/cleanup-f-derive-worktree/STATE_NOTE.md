@@ -1,10 +1,10 @@
 # Crash-resume state note — cleanup-f-derive-worktree
 
-- **step:** execute · leg 4 · g3: 4 reviews, 4 reworks, every review returned a measured defect. review4 BLOCK(B6 render-selection, B7 prose) — **both measured PRE-EXISTING**. **`g3` rework 4 is dispatching.** `FLOAT_TO_ADMIRAL-3.md` is written (3 scope questions, none blocking). Then `skip` g4 (R2), `skip` g5 (R3), reconcile → triage → review → feedback → archive. **Park at `archive`; do NOT merge.**
+- **step:** execute · leg 4 · g3: 5 reviews, 4 reworks. review4 BLOCK(B6/B7, both pre-existing) → **rework4 `539ff636`, both verified fixed by me**. **`g3` review 5 is dispatching.** `FLOAT_TO_ADMIRAL-3.md` written (3 scope questions, none blocking). Then `skip` g4 (R2), `skip` g5 (R3), reconcile → triage → review → feedback → archive. **Park at `archive`; do NOT merge.**
 - **slug:** cleanup-f-derive-worktree · branch `cleanup/f-derive-worktree` · worktree `/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree` · HEAD `e3e50a69` (g3 implementation committed)
 - **next command:** `env -u CREW_SCRATCH_DIR py scripts/checklist_engine.py --file .agent-work/cleanup-f-derive-worktree/execute.json current`
-- **pid:** commander leg 4 is pid **1634189** (foreground). The g3 rework-4 implementer is dispatched through `run_crew.py`; its pid is recorded in `crew-runs.json` under `constellation/cleanup-f-derive-worktree/g3/implementer/attempt-5`.
-- **expected artifact:** `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implementer-rework4-result.md` for the crew; for this leg, `.agent-work/cleanup-f-derive-worktree/crew-handoffs/execute-commander-result.md`
+- **pid:** commander leg 4 is pid **1634189** (foreground). The g3 review-5 reviewer is dispatched through `run_crew.py`; its pid is recorded in `crew-runs.json` under `constellation/cleanup-f-derive-worktree/g3/reviewer/attempt-5`.
+- **expected artifact:** `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-reviewer-rework4-result.md` for the crew; for this leg, `.agent-work/cleanup-f-derive-worktree/crew-handoffs/execute-commander-result.md`
 
 **Read first on resume:** `LAUNCH_ORDER-4.md`, `ADMIRAL_RULING-3.md`,
 `ADMIRAL_RULING-2.md`, `ADMIRAL_RULING-1.md`, then `LAUNCH_ORDER.md`,
