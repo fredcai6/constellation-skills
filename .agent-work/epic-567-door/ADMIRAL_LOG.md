@@ -197,3 +197,12 @@ All four merged 2026-08-17 under the Linux-green gate, in dependency order, each
 ## Closeout
 
 - _pending_
+
+## Handoff
+
+- `2026-08-17` — `CHECKPOINT` (human): Tommy asked for a handoff file to cycle the system. Written to `.agent-work/HANDOFF-2026-08-17-epic-567-wave-2.md`, following the repo's existing convention (`.agent-work/HANDOFF-2026-08-12-post-epic-418-followon.md`).
+  - Every figure in it was **re-measured on `178cb9ec`**, not carried from the epic body or from wave 1. The clause and token counts are unchanged (15 and 11) but the `<engine>` **file set shifted** — `crew-dispatch.md` now carries one after lane C's edit — so the handoff prints the two greps and tells the next Admiral not to trust the table if `main` has moved.
+  - **The single most useful thing in it:** `.mcp.json` launches `scripts/mcp_spine_server.py` **from the repo**, and there is no installed `mcp_spine_server.py` anywhere under `~/.claude/skills/`. So a **fresh session gets `spine_bind` immediately**, with no install sync. This session could not use it because its door process predates the verb. The next Admiral is the first agent that can bind an existing spine through the door — the epic dogfooding itself at the first opportunity.
+  - **Lease released deliberately, as the last action.** `spine_bind` is refused while the identity it would take is live elsewhere, and a lease held by a session that is deliberately ending asserts that someone is driving — which is exactly the lie #552 exists to stop, and which lane G just fixed. Releasing costs #615's unguarded-spine state for the gap, which is the lesser harm and is called out in the handoff with the claim command. The alternative was making the next session `claim --force` and erase actor attribution (#369).
+  - `execute` is left **in-progress on purpose**. Wave 1 is merged but c1 (every issue dispositioned) is genuinely unmet: wave 2's three lanes have not run and #442, #559, #613, #574 and #552 are each only partly delivered. The handoff says not to advance it to tidy the state.
+  - Section 9 records my four self-inflicted instances of the epic's own defect class, plus the invented net-deletion rule, the mis-reported guard message, the tracked-shared-path `RETURN.md` collision, and the ~25 minutes duplicated against the peer session. Written as observations, with the pattern named: every one was a measurement trusted without asking what it would look like in the broken world.
