@@ -1,5 +1,36 @@
 # RETURN — cmdr-567-c (epic-567-door lane C)
 
+## 0. Post-acceptance fix (Admiral-diagnosed, this lane implemented)
+
+The Admiral reproduced one net regression in PR #620:
+`tests/test_spine_rail.py::test_stop_mid_flight_blocks_with_substrings` pinned the literal phrase
+`"do not end your turn to wait"`, which the #595 net-deletion rewrite of `_mid_flight_reason`
+correctly replaced with a better sentence naming `spine_halt block`. Per the Admiral's diagnosis
+("your change was right; the test is what is wrong"), fixed the test rather than the text: it now
+asserts the three properties the refusal must guarantee (identifies mid-flight with the gate id;
+states precedence over the context-trip advisory; names `spine_halt block` as the sanctioned exit)
+instead of one pinned phrase.
+
+**Genuine finding, as the Admiral asked to have noted:** this is #522's exact complaint — "pin tests
+guard the literal wording of the bug, not the class of defect" — reproducing live inside this epic.
+The original test used a `_with_substrings` name that already signaled intent to check content, not
+exact wording, but still pinned one literal phrase inside that shape. Worth a corpus-wide check for
+the same pattern (a `_with_substrings`/`_blocks`-style test that pins one phrase instead of the
+guaranteed properties) wherever hook/engine refusal text is under test — logged as triage candidate
+`tc4`.
+
+Local verification (fresh run, this worktree, nothing else touched):
+```
+$ python3 -m pytest tests/test_spine_rail.py::test_stop_mid_flight_blocks_with_substrings -v
+tests/test_spine_rail.py::test_stop_mid_flight_blocks_with_substrings PASSED [100%]
+1 passed in 0.17s
+
+$ env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python3 -m pytest -q tests/test_spine_rail.py
+174 passed, 1 skipped, 35 subtests passed in 1.62s
+```
+`git status --porcelain` / `git diff --stat` after the fix: only `tests/test_spine_rail.py` changed
+(15 insertions, 1 deletion). Committed as `588efc0b`, pushed to `feat/567-c-rail-readability`.
+
 ## 1. Verdict
 
 Partial delivery, floated not guessed: **#595 delivered** (Stop hook stated authoritative over the
