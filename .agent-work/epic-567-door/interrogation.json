@@ -1,0 +1,193 @@
+{
+  "work_id": "epic-567-door",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "i0-context",
+    "f1-door-reach",
+    "q1-scope",
+    "q2-checkpoints",
+    "q3-decision-classes",
+    "q4-budget",
+    "q5-expiry",
+    "zc-consolidate"
+  ],
+  "tasks": {
+    "i0-context": {
+      "id": "i0-context",
+      "title": "Load baseline context",
+      "imperative": "Load epic #567 and its member issues (#559 anchor, #565, #432, #541, #442, #535), the slurp candidates named in the 2026-08-16 planning ruling (#574, #552, #613, #561, #596, #526, #595), inherited doctrine (global-orchestrator.md, global-everyone.md, fleet-doctrine.md) and the project overlay (docs/agents/ORCHESTRATOR_CONTEXT.md). Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "f1-door-reach": {
+      "id": "f1-door-reach",
+      "title": "How far does the door actually reach today, and does the epic's stated repro still hold?",
+      "kind": "fact",
+      "imperative": "Resolve from the code and the live door: count the surviving CLI-fallback clauses and <engine> tokens, list the door's registered tools against the engine's verbs, and establish whether a role agent can reach its OWN spine through the door. Record the code evidence.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "MEASURED 2026-08-16 @600de02: 15 CLI-fallback clauses across 11 files (charter, workbench SKILL+checklist-engine, explorer SKILL+spine tmpl x2, interrogator SKILL, write-a-skill survey+gated-engine tmpls, commander spine tmpl x3 + commander-core, admiral spine tmpl x2); 11 <engine> tokens across 7 files incl. scripts/init_work_area.py. Door registers 11 tools covering every engine verb EXCEPT there is no verb to BIND an existing spine: spine_open only MINTS a new worktree+branch+spine. Live proof this run: spine_status REFUSED with 'no spine is bound to this door' in the Admiral's own session, so the Admiral drove its own spine on the CLI fallback. specs/ holds only implementer.spine.toml and reviewer.spine.toml; neither carries door vocabulary. Epic repro HOLDS and extends: the unreachable-own-spine defect (#559 collision 2) is not confined to dispatched subagents -- it hits the top-tier orchestrator in its own process.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q1-scope": {
+      "id": "q1-scope",
+      "title": "What is in this epic's scope, and how does it wave up?",
+      "kind": "decision",
+      "imperative": "Take to the human: the member set (#559, #565, #432, #541, #442, #535), which slurp candidates come in, and the proposed wave shape. Scope branches every later question, so resolve it first and alone.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "HUMAN ANSWER 2026-08-16: two waves, seven lanes. W1 (parallel, unblocks): A=#559 per-dispatch spine identity + the bind-own-spine gap + #613's save()-atomicity half; B=#432 ExternalBackend spine-terminal verification; C=#442 rail/refusal readability paired with #595; G=#574 one-verb mechanical closeout + #552 lease-release-on-archive. CHECKPOINT. W2 (the subtraction wave): D=doctrine sweep (15 clauses, 11 <engine> tokens) + #565 workbench sunset + regrowth guard + doc co-travelers #561/#596/#526; E=#541 door rejections into episode friction; F=#535 reveal spec through spine. All four slurp groups accepted.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q2-checkpoints": {
+      "id": "q2-checkpoints",
+      "title": "Stop-and-present at every wave boundary, or cleared to run ahead?",
+      "kind": "decision",
+      "imperative": "Take to the human: the checkpoint protocol and what reaches them at a checkpoint.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "HUMAN ANSWER: stop-and-present at each wave boundary. Two checkpoints: post-W1, and closeout acceptance. Plain-English summary plus decision asks; evidence on demand.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q3-decision-classes": {
+      "id": "q3-decision-classes",
+      "title": "Which decision classes are delegated to the Admiral, and which are surfaced?",
+      "kind": "decision",
+      "imperative": "Take to the human. Note the project overlay's standing rule: pushes, PRs and merges to main require explicit human approval unless pre-approved for the specified work. Settle the pre-clearance/fallback row for each delegated class, since the harness permission classifier can veto regardless (#145, #408).",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "HUMAN ANSWER: DELEGATED = merge to main (pre-approved for epic #567 specifically, satisfying the overlay's 'unless pre-approved for the specified work' clause) and fix-now triage. SURFACED = architecture/structural change. ISSUE FILING IS NOT DELEGATED AND NOT MERELY SURFACED -- the human ruled it HELD: 'we've been ballooning out tracking. let's hold on to them until the end then see if we can pair them with open issues, anything else we can file under episodes.' Operationally: no lane files any issue during the run; triage candidates accumulate under .agent-work/epic-567-door/triage-candidates/; at closeout each is paired against an OPEN issue as a comment where one fits, and whatever does not pair is recorded as an episode rather than minted as a new issue. Admiral's stated reading, open to correction: closing the epic's OWN member issues on verified-merged remains delegated as the tail of the merge class.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q4-budget": {
+      "id": "q4-budget",
+      "title": "Wave width and model tier per lane?",
+      "kind": "decision",
+      "imperative": "Take to the human: how many Commanders run concurrently, at what model tier, and how the usage-limit window sizes the waves.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "HUMAN ANSWER: all four W1 lanes concurrent. Opus Commander on lane A (#559, design-heavy, load-bearing interface); Sonnet Commanders on B, C, G. Usage window is a wave-sizing input: defer a dispatch past a near reset rather than launching into it.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q5-expiry": {
+      "id": "q5-expiry",
+      "title": "When does this contract expire?",
+      "kind": "decision",
+      "imperative": "Take to the human: a time or an event that forces a contract-refresh decision before further dispatch.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "HUMAN ANSWER: expires at the W1 checkpoint. Crossing into W2 forces a contract refresh.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "zc-consolidate": {
+      "id": "zc-consolidate",
+      "title": "Consolidate behind the finish gate",
+      "imperative": "Do NOT record this until joint understanding is reached. Write the interrogation record to .agent-work/epic-567-door/INTERROGATION_RECORD.json (from templates/INTERROGATION_RECORD.template.json; each question typed fact|decision; each resolved decision carrying its human_answer; each resolved fact its code_evidence) and capture the counterpart's explicit sign-off. Run `py /home/tommy/.claude/skills/constellation-interrogator/scripts/verify_interrogation.py .agent-work/epic-567-door/INTERROGATION_RECORD.json` \u2014 it MUST exit 0. Record pass only after exit 0, then `consolidate`.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_interrogation.py exits 0 on the interrogation record -- refuses a self-answered decision or a consolidation with no joint-understanding sign-off",
+          "check": {
+            "kind": "command",
+            "command": "py /home/tommy/.claude/skills/constellation-interrogator/scripts/verify_interrogation.py .agent-work/epic-567-door/INTERROGATION_RECORD.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-zc-consolidate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-zc-consolidate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-interrogator/scripts/verify_interrogation.py .agent-work/epic-567-door/INTERROGATION_RECORD.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "RESOLVED",
+    "findings": [],
+    "summary": "Latitude contract for epic-567-door settled and signed by Tommy 2026-08-16. Two waves, seven lanes; W1 = A(#559+bind-own-spine+#613 atomicity, Opus), B(#432), C(#442+#595), G(#574+#552) all concurrent on Sonnet except A; stop-and-present at each wave boundary; merge-to-main and fix-now triage delegated, architecture surfaced, issue FILING held to closeout with triage candidates staged under triage-candidates/ and dispositioned by pairing onto open issues or recording as episodes; contract expires at the W1 checkpoint. Nine pre-rulings recorded, incl. self-hosting engine-edit safety, fresh-process validation of engine/hook changes, human-only design convergence on lane A, and every-lane-deletes. Contract at .agent-work/epic-567-door/LATITUDE_CONTRACT.md; record at INTERROGATION_RECORD.json (verifier exit 0)."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "a4704163-34f0-4c9f-aca6-8d68c189ab36",
+    "status": "released",
+    "claimed_at": "2026-08-17T05:05:42.572331+00:00",
+    "last_heartbeat": "2026-08-17T05:15:05.628345+00:00",
+    "claimed_by": "interrogator",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T05:15:05.673290+00:00"
+  }
+}

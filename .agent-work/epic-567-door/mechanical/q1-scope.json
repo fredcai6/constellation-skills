@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "q1-scope",
+  "mechanical": {
+    "run": "epic-567-door",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 1,
+    "spine-step": "q1-scope",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door-q1-scope@2b9fc77ebae7049cdc70b4ede203cf3b3c2dce5b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door",
+    "generated_at": "2026-08-17T05:08:34Z"
+  }
+}

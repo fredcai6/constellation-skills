@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "decision": "advance",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Wave 1 has not run yet; its exit criteria are measurable as written — each lane returns a merged green PR or an evidenced honest null, names what it deleted, and files nothing.",
+    "epic_done": "The epic is not complete. None of its four definition-of-done clauses holds: crews cannot drive their own spines, 15 CLI-fallback clauses and 11 <engine> tokens survive, no regrowth guard exists, and ExternalBackend still accepts a spineless success.",
+    "good_enough": "The mandatory quality boundary is preserved. Every lane's engine or hook validation is bound to a fresh process with explicit paths, and lane A additionally proves the edited engine against the live spine before merge."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "D-own-spine",
+      "action": "revise_plan",
+      "reason": "The epic body scopes #559's collision to dispatched subagents. Measured otherwise in this Admiral's own process, so lane A's desired outcome is stated as the general case — any role reaching its own spine — before the wave launches rather than discovered inside it.",
+      "issue_created": false
+    },
+    {
+      "id": "D-token-count",
+      "action": "record_evidence_only",
+      "reason": "A count correction from 9 to 11 changes lane D's target number and nothing else.",
+      "issue_created": false
+    },
+    {
+      "id": "D-tracking-ballast",
+      "action": "amend_forecast_or_parked",
+      "reason": "The held-filing ruling changes what happens at closeout, not what this wave's issues are; it is recorded against the later disposition rather than against the current wave.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Unblock the doctrine sweep by making the door reach the caller's own spine, and land the three independent door-shaped subtractions alongside it.",
+    "exit_criteria": [
+      "Lane A returns a converged design and an implementation for per-dispatch spine identity, or an evidenced honest null.",
+      "Lanes B, C and G return merged green PRs or evidenced honest nulls.",
+      "Each lane names what it deleted.",
+      "No issue was filed by any lane."
+    ],
+    "issues": [
+      {
+        "id": "A",
+        "title": "Per-dispatch spine identity: the door reaches the caller's own spine (#559 anchor, + bind-own-spine, + #613 save() atomicity)",
+        "desired_outcome": "A role agent — dispatched subagent or top-tier orchestrator — reaches its own spine through the door, and the engine's save() stops being a lost-update race between concurrent writers.",
+        "useful_now": "It is the only thing blocking the doctrine sweep: you cannot delete a fallback that is currently the only path.",
+        "appetite": "One Commander at Opus tier, design-it-twice before converging.",
+        "acceptance_or_falsification_evidence": "A dispatched crew drives its own spine through the door end to end in a fresh process; or an evidenced finding that the property cannot be had without adding more mechanism than it removes.",
+        "implementation_latitude": "Choose the mechanism — containment generalizing _identity_violation, per-call spine paths, or another candidate. Convergence is human-only: return a comparison and a recommendation.",
+        "hard_constraints_no_gos": [
+          "Do not merge before proving the edited engine drives the live spine: read-only current on the live spine, mutating verb against a copy.",
+          "Do not accept an in-session observation of hook or engine behavior as evidence."
+        ],
+        "local_unknowns": [
+          "Whether the door can bind an existing spine without giving up the isolation the env-binding buys."
+        ],
+        "anchors": ["scripts/mcp_spine_server.py", "scripts/checklist_engine.py"],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "B",
+        "title": "ExternalBackend refuses a spineless success (#432)",
+        "desired_outcome": "A dispatched role that drove no spine at all can no longer return a clean success; the mtime-only verification path is gone.",
+        "useful_now": "The engine-drive rule is prose that nothing verifies, so a correct-looking result walks straight past it.",
+        "appetite": "One Commander at Sonnet tier.",
+        "acceptance_or_falsification_evidence": "A red-proof: a dispatch that drives no spine is refused, demonstrated against the shipped path rather than a fixture.",
+        "implementation_latitude": "Choose where the check sits on the ExternalBackend path.",
+        "hard_constraints_no_gos": [
+          "The check must be able to fail: assert against the behavior, never against text describing it."
+        ],
+        "local_unknowns": [
+          "Whether the Agent-tool dispatch path has a chokepoint that can refuse at all, or only report."
+        ],
+        "anchors": ["scripts/mcp_spine_server.py"],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "C",
+        "title": "The rail and the HARD refusal read to a cold agent (#442), and the stop hook vs context-trip authority is settled (#595)",
+        "desired_outcome": "A cold agent with no corpus loaded, shown only the rail and a HARD refusal, can state what it is being asked to do and do it; and exactly one of the two competing advisory mechanisms has authority.",
+        "useful_now": "Agents read the RAIL banner as a possible prompt injection and discount the instruction it exists to deliver.",
+        "appetite": "One Commander at Sonnet tier.",
+        "acceptance_or_falsification_evidence": "Measured on a real cold agent, not judged by the author; and one of the two advisory mechanisms deleted or explicitly subordinated in shipped text.",
+        "implementation_latitude": "Rewrite the rail and refusal strings; choose which advisory wins.",
+        "hard_constraints_no_gos": [
+          "Do not redesign the trip mechanic.",
+          "Adding a third advisory mechanism is out of bounds."
+        ],
+        "local_unknowns": [
+          "Whether a cold-agent measurement can be run inside this wave's budget."
+        ],
+        "anchors": ["scripts/checklist_engine.py", "scripts/hooks"],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "G",
+        "title": "One-verb mechanical closeout behind the door (#574), and archiving releases the lease (#552)",
+        "desired_outcome": "The agent says done and the engine does the rest; archiving a finished run releases its lease, so stale leases stop accumulating on disk.",
+        "useful_now": "43 active leases on disk, 41 stale and 17 inside .agent-work/archive/, is live rot that grows every run.",
+        "appetite": "One Commander at Sonnet tier.",
+        "acceptance_or_falsification_evidence": "The closeout sequence runs from one verb through the door, and an archived run holds no active lease; both proven in a fresh process.",
+        "implementation_latitude": "Choose how much of closeout the verb absorbs.",
+        "hard_constraints_no_gos": [
+          "Do not accept an in-session observation of hook or engine behavior as evidence."
+        ],
+        "local_unknowns": [
+          "Whether the 41 existing stale leases are cleaned by this change or need a separate sweep."
+        ],
+        "anchors": ["scripts/checklist_engine.py", "scripts/mcp_spine_server.py"],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "Lane D: the doctrine sweep deletes 15 CLI-fallback clauses and the measured 11 <engine> tokens, sunsets the workbench teaching half, rehomes its templates, and lands the regrowth guard; doc co-travelers #561, #596 and #526 ride along.",
+      "why_likely": "The text is measured and the edits are mechanical once the fallback is no longer the only path.",
+      "entry_conditions": [
+        "Lane A has landed per-dispatch spine identity, or has returned an honest null that changes the sweep's premise.",
+        "The rehoming target for STATE_NOTE.template.md is settled, because the Admiral spine's own execute precondition names that path."
+      ]
+    },
+    {
+      "outcome": "Lane E: door rejections are captured as episode friction (#541).",
+      "why_likely": "The episode store already carries the counters; this teaches the server to write to the store that exists.",
+      "entry_conditions": ["The apply_episode_delta.py / verify_episode_captured.py nested-work-id pair is satisfiable."]
+    },
+    {
+      "outcome": "Lane F: the spec is revealed through the spine rather than dumped into the launch order (#535).",
+      "why_likely": "spine_open already compiles a spec into a minted spine, so the mechanism exists and needs making structural.",
+      "entry_conditions": ["Lane A's identity design has settled how a dispatched agent binds to the spine it is given."]
+    },
+    {
+      "outcome": "Closeout disposition pass: every accumulated triage candidate is paired onto an open issue as a comment, or recorded as an episode; none is minted as a new issue.",
+      "why_likely": "The human ruled filing held for the whole run because tracking has been ballooning.",
+      "entry_conditions": ["Both waves are merged and the candidates under triage-candidates/ are complete."]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether per-dispatch spine identity can be had without adding more mechanism than the sweep removes.",
+      "affects": "Whether wave 2's lane D proceeds at all, and whether the epic's net-deletion filter holds.",
+      "settle_by": "Lane A's design-it-twice comparison at the W1 checkpoint.",
+      "current_evidence": "The door binds one spine per process at import time; spine_open mints rather than binds; spine_status REFUSED in this Admiral's own session.",
+      "next_probe": "Lane A generates N>=2 candidates under distinct named constraints and compares them on depth, locality, seam placement and testability."
+    },
+    {
+      "unknown": "Whether a cold-agent readability measurement for #442 fits inside a Sonnet lane's budget.",
+      "affects": "Whether lane C returns a measurement or an authored judgement.",
+      "settle_by": "Lane C's own first gate.",
+      "current_evidence": "The acceptance criterion in #442 explicitly demands real agents, not author judgement.",
+      "next_probe": "Lane C scopes the measurement before committing to it, and floats if it does not fit."
+    },
+    {
+      "unknown": "Which of the accumulated triage candidates will pair onto an open issue at closeout and which become episodes.",
+      "affects": "Closeout disposition volume.",
+      "settle_by": "The closeout pairing pass.",
+      "current_evidence": "The human ruled tracking has been ballooning; no lane files during the run.",
+      "next_probe": "Collect candidates under triage-candidates/ and pair them once, at the end."
+    },
+    {
+      "unknown": "Whether lanes A and G both touch scripts/hooks/*, which would force them to merge sequentially behind a fresh-process suite.",
+      "affects": "Merge ordering at the W1 boundary.",
+      "settle_by": "The first return from either lane that names its touched paths.",
+      "current_evidence": "Both lanes name scripts/checklist_engine.py as an anchor; neither names scripts/hooks/* yet, but lane C does.",
+      "next_probe": "Each lane reports its touched paths in its return, and the Admiral sequences merges on that."
+    }
+  ],
+  "revised_parked": [
+    "#575 Windows proof of the .mcp.json launch line — stays in epic-distribution by the 2026-08-16 rescope.",
+    "amend and flag-candidate remaining operator-only verbs, stated rather than implied.",
+    "Sweeping the 41 pre-existing stale leases, as distinct from stopping new ones accruing — held until lane G reports whether its change reaches them."
+  ],
+  "unlaunched_dispositions": [
+    {"id": "D", "action": "keep", "reason": "Still the wave-2 anchor; blocked on lane A, not invalidated by it."},
+    {"id": "E", "action": "keep", "reason": "Independent of wave 1's outcome."},
+    {"id": "F", "action": "keep", "reason": "Independent of wave 1's outcome, though its entry condition now names lane A's binding design."},
+    {"id": "U-forecast-sweep", "action": "keep", "reason": "The sweep forecast survives with a corrected token count."},
+    {"id": "U-identity-cost", "action": "keep", "reason": "The central uncertainty of the epic; wave 1 exists to settle it."},
+    {"id": "U-parked-575", "action": "keep", "reason": "Parked by the 2026-08-16 rescope; nothing in this boundary disturbs it."}
+  ],
+  "material_changes": [
+    {
+      "surface": "epic_body_decomposition",
+      "before": "#559's unreachable-own-spine collision is scoped to dispatched Task-tool subagents inheriting their dispatcher's binding.",
+      "after": "The collision is general: any role reaching its own spine, including a top-tier orchestrator in its own process, has no door path to it.",
+      "reason": "Measured live this run — spine_status REFUSED in the Admiral's own session, and spine_open mints rather than binds, so there is no verb that reaches an existing spine at all."
+    },
+    {
+      "surface": "wave_forecast",
+      "before": "Lane D's deletion target is 9 <engine> tokens.",
+      "after": "Lane D's deletion target is the measured 11 <engine> tokens across 7 files.",
+      "reason": "Counted at 600de02; the epic body's figure was stale."
+    }
+  ],
+  "wave_review_comment": "## Wave review — boundary w1 (pre-launch)\n\nNo wave has run yet. This is the launch-authorizing transition for wave 1, and it exists to record two things measured before dispatch rather than discovered inside it.\n\n**The epic's repro holds, with one correction and one extension.** At `600de02`: 15 CLI-fallback clauses across 11 files, as recorded. Eleven live `<engine>` tokens across 7 files, not the 9 the epic body states. Zero door vocabulary in `specs/*.spine.toml` — only `implementer` and `reviewer` specs exist. The verb gap is closed at 11 tools.\n\n**The extension is the one that matters.** #559 frames the unreachable-own-spine collision as a dispatched-subagent problem. It is not. It stopped this Admiral in its own process at step one: `spine_status` returned `REFUSED: no spine is bound to this door`, and `spine_open` only mints a new worktree, branch and compiled spine — no verb binds the door to an existing spine file. Init was consequently driven on the CLI fallback and logged as an `ADMIRAL ERROR`. Lane A's scope is therefore the general case, and the doctrine sweep is genuinely blocked behind it: you cannot delete a fallback that is currently the only path.\n\n**Decision: advance.** Wave 1 launches four lanes concurrently — A (Opus), B, C and G (Sonnet). Every discrepancy is dispositioned; no issue was created, per the standing ruling that filing is held to closeout.",
+  "revised_epic_body": "## Current planning truth — epic 567, boundary w1\n\n### Intent\n\nOne interface for agents: the MCP door. The CLI becomes an operator and debug path only. The outcome that must not be violated is that this epic **reduces paths rather than adding mechanism** — every lane ends net-mechanism-negative.\n\n### Measured starting point (`600de02`, 2026-08-16)\n\n| Claim | State |\n|---|---|\n| CLI-fallback clauses | 15, across 11 files |\n| live `<engine>` tokens | 11, across 7 files — the epic body's 9 was stale |\n| door vocabulary in `specs/*.spine.toml` | zero; only `implementer` and `reviewer` specs exist |\n| verb gap | closed — 11 tools cover every engine verb |\n| a role agent reaching its **own** spine through the door | impossible |\n\n### Current wave (launched at this boundary)\n\n- **A** — per-dispatch spine identity: the door reaches the caller's own spine (#559 anchor, plus the bind-own-spine gap, plus #613's `save()`-atomicity half). Opus. Design-it-twice; convergence is human-only.\n- **B** — ExternalBackend refuses a spineless success (#432). Sonnet.\n- **C** — the rail and HARD refusal read to a cold agent (#442), and the stop-hook-versus-context-trip authority is settled (#595). Sonnet.\n- **G** — one-verb mechanical closeout behind the door (#574), and archiving releases the lease (#552). Sonnet.\n\n### Nonbinding forecast\n\n- **D** — the doctrine sweep: delete 15 clauses and 11 tokens, sunset the workbench teaching half, rehome its templates, land the regrowth guard, carry #561/#596/#526. Entry condition: lane A has landed, or has returned an honest null that changes the premise.\n- **E** — door rejections captured as episode friction (#541).\n- **F** — the spec revealed through the spine rather than the launch order (#535).\n- **Closeout disposition** — every accumulated triage candidate paired onto an open issue or recorded as an episode; none minted as a new issue.\n\n### Standing constraints\n\nNo lane files an issue during the run. No lane promotes an observation into `docs/agents/*`. Engine and hook changes are validated in a fresh process with explicit paths — an in-session observation is not evidence. Lane A proves the edited engine drives the live spine before merge: read-only `current` on the live spine, mutating verb against a **copy**.\n\n### Open uncertainty\n\nWhether per-dispatch spine identity can be had without adding more mechanism than the sweep removes. Wave 1 exists to settle it; lane A's comparison lands at the W1 checkpoint, where the contract expires.",
+  "escalation": null
+}

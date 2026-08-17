@@ -1,0 +1,59 @@
+{
+  "goal": "Settle the latitude contract for Admiral epic-567-door: how much rope the Admiral has to run epic #567 (the door is the interface -- finish the MCP migration) as the human's delegate.",
+  "mode": "interactive",
+  "questions": [
+    {
+      "id": "f1-door-reach",
+      "kind": "fact",
+      "question": "How far does the door actually reach today, and does the epic's stated repro still hold?",
+      "status": "resolved",
+      "resolution": "The repro holds and extends. 15 CLI-fallback clauses across 11 files; 11 live <engine> tokens across 7 files; zero door vocabulary in specs/*.spine.toml (only implementer and reviewer specs exist); the verb gap is closed at 11 tools. But no verb binds the door to an EXISTING spine -- spine_open only mints a new worktree+branch+spine -- so a role agent cannot reach its own spine through the door. #559 frames this as a dispatched-subagent problem; it is not, it hit this Admiral in its own process at step one.",
+      "code_evidence": "Measured at 600de02 on 2026-08-16. Clause count: grep -rn 'CLI fallback' skills/ specs/ = 15, in skills/charter/SKILL.md, skills/workbench/SKILL.md, skills/workbench/references/checklist-engine.md, skills/explorer/SKILL.md, skills/explorer/templates/EXPLORER_SPINE.template.json (x2), skills/interrogator/SKILL.md, skills/write-a-skill/templates/survey-SKILL.template.md, skills/write-a-skill/templates/gated-engine-SKILL.template.md, skills/commander/templates/COMMANDER_SPINE.template.json (x3), skills/commander/references/commander-core.md, skills/admiral/templates/ADMIRAL_SPINE.template.json (x2). Token count: grep -rn '<engine>' skills/ specs/ scripts/ docs/ = 11, in skills/commander/references/crew-dispatch.md, skills/explorer/templates/EXPLORER_SPINE.template.json, skills/commander/templates/COMMANDER_SPINE.template.json, skills/commander/references/commander-core.md, skills/admiral/templates/ADMIRAL_SPINE.template.json, scripts/init_work_area.py, docs/superpowers/plans/2026-06-27-delegated-autonomous-commander.md. Live door behaviour: mcp__spine__spine_status returned 'REFUSED: no spine is bound to this door, so there is nothing for this tool to act on. Call spine_open to mint a spine and bind this process to it, or relaunch this door with SPINE_FILE set to an existing spine file.' in this Admiral's own session; env holds no SPINE_* variables; init was consequently driven on the documented CLI fallback and logged as an ADMIRAL ERROR in .agent-work/epic-567-door/ADMIRAL_LOG.md."
+    },
+    {
+      "id": "q1-scope",
+      "kind": "decision",
+      "question": "What is in this epic's scope, and how does it wave up? Member set is #559 (anchor), #565, #432, #541, #442, #535; the 2026-08-16 planning ruling named #574, #552, #613, #561, #596, #526 and #595 as slurp candidates.",
+      "status": "resolved",
+      "resolution": "Two waves, seven lanes. Wave 1 (parallel, unblocks the rest): A = #559 per-dispatch spine identity + the bind-own-spine gap + #613's save()-atomicity half; B = #432 ExternalBackend spine-terminal verification; C = #442 rail/refusal readability paired with #595; G = #574 one-verb mechanical closeout + #552 lease-release-on-archive. Checkpoint. Wave 2 (the subtraction wave, provisional): D = doctrine sweep + #565 workbench sunset + regrowth guard + doc co-travelers #561/#596/#526; E = #541 door rejections into episode friction; F = #535 reveal spec through spine.",
+      "human_answer": "Chose the recommended two-wave, six-lane cut, and accepted all four slurp groups: '#574 + #552 - yes, as a 7th lane', '#613 atomicity half - yes, into lane A', '#561/#596/#526 - yes, into lane D', '#595 - yes, paired with #442'."
+    },
+    {
+      "id": "q2-checkpoints",
+      "kind": "decision",
+      "question": "Stop-and-present at every wave boundary, or cleared to run ahead?",
+      "status": "resolved",
+      "resolution": "Stop-and-present at each wave boundary. Two checkpoints: post-W1 and closeout acceptance. Plain-English summary plus decision asks; evidence on demand.",
+      "human_answer": "Selected 'Stop-and-present at each wave boundary (Recommended)'."
+    },
+    {
+      "id": "q3-decision-classes",
+      "kind": "decision",
+      "question": "Which decision classes are delegated to the Admiral, and which are surfaced? The project overlay already requires explicit human approval for pushes, PRs and merges to main unless pre-approved for the specified work.",
+      "status": "resolved",
+      "resolution": "Delegated: merge to main (pre-approved for epic #567 specifically) and fix-now triage. Surfaced: architecture/structural change, scope change, production defaults, apply-a-lesson. Issue filing is HELD -- no lane files any issue during the run; triage candidates accumulate under .agent-work/epic-567-door/triage-candidates/ and are dispositioned at closeout by pairing onto an open issue as a comment, or recording as an episode where none fits. Closing this epic's own member issues on verified-merged remains delegated as the tail of the merge class; the human confirmed this reading at sign-off.",
+      "human_answer": "Selected 'Merge to main - delegated for this epic', 'Fix-now triage - delegated', 'Architecture / structural change - stays surfaced', and wrote in: 'keep track of the issues, but we've been ballooning out tracking. let's hold on to them until the end then see if we can pair them with open issues, anything else we can file under episodes'. At the sign-off gate the human was shown the Admiral's reading that member-issue CLOSING stays delegated, with an explicit option to hold closes too, and selected 'Signed - launch wave 1'."
+    },
+    {
+      "id": "q4-budget",
+      "kind": "decision",
+      "question": "Wave width and model tier for W1's four lanes?",
+      "status": "resolved",
+      "resolution": "All four W1 lanes run concurrently. Opus Commander on lane A; Sonnet Commanders on B, C and G. The account usage window is a wave-sizing input: defer a dispatch past a near reset rather than launching into it.",
+      "human_answer": "Selected 'All four W1 lanes concurrent; Opus on A, Sonnet on B/C/G (Recommended)'."
+    },
+    {
+      "id": "q5-expiry",
+      "kind": "decision",
+      "question": "When does this contract expire?",
+      "status": "resolved",
+      "resolution": "At the W1 checkpoint. Crossing into wave 2 forces a contract refresh, as does any material exception that invalidates the wave plan.",
+      "human_answer": "Selected 'After the W1 checkpoint (Recommended)'."
+    }
+  ],
+  "signoff": {
+    "by": "Tommy (repo owner, human at the keyboard)",
+    "statement": "Shown the drafted contract -- wave-1 lane table with each lane's deletion, the nine pre-rulings with the three risk-carrying ones called out (self-hosting engine edit, in-session hook observation struck as evidence, human-only design convergence on lane A), and the Admiral's stated reading that closing this epic's own member issues on verified-merged stays delegated while filing is held -- and offered the alternatives 'Signed, but issue-closing is held too' and 'Not yet - more questions', the human answered 'Signed - launch wave 1'. Questioning is complete and the understanding is shared."
+  },
+  "consolidated": false
+}

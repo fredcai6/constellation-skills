@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "q2-checkpoints",
+  "mechanical": {
+    "run": "epic-567-door",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 1,
+    "spine-step": "q2-checkpoints",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door-q2-checkpoints@a8d2ffaf1ded43b557afdca540515747c8738c92",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door",
+    "generated_at": "2026-08-17T05:08:34Z"
+  }
+}
