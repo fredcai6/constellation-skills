@@ -1234,6 +1234,49 @@ instance: `main()`'s `except KeyError` means *any* unhandled exception in a life
 dispatch kills the door, so the whole surface is one broad `except Exception` away from
 being fail-closed.
 
+#### F28 — both blockers verified fixed in my own hands, including the no-over-correction case
+
+The rework returned `complete`. I verified it myself rather than on its word, reusing the exact
+nested-checkout topology from my own F26 reproduction:
+
+```
+=== B1: the escape that WORKED before the fix ===
+  symlink -> nested checkout:  REFUSED = True
+    REFUSED: '.../.agent-work/zz-nested-repo/spine.json' sits inside a DIFFERENT checkout (...)
+  SPINE after: None
+
+=== B2: NUL byte must refuse, not kill the process ===
+  NUL byte: REFUSED = True | process ALIVE
+    spine_bind: spine_file is not a usable filesystem path (ValueError: embedded null byte).
+
+=== the legitimate case still works (no over-correction) ===
+  an ordinary spine in our own work area: REFUSED = False
+  SESSION = 'constellation/zz-ok'
+```
+
+**The third check is the one I would have skipped if I were being lazy, and it is the one that
+distinguishes a fix from a wall.** A guard that refuses the escape *and everything else* passes
+both blocker tests and destroys the feature. `SPINE` stayed `None` after the refused bind (so a
+refusal genuinely does not bind), and an ordinary spine in the door's own work area still binds
+with the session derived correctly. Same call, opposite outcomes, which is what "fixed" means.
+
+Rework's own numbers, which I accept because it reproduced the bug **before** fixing it (against
+`md5 7dfd9918…` on unmodified HEAD it bound and *drove* a nested worktree's spine and a separate
+repository's spine, and died on the NUL byte): nine new symlink tests and four NUL tests, all
+red first; four pins pass with controls firing; **full suite 3276 passed, 5 skipped, 0 failed.**
+
+It also carried the hardlink limit from my triage candidate into the code, so the property in the
+tool description now reads "enforced by path" rather than making the unqualified claim that a
+symlink had already falsified once.
+
+**I am not closing the gate on this.** The gate's postcondition wants a `review-result` with
+`verdict: APPROVE`, and everything above is *my* verification of a fix to a defect *I* helped
+specify. Attesting my own work through a review gate would be precisely the self-report problem
+this whole lane kept catching in others. Dispatched a narrow re-review instead, scoped to the two
+blockers, the non-vacuity of the new tests, and whether the three property statements still
+overclaim — explicitly not a fresh full review, since the prior reviewer's 1651 lines of passing
+checks have not changed.
+
 #### F27 — a SECOND reviewer reached the same BLOCK independently, and found a third gap
 
 A relaunched reviewer ran while the first one's review already sat at the deliverable path.
