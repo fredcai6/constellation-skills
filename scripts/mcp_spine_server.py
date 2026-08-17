@@ -71,7 +71,10 @@ discovered.
   confined to `<this door's own checkout>/.agent-work/`, by
   `_own_checkout_for_binding` plus the SAME `_resolve_confined` predicate, and a
   candidate whose own `git rev-parse --show-toplevel` differs from this door's is
-  refused even when its path is lexically inside. The replacement isolation
+  refused even when its path is lexically inside. Both halves are asked of the
+  RESOLVED path: while the second half asked about the argument's own parent, a
+  symlink inside this work area pointing at a nested checkout satisfied both at
+  once, and the door bound another repository's spine. The replacement isolation
   property, in one line: **one checkout's work-area tree per process.** The
   identity it confers is the spine's own, never the caller's. See
   IDENTITY_TRADE.md §7 for the measured reach delta this bought.
@@ -967,6 +970,15 @@ def _own_checkout_for_binding() -> Path:
     aspirational -- lexical containment alone would admit a checkout nested
     inside the work area.
 
+    **Both halves of that pair are asked of the RESOLVED path, and the property
+    was false until they were.** The reviewer of this gate defeated the second
+    half with a symlink: the link sat inside this work area, so lexical
+    containment (which resolves) passed, and the cross-checkout check asked git
+    about the LINK's parent -- this door's own directory -- rather than the
+    target's, so it passed too. A nested linked worktree's spine and an unrelated
+    repository's spine were both bound that way. The property now holds by any
+    spelling of the path, which is the only form of it worth stating.
+
     Unbound, the anchor is `Path(__file__).resolve().parent`, which is the same
     fallback `_primary_checkout_for_lifecycle` uses and for the same reason: it
     is the only anchor an unbound door has that is not ambient. NOT the process
@@ -1256,19 +1268,21 @@ def _spine_bind(args: dict) -> dict:
     (`tests/test_mcp_spine_bind.py`). Each returns through `_tool_error` with a
     `rejection_class`, so every one lands in the rejection log:
 
-      R1 missing-required-argument   no `spine_file`
-      R2 bad-argument-type          not a non-empty string
-      R0 (SUCCESS)                  already bound to this exact path -- a no-op
-      R3 root-resolution-failed     this door's own checkout will not resolve
-      R4 path-escape                outside `<own checkout>/.agent-work/`
-      R5 no-spine-there             nothing readable at that path
-      R6 cross-checkout             the candidate's own checkout is not ours
-      R7 not-a-spine                not a JSON object
-      R8 no-derivable-identity      neither `origin.work_id` nor `work_id`
-      R9 identity-held              that identity is live somewhere else
-      R10 lease-held                this door still holds a lease of its own
+      R1  missing-required-argument  no `spine_file`
+      R2  bad-argument-type          not a non-empty string
+      R2b bad-argument-type          a string, but no path resolves from it
+      R0  (SUCCESS)                  already bound to this exact path -- a no-op
+      R3  root-resolution-failed     this door's own checkout will not resolve
+      R4  path-escape                outside `<own checkout>/.agent-work/`
+      R5  no-spine-there             nothing readable at that path
+      R6  cross-checkout             the resolved path's own checkout is not ours
+      R7  not-a-spine                not a JSON object
+      R8  no-derivable-identity      neither `origin.work_id` nor `work_id`
+      R9  identity-held              that identity is live somewhere else
+      R10 lease-held                 this door still holds a lease of its own
 
-    **R0 is FIRST, and the ordering is easy to get backwards.**
+    **R0 is FIRST of the guards that read the world, and the ordering is easy to
+    get backwards.**
     `_rebind_refusal` refuses whenever this process holds an active lease -- so an
     agent that binds, claims, then calls `spine_bind` again with the SAME path (a
     retry, a resumed transcript, a re-read of its own state) would be refused for
@@ -1278,11 +1292,19 @@ def _spine_bind(args: dict) -> dict:
     `resolve()`, matching `_bind_process_to`'s own, so a relative path, a symlink
     or a trailing-slash spelling of the bound spine reads as the same spine.
 
-    **R6 is what makes the isolation claim true rather than aspirational.** R4 is
-    lexical, and a checkout can be NESTED under `.agent-work/`, at which point a
-    path inside the boundary is still in another repository. So the candidate's
-    OWN `--show-toplevel` is asked and compared. See
-    `_own_checkout_for_binding` for the measured reach delta this pair buys.
+    **R6 is what makes the isolation claim true rather than aspirational, and it
+    only became true when it started resolving.** R4 is lexical, and a checkout
+    can be NESTED under `.agent-work/`, at which point a path inside the boundary
+    is still in another repository. So the RESOLVED path's own `--show-toplevel`
+    is asked and compared. Resolved, because R4 returns its candidate unresolved:
+    while R6 asked git about `candidate.parent`, a symlink inside this door's own
+    work area pointing at a nested checkout's spine satisfied both guards at once
+    -- R4 followed the link and saw the target inside the boundary, R6 did not
+    follow it and saw our own directory. This gate's reviewer bound both a nested
+    linked worktree's spine and a wholly separate repository's spine that way. See
+    `_own_checkout_for_binding` for the measured reach delta this pair buys and
+    `tests/test_mcp_spine_bind.py::ASymlinkCannotHideAnotherCheckoutTests` for the
+    topology that can see the difference.
 
     Reuse, never a second notion: `_resolve_confined` for containment (the same
     predicate `_identity_violation` and `_spine_open` already use, with a
@@ -1305,9 +1327,36 @@ def _spine_bind(args: dict) -> dict:
             tool="spine_bind", rejection_class="bad-argument-type",
         )
 
-    # R0 -- already bound here. Asked before ANYTHING else, including the root:
-    # a no-op cannot escape a boundary it does not cross.
-    if SPINE is not None and Path(raw).resolve() == SPINE:
+    # R2b -- the string will not resolve to a path at all. Placed BEFORE R0
+    # because R0's own `resolve()` is one of the two lines that raised: a NUL byte
+    # makes `Path(raw).resolve()` raise `ValueError: embedded null byte`, and
+    # `main()`'s lifecycle branch catches only `KeyError`, so the exception unwound
+    # out of `main()` and the door EXITED -- taking all twelve tools with it for
+    # the rest of the session, and giving the next call a `BrokenPipeError`. That
+    # is the opposite of this gate's Protected Intent ("Fail closed. A spine that
+    # cannot be identified refuses"): it neither refused nor logged a rejection.
+    # `spine_bind` is the first lifecycle tool to take a caller-supplied filesystem
+    # path -- the pre-existing analogue, `spine_advance`'s `--from-child`, survives
+    # only because `_identity_violation` runs inside `run_engine`'s
+    # `except Exception` net, and the lifecycle path has no such net -- and it is
+    # reachable with NOTHING bound (`BINDS_WITHOUT_A_BOUND_SPINE`), so it is
+    # reachable at the moment an agent has no other way in. `OSError` and
+    # `RuntimeError` join `ValueError` for the same reason the two root resolutions
+    # below catch them: a name too long and a symlink loop are the same class of
+    # answer as a NUL, and each must be a refusal rather than a dead door.
+    try:
+        requested = Path(raw).resolve()
+    except (OSError, ValueError, RuntimeError) as exc:
+        return _tool_error(
+            f"spine_bind: spine_file is not a usable filesystem path "
+            f"({type(exc).__name__}: {exc}). Pass an absolute path to a spine file that "
+            f"exists -- the SPINE_FILE value `spine_open` returned.",
+            tool="spine_bind", rejection_class="bad-argument-type",
+        )
+
+    # R0 -- already bound here. Asked before anything that reads the filesystem or
+    # git, including the root: a no-op cannot escape a boundary it does not cross.
+    if SPINE is not None and requested == SPINE:
         return _lifecycle_result({
             "SPINE_FILE": str(SPINE), "SPINE_SESSION": SESSION,
             "already_bound": True,
@@ -1344,16 +1393,31 @@ def _spine_bind(args: dict) -> dict:
             tool="spine_bind", rejection_class="no-spine-there",
         )
 
+    # R6 asks git about the RESOLVED path, and the `resolve()` is the whole guard.
+    # `_resolve_confined` computes containment on `p.resolve()` but returns the
+    # candidate UNRESOLVED -- so a SYMLINK at `<work area>/link.json` pointing at a
+    # spine in another checkout passed R4 (the target is inside the boundary) and
+    # then passed R6 too, because `candidate.parent` is our own work area and git
+    # dutifully answered with our own checkout. This gate's reviewer bound a nested
+    # linked worktree's spine and a wholly separate repository's spine exactly that
+    # way (`tests/test_mcp_spine_bind.py::ASymlinkCannotHideAnotherCheckoutTests`).
+    # Resolving first asks about the spine this door would ACTUALLY drive, which is
+    # the same path `_bind_process_to` resolves and the same one R4's own refusal
+    # text names. `_identity_violation`'s docstring records six guards each
+    # defeated by a shape it had not enumerated; this one enumerated a single
+    # spelling of "which checkout is this path in", and one resolve retires the
+    # spelling question rather than adding a second guard beside it.
+    resolved = candidate.resolve()
     try:
-        candidate_checkout = _checkout_containing(candidate.parent)
+        candidate_checkout = _checkout_containing(resolved.parent)
     except (OSError, RuntimeError) as exc:
         return _tool_error(
-            f"spine_bind: could not resolve which checkout {str(candidate)!r} belongs to: {exc}",
+            f"spine_bind: could not resolve which checkout {str(resolved)!r} belongs to: {exc}",
             tool="spine_bind", rejection_class="root-resolution-failed",
         )
     if candidate_checkout != checkout:
         return _tool_error(
-            f"REFUSED: {str(candidate)!r} sits inside a DIFFERENT checkout "
+            f"REFUSED: {str(resolved)!r} sits inside a DIFFERENT checkout "
             f"({str(candidate_checkout)!r}) than this door's own ({str(checkout)!r}), even "
             f"though its path is under this door's work area -- a checkout nested there is "
             f"still another repository. One checkout's work-area tree per process. "
@@ -1793,7 +1857,10 @@ LIFECYCLE_TOOLS = [
             "binding a spine yields exactly the identity that spine is driven "
             "under. Confined to one checkout's work-area tree per process -- "
             "refused for a spine outside this door's own checkout's "
-            "`.agent-work/`, including a sibling worktree of the same repository. "
+            "`.agent-work/`, including a sibling worktree of the same repository, "
+            "and refused for a spine in a checkout NESTED inside that "
+            "`.agent-work/`. The path is judged after resolution, so a symlink is "
+            "not a way around either refusal. "
             "Also refused while this door still holds an active lease on a "
             "different spine (release it first), and while the identity it would "
             "take is live somewhere else. Binding the spine this door is already "

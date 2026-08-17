@@ -519,6 +519,217 @@ class TheRootMustBeTheDoorsOwnWorktreeTests(unittest.TestCase):
             f"other lanes' work")
 
 
+@requires_git
+class ASymlinkCannotHideAnotherCheckoutTests(unittest.TestCase):
+    """**The gate's reviewer defeated R6 with a symlink, and this class is what
+    closes it.**
+
+    R4 (`_resolve_confined`) computes containment on `p.resolve()`, so symlinks
+    ARE followed there -- but it returns the candidate UNRESOLVED. R6 then asked
+    git which checkout `candidate.parent` belongs to, and for a link at
+    `<our work area>/link.json` that parent is our OWN work area, which trivially
+    matches. So a symlink sitting inside the door's own `.agent-work/` and
+    pointing at a spine in a DIFFERENT checkout passed both guards: R4 saw a
+    resolved target inside the boundary, R6 saw our own directory. The reviewer
+    bound a nested linked worktree's spine and a wholly separate repository's
+    spine exactly that way, and `_bind_process_to` then resolved the link, so the
+    door really did end up driving the other checkout's spine.
+
+    `_identity_violation`'s own docstring records six guards "each defeated by a
+    shape it had not enumerated" and concludes "enumerating spellings is the
+    defect". R6 enumerated one spelling of "which checkout is this path in". This
+    class asserts the OTHER spelling, and does it on genuine topologies -- a real
+    `git worktree add` nested under the work area and a real `git init` beside it
+    -- because that is the only kind of fixture that can see the bug at all:
+
+        repo/                                     <- primary checkout
+          .worktrees/lane-a/                      <- THIS door's checkout
+            .agent-work/mine/spine.json           <- bound
+            .agent-work/other/spine.json          <- legitimately bindable
+            .agent-work/nested/                   <- `git worktree add`, NESTED
+              .agent-work/n/spine.json
+            .agent-work/alien-repo/               <- `git init`, unrelated repo
+              .agent-work/a/spine.json
+            .agent-work/link-nested.json  ->  nested/.agent-work/n/spine.json
+            .agent-work/link-alien.json   ->  alien-repo/.agent-work/a/spine.json
+            .agent-work/link-sibling.json ->  ../lane-b/.agent-work/theirs/spine.json
+          .worktrees/lane-b/
+            .agent-work/theirs/spine.json         <- a sibling lane's work
+
+    Every link's own parent directory is inside this door's work area, which is
+    the whole point: the defeated guard asked about that parent.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.repo = Path(self.tmp.name) / "repo"
+        self.repo.mkdir(parents=True)
+        _init_repo(self.repo)
+        self.lane_a = self._worktree("lane-a", self.repo / ".worktrees" / "lane-a")
+        self.lane_b = self._worktree("lane-b", self.repo / ".worktrees" / "lane-b")
+        self.work = self.lane_a / ".agent-work"
+        self.mine = _write_spine(self.work / "mine" / "spine.json", _spine_payload("mine-work"))
+
+        # A linked worktree of the SAME repository, nested inside our work area.
+        self.nested = self._worktree("nested-branch", self.work / "nested")
+        self.nested_spine = _write_spine(
+            self.nested / ".agent-work" / "n" / "spine.json", _spine_payload("nested-work"))
+
+        # A wholly unrelated repository, also nested inside our work area.
+        self.alien = self.work / "alien-repo"
+        _init_repo(self.alien)
+        self.alien_spine = _write_spine(
+            self.alien / ".agent-work" / "a" / "spine.json", _spine_payload("alien-work"))
+
+        # A sibling lane's work, outside our checkout entirely.
+        self.theirs = _write_spine(
+            self.lane_b / ".agent-work" / "theirs" / "spine.json", _spine_payload("theirs-work"))
+
+        self.link_nested = self._link("link-nested.json", self.nested_spine)
+        self.link_alien = self._link("link-alien.json", self.alien_spine)
+        self.link_sibling = self._link("link-sibling.json", self.theirs)
+
+        self.module = _load_module(self.mine, "constellation/mine-work")
+
+    def _worktree(self, branch: str, path: Path) -> Path:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["git", "-C", str(self.repo), "worktree", "add", "-q",
+                        "-b", branch, str(path)], check=True, capture_output=True)
+        return path
+
+    def _link(self, name: str, target: Path) -> Path:
+        link = self.work / name
+        link.symlink_to(target)
+        return link
+
+    def bind(self, path: Path) -> dict:
+        return self.module._spine_bind({"spine_file": str(path)})
+
+    def _classes(self) -> list[str]:
+        log = self.module._rejectionlog()
+        if not log.exists():
+            return []
+        return [json.loads(x)["class"] for x in log.read_text(encoding="utf-8").splitlines()
+                if x.strip() and json.loads(x)["tool"] == "spine_bind"]
+
+    def test_the_fixture_is_the_discriminating_topology(self):
+        """The premise. If any of this fails the assertions below are vacuous:
+        they would be measuring a symlink that does not actually cross a checkout
+        boundary, or a link whose parent is not our own work area."""
+        own = self.module._own_checkout_for_binding().resolve()
+        self.assertEqual(self.lane_a.resolve(), own)
+        self.assertEqual(
+            self.nested.resolve(),
+            self.module._checkout_containing(self.nested_spine.parent).resolve(),
+            "the nested `git worktree` does not answer with itself, so it is not a "
+            "different checkout and there is nothing here to escape")
+        self.assertEqual(
+            self.alien.resolve(),
+            self.module._checkout_containing(self.alien_spine.parent).resolve())
+        for link in (self.link_nested, self.link_alien, self.link_sibling):
+            self.assertTrue(link.is_symlink(), f"{link} is not a symlink")
+            self.assertEqual(
+                self.work.resolve(), link.parent.resolve(),
+                "the link's own parent is not this door's work area -- which is the "
+                "directory the defeated guard asked git about")
+
+    def test_the_doors_own_work_area_is_still_bindable(self):
+        """The non-vacuity control, first. A guard that refused everything would
+        satisfy every assertion below while making the tool useless."""
+        other = _write_spine(self.work / "other" / "spine.json", _spine_payload("other-work"))
+        result = self.bind(other)
+        self.assertFalse(result["isError"], _text(result))
+        self.assertEqual(other.resolve(), self.module.SPINE)
+
+    def test_a_symlink_to_the_bound_spine_is_still_an_idempotent_no_op(self):
+        """The second non-vacuity control, and the one that proves resolving in R6
+        did not break R0: a link is a spelling of the bound spine, not a rebind."""
+        link = self._link("link-mine.json", self.mine)
+        result = self.bind(link)
+        self.assertFalse(result["isError"], _text(result))
+        self.assertTrue(json.loads(_text(result))["already_bound"])
+
+    def test_a_nested_checkout_via_the_DIRECT_path_is_refused(self):
+        """The spelling R6 already caught, kept as the paired half: the direct and
+        symlinked spellings of ONE path must get the SAME answer."""
+        result = self.bind(self.nested_spine)
+        self.assertTrue(result["isError"], _text(result))
+        self.assertEqual(["cross-checkout"], self._classes())
+
+    def test_a_nested_checkout_reached_THROUGH_A_SYMLINK_is_refused(self):
+        """THE assertion. The link is inside our work area, so R4 passes and the
+        UNRESOLVED parent is our own checkout -- the exact shape that bound
+        another checkout's spine before R6 learned to resolve first."""
+        result = self.bind(self.link_nested)
+        self.assertTrue(
+            result["isError"],
+            "a spine in a NESTED checkout was bound through a symlink whose parent is "
+            "this door's own work area -- R4 resolved and saw a path inside the boundary, "
+            "and R6 asked git about the link's parent rather than the target's")
+        self.assertEqual(
+            ["cross-checkout"], self._classes(),
+            "the symlink was refused, but not BY the cross-checkout guard -- the direct "
+            "and symlinked spellings of one path must be refused for the same reason")
+        self.assertEqual(self.mine.resolve(), self.module.SPINE, "the binding moved anyway")
+        self.assertEqual("constellation/mine-work", self.module.SESSION)
+
+    def test_an_UNRELATED_REPOSITORY_reached_through_a_symlink_is_refused(self):
+        """The same escape into a repository this door knows nothing about, under
+        an identity that repository dictates. `IDENTITY_TRADE.md` §7's "what an
+        agent still cannot do: drive a spine in another checkout" is this
+        sentence, and it was false."""
+        result = self.bind(self.link_alien)
+        self.assertTrue(result["isError"],
+                        "a wholly separate repository's spine was bound through a symlink")
+        self.assertEqual(["cross-checkout"], self._classes())
+        self.assertEqual(self.mine.resolve(), self.module.SPINE)
+
+    def test_a_symlink_to_a_SIBLING_worktree_is_refused(self):
+        """This one is refused by R4 rather than R6, because the resolved target is
+        outside the boundary lexically too -- asserted so the two guards' division
+        of labour is recorded rather than assumed."""
+        result = self.bind(self.link_sibling)
+        self.assertTrue(result["isError"], "a sibling lane's spine was bound through a symlink")
+        self.assertEqual(["path-escape"], self._classes())
+        self.assertEqual(self.mine.resolve(), self.module.SPINE)
+
+    def test_the_refusal_names_the_RESOLVED_target_not_the_link(self):
+        """A refusal that named the link would tell an agent its own work area is
+        "a different checkout", which is false and unactionable. R4's symlink
+        refusals already name the resolved target; R6 matches them."""
+        result = self.bind(self.link_nested)
+        # Asserted first: a SUCCESS payload also names all three of these paths,
+        # so without this the assertions below would pass on the escape itself.
+        self.assertTrue(result["isError"], _text(result))
+        text = _text(result)
+        self.assertIn(str(self.nested_spine.resolve()), text,
+                      "the refusal does not name the spine that would actually be driven")
+        self.assertIn(str(self.nested.resolve()), text,
+                      "the refusal does not name the checkout the target belongs to")
+        self.assertIn(str(self.lane_a.resolve()), text,
+                      "the refusal does not name this door's own checkout")
+
+    def test_the_reach_including_symlinked_spellings_is_still_one_spine(self):
+        """The reach delta re-measured with the symlinked spellings in the
+        candidate set -- a count on a topology small enough to enumerate by hand.
+        Exactly one of these six is in this door's own checkout's work area."""
+        legit = _write_spine(self.work / "other" / "spine.json", _spine_payload("other-work"))
+        candidates = [legit, self.nested_spine, self.alien_spine, self.theirs,
+                      self.link_nested, self.link_alien, self.link_sibling]
+        bindable = set()
+        for candidate in candidates:
+            # A fresh module per candidate: a successful bind MOVES the boundary
+            # anchor to the new spine's directory.
+            module = _load_module(self.mine, "constellation/mine-work")
+            if not module._spine_bind({"spine_file": str(candidate)})["isError"]:
+                bindable.add(candidate.resolve())
+        self.assertEqual(
+            {legit.resolve()}, bindable,
+            f"reach is {sorted(str(p) for p in bindable)}; only this door's own work area "
+            f"is in it, by any spelling")
+
+
 # --------------------------------------------------------------------------- #
 # 3. The remaining refusals, each reachable on its own.
 # --------------------------------------------------------------------------- #
@@ -547,6 +758,38 @@ class RefusalSetTests(_BoundInARepo):
         for bad in ("", "   ", "\t\n"):
             result = self.bind(bad)
             self.assertTrue(result["isError"], f"{bad!r} was accepted")
+
+    def test_a_path_that_will_not_RESOLVE_refuses_instead_of_raising(self):
+        """A NUL byte makes `Path(raw).resolve()` raise `ValueError: embedded null
+        byte`, and `main()`'s lifecycle branch catches only `KeyError` -- so before
+        this guard the exception unwound out of `main()` and killed the door,
+        taking all twelve tools with it. `spine_bind` is the first lifecycle tool
+        to take a caller-supplied filesystem path AND is reachable with nothing
+        bound, so it is reachable at the moment an agent has no other way in.
+        "Fail closed" means refuse, not die.
+
+        `NulByteDoesNotKillTheDoorTests` is the half that proves the process
+        survives; this is the half that proves the refusal is a refusal, in the
+        module's own voice, with a `rejection_class` so it lands in the log."""
+        log = self.module._rejectionlog()
+        result = self.bind(str(self.work / "x\x00evil" / "spine.json"))
+        self.assertTrue(result["isError"], "a NUL byte in spine_file was accepted")
+        self.assertIn("spine_file", _text(result))
+        classes = [json.loads(x)["class"] for x in log.read_text(encoding="utf-8").splitlines()
+                   if x.strip()]
+        self.assertEqual(["bad-argument-type"], classes,
+                         f"the unresolvable path did not land in the rejection log as "
+                         f"bad-argument-type: {classes}")
+        self.assertEqual(self.driving.resolve(), self.module.SPINE, "the binding moved")
+
+    def test_the_unresolvable_path_guard_covers_the_UNBOUND_door_too(self):
+        """R0 -- the only earlier resolve -- runs only when something is bound, so
+        a guard placed after it would leave the unbound door still dying. The
+        unbound door is the one `spine_bind` exists for."""
+        module = _load_module(None)
+        result = module._spine_bind({"spine_file": "/tmp/x\x00evil/spine.json"})
+        self.assertTrue(result["isError"])
+        self.assertIsNone(module.SPINE, "an unbound door bound something")
 
     def test_a_directory_is_refused_with_the_doors_own_wording(self):
         target = self.work / "a-directory"
@@ -930,17 +1173,10 @@ class _Door:
             self.proc.kill()
 
 
-@requires_git
-class TwoDoorRoundTripTests(unittest.TestCase):
-    """Required evidence, load-bearing. Door 1 MINTS work with `spine_open`.
-    Door 2, launched with **no** `SPINE_FILE` and no `SPINE_SESSION`, binds the
-    same spine with `spine_bind` and drives it to terminal.
-
-    The assertion that carries the design: door 2's resulting `SPINE`/`SESSION`
-    are BYTE-IDENTICAL to the pair `spine_open` handed door 1. That is the only
-    check that measures "bound by binding" and "bound at launch" being the same
-    thing -- everything else in this file measures a refusal.
-    """
+class _RealDoorInAStagedCheckout(unittest.TestCase):
+    """Base for the cases that need a real server PROCESS in a throwaway
+    checkout. Shared rather than copied so the two classes below cannot drift
+    into two subtly different launch environments."""
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -963,6 +1199,77 @@ class TwoDoorRoundTripTests(unittest.TestCase):
         d = _Door(script, self._env(**env), cwd)
         self.doors.append(d)
         return d
+
+
+@requires_git
+class NulByteDoesNotKillTheDoorTests(_RealDoorInAStagedCheckout):
+    """**A refusal that kills the server is not a refusal.** A NUL byte in
+    `spine_file` raised `ValueError: embedded null byte` out of
+    `Path(raw).resolve()`; `main()`'s lifecycle branch catches only `KeyError`, so
+    the exception unwound out of `main()` and the process exited 1. Every one of
+    the door's twelve tools was then gone for the rest of the session, and the
+    next call got a `BrokenPipeError`.
+
+    A real process, not an imported module: the property under test is that the
+    PROCESS survives, and an in-process call cannot observe that. The pre-existing
+    analogue (`spine_advance(from_child=<NUL>)`) already survives, because
+    `_identity_violation` runs inside `run_engine`'s `except Exception` net --
+    `spine_bind` is the first lifecycle tool to take a caller-supplied filesystem
+    path, and the lifecycle path has no such net."""
+
+    def test_a_nul_byte_in_spine_file_is_refused_and_the_door_stays_alive(self):
+        door = self._door(self.repo / "scripts" / "mcp_spine_server.py", self.repo)
+
+        # A healthy call first, so "the door replies" is a measured baseline.
+        is_err, before = door.text("spine_status")
+        self.assertTrue(is_err)
+        self.assertIn("no spine is bound", before)
+
+        is_err, text = door.text(
+            "spine_bind", spine_file=str(self.repo / ".agent-work" / "x\x00evil" / "spine.json"))
+        self.assertTrue(is_err, f"a NUL byte in spine_file was accepted: {text}")
+        self.assertIn("spine_file", text)
+
+        # THE assertion: the process is still there, and still answering.
+        self.assertIsNone(door.proc.poll(),
+                          "the door process exited on a NUL byte in spine_file")
+        is_err, after = door.text("spine_status")
+        self.assertTrue(is_err)
+        self.assertEqual(before, after, "the door survived but its state changed")
+
+    def test_the_door_also_survives_a_nul_byte_while_it_is_BOUND(self):
+        """Bound, R0's `Path(raw).resolve()` runs before anything else -- so the
+        bound door reaches the raising line by a different route than the unbound
+        one, and both must refuse."""
+        door = self._door(self.repo / "scripts" / "mcp_spine_server.py", self.repo)
+        spec = {"work_id": "nul-probe", "type": "gated",
+                "gate": [{"id": "m1", "title": "t", "imperative": "do",
+                          "postconditions": [{"id": "c1", "statement": "s", "kind": "artifact",
+                                              "evidence_type": "user-decision"}]}]}
+        is_err, text = door.text("spine_open", work_id="nul-probe", spec=spec, base="HEAD")
+        self.assertFalse(is_err, text)
+        bound = json.loads(text)["SPINE_FILE"]
+
+        is_err, text = door.text("spine_bind", spine_file=bound + "\x00evil")
+        self.assertTrue(is_err, f"a NUL byte in spine_file was accepted: {text}")
+        self.assertIsNone(door.proc.poll(),
+                          "the bound door process exited on a NUL byte in spine_file")
+        is_err, status = door.text("spine_status")
+        self.assertFalse(is_err, status)
+        self.assertIn("m1", status)
+
+
+@requires_git
+class TwoDoorRoundTripTests(_RealDoorInAStagedCheckout):
+    """Required evidence, load-bearing. Door 1 MINTS work with `spine_open`.
+    Door 2, launched with **no** `SPINE_FILE` and no `SPINE_SESSION`, binds the
+    same spine with `spine_bind` and drives it to terminal.
+
+    The assertion that carries the design: door 2's resulting `SPINE`/`SESSION`
+    are BYTE-IDENTICAL to the pair `spine_open` handed door 1. That is the only
+    check that measures "bound by binding" and "bound at launch" being the same
+    thing -- everything else in this file measures a refusal.
+    """
 
     def test_door_two_binds_what_door_one_minted_and_drives_it(self):
         work_id = "bind-roundtrip"

@@ -351,6 +351,10 @@ decision moves — which is what `decision:bind-on-open-over-new-verb` already d
 
 Stated so it can be attacked, in one line: **one checkout's work-area tree per process.**
 
+It **was** attacked, and as first shipped it was false: a symlink defeated the cross-checkout
+guard. See "The property was false as first shipped" at the end of this section before relying
+on any sentence above it.
+
 ### The reach delta, measured
 
 `decision:isolation-not-fencing` requires the number, not the adjective. Counting readable
@@ -383,7 +387,9 @@ both named in the module docstring so nobody "simplifies" them into one.
    candidate whose own `git rev-parse --show-toplevel` differs from this door's is refused
    even when its path is lexically inside, because a checkout can be *nested* under
    `.agent-work/` and lexical containment alone would admit it. That second clause is what
-   makes the isolation claim true rather than aspirational.
+   makes the isolation claim true rather than aspirational — **and both clauses are asked of
+   the path after symlink resolution, which is the correction the rework below records.**
+   The `--show-toplevel` asked for is the *resolved* candidate's, not the argument's.
 2. **`work_id` confines WHICH identities.** Identity is a function of the spine, never of a
    model-supplied string — derived through `spine_lifecycle.session_id_for`, the same
    function `open_work` returns `SPINE_SESSION` from. §3 Option B settled that a
@@ -440,3 +446,53 @@ the only path for a whole class of agent" is therefore narrowed, not deleted, an
   in *time* as well as identity, and `checklist_engine.py` already records that lease
   ownership measured in time rather than identity is a known defect with issue #600 against
   it. That refusal is correct today and inherits #600 tomorrow.
+
+### The property was false as first shipped — corrected in gate `g2-rework`
+
+**Recorded rather than quietly fixed, because this section's own settle condition
+(`decision:isolation-not-fencing`) is "name the property and have the reviewer attack it," and
+the attack succeeded.** The independent reviewer of `g2` returned BLOCK on this sentence.
+
+**What was wrong.** The cross-checkout refusal asked git about `candidate.parent` — the
+*unresolved* argument's parent. `_resolve_confined` computes containment on `p.resolve()` but
+returns its candidate unresolved, so a **symlink** sitting inside this door's own
+`.agent-work/` and pointing at a spine in a different checkout satisfied both clauses at once:
+the containment clause followed the link and saw a target inside the boundary, and the
+cross-checkout clause did not follow it and saw this door's own directory. The reviewer bound a
+nested linked worktree's spine and a wholly separate `git init` repository's spine that way,
+and the door then drove them, under identities those repositories dictated. "What an agent
+still cannot do: drive a spine in another checkout" — the sentence this whole section was
+written to make true — was false again, by a second spelling of the same path.
+
+**The fix, one token:** `_checkout_containing(candidate.resolve().parent)`. The refusal text
+now names the resolved target too, matching what the containment refusal already did for
+symlinked arguments, so a refusal never tells an agent its own work area is another checkout.
+
+**The lesson is the one already written down two guards away.** `_identity_violation`'s
+docstring records six guards "each defeated by a shape it had not enumerated" and concludes
+"enumerating spellings is the defect." This guard enumerated one spelling of *which checkout is
+this path in* and was defeated by the second. Resolving retires the spelling question instead
+of adding a third guard beside it.
+
+**Why the single test did not catch it.** The cross-checkout clause shipped with exactly one
+test, covering exactly the direct spelling, on a cooperative fixture. What sees the bug is a
+fixture where the escape target is a *genuine* checkout nested inside the work area — a real
+`git worktree add` and a real `git init` — reached through a real symlink. That is now
+`tests/test_mcp_spine_bind.py::ASymlinkCannotHideAnotherCheckoutTests`, which asserts the
+direct and symlinked spellings of one path get the same answer *and* are refused by the same
+guard, plus two non-vacuity controls (the door's own work area still binds; a symlink to the
+bound spine is still an idempotent no-op).
+
+**Scope of the live exposure, stated honestly:** the escape reached only checkouts nested
+inside the door's own `.agent-work/`, of which the live tree had zero, and creating one
+requires the agent to plant both the nested checkout and the symlink inside its own work area.
+So this was a guard that did not implement its stated property, not a live cross-lane breach.
+The property, not the incident, is what this document is for.
+
+**Also corrected in the same rework, and the same principle:** a NUL byte in `spine_file` made
+`Path(raw).resolve()` raise `ValueError` out of `main()`, whose lifecycle branch catches only
+`KeyError`, so the door *exited* instead of refusing. A guard that kills the server is not a
+fail-closed guard: it produces no refusal, no `rejection_class`, no log line, and takes the
+other eleven tools with it. `spine_bind` is the first lifecycle tool to take a caller-supplied
+filesystem path, and it is reachable with nothing bound, which is the moment an agent has no
+other way in.
