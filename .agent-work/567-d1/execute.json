@@ -396,7 +396,8 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
         }
       ],
       "constraints": [
@@ -431,11 +432,21 @@
           "guard GREEN; the specificity proof's RED-then-GREEN at a reworded site; full suite tally with the ^FAILED grep"
         ]
       },
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-integrate": {
@@ -447,7 +458,8 @@
           "id": "p1",
           "statement": "g2-review returned a verdict",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g2-review returned APPROVE; REVIEW_RESULT at .agent-work/567-d1/crew-handoffs/g2-reviewer-result.md, survey consolidated at .agent-work/567-d1/g2-review/review.json."
         }
       ],
       "postconditions": [
@@ -461,7 +473,8 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
         },
         {
           "id": "c2",
@@ -470,7 +483,8 @@
             "kind": "command",
             "command": "test -z \"$(grep -rn -i 'CLI fallback' skills/ --exclude-dir=workbench || true)\" && test -z \"$(grep -rn '<engine>' skills/ --exclude-dir=workbench || true)\" && test -z \"$(grep -rn -i 'CLI fallback' .agent-work/templates/ || true)\" && test -z \"$(grep -rn '<engine>' .agent-work/templates/ || true)\" && python3 -m pytest tests/test_mcp_adoption.py -q >/dev/null 2>&1"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
         }
       ],
       "constraints": [],
@@ -503,11 +517,32 @@
           "guard GREEN; the specificity proof's RED-then-GREEN at a reworded site; full suite tally with the ^FAILED grep"
         ]
       },
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -z \"$(grep -rn -i 'CLI fallback' skills/ --exclude-dir=workbench || true)\" && test -z \"$(grep -rn '<engine>' skills/ --exclude-dir=workbench || true)\" && test -z \"$(grep -rn -i 'CLI fallback' .agent-work/templates/ || true)\" && test -z \"$(grep -rn '<engine>' .agent-work/templates/ || true)\" && python3 -m pytest tests/test_mcp_adoption.py -q >/dev/null 2>&1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-implement": {
@@ -519,7 +554,8 @@
           "id": "p1",
           "statement": "g2-integrate closed: the corpus is swept and the guard is green",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g2-integrate closed; corpus and overlay swept, mandate inverted, guard clean outside lane D2's fenced files."
         }
       ],
       "postconditions": [
@@ -562,7 +598,7 @@
           "before/after diff of both specs; the guard still green over the extended walk"
         ]
       },
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -1145,7 +1181,7 @@
     "session_id": "commander-567-d1-execute",
     "status": "active",
     "claimed_at": "2026-08-17T18:02:30.383334+00:00",
-    "last_heartbeat": "2026-08-17T20:23:19.524664+00:00",
+    "last_heartbeat": "2026-08-17T20:40:43.633766+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -1228,6 +1264,20 @@
       "why": "The sweep landed and the mandate is inverted. Verified in my own hands: zero CLI-fallback clauses and zero <engine> tokens in skills/ outside lane D2's fenced files AND in the tracked overlay including its .baseline/ mirrors; adoption suite green; the guard's non-workbench site list empty; 41 JSON files parse; both pre-ruled survivors untouched by git diff. The specificity proof is the item that closes #559 and it is genuinely discriminating: the reintroduced clause is flagged at skills/interrogator/SKILL.md:28, one line BELOW the reworded text at :27 that describes the same mechanism in the same words and is flagged by nothing in either direction -- the guard separates the two sentences, not the two files. The replacement wording is better than the order asked for: it removes the 'by default ... otherwise' framings too, on the reasoning that leaving them keeps the two-path idea alive in grammar after the second path is gone, and where an <engine> command was the only instruction for a real action it was converted to the equivalent door call rather than deleted. The crew also found a TENTH mandating assertion my handoff's table of nine missed.",
       "mechanical": false,
       "ts": "2026-08-17T20:23:19.395908+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g2-review",
+      "why": "APPROVE with one recorded fail under an explicit override-reason rather than a downgrade. The reviewer re-ran all eight close criteria itself and, better, checked two of them for NON-VACUITY first -- an absence grep over a narrowed walk reads exactly like a passing guard, so it proved criterion 3's grep really reaches .baseline/ (a control word matches 13 of 56 files) and that criterion 5's walk is intact at the same 3098/216 census with its floors passing. Its finding, which I accept: the removed clause incidentally carried the FIRST MOVE -- how an agent gets a door pointed at a checklist at all. grep spine_open|spine_bind over skills/ excluding workbench now returns zero, and the only corpus mention is lane D2's file, which documents spine_open but never spine_bind. Nobody is stranded, because the door's refusal carries its own remedy, but after lane D2 merges no file in the corpus will tell an in-session crew member how to drive its own plan. Staged as a candidate and carried to g5-final to be met as a measured fact rather than a surprise.",
+      "mechanical": false,
+      "ts": "2026-08-17T20:40:35.353405+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g2-integrate",
+      "why": "Integrated, with two fix-now items taken inside my own worktree. Fixed: a stray period in the Admiral spine's init imperative ('argument.: it reads') that the sweep introduced into shipped doctrine, corrected in all three copies with each re-validated as JSON and the three confirmed byte-identical again. Deliberately NOT fixed: TEMPLATES_MANIFEST.json's five now-stale sha256 entries. It is an install lockfile carrying generated:2026-08-10 and a source_commit, so hand-editing hashes into it would make it claim those bytes were installed at a commit where they were not -- the same falsification decision:records-are-not-instruction forbids for docs/superpowers/**. A stale lockfile is honest; a doctored one is not. It is measurably inert (check_skill_freshness recomputes from files, no test reads the field) and its generator is lane D2's. Staged as a candidate instead. Guard still clean outside workbench and adoption suite still green after both decisions.",
+      "mechanical": false,
+      "ts": "2026-08-17T20:40:35.776116+00:00"
     }
   ],
   "amendments": [

@@ -7,7 +7,7 @@
     "init": {
       "id": "init",
       "title": "Set up epic work area",
-      "imperative": "Claim the engine session lease on this spine: call the spine_lease MCP tool with action=claim, claimed_by=admiral, worktree=. -- this is your own spine, so the door needs no session id argument.: it reads the spine it is bound to, and the session it drives that spine under, from its own environment. Create the ADMIRAL_LOG from templates/ADMIRAL_LOG.template.md at .agent-work/<work-id>/ADMIRAL_LOG.md.",
+      "imperative": "Claim the engine session lease on this spine: call the spine_lease MCP tool with action=claim, claimed_by=admiral, worktree=. -- this is your own spine, so the door needs no session id argument: it reads the spine it is bound to, and the session it drives that spine under, from its own environment. Create the ADMIRAL_LOG from templates/ADMIRAL_LOG.template.md at .agent-work/<work-id>/ADMIRAL_LOG.md.",
       "preconditions": [],
       "postconditions": [
         {"id": "c1", "statement": "work area scaffolded and ADMIRAL_LOG created", "check": {"kind": "command", "command": "python <admiral-skill-dir>/scripts/init_work_area.py <work-id> && test -f .agent-work/<work-id>/ADMIRAL_LOG.md"}, "satisfied": false},

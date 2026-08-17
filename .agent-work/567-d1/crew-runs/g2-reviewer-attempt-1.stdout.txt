@@ -1,0 +1,23 @@
+**The hook is guarding a spine this session does not own, and my own work is terminal.**
+
+Checked against the engine's own projection, not the files:
+
+| | |
+|---|---|
+| Spine the hook names (`.agent-work/567-d1/spine.json`) | `LEASE active: constellation/567-d1/lane-d1/commander-delegated (by commander)` |
+| My session | `constellation/567-d1/g2/reviewer/attempt-1` — **not** the lease holder |
+| My env | `SPINE_FILE=''`, `SPINE_SESSION=''`, `SPINE_PARENT=constellation/567-d1/lane-d1/commander-delegated` |
+| The checklist I own (`g2-review/review.json`) | `DONE: no open items` · verdict `APPROVE` · lease released |
+| Deliverable | `g2-reviewer-result.md` (17,210 B) + `FOWLER_PASS.json` (rail exit 0) both on disk |
+
+`execute` is my **parent's** gate. It is open precisely *because* it was waiting on this reviewer dispatch — and what closes it is the Commander reading the result artifact I just wrote, then driving its own `g2-integrate`. I am not the actor for that step, and there is no sanctioned way for me to become one:
+
+- Driving `execute` would mean mutating a checklist leased by another live session. The engine refuses that without the Commander's session id, and taking it with `--force` would be impersonating my parent — the exact hazard this lane already staged as a triage candidate.
+- `spine_halt block` is equally not mine to call. Blocking is for a check *I* cannot satisfy on *my* checklist; my checklist has no unsatisfied check, and `block` on the parent's spine would write a false blocker onto a run that is not stuck.
+- The reviewer skill's terminal rule is "final `consolidate`, then `release` as the very last action." Both ran, in that order, with the lease covering every journaled action.
+
+So I did not end my turn to hand off — the survey reached its consolidated verdict and released. Ending here is the correct terminal state for a dispatched crew, and the reason the hook still fires is that it reads the ambient repo spine rather than the dispatched session's own.
+
+**This is itself review-relevant signal, and I'm recording it as such rather than acting on it:** a `run_crew.py`-dispatched crew whose `SPINE_*` env is empty gets a Stop hook aimed at its parent's spine, whose only two suggested exits (`spine_halt block`, waive with human authority) are both writes to a checklist the crew must never touch. That is the same shape as this gate's finding — an instruction whose named path does not reach the agent reading it.
+
+**For the Commander, on resuming `execute`:** the g2 result is `APPROVE` with one recorded `fail` carried as an explicit override, two triage candidates (`tc1` the undocumented `spine_bind` binding moment, `tc2` the stale `TEMPLATES_MANIFEST.json` hashes), and four observations including a one-character typo in the shipped Admiral `init` imperative that must be fixed across all three template copies or close criterion 6 breaks.
