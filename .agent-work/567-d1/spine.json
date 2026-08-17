@@ -387,13 +387,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Recorded at .agent-work/567-d1/RECONCILE.md. No packet map exists (map_orient DEGRADED-UNPARSEABLE: no docs/architecture, no citable anchor id in map/INDEX.md, empty map/ids.jsonl), so no Cartographer subagent was dispatched and the structural record was reconciled directly per this step's own imperative. Not a no-op: (1) specs/*.spine.toml ARE the structural record of what a role plan is, and g3 folded the door boundary into both; (2) test_mcp_adoption.py's header is the repo's definition of agent-facing instruction text, and g2 inverted the nine mandating assertions while leaving both of its own rules intact, with the walk now imported rather than re-derived so one definition exists instead of two; (3) one new fact with no existing owner is recorded in RECONCILE.md \u2014 .agent-work/templates/** is now agent-facing instruction text under a machine check, where before no walk in the repo read it. map/INDEX.md deliberately untouched (Admiral-owned, #544)."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -421,7 +422,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile closed complete; RECONCILE.md committed."
         }
       ],
       "postconditions": [
@@ -444,11 +446,23 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "triage",
+            "why_ref": "w-6",
+            "note": "Filed per the engine's own recovery instruction at the hard band. The Stop hook is authoritative over the context-trip advisory (#595, settled by lane C), so this run continues rather than handing off: the legal sequence is attach-then-start, which is what follows."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -620,12 +634,12 @@
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard",
     "opened_by": "init_work_area"
   },
-  "refusals": 4,
+  "refusals": 5,
   "engine_session": {
     "session_id": "constellation/567-d1/lane-d1/commander-delegated",
     "status": "active",
     "claimed_at": "2026-08-17T17:20:59.187959+00:00",
-    "last_heartbeat": "2026-08-17T22:23:32.904079+00:00",
+    "last_heartbeat": "2026-08-17T22:24:38.747761+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -666,6 +680,13 @@
       "why": "Execute is complete and the deliverable exists. #559 is closed by a guard, not a deletion: tests/test_cli_retirement_guard.py walks 216 files / 3098 texts with an exception list of length ZERO, and it is red-proofed at the hardest available place \u2014 a reintroduced clause at interrogator/SKILL.md:28 goes RED and is named while the reworded text one line above at :27, same mechanism and same words, stays green in both directions. The guard separates the two sentences, not the two files.\n\nThree things this run established that the plan did not know. FIRST, the regrowth had a mechanism and it was a test: test_mcp_adoption.py mandated the text across nine assertions with a failure message reading \"the CLI door must stay\". Inverting it was the real work; the deletion never was. SECOND, a skills/-only sweep does not close #559 in this repo \u2014 .agent-work/templates/ is a tracked overlay that doctrine tells agents to PREFER, carrying 16 <engine> occurrences and 18 clause matches across 10 files, read by no walk. The Admiral independently granted it mid-run at 5099eea1. THIRD, the launch order's own acceptance test passes: a freshly instantiated spine hands a Commander no token, no clause and no command in init, plan or archive.\n\nWhat I got wrong, since it is the more useful half. Three of my own checks were defective in the same way each time \u2014 authored from what the output should say rather than run against what it does say: five postconditions opened with `set -o pipefail`, which dash rejects outright, so the cold critic's repair for \"a check that cannot fail\" produced five that cannot pass; two more matched the guard's own census line as a violation; two more required a whole-corpus green that lane D2's un-merged files made unobtainable. And I stated the second-checklist boundary wrong in two handoffs \u2014 a dispatched crew's door is unbound, so it CAN drive its own plan \u2014 which two crews measured and corrected, and which I have fixed in notes-1.md and REPLAN_INPUT.json rather than leaving standing.\n\nRemaining: reconcile, triage, review, feedback, archive, and the PR. Lane D2 must merge before this lane; until it does the guard is red on exactly its two files, proven to be the whole residual by removing skills/workbench/ in a scratch copy and getting 19 passed.",
       "mechanical": false,
       "ts": "2026-08-17T22:22:03.891507+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "Reconciled directly, because there is no packet map to dispatch a Cartographer against and the step's own imperative sanctions that path. The reconcile is not a no-op: specs/*.spine.toml ARE the structural record of what a role plan is, and g3 folded the door boundary into both; test_mcp_adoption.py's header is this repo's written definition of agent-facing instruction text, and g2 inverted the nine mandating assertions while leaving its two self-rules intact, with the walk now imported rather than re-derived so the repo holds one definition instead of two that drift. The one structural fact no existing doc owns is recorded in RECONCILE.md: .agent-work/templates/** is now agent-facing instruction text with a machine check on it, where before no walk in the repo read it at all \u2014 which is the durable half of what this lane found. The residual, that the same doctrine now lives in four tracked copies with no automatic reconciler, is staged as triage rather than fixed, because the generator is another lane's and the question is architecture.",
+      "mechanical": false,
+      "ts": "2026-08-17T22:24:20.297631+00:00"
     }
   ],
   "trip_ledger": [
@@ -712,6 +733,28 @@
       "model": "claude-opus-5",
       "why_ref": "w-5",
       "ts": "2026-08-17T22:23:32.873018+00:00"
+    },
+    {
+      "id": "tl-5",
+      "gate": "triage",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.4995,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-17T22:24:25.842575+00:00"
+    },
+    {
+      "id": "tl-6",
+      "gate": "triage",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.5007,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-17T22:24:38.718896+00:00"
     }
   ]
 }
