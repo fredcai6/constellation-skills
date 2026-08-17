@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "understand",
+  "files": [],
+  "repo_rev": {
+    "commit": "600de020525b5cce8ce9f3131f4a6f2b49cb4b47"
+  },
+  "run": {
+    "work_id": "epic-567-door/cmdr-b",
+    "generated_at": "2026-08-17T05:34:51Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-commander",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend"
+    }
+  }
+}

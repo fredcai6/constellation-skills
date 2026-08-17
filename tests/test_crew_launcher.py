@@ -2173,31 +2173,35 @@ class ExternalDispatchTests(unittest.TestCase):
             self.assertEqual("xhigh", entry["reasoning_effort"])
 
     def test_external_dispatch_refuses_spine(self):
-        # CONTROL: `--spine` on the external backend binds nothing (`ExternalBackend`
-        # spawns no process and builds no environment), so accepting it silently is
-        # a lie — the option must be refused there, not recorded inert. Drives the
-        # real CLI entrypoint (`RC.main`), not a reconstructed formula.
+        # INTENTIONAL SCENARIO CHANGE (issue #432): `--spine` on the external
+        # backend used to be refused outright (binding was impossible, so the
+        # old reasoning treated the flag itself as unsafe). #432's fix makes
+        # `--spine` verification-only here: it is still never BOUND into an
+        # environment (nothing spawns, so nothing can be bound), but it is now
+        # ACCEPTED and RECORDED on the entry so a later `--verify-result` can
+        # consult it via `spine_terminal`. This test used to assert the old
+        # refusal; it now asserts accept-and-record. Drives the real CLI
+        # entrypoint (`RC.main`), not a reconstructed formula.
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             handoff = write_handoff(root, "issue-1", "g1", "implementer")
             result = result_rel("issue-1", "g1", "implementer")
             spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
             with fake_launch(RC, 0, write_result_at=root / result) as calls:
-                stderr = io.StringIO()
-                with contextlib.redirect_stderr(stderr):
+                stdout = io.StringIO()
+                with contextlib.redirect_stdout(stdout):
                     code = RC.main([
                         "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
                         "--role", "implementer", "--handoff", handoff, "--result", result,
                         "--backend", "external", "--spine", spine_rel, "--model", "sonnet",
                     ])
-            self.assertEqual(1, code)
-            self.assertEqual([], calls)  # nothing spawned
-            self.assertIn("REFUSED", stderr.getvalue())
-            self.assertIn("--spine", stderr.getvalue())
-            self.assertIn("external", stderr.getvalue())
-            # refused BEFORE any durable record was written
+            self.assertEqual(0, code)
+            self.assertEqual([], calls)  # still nothing spawned -- external spawns nothing
             reg = RC.load_registry(RC.registry_path("issue-1", root))
-            self.assertEqual([], reg)
+            self.assertEqual(1, len(reg))
+            # --spine IS recorded on the entry (verification-only, not binding)
+            self.assertEqual(spine_rel, reg[0]["spine"])
+            self.assertEqual("running", reg[0]["status"])
 
     def test_external_missing_handoff_is_refused(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -2229,6 +2233,16 @@ class ExternalDispatchTests(unittest.TestCase):
                 self.assertEqual(1, RC.main(argv))
 
     def test_verify_result_absent_then_present_marks_completed(self):
+        # INTENTIONAL SCENARIO CHANGE (issue #432, the core fix of this gate):
+        # this test used to assert that a fresh result artifact ALONE, with no
+        # spine evidence and no explicit override, was enough for
+        # `--verify-result` to mark the crew `completed` (code_present == 0).
+        # That is exactly the silent-clean-pass #432 closes: a crew that drove
+        # no spine at all must not read as an unqualified success BY DEFAULT.
+        # The final assertion below is rewritten from `code_present == 0` to
+        # `code_present == 1` (REFUSE) -- the crew's own bar now requires
+        # either a terminal spine (--spine at dispatch or --verify-spine at
+        # verify time) or an explicit, reasoned `--accept-mtime-only-risk`.
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             handoff = write_handoff(root, "issue-1", "g1", "implementer")
@@ -2247,15 +2261,204 @@ class ExternalDispatchTests(unittest.TestCase):
             self.assertEqual(
                 "running", RC.load_registry(RC.registry_path("issue-1", root))[0]["status"]
             )
-            # write the result artifact (the out-of-band crew finished) -> completed
+            # write the result artifact (the out-of-band crew finished) -- but
+            # with NO spine evidence and NO --accept-mtime-only-risk override,
+            # this must now REFUSE by default (#432), not mark completed.
+            (root / result).parent.mkdir(parents=True, exist_ok=True)
+            (root / result).write_text("RESULT\n", encoding="utf-8")
+            stderr = io.StringIO()
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+                code_present = RC.main(["--root", str(root), "--verify-result", session])
+            self.assertEqual(1, code_present)
+            self.assertIn("REFUSED", stderr.getvalue())
+            self.assertIn("432", stderr.getvalue())
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("running", entry["status"])
+            self.assertFalse(entry["spine_verified"])
+
+    @staticmethod
+    def _write_gated_spine(path: Path, *, terminal: bool) -> None:
+        """A minimal hand-built gated checklist fixture -- does not need the
+        real engine (per spine_terminal's own docstring). `terminal=False`
+        mirrors #432's actual evidence: a spine that exists but was never
+        advanced past its first (`pending`, i.e. init) item."""
+        path.parent.mkdir(parents=True, exist_ok=True)
+        status = "complete" if terminal else "pending"
+        path.write_text(json.dumps({
+            "type": "gated",
+            "items": ["m1"],
+            "tasks": {"m1": {"id": "m1", "status": status}},
+        }), encoding="utf-8")
+
+    def test_verify_named_spine_not_terminal_refuses(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            session = "constellation/issue-1/g1/implementer/attempt-1"
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            self._write_gated_spine(root / spine_rel, terminal=False)
+            with contextlib.redirect_stdout(io.StringIO()):
+                RC.main([
+                    "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                    "--role", "implementer", "--handoff", handoff, "--result", result,
+                    "--backend", "external", "--spine", spine_rel, "--model", "sonnet",
+                ])
+            (root / result).parent.mkdir(parents=True, exist_ok=True)
+            (root / result).write_text("RESULT\n", encoding="utf-8")
+
+            # RED-PROOF: `CrewBackend.verify` is the literal PRE-FIX logic --
+            # unchanged by this gate (ExternalBackend.verify is an override,
+            # never a base-class edit) -- so calling it directly on this exact
+            # entry/result is a genuine, not simulated, demonstration of the
+            # #432 bug: a fresh result artifact ALONE reads `completed` despite
+            # the un-terminal spine right next to it.
+            entries = RC.load_registry(RC.registry_path("issue-1", root))
+            pre_fix_fresh, pre_fix_entry = RC.CrewBackend().verify(entries, session, root=root)
+            self.assertTrue(pre_fix_fresh, "pre-fix CrewBackend.verify wrongly reads fresh")
+            self.assertEqual("completed", pre_fix_entry["status"])
+
+            # Undo CrewBackend.verify's side effect (it mutated + saved the
+            # SAME shared registry file the fix must judge next) so the fix's
+            # own verify() below observes the crew's true pre-verification
+            # state, not the pre-fix demonstration's leftover mutation.
+            entries = RC.load_registry(RC.registry_path("issue-1", root))
+            entries[0]["status"] = "running"
+            RC.save_registry(RC.registry_path("issue-1", root), entries)
+
+            # THE FIX: ExternalBackend.verify() consults the named spine and
+            # refuses because it never reached terminal -- AND semantics, the
+            # fresh result next to it does not rescue the verdict.
+            entries = RC.load_registry(RC.registry_path("issue-1", root))
+            fresh, entry = RC.ExternalBackend().verify(entries, session, root=root)
+            self.assertFalse(fresh)
+            self.assertEqual("running", entry["status"])
+            self.assertFalse(entry["spine_verified"])
+
+            # Same story through the real CLI entrypoint.
+            stderr = io.StringIO()
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+                code = RC.main(["--root", str(root), "--verify-result", session])
+            self.assertEqual(1, code)
+            self.assertIn("REFUSED", stderr.getvalue())
+            self.assertIn(spine_rel, stderr.getvalue())
+
+    def test_verify_named_spine_terminal_completes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            session = "constellation/issue-1/g1/implementer/attempt-1"
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            self._write_gated_spine(root / spine_rel, terminal=True)
+            with contextlib.redirect_stdout(io.StringIO()):
+                RC.main([
+                    "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                    "--role", "implementer", "--handoff", handoff, "--result", result,
+                    "--backend", "external", "--spine", spine_rel, "--model", "sonnet",
+                ])
             (root / result).parent.mkdir(parents=True, exist_ok=True)
             (root / result).write_text("RESULT\n", encoding="utf-8")
             with contextlib.redirect_stdout(io.StringIO()):
-                code_present = RC.main(["--root", str(root), "--verify-result", session])
-            self.assertEqual(0, code_present)
-            self.assertEqual(
-                "completed", RC.load_registry(RC.registry_path("issue-1", root))[0]["status"]
-            )
+                code = RC.main(["--root", str(root), "--verify-result", session])
+            self.assertEqual(0, code)
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("completed", entry["status"])
+            self.assertTrue(entry["spine_verified"])
+
+    def test_verify_time_spine_override_completes(self):
+        # Dispatch with NO --spine; the crew's actual plan/spine path is only
+        # learned AFTER it returns. --verify-spine at verify time must be
+        # consulted independently of dispatch-time state (it is not recorded
+        # on the entry at all here).
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            session = "constellation/issue-1/g1/implementer/attempt-1"
+            with contextlib.redirect_stdout(io.StringIO()):
+                RC.main([
+                    "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                    "--role", "implementer", "--handoff", handoff, "--result", result,
+                    "--dispatch", "external", "--model", "sonnet",
+                ])
+            self.assertIsNone(RC.load_registry(RC.registry_path("issue-1", root))[0].get("spine"))
+            (root / result).parent.mkdir(parents=True, exist_ok=True)
+            (root / result).write_text("RESULT\n", encoding="utf-8")
+            spine_rel = ".agent-work/issue-1/discovered/PLAN.json"
+            ExternalDispatchTests._write_gated_spine(root / spine_rel, terminal=True)
+            with contextlib.redirect_stdout(io.StringIO()):
+                code = RC.main([
+                    "--root", str(root), "--verify-result", session,
+                    "--verify-spine", spine_rel,
+                ])
+            self.assertEqual(0, code)
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("completed", entry["status"])
+            self.assertTrue(entry["spine_verified"])
+
+    def test_verify_accept_mtime_only_risk_completes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            session = "constellation/issue-1/g1/implementer/attempt-1"
+            with contextlib.redirect_stdout(io.StringIO()):
+                RC.main([
+                    "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                    "--role", "implementer", "--handoff", handoff, "--result", result,
+                    "--dispatch", "external", "--model", "sonnet",
+                ])
+            (root / result).parent.mkdir(parents=True, exist_ok=True)
+            (root / result).write_text("RESULT\n", encoding="utf-8")
+            stdout, stderr = io.StringIO(), io.StringIO()
+            reason = "no spine target available for this legacy dispatch path"
+            with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                code = RC.main([
+                    "--root", str(root), "--verify-result", session,
+                    "--accept-mtime-only-risk", reason,
+                ])
+            self.assertEqual(0, code)
+            self.assertIn(reason, stdout.getvalue())
+            self.assertIn("RISK", stdout.getvalue())
+            self.assertIn(reason, stderr.getvalue())
+            self.assertIn("RISK", stderr.getvalue())
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("completed", entry["status"])
+            self.assertIsNone(entry["spine_verified"])
+            self.assertEqual(reason, entry["mtime_only_risk_accepted"]["reason"])
+
+    def test_verify_spine_only_external_dispatch_no_crash(self):
+        # `result=None` + `--spine` given at dispatch (legal per
+        # CrewSpec.__post_init__, newly reachable on this backend since
+        # dispatch() stopped refusing --spine). No result artifact is ever
+        # involved -- the pre-guard version (`entry["result"]`/bracket access
+        # into result_exists/result_fresh) would crash on `Path(None)`; the
+        # `.get("result") is not None` guard must prevent that and judge
+        # completion solely on the spine.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            session = "constellation/issue-1/g1/implementer/attempt-1"
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            ExternalDispatchTests._write_gated_spine(root / spine_rel, terminal=True)
+            with contextlib.redirect_stdout(io.StringIO()):
+                code_dispatch = RC.main([
+                    "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                    "--role", "implementer", "--handoff", handoff,
+                    "--backend", "external", "--spine", spine_rel, "--model", "sonnet",
+                ])
+            self.assertEqual(0, code_dispatch)
+            entry_before = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertIsNone(entry_before["result"])
+            with contextlib.redirect_stdout(io.StringIO()):
+                code = RC.main(["--root", str(root), "--verify-result", session])
+            self.assertEqual(0, code)  # no crash
+            entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
+            self.assertEqual("completed", entry["status"])
+            self.assertTrue(entry["spine_verified"])
+            self.assertFalse(entry["result_present"])
+            self.assertFalse(entry["result_fresh"])
 
 
 class ResultFreshnessTests(unittest.TestCase):
@@ -2871,8 +3074,21 @@ class BackendEquivalenceTests(unittest.TestCase):
             self.assertIn("spine_status", banner)
 
     def test_verify_is_uniform_across_backends(self):
-        """CrewBackend.verify (used by both backends) finalizes on a fresh result
-        exactly like verify_external_result — the same instance/API on either."""
+        """INTENTIONAL NARROWING (issue #432) of
+        docs/superpowers/specs/2026-07-07-crew-backend-design.md Decision 2
+        ("the result contract is backend-invariant ... never forked"). This
+        test used to assert CliBackend().verify() and ExternalBackend().verify()
+        behave IDENTICALLY on a fresh result with no spine evidence at all --
+        that is now intentionally false. The base exists-AND-fresh contract
+        itself stays byte-for-byte SHARED (unforked) -- CliBackend keeps the
+        exact old mtime-only `CrewBackend.verify` behavior unchanged below.
+        ExternalBackend now layers one ADDITIONAL gate on top, for this
+        backend only: without spine evidence or an explicit accepted risk, a
+        fresh result alone no longer completes it (#432's core fix -- a
+        record-only dispatch that drove no spine must not read as an
+        unqualified clean success by default). The old mtime-only-pass
+        behavior stays reachable through ExternalBackend as an explicit,
+        reasoned `accept_mtime_only_risk` override, proven below."""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             handoff = write_handoff(root, "issue-1", "g1", "implementer")
@@ -2882,16 +3098,38 @@ class BackendEquivalenceTests(unittest.TestCase):
                 work_id="issue-1", gate="g1", role="implementer", handoff=handoff,
                 result=result, worktree=".", model="sonnet", attempt=1, root=root, entries=[],
             )]
-            # not written yet -> not fresh, stays running
+            # not written yet -> not fresh, stays running (unchanged on either backend)
             fresh_cli, _ = RC.CliBackend().verify(entries, session, root=root)
             self.assertFalse(fresh_cli)
             self.assertEqual("running", entries[0]["status"])
-            # write it, verify through the external backend -> completed
+            # write it: CliBackend's base-class verify is UNCHANGED -- fresh
+            # result alone still completes it (CliBackend never calls .verify()
+            # in production, but the base-class method itself is untouched).
             (root / result).parent.mkdir(parents=True, exist_ok=True)
             (root / result).write_text("RESULT\n", encoding="utf-8")
-            fresh_ext, entry = RC.ExternalBackend().verify(entries, session, root=root)
-            self.assertTrue(fresh_ext)
-            self.assertEqual("completed", entry["status"])
+            fresh_cli_after, entry_cli = RC.CliBackend().verify(entries, session, root=root)
+            self.assertTrue(fresh_cli_after)
+            self.assertEqual("completed", entry_cli["status"])
+
+            # Reset to `running` to isolate ExternalBackend's own verdict on
+            # the SAME fresh result -- the divergence, not the CLI side.
+            entries[0]["status"] = "running"
+            RC.save_registry(RC.registry_path("issue-1", root), entries)
+
+            # ExternalBackend now DEFAULT-REFUSES the identical fresh result:
+            # no spine evidence, no override -> stays running, not fresh.
+            fresh_ext, entry_ext = RC.ExternalBackend().verify(entries, session, root=root)
+            self.assertFalse(fresh_ext)
+            self.assertEqual("running", entry_ext["status"])
+            self.assertFalse(entry_ext["spine_verified"])
+
+            # The old behavior is still REACHABLE, but only via the explicit,
+            # reasoned override -- never the default.
+            fresh_override, entry_override = RC.ExternalBackend().verify(
+                entries, session, root=root, accept_mtime_only_risk="regression-test override",
+            )
+            self.assertTrue(fresh_override)
+            self.assertEqual("completed", entry_override["status"])
 
     def test_cli_resume_relaunches_and_finalizes(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -3132,7 +3370,19 @@ class ExternalResumeRefusalTests(unittest.TestCase):
 class BackendInvariantContractTests(unittest.TestCase):
     """Decision 2: the result contract is backend-invariant — both backends verify
     exists-AND-fresh identically against the entry's started_at via the single
-    `result_fresh`, never forked."""
+    `result_fresh`, never forked.
+
+    INTENTIONAL NARROWING (issue #432): the base exists-AND-fresh contract
+    below (missing -> not fresh; stale -> present-but-not-fresh) stays
+    byte-for-byte SHARED across both backends -- (a) and (b) are unchanged and
+    still run through the same shared loop. Only the FRESH-result case (c)
+    diverges, and only on `ExternalBackend`: a fresh result alone no longer
+    completes it without spine evidence or an explicit accepted risk (#432's
+    core fix). `CliBackend` keeps the old fresh-alone-completes behavior
+    verbatim (it never calls `.verify()` in production, but the shared
+    base-class method itself is untouched). This is an ADDITIONAL gate
+    layered on `ExternalBackend` for its spine-evidence dimension, not a fork
+    of the base `result_exists`/`result_fresh` contract itself."""
 
     BASE = 1_000_000_000.0
 
@@ -3154,22 +3404,42 @@ class BackendInvariantContractTests(unittest.TestCase):
                 root = Path(tmp)
                 result, entry = self._entry_for(root, backend.name)
                 entries = [entry]
-                # (a) result missing -> not fresh, stays running
+                # (a) result missing -> not fresh, stays running -- SHARED, unchanged
                 fresh, e = backend.verify(entries, session, root=root)
                 self.assertFalse(fresh, backend.name)
                 self.assertEqual("running", e["status"], backend.name)
-                # (b) STALE leftover (mtime predates dispatch) -> present but not fresh
+                # (b) STALE leftover (mtime predates dispatch) -> present but not
+                # fresh -- SHARED, unchanged (identical on both backends: the
+                # ExternalBackend default-refuse branch computes result_present/
+                # result_fresh from the real facts even though `fresh` itself is
+                # always False there regardless of staleness).
                 write_result_with_mtime(root / result, self.BASE - 60)
                 fresh, e = backend.verify(entries, session, root=root)
                 self.assertFalse(fresh, backend.name)
                 self.assertTrue(e["result_present"], backend.name)
                 self.assertFalse(e["result_fresh"], backend.name)
                 self.assertEqual("running", e["status"], backend.name)
-                # (c) FRESH result (mtime at/after dispatch) -> completed
+                # (c) FRESH result (mtime at/after dispatch) -- DIVERGES (#432).
                 write_result_with_mtime(root / result, self.BASE + 60)
                 fresh, e = backend.verify(entries, session, root=root)
-                self.assertTrue(fresh, backend.name)
-                self.assertEqual("completed", e["status"], backend.name)
+                if backend.name == RC.BACKEND_CLI:
+                    self.assertTrue(fresh, backend.name)
+                    self.assertEqual("completed", e["status"], backend.name)
+                else:
+                    # ExternalBackend: fresh result ALONE, no spine evidence, no
+                    # override -> default-refuses (the #432 fix).
+                    self.assertFalse(fresh, backend.name)
+                    self.assertEqual("running", e["status"], backend.name)
+                    self.assertFalse(e["spine_verified"], backend.name)
+                    # The old behavior stays REACHABLE via the explicit,
+                    # reasoned override -- confirming the divergence is
+                    # deliberate, not an accidental loss of capability.
+                    fresh_override, e_override = backend.verify(
+                        entries, session, root=root,
+                        accept_mtime_only_risk="regression-test override",
+                    )
+                    self.assertTrue(fresh_override, backend.name)
+                    self.assertEqual("completed", e_override["status"], backend.name)
 
 
 class RecoverBackendActionTests(unittest.TestCase):

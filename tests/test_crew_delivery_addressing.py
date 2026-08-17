@@ -177,6 +177,7 @@ class JobAddressedDeliverySurvivesRelaunch(unittest.TestCase):
 
                 fresh, verified_entry = RC.verify_external_result(
                     reloaded_entries, session, root,
+                    accept_mtime_only_risk=f"test: {asking_instance} proving identity-free delivery discovery (job-file-not-agent-file), not spine-driving",
                 )
                 self.assertTrue(
                     fresh, f"{asking_instance}: run_crew.verify_external_result "

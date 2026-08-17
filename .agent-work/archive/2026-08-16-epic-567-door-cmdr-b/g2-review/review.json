@@ -1,0 +1,207 @@
+{
+  "work_id": "epic-567-door/cmdr-b/g2-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a-honest-reasons",
+    "r4b-restate-only"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md, the g2-review handoff, both target-file diffs, the g2-implement evidence writeup, the episode delta, the tc3 triage candidate, and the AMEND_G2.json gate spec.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 5 named Close Criteria tests independently re-run and pass in my own hands (test_flat_work_id_finalizes_identically, test_nested_work_id_finalizes_its_own_registry, test_b_relaunched_commander_discovers_a_completed_crew_with_no_shared_identity, RealStoreTests::test_the_real_store_is_clean_under_strict, ::test_the_real_store_scan_actually_examined_the_records). Both group-1 test edits pass accept_mtime_only_risk with honest, scenario-specific reason strings (verified against surrounding test code, not generic). Episode fix independently reproduced: replaying episode-delta-g2.json through scripts/apply_episode_delta.py --delta ... --store-root <scratch, seeded from git show HEAD: original file> reproduces the actual working-tree episodes/active/epic-567-door_cmdr-b-003.md byte-for-byte (diff empty) -- confirms restate-assertion was the real write path, not a hand-edit dressed up to look like one. No production code touched (git status --porcelain scripts/run_crew.py empty).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status --porcelain shows exactly the Allowed Scope touched: tests/test_work_id_nesting.py, tests/test_crew_delivery_addressing.py, episodes/active/epic-567-door_cmdr-b-003.md, plus new .agent-work/567-b/triage-candidates/tc3-*.md. All 6 Specific-Exclusion / stop-condition paths (map/INDEX.md, scripts/run_crew.py, scripts/checklist_engine.py, scripts/mcp_spine_server.py, tests/test_crew_launcher.py, tests/test_code_map.py) independently confirmed untouched via git status --porcelain on those exact paths (empty output). One pre-existing untracked file at the worktree root, RETURN.md, is the Commander's own epic-level closing narrative (references PR #621 / g1's #432 fix) -- not code, not part of this diff, noted as an out-of-scope observation, not a scope-drift finding.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Implementer's RED/GREEN transcripts in g2-implement-implementer-result.md independently reproduced: I re-ran all 3 group-1 tests together and the 2 group-2 tests, all pass (verbatim pytest output captured in my own session, matching the pasted counts). The map-freshness redness claim independently reproduced too: tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build re-run by me is still FAILED (entity-count mismatch 1227 vs 1226), confirming group 3 was genuinely left undone as instructed, not silently completed. Full close-criteria suite (test_work_id_nesting.py test_crew_delivery_addressing.py test_episode_observations.py test_crew_launcher.py -q) re-run by me: 269 passed, 20 subtests passed, 0 failures -- fully green as required. Episode-fix evidence goes beyond the pasted diff: I replayed the actual episode-delta-g2.json through scripts/apply_episode_delta.py against a scratch store seeded from the pre-change git blob and the output is byte-identical to the real working-tree file, which is stronger than 'diff looks right' -- it proves restate-assertion, not a hand-edit, produced this exact diff.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Parent check: the handoff's two named constraints are each covered by an appended sibling check (r4a, r4b), both to be recorded next. No other inherited project rule (docs/agents/CREW_CONTEXT.md Verification Discipline, Record Stores Are Never Hand-Edited; global-crew.md minimal-change discipline) is violated: the change is two one-line keyword additions plus one restate-assertion op, no speculative abstraction, matches surrounding conventions.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No docs/architecture map exists in this repo (confirmed: directory absent), so there is nothing structural to reconcile against. tc3 (imperative-detector homograph/allowlist-growth observation) is correctly recorded as an unfiled triage-candidate file per this lane's decision:no-issue-filing, not silently fixed (guard.EXCEPTIONS confirmed untouched by git status on scripts/verify_episode_observations.py) or dropped. Map Impact notes in the implementer result (structural anchor verify_external_result confirmed read-only touched-but-unchanged; capabilities/constraints notes accurate against the decision anchors in g1 MISSION_FRAME.md) match the diff -- no overstated or missing impact.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/<work-id>/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/<work-id>/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-567-door/cmdr-b/g2-review/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 12 baseline Fowler smells visited, none silently skipped, all 12 verdict=absent -- an honest outcome for a diff this small (two one-line keyword-arg additions plus one restate-assertion op, no production code). scripts/verify_fowler_pass.py exits 0 on the record (smells=12, flagged=[], overridden=[]). Recorded to .agent-work/epic-567-door/cmdr-b/g2-review/FOWLER_PASS.json.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-567-door/cmdr-b/g2-review/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a-honest-reasons": {
+      "id": "r4a-honest-reasons",
+      "title": "Constraint: accept_mtime_only_risk reason strings are honest",
+      "imperative": "Check both new reason strings against the actual test scenario they annotate -- not a generic 'no spine given' string. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "test_work_id_nesting.py: 'test: exercising registry addressing (nested vs flat work_id), not spine-driving' -- read against CrewRegistryAddressingTests's own docstring ('--verify-result must find the registry its own launch wrote') and both test docstrings (flat/nested work_id addressing): honest, specific, matches. test_crew_delivery_addressing.py: 'test: {asking_instance} proving identity-free delivery discovery (job-file-not-agent-file), not spine-driving' -- read against JobAddressedDeliverySurvivesRelaunch's own docstring ('the WRITE to the job/gate-addressed result path is the delivery ... no agent name involved') and the test body's own comments (asking_instance deliberately never passed into the production call, proving identity-freedom): honest, specific, matches. Neither string is the generic 'no spine given' the constraint warns against; neither scenario has any spine concept in play.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b-restate-only": {
+      "id": "r4b-restate-only",
+      "title": "Constraint: episode fix goes through restate-assertion only, never a hand-edit",
+      "imperative": "Independently confirm the episode diff was produced by apply_episode_delta.py's restate-assertion op, not a hand-edit of the .md file. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently reproduced (not just inspected): seeded a scratch store with the pre-change episode file (git show HEAD:episodes/active/epic-567-door_cmdr-b-003.md), ran 'python3 scripts/apply_episode_delta.py --delta .agent-work/epic-567-door/cmdr-b/episode-delta-g2.json --store-root <scratch>/episodes' -- output 'restated epic-567-door_cmdr-b-003.a5' -- then diffed the scratch result against the actual working-tree file: byte-identical (diff empty). This proves the real write path was apply_episode_delta.py's restate-assertion op, not a hand-edit dressed up to match the expected history-line format. git diff --stat on the episode file also confirms minimal footprint (2 insertions, 1 deletion in one file) consistent with 'only a5's statement line changed plus one appended history line' -- no other assertion, no lifecycle-standing, no other field touched.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "g2 rework of PR #621's 6 net regressions (groups 1+2 only; group 3/map-INDEX.md correctly withdrawn and left red) -- all 9 survey items pass, no override needed. All 5 named Close Criteria tests independently re-run and pass in my own hands; full close-criteria suite (test_work_id_nesting + test_crew_delivery_addressing + test_episode_observations + test_crew_launcher) independently re-run: 269 passed, 20 subtests, 0 failures. Map freshness test independently re-confirmed still RED (1227 vs 1226 entity count) -- the required pass condition, not a defect. Both accept_mtime_only_risk reason strings verified honest and scenario-specific against the actual test bodies, not generic. Episode restate-assertion fix independently reproduced end to end: replaying episode-delta-g2.json through apply_episode_delta.py against a scratch store seeded from the pre-change git blob produces a byte-identical file to the real working-tree episode -- proves the only legitimate write path was used, not a hand-edit. Scope clean: exactly the Allowed Scope touched; all 6 named exclusion paths (map/INDEX.md, scripts/run_crew.py, scripts/checklist_engine.py, scripts/mcp_spine_server.py, tests/test_crew_launcher.py, tests/test_code_map.py) independently confirmed untouched. Fowler pass: all 12 baseline smells visited, all absent (verify_fowler_pass.py exits 0) -- an honest outcome for a diff this small. One out-of-scope observation: RETURN.md, a pre-existing untracked Commander-level closing-narrative file at the worktree root, unrelated to this diff."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "g2-reviewer-1",
+    "status": "released",
+    "claimed_at": "2026-08-17T06:53:46.015456+00:00",
+    "last_heartbeat": "2026-08-17T06:57:05.893264+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T06:57:10.535082+00:00"
+  }
+}
