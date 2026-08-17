@@ -1,0 +1,389 @@
+{
+  "schema_version": 1,
+  "decision": "advance",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Wave 1's exit criteria are met and measured. All four lanes returned merged green PRs — #623, #621, #620, #622 — each named what it deleted, and no lane filed an issue. The wave's central uncertainty is settled affirmatively rather than by assertion: spine_bind succeeded on the first call from this fresh Admiral's door, so the epic resumed with zero CLI fallback invocations, which is the exact scenario #559 describes.",
+    "epic_done": "The epic is not complete. Two of its four definition-of-done clauses now hold — a role agent reaches its own spine through the door, and ExternalBackend refuses a spineless success — and two do not: 15 CLI-fallback clauses and 11 <engine> tokens still stand in agent-facing text, and no regrowth guard exists. #559 is explicit that the guard is the deliverable, because this text has been deleted twice and grown back twice.",
+    "good_enough": "The mandatory quality boundary is preserved and tightened. The merge gate is the full suite green on Linux in a clean detached worktree of the branch, never in a working copy — the defect the wave-1 Admiral authored four times and recorded each time. Added at this boundary: re-verify main after each merge and not only the branch before it, because wave 1's red main came from a pair of individually-green PRs that no single-PR gate could see."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "D-lane-d-size",
+      "action": "revise_plan",
+      "reason": "The human ruled lane D splits: D1 takes the sweep outside skills/workbench/** plus the regrowth guard at Opus tier; D2 takes the workbench sunset and the doc co-travelers at Sonnet. The measured clause distribution makes this a clean file-level split rather than a negotiated one — only 2 of the 15 clauses live in workbench itself.",
+      "issue_created": false
+    },
+    {
+      "id": "D-442-unfenced",
+      "action": "revise_plan",
+      "reason": "#442 becomes lane H. Its fence was purely a wave-1 file-ownership artifact, and an epic member issue with no lane cannot satisfy execute's c1.",
+      "issue_created": false
+    },
+    {
+      "id": "D-613-heartbeat",
+      "action": "amend_forecast_or_parked",
+      "reason": "Deferred by human ruling behind #615, with the reason recorded on the issue ledger. A deferral with a ruling is an accepted c1 disposition, so this changes the ledger rather than the wave.",
+      "issue_created": false
+    },
+    {
+      "id": "D-template-home",
+      "action": "revise_plan",
+      "reason": "The human ruled the four templates stay at their current paths and the workbench directory becomes a template-only package. This removes #565's blocking question from lane D2's critical path entirely, and it removes the rehoming entry condition the wave-1 forecast placed on lane D.",
+      "issue_created": false
+    },
+    {
+      "id": "D-map-index",
+      "action": "repair_current_wave",
+      "reason": "Repaired by pre-ruling before dispatch rather than mid-flight: no lane regenerates map/INDEX.md, a lane branch is accepted green except MapTreeFreshnessTests, and the Admiral regenerates once on the final merged main and re-verifies there. Wave 1 issued this ruling, withdrew it, re-issued it and then applied it unevenly, which is why it is now pre-stated in every launch order.",
+      "issue_created": false
+    },
+    {
+      "id": "D-records-not-instruction",
+      "action": "record_evidence_only",
+      "reason": "A classification correction to lane D1's target list, carried as a pre-ruling. No plan change: D1 still classifies all 11 sites and reports the classification rather than silently skipping two.",
+      "issue_created": false
+    },
+    {
+      "id": "D-fork-hazard",
+      "action": "record_evidence_only",
+      "reason": "Becomes a standing pre-ruling in every wave-2 launch order — design and candidate generation go to fresh agents, never a fork. The underlying defect is already a staged triage candidate for closeout pairing against #559.",
+      "issue_created": false
+    },
+    {
+      "id": "D-cold-cd",
+      "action": "repair_current_wave",
+      "reason": "Repaired in the launch-order template rather than in code: the bootstrap floor is a single compound call and sits ahead of both the launch order and the skill load, which is #535's own remedy. Wave 1 lost 47 minutes and zero bytes to this on one lane.",
+      "issue_created": false
+    },
+    {
+      "id": "D-concurrent-session",
+      "action": "record_evidence_only",
+      "reason": "Folded into the merge gate as a pre-ruling: check git rev-parse origin/main before starting, and re-verify main after each merge. The peer session is reachable by name if a diagnosis needs sending.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Subtract the redundant path now that the door reaches the caller's own spine: delete the CLI-fallback doctrine, land a guard that refuses its return, sunset the skill whose job the door took over, and finish the two remaining door-shaped issues plus the readability text wave 1 fenced out.",
+    "exit_criteria": [
+      "Zero CLI fallback clauses and zero live agent-facing <engine> tokens remain, and a guard fails if either returns.",
+      "The workbench teaching half is gone, the four templates still resolve at their existing paths, and every Admiral, Commander and Explorer spine still starts.",
+      "Lanes E, F and H each return a merged green PR or an evidenced honest null.",
+      "Each lane returns to .agent-work/epic-567-door/results/lane-<x>-RETURN.md; no lane files an issue; no lane regenerates map/INDEX.md.",
+      "main is re-verified green on Linux in a clean detached worktree after the last merge, not only per branch before it."
+    ],
+    "issues": [
+      {
+        "id": "D1",
+        "title": "The doctrine sweep and the regrowth guard: delete the CLI fallback for agents outside skills/workbench/** (#559)",
+        "desired_outcome": "No agent-facing instruction names the CLI as a path for agents, the 11 <engine> sites are each dispositioned with a stated classification, specs/*.spine.toml carry door vocabulary, and a guard in the test suite fails if any of it returns.",
+        "useful_now": "The door now reaches the caller's own spine, proven live this session, so the fallback is genuinely redundant for the first time. Wave 1 removed the reason it could not be deleted.",
+        "appetite": "One Commander at Opus tier. The guard is the deliverable, not the deletion.",
+        "acceptance_or_falsification_evidence": "A red-proof of the guard: reintroduce a CLI-fallback clause and an <engine> token on a scratch branch and show the guard fails, then remove them and show it passes. A deletion with no failing-guard demonstration does not close #559, because this text has been deleted twice and grown back twice.",
+        "implementation_latitude": "Choose the guard's mechanism, its scope expression, and how specs express door vocabulary. Choose the replacement wording for each clause.",
+        "hard_constraints_no_gos": [
+          "Do not touch skills/workbench/** — it is lane D2's file set, including the 2 clauses that live there.",
+          "Do not edit docs/superpowers/plans/** — a historical plan record; editing it falsifies the record.",
+          "Do not delete the <engine> mention at scripts/init_work_area.py:24 without reading it — it is a comment documenting the placeholder convention itself.",
+          "Do not regenerate or hand-edit map/INDEX.md (#544).",
+          "Do not file an issue; stage candidates under .agent-work/567-d1/triage-candidates/.",
+          "Do not dispatch design work as a fork.",
+          "The guard must be able to fail: assert against the text's absence in a way a reintroduction trips, never against a description of the rule."
+        ],
+        "local_unknowns": [
+          "Whether the guard belongs with the retirement-guard family in tests/test_retirement_guard.py or as its own module.",
+          "How the guard expresses 'agent-facing' without either exempting the whole corpus or catching historical records.",
+          "Whether specs/*.spine.toml need new keys or only new prose, given only implementer and reviewer specs exist."
+        ],
+        "anchors": [
+          "skills/commander/templates/COMMANDER_SPINE.template.json",
+          "skills/explorer/templates/EXPLORER_SPINE.template.json",
+          "skills/admiral/templates/ADMIRAL_SPINE.template.json",
+          "skills/write-a-skill/templates",
+          "skills/interrogator/SKILL.md",
+          "skills/explorer/SKILL.md",
+          "skills/charter/SKILL.md",
+          "skills/commander/references/commander-core.md",
+          "skills/commander/references/crew-dispatch.md",
+          "specs",
+          "scripts/init_work_area.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "D2",
+        "title": "Sunset the workbench teaching half and keep the directory as a template-only package (#565, with #561, #596, #526)",
+        "desired_outcome": "The 289-line teaching half is gone, workbench is no longer a registered skill, the four templates still resolve at their existing skills/workbench/templates/ paths, and the doc co-travelers are fixed: CREW_CONTEXT's Python Invocation section is right on this Linux host (#561), CONSTELLATION_FEEDBACK.md is no longer mandated in four places after the switch to the episode ledger (#596), and the Commander skill's stock close criteria stop citing a nonexistent build script (#526).",
+        "useful_now": "#565's diagnosis is that the CLI text keeps growing back because teaching an agent to drive the engine is what this skill is for, and that job moved to the door. Delete the clauses and leave the skill and the text returns — which it has, twice.",
+        "appetite": "One Commander at Sonnet tier. The template home is already ruled, so no design work remains.",
+        "acceptance_or_falsification_evidence": "Establish, do not assume, that the door's tool descriptions carry what the two references carried — the verbs, the two spine types, evidence shape, refusal semantics, and the status vocabulary — and name anything they do not. Then prove every spine still starts: an Admiral, Commander and Explorer spine each instantiate and reach their first gate in a fresh process, and STATE_NOTE.template.md still resolves for the Admiral execute precondition.",
+        "implementation_latitude": "Choose how workbench is deregistered, and the replacement wording anywhere a reference pointed into the teaching half.",
+        "hard_constraints_no_gos": [
+          "Do not move any of the four templates. The human ruled the paths stay: STATE_NOTE.template.md is named by the Admiral spine's execute precondition, and rehoming would mean extending the installer's _shared fan-out from references to templates — new mechanism spent to remove old text.",
+          "Three scripts name the skill directly — install_constellation.py, verify_skill_registered.py, measure_overread.py. Deregistration must satisfy all three, checked rather than assumed.",
+          "Do not touch anything outside skills/workbench/** except the specific doc fixes for #561, #596 and #526.",
+          "Do not regenerate or hand-edit map/INDEX.md (#544).",
+          "Do not file an issue; stage candidates under .agent-work/567-d2/triage-candidates/.",
+          "Do not dispatch design work as a fork."
+        ],
+        "local_unknowns": [
+          "Whether deregistering a skill that still ships templates is a supported state in install_constellation.py, or needs a code change there.",
+          "Whether the tracked .agent-work/templates/ overlay (113 files, reconciled today) references the teaching half.",
+          "Whether #482's workbench-vs-reviewer dogfooding collision disappears with the teaching half or survives it."
+        ],
+        "anchors": [
+          "skills/workbench",
+          "scripts/install_constellation.py",
+          "scripts/verify_skill_registered.py",
+          "scripts/measure_overread.py",
+          "docs/agents"
+        ],
+        "type": "AFK",
+        "blocks": [
+          "D1"
+        ]
+      },
+      {
+        "id": "E",
+        "title": "Door rejections are captured as episode friction (#541)",
+        "desired_outcome": "When the door refuses a call, the friction lands in the run's episode record instead of vanishing — so the rejections that used to get filed as issues are visible again after the switch to the door.",
+        "useful_now": "The door hides the friction the CLI used to surface. Wave 1 produced 24 triage candidates by hand precisely because nothing captures this automatically.",
+        "appetite": "One Commander at Sonnet tier.",
+        "acceptance_or_falsification_evidence": "A real refusal, triggered through the door in a fresh process, appears in the episode store afterward — proven by reading the store, not by reading the code that writes it. Include a negative control: with the capture removed, the refusal leaves no trace.",
+        "implementation_latitude": "Choose which refusals are worth capturing and the shape of the captured record.",
+        "hard_constraints_no_gos": [
+          "episodes/ has exactly one write path, scripts/apply_episode_delta.py, always with --store-root episodes. Never hand-edit the store. To reword an assertion use its restate-assertion op.",
+          "Order matters when touching episodes/: write, then git add, then run the suite, then commit. test_canon_episode_store_untouched is worktree-vs-index only, so running the suite between the write and the stage trips it with a message that reads like store corruption.",
+          "The episode-observation guard cannot tell a past-tense verb from an imperative. Rephrase to remove the bare verb; do not add to the exception list, which already carries 11 entries across five prior runs.",
+          "Do not accept an in-session observation of engine or hook behaviour as evidence — validate in a fresh process with explicit paths.",
+          "Do not regenerate or hand-edit map/INDEX.md (#544).",
+          "Do not file an issue; stage candidates under .agent-work/567-e/triage-candidates/.",
+          "Do not dispatch design work as a fork."
+        ],
+        "local_unknowns": [
+          "Whether the apply_episode_delta.py / verify_episode_captured.py nested-work-id pair is satisfiable from inside the server process.",
+          "Whether a refusal during a run with no bound spine has any work-id to attribute the friction to.",
+          "Whether capturing every refusal floods the store, and if so what the filter is."
+        ],
+        "anchors": [
+          "scripts/mcp_spine_server.py",
+          "scripts/apply_episode_delta.py",
+          "episodes"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "F",
+        "title": "Reveal the spec through the spine, not the launch order (#535)",
+        "desired_outcome": "A dispatch starts with 'start the spine with this identifier' and the spine reveals the spec, rather than the launch order carrying the spec as pasted prose.",
+        "useful_now": "Wave 1's launch orders were long pasted documents, and its worst single failure was a lane that could not get past the bootstrap floor those documents open with.",
+        "appetite": "One Commander at Sonnet tier. Measure before building: spine_open already compiles a spec into a minted spine, so establish how much of #535 wave 1's lane A already made possible before writing anything.",
+        "acceptance_or_falsification_evidence": "A dispatch driven from an identifier alone reaches its first gate with the spec available, in a fresh process. An evidenced honest null — that the remaining gap is smaller or larger than #535 assumes, stated with the measurement — is a complete deliverable.",
+        "implementation_latitude": "Choose how much of the launch order the spine absorbs and where the identifier is handed over.",
+        "hard_constraints_no_gos": [
+          "Measure the existing spine_open spec compilation first and report it, before proposing a change.",
+          "Do not redesign the launch-order template wholesale; the bootstrap floor ahead of it is the part wave 1 proved is load-bearing.",
+          "Do not accept an in-session observation of engine behaviour as evidence.",
+          "Do not regenerate or hand-edit map/INDEX.md (#544).",
+          "Do not file an issue; stage candidates under .agent-work/567-f/triage-candidates/.",
+          "Do not dispatch design work as a fork."
+        ],
+        "local_unknowns": [
+          "How much of #535 lane A's spine_bind and spine_open already deliver.",
+          "Whether the identifier-only dispatch survives the ExternalBackend path, which refuses --spine outright.",
+          "Whether specs/*.spine.toml covering only implementer and reviewer is enough surface to prove the shape."
+        ],
+        "anchors": [
+          "scripts/mcp_spine_server.py",
+          "specs",
+          "skills/admiral/templates/LAUNCH_ORDER.template.md",
+          "skills/commander/references/crew-dispatch.md"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "H",
+        "title": "The rail and the HARD refusal remedy read to the agent they are aimed at (#442)",
+        "desired_outcome": "A cold agent with no corpus loaded, shown only the RAIL banner and a HARD refusal, can state what it is being asked to do and do it — rather than reading the banner as a possible prompt injection and discounting the instruction it exists to deliver.",
+        "useful_now": "Wave 1 fenced this out only because lane A owned checklist_engine.py. That fence is gone, and the strings are still frozen exactly as lane C left them.",
+        "appetite": "One Commander at Sonnet tier.",
+        "acceptance_or_falsification_evidence": "Measured on a real cold agent, not judged by the author — #442's own acceptance criterion demands real agents. Before and after, on the same prompt.",
+        "implementation_latitude": "Rewrite the strings. Choose the measurement's shape.",
+        "hard_constraints_no_gos": [
+          "The three target strings are _RAIL_STRINGS['early'], _refresh_attach_hint's remedy text, and adjacently _trip_advisory. The file's own comment says do not paraphrase — it is a measurement precondition for #145 — so any rewrite must state what it changed and why the measurement survives it.",
+          "Do not redesign the trip mechanic, and do not add a third advisory mechanism. Lane C settled that the Stop hook outranks the context advisory (#595); do not reopen that precedence.",
+          "Do not accept an in-session observation of engine or hook behaviour as evidence — validate in a fresh process with explicit paths.",
+          "Do not regenerate or hand-edit map/INDEX.md (#544).",
+          "Do not file an issue; stage candidates under .agent-work/567-h/triage-candidates/.",
+          "Do not dispatch design work as a fork."
+        ],
+        "local_unknowns": [
+          "Whether a cold-agent measurement fits inside a Sonnet lane's budget — wave 1's lane C flagged exactly this uncertainty and it was never settled.",
+          "Whether the #145 measurement precondition genuinely forbids rewording or only forbids silent rewording."
+        ],
+        "anchors": [
+          "scripts/checklist_engine.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "Closeout disposition pass: all 24 staged triage candidates plus wave 2's are each paired onto an open issue as a comment or recorded as an episode; none is minted as a new issue.",
+      "why_likely": "The human ruled filing held for the whole run because tracking has been ballooning, and the candidates are already staged under .agent-work/567-*/triage-candidates/.",
+      "entry_conditions": [
+        "Wave 2 is merged and main is re-verified green."
+      ]
+    },
+    {
+      "outcome": "Closeout record: one episode per distinct thing that happened across the epic, a cartographer reconcile of the epic's net change, a fresh collect_feedback.py sweep per docs/DEBT_SWEEP_CADENCE.md because this repo is the dogfood target, and the ADMIRAL_LOG archived under .agent-work/archive/.",
+      "why_likely": "Contract v2 carries closeout on the same rope as wave 2, with a single acceptance checkpoint.",
+      "entry_conditions": [
+        "Every wave-2 lane is dispositioned and the issue ledger is settled."
+      ]
+    },
+    {
+      "outcome": "#613's parent-heartbeat half and #615's unleased-spine ownership guard are taken together in a later epic.",
+      "why_likely": "The human deferred #613's remainder specifically because #615 sits underneath it, and wave 1's lane A independently noted that spine_bind's work-area boundary check may be surplus once #615 gives an unleased spine an ownership guard at all.",
+      "entry_conditions": [
+        "A later epic scopes #615."
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "How the regrowth guard expresses 'agent-facing' without exempting the whole corpus or catching historical records.",
+      "affects": "Whether #559 actually closes, since the guard is its deliverable.",
+      "settle_by": "Lane D1's design of the guard scope.",
+      "current_evidence": "Two of 11 <engine> sites are a historical plan record and a convention-documenting comment, so a naive whole-tree grep guard would either fail on legitimate text or need an exception list — and the episode-observation guard's exception list already carries 11 entries across five runs, which is the failure mode to avoid.",
+      "next_probe": "Lane D1 red-proofs the guard by reintroducing a clause and a token on a scratch branch."
+    },
+    {
+      "unknown": "Whether deregistering a skill that still ships templates is a supported state, or needs installer work.",
+      "affects": "Whether lane D2's zero-new-mechanism premise holds.",
+      "settle_by": "Lane D2's first gate, reading install_constellation.py, verify_skill_registered.py and measure_overread.py.",
+      "current_evidence": "install_constellation.py:320 skips underscore-prefixed directories, which is a deregistration mechanism that exists — but skills/workbench is not underscore-prefixed and renaming it would churn every referencing path, which is what the human's ruling avoids.",
+      "next_probe": "Lane D2 establishes the supported deregistration path before editing, and floats if it requires installer code."
+    },
+    {
+      "unknown": "Whether a cold-agent readability measurement fits inside a Sonnet lane's budget.",
+      "affects": "Whether lane H returns a measurement or an authored judgement.",
+      "settle_by": "Lane H's own first gate.",
+      "current_evidence": "Carried unsettled from wave 1: lane C raised this uncertainty and the issue was fenced out before it could be answered.",
+      "next_probe": "Lane H scopes the measurement before committing to it and floats if it does not fit."
+    },
+    {
+      "unknown": "How much of #535 wave 1 already delivered.",
+      "affects": "Whether lane F builds or returns an honest null.",
+      "settle_by": "Lane F's measurement of the existing spine_open spec compilation.",
+      "current_evidence": "spine_open already compiles a spec into a minted spine, and spine_bind now reaches an existing one, so both halves of the identifier-only dispatch may already exist.",
+      "next_probe": "Lane F measures before proposing."
+    },
+    {
+      "unknown": "Whether five concurrent lanes fit the account session pool.",
+      "affects": "Whether the wave dispatches at once or in two groups.",
+      "settle_by": "The dispatch itself; the Admiral defers past a near limit reset rather than stranding Commanders mid-flight.",
+      "current_evidence": "Wave 1 ran four concurrent lanes including one Opus without exhausting the pool.",
+      "next_probe": "Watch for a limit signal during the wave and stage the remaining launches if one appears."
+    }
+  ],
+  "revised_parked": [
+    "#575 Windows proof of the .mcp.json launch line — stays in epic-distribution by the 2026-08-16 rescope.",
+    "amend and flag-candidate remaining operator-only verbs, stated rather than implied.",
+    "Sweeping the 41 pre-existing stale leases, as distinct from stopping new ones accruing — wave 1's lane G stopped the accrual; the existing rot is untouched.",
+    "#619 the installer wires a probed machine-local interpreter into the tracked .mcp.json — reproduced on demand this run and reverted, not fixed.",
+    "Closing spine_bind's hardlink hole by inode containment — ruled out in wave 1 because it adds surface and removes no agent work; the limit is documented instead.",
+    "Removing spine_bind's work-area boundary check as surplus — blocked on #615.",
+    "#574's reserved question: whether PR-opening lives in the engine verb or in the wrapper script. Reserved by the human, not adjudicated."
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "D",
+      "action": "delete",
+      "reason": "Consumed: split by human ruling into D1 (sweep plus regrowth guard, Opus) and D2 (workbench sunset plus doc co-travelers, Sonnet), both launched in this wave's current_wave. Its rehoming entry condition is void — the templates stay put."
+    },
+    {
+      "id": "E",
+      "action": "delete",
+      "reason": "Consumed: launched in this wave as lane E, unchanged from forecast."
+    },
+    {
+      "id": "F",
+      "action": "delete",
+      "reason": "Consumed: launched in this wave as lane F, with a measure-first instruction because wave 1 may already have delivered part of #535."
+    },
+    {
+      "id": "U-forecast-sweep",
+      "action": "delete",
+      "reason": "No longer a forecast: the sweep is the launched current wave as D1 and D2."
+    },
+    {
+      "id": "U-forecast-closeout",
+      "action": "keep",
+      "reason": "Still ahead, now on the same contract as wave 2 with a single acceptance checkpoint."
+    },
+    {
+      "id": "U-identity-cost",
+      "action": "delete",
+      "reason": "Settled affirmatively. spine_bind landed and this Admiral bound its own spine through the door on the first call, so per-dispatch spine identity cost less mechanism than the sweep removes."
+    },
+    {
+      "id": "U-cold-agent-budget",
+      "action": "keep",
+      "reason": "Carried unsettled from wave 1's lane C into lane H, which owns #442 now that the fence is gone."
+    },
+    {
+      "id": "U-candidate-pairing",
+      "action": "keep",
+      "reason": "Settles at the closeout pairing pass; 24 candidates are staged and wave 2 will add more."
+    },
+    {
+      "id": "U-hook-sequencing",
+      "action": "delete",
+      "reason": "Answered: wave 1 merged with no sequential-merge requirement from hook overlap. Wave 2 merge ordering is governed instead by the D2-before-D1 file-ownership ruling."
+    },
+    {
+      "id": "U-parked-575",
+      "action": "keep",
+      "reason": "Parked by the 2026-08-16 rescope; nothing in this boundary disturbs it."
+    },
+    {
+      "id": "U-parked-operator-verbs",
+      "action": "keep",
+      "reason": "Still parked; the sweep concerns agent-facing text, not the operator surface."
+    },
+    {
+      "id": "U-parked-stale-leases",
+      "action": "keep",
+      "reason": "Lane G stopped new leases accruing but did not sweep the 41 existing ones; the distinction survives the wave."
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "wave_forecast",
+      "before": "Wave 2 is three lanes: D (the whole doctrine sweep including the workbench sunset), E, F.",
+      "after": "Wave 2 is five lanes: D1 (sweep outside skills/workbench/** plus the regrowth guard, Opus), D2 (workbench sunset plus #561/#596/#526, Sonnet), E, F, and H (#442, Sonnet). Merge order D2 before D1.",
+      "reason": "Human ruling at the W1 checkpoint on two grounds: lane D as forecast was larger than any wave-1 lane and a stall would cost the whole subtraction; and #442's wave-1 fence was purely lane A's file ownership, which is gone."
+    },
+    {
+      "surface": "epic_body_decomposition",
+      "before": "#565's blocking question is where the workbench's four surviving templates live.",
+      "after": "The templates do not move. The workbench directory becomes a template-only package and is deregistered as a skill.",
+      "reason": "Human ruling. Rehoming to skills/_shared/templates/ requires extending the installer's _shared fan-out from references to templates — new mechanism spent to remove old text, which fails the epic's own test for a trade — and per-reader rehoming churns every referencing path including the Admiral spine's execute precondition, which names STATE_NOTE.template.md by path."
+    },
+    {
+      "surface": "wave_forecast",
+      "before": "Every epic member issue is delivered inside this epic.",
+      "after": "#613's parent-heartbeat half is deferred behind #615 with the ruling recorded, which is an accepted disposition for execute's c1. The epic's four definition-of-done clauses are untouched.",
+      "reason": "Human ruling. The second-writer problem is tangled with #615 — an unleased spine has no ownership guard at all — and wants that settled first."
+    }
+  ],
+  "wave_review_comment": "## Wave review — boundary w2 (wave 1 complete, wave 2 authorized)\n\n**Wave 1 delivered, and the proof is this document existing.** Four lanes, four merged green PRs — #623 (per-dispatch spine identity plus atomic `save()`), #621 (ExternalBackend refuses a spineless success), #620 (the Stop hook outranks the context advisory), #622 (`finish_work` plus lease-release-on-archive) — with #626 added after the fact to make a failing subtest greppable as `FAILED`. `origin/main` is at **`f05a3d78`**: 3352 passed, 6 skipped, 1219 subtests passed, 0 failed, 0 SUBFAILED on Linux in a clean detached worktree. Main was 3191 when the epic began.\n\n**The epic's central uncertainty is settled, and not by assertion.** The wave-1 Admiral was itself blocked at step one — `spine_status` returned `REFUSED: no spine is bound to this door`, so `init` ran on the CLI fallback and was logged as an `ADMIRAL ERROR`. This Admiral, one session later, called `spine_bind` and it worked on the first attempt. The epic resumed with **zero CLI invocations**. That is #559's own scenario, answered by the lane it blocked, which makes the doctrine sweep sound on its premise for the first time: you can now delete a fallback that is no longer the only path.\n\n**What is not done.** Two of four definition-of-done clauses stand open: 15 `CLI fallback` clauses and 11 `<engine>` tokens survive in agent-facing text, and no regrowth guard exists. #559 is explicit that the guard is the deliverable — this text has been deleted twice and grown back twice.\n\n**Decision: advance, with the forecast revised on human ruling.** Wave 2 launches five lanes, not three. Lane D splits — D1 takes the sweep and the guard at Opus, D2 takes the workbench sunset at Sonnet — because one Commander carrying 15 clauses, 11 tokens, a 289-line sunset, four rehomes, a guard and three doc issues is larger than any wave-1 lane, and wave 1 lost 47 minutes and zero bytes to a single lane's bootstrap failure. #442 rejoins as lane H, its fence removed with lane A's file ownership. #613's heartbeat half defers behind #615.\n\n**The measurement that made the split clean:** only **2** of the 15 clauses live in `skills/workbench/**`. #565 asserts all 15 sit in the teaching half or in templates instantiated from it; by file they do not. So D1 and D2 divide on file ownership with no shared writer, and D2 merges first so D1's guard is authored against a tree that already has the teaching half gone.\n\n**Two hazards repaired by pre-ruling rather than mid-flight**, both of which cost wave 1 real time: `map/INDEX.md` is Admiral-owned and a lane branch is accepted green except `MapTreeFreshnessTests` (#544 — it blocked three of four lanes in one afternoon, and the ruling was issued, withdrawn, re-issued and then applied unevenly); and the bootstrap floor is a single compound `cd && verify` call placed ahead of both the launch order and the skill load, because a bare `cd` does not persist between Bash calls.\n\nNo issue was created at this boundary. Filing stays held to closeout, where 24 staged candidates are paired onto open issues or recorded as episodes.",
+  "revised_epic_body": "## Current planning truth — epic 567, boundary w2\n\n### Intent\n\nOne interface for agents: the MCP door. The CLI becomes an operator and debug path only. The outcome that must not be violated: **this epic reduces complexity by removing a redundant path.** Judge a change by Tommy's test — *does this choice reduce work on agents by moving it into mechanisms?* Removing a redundant path counts even when the removing lane's own line count rises. The earlier \"every lane ends net-mechanism-negative\" wording was **withdrawn** on 2026-08-17: it was never the human's rule.\n\n### Measured state (`f05a3d78`, 2026-08-17)\n\n| Claim | State |\n|---|---|\n| full suite, Linux, clean detached worktree | 3352 passed, 6 skipped, 1219 subtests, **0 failed, 0 SUBFAILED** (3191 at epic start) |\n| a role agent reaching its **own** spine through the door | **possible** — proven live by this Admiral binding its own spine on the first call |\n| ExternalBackend accepting a spineless success | **refused** (#432 delivered, issue still open pending closeout verification) |\n| CLI-fallback clauses | **15** — 2 in `skills/workbench/**`, 13 elsewhere |\n| live `<engine>` tokens | **11** across 7 files, of which 2 are a historical record and a convention comment, not instruction |\n| door vocabulary in `specs/*.spine.toml` | **zero**; only `implementer` and `reviewer` specs exist |\n| regrowth guard | **none** — and this text has been deleted twice and grown back twice |\n\n### Current wave (launched at this boundary — five lanes)\n\n- **D1** — the doctrine sweep outside `skills/workbench/**` plus **the regrowth guard** (#559). Opus. The guard is the deliverable; a deletion without a failing-guard red-proof does not close #559.\n- **D2** — sunset the workbench teaching half (289 lines), keep the directory as a template-only package, deregister the skill, carry #561, #596, #526. Sonnet. **Merges first.**\n- **E** — door rejections captured as episode friction (#541). Sonnet.\n- **F** — reveal the spec through the spine, not the launch order (#535). Sonnet, measure-first.\n- **H** — the rail and HARD-refusal remedy read to a cold agent (#442). Sonnet.\n\n### Issue ledger\n\nClosed: #574, #552. Open and dispositioned: #559 (closes on D1's guard), #565/#561/#596/#526 (D2), #541 (E), #535 (F), #442 (H), #432 (verify and close at closeout), #613 (**deferred** behind #615, atomicity half shipped), #595 (confirm at closeout), #575 (**parked**).\n\n### Nonbinding forecast\n\nCloseout on the same contract: one episode per distinct thing that happened, a cartographer reconcile, the triage-candidate pairing pass over 24-plus staged candidates, a `collect_feedback.py` sweep per `docs/DEBT_SWEEP_CADENCE.md` because this repo is the dogfood target, and the ADMIRAL_LOG archived. Later: #613's heartbeat half with #615 underneath it.\n\n### Standing constraints\n\nNo lane files an issue. No lane promotes an observation into `docs/agents/*`. No lane regenerates `map/INDEX.md` (#544) — a lane branch is green **except** `MapTreeFreshnessTests`, and the Admiral regenerates once on the final merged main. No design work is dispatched as a **fork** (a fork believes it is the Commander and drove a lane's spine under its lease id in wave 1). Every lane returns to `results/lane-<x>-RETURN.md`, never a tracked worktree-root path. Engine and hook behaviour is validated in a **fresh process** with explicit paths. The merge gate is the full suite green on Linux in a **clean detached worktree of the branch**, and `main` is re-verified **after** each merge — wave 1's red main came from a pair of individually-green PRs.\n\n### Open uncertainty\n\nHow the regrowth guard expresses \"agent-facing\" without exempting the corpus or catching historical records — the guard is #559's deliverable, so this is the wave's load-bearing unknown. Whether deregistering a skill that still ships templates needs installer work. Whether a cold-agent measurement fits a Sonnet lane's budget, carried unsettled from wave 1. How much of #535 wave 1 already delivered.",
+  "escalation": null
+}

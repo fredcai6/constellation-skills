@@ -210,3 +210,143 @@ early on any material exception that invalidates the wave plan.
 2026-08-16 — confirmed by Tommy across two interrogation rounds (scope and slurps; then
 checkpoints, decision classes, budget, expiry). Recorded as `user-decision` evidence on
 the latitude step. Full record: `.agent-work/epic-567-door/INTERROGATION_RECORD.json`.
+
+---
+
+# Contract v2 — confirmed 2026-08-17, covering wave 2 and closeout
+
+The v1 contract expired at the W1 checkpoint, as written. Tommy refreshed it in four
+rulings. **Everything above still holds** — intent, success shape, decision classes,
+permission prerequisites, float-up routing, comms, and every pre-ruling except the one
+already withdrawn — with the changes below layered on top.
+
+## What wave 1 actually settled (measured, not inherited)
+
+`origin/main` at **`f05a3d78`**: **3352 passed, 6 skipped, 1219 subtests passed, 0 failed,
+0 SUBFAILED** on Linux, verified in a clean detached worktree. Main was **3191** when the
+epic began.
+
+The epic's own blocker is gone, and this Admiral is the proof: `spine_bind` succeeded from
+a fresh door on the first call, and this contract's spine is being driven through the door
+rather than the CLI. Wave 1's central uncertainty — whether per-dispatch spine identity
+could be had at all — is **settled yes**, so the doctrine sweep proceeds on a true premise.
+
+## Wave 2 — five lanes, confirmed
+
+**Lane D is split.** Tommy's ruling: one Commander doing 15 clauses, 11 tokens, a 289-line
+sunset, four template rehomes, a regrowth guard and three doc issues is larger than any
+wave-1 lane, and a stall would cost the whole subtraction.
+
+| Lane | Issues | Deliverable | Tier |
+|---|---|---|---|
+| D1 | #559 (close it) | delete the **13** `CLI fallback` clauses outside `skills/workbench/**`, disposition the 11 `<engine>` tokens, give `specs/*.spine.toml` door vocabulary, and **land the regrowth guard** | Opus |
+| D2 | #565 + #561 + #596 + #526 | sunset the workbench **teaching half** (289 lines, incl. the 2 clauses there), keep the four templates in place, deregister the skill, carry the doc co-travelers | Sonnet |
+| E | #541 | door rejections captured as episode friction | Sonnet |
+| F | #535 | reveal the spec through the spine, not the launch order | Sonnet |
+| H | #442 | the rail and HARD-refusal remedy text read to a cold agent | Sonnet |
+
+**#559's deliverable is the guard, not the deletion.** This text has been deleted twice and
+grown back twice. A lane that deletes 13 clauses and lands no guard has not closed #559.
+
+## New rulings (v2)
+
+- `decision:workbench-stays-a-template-package` — **settled/human.** The four surviving
+  templates stay at their current `skills/workbench/templates/` paths. D2 deletes the
+  teaching half and deregisters workbench as a skill; it does **not** move a template.
+  Tommy's reason, and it is the epic's own test: rehoming to `skills/_shared/templates/`
+  would mean extending the installer's `_shared` fan-out from references to templates —
+  **new mechanism spent to remove old text** — and moving each template to its primary
+  reader churns every referencing path, including the Admiral spine's own `execute`
+  precondition, which names `STATE_NOTE.template.md` by path. Zero path churn across
+  `specs/`, `TEMPLATES_MANIFEST.json`, the tracked `.agent-work/templates/` overlay (113
+  files, reconciled today) and the spine preconditions. The regrowth guard covers the
+  reappearance risk that #565 says the directory's existence causes.
+  `@grade: settled/human · leans D2`
+- `decision:442-in-613-out` — **settled/human.** #442 is now unfenced (lane A no longer
+  owns `checklist_engine.py`) and runs as lane H. **#613's remaining half is deferred** —
+  the parent heartbeat as a second concurrent writer is tangled with **#615** (an unleased
+  spine has no ownership guard at all), and that wants settling first. #613's
+  `save()`-atomicity half shipped in PR #623, including the Windows finding that
+  `MoveFileEx` fails rather than tears; the issue stays open on its heartbeat half with
+  this ruling recorded. `@grade: settled/human · leans H`
+- `decision:workbench-is-D2s-file` — **delegated/doctrine.** One writer per file. All of
+  `skills/workbench/**` belongs to **D2**; D1 does not touch it, and the 2 `CLI fallback`
+  clauses living there are D2's to remove by deleting their files. **Merge order: D2
+  first, then D1**, which rebases on the merged tree so its regrowth guard is authored and
+  proven against a tree that already has the teaching half gone. D1's guard covers the
+  whole tree, workbench included. `@grade: settled/doctrine · leans D1, D2`
+- `decision:map-index-is-admiral-owned` — **settled/doctrine**, carried forward from wave
+  1's corrected ruling and now stated *before* dispatch instead of discovered mid-flight.
+  **No lane regenerates `map/INDEX.md`** (#544: it is generated, committed and
+  freshness-tested, so every parallel branch stales it and two regenerating lanes conflict
+  by construction). A lane branch is therefore accepted green **except**
+  `test_code_map.py::MapTreeFreshnessTests`, which is the Admiral's single retained item:
+  one regeneration (`python3 -m scripts.code_map build --root .`) on the final merged
+  main, then a full re-verify there. No lane hand-edits the index.
+  `@grade: settled/doctrine · leans all lanes`
+- `decision:records-are-not-instruction` — **delegated/doctrine.** Two of the 11 `<engine>`
+  sites are not agent-facing instruction and are not deletion targets:
+  `docs/superpowers/plans/2026-06-27-delegated-autonomous-commander.md:59` is a **historical
+  plan record** (editing it falsifies the record), and `scripts/init_work_area.py:24` is a
+  **comment documenting the placeholder convention itself**, naming `<engine>` as an example
+  of a token the script deliberately never resolves. D1 classifies all 11 and reports the
+  classification; it does not silently skip. `@grade: settled/doctrine · leans D1`
+- `decision:merge-gate-is-clean-detached` — **settled/doctrine.** The gate is the full suite
+  green on Linux, run in a **clean detached worktree of the branch**, never in a working
+  copy. Windows CI's ~122-failure path-casing baseline is pre-existing and is not the
+  yardstick (#575 deferred). Re-verify `main` **after** each merge, not only the branch
+  before it: wave 1's red main came from a *pair* of individually-green PRs.
+  `@grade: settled/doctrine · leans admiral`
+- `decision:no-fork-for-design` — **settled/doctrine.** Candidate generation and design
+  work is dispatched to **fresh** agents, never a `fork`. A fork inherits the parent's full
+  context and therefore believes it *is* the Commander: in wave 1 a lane-G fork rewrote its
+  sole-writer notes file in the first person and drove its `spine.json` under the identical
+  lease id, and lane G halted a delivering run believing its worktree was compromised.
+  `@grade: settled/doctrine · leans all lanes`
+- `decision:returns-are-per-lane-paths` — **settled/doctrine.** Each lane writes
+  `.agent-work/epic-567-door/results/lane-<x>-RETURN.md`, never `RETURN.md` at the worktree
+  root — that path is tracked, so wave 1's four lanes collided add/add on main the moment
+  the first merged. `@grade: settled/doctrine · leans all lanes`
+
+## Issue disposition ledger (what `execute`'s c1 is measured against)
+
+| Issue | State | Disposition |
+|---|---|---|
+| #574, #552 | CLOSED | delivered, PR #622 |
+| #432 | open | lane B delivered the refusal; **verify and close at closeout** |
+| #613 | open | atomicity half shipped; heartbeat half **deferred** behind #615 |
+| #559 | open | closes on **D1's guard**, not on the deletion |
+| #442 | open | **lane H** |
+| #565, #561, #596, #526 | open | **lane D2** |
+| #541 | open | **lane E** |
+| #535 | open | **lane F** |
+| #595 | check at closeout | lane C delivered the precedence; confirm state |
+| #575 | open | parked by the 2026-08-16 rescope, stays parked |
+
+## Budget / Model Parameters (v2)
+
+Five lanes, one Opus (D1) and four Sonnet. All five launch concurrently — only D1 and D2
+share a merge dependency, and no two lanes share a file. The account session pool remains a
+**wave-sizing input**: if a limit reset is near, defer the dispatch past it rather than
+stranding five Commanders mid-flight.
+
+## Expiry (v2)
+
+**Event: closeout acceptance.** Tommy's ruling: this contract carries wave 2 **and** the
+whole closeout — episodes, the cartographer reconcile, the 24-candidate pairing pass, the
+`collect_feedback.py` sweep per `docs/DEBT_SWEEP_CADENCE.md`, and archiving the
+ADMIRAL_LOG — and presents **once**, for acceptance. It still expires early on any material
+exception that invalidates the wave plan.
+
+## Confirmation (v2)
+
+2026-08-17 — confirmed by Tommy in four rulings at the W1 checkpoint: split lane D; add
+#442 as a lane and defer #613's heartbeat half; keep the workbench directory as a
+template-only package; carry wave 2 plus closeout on one contract with a single acceptance
+checkpoint.
+
+## Still reserved for the human
+
+**#574's reserved question, floated by lane G in wave 1 and never ruled:** does PR-opening
+live in the engine verb or in the wrapper script that manages the worktree? Tommy reserved
+it; it is not adjudicated here and no lane may settle it.

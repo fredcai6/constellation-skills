@@ -277,15 +277,14 @@
   "blockers": [],
   "refusals": 1,
   "engine_session": {
-    "session_id": "a4704163-34f0-4c9f-aca6-8d68c189ab36",
-    "status": "released",
-    "claimed_at": "2026-08-17T05:03:30.564165+00:00",
-    "last_heartbeat": "2026-08-17T15:06:14.458544+00:00",
+    "session_id": "constellation/epic-567-door",
+    "status": "active",
+    "claimed_at": "2026-08-17T16:39:58.536463+00:00",
+    "last_heartbeat": "2026-08-17T16:39:58.536463+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null,
-    "released_at": "2026-08-17T16:09:35.077151+00:00"
+    "takeover_reason": null
   },
   "why_trail": [
     {

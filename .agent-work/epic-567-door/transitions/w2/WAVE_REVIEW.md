@@ -1,0 +1,15 @@
+## Wave review — boundary w2 (wave 1 complete, wave 2 authorized)
+
+**Wave 1 delivered, and the proof is this document existing.** Four lanes, four merged green PRs — #623 (per-dispatch spine identity plus atomic `save()`), #621 (ExternalBackend refuses a spineless success), #620 (the Stop hook outranks the context advisory), #622 (`finish_work` plus lease-release-on-archive) — with #626 added after the fact to make a failing subtest greppable as `FAILED`. `origin/main` is at **`f05a3d78`**: 3352 passed, 6 skipped, 1219 subtests passed, 0 failed, 0 SUBFAILED on Linux in a clean detached worktree. Main was 3191 when the epic began.
+
+**The epic's central uncertainty is settled, and not by assertion.** The wave-1 Admiral was itself blocked at step one — `spine_status` returned `REFUSED: no spine is bound to this door`, so `init` ran on the CLI fallback and was logged as an `ADMIRAL ERROR`. This Admiral, one session later, called `spine_bind` and it worked on the first attempt. The epic resumed with **zero CLI invocations**. That is #559's own scenario, answered by the lane it blocked, which makes the doctrine sweep sound on its premise for the first time: you can now delete a fallback that is no longer the only path.
+
+**What is not done.** Two of four definition-of-done clauses stand open: 15 `CLI fallback` clauses and 11 `<engine>` tokens survive in agent-facing text, and no regrowth guard exists. #559 is explicit that the guard is the deliverable — this text has been deleted twice and grown back twice.
+
+**Decision: advance, with the forecast revised on human ruling.** Wave 2 launches five lanes, not three. Lane D splits — D1 takes the sweep and the guard at Opus, D2 takes the workbench sunset at Sonnet — because one Commander carrying 15 clauses, 11 tokens, a 289-line sunset, four rehomes, a guard and three doc issues is larger than any wave-1 lane, and wave 1 lost 47 minutes and zero bytes to a single lane's bootstrap failure. #442 rejoins as lane H, its fence removed with lane A's file ownership. #613's heartbeat half defers behind #615.
+
+**The measurement that made the split clean:** only **2** of the 15 clauses live in `skills/workbench/**`. #565 asserts all 15 sit in the teaching half or in templates instantiated from it; by file they do not. So D1 and D2 divide on file ownership with no shared writer, and D2 merges first so D1's guard is authored against a tree that already has the teaching half gone.
+
+**Two hazards repaired by pre-ruling rather than mid-flight**, both of which cost wave 1 real time: `map/INDEX.md` is Admiral-owned and a lane branch is accepted green except `MapTreeFreshnessTests` (#544 — it blocked three of four lanes in one afternoon, and the ruling was issued, withdrawn, re-issued and then applied unevenly); and the bootstrap floor is a single compound `cd && verify` call placed ahead of both the launch order and the skill load, because a bare `cd` does not persist between Bash calls.
+
+No issue was created at this boundary. Filing stays held to closeout, where 24 staged candidates are paired onto open issues or recorded as episodes.
