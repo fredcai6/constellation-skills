@@ -1,33 +1,57 @@
 # Crash-resume state note — 567-d1
 
-- **step:** `execute` is COMPLETE — `execute.json` driven through `g5-final`, lease released, `verify_iterative_role_artifacts.py commander --work-id 567-d1` ok. The return artifact EXISTS at `.agent-work/epic-567-door/results/lane-d1-RETURN.md`. Remaining spine steps: **reconcile → triage → review → feedback → archive**, plus opening the PR.
-- **slug:** 567-d1 · branch `feat/567-d1-doctrine-sweep-guard` · worktree `/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard`
-- **next command:** advance the parent spine from `reconcile`. Branch is rebased on `origin/main` 5099eea1; verified head 1037ab86. **Lane D2 must merge before this lane.**
-- **old next command:**
+- **step:** `execute` is **COMPLETE**. `execute.json` was driven through `g5-final`, its lease
+  released, and `verify_iterative_role_artifacts.py commander --work-id 567-d1` returns ok. The
+  **result artifact exists**: `.agent-work/epic-567-door/results/lane-d1-RETURN.md` (committed
+  `ef3eddfd`). The active step is **`reconcile`**, `pending`, with a `refresh-request`
+  (`e-reconcile-1`) attached — the engine refused to START it at 48% context, which is the
+  sanctioned handoff point, not a stall.
+- **slug:** 567-d1 · branch `feat/567-d1-doctrine-sweep-guard` · worktree
+  `/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard`
+- **next command:**
   ```sh
   cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard
-  py /home/tommy/.claude/skills/constellation-commander/scripts/recover_crews.py 567-d1
-  py scripts/checklist_engine.py --file .agent-work/567-d1/execute.json current
+  # door is bound to this spine; no session id argument
+  spine_status            # then: spine_start reconcile
   ```
-  Then dispatch `g1-implement` through `run_crew.py`, **with `SPINE_FILE`/`SPINE_SESSION`/`CREW_SCRATCH_DIR` stripped from the launching environment** (`env -u SPINE_FILE -u SPINE_SESSION -u CREW_SCRATCH_DIR ...`): a no-`--spine` crew inherits those variables and its door would otherwise bind **this lane's** spine.
-- **pid:** none — the Commander runs in the foreground; `run_crew.py` blocks on each crew.
-- **expected artifact:** `.agent-work/epic-567-door/results/lane-d1-RETURN.md` (the run is complete only when this exists), plus `tests/test_cli_retirement_guard.py` as the gate deliverable.
+  Remaining steps: **reconcile → triage → review → feedback → archive**, then open the PR.
+- **pid:** none — foreground. No crew is running; `recover_crews.py 567-d1` reports 12 crews, 0 unresolved.
+- **expected artifact:** `.agent-work/epic-567-door/results/lane-d1-RETURN.md` — **already written.**
 
-## Crew state
+## Branch state
 
-`constellation/567-d1/g1/implementer/attempt-1` died at launch with a bare `Execution error`
-(0 bytes of work, no result artifact, PID 2330638 dead). Abandoned and relaunched as attempt-2.
+Rebased on `origin/main` `5099eea1` (lanes F, H, E merged; **D2 not**). Verified head for the suite
+run: **`1037ab86`** — 3 failed, 3371 passed, 6 skipped, 1219 subtests, in a clean detached worktree.
+The three failures are `MapTreeFreshnessTests` (permitted, Admiral-owned, #544) and this lane's own
+guard on lane D2's two un-merged files.
 
-## What a fresh Commander must not re-derive
+## What a fresh Commander must NOT re-derive
 
-Read `.agent-work/567-d1/notes-1.md` (measurements), `MISSION_FRAME.md`, `decision-anchors.md`,
-and `plan-rigor/RESULT-critic.md`. The three things that cost the most to establish:
+Read the RETURN artifact first — it is complete and current. Then `notes-1.md` (measurements plus
+two corrections this lane made to its own earlier claims) and `REPLAN_INPUT.json`.
 
-1. **The regrowth mechanism is a test.** `tests/test_mcp_adoption.py` mandates the text across
-   **nine** assertions, not one. The sweep is an inversion of an existing test.
-2. **The door cannot drive a second checklist** (measured, fresh process): it refuses to rebind
-   while the process holds its own lease. So 3 of the 13 clauses get reworded, not deleted.
-3. **Guard scope = the existing `INSTRUCTION_FILES` walk**, extended to `specs/**/*.toml`.
-   Exception list length **zero**, measured.
+1. **`reconcile` has no packet map to fold into.** `map_orient` returns `DEGRADED-UNPARSEABLE`: no
+   `docs/architecture`, empty `map/ids.jsonl`. The step's own imperative sanctions reconciling the
+   structural record directly, or recording a **reasoned no-op as compliant**. Do **not** regenerate
+   or hand-edit `map/INDEX.md` — Admiral-owned, #544.
+2. **`triage`: 19 candidates are already staged** under `.agent-work/567-d1/triage-candidates/`, each
+   with a disposition line. **File no issues** (`decision:no-issue-filing-mid-run`). One deserves
+   priority in the return to the Admiral: `dispatched-crew-spine-is-not-bound.md`, a live
+   impersonation hazard reproduced six times.
+3. **`feedback`:** episodes go through `scripts/apply_episode_delta.py --store-root episodes` — the
+   only write path — proved with `verify_episode_captured.py`. Order is **write → `git add` → suite
+   → commit**; running the suite between the write and the stage trips
+   `test_canon_episode_store_untouched` with a message that reads like store corruption.
+4. **`archive`:** release the engine lease **last**, after the closing `advance` on archive.
+5. **The PR is not yet open.** `gh` has been returning intermittent 503s all day — gate each retry on
+   whether the world actually changed (`gh pr view`), never on the command's own output.
 
-_Updated: 2026-08-17T18:05:00Z_
+## The one thing this lane cannot do for itself
+
+**Lane D2 must merge before this lane.** Until it does, the guard is red on exactly
+`skills/workbench/SKILL.md` and `skills/workbench/references/checklist-engine.md`. That residual is
+**proven** to be the whole of it: with `skills/workbench/` removed in a scratch copy the guard is
+fully green, 19 passed. `g5-final`'s postcondition already encodes both halves and becomes the
+unfiltered whole-corpus check automatically once D2 lands — no edit required.
+
+_Updated: 2026-08-17T22:35:00Z_

@@ -289,7 +289,8 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Every gate in execute.json closed with integrated crew evidence: e0-context, g1 (implement/review/integrate), g1b (added mid-run by amend), g2, g3, g4, g5-final. Six implementer results and six review results, all attached as engine evidence; two BLOCKs, both correct, both reworked to APPROVE through reopen rather than override. execute.json's own lease is released and the file is terminal. Full suite in a clean detached worktree at 1037ab86: 3 failed, 3371 passed, 6 skipped, 1219 subtests \u2014 MapTreeFreshnessTests (permitted) plus this lane's guard on lane D2's two un-merged files, proven to be the entire residual. The return artifact exists at .agent-work/epic-567-door/results/lane-d1-RETURN.md."
         },
         {
           "id": "c2",
@@ -298,7 +299,8 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id 567-d1"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-3"
         }
       ],
       "constraints": [],
@@ -325,7 +327,7 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -347,6 +349,17 @@
           "type": "command-output",
           "payload": {
             "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_state_note.py 567-d1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id 567-d1",
             "exit": 0,
             "shell": "posix"
           },
@@ -383,7 +396,19 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-reconcile-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "reconcile",
+            "why_ref": "w-5",
+            "note": "Requested at 48% context, having spent it on the work rather than on arrival. execute is COMPLETE and the deliverable exists: .agent-work/epic-567-door/results/lane-d1-RETURN.md, committed at ef3eddfd. Remaining: reconcile, triage, review, feedback, archive, and the PR."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "triage": {
@@ -594,12 +619,12 @@
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard",
     "opened_by": "init_work_area"
   },
-  "refusals": 2,
+  "refusals": 3,
   "engine_session": {
     "session_id": "constellation/567-d1/lane-d1/commander-delegated",
     "status": "active",
     "claimed_at": "2026-08-17T17:20:59.187959+00:00",
-    "last_heartbeat": "2026-08-17T17:59:18.128107+00:00",
+    "last_heartbeat": "2026-08-17T22:22:18.663170+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -633,6 +658,13 @@
       "why": "Plan frozen at commit bd677d7c. The gate plan is guard-FIRST: g1 authors tests/test_cli_retirement_guard.py against the still-dirty tree so its RED is produced by the real corpus (13 clause + 9 token sites), not by a scratch string its own author chose to match; g2 then sweeps and inverts the mandate in the same gate, because doing either alone leaves the suite red, and proves specificity by reintroducing a clause at one of the 3 REWORDED sites; g3 gives specs/*.spine.toml door vocabulary and is covered because g1 extended the walk to specs/**/*.toml; g4 disposes #596/#526 with per-issue evidence files; g5-final is a reasoning gate for the post-rebase whole-corpus run. The guard's scope reuses INSTRUCTION_FILES, exception list length zero, and it matches three patterns, not one spelling, because the clause has three measured surface forms. Three floats to the Admiral, none blocking: the second-checklist finding, the test_mcp_adoption.py ownership gap, and the absence of a durable home for the ruling.",
       "mechanical": false,
       "ts": "2026-08-17T17:54:55.583918+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "Execute is complete and the deliverable exists. #559 is closed by a guard, not a deletion: tests/test_cli_retirement_guard.py walks 216 files / 3098 texts with an exception list of length ZERO, and it is red-proofed at the hardest available place \u2014 a reintroduced clause at interrogator/SKILL.md:28 goes RED and is named while the reworded text one line above at :27, same mechanism and same words, stays green in both directions. The guard separates the two sentences, not the two files.\n\nThree things this run established that the plan did not know. FIRST, the regrowth had a mechanism and it was a test: test_mcp_adoption.py mandated the text across nine assertions with a failure message reading \"the CLI door must stay\". Inverting it was the real work; the deletion never was. SECOND, a skills/-only sweep does not close #559 in this repo \u2014 .agent-work/templates/ is a tracked overlay that doctrine tells agents to PREFER, carrying 16 <engine> occurrences and 18 clause matches across 10 files, read by no walk. The Admiral independently granted it mid-run at 5099eea1. THIRD, the launch order's own acceptance test passes: a freshly instantiated spine hands a Commander no token, no clause and no command in init, plan or archive.\n\nWhat I got wrong, since it is the more useful half. Three of my own checks were defective in the same way each time \u2014 authored from what the output should say rather than run against what it does say: five postconditions opened with `set -o pipefail`, which dash rejects outright, so the cold critic's repair for \"a check that cannot fail\" produced five that cannot pass; two more matched the guard's own census line as a violation; two more required a whole-corpus green that lane D2's un-merged files made unobtainable. And I stated the second-checklist boundary wrong in two handoffs \u2014 a dispatched crew's door is unbound, so it CAN drive its own plan \u2014 which two crews measured and corrected, and which I have fixed in notes-1.md and REPLAN_INPUT.json rather than leaving standing.\n\nRemaining: reconcile, triage, review, feedback, archive, and the PR. Lane D2 must merge before this lane; until it does the guard is red on exactly its two files, proven to be the whole residual by removing skills/workbench/ in a scratch copy and getting 19 passed.",
+      "mechanical": false,
+      "ts": "2026-08-17T22:22:03.891507+00:00"
     }
   ],
   "trip_ledger": [
@@ -646,6 +678,17 @@
       "model": "claude-opus-5",
       "why_ref": "w-4",
       "ts": "2026-08-17T17:59:18.085765+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "reconcile",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.4846,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-17T22:22:09.712297+00:00"
     }
   ]
 }
