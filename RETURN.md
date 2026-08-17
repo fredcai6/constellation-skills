@@ -72,13 +72,13 @@ port) would be one adapter, and one adapter is a hypothetical seam.
 | **Locality** | **wins**; one dispatch fn, one schema entry, one route, no caller changes | mixed by its own admission; fans out into the skills corpus | fans out across `_identity_violation`, the one function that most rewards being left alone |
 | **Seam placement** | loses on the caller it inconveniences; **wins on the boundary** | wins on the tests (no pin moves); **loses on the boundary** | seam is the guard itself — reopening a function whose docstring records six defeats |
 | **Testability** | **wins**; 9 refusals each independently reachable, harness exists | strong; library fn testable with no door | fine, but its central property is a claim about what is on disk at call time |
-| Reach added | any spine-shaped JSON in this door's own checkout | any spine under `<root>/.agent-work/<work_id>` for any nameable `work_id` | **124 spines, 99 unleased, 674 `--from-child` targets** |
+| Reach added *(one predicate — see the note under §3)* | **683**, cross-checkout **0** *(amended down from 4205/3505)* | any spine under `<root>/.agent-work/<work_id>` for any nameable `work_id` | **683**, 51 leased, **674** legal `--from-child` targets |
 | Deletes | 1 constant, 1 documented recovery path, 1 possible duplicate definition | some refusal text | **nothing** |
 | Verdict | **winner, with one correction** | strong runner-up, **self-refuted** | **well-argued negative** |
 
 **C is a measured negative on its own constraint** — which the brief said is a
-complete deliverable. Its case is arithmetic: its only viable root exposes 124
-readable spines, 99 of them unleased and therefore writable since #609, and 674 files
+complete deliverable. Its case is arithmetic: its only viable root exposes 683
+readable spines, 51 of them under an active lease and the rest writable since #609, and 674 files
 carrying a `consolidation` key and thus legal `--from-child` targets. Its two *safe*
 roots either cannot serve an unbound door at all (`SPINE.parent` is derived from a
 bound file) or buy nothing a launcher could not buy by setting `SPINE_FILE` in the
@@ -101,9 +101,17 @@ inference is the fail-open defect the previous lane deliberately removed.
 ### Recommendation — a named hybrid, not a menu
 
 **Candidate A's `spine_bind`, with the session derived from `work_id` rather than
-`origin.work_id`.** A's seam, A's containment root
-(`_primary_checkout_for_lifecycle()`, the same expression `_spine_open` already
-uses), A's nine refusals — and one corrected field.
+`origin.work_id`, and with a containment root narrowed after the critic.** A's seam, A's
+nine refusals, and two corrections — one to the session field, one to the root.
+
+**The root is `<the door's own checkout>/.agent-work/`, derived with
+`git rev-parse --show-toplevel`, plus a refusal for any candidate whose own
+`--show-toplevel` differs from the door's.** It is deliberately NOT
+`_primary_checkout_for_lifecycle()`, which resolves `--git-common-dir` and therefore
+jumps to the primary checkout — with `.worktrees/` nested inside it. That distinction is
+the gate's whole security content: `--git-common-dir` is *correct* for `spine_open`,
+which must create a worktree and so must nest it under the primary checkout, and *wrong*
+for `spine_bind`, which must not reach one. Two questions, two roots, both named.
 
 Plus one borrowing that earned itself: **`session_id_for(work_id)` extracted into
 `spine_lifecycle.py`** and shared with `open_work:357`. A and B proposed this
@@ -111,10 +119,15 @@ Plus one borrowing that earned itself: **`session_id_for(work_id)` extracted int
 a hypothetical seam; two = a real one." I take it on their agreement, not my
 judgement.
 
-Why A over B in one line: both widen reach, but A widens it behind a tool that exists
-only to widen it, with nine named refusals and an honest description, while B widens
-it behind an argument on a tool whose description promises creation, guarded by
-`_rebind_refusal` — which fails open when no lease is held, and releasing is one call.
+Why A over B in one line — **corrected, because my first version overstated it and the
+critic caught that**: both widen reach; **A makes the widening legible, adds `R8` (refuse
+a bind onto a demonstrably-live identity), and ends up with the narrower root; the guard
+is the same guard.** `spine_bind` *is* a rebind and sits behind the same
+`_rebind_refusal`, which fails open on "no lease" exactly as it does for `spine_open` —
+so the sequence I held against B (release, bind another lane's spine, drive it) was
+reachable through A too until the root was narrowed. What separates them now is that A's
+capability is declared rather than smuggled onto a tool that promises creation, and A's
+reach is 683-with-no-cross-checkout against B's any-spine-for-any-nameable-`work_id`.
 
 ### The correction, and why it decided the run
 
@@ -171,14 +184,41 @@ which the census says is currently never but remains the right fail-closed postu
 `spine_open` (mint).
 
 **After:** one spine per process, decided at launch, at mint, **or by one confined
-binding to a spine that already exists inside this door's own checkout, whose session
-identity the spine itself dictates.** The count never rises above one. Only the moment
-of decision moves — exactly what `decision:bind-on-open-over-new-verb` already did once.
+binding to a spine that already exists inside the door's own checkout's work-area tree,
+whose session identity the spine itself dictates.** The count never rises above one. Only
+the moment of decision moves — exactly what `decision:bind-on-open-over-new-verb` already
+did once. As a property in one line: **one checkout's work-area tree per process.**
 
-**What an agent can reach that it could not before, said plainly:** any readable
-spine-shaped JSON object carrying a `work_id`, anywhere inside the primary checkout of
-this door's own repository — **including a sibling worktree's live spine** — may become
-the spine this process drives. Before, an unbound door could reach nothing at all, and
+**What an agent can reach that it could not before, with the number beside it:** any
+readable spine-shaped JSON object carrying a `work_id`, under
+`<the door's own checkout>/.agent-work/`. **683 files — 651 archived records, 32 live; 51
+carry an `engine_session` marked active.**
+
+**What it deliberately does NOT reach, and this is the amendment the critic forced.** My
+first design used `_primary_checkout_for_lifecycle()` (`--git-common-dir`), which lands on
+the primary checkout with `.worktrees/` nested inside: **4205 reachable, 3505 of them in
+other lanes' checkouts, 307 under an active lease.** I had killed candidate C for a
+683-file root and crowned a 4205-file one without printing the number — a boundary
+argument decided on an axis measured for only one side. Narrowed to `--show-toplevel` plus
+a cross-checkout refusal:
+
+| root | reachable | cross-checkout | active lease |
+|---|---|---|---|
+| `--git-common-dir` (my original) | 4205 | 3505 | 307 |
+| `--show-toplevel` + cross-checkout refusal (**shipped**) | **683** | **0** | 51 |
+
+The implementing crew re-measured the same comparison under its own predicate and got
+**6102 vs 1014**. The absolute numbers differ because the predicates differ (it counted
+readable JSON under any `.agent-work/` with a derivable `work_id`; I required an `items`
+list and a `tasks` dict). **The ratio, the direction and the conclusion agree.** Both are
+reported with their predicates rather than picking the flattering one — counts are only
+comparable under one stated predicate, which is a lesson this run learned the hard way.
+
+A further narrowing is available and I did **not** take it unilaterally: 651 of the 683
+are under `archive/` — closed records, never legitimate bind targets — so excluding them
+would cut reach to **32**. Left to the human and the reviewer, because it introduces a
+second notion of "what is bindable" keyed on path rather than structure, and this design
+has already been wrong once by adding reach without measuring it. Before, an unbound door could reach nothing at all, and
 a bound door only what it was launched with or what it minted. **That is a real
 widening on a security boundary,** stated here rather than left for the tests to
 certify, per `decision:isolation-not-fencing`.
@@ -190,10 +230,24 @@ identity that is demonstrably live, closing the "two agents on one lease" failur
 `IDENTITY_TRADE.md` names rather than inheriting it; and `_rebind_refusal` still
 forbids orphaning a lease this process holds.
 
-**What an agent still cannot do:** drive two spines at once; drive a spine in another
-checkout; name its own identity; or point any of the nine pass-through tools anywhere
-— `_identity_violation` is untouched and still an equality check against `SPINE` at
-call time.
+**What an agent still cannot do:** drive two spines at once; **drive a spine in another
+checkout, including a sibling worktree**; reach outside `.agent-work/`; name its own
+identity; or point any of the nine pass-through tools anywhere — `_identity_violation` is
+untouched and still an equality check against `SPINE` at call time.
+
+> The second bullet is true **because of** the narrowed root and the cross-checkout
+> refusal. In my first draft it was flatly **false**, and it sat 18 lines below a sentence
+> that said a sibling worktree's live spine *was* reachable. A linked worktree is another
+> checkout. The critic found the contradiction, and it mattered more than a wording slip:
+> that bullet is the line a human skimming for the security summary actually reads, and
+> the incident grounding this whole wave — lane G's crew and fork writing one spine under
+> one identity — is exactly cross-agent access to one live spine.
+>
+> The implementing crew then found a hole in my *fix*: path-prefix containment against
+> `<root>/.agent-work/` would still admit **a whole separate checkout nested inside that
+> directory**, which `.worktrees/` proves is not hypothetical here. So the cross-checkout
+> refusal is not redundancy — it closes a gap the confinement check structurally cannot
+> see. My handoff asked for the right thing for a weaker reason than the real one.
 
 **Which side of the trade:** the **env-binding** side, unchanged. The composition
 failure `IDENTITY_TRADE.md` records is env-isolation composed with per-call *paths*;
@@ -235,19 +289,84 @@ postconditions with a recovery line, not a traceback — which is the behaviour 
 ruling asks me to preserve. And `git status` proves the copy test did not touch the
 live spine, which is the part of the ruling most easily violated by accident.
 
-*(post-edit re-run pending — the comparison lands here as the gates close)*
+**After the edit** — and note the check the launch order specified is not sufficient on
+its own, which a cold critic caught (its S3): `current` is **read-only and never calls
+`save()`**, so its exit code is identical in the healthy and the defective world. It is
+an import smoke test, not a proof of an atomicity change. Its relative paths also made
+its verdict a function of the harness cwd — run verbatim from the primary checkout it
+raised `FileNotFoundError`. Both fixed, and the missing proof added.
+
+**Proof 1 — read-only `current` on the LIVE spine, edited engine, absolute paths:**
+```
+$ py <WT>/scripts/checklist_engine.py --file <WT>/.agent-work/epic-567-door/cmdr-a/spine.json current
+exit=0
+LEASE active: cmdr-567-a (by constellation-commander-delegated, heartbeat 2026-08-17T06:55:51Z)
+```
+Matches the pre-edit baseline, so the edit did not break the read path.
+
+**Proof 2 — a MUTATING verb against a COPY, never a live spine.** `advance` on the copy
+refused coherently (exit 1, six unmet postconditions named, recovery line — not a
+traceback), the same shape as baseline. But a refusal returns *before* writing, so it
+does not exercise `save()`. So I ran a verb that really writes, and measured the
+discriminating thing rather than the exit code:
+
+```
+$ B=$(stat -c %i spine-copy-after.json)          # inode before: 6193176
+$ py <WT>/scripts/checklist_engine.py --file <SCRATCH>/spine-copy-after.json \
+      heartbeat --session-id cmdr-567-a
+heartbeat cmdr-567-a @ 2026-08-17T07:01:39Z
+exit=0
+$ A=$(stat -c %i spine-copy-after.json)          # inode after:  6193175  -> CHANGED
+```
+
+**The inode changed.** An in-place `write_bytes` keeps the inode; an atomic rename
+replaces it. So the new write path demonstrably engaged, under the edited engine, on a
+real spine document, driven by a real engine verb. The copy still parses and no `.tmp`
+sibling survived.
+
+**Proof 3 — the live spine was untouched throughout.** `git status --short` on
+`.agent-work/epic-567-door/cmdr-a/spine.json` is empty after all three proofs. This is
+the half of the ruling most easily violated by accident, so the empty status line is the
+evidence rather than my assurance.
+
+**And the red-proof, re-run by me rather than taken from the crew.** Reverting `save()`
+to the old bare `write_bytes` in the **worktree** copy only:
+
+```
+5 failed, 6 passed
+FAILED ...::test_save_never_opens_target_for_writing
+FAILED ...::test_target_inode_is_replaced_exactly_once
+FAILED ...::test_save_writes_a_temp_sibling_in_the_same_directory
+FAILED ...::test_no_temp_sibling_after_a_failed_replace
+FAILED ...::test_concurrent_reader_never_observes_a_partial_document
+```
+Restored; `git diff --stat` confirms the restore was exact; 11/11 green again. The 6 that
+pass in both worlds are the line-ending-preservation tests, which *should* — that is the
+correct shape for a red-proof, not a weakness.
 
 ## 6. Fresh-process validation
 
-*(pending — see section 5's post-edit half)*
+Done by **stripping the environment**, not merely spawning a subprocess — because the
+doctrine's specific warning is against a fixture that hand-injects the value it is trying
+to prove the harness delivers:
 
-Method, fixed in advance so it cannot be quietly softened: validation runs in a
-**fresh process with explicit paths**, never an in-session observation after the edit,
-and never a fixture that hand-injects the value it is trying to prove the harness
-delivers. `decision:in-session-observation-is-not-evidence` and
-`docs/agents/ORCHESTRATOR_CONTEXT.md` §Dogfooding both require this independently;
-`CLAUDE_PROJECT_DIR` resolves once at session launch and is inherited unchanged by
-every subagent (#269).
+```
+$ env -i PATH=$PATH HOME=$HOME PYTHONIOENCODING=utf-8 \
+    py <WT>/scripts/checklist_engine.py --file <WT>/.agent-work/.../spine.json current
+exit=0
+
+$ env -i PATH=$PATH HOME=$HOME py -c "…"
+SPINE_* in env: none
+CLAUDE_PROJECT_DIR: (unset)
+```
+
+Both identity variables and `CLAUDE_PROJECT_DIR` are provably **absent**, every path is
+absolute, and the worktree engine still drives the live spine. Nothing was inherited from
+my session, so this is not my session's behaviour reported as the world's.
+
+**What it did NOT validate, stated so the claim is not read as broader than it is:** hook
+behaviour. I touched no hooks, and `CLAUDE_PROJECT_DIR` resolving once at session launch
+(#269) means I could not have validated hooks from inside this session regardless.
 
 ## 7. What was deleted
 

@@ -881,7 +881,40 @@ process. It did **not** validate hook behaviour, because I touched no hooks — 
 validated hooks from inside this session anyway. Saying so explicitly, because "fresh
 process validated" would otherwise imply more coverage than I bought.
 
-### Accepted without argument
+### F15 — the g2 crew improved the design it was handed
+
+Worth recording because it is the argument for handing a crew the *reasoning* rather
+than only the instruction. My amendment told it to confine to
+`<own checkout>/.agent-work/` **and** to refuse a candidate whose own
+`--show-toplevel` differs from the door's. I gave those as two requirements without
+saying why both were needed. The crew worked out the reason and wrote it down:
+
+> "…and additionally refuses any candidate whose OWN `--show-toplevel` differs from
+> this one, which is what makes the isolation claim true rather than aspirational —
+> **lexical containment alone would admit a checkout nested inside the work area.**"
+
+That last clause is a hole I had not seen. Path-prefix containment against
+`<root>/.agent-work/` is satisfied by a *whole separate checkout* someone has placed
+inside that directory, and `.worktrees/` proves the pattern is not hypothetical in this
+repo. So the cross-checkout refusal is not belt-and-braces; it closes a real gap that
+the confinement check cannot see. My handoff asked for the right thing for a weaker
+reason than the real one.
+
+It also named the two-roots distinction cleanly — `_primary_checkout_for_lifecycle`
+(`--git-common-dir`) is *correct* for `spine_open`, which must create a worktree and so
+must nest it under the primary checkout, and *wrong* for `spine_bind`, which must not
+reach one. "Two questions, two roots, both named." That is a better framing than my
+"use `--show-toplevel`, not `--git-common-dir`", which read as a correction rather than
+as a distinction.
+
+**One reconciliation to carry into the return.** The crew measured the same comparison
+under its own predicate and got **6102 vs 1014 candidates** where I got **4205 vs 683**.
+The absolute numbers disagree because the predicates differ (it counted readable JSON
+objects under any `.agent-work/` with a derivable `work_id`; I required an `items` list
+and a `tasks` dict). **The ratio and the direction agree, and the security conclusion is
+identical.** This is precisely the critic's M9 lesson — counts are only comparable under
+one stated predicate — so I report both with their predicates rather than picking the
+flattering one or silently averaging them.
 
 S4 (the new atomicity module is in no command), S5 (`spine_lifecycle.py` is in g2's
 fence and none of its suites run, though it touches `open_work`, which mints every
@@ -889,6 +922,39 @@ spine in the fleet), S10 (`constraint:rail-strings-untouched` asserted in all ni
 gates and checked nowhere, when byte-identity is trivially checkable), M7, M8
 (`session_id_for` written in the present tense for code that does not exist), M9 (52
 and 124 printed as commensurable under different unstated predicates), M10, M12.
+
+### F16 — the structural record this change falsifies, found before reconcile
+
+`global-everyone.md`'s authoring-side rule again: enumerate by command every artifact
+that asserts something about what you changed. For the **door** half the answer is
+`docs/CHECKLIST_ENGINE_DESIGN.md:295-300`:
+
+> "**Identity rides the environment, not a generated file.** The server binds
+> `SPINE_FILE`, `SPINE_ENGINE` and `SPINE_SESSION` from its environment when it
+> launches, and — since issue #603 — again when a successful `spine_open` binds the
+> process to the spine it just minted. **Neither moment is a tool argument: a model
+> still cannot point the door at another spine or another identity mid-conversation**,
+> and `_rebind_refusal` blocks the swap while the process holds an active lease."
+
+The bolded sentence is **half falsified** by this lane, and the split matters:
+
+- *"cannot point the door at another spine"* — **now false, in a confined form.** A model
+  may name a spine, provided it resolves inside the door's own checkout's work-area tree
+  and survives the cross-checkout refusal. There is now a third binding moment.
+- *"or another identity"* — **still true, deliberately.** Identity is derived from the
+  spine's own `work_id` and is never a tool argument; `IDENTITY_TRADE.md` §3 Option B
+  settled that a caller-supplied identity buys nothing.
+- *"`_rebind_refusal` blocks the swap while the process holds an active lease"* — still
+  true, and it governs `spine_bind` too.
+
+This is the reconcile target for the door half, and it is exactly the failure the
+authoring-side rule predicts: a doc that goes on asserting the old property after the
+code stopped having it, in the one place a reader goes to learn what the door guarantees.
+`commander-core.md` sanctions reconciling the structural record directly where the repo
+has no packet map, which this one does not.
+
+Also checked and NOT changed: `docs/CHECKLIST_SCHEMA.md:115` lists `opened_by` as
+"`spine_open` or `init_work_area`". Binding does not open, so that row stays correct.
 
 ### S9 — accepted as a real double standard, and answered honestly
 
