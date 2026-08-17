@@ -657,7 +657,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "workflow feedback recorded (4 episodes)"
         }
       ],
       "postconditions": [
@@ -735,7 +736,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {
         "superseded_by_reopen": "execute"
       },
@@ -855,7 +856,7 @@
     "session_id": "cmdr-567-b-session-2",
     "status": "active",
     "claimed_at": "2026-08-17T06:39:27.004878+00:00",
-    "last_heartbeat": "2026-08-17T07:02:10.578102+00:00",
+    "last_heartbeat": "2026-08-17T07:02:43.386911+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
