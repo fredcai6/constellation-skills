@@ -187,8 +187,13 @@
         }
       },
       "child_checklist": null,
-      "status": "in-progress",
-      "status_detail": {},
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "Wave 1 delivered and closed out (PRs #620 #621 #622 #623, none merged), but execute's c1 (every epic issue dispositioned) cannot be met by the Admiral. Two surfaced-class human rulings block it: (a) the contract delegates merge 'gated on the check exit code', which is unsatisfiable because main has been red for five commits and CI is windows-latest only (baseline 122 failed/3070 passed) -- adopting merge-on-failure-set-delta is a change to the gate itself; (b) lane A's spine_bind design cannot be accepted or rejected without a ruling on whether IDENTITY_TRADE.md section 2's confinement property is amendable, and if it is settled the design is dead as written. Also surfaced: whether lane A's one-clause deletion satisfies the settled/human net-deletion filter, and the scope of the subTest-reads-PASSED finding (169 call sites across 25 files) which undercuts every suite-green claim in the wave.",
+        "authority_needed": "human",
+        "next_action": "Human rules on the four checkpoint decisions; then merge in dependency order (A first -- it owns checklist_engine.py and mcp_spine_server.py and the other three are fenced off both), regenerate map/INDEX.md once on the final merged main, re-verify there in a fresh worktree, then close the member issues on verified-merged and drive closeout.",
+        "prior_status": "in-progress"
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -269,13 +274,20 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "execute",
+      "blocker": "Wave 1 delivered and closed out (PRs #620 #621 #622 #623, none merged), but execute's c1 (every epic issue dispositioned) cannot be met by the Admiral. Two surfaced-class human rulings block it: (a) the contract delegates merge 'gated on the check exit code', which is unsatisfiable because main has been red for five commits and CI is windows-latest only (baseline 122 failed/3070 passed) -- adopting merge-on-failure-set-delta is a change to the gate itself; (b) lane A's spine_bind design cannot be accepted or rejected without a ruling on whether IDENTITY_TRADE.md section 2's confinement property is amendable, and if it is settled the design is dead as written. Also surfaced: whether lane A's one-clause deletion satisfies the settled/human net-deletion filter, and the scope of the subTest-reads-PASSED finding (169 call sites across 25 files) which undercuts every suite-green claim in the wave.",
+      "authority_needed": "human",
+      "next_action": "Human rules on the four checkpoint decisions; then merge in dependency order (A first -- it owns checklist_engine.py and mcp_spine_server.py and the other three are fenced off both), regenerate map/INDEX.md once on the final merged main, re-verify there in a fresh worktree, then close the member issues on verified-merged and drive closeout."
+    }
+  ],
   "refusals": 1,
   "engine_session": {
     "session_id": "a4704163-34f0-4c9f-aca6-8d68c189ab36",
     "status": "active",
     "claimed_at": "2026-08-17T05:03:30.564165+00:00",
-    "last_heartbeat": "2026-08-17T05:16:06.716351+00:00",
+    "last_heartbeat": "2026-08-17T09:23:30.556038+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,
