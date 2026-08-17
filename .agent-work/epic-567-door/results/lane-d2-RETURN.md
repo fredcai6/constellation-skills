@@ -339,7 +339,10 @@ them" caution all pointed straight at the real defect in the mission's original 
 
 ## 11. PR
 
-Opened against `main` from `feat/567-d2-workbench-sunset`.
-
-*(PR number and head SHA to be filled in immediately below, once `gh pr create` returns —
-see the commands run for this in the same turn as this file's commit.)*
+**#629** — https://github.com/fredcai6/constellation-skills/pull/629, opened against `main`
+from `feat/567-d2-workbench-sunset`. Confirmed OPEN via `gh pr view 629`. Head sha at close:
+`05042e320eddba2c28e03962f66a8411b7c7ccf7` (the archive-close commit; `gh pr view 629
+--json headRefOid` matches). `origin/main` moved out from under this run mid-flight (lanes F
+and H merged first, ahead of this lane's expected first-merge sequencing) — checked for
+conflicts with this lane's changed files (`skills/workbench/**`, `docs/agents/CREW_CONTEXT.md`)
+and found none; not rebased or merged locally, per the launch order's server-side-merge note.
