@@ -1,3 +1,29 @@
+This file holds the EXACT target content for the three workbench files and the CREW_CONTEXT.md
+edit, for the implementer to apply byte-for-byte. Not committed as final documentation -- a
+working spec consumed by g1-implement/g1-review.
+
+=== skills/workbench/SKILL.md (full replacement) ===
+---
+name: constellation-workbench
+description: Use when work needs the shared workflow templates, or a pointer to the checklist engine's CLI fallback and MCP door -- the engine's verbs and mechanism are taught by the door's own tool descriptions, not by this skill.
+---
+
+# Constellation Workbench
+
+Retired as a taught procedure (issue #565): the MCP door's own tool descriptions now teach the
+checklist engine's verbs, evidence shape, and mechanism directly, so this skill no longer
+restates them. What remains: the four shared templates every role's checklist instantiates
+from (`templates/`), and the one pointer below, which stays load-bearing because other skills
+and two independent test suites cite it directly.
+
+## Checklist engine
+
+Drive a controller one step at a time — by default via the MCP door's `spine_status`/`spine_lease`/`spine_start`/`spine_advance`/`spine_evidence`/`spine_halt`/`spine_survey_result` tools when this agent owns the process's bound spine (see `references/checklist-engine.md` — MCP door); CLI fallback, always available and the only path for an in-session dispatched crew member driving its own plan or survey: the absolute path to this installed skill's bundled `scripts/checklist_engine.py` (canonical JSON state). Do not run `scripts/checklist_engine.py` relative to the target repo unless that repo vendors the script. See `references/checklist-engine.md`.
+
+Templates: `templates/DEFAULT.template.json`, `templates/WORKFLOW_CLOSEOUT.template.md`, `templates/STATE_NOTE.template.md`, `templates/CONSTELLATION_FEEDBACK.template.md`. References: `references/checklist-engine.md`, `references/status-model.md`.
+=== end SKILL.md ===
+
+=== skills/workbench/references/checklist-engine.md (full replacement) ===
 # Workbench Checklist Engine
 
 Retired as a taught procedure (issue #565): the verb loop, session-lease claim/heartbeat/release
@@ -63,3 +89,68 @@ The reach-up `current`-alone cold start holds for both `gated` and `survey`-driv
 ## Obey refusals
 
 The engine answers illegal moves with an imperative, e.g. `REFUSED: g1: postconditions unmet ['c1']`. Treat that as the next instruction — fix the named gap, do not work around it. The refusal *is* the gate.
+=== end checklist-engine.md ===
+
+=== skills/workbench/references/status-model.md (full replacement) ===
+# Constellation Status Model
+
+Retired as a taught procedure (issue #565) except for the two sections below, which stay
+load-bearing: `Crew Return Status` is pinned verbatim by `tests/test_commander_evidence_convention.py`
+and cited by `skills/commander/templates/IMPLEMENTER_HANDOFF.template.md`; `Review Verdict` is
+the field `skills/reviewer/templates/REVIEW_RESULT.template.md` and
+`skills/implementer/templates/IMPLEMENTER_RESULT.template.md` both point at by name. Gate status
+is directly observable from the engine's own `current` output (`global-everyone.md`, "Engine
+output is the state channel") and needs no separate table; Commander Gate Decision vocabulary
+is uncited internal prose, not an engine-enforced convention.
+
+## Crew Return Status
+
+Use for implementer/reviewer result status:
+
+```text
+complete | partial | blocked | out-of-scope | failed
+```
+
+Rules:
+
+- `partial` requires completed portion, missing portion, and next action.
+- `blocked` requires blocker and needed authority/evidence.
+- `out-of-scope` requires scope concern and return-to-Commander note.
+- `failed` requires failure evidence and recommended recovery.
+
+## Review Verdict
+
+Use for reviewer judgment:
+
+```text
+APPROVE | BLOCK | COMMENT
+```
+
+Rules:
+
+- `APPROVE` means no blockers found against handoff, evidence, scope, and project rules.
+- `BLOCK` requires blockers.
+- `COMMENT` means observations only; gate may still need Commander decision.
+=== end status-model.md ===
+
+=== docs/agents/CREW_CONTEXT.md -- edit ONLY the "Python Invocation" section (lines ~17-38), everything else unchanged ===
+Replace this exact block:
+
+    Measured on this host on 2026-08-10: `py` and `python` both resolve to
+    `/home/tommy/.local/bin/{py,python}`, both report Python 3.12.3, and both have pytest
+    9.1.1. `python3` resolves to `/usr/bin/python3.12`, also Python 3.12.3, but has no pytest
+    installed. None of this is guaranteed to match CI's pin — a local green is evidence,
+    never the gate.
+
+with:
+
+    Measured on this host on 2026-08-17: `py`, `python`, and `python3` all resolve to
+    Python 3.12.3 with pytest 9.1.1 installed (`py` and `python` at
+    `/home/tommy/.local/bin/{py,python}`; `python3` at `/usr/bin/python3.12`). This superseded
+    an earlier 2026-08-10 measurement on this same host that found `python3` without pytest --
+    the interpreter-to-pytest mapping on a given host is not fixed over time, which is exactly
+    why the check-before-you-run instruction above stands regardless of any measurement here.
+    None of this is guaranteed to match CI's pin — a local green is evidence, never the gate.
+
+Do not touch anything else in CREW_CONTEXT.md.
+=== end CREW_CONTEXT.md edit ===

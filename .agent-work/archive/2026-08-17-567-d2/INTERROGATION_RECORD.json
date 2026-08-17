@@ -1,0 +1,51 @@
+{
+  "goal": "Sunset the workbench skill's teaching half (SKILL.md, references/checklist-engine.md, references/status-model.md) since the MCP door's tool schemas now teach the engine mechanism directly; keep the four templates at their current skills/workbench/templates/ paths, unmoved; deregister workbench as an actively-taught procedural skill; plus fix #561 (CREW_CONTEXT.md's Python Invocation section, which the launch order says is measured wrong on this Linux dev host).",
+  "mode": "delegated",
+  "questions": [
+    {
+      "id": "q1",
+      "kind": "fact",
+      "question": "What capability is being added or changed?",
+      "status": "resolved",
+      "resolution": "Delete workbench's teaching half where genuinely redundant with the door's tool schemas; keep all four templates unmoved; deregister workbench from being taught as a procedure; fix #561.",
+      "code_evidence": "LAUNCH_ORDER.md Mission + Pre-Rulings (decision:workbench-stays-a-template-package, decision:establish-the-door-carries-it, decision:three-scripts-must-still-pass)."
+    },
+    {
+      "id": "q2",
+      "kind": "fact",
+      "question": "Does the door's tool schema carry what checklist-engine.md and status-model.md teach, in full?",
+      "status": "resolved",
+      "resolution": "Partial, not full. The 12 MCP door tool schemas carry the verb loop, evidence shape, ordering, session-lease claim/heartbeat/release, rework/reopen cascade, and the survey-vs-gated split. They do NOT carry the door-is-default-while-CLI-survives cross-reference doctrine that two independent, pre-existing test suites (tests/test_mcp_adoption.py Tier2+Tier3, tests/test_install_constellation.py) hard-pin to specific paragraphs/sections in skills/workbench/SKILL.md and references/checklist-engine.md, including a byte-exact sentence. This is a genuine gap, not a silent-deletion candidate.",
+      "code_evidence": "tests/test_mcp_adoption.py:898-1030 (TIER3_PATH, TIER3_SECTION_HEADING='## MCP door', CANONICAL_CLI_SENTENCE, test_lease_section_carries_door_equivalent scoped to '## Session lease'); tests/test_mcp_adoption.py:804-835 (TIER2_SKILL_FILES includes skills/workbench/SKILL.md, test_default_path_paragraph_is_two_sided); tests/test_install_constellation.py:344-352 (asserts skills/workbench/references/checklist-engine.md exists post-install with <skill-dir> token substituted)."
+    },
+    {
+      "id": "q3",
+      "kind": "fact",
+      "question": "Is deregistering workbench while keeping templates in place a state install_constellation.py already supports?",
+      "status": "resolved",
+      "resolution": "Not supported today. Every non-underscore-prefixed directory under skills/ must have a parseable SKILL.md (name+description frontmatter) or the whole installer raises InstallError. The human's ruling already rejects renaming/moving the directory. A workbench directory with no SKILL.md is not installable without new installer code.",
+      "code_evidence": "scripts/install_constellation.py:312-339 (discover_skills()), specifically :317-324 (SKILL.md existence requirement, InstallError on missing) and :320 (underscore-prefix skip, _shared only)."
+    },
+    {
+      "id": "q4",
+      "kind": "decision",
+      "question": "How should workbench be deregistered, given the installer constraint found at q3?",
+      "status": "resolved",
+      "resolution": "Keep SKILL.md, checklist-engine.md, status-model.md present but shrink each to the minimum content that is either genuinely load-bearing (per q2/q3) or structurally required. Delete everything else. No new installer mechanism. Float the alternative (a first-class 'retired skill' installer state) to the Admiral as a cleaner long-term fix, not built here.",
+      "human_answer": "LAUNCH_ORDER.md Inherited Latitude table: 'How workbench is deregistered — yours' and 'Replacement wording where a reference pointed into the teaching half — yours'; 'New installer mechanism — float' (declined here in favor of the no-new-mechanism path). The delegated counterpart (the Admiral, via the ratified launch order) pre-authorizes the Commander to make and record this call within that explicit grant."
+    },
+    {
+      "id": "q5",
+      "kind": "fact",
+      "question": "Is CREW_CONTEXT.md's Python Invocation section (#561) actually wrong on this host, and how should it be corrected?",
+      "status": "resolved",
+      "resolution": "Confirmed wrong as of 2026-08-17: py, python, and python3 all resolve to Python 3.12.3 with pytest 9.1.1 installed. CREW_CONTEXT.md's 2026-08-10 claim that python3 has no pytest no longer holds. Fix: update the measured claim and refresh the date/host note; keep the check-before-you-run instruction (a future divergence is still possible).",
+      "code_evidence": "docs/agents/CREW_CONTEXT.md:33-37 (the stale 2026-08-10 claim) vs. measured `which py python python3` + `X -m pytest --version` on this host, 2026-08-17, all three succeeding with pytest 9.1.1."
+    }
+  ],
+  "signoff": {
+    "by": "Admiral (delegated, via ratified LAUNCH_ORDER cmdr-567-d2)",
+    "statement": "The launch order's Pre-Rulings and Inherited Latitude sections pre-settle the decision questions this interrogation raises (workbench-stays-a-template-package, establish-the-door-carries-it, three-scripts-must-still-pass, and the explicit 'yours' grants for deregistration mechanism and replacement wording). No question here falls outside what the order already rules or explicitly delegates to the Commander's own judgment; none required an up-front float. Per Modes: delegated runs cite the frozen order and proceed rather than interrogating a live human."
+  },
+  "consolidated": true
+}

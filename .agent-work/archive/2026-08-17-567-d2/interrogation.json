@@ -1,0 +1,175 @@
+{
+  "work_id": "567-d2",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "i0-context",
+    "q1",
+    "q2",
+    "q3",
+    "q4",
+    "q5",
+    "zc-consolidate"
+  ],
+  "tasks": {
+    "i0-context": {
+      "id": "i0-context",
+      "title": "Load baseline context",
+      "imperative": "Load LAUNCH_ORDER.md, ORCHESTRATOR_CONTEXT.md, GLOSSARY.md, CREW_CONTEXT.md, map orientation receipt. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q1": {
+      "id": "q1",
+      "title": "What capability is being added or changed?",
+      "kind": "fact",
+      "imperative": "Frame the mission in behavior terms: sunset the teaching half of skills/workbench (SKILL.md, references/checklist-engine.md, references/status-model.md) since the MCP door's tool schemas now teach the engine mechanism directly; keep the four templates at their current path; deregister workbench as an actively-taught skill without moving templates or requiring new installer mechanism where avoidable. Plus fix #561 (CREW_CONTEXT.md's Python Invocation section, measured wrong on this host).",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Capability confirmed against LAUNCH_ORDER Mission + Pre-Rulings: delete workbench's teaching half where genuinely redundant with the door, keep all 4 templates at skills/workbench/templates/ unmoved, deregister workbench from being taught as a procedure, and fix #561.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q2": {
+      "id": "q2",
+      "title": "Does the door's tool schema carry what checklist-engine.md and status-model.md teach, in full?",
+      "kind": "fact",
+      "imperative": "Resolve by reading both docs and the 12 MCP door tool schemas (spine_status/spine_lease/spine_start/spine_advance/spine_evidence/spine_halt/spine_survey_result/spine_capture/spine_amend/spine_bind/spine_close/spine_open). Compare content section by section.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PARTIAL, not full: door tool schemas carry verb loop, evidence shape (attest/attach/waive incl. override_policy), ordering, session-lease claim/heartbeat/release incl. force+reason, rework/reopen cascade, survey-vs-gated split (implied by separate tools), bubble-up (flag-candidate/block). NOT carried: (1) tests/test_mcp_adoption.py Tier2/Tier3 hard-pin two files -- skills/workbench/SKILL.md's 'Checklist engine' paragraph and checklist-engine.md's '## MCP door' + '## Session lease' sections -- as the sole written authority that the door is the DEFAULT while the CLI (checklist_engine.py) remains available, incl. a byte-exact sentence 'Nothing here removes or discourages the CLI.' and the dispatched-subagent-uses-CLI-for-its-own-plan rule (MCP scope). (2) tests/test_install_constellation.py:344-352 asserts checklist-engine.md exists post-install with its <skill-dir> token substituted for the real checklist_engine.py path. Deleting these sections/files outright breaks 2 independent, pre-existing test suites that assert this exact content is the corpus's sole documented authority for door-vs-CLI coexistence -- this is a genuine gap, not carried by tool schemas, and not safe to silently delete.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q3": {
+      "id": "q3",
+      "title": "Is deregistering workbench while keeping templates in place a state install_constellation.py already supports?",
+      "kind": "fact",
+      "imperative": "Read scripts/install_constellation.py's discover_skills() and SKILL_REFERENCE_BUNDLES/SKILL_SCRIPT_BUNDLES/HOOK_OWNER_SKILL. Determine whether a skills/workbench/ directory with a template-only body but no teaching content is installable without new installer code.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "NOT supported today. install_constellation.py:317-324 discover_skills() requires EVERY non-underscore-prefixed dir under skills/ to have a parseable SKILL.md with name+description frontmatter, or it raises InstallError for the WHOLE installer (not scoped to workbench). skills/_shared/ is the only skip (underscore prefix), and 'workbench-stays-a-template-package' + the Admiral's ruling explicitly reject renaming/moving the directory (would churn every skills/workbench/templates/X path reference, incl. the Admiral spine's own execute precondition). A zero-content or missing SKILL.md at skills/workbench/ is therefore not installable without new installer code (teaching a directory-specific exemption from the SKILL.md requirement). A minimal-but-present SKILL.md is the only supported path today.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q4": {
+      "id": "q4",
+      "title": "How should workbench be deregistered, given the installer constraint found at q3?",
+      "kind": "decision",
+      "imperative": "This is 'How workbench is deregistered -- yours' per Inherited Latitude. Decide and record the chosen mechanism, citing the launch order's grant of latitude.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Decision: keep SKILL.md, checklist-engine.md, status-model.md present (satisfies discover_skills()) but shrink each to the minimum content that is either (a) genuinely load-bearing per q3/q2's measured findings, or (b) structurally required frontmatter. Delete everything else. SKILL.md becomes a short retired/template-only notice plus the one Tier2-pinned 'Checklist engine' default-path paragraph. checklist-engine.md keeps only its opening CLI-invocation sentence, '## MCP door', and '## Session lease' sections; deletes TOC + 9 other sections the door's schemas or self-describing gate text already carry. status-model.md keeps only 'Crew Return Status' (cited by tests/test_commander_evidence_convention.py and skills/commander/templates/IMPLEMENTER_HANDOFF.template.md:106); deletes Gate Status/Review Verdict/Commander Gate Decision as door-observable or non-mechanism prose. No new installer mechanism needed. Floating the alternative (a first-class 'retired skill' installer state) to the Admiral as a cleaner long-term fix, not built here.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q5": {
+      "id": "q5",
+      "title": "Is CREW_CONTEXT.md's Python Invocation section (#561) actually wrong on this host, and how should it be corrected?",
+      "kind": "fact",
+      "imperative": "Measure which python/py/python3 have pytest installed on this Linux host and compare against the doc's 2026-08-10 claim.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Confirmed wrong on this host as of 2026-08-17. Measured: py, python, and python3 ALL resolve to Python 3.12.3 with pytest 9.1.1 installed ('which py python python3' -> /home/tommy/.local/bin/py, /home/tommy/.local/bin/python, /usr/bin/python3; all three 'X -m pytest --version' succeed). CREW_CONTEXT.md's 2026-08-10 claim that python3 resolves to /usr/bin/python3.12 'but has no pytest installed' no longer holds -- pytest is now installed for python3 too. Fix: update the measured claim to reflect all three now having pytest, re-affirm the check-before-you-run instruction stands regardless (a future host or python3 reinstall could diverge again), and refresh the measurement date/host note.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "zc-consolidate": {
+      "id": "zc-consolidate",
+      "title": "Consolidate behind the finish gate",
+      "imperative": "Write the interrogation record to .agent-work/567-d2/INTERROGATION_RECORD.json and capture the delegated sign-off citing the launch order. Run verify_interrogation.py -- it MUST exit 0. Record pass only after exit 0, then consolidate.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_interrogation.py exits 0",
+          "check": {
+            "kind": "command",
+            "command": "py /home/tommy/.claude/skills/constellation-interrogator/scripts/verify_interrogation.py .agent-work/567-d2/INTERROGATION_RECORD.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-zc-consolidate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "verify_interrogation.py exits 0: interrogation ok, mode=delegated, questions=5, consolidated=True",
+      "evidence": [
+        {
+          "id": "e-zc-consolidate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-interrogator/scripts/verify_interrogation.py .agent-work/567-d2/INTERROGATION_RECORD.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "done",
+    "findings": [],
+    "summary": "5 questions resolved (3 fact, 1 decision, 1 fact); delegated sign-off cites LAUNCH_ORDER. Key finding: checklist-engine.md/status-model.md/SKILL.md cannot be deleted outright -- partial retention required, evidenced by two pre-existing test suites."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "interrogator-567-d2",
+    "status": "released",
+    "claimed_at": "2026-08-17T17:36:34.127840+00:00",
+    "last_heartbeat": "2026-08-17T17:37:47.305845+00:00",
+    "claimed_by": "interrogator",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T17:37:47.346300+00:00"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4-quality",
+  "mechanical": {
+    "run": "567-d2",
+    "project": "constellation-skills",
+    "role": "constellation/567-d2/g1-review/reviewer/attempt-2",
+    "refusals": 2,
+    "spine-step": "r4-quality",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-d2-r4-quality@2a7656f8c904afd077768416881a22d40924a18c",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-d2",
+    "generated_at": "2026-08-17T18:09:51Z"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "work_id": "567-d2",
+  "diff_ref": "git diff -- docs/agents/CREW_CONTEXT.md skills/workbench/SKILL.md skills/workbench/references/checklist-engine.md skills/workbench/references/status-model.md (re-review of attempt-1's Session-lease fix, attempt 2)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "No code in this diff (markdown-only).", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "No code in this diff.", "override": null},
+    {"smell": "duplicated-code", "verdict": "overridden", "finding": "SKILL.md's 'Checklist engine' pointer paragraph and checklist-engine.md's opening paragraph both describe the MCP-door-vs-CLI-fallback choice.", "override": {"repo_standard": "This repo's documented index/detail convention: SKILL.md is a thin entry pointer, references/ holds the elaborated version (per CREW_CONTEXT.md and the retirement preamble itself, which states SKILL.md keeps only 'the one pointer below, which stays load-bearing because other skills and two independent test suites cite it directly').", "reason": "The overlap is the intended index/detail split, not accidental copy-paste drift; each file's copy is scoped to its own audience (SKILL.md = pointer, checklist-engine.md = elaborated reference)."}},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "No code in this diff.", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "No code in this diff.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "No code in this diff.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "No code in this diff.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "This attempt's fix touched exactly one section (Session lease) in exactly one file (checklist-engine.md), plus the matching correction to g1-target-content.md's spec block for that same section -- a tight, single-concern fix-now triage, not a scattered edit.", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "No code in this diff.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "No code in this diff.", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "No new abstractions introduced; the fix restores previously-existing, load-bearing text verbatim rather than adding anything speculative.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The retirement preambles explain *why* content was cut (issue #565) rather than papering over a code smell -- these are docs, not code comments, and the practice is this repo's own documented retirement convention.", "override": null}
+  ],
+  "rail_exception": null
+}
