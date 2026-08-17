@@ -5,17 +5,17 @@
     "run": "epic-567-door/cmdr-g",
     "project": "constellation-skills",
     "role": "commander",
-    "refusals": 5,
+    "refusals": 7,
     "spine-step": "review",
     "rework-count": 0,
     "failed-commands": 0,
-    "reopens": 0,
+    "reopens": 1,
     "context-manifest-ref": "ctx-epic-567-door/cmdr-g-review@3908cbfdc01924a6c2e7d09bb9f300e8bacdacf4",
     "artifact-ref": []
   },
   "refused": [],
   "run": {
     "work_id": "epic-567-door/cmdr-g",
-    "generated_at": "2026-08-17T07:15:58Z"
+    "generated_at": "2026-08-17T07:52:36Z"
   }
 }

@@ -81,10 +81,29 @@ def _all_qualitative_spec(work_id, *, gate_id="m1"):
 
 
 def _init_repo(path: Path) -> None:
+    """A throwaway git repo, self-sufficient for every commit it will ever be
+    asked to make -- not just the one this function makes itself.
+
+    `user.name`/`user.email` are set REPO-LOCAL (`git config`, persisted in
+    `.git/config`), not just passed via `-c` on this function's own init
+    commit: a fixture that only configures identity for its OWN commit still
+    fails the moment code under test (e.g. `close_work`'s internal `git
+    commit`) makes a SECOND commit with no `-c` override of its own, because
+    nothing here follows it. This surfaced on Windows CI, where the runner
+    carries no ambient git identity at all (`Author identity unknown`) --
+    Linux runs never caught it because SOME ambient identity happened to be
+    configured there. A test that only passes where someone happened to
+    configure git is a test that cannot fail for the right reason; this repo
+    is self-sufficient regardless of the runner's own git config."""
     subprocess.run(["git", "init", "-q", str(path)], check=True, capture_output=True)
     subprocess.run(
-        ["git", "-C", str(path), "-c", "user.email=t@t", "-c", "user.name=t",
-         "commit", "-q", "--allow-empty", "-m", "init"],
+        ["git", "-C", str(path), "config", "user.email", "t@t"], check=True, capture_output=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(path), "config", "user.name", "t"], check=True, capture_output=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(path), "commit", "-q", "--allow-empty", "-m", "init"],
         check=True, capture_output=True,
     )
 
@@ -1276,13 +1295,22 @@ def _raw_engine_cli(argv: list[str]) -> str:
     """The same argv run through the REAL engine CLI in a SEPARATE PROCESS, and
     its combined output. The independent path the byte-identity assertions below
     compare against, so "verbatim" is measured against the engine itself rather
-    than against another call into the same in-process helper."""
+    than against another call into the same in-process helper.
+
+    Newline-normalized (\\r\\n -> \\n) before returning: on Windows, output
+    piped through a real subprocess picks up CRLF at the OS/CRT layer that the
+    in-process `_engine_call` capture (an `io.StringIO`, never touching a
+    platform pipe) never introduces. The assertion this feeds is a genuine
+    "same text" check, not a "same line-ending convention" check -- comparing
+    raw strings made it fail on Windows CI for a reason unrelated to what it
+    exists to test (issue #495's family: a newline-sensitive comparison that
+    only a non-Linux runner exposes)."""
     proc = subprocess.run(
         [sys.executable, str(ROOT / "scripts" / "checklist_engine.py"), *argv],
         capture_output=True, text=True,
         env={**os.environ, "PYTHONIOENCODING": "utf-8"},
     )
-    return (proc.stdout + proc.stderr).strip()
+    return (proc.stdout + proc.stderr).strip().replace("\r\n", "\n")
 
 
 # --------------------------------------------------------------------------- #

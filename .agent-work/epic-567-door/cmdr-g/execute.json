@@ -657,6 +657,11 @@
       "id": "tc4",
       "from": "g3-integrate",
       "statement": "finish_work is not wired as an actual spine_done MCP tool (mcp_spine_server.py is fenced this wave, owned by lane A). scripts/spine_done_cli.py is the reachable-today substitute. A follow-on lane should add a third lifecycle-tool dispatch to mcp_spine_server.py mirroring the existing _spine_open/_spine_close pattern once lane A's rewrite lands."
+    },
+    {
+      "id": "tc5",
+      "from": "g3-integrate",
+      "statement": "A byte-identical refusal-text assertion in tests/test_spine_lifecycle.py compared a subprocess-captured string against an in-process-captured one without newline normalization, failing only on Windows CI (CRLF vs LF) -- issue #495's family (repo JSON writers/comparisons that pass encoding discipline but not newline discipline). Fixed in this lane's own test helper (_raw_engine_cli normalizes CRLF->LF); worth checking whether the same class of gap exists elsewhere in the repo's byte-identity assertions."
     }
   ],
   "blockers": [],

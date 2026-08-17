@@ -5,17 +5,17 @@
     "run": "epic-567-door/cmdr-g",
     "project": "constellation-skills",
     "role": "commander",
-    "refusals": 5,
+    "refusals": 6,
     "spine-step": "reconcile",
     "rework-count": 0,
     "failed-commands": 0,
-    "reopens": 0,
+    "reopens": 1,
     "context-manifest-ref": "ctx-epic-567-door/cmdr-g-reconcile@69915efb4663b5bfa66da1dcfe7b248a0796aeba",
     "artifact-ref": []
   },
   "refused": [],
   "run": {
     "work_id": "epic-567-door/cmdr-g",
-    "generated_at": "2026-08-17T07:13:50Z"
+    "generated_at": "2026-08-17T07:51:37Z"
   }
 }
