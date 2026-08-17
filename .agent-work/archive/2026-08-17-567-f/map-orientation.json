@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "work_id": "567-f",
+  "root": "/home/tommy/projects/constellation-skills/.worktrees/567-f-spec-through-spine",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "README.md",
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb",
+      "source": "known-fallback"
+    },
+    {
+      "path": "skills/commander/references/crew-dispatch.md",
+      "content_hash": "f159708ff6c6e1ad41a2988c55aabf67fd2c7ce4ed3a04ead3eb443ca42e838c",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "docs/architecture map is absent in this skill-source repo; map/INDEX.md is an unfilled template and map/ids.jsonl is empty (map-index is Admiral-owned per LAUNCH_ORDER decision:map-index-is-admiral-owned, not this lane's to regenerate)"
+  ],
+  "escalation": "none needed -- README.md plus the in-skill crew-dispatch reference cover this lane's scope (scripts/run_crew.py spine-only dispatch); no architecture map exists for this repo to escalate about",
+  "emitted_at": "2026-08-17T17:22:17.767999+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

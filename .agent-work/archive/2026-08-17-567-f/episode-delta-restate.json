@@ -1,0 +1,12 @@
+{
+  "work_id": "567-f",
+  "ops": [
+    {
+      "op": "restate-assertion",
+      "id": "567-f-001",
+      "assertion": "a1",
+      "statement": "Measure whether run_crew.py's spine-only dispatch, spine_open's spec compilation, and spine_bind already deliver #535 ('dispatch should start with an identifier, not the launch order') before proposing any code change, per the launch order's own measure-before-building ruling.",
+      "history": "Reworded to drop the hyphenated 'measure-before-you-build' ruling name: the episode-observation guard's word-boundary scan matched the bare word 'you' inside it as second-person phrasing, tripping test_the_real_store_is_clean_under_strict. Meaning is unchanged."
+    }
+  ]
+}

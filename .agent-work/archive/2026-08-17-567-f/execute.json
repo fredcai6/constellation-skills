@@ -1,0 +1,122 @@
+{
+  "work_id": "567-f",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-consolidate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md. Confirm the frozen plan's intent and scope (the mission frame at .agent-work/567-f/MISSION_FRAME.md and the measurement at .agent-work/567-f/notes-1.md), then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary loaded; plan intent and scope confirmed (measurement result: evidenced honest null, no run_crew.py change warranted)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Global doctrine + project deltas already loaded at the parent spine's context gate; plan intent/scope reconfirmed: measurement result is an evidenced honest null, no scripts/run_crew.py change warranted."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-consolidate": {
+      "id": "g1-consolidate",
+      "title": "Consolidate the measurement into the honest-null deliverable (reasoning gate, no crew)",
+      "imperative": "REASONING GATE, no gN-implement/gN-review crew tasks -- crew-waiver reason: the deliverable is the measurement writeup itself (a diagnosis, not code or an independently-verifiable change to scripts/run_crew.py), and this Commander already holds the full context that produced it (no fresh reasoning a dispatched crew would add). In your own context: confirm the measurement at .agent-work/567-f/notes-1.md is complete and evidenced (commands + output, not assertion), confirm no scripts/run_crew.py diff is warranted, and draft the two floated-decision write-ups (ExternalBackend/harness-constraint gap; Commander-level spec-compilation gap) that will carry into review/triage and the lane-f-RETURN.md. Attest c1 when the writeup is complete and self-contained.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded (e0-context complete)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "measurement writeup complete at .agent-work/567-f/notes-1.md, evidenced with commands+output; verdict (evidenced honest null) and the two floated gaps stated; no scripts/run_crew.py diff",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Measurement writeup complete at .agent-work/567-f/notes-1.md: evidenced with commands+output (pytest -k spine_only... -> 14 passed; source citations with line numbers for CrewSpec.__post_init__, build_crew_argv, ExternalBackend.dispatch, generate_spine.py/specs/*.spine.toml). Verdict: evidenced honest null -- no scripts/run_crew.py diff. Two floated gaps stated: (1) ExternalBackend spine-only refusal, blocked by the Agent tool's lack of an env-injection parameter; (2) Commander-level spec-through-spine has no compiled representation (spine_open covers only implementer/reviewer gate plans)."
+        }
+      ],
+      "constraints": [
+        "do not edit scripts/run_crew.py absent a genuine measured gap inside it",
+        "do not reopen IDENTITY_TRADE.md \u00a73",
+        "do not edit skills/** (except skills/workbench/**), specs/**, or scripts/mcp_spine_server.py -- fenced to other lanes this wave"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/run_crew.py -- CrewSpec.__post_init__ (identity/handoff/spine refusal logic), build_crew_argv (spine-only prompt branch), ExternalBackend.dispatch (spine-only refusal)"
+        ],
+        "capability": [
+          "crew dispatch: spine-only, handoff-optional launch (already shipped, PR #623)"
+        ],
+        "constraint": [
+          "decision:identity-trade-3-stays-shut -- session identity derived from spine work_id, never caller-supplied"
+        ],
+        "decision": [
+          "decision:honest-null-is-likely-and-fine -- a measured negative on #535's stated question is a complete, correct outcome. @grade: settled/human \u00b7 leans g1-consolidate"
+        ],
+        "evidence": [
+          "python -m pytest tests/test_crew_launcher.py -k \"spine_only or refuses_spine or spine_status\" -q -> 14 passed"
+        ],
+        "confidence_flags": [
+          "no docs/architecture map exists for this repo; oriented via README.md + skills/commander/references/crew-dispatch.md substitutes per .agent-work/567-f/map-orientation.json"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "commander-567-f-execute",
+    "status": "released",
+    "claimed_at": "2026-08-17T17:30:22.339679+00:00",
+    "last_heartbeat": "2026-08-17T17:30:49.384836+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T17:30:52.303661+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-17T17:30:36.364518+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-consolidate",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-17T17:30:49.384828+00:00"
+    }
+  ]
+}

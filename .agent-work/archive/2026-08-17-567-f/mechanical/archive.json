@@ -1,0 +1,26 @@
+{
+  "contract": 1,
+  "step": "archive",
+  "mechanical": {
+    "run": "567-f",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 17,
+    "spine-step": "archive",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-f-archive@140eb2fcb799ce62b7928d3e3ee4bea2cc80d436",
+    "artifact-ref": [
+      ".agent-work/567-f/episode-delta.json",
+      "episodes/active/567-f-001.md",
+      "episodes/active/567-f-002.md",
+      "episodes/active/567-f-003.md"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-f",
+    "generated_at": "2026-08-17T17:35:45Z"
+  }
+}

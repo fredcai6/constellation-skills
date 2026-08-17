@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "plan",
+  "files": [],
+  "repo_rev": {
+    "commit": "f05a3d78e4e57c0ed6730e2feef9e903fba635c4"
+  },
+  "run": {
+    "work_id": "567-f",
+    "generated_at": "2026-08-17T17:26:47Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/567-f-spec-through-spine",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-f-spec-through-spine",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-f-spec-through-spine"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-f-spec-through-spine"
+    }
+  }
+}

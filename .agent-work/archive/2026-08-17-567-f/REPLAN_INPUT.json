@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "epic-567-door: the door is the interface",
+      "spec_path": ".agent-work/567-f/LAUNCH_ORDER.md",
+      "intent_and_why": "Reveal the spec through the spine, not the launch order (#535): dispatch should start with 'start the spine with this identifier.'"
+    },
+    "definition_of_done": [
+      "A dispatched crew drives its own spine through the door end to end.",
+      "#535's mechanism is measured before it is built; a genuine gap in scripts/run_crew.py is closed, or an evidenced honest null is reported."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Evidenced measurement (commands + output), no assertion-only claims",
+      "sufficient_evidence": "Source citations with line numbers, live proof from this session's own dispatch, and existing test coverage",
+      "appetite": "One focused session, weighted toward measurement"
+    },
+    "hard_constraints": [
+      "Do not reopen IDENTITY_TRADE.md §3",
+      "Confine any code change to scripts/run_crew.py",
+      "Do not edit skills/** (except skills/workbench/**), specs/**, or scripts/mcp_spine_server.py this wave"
+    ],
+    "fixed_decisions": [
+      "Session identity is derived from the spine's own work_id, never caller-supplied"
+    ],
+    "current_wave": {
+      "objective": "Measure #535 against run_crew.py's spine-only dispatch, spine_open, and spine_bind; build only what the measurement shows missing",
+      "exit_criteria": ["Measurement is evidenced and complete", "Verdict (delivered or honest null) is stated with evidence"],
+      "issues": [
+        {
+          "id": "535",
+          "title": "reveal the spec through the spine, not the launch order",
+          "desired_outcome": "Dispatch starts with an identifier bound to a spine, not pasted prose, wherever the mechanism can deliver it.",
+          "useful_now": "Settles whether #535 needs new code or is already delivered by wave-1 mechanism (PR #623).",
+          "appetite": "One lane, one session",
+          "acceptance_or_falsification_evidence": "notes-1.md's command+output evidence: CLI-backend spine-only dispatch is shipped and this session is live proof of it.",
+          "implementation_latitude": "scripts/run_crew.py only",
+          "hard_constraints_no_gos": ["IDENTITY_TRADE.md §3"],
+          "local_unknowns": [
+            "How much of #535 wave 1 already delivered",
+            "Whether an identifier-only dispatch survives the ExternalBackend path",
+            "Whether specs/*.spine.toml covering only implementer and reviewer is enough surface"
+          ],
+          "anchors": ["scripts/run_crew.py"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [],
+    "uncertainty_register": [],
+    "parked_possibilities": []
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "535",
+      "outcome": "Measured run_crew.py's CLI-backend spine-only dispatch (handoff-optional, identity derived from work_id): already shipped in PR #623 and demonstrated live by this Commander session's own dispatch.",
+      "evidence": ".agent-work/567-f/notes-1.md"
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "run_crew.py's CLI-backend can dispatch a crew with only a bound spine, no --handoff document, deriving session identity from work_id",
+      "expected": "handoff-optional dispatch works and identity is never caller-supplied",
+      "observed": "CrewSpec.__post_init__ requires only one of --handoff/--spine; build_crew_argv's spine-only branch emits 'call spine_status, your spine is already bound'; _crew_door_env derives SPINE_SESSION via assignment_session_name(work_id, gate, role); this session was itself launched this way (spine_lease claim succeeded with no session-id argument)",
+      "source": "scripts/run_crew.py:813-820,1010-1048,1369-1383; python -m pytest tests/test_crew_launcher.py -k \"spine_only or refuses_spine or spine_status\" -q -> 14 passed"
+    },
+    {
+      "claim": "ExternalBackend (the Agent-tool-harness crew dispatch path) can also go spine-only",
+      "expected": "n/a -- this claim was tested and found false",
+      "observed": "ExternalBackend.dispatch raises CrewLaunchError whenever spec.handoff is None, even with spec.spine given; deliberate, tested (test_external_backend_refuses_spine_only_with_no_handoff), and blocked by a harness constraint (the Agent tool takes no env-injection parameter), not a run_crew.py defect",
+      "source": "scripts/run_crew.py:1685-1702"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "ExternalBackend (Commander-to-crew Agent-tool dispatch) cannot go spine-only; a handoff document remains mandatory on that path",
+      "classification": "evidence_only",
+      "affects": "#535's broader ask (any dispatch should start with an identifier) is only partially delivered -- true for the CLI-backend/Admiral-to-Commander path, not for the Agent-tool/Commander-to-crew path",
+      "evidence": ".agent-work/567-f/notes-1.md section 2; scripts/run_crew.py:1673-1702",
+      "reason": "Real gap, but the blocker is a harness constraint (no env-injection parameter on the Agent tool primitive) that no change inside scripts/run_crew.py can close -- architecture-level, floated to the Admiral in lane-f-RETURN.md rather than built this run. No issue filed per decision:no-issue-filing-mid-run; staged as a triage candidate instead."
+    },
+    {
+      "id": "D1",
+      "signal": "Commander-level mission content (this launch order's own Mission/Pre-Rulings/Latitude/File-Ownership) has no spine-carried representation; spine_open's spec compilation covers only implementer/reviewer gate plans (specs/implementer.spine.toml, specs/reviewer.spine.toml)",
+      "classification": "later_only",
+      "affects": "A fuller reading of #535 (the launch order's own content riding the spine, not just session identity/binding)",
+      "evidence": ".agent-work/567-f/notes-1.md section 3; scripts/generate_spine.py; specs/*.spine.toml",
+      "reason": "Closing this needs a Commander-level spec schema and spine template in skills/** paths fenced to lane D1 this wave -- out of this lane's file ownership and latitude. Staged as a triage candidate, not built."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": ["scripts/run_crew.py"],
+    "map_status": "No docs/architecture map exists for this repo (skill-source repo); oriented via README.md and skills/commander/references/crew-dispatch.md substitutes (.agent-work/567-f/map-orientation.json)"
+  }
+}
