@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-repair",
+  "mechanical": {
+    "run": "567-d1-g3-implementer-attempt-2",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m1-repair",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-d1-g3-implementer-attempt-2-m1-repair@3feb569bcc465b4244c59ae2045869295084a8ac",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-d1-g3-implementer-attempt-2",
+    "generated_at": "2026-08-17T21:13:43Z"
+  }
+}

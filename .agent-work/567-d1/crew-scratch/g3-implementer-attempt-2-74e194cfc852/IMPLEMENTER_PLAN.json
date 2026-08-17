@@ -1,0 +1,329 @@
+{
+  "work_id": "567-d1-g3-implementer-attempt-2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-repair",
+    "m2-verify-claims",
+    "m3-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the rework handoff .agent-work/567-d1/crew-handoffs/g3-implementer-rework-handoff.md, the original g3 handoff, the predecessor IMPLEMENTER_RESULT and the reviewer BLOCK result. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + rework handoff + predecessor result + reviewer BLOCK loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded: global-crew.md + global-everyone.md (implementer skill), docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the rework handoff, the predecessor IMPLEMENTER_RESULT and the reviewer BLOCK result. Handoff complete: task (one-clause fix, two files), intent, allowed scope (specs/** only), exclusions (tests/, skills/, scripts/, episodes/, docs/, map/INDEX.md), required evidence (before/after quoted + a measurement per remaining assertion), verification commands, stop conditions, return format all present. One CREW_CONTEXT delta measured stale: it records python3 as lacking pytest on this host; measured now, py/python/python3 all report pytest 9.1.1."
+        }
+      ],
+      "constraints": [
+        "Allowed scope is specs/** and nothing else",
+        "Do not edit tests/test_cli_retirement_guard.py, skills/**, scripts/**, episodes/**, docs/**, or map/INDEX.md",
+        "File no issues; stage candidates under .agent-work/567-d1/triage-candidates/",
+        "Prose is inside the guard's walk: it may name the engine as a component, never show the command"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-repair": {
+      "id": "m1-repair",
+      "title": "Replace the false archive-gate clause in both specs with a measured one",
+      "imperative": "In specs/implementer.spine.toml and specs/reviewer.spine.toml, replace the clause 'the escape that refusal names is barred for you, because the archive gate requires the lease to cover every journaled action, so releasing it to reach a second checklist fails your own closeout' with prose that is true for the reader of that file: name the inherited terminal provenance check exactly as skills/{implementer,reviewer}/SKILL.md:17 word it, and scope the release-and-rebind escape to the role that actually faces it. The repair lands in BOTH files. Change nothing else in the diff. This is prose repair over an existing measured diff, not TDD: the observable is the guard plus the parse, so c1 collapses to the single green postcondition.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and rework handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; rework handoff verified complete at m0."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the clause is replaced in both files; 'archive gate' appears nowhere in specs/ or skills/; both files still parse as TOML and both name the terminal provenance check",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 -c \"import tomllib;[tomllib.load(open(p,'rb')) for p in ['specs/implementer.spine.toml','specs/reviewer.spine.toml']]\" && ! grep -rq 'archive gate' specs/ skills/ && grep -q 'terminal provenance check' specs/implementer.spine.toml && grep -q 'terminal provenance check' specs/reviewer.spine.toml"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-repair-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the retirement guard reports no violation at any specs/ address, and both specs still compile clean through generate_spine",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g3r2-guard.log 2>&1; grep -oE 'specs/[A-Za-z0-9_./-]+' /tmp/g3r2-guard.log | sort -u > /tmp/g3r2-specs.txt; ! test -s /tmp/g3r2-specs.txt && python3 scripts/generate_spine.py specs/implementer.spine.toml --out /tmp/g3r2-impl.json --check-only && python3 scripts/generate_spine.py specs/reviewer.spine.toml --out /tmp/g3r2-rev.json --check-only"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-repair-2"
+        },
+        {
+          "id": "c3",
+          "statement": "no file outside specs/** was edited",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && git status --porcelain | awk '{print $2}' | grep -v '^[.]agent-work/' | grep -v '^specs/' > /tmp/g3r2-drift.txt; ! test -s /tmp/g3r2-drift.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-repair-3"
+        }
+      ],
+      "constraints": [
+        "specs/** only",
+        "Do not invent a third name for the terminal provenance check",
+        "Prefer accuracy over completeness: cut reasoning that applies to no reader of these two files",
+        "The paragraph is a linked pair; the repair must land in both files identically in substance"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-repair-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 -c \"import tomllib;[tomllib.load(open(p,'rb')) for p in ['specs/implementer.spine.toml','specs/reviewer.spine.toml']]\" && ! grep -rq 'archive gate' specs/ skills/ && grep -q 'terminal provenance check' specs/implementer.spine.toml && grep -q 'terminal provenance check' specs/reviewer.spine.toml",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-repair-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g3r2-guard.log 2>&1; grep -oE 'specs/[A-Za-z0-9_./-]+' /tmp/g3r2-guard.log | sort -u > /tmp/g3r2-specs.txt; ! test -s /tmp/g3r2-specs.txt && python3 scripts/generate_spine.py specs/implementer.spine.toml --out /tmp/g3r2-impl.json --check-only && python3 scripts/generate_spine.py specs/reviewer.spine.toml --out /tmp/g3r2-rev.json --check-only",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-repair-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && git status --porcelain | awk '{print $2}' | grep -v '^[.]agent-work/' | grep -v '^specs/' > /tmp/g3r2-drift.txt; ! test -s /tmp/g3r2-drift.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-verify-claims": {
+      "id": "m2-verify-claims",
+      "title": "Measure every remaining factual assertion in the new prose",
+      "imperative": "Enumerate every factual assertion left standing in the added prose of both specs (not only the repaired clause) and measure each against the file, symbol or observed behaviour that makes it true. Record the enumeration and its measurement as an executable check under the crew scratch dir so the assertion set is re-runnable rather than asserted. Any assertion that cannot be measured is cut from the prose or reported as a stop condition, per the handoff.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-repair complete: the clause is replaced and the guard is clean at specs/",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-repair complete: clause replaced in both files, guard clean at every specs/ address, both specs compile clean, no drift outside specs/**."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every remaining factual assertion in the added prose is backed by a measurement, executed by .agent-work/567-d1/crew-scratch/g3-implementer-attempt-2-74e194cfc852/verify_claims.py exiting 0",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 .agent-work/567-d1/crew-scratch/g3-implementer-attempt-2-74e194cfc852/verify_claims.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-verify-claims-3"
+        },
+        {
+          "id": "c2",
+          "statement": "the rebind refusal is re-measured in a fresh process against the unmodified door, and its quoted fragment is verbatim present in that refusal",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 .agent-work/567-d1/crew-scratch/g3-implementer-attempt-2-74e194cfc852/door_probe.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-verify-claims-4"
+        }
+      ],
+      "constraints": [
+        "Measure against behaviour, never against text that describes it",
+        "Probe scripts live under the crew scratch dir; no repo file outside specs/** is written"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-verify-claims-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 .agent-work/567-d1/crew-scratch/g3-implementer-attempt-2-74e194cfc852/verify_claims.py",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-verify-claims-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 .agent-work/567-d1/crew-scratch/g3-implementer-attempt-2-74e194cfc852/door_probe.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-verify-claims-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 .agent-work/567-d1/crew-scratch/g3-implementer-attempt-2-74e194cfc852/verify_claims.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-verify-claims-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 .agent-work/567-d1/crew-scratch/g3-implementer-attempt-2-74e194cfc852/door_probe.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-result": {
+      "id": "m3-result",
+      "title": "Write the IMPLEMENTER_RESULT the handoff names",
+      "imperative": "Write the full IMPLEMENTER_RESULT to .agent-work/567-d1/crew-handoffs/g3-implementer-rework-result.md, quoting the before and after text of the clause in both files and giving, for every remaining factual assertion in the new prose, the file, symbol or measurement that makes it true. Include a Return status field whose value is exactly 'complete' and a Workflow Feedback section.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2-verify-claims complete: every remaining assertion measured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-verify-claims complete: 51 claim checks + 16 door-probe checks, all green, in both a clean and an ambient-pair environment."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the result artifact exists, carries Return status complete, quotes before/after for both files, and has a Workflow Feedback section",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && test -f .agent-work/567-d1/crew-handoffs/g3-implementer-rework-result.md && grep -q 'Return status' .agent-work/567-d1/crew-handoffs/g3-implementer-rework-result.md && grep -q 'complete' .agent-work/567-d1/crew-handoffs/g3-implementer-rework-result.md && grep -q 'Workflow Feedback' .agent-work/567-d1/crew-handoffs/g3-implementer-rework-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-result-1"
+        }
+      ],
+      "constraints": [
+        "File no issues; stage triage candidates only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && test -f .agent-work/567-d1/crew-handoffs/g3-implementer-rework-result.md && grep -q 'Return status' .agent-work/567-d1/crew-handoffs/g3-implementer-rework-result.md && grep -q 'complete' .agent-work/567-d1/crew-handoffs/g3-implementer-rework-result.md && grep -q 'Workflow Feedback' .agent-work/567-d1/crew-handoffs/g3-implementer-rework-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m2-verify-claims",
+      "statement": "run_crew._crew_door_env(spine=None) passes a dispatcher's own ambient SPINE_FILE/SPINE_SESSION through to a no-spine child, by design \u2014 so such a child's spine_status SUCCEEDS and shows the PARENT's spine, with no refusal to warn it, while the crew skills tell it that spine is its own. Measured under a controlled ambient env in verify_claims.py section 2. Recorded as an addendum to the existing .agent-work/567-d1/triage-candidates/headless-dispatch-inherits-parent-spine.md rather than a new candidate; the doctrine half belongs to dispatched-crew-spine-is-not-bound.md. skills/** and scripts/** are fenced from this lane, so no fix attempted."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/567-d1-g3-implementer-attempt-2",
+    "status": "released",
+    "claimed_at": "2026-08-17T21:12:38.146935+00:00",
+    "last_heartbeat": "2026-08-17T21:25:34.897199+00:00",
+    "claimed_by": "implementer",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T21:25:39.147642+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "The blocker is one clause in two files, and the reviewer's measurement of it reproduces on inspection: skills/{implementer,reviewer}/SKILL.md:17 both name the \"terminal provenance check \u2014 the lease must cover every journaled action\", and neither crew plan template has a closeout gate, so the clause's \"archive gate ... fails your own closeout\" names the wrong check for the wrong reader. The repair is to use the inherited name and scope the release-and-rebind escape to the reader who actually faces it, then measure every assertion left standing.",
+      "mechanical": false,
+      "ts": "2026-08-17T21:13:04.781934+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-repair",
+      "why": "The clause now says what is true for the reader of these two files: the escape is barred by the role's own doctrine, which holds the lease open until the last action because the lease must cover every journaled action \u2014 the inherited \"terminal provenance check\", named as skills/{implementer,reviewer}/SKILL.md:17 names it, not renamed into a gate. And the second half is scoped honestly: a crew dispatched without a spine arrives holding no lease, so the release-and-rebind escape never arises for it at all. \"archive gate\" is now absent from specs/ and skills/; both files parse, compile clean, and the guard reports no specs/ address (its only two failures are lane D2's fenced skills/workbench files, byte-identical to baseline).",
+      "mechanical": false,
+      "ts": "2026-08-17T21:14:37.062710+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-verify-claims",
+      "why": "Every assertion left standing in the added prose is now measured rather than restated: 51 checks in verify_claims.py (the repaired clause against both role skills' own wording, the dispatch env from run_crew._crew_door_env, the nine-tool inventory off the door's own schemas, the engine's symmetric advance/record refusal that makes the survey dialect real, the shared verbs exercised on both dialects with condition-kind isolated, the cited decision id, and the header comment's five compiler claims), plus 16 in door_probe.py across three fresh processes with a positive control. Two things the checks caught that prose review had not: both specs quoted the refusal as \"release it first\" where the door says \"Release it first\" (fixed in both; the probe now reads the quoted fragment out of the specs so it tracks the shipped text), and the launcher passes a dispatcher's own ambient SPINE_FILE/SPINE_SESSION through to a no-spine child, so \"unbound\" is a state the door reports rather than one to assume \u2014 the first engine run of this check failed for exactly that reason, and the probe now controls the ambient and measures both cases.",
+      "mechanical": false,
+      "ts": "2026-08-17T21:22:49.674291+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-result",
+      "why": "The result artifact is written and is the delivery: it quotes the clause before and after in both files, gives a measurement for every assertion left standing (not only the repaired one), records the two things the checks caught that prose review had not \u2014 the non-verbatim \"release it first\" quotation and the launcher's spine-pair pass-through \u2014 and states plainly what the clause deliberately does not claim, since the terminal provenance check is role doctrine with no live mechanical enforcement. Close criteria 1-8 all met; no stop condition was hit.",
+      "mechanical": false,
+      "ts": "2026-08-17T21:25:34.897187+00:00"
+    }
+  ]
+}

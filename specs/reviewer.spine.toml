@@ -9,6 +9,16 @@ parent     = "<parent>"
 # already carried a real `command` check in the shipped JSON. r6-fowler also
 # carries this spec's large claim (see its [gate.claim] below): it is the one
 # item whose scope is genuinely the whole diff rather than one narrow question.
+#
+# Door vocabulary lives in `imperative` and `constraints`, and this comment does
+# not. That is not a style choice: generate_spine._compile_gate builds every
+# compiled item from a FIXED field list, and compile_spec builds the top level
+# the same way, so a new spec key reaches no reader and spec_shape_faults has no
+# unknown-key fault to refuse it with -- it would be dropped silently. Comments
+# are dropped too. Authored text a reviewer actually reads is `title`,
+# `imperative`, `constraints`, a condition `statement`, and a qualitative
+# `because` (compile_condition folds it into the statement). Doctrine put
+# anywhere else in this file is doctrine nobody is handed.
 
 [[gate]]
 id    = "r0-context"
@@ -18,7 +28,41 @@ Read your inherited global doctrine (this skill's references/global-crew.md and
 references/global-everyone.md), then the project deltas if present:
 docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the
 diff, and the relevant packet. Record pass when loaded.
+
+THE DOOR IS HOW YOU DRIVE THIS SURVEY, and these items are the survey -- there
+is nothing else to drive. A reviewer dispatched with a spine of its own starts
+with SPINE_FILE and SPINE_SESSION already in its environment, so the door
+resolves to that spine by itself and no session id is passed anywhere. The
+survey dialect is not the gated one: spine_status reads where you are,
+spine_survey_result records each item pass or fail AND consolidates the verdict
+at the end -- spine_advance is the gated plan's closing verb and is not yours --
+while spine_evidence, spine_lease, spine_capture, spine_halt and spine_amend
+are shared with every other plan. A reviewer dispatched WITHOUT a spine of its
+own holds no lease, and an unbound door binds one spine and then drives it
+identically -- the identity comes from that spine's own work id, never from a
+string you supply.
+
+WHAT YOU MAY NOT DO IS DRIVE A SECOND CHECKLIST FROM THIS PROCESS, and the
+reason is a measured refusal rather than an oversight. One door drives one
+spine at a time (`decision:one-spine-per-process-stands`). Measured in a fresh
+process: with your own lease held, binding a second checklist is REFUSED --
+"one door drives one spine at a time ... Release it first" -- and that
+escape is not yours to take: your role skill holds the lease open until
+your last action, because the lease must cover every journaled action, and
+releasing it early fails the terminal provenance check. Dispatched without
+a spine of your own you arrive holding no lease -- nothing to release, and
+the escape never arises. Read the two halves together and the rule is
+one rule, not a limitation: the door reaches the spine you hold a lease on, and
+you hold a lease on exactly one. So do not author a survey of your own beside
+this one. If these items are wrong for the diff in front of you, that is what
+spine_amend and spine_halt are for, and r6-fowler's own REPAIR PATH below is
+the worked example.
 """
+constraints = [
+  "The door is this role's whole interface to its spine -- no session id is passed to it, because this process is already bound to exactly one spine",
+  "Author no second survey beside these items: one door drives one spine at a time, and while you hold your own lease the door refuses to bind another -- measured, not assumed",
+  "A survey item closes through spine_survey_result, never spine_advance -- the engine refuses the gated verb here",
+]
 
   [[gate.postconditions]]
   id        = "c1"

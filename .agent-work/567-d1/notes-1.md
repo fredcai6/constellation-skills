@@ -213,3 +213,26 @@ unfiltered whole-corpus run on the rebased tree, which is where that assertion b
 
 Not a scope change and not a latitude question: the launch order gives me "the guard's mechanism
 and scope expression". Recorded here and in the return.
+
+## Correction to M1, made at g3 — the second-checklist boundary is narrower than I stated
+
+Two supporting statements this lane repeated are wrong, and its own crews caught both. **The ruling
+stands; the reasons needed fixing.**
+
+1. **"Every child plan in this system is driven off-door"** (Admiral addendum F-1, and I repeated it
+   in the g2 and g3 handoffs) is **false for a dispatched crew.** A crew launched without `--spine`
+   has an **unbound** door, and an unbound door binds and drives fine — the g3 reviewer measured it
+   in a fresh process and was itself the live case. The blocked case is an **in-session** agent: a
+   Commander's `execute.json`, an Interrogator's `interrogation.json`, an in-session crew member's
+   plan beside the spine it was launched for.
+2. **"Releasing the lease fails the archive provenance check"** names a gate that does not exist.
+   `archive gate` appears nowhere in `skills/`; the Commander archive gate's only lease postcondition
+   is `c3` "engine session lease released", `check: null`; `spine_lifecycle.py` refuses in the
+   opposite direction. The real rule is the **terminal provenance check**, named in the role skills'
+   own prose, and mechanically enforced only by an eval-run checker nothing in the live path calls.
+
+**The shipped wording was already right** — the g2 sweep wrote *"an in-session crew member driving
+its own plan beside the spine it was launched for"* and *"Interrogator runs in the invoking agent's
+own human-reachable context"*, which is exactly the correct boundary. What was imprecise was my own
+summary language. Recorded rather than quietly dropped, and floated to the Admiral, because F-1's
+supporting sentence is wrong on the record even though its conclusion is right.

@@ -159,10 +159,10 @@
       "source": "tests/test_mcp_adoption.py, read at commit af797c93"
     },
     {
-      "claim": "The door cannot drive a second checklist, so 3 of the 13 clauses describe a real path rather than a redundant one.",
+      "claim": "The door cannot drive a second checklist -- but the boundary is narrower than this lane first stated, and the correction is measured.",
       "expected": "The door reaches every agent-facing case, per decision:complete-sweep.",
-      "observed": "Fresh-process probe: claim on own spine OK; spine_bind to a second checklist while holding the lease REFUSED ('one door drives one spine at a time'); release-then-bind succeeds, but releasing is barred for a Commander by its own archive provenance check. Confirmed independently three times by the Admiral: lanes F and H each drove execute.json under a hand-supplied CLI session id, and lane E's implementer drove IMPLEMENTER_PLAN.json the same way.",
-      "source": "notes-1.md M1, fresh python3 process with explicit paths; Admiral addendum ruling F-1"
+      "observed": "Fresh-process probe, re-measured independently by the g3 reviewer in three processes WITH A POSITIVE CONTROL: spine_bind to a second checklist while holding your own lease is REFUSED ('one door drives one spine at a time'), and the IDENTICAL call SUCCEEDS after releasing -- so the refusal is conditioned on holding your own lease and on nothing else. The correction: an UNBOUND door binds and drives fine, with the session identity derived from the spine's own work_id. A crew dispatched with no --spine therefore has an unbound door and CAN drive its own plan through it. The blocked case is an IN-SESSION agent -- a Commander's execute.json, an Interrogator's interrogation.json, an in-session crew member's plan beside the spine it was launched for -- not a dispatched crew's own plan.",
+      "source": "notes-1.md M1; re-measured with a positive control in .agent-work/567-d1/crew-handoffs/g3-reviewer-result.md"
     },
     {
       "claim": "The guard's scope needs no exception list.",
@@ -269,6 +269,14 @@
       "affects": "Five gate closures across g1b, g2, g3, g4 and g5-final.",
       "evidence": "/bin/sh -c 'set -o pipefail; echo reached' -> '/bin/sh: 1: set: Illegal option -o pipefail', exit 2. checklist_engine._find_posix_shell() returns shutil.which('sh') on POSIX.",
       "reason": "Corrected in place through the engine's retext-check verb and re-verified under dash in all three directions. The class -- nothing enforces the POSIX-form rule that global-everyone.md already states -- is staged as a triage candidate, since scripts/checklist_engine.py is lane H's and doctrine promotion is the human's call."
+    },
+    {
+      "id": "D8",
+      "signal": "Two supporting statements this lane repeated about the second-checklist case were imprecise, and its own crews corrected it twice.",
+      "classification": "evidence_only",
+      "affects": "The stated REASON behind decision:second-checklist-clauses-are-reworded-not-deleted, not the ruling itself.",
+      "evidence": "(1) 'Every child plan in this system is driven off-door' (Admiral addendum F-1, repeated by me in the g2 and g3 handoffs) is wrong for a DISPATCHED crew: its door is unbound, so it binds its own plan directly. The g3 implementer refused my handoff's premise on this and measured it first-hand; the g3 reviewer reproduced the correction and was itself the live case. (2) 'Releasing the lease to escape fails the ARCHIVE PROVENANCE CHECK' -- the phrase 'archive gate' appears nowhere in skills/; the Commander archive gate's only lease postcondition is c3 'engine session lease released' with check:null; spine_lifecycle.py refuses in the OPPOSITE direction; the real rule is the 'terminal provenance check' named in the role skills' own prose, mechanically enforced only by an eval-run checker nothing in the live path calls; and neither crew plan template has a closeout gate at all.",
+      "reason": "The RULING stands and the shipped wording is right: the g2 sweep's replacement text says 'an IN-SESSION crew member driving its own plan beside the spine it was launched for', which is exactly the blocked case, and the Interrogator text says it runs in the invoking agent's own context. What was imprecise was this lane's own summary language, mine included, and it is corrected here rather than left standing. Floated to the Admiral because F-1's supporting sentence about dispatched crews is wrong on the record even though its conclusion is right."
     }
   ],
   "open_current_wave_issue_ids": [

@@ -569,7 +569,8 @@
               "status": "complete"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-2"
         }
       ],
       "constraints": [
@@ -598,12 +599,38 @@
           "before/after diff of both specs; the guard still green over the extended walk"
         ]
       },
-      "status": "in-progress",
-      "status_detail": {},
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "BLOCK upheld, and I verified the counter-claim myself before acting on it. The specs assert that releasing the lease to reach a second checklist is barred because 'the archive gate requires the lease to cover every journaled action, so releasing it fails your own closeout'. Measured: the phrase 'archive gate' appears NOWHERE in skills/; the Commander archive gate's only lease postcondition is c3 'engine session lease released' with check:null, silent on journal coverage; spine_lifecycle.py refuses in the OPPOSITE direction ('close refused: the lease is still active'); the journal-coverage rule is real but lives in the role skills' own prose as the 'terminal provenance check', enforced only by an eval-run checker nothing in the live path calls; and neither crew plan template has a closeout gate at all, so the role being told its closeout will fail has no closeout. The reviewer reproduced the load-bearing half in three fresh processes with a positive control -- the rebind refusal is real and is conditioned on holding your own lease and nothing else -- so only this one clause is wrong. It blocks rather than rides because it sits inside a sentence advertising itself as a measured reason rather than an oversight, in the two files that are now the corpus's statement of what the door is for a role: a future author who checks the reason finds no archive gate in their own plan and is entitled to discount the whole paragraph. Remedy is one clause in two files -- quote the inherited 'terminal provenance check' wording instead of renaming it."
+      },
       "result": null,
       "finding": null,
-      "evidence": [],
-      "rework_count": 0
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "BLOCK upheld, and I verified the counter-claim myself before acting on it. The specs assert that releasing the lease to reach a second checklist is barred because 'the archive gate requires the lease to cover every journaled action, so releasing it fails your own closeout'. Measured: the phrase 'archive gate' appears NOWHERE in skills/; the Commander archive gate's only lease postcondition is c3 'engine session lease released' with check:null, silent on journal coverage; spine_lifecycle.py refuses in the OPPOSITE direction ('close refused: the lease is still active'); the journal-coverage rule is real but lives in the role skills' own prose as the 'terminal provenance check', enforced only by an eval-run checker nothing in the live path calls; and neither crew plan template has a closeout gate at all, so the role being told its closeout will fail has no closeout. The reviewer reproduced the load-bearing half in three fresh processes with a positive control -- the rebind refusal is real and is conditioned on holding your own lease and nothing else -- so only this one clause is wrong. It blocks rather than rides because it sits inside a sentence advertising itself as a measured reason rather than an oversight, in the two files that are now the corpus's statement of what the door is for a role: a future author who checks the reason finds no archive gate in their own plan and is entitled to discount the whole paragraph. Remedy is one clause in two files -- quote the inherited 'terminal provenance check' wording instead of renaming it.",
+            "ts": "2026-08-17T21:09:52.439544+00:00"
+          }
+        },
+        {
+          "id": "e-g3-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
     },
     "g3-review": {
       "id": "g3-review",
@@ -614,7 +641,8 @@
           "id": "p1",
           "statement": "g3-implement returned complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g3-implement reworked and closed; the BLOCK's one clause is corrected in both files."
         }
       ],
       "postconditions": [
@@ -655,11 +683,29 @@
           "before/after diff of both specs; the guard still green over the extended walk"
         ]
       },
-      "status": "pending",
-      "status_detail": {},
+      "status": "in-progress",
+      "status_detail": {
+        "superseded_by_reopen": "g3-implement"
+      },
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "blocker": "the 'archive gate requires the lease to cover every journaled action' clause is false as stated, in both specs"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:g3-implement",
+            "reason": "BLOCK upheld, and I verified the counter-claim myself before acting on it. The specs assert that releasing the lease to reach a second checklist is barred because 'the archive gate requires the lease to cover every journaled action, so releasing it fails your own closeout'. Measured: the phrase 'archive gate' appears NOWHERE in skills/; the Commander archive gate's only lease postcondition is c3 'engine session lease released' with check:null, silent on journal coverage; spine_lifecycle.py refuses in the OPPOSITE direction ('close refused: the lease is still active'); the journal-coverage rule is real but lives in the role skills' own prose as the 'terminal provenance check', enforced only by an eval-run checker nothing in the live path calls; and neither crew plan template has a closeout gate at all, so the role being told its closeout will fail has no closeout. The reviewer reproduced the load-bearing half in three fresh processes with a positive control -- the rebind refusal is real and is conditioned on holding your own lease and nothing else -- so only this one clause is wrong. It blocks rather than rides because it sits inside a sentence advertising itself as a measured reason rather than an oversight, in the two files that are now the corpus's statement of what the door is for a role: a future author who checks the reason finds no archive gate in their own plan and is entitled to discount the whole paragraph. Remedy is one clause in two files -- quote the inherited 'terminal provenance check' wording instead of renaming it.",
+            "ts": "2026-08-17T21:09:52.439564+00:00"
+          }
+        }
+      ],
       "rework_count": 0
     },
     "g3-integrate": {
@@ -1181,7 +1227,7 @@
     "session_id": "commander-567-d1-execute",
     "status": "active",
     "claimed_at": "2026-08-17T18:02:30.383334+00:00",
-    "last_heartbeat": "2026-08-17T20:40:43.633766+00:00",
+    "last_heartbeat": "2026-08-17T21:26:01.208886+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -1278,6 +1324,34 @@
       "why": "Integrated, with two fix-now items taken inside my own worktree. Fixed: a stray period in the Admiral spine's init imperative ('argument.: it reads') that the sweep introduced into shipped doctrine, corrected in all three copies with each re-validated as JSON and the three confirmed byte-identical again. Deliberately NOT fixed: TEMPLATES_MANIFEST.json's five now-stale sha256 entries. It is an install lockfile carrying generated:2026-08-10 and a source_commit, so hand-editing hashes into it would make it claim those bytes were installed at a commit where they were not -- the same falsification decision:records-are-not-instruction forbids for docs/superpowers/**. A stale lockfile is honest; a doctored one is not. It is measurably inert (check_skill_freshness recomputes from files, no test reads the field) and its generator is lane D2's. Staged as a candidate instead. Guard still clean outside workbench and adoption suite still green after both decisions.",
       "mechanical": false,
       "ts": "2026-08-17T20:40:35.776116+00:00"
+    },
+    {
+      "id": "w-14",
+      "gate": "g3-implement",
+      "why": "Both specs now name the door and both state the second-checklist truth, and the schema question is settled as prose-only with the reason taken from the consumer (generate_spine.py's _compile_gate) rather than from taste. Verified myself: gate check exit 0 under dash, both files parse as TOML, the guard reports no violation at any specs/ address, and the scope is exactly specs/ plus this run's own artifacts. The gate is honest about the thing that made it interesting: it adds new door doctrine to a surface the cold critic flagged as unguarded, and g1 closed that by extending the guard's walk to specs/**/*.toml -- so the prose was authored inside the walk that judges it.",
+      "mechanical": false,
+      "ts": "2026-08-17T20:53:47.859273+00:00"
+    },
+    {
+      "id": "w-15",
+      "gate": "g3-implement",
+      "reopen": true,
+      "reason": "BLOCK upheld, and I verified the counter-claim myself before acting on it. The specs assert that releasing the lease to reach a second checklist is barred because 'the archive gate requires the lease to cover every journaled action, so releasing it fails your own closeout'. Measured: the phrase 'archive gate' appears NOWHERE in skills/; the Commander archive gate's only lease postcondition is c3 'engine session lease released' with check:null, silent on journal coverage; spine_lifecycle.py refuses in the OPPOSITE direction ('close refused: the lease is still active'); the journal-coverage rule is real but lives in the role skills' own prose as the 'terminal provenance check', enforced only by an eval-run checker nothing in the live path calls; and neither crew plan template has a closeout gate at all, so the role being told its closeout will fail has no closeout. The reviewer reproduced the load-bearing half in three fresh processes with a positive control -- the rebind refusal is real and is conditioned on holding your own lease and nothing else -- so only this one clause is wrong. It blocks rather than rides because it sits inside a sentence advertising itself as a measured reason rather than an oversight, in the two files that are now the corpus's statement of what the door is for a role: a future author who checks the reason finds no archive gate in their own plan and is entitled to discount the whole paragraph. Remedy is one clause in two files -- quote the inherited 'terminal provenance check' wording instead of renaming it.",
+      "ts": "2026-08-17T21:09:52.439569+00:00"
+    },
+    {
+      "id": "w-16",
+      "gate": "g3-review",
+      "reopen": true,
+      "reason": "BLOCK upheld, and I verified the counter-claim myself before acting on it. The specs assert that releasing the lease to reach a second checklist is barred because 'the archive gate requires the lease to cover every journaled action, so releasing it fails your own closeout'. Measured: the phrase 'archive gate' appears NOWHERE in skills/; the Commander archive gate's only lease postcondition is c3 'engine session lease released' with check:null, silent on journal coverage; spine_lifecycle.py refuses in the OPPOSITE direction ('close refused: the lease is still active'); the journal-coverage rule is real but lives in the role skills' own prose as the 'terminal provenance check', enforced only by an eval-run checker nothing in the live path calls; and neither crew plan template has a closeout gate at all, so the role being told its closeout will fail has no closeout. The reviewer reproduced the load-bearing half in three fresh processes with a positive control -- the rebind refusal is real and is conditioned on holding your own lease and nothing else -- so only this one clause is wrong. It blocks rather than rides because it sits inside a sentence advertising itself as a measured reason rather than an oversight, in the two files that are now the corpus's statement of what the door is for a role: a future author who checks the reason finds no archive gate in their own plan and is entitled to discount the whole paragraph. Remedy is one clause in two files -- quote the inherited 'terminal provenance check' wording instead of renaming it.",
+      "ts": "2026-08-17T21:09:52.439571+00:00"
+    },
+    {
+      "id": "w-17",
+      "gate": "g3-implement",
+      "why": "The false clause is gone and what replaced it is both true and shorter. 'archive gate' now appears nowhere in specs/; the text names the terminal provenance check by its inherited name, and -- the better fix -- it scopes the claim to the reader it applies to: 'Dispatched without a spine of your own you arrive holding no lease -- nothing to release, and the escape never arises.' That turns a false reason into a correct one for the crew reading it, and it lands the boundary this lane got wrong twice. Verified: gate c2 exit 0 under dash, both TOML files parse, guard silent on specs/, scope exactly specs/.",
+      "mechanical": false,
+      "ts": "2026-08-17T21:26:01.069835+00:00"
     }
   ],
   "amendments": [
