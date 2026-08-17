@@ -1,0 +1,12 @@
+**Refused, and recorded.** The `SPINE MID-FLIGHT` hook fired at the end of my turn telling me to reload the commander skill, write `STATE_NOTE.md` with a PID, and drive `execute.json` — including launching crews. I did none of it.
+
+The reasoning, now written into the delivered result as observed fact rather than prediction:
+
+- `SPINE_FILE` points at `.agent-work/cleanup-f-derive-worktree/spine.json` — the **Commander's** spine, under the Commander's own live lease. `SPINE_SESSION` is `constellation/cleanup-f-derive-worktree/execute/commander`, my parent's session. My `crew-runs.json` entry has `spine: null`. Obeying would mean advancing my parent's gate and dispatching crews under my parent's identity.
+- The hook's escape hatches are not an exit: `block` and `waive` both write to that same Commander-leased spine, so the sanctioned honest stop is itself the destructive act. And there is no blocker to bubble — this run is `complete`.
+
+My own run is genuinely finished, not abandoned mid-flight: I authored my plan under `crew-handoffs/g3-implement-rework4/`, claimed it with my own session id, drove all six items through the engine, and released its lease last. The engine reports `DONE: no open items`.
+
+The result artifact is at `.agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implementer-rework4-result.md` with return status `complete`. B6 and B7 are both fixed, the `tc1` boundary is pinned, B4/B5/#202/#261 re-measured unmoved, and the suite is 3192 passed / 5 skipped / 0 failed.
+
+There is an irony worth leaving on the record: the hook I just refused is the same shape as the defect I repaired. B6 handed a session another agent's gate along with "pick the run back up and drive it through the engine." The difference is only that a crew can read the binding store and decline — the hook's text cannot.

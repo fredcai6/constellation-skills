@@ -1,0 +1,73 @@
+F....                                                                  [100%]
+=================================== FAILURES ===================================
+_ OwnershipIsBindingKeyNotWorktree.test_a_parents_restart_on_an_ambiguous_scan_is_told_nothing_it_may_drive _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_a_parents_restart_on_an_ambiguous_scan_is_told_nothing_it_may_drive>
+
+    def test_a_parents_restart_on_an_ambiguous_scan_is_told_nothing_it_may_drive(self):
+        """The same leak as a SEQUENCE, asserted in BOTH rendered fields at
+        both calls -- this gate's leaks have twice survived in whichever field
+        the case in front of the author did not look at.
+    
+        The parent's SessionStart hands out no gate at all. Its next Stop still
+        BLOCKS, because an open gate blocks whoever owns it, and names the run
+        foreign-owned with the imperative withheld from `reason` and
+        `additionalContext` alike (#549). And the crew, which claimed both
+        spines, still recognises its own gate afterwards: withholding from the
+        parent must not cost the owner anything.
+        """
+        sid, crew, crew_key = self._two_active_spines_and_the_parents_archived_spine(True)
+    
+        start = sr.decide_session_start({"session_id": sid, "cwd": str(self.proj)}, self.proj)
+    
+>       self.assertEqual(start, {})  # no gate handed over, in any field
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: {'hookSpecificOutput': {'hookEventName': '[410 chars]e."}} != {}
+E       Diff is 1141 characters long. Set self.maxDiff to None to see it.
+
+tests/test_spine_rail.py:1910: AssertionError
+_ OwnershipIsBindingKeyNotWorktree.test_an_ambiguous_scan_selects_by_provenance_not_by_glob_order (row='both matches attributed to the crew -> withhold') _
+
+self = <test_spine_rail.OwnershipIsBindingKeyNotWorktree testMethod=test_an_ambiguous_scan_selects_by_provenance_not_by_glob_order>
+
+    def test_an_ambiguous_scan_selects_by_provenance_not_by_glob_order(self):
+        """The scan's fallback chooses what to RENDER as well as what to write,
+        and `matches[0]` chooses by glob order -- filesystem order, which knows
+        nothing about who claimed what. The write-side rule sits inside
+        `len(matches) == 1`, so two or more active spines write nothing by
+        construction and were left rendering whatever the glob returned first.
+    
+        The two rows differ ONLY in who this session's view attributes the two
+        scanned spines to, so nothing else can explain the answer:
+    
+        - attributed to the CREW -> withheld. Rendering another key's gate
+          contradicts an attribution as much as filing one does, since the
+          context ends "Pick the run back up at this gate and drive it through
+          the engine".
+        - attributed to NOBODY -> rendered, exactly as today. That is the
+          recorded `tc1` boundary, which this repair deliberately does not
+          decide, and pinning it is what stops the repair from drifting into a
+          fail-closed refusal (`ADMIRAL_RULING-1` R2).
+        """
+        rows = [("both matches attributed to the crew -> withhold", True, False),
+                ("neither match attributed to anyone -> render (tc1)", False, True)]
+        for label, crew_claims, expect_render in rows:
+            with self.subTest(row=label):
+                sr.save_binding(self.proj, {})
+                sr.save_nudges(self.proj, {})
+                shutil.rmtree(str(self.proj / ".agent-work"), True)
+                sid, _crew, _crew_key = \
+                    self._two_active_spines_and_the_parents_archived_spine(crew_claims)
+    
+                start = sr.decide_session_start({"session_id": sid, "cwd": str(self.proj)},
+                                                self.proj)
+    
+                rendered = json.dumps(start.get("hookSpecificOutput") or {})
+>               self.assertEqual("RESUMING" in rendered, expect_render, label)
+E               AssertionError: True != False : both matches attributed to the crew -> withhold
+
+tests/test_spine_rail.py:1881: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_a_parents_restart_on_an_ambiguous_scan_is_told_nothing_it_may_drive
+SUBFAILED(row='both matches attributed to the crew -> withhold') tests/test_spine_rail.py::OwnershipIsBindingKeyNotWorktree::test_an_ambiguous_scan_selects_by_provenance_not_by_glob_order
+2 failed, 4 passed, 170 deselected, 1 subtests passed in 0.16s

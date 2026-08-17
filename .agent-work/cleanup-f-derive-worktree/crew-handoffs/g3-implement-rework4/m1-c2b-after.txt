@@ -1,0 +1,11 @@
+PREGATE   {"every_match_owned_by_crew": true, "renders_a_crew_gate": true, "renders_pick_it_up": true, "scan_matches": 2, "wrote_a_binding": false}
+REWORK2   {"every_match_owned_by_crew": true, "renders_a_crew_gate": true, "renders_pick_it_up": true, "scan_matches": 2, "wrote_a_binding": false}
+WORKTREE  {"every_match_owned_by_crew": true, "renders_a_crew_gate": false, "renders_pick_it_up": false, "scan_matches": 2, "wrote_a_binding": false}
+         rendered additionalContext ->
+         (empty)
+
+  stop #1 (parent) decision=block     nudge_count=1
+  stop #2 (crew  ) decision=block     nudge_count=2
+  stop #3 (parent) decision=continue  nudge_count=3
+  stop #4 (crew  ) decision=continue  nudge_count=4
+scratch: /tmp/g3rev4c2b-b8knbxxr

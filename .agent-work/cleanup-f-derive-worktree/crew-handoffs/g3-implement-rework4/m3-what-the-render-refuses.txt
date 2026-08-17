@@ -1,0 +1,51 @@
+arm REWORK3   sha256=4b5cf14d5278 bytes=89859 render_loop=False
+arm WORKTREE  sha256=6267b32fdff6 bytes=94930 render_loop=True
+guard ok: 2 distinct arms, HEAD=52ba9940, render loop only in WORKTREE
+
+n=1  #261 no binding at all
+      REWORK3   {"binds_a_scanned_path": true, "marker": "A", "renders": true}
+      WORKTREE  {"binds_a_scanned_path": true, "marker": "A", "renders": true}
+n=1  B4 owns nothing visible; crew claims the scan
+      REWORK3   {"binds_a_scanned_path": false, "marker": "-", "renders": false}
+      WORKTREE  {"binds_a_scanned_path": false, "marker": "-", "renders": false}
+n=1  B5/B6 owns an ARCHIVED entry; crew claims the scan
+      REWORK3   {"binds_a_scanned_path": false, "marker": "-", "renders": false}
+      WORKTREE  {"binds_a_scanned_path": false, "marker": "-", "renders": false}
+n=1  tc1 owns an ARCHIVED entry; scan claimed by NOBODY
+      REWORK3   {"binds_a_scanned_path": true, "marker": "A", "renders": true}
+      WORKTREE  {"binds_a_scanned_path": true, "marker": "A", "renders": true}
+n=1  owns an ARCHIVED entry; the scan is its OWN bare claim
+      REWORK3   {"binds_a_scanned_path": false, "marker": "A", "renders": true}
+      WORKTREE  {"binds_a_scanned_path": false, "marker": "A", "renders": true}
+n=1  B7 owns an ARCHIVED entry; ANOTHER SESSION claims the scan
+      REWORK3   {"binds_a_scanned_path": true, "marker": "A", "renders": true}
+      WORKTREE  {"binds_a_scanned_path": true, "marker": "A", "renders": true}
+n=1  owns an ARCHIVED entry; crew claims the LEADING match only
+      REWORK3   {"binds_a_scanned_path": false, "marker": "-", "renders": false}
+      WORKTREE  {"binds_a_scanned_path": false, "marker": "-", "renders": false}
+n=2  #261 no binding at all
+      REWORK3   {"binds_a_scanned_path": false, "marker": "B", "renders": true}
+      WORKTREE  {"binds_a_scanned_path": false, "marker": "B", "renders": true}
+n=2  B4 owns nothing visible; crew claims the scan
+      REWORK3   {"binds_a_scanned_path": false, "marker": "-", "renders": false}
+      WORKTREE  {"binds_a_scanned_path": false, "marker": "-", "renders": false}
+n=2  B5/B6 owns an ARCHIVED entry; crew claims the scan   <-- CHANGED
+      REWORK3   {"binds_a_scanned_path": false, "marker": "B", "renders": true}
+      WORKTREE  {"binds_a_scanned_path": false, "marker": "-", "renders": false}
+n=2  tc1 owns an ARCHIVED entry; scan claimed by NOBODY
+      REWORK3   {"binds_a_scanned_path": false, "marker": "B", "renders": true}
+      WORKTREE  {"binds_a_scanned_path": false, "marker": "B", "renders": true}
+n=2  owns an ARCHIVED entry; the scan is its OWN bare claim
+      REWORK3   {"binds_a_scanned_path": false, "marker": "B", "renders": true}
+      WORKTREE  {"binds_a_scanned_path": false, "marker": "B", "renders": true}
+n=2  B7 owns an ARCHIVED entry; ANOTHER SESSION claims the scan
+      REWORK3   {"binds_a_scanned_path": false, "marker": "B", "renders": true}
+      WORKTREE  {"binds_a_scanned_path": false, "marker": "B", "renders": true}
+n=2  owns an ARCHIVED entry; crew claims the LEADING match only   <-- CHANGED
+      REWORK3   {"binds_a_scanned_path": false, "marker": "B", "renders": true}
+      WORKTREE  {"binds_a_scanned_path": false, "marker": "A", "renders": true}
+
+rows measured: 28   topologies x match-counts: 14   rows whose answer this rework changed: 2
+  CHANGED  n=2  B5/B6 owns an ARCHIVED entry; crew claims the scan
+  CHANGED  n=2  owns an ARCHIVED entry; crew claims the LEADING match only
+scratch: /tmp/g3rw4-refuses-crzqmy78

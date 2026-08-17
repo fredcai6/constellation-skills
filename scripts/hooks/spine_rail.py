@@ -715,14 +715,21 @@ def reconstruct_current(spine: dict) -> str:
 #   - a non-empty view the agent DOES own, whose spine no longer loads --
 #     archived at closeout, deleted, moved, or an entry with no usable `spine`
 #     field. Nothing is withheld there, correctly, and the scan may then hand
-#     that agent whatever single active-leased spine the tree holds, a sibling
-#     agent's included.
+#     that agent whatever active-leased spine the tree holds, a sibling agent's
+#     included: on one match by writing a binding as well, on two or more by
+#     rendering alone.
 #
-# So the last word belongs to the writer rather than to either reader path:
-# `_attributed_to_another_key` refuses to file a path the store already
-# attributes to a DIFFERENT binding key. That is narrower than the question of
-# whether the scan should bind a session to a spine NOBODY has claimed, which
-# is genuinely open and is not answered anywhere in this file.
+# So the last word belongs to neither reader path but to
+# `_attributed_to_another_key`, which refuses to file -- and, since rework 4,
+# refuses to RENDER -- a path that THIS SESSION'S VIEW of the binding store
+# already attributes to a DIFFERENT binding key. That view is what
+# `session_view_provenance` returns: the bare `sid` plus this session's own
+# `sid#agent_id` keys, never the store entire, so a claim filed under a
+# different harness session_id is invisible to the rule and neither the write
+# nor the render is withheld for one (rework 4, B7). Both of those are narrower
+# than the question of whether the scan should bind a session to a spine NOBODY
+# has claimed, which is genuinely open and is not answered anywhere in this
+# file.
 #
 # What remains here compares paths and locates spines, and decides nothing
 # about identity.
@@ -1580,28 +1587,41 @@ def _own_entries(candidates, owners, own_key) -> list:
 
 
 def _attributed_to_another_key(owners, spine_path, bind_key) -> bool:
-    """Whether the store ALREADY attributes `spine_path` to a binding key other
-    than `bind_key` -- the key a write is about to file that path under.
+    """Whether `owners` ALREADY attributes `spine_path` to a binding key other
+    than `bind_key` -- the key about to take that path, by filing it or by
+    rendering its gate as this session's own.
 
-    This is the ownership comparison asked from the WRITER's side. `_is_own_entry`
-    asks a reader "is this entry mine?"; this asks "would filing this path here
-    contradict an attribution the store already holds?" The two are separate
-    questions and the writer's is the one that has to be asked at the
-    bind-on-resume, because that branch is reached by more than one reader path
-    and a reader-side answer only covers the path it was written for (#609 lane F
-    g3 rework 3, B5).
+    WHAT `owners` IS, AND IS NOT. Both call sites pass
+    `session_view_provenance(binding, sid)`, which is THIS SESSION's view of the
+    binding store -- the bare `sid` plus this session's own `sid#agent_id` keys
+    -- and never the store entire. A path claimed under a DIFFERENT harness
+    session_id is not in that mapping, so this answers False for it and the
+    caller proceeds. That gap is measured rather than assumed, and it is not
+    exotic: every crew on this project is launched as its own session. Whether a
+    resume may bind or render across a session boundary is an open authority
+    question and is not settled here (#609 lane F g3 rework 4, B7).
 
-    What it deliberately does NOT decide: whether the scan should bind at all.
-    A path attributed to NOBODY is not a contradiction, so #261's resumed
-    session and #202's sibling merge are both untouched -- the authority
+    This is the ownership comparison asked from the CLAIMING side.
+    `_is_own_entry` asks a reader "is this entry mine?"; this asks "would taking
+    this path contradict an attribution already visible here?" The two are
+    separate questions, and this one has to be asked at the bind-on-resume,
+    because that branch is reached by more than one reader path and a
+    reader-side answer only covers the path it was written for (rework 3, B5).
+    Rework 4 asks it of that same branch's RENDER selection too: handing out a
+    gate the view attributes elsewhere contradicts that attribution exactly as
+    much as filing it does (B6).
+
+    What it deliberately does NOT decide: whether the scan should bind or render
+    at all. A path attributed to NOBODY is not a contradiction, so #261's
+    resumed session and #202's sibling merge are both untouched -- the authority
     question about binding a session to a spine no one claimed is recorded
     separately and is not settled here.
 
     Paths are compared with `_same_path`, so a differently-spelled route to the
     same file still counts as the same attribution. Unusable input answers
-    True: this guards a writer, and withholding a write is the fail-safe
-    direction, exactly as `_same_path`'s own True-on-exception is at the
-    comparison one layer down. NEVER raises.
+    True: this guards a write and a render, and withholding either is the
+    fail-safe direction, exactly as `_same_path`'s own True-on-exception is at
+    the comparison one layer down. NEVER raises.
     """
     try:
         for path, owner_key in owners.items():
@@ -1753,9 +1773,11 @@ def _scan_active_spine(project_dir: Path):
 
     Returning every match (not just the first) is deliberate: the caller
     needs a COUNT to tell an unambiguous single active spine from an
-    ambiguous multi-spine scan (#261 bind-on-resume), while still wanting
-    the same "first match" spine for the advisory-context injection it did
-    before this match ever mattered. One glob pass serves both."""
+    ambiguous multi-spine scan (#261 bind-on-resume), and it needs the LIST
+    itself, because the spine it injects as advisory context is the first
+    match this session's view does not attribute to another binding key --
+    not simply the first (#609 lane F g3 rework 4). One glob pass serves
+    both."""
     try:
         base = _agent_work(project_dir)
         matches = []
@@ -1840,17 +1862,53 @@ def decide_session_start(data: dict, project_dir: Path) -> dict:
         #
         # What that does NOT mean -- it was written here once and it was wrong,
         # which is how B5 got scoped out of rework 2 -- is that such an agent
-        # contradicts no one. The scan below can hand it whatever single
-        # active-leased spine the tree holds, and on this lane that is routinely
-        # a spine a sibling agent has visibly claimed. That case is answered at
-        # the WRITE instead, by `_attributed_to_another_key`, because it is the
-        # write and not the read that the two paths have in common.
+        # contradicts no one. The scan below can hand it whatever active-leased
+        # spine the tree holds, and on this lane that is routinely one a sibling
+        # agent has visibly claimed. That case is answered below instead, by
+        # `_attributed_to_another_key`, asked once of what the scan RENDERS and
+        # once of what it WRITES -- those two acts are what every route into
+        # this branch has in common, and a reader-side rule covers only the
+        # route it was written for.
         if spine is None and sid_bindings and not owned:
             return {}
         if spine is None:
             matches = _scan_active_spine(project_dir)  # best-effort fallback
-            if matches:
-                spine = matches[0][0]  # first match, same tone as before
+            # The scan is a THIRD selection site, and until this rework it was
+            # the only one not held to the rule the other two obey: it took
+            # `matches[0]`, which is glob order -- filesystem order, which knows
+            # nothing about who claimed what (#609 lane F g3 rework 4, B6).
+            #
+            # So the same question the write asks below is asked here, of each
+            # candidate in turn: rendering a gate this session's view attributes
+            # to another binding key contradicts that attribution exactly as
+            # much as filing it does, because the context this branch ends with
+            # is "Pick the run back up at this gate and drive it through the
+            # engine". Asking it per candidate rather than only of `matches[0]`
+            # is what decouples the rule from `len(matches) == 1`: the write
+            # below is gated on that count because AMBIGUITY is not ours to
+            # resolve silently, and ambiguity is a different question from
+            # ownership. On 2+ matches the count is the only reason nothing was
+            # filed, which read like the ownership rule holding when it was not
+            # being asked at all -- and the render went out regardless.
+            #
+            # Asked with `own_key`, the READER's key, the same one `_own_entries`
+            # is asked with above -- this is a render, and a render is a read.
+            # The write below passes the bare `sid` instead because that is the
+            # key it would file under. On every SessionStart payload measured so
+            # far the two are the same string (no `agent_id` arrives, so
+            # `binding_key` yields the bare `sid`), and they are still named
+            # separately here rather than shared, because if one ever does
+            # arrive the acting agent is who this selection is for.
+            #
+            # A path attributed to NOBODY is unchanged by this: it contradicts
+            # no one, so it renders exactly as it did before, and the open
+            # authority question about binding a session to a spine no one
+            # claimed is not touched here either.
+            for _cand_spine, _cand_path in matches:
+                if _attributed_to_another_key(owners, _cand_path, own_key):
+                    continue
+                spine = _cand_spine
+                break
             if len(matches) == 1 and sid:
                 # Unambiguous (decision:no-bind-on-ambiguous-scan): exactly
                 # one active-leased spine on disk and no positional-count
@@ -1858,27 +1916,44 @@ def decide_session_start(data: dict, project_dir: Path) -> dict:
                 # same shape g1's claim writer uses, so a resumed/compacted
                 # session that never itself ran `claim` still gets a binding
                 # (#261) and gauge_writer_hook.resolve_gauge_path stops
-                # returning empty for it. Zero or 2+ matches: inject context
-                # (below) but write NO binding -- ambiguity is not ours to
-                # silently resolve.
+                # returning empty for it. Zero or 2+ matches: write NO binding
+                # -- ambiguity is not ours to silently resolve -- while the
+                # context injection below still hands out whatever the selection
+                # above kept, which on 2+ matches is the only thing that answers
+                # such a session at all.
                 own_spine, own_spine_path = matches[0]
-                # The WRITER's own guard, and the reason it is here rather than
-                # one branch up with the selection: this write is reached by
-                # more than one reader path. `spine` is left None both when the
-                # agent owns nothing visible AND when it owns an entry whose
-                # spine no longer loads -- archived, deleted, moved, or carrying
-                # no usable `spine` field -- and on that second route there is
-                # nothing above to withhold, so a reader-side rule never sees it
-                # (#609 lane F g3 rework 3, B5). Guarding each reader path in
-                # turn has now missed a door twice.
+                # The WRITE's own guard, asked again here rather than read off
+                # the selection above, because this write is reached by more than
+                # one reader path. `spine` is left None both when the agent owns
+                # nothing visible AND when it owns an entry whose spine no longer
+                # loads -- archived, deleted, moved, or carrying no usable
+                # `spine` field -- and on that second route there is nothing
+                # above to withhold, so a reader-side rule never sees it (#609
+                # lane F g3 rework 3, B5). Guarding each reader path in turn had
+                # missed a door twice.
+                #
+                # It is asked of `sid` here and of `own_key` above because the
+                # two acts take the path in different ways: this one FILES it,
+                # under the bare `sid`, so that is the key an existing
+                # attribution would have to contradict. On every SessionStart
+                # payload measured the two keys are the same string.
                 #
                 # The rule is narrow on purpose: the scan may still bind a path
                 # nobody has claimed, but it may not CONTRADICT an attribution
-                # the store already holds. Filing another agent's spine under
-                # this session's bare `sid` does exactly that, and it does it in
-                # both directions at once -- provenance is last-key-wins, so the
-                # write hands this session the other agent's gate as its own AND
-                # takes that gate away from the agent that claimed it.
+                # already VISIBLE TO THIS SESSION. Filing another agent's spine
+                # under this session's bare `sid` does exactly that, and it does
+                # it in both directions at once -- provenance is last-key-wins,
+                # so the write hands this session the other agent's gate as its
+                # own AND takes that gate away from the agent that claimed it.
+                #
+                # "Visible to this session" is the literal reach, not a hedge:
+                # `owners` is `session_view_provenance(binding, sid)`, so the
+                # attributions compared are those filed under the bare `sid` and
+                # under this session's own `sid#agent_id` keys. A spine claimed
+                # by a DIFFERENT harness session_id is not in that mapping, and
+                # this write proceeds against such a claim (rework 4, B7).
+                # Widening the comparison across the session boundary is an open
+                # authority question and is deliberately not answered here.
                 if _attributed_to_another_key(owners, own_spine_path, sid):
                     return {}
                 lease_for_bind = own_spine.get("engine_session") or {}

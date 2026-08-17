@@ -961,7 +961,13 @@ class OwnershipIsBindingKeyNotWorktree(unittest.TestCase):
     such fixtures and not one: `_in_tree_crew_only`, where the acting agent owns
     nothing visible, and `_in_tree_crew_and_the_parents_archived_spine`, where
     it owns an entry whose spine no longer loads. The second is the one no
-    reader-side rule can see, and it is guarded at the writer.
+    reader-side rule can see, and it is guarded where the branch claims a path.
+
+    A third fixture, `_two_active_spines_and_the_parents_archived_spine`, is
+    that second one at a different SCAN COUNT. The count matters because the
+    write is gated on it and the render never was: with two active-leased
+    spines nothing is written at all, and what is handed out was chosen by glob
+    order until rework 4 made that selection ask the same ownership question.
 
     `unittest.TestCase` rather than this module's function style so pytest
     collects the class under its required name: this repo ships no pytest
@@ -1682,9 +1688,14 @@ class OwnershipIsBindingKeyNotWorktree(unittest.TestCase):
         return sid, crew, crew_key, crew_spine
 
     def test_a_restarting_parent_is_not_bound_to_a_spine_its_crew_visibly_claims(self):
-        """The bind-on-resume must not file a spine path the store already
-        attributes to a DIFFERENT binding key, and must not overwrite that
-        attribution.
+        """The bind-on-resume must not file a spine path this session's VIEW of
+        the binding store already attributes to a DIFFERENT binding key, and
+        must not overwrite that attribution. The view is
+        `session_view_provenance`'s: the bare `sid` and this session's own
+        `sid#agent_id` keys. A claim filed under a different harness session_id
+        is invisible to that rule, and this case does not exercise one -- here
+        the crew shares the parent's session_id, which is the topology the
+        Agent tool actually produces.
 
         A session reaches that writer whenever `spine` is left None, and owning
         nothing visible is only one of the two ways that happens: a session that
@@ -1755,15 +1766,26 @@ class OwnershipIsBindingKeyNotWorktree(unittest.TestCase):
         self.assertEqual(len(answers), len(arms))  # assert what the loop looped over
         self.assertEqual(answers["no restart"], answers["parent restarts first"])
 
-    def test_the_writer_rule_refuses_only_a_contradicting_attribution(self):
-        """The rule the bind-on-resume applies, asked directly, including the
-        two answers that keep it from being broader than it is: a path the store
-        attributes to NOBODY is not a contradiction (that is #202's sibling
-        merge, and #261's resumed session), and neither is one already
-        attributed to the very key the write would file it under.
+    def test_the_attribution_rule_refuses_only_a_contradicting_attribution(self):
+        """The rule the bind-on-resume applies -- and, since rework 4, the
+        render selection above it -- asked directly, including the two answers
+        that keep it from being broader than it is: a path the given
+        attributions place with NOBODY is not a contradiction (that is #202's
+        sibling merge, and #261's resumed session), and neither is one already
+        attributed to the very key that is about to take it.
+
+        The mapping under test is the shape both call sites pass, a
+        `session_view_provenance` view: keys are the bare `sid` and this
+        session's own `sid#agent_id` keys. What is NOT here, because the rule
+        genuinely cannot see it, is a claim held under another harness
+        session_id.
 
         Unusable input answers REFUSE, not permit: this guard sits in front of a
-        writer, and the fail-safe direction at a writer is to withhold."""
+        write and a render, and withholding either is the fail-safe direction.
+
+        (It was named `test_the_writer_rule_...` until rework 4 gave the same
+        predicate a second caller, at which point the name was narrower than
+        what it covers.)"""
         conflict = "/p/.agent-work/run-crew/spine.json"
         cases = [
             ("attributed to a sibling's composite key -> refuse",
@@ -1788,6 +1810,145 @@ class OwnershipIsBindingKeyNotWorktree(unittest.TestCase):
                 self.assertEqual(
                     sr._attributed_to_another_key(owners, path, bind_key), expected, label)
         self.assertEqual(len(cases), 6)  # a loop that asserts what it looped over
+
+    # -- the same door, one match-count over ----------------------------------
+
+    def _two_active_spines_and_the_parents_archived_spine(self, crew_claims):
+        """`_in_tree_crew_and_the_parents_archived_spine` with the scan
+        AMBIGUOUS: the parent still owns an entry whose spine no longer loads,
+        but the glob now turns up TWO active-leased in-tree spines instead of
+        one. Two `spine.json` under one `.agent-work` is an Admiral plus a
+        Commander, or two Commanders in one tree -- this lane's own topology.
+
+        `crew_claims` is the only variable between the two rows below. True:
+        the crew claims BOTH remaining spines, which #202 already sanctions --
+        one binding key legitimately holds N -- so whichever one the glob
+        returns first is one this session's view attributes to another key, and
+        glob order stops being able to explain the answer. False: nobody claims
+        either, which is the recorded `tc1` boundary, where there is no
+        attribution to contradict.
+
+        The two facts the cases turn on are asserted here rather than
+        described: the scan count is two, and both matches are attributed to
+        the crew or to nobody, as the row asks.
+        """
+        parent = _real_parent_payloads()[0]
+        crew = _real_subagent_payloads()[0]
+        self.assertEqual(crew["session_id"], parent["session_id"])  # one harness session
+        for work, gate, marker, eng in (
+                ("run-crew-a", "g3", "CREWA-MARKER the crew's first gate", "eng-a"),
+                ("run-crew-b", "g4", "CREWB-MARKER the crew's second gate", "eng-b"),
+                ("run-own", "execute", "OWN-MARKER drive your own gate", "eng-own")):
+            write_spine(
+                self.proj,
+                make_spine([(gate, "in-progress")], session_id=eng,
+                           imperatives={gate: marker}),
+                work=work, journal_lines=1,
+            )
+        if crew_claims:
+            for work, eng in (("run-crew-a", "eng-a"), ("run-crew-b", "eng-b")):
+                sr.handle_post_tool_use(
+                    _real_post_tool_use(crew, _claim_cmd(work, eng), self.proj), self.proj)
+        sr.handle_post_tool_use(
+            _real_post_tool_use(parent, _claim_cmd("run-own", "eng-own"), self.proj), self.proj)
+
+        sid = parent["session_id"]
+        crew_key = sid + sr.BINDING_KEY_SEP + crew["agent_id"]
+        shutil.rmtree(str(self.proj / ".agent-work" / "run-own"))  # archived at closeout
+
+        binding = sr.load_binding(self.proj)
+        owners = sr.session_view_provenance(binding, sid)
+        matches = sr._scan_active_spine(self.proj)
+        self.assertEqual(len(matches), 2)  # AMBIGUOUS: the write is off the table
+        expected_owner = crew_key if crew_claims else None
+        self.assertEqual([owners.get(path) for _spine, path in matches],
+                         [expected_owner, expected_owner])  # both, so order proves nothing
+        self.assertTrue(sr._own_entries(list(sr.session_view(binding, sid).items()),
+                                        owners, sid))       # B5's door, not B4's
+        return sid, crew, crew_key
+
+    def test_an_ambiguous_scan_selects_by_provenance_not_by_glob_order(self):
+        """The scan's fallback chooses what to RENDER as well as what to write,
+        and `matches[0]` chooses by glob order -- filesystem order, which knows
+        nothing about who claimed what. The write-side rule sits inside
+        `len(matches) == 1`, so two or more active spines write nothing by
+        construction and were left rendering whatever the glob returned first.
+
+        The two rows differ ONLY in who this session's view attributes the two
+        scanned spines to, so nothing else can explain the answer:
+
+        - attributed to the CREW -> withheld. Rendering another key's gate
+          contradicts an attribution as much as filing one does, since the
+          context ends "Pick the run back up at this gate and drive it through
+          the engine".
+        - attributed to NOBODY -> rendered, exactly as today. That is the
+          recorded `tc1` boundary, which this repair deliberately does not
+          decide, and pinning it is what stops the repair from drifting into a
+          fail-closed refusal (`ADMIRAL_RULING-1` R2).
+        """
+        rows = [("both matches attributed to the crew -> withhold", True, False),
+                ("neither match attributed to anyone -> render (tc1)", False, True)]
+        for label, crew_claims, expect_render in rows:
+            with self.subTest(row=label):
+                sr.save_binding(self.proj, {})
+                sr.save_nudges(self.proj, {})
+                shutil.rmtree(str(self.proj / ".agent-work"), True)
+                sid, _crew, _crew_key = \
+                    self._two_active_spines_and_the_parents_archived_spine(crew_claims)
+
+                start = sr.decide_session_start({"session_id": sid, "cwd": str(self.proj)},
+                                                self.proj)
+
+                rendered = json.dumps(start.get("hookSpecificOutput") or {})
+                self.assertEqual("RESUMING" in rendered, expect_render, label)
+                self.assertEqual(
+                    ("CREWA-MARKER" in rendered) or ("CREWB-MARKER" in rendered),
+                    expect_render, label)
+                # An ambiguous scan writes no binding in EITHER row: this
+                # repair moves the selection, never the count that gates the
+                # write, so #261's unambiguous bind is not what is being
+                # measured here.
+                filed = set(sr.load_binding(self.proj).get(sid) or {})
+                self.assertEqual(filed & {_abs_spine(self.proj, "run-crew-a"),
+                                          _abs_spine(self.proj, "run-crew-b")}, set(), label)
+        self.assertEqual(len(rows), 2)  # a loop that asserts what it looped over
+
+    def test_a_parents_restart_on_an_ambiguous_scan_is_told_nothing_it_may_drive(self):
+        """The same leak as a SEQUENCE, asserted in BOTH rendered fields at
+        both calls -- this gate's leaks have twice survived in whichever field
+        the case in front of the author did not look at.
+
+        The parent's SessionStart hands out no gate at all. Its next Stop still
+        BLOCKS, because an open gate blocks whoever owns it, and names the run
+        foreign-owned with the imperative withheld from `reason` and
+        `additionalContext` alike (#549). And the crew, which claimed both
+        spines, still recognises its own gate afterwards: withholding from the
+        parent must not cost the owner anything.
+        """
+        sid, crew, crew_key = self._two_active_spines_and_the_parents_archived_spine(True)
+
+        start = sr.decide_session_start({"session_id": sid, "cwd": str(self.proj)}, self.proj)
+
+        self.assertEqual(start, {})  # no gate handed over, in any field
+
+        out = sr.decide_stop({"session_id": sid, "cwd": str(self.proj)}, self.proj)
+
+        self.assertEqual(out["decision"], "block")  # an open gate still blocks
+        reason = out["reason"]
+        ctx = out["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("foreign-owned", reason)  # named as someone else's
+        self.assertIn(crew_key, reason)         # and whose
+        for field in (reason, ctx):
+            self.assertNotIn("CREWA-MARKER", field)  # imperative withheld from BOTH
+            self.assertNotIn("CREWB-MARKER", field)  # rendered fields
+
+        crew_stop = sr.decide_stop(
+            {"session_id": sid, "agent_id": crew["agent_id"], "cwd": str(self.proj)}, self.proj)
+
+        self.assertEqual(crew_stop["decision"], "block")
+        self.assertNotIn("foreign-owned", crew_stop["reason"])
+        self.assertTrue(("CREWA-MARKER" in crew_stop["reason"])
+                        or ("CREWB-MARKER" in crew_stop["reason"]))
 
 
 def _derived_form(path):

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m5-deliver",
+  "files": [],
+  "repo_rev": {
+    "commit": "52ba9940e08339c8b87d2e8c661e416f93d609e7"
+  },
+  "run": {
+    "work_id": "cleanup-f-derive-worktree-g3-implement-rework4",
+    "generated_at": "2026-08-17T01:07:50Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree"
+    }
+  }
+}

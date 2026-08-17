@@ -1,0 +1,386 @@
+{
+  "work_id": "cleanup-f-derive-worktree-g3-implement-rework4",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-b6",
+    "m2-b7",
+    "m3-regressions",
+    "m4-verify",
+    "m5-deliver"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load context, re-measure the floor at the real HEAD",
+      "imperative": "Read the inherited crew doctrine, the rework-4 handoff, the fourth review that produced B6 and B7, the rework-3 result being amended, and the original gate handoff (Allowed Scope, Specific Exclusions, Constraints, Authority). Read the diff base with `git rev-parse HEAD` rather than trusting any sha in the handoff. Re-measure the floor (targeted class + full suite) before touching anything. Attest c1 and c2.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff complete (task, scope, exclusions, evidence, test mode, stop conditions); B6 understood as the RENDER selection on the same door rework 3 guarded at the WRITE, and B7 as a prose repair only",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Handoff complete: task (B6 render selection + B7 prose), allowed scope + exclusions + constraints + authority inherited from g3-implementer-handoff.md, required evidence, TDD test mode, stop conditions, return format and delivery path all present. B6 read as the RENDER half of the rule rework 3 guarded at the WRITE: _attributed_to_another_key sits after 'spine = matches[0][0]' and inside 'if len(matches) == 1 and sid:', so it governs only the write on an unambiguous scan; the render still selects by glob order. B7 read as prose-only: the guard's reach does not change."
+        },
+        {
+          "id": "c2",
+          "statement": "floor re-measured at the actual HEAD: targeted class 21 green, full suite counted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Floor re-measured at the ACTUAL HEAD 52ba9940 (git rev-parse, not a sha from the handoff): targeted -k OwnershipIsBindingKeyNotWorktree = 21 passed, 152 deselected, 33 subtests; full suite with __pycache__ cleared and SPINE_*/CREW_SCRATCH_DIR scrubbed = 3190 passed, 5 skipped, 0 failed, 1216 subtests. Matches the handoff's stated rework-3 floor exactly."
+        }
+      ],
+      "constraints": [
+        "Allowed scope: scripts/hooks/spine_rail.py, tests/test_spine_rail.py, map/ (regenerate only).",
+        "tests/test_worktree_derivation.py stays unedited.",
+        "Do not commit anything."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-b6": {
+      "id": "m1-b6",
+      "title": "B6: the ambiguous-scan RENDER selection is a binding-key property, not glob order",
+      "imperative": "TDD. RED first: in OwnershipIsBindingKeyNotWorktree, build the ambiguous-scan fixture with production writers -- two active-leased in-tree spines, BOTH attributed to the crew's composite key (#202 sanctions one key holding N), the parent on B5's door -- and assert the fixture's own preconditions (2 scan matches, every match owned by the crew) before measuring. Observe the parent's SessionStart hand over the crew's gate in additionalContext, and observe the parent's next Stop. Pin the tc1 NEGATIVE in the same step: two matches attributed to NOBODY must render exactly as today. Then GREEN: select the rendered `spine` by binding-key provenance rather than by glob order -- refuse a match the session's view attributes to another key -- leaving the WRITE branch's `len(matches) == 1` ambiguity rule untouched. Assert on additionalContext AND reason.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded, floor measured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: context loaded, floor measured at HEAD 52ba9940 (21 targeted / 3190-5-0 full)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the ambiguous-scan render case written and observed handing over the crew's gate against the committed code",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed against the committed code (m1-red.txt): test_an_ambiguous_scan_selects_by_provenance_not_by_glob_order SUBFAILED on the crew row ('True != False') while the tc1 row PASSED unchanged, and test_a_parents_restart_on_an_ambiguous_scan_is_told_nothing_it_may_drive failed with a 410-char hookSpecificOutput where {} was required. The reviewer's own committed instrument, re-run unedited after the fix (m1-c2b-after.txt), shows renders_a_crew_gate/renders_pick_it_up true on PREGATE and REWORK2 and false on WORKTREE -- the defect pre-dates this gate and is now closed on this tree."
+        },
+        {
+          "id": "c2",
+          "statement": "the render refuses a match attributed to another binding key, the tc1 negative (nothing attributed -> renders as today) is pinned, and the targeted class is green",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_spine_rail.py -k OwnershipIsBindingKeyNotWorktree"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-b6-1"
+        }
+      ],
+      "constraints": [
+        "Do NOT decide what happens when a match is attributed to NOBODY -- that is tc1, an open authority question, and it goes to the Admiral untouched.",
+        "No fail-closed refusal (ADMIRAL_RULING-1 R2).",
+        "stdlib-only imports; fail-safe direction (uncertainty withholds, never relaxes).",
+        "Do not reopen _foreign_worktree, _entry_mid_flight_view, _own_entries, the rework-2 reader guard, or _attributed_to_another_key's write-side call."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-b6-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_spine_rail.py -k OwnershipIsBindingKeyNotWorktree",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-b7": {
+      "id": "m2-b7",
+      "title": "B7: the three sentences that call a session view `the store`",
+      "imperative": "Find every fresh sentence written during rework 3 that calls `owners` the store, or says the guard refuses a path `another key` holds without qualifying which keys are visible. Make each true: the guard sees THIS SESSION's attributions (session_view_provenance), and a cross-session attribution is invisible to it. Name that limit in the same breath. Read every comment and docstring you touch WHOLE and test each sentence against the tree as it stands. Do NOT widen the guard across the session boundary -- that is an Admiral decision. Do not add a fifth copy of the three-states taxonomy; if a repair touches one of the four, make that copy true.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "B6 landed green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-b6 complete: render selection by provenance, targeted class 23 green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every sentence naming the guard's reach is true of the tree as it stands and names the session-scoped limit; enumerated one by one",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Twelve sentences enumerated one by one in m2-prose.md. The three the review named (the predicate's docstring, the call site, the new test's docstring) now say 'this session's VIEW' and name what the view cannot see: a claim under a different harness session_id. Three further copies of the same claim were found by grepping the CLAIM rather than the symbol (the module-level three-states block, the direct-rule test's docstring, and that test's now-narrow name) and repaired in place -- no fifth taxonomy copy added. Six more sentences that MY B6 repair falsified were repaired in the same pass (_scan_active_spine's 'first match', the 'answered at the WRITE instead' clause, the count comment's 'inject context', the write guard's 'rather than one branch up', the taxonomy's 'whatever single active-leased spine', and the class docstring's 'two such fixtures'). The guard's reach is unchanged; the cross-session widening stays an Admiral decision."
+        },
+        {
+          "id": "c2",
+          "statement": "tests/test_spine_rail.py green after the prose repair",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_spine_rail.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-b7-1"
+        }
+      ],
+      "constraints": [
+        "Prose repair only -- the guard's reach does not change.",
+        "Prefer symbol names to file:line in any prose written."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-b7-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_spine_rail.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-regressions": {
+      "id": "m3-regressions",
+      "title": "B4 and B5 stay fixed; #202 and #261 unweakened; enumerate what the render now refuses",
+      "imperative": "Re-run the B4 and B5 sequences and show them still fixed. Show #202's sibling merge and #261's bind-on-resume still green and unweakened, and tests/test_worktree_derivation.py unedited. Then enumerate, from the code as it stands, exactly what the render now refuses and whether any legitimate resume context is now withheld -- that is this fix's risk. Record the enumeration as an evidence artifact.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "B6 and B7 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-b6 and m2-b7 complete; tests/test_spine_rail.py 174 passed, 1 skipped."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "what the render refuses is enumerated from the code, with the legitimate-withholding question answered",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Enumerated in m3-what-the-render-refuses.md from a 28-row measurement (7 topologies x 2 scan counts x 2 arms, each arm printing sha256/bytes and guarded on the render loop's presence). Exactly 2 of 14 rows changed, both on B5's door at 2 matches: all-candidates-crew-claimed now renders {} instead of the crew's gate, and leading-candidate-crew-claimed now renders the unclaimed candidate instead. Nothing legitimate is withheld: reaching the skip requires the session's own spine to no longer load, so the only context on offer was another key's gate plus its imperative. B4 and B5 re-measured still fixed on the reviewer's own committed rev4_instrument.py (C1, C3), #261 still binds (C4), #202's sibling merge and the four #261 scan tests green, tests/test_worktree_derivation.py has no diff against HEAD. C5 confirms B7's cross-session limit is unchanged on all three arms, exactly as the repaired prose now states."
+        },
+        {
+          "id": "c2",
+          "statement": "both spine_rail and worktree_derivation suites green, worktree_derivation unedited",
+          "check": {
+            "kind": "command",
+            "command": "git diff --quiet HEAD -- tests/test_worktree_derivation.py && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_spine_rail.py tests/test_worktree_derivation.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-regressions-1"
+        }
+      ],
+      "constraints": [
+        "No existing test weakened or deleted."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-regressions-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "git diff --quiet HEAD -- tests/test_worktree_derivation.py && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q tests/test_spine_rail.py tests/test_worktree_derivation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-verify": {
+      "id": "m4-verify",
+      "title": "Full suite, cache cleared, clean env, count stated, failure distribution derived",
+      "imperative": "Clear __pycache__, scrub SPINE_*/CREW_SCRATCH_DIR, run the full suite, state the count against the rework-3 floor, and derive the failure distribution mechanically even when empty. Regenerate map/INDEX.md with `py -m scripts.code_map build` if entity counts move -- never hand-edit it (#544).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "regressions checked",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3-regressions complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "suite arithmetic reconciled against the rework-3 floor of 3190/5/0 and the failure distribution derived mechanically",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Full suite, __pycache__ cleared, SPINE_*/CREW_SCRATCH_DIR scrubbed: 3192 passed, 5 skipped, 0 failed, 1218 subtests. Floor was 3190/5/0, so +2 = the two new tests; the third new def is the fixture helper, not a test. Targeted class 21 -> 23 (--collect-only), 35 subtests. def test_ count in tests/test_spine_rail.py 173 -> 175. map/INDEX.md regenerated with py -m scripts.code_map build (never hand-edited, #544): tests.test_spine_rail 217 -> 220 = 2 tests + 1 fixture helper; scripts.hooks.spine_rail stays 65 because the render fix added no new symbol. Failure distribution derived mechanically from the run log: grep -c '^FAILED' = 0, so the distribution is empty by measurement rather than by assertion. The first run of this step failed MapTreeFreshnessTests by name, which is what sent me to the regeneration; it is green after."
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green with cache cleared and env scrubbed",
+          "check": {
+            "kind": "command",
+            "command": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verify-1"
+        }
+      ],
+      "constraints": [
+        "CREW_SCRATCH_DIR must be scrubbed; lane E's ScratchDirResumeTests is fenced -- do not fix it, do not report it."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "find . -name __pycache__ -type d -prune -exec rm -rf {} + ; env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR py -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-deliver": {
+      "id": "m5-deliver",
+      "title": "Write the IMPLEMENTER_RESULT artifact",
+      "imperative": "Write the result to .agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implementer-rework4-result.md before ending the turn. State plainly that B6 pre-dates this gate and was repaired as completion of an already-agreed rule. Record the Stop-hook refusal as observed fact. Return status on its own line, lowercase.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all evidence produced",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-m4 complete; all evidence artifacts written under crew-handoffs/g3-implement-rework4/."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "result artifact exists at the handoff's path with a lowercase return status",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implementer-rework4-result.md && grep -q '^`complete`$\\|^`partial`$\\|^`blocked`$\\|^`out-of-scope`$\\|^`failed`$' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implementer-rework4-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-deliver-1"
+        }
+      ],
+      "constraints": [
+        "Do not commit anything."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-deliver-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implementer-rework4-result.md && grep -q '^`complete`$\\|^`partial`$\\|^`blocked`$\\|^`out-of-scope`$\\|^`failed`$' .agent-work/cleanup-f-derive-worktree/crew-handoffs/g3-implementer-rework4-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "constellation/cleanup-f-derive-worktree/g3/implementer/attempt-5",
+    "status": "released",
+    "claimed_at": "2026-08-17T00:47:27.823739+00:00",
+    "last_heartbeat": "2026-08-17T01:09:33.415631+00:00",
+    "claimed_by": "implementer",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T01:09:37.433662+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "The floor is real and the two blockers are one shape apart. Rework 3 put the ownership rule on the scan's WRITE; the same branch still picks what to RENDER by glob order, so on an ambiguous scan (2+ active-leased spines) the rule is bypassed entirely - that is B6, and it measures identical on PREGATE, so it pre-dates this gate. B7 is narrower still: the guard reads session_view_provenance, a view of THIS session's keys, and three rework-3 sentences call it the store. Neither repair may touch tc1 (a path attributed to nobody must render as today) and neither may widen the guard across the session boundary.",
+      "mechanical": false,
+      "ts": "2026-08-17T00:50:10.175119+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-b6",
+      "why": "The scan's fallback was the third selection site and the only one never held to the ownership rule. The render now asks _attributed_to_another_key of each candidate with own_key -- the reader's key -- and takes the first the session's view does not attribute elsewhere, so the answer stops depending on glob order and the rule stops depending on len(matches)==1. The write branch is untouched: its count gate is about AMBIGUITY, a different question from ownership, so #261's unambiguous bind is unmoved. A path attributed to nobody still renders exactly as before, which is the tc1 boundary and the pinned proof this is not a fail-closed refusal.",
+      "mechanical": false,
+      "ts": "2026-08-17T00:53:27.916537+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-b7",
+      "why": "B7 is a truthfulness defect, not a behavioural one: the code implemented the narrow rule and the prose stated the wide one. Correcting the prose alone clears the blocker, and widening the comparison across the session boundary is explicitly not mine to decide. Grepping the claim rather than the symbol found three more copies than the review named, and my own B6 change falsified six further sentences about first-match selection -- which is the same recurrence the lane has now seen six times.",
+      "mechanical": false,
+      "ts": "2026-08-17T00:57:43.912075+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-regressions",
+      "why": "The risk this fix carries is over-withholding, and the matrix answers it: one row of fourteen loses its render, and that row is a session whose own spine is gone being offered a gate its own view says belongs to a crew. The second changed row is the more interesting one - it still renders, just not the contradicted candidate - which is what makes this a selection fix rather than a fail-closed refusal. B4, B5, #202 and #261 all re-measured unmoved.",
+      "mechanical": false,
+      "ts": "2026-08-17T01:00:30.293622+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-verify",
+      "why": "Suite arithmetic reconciles exactly in three independent directions - full count +2, targeted class +2, map entities +3 with the extra one accounted for as the fixture helper - so no test was quietly deleted or renamed away. The map moved because the test module gained entities and only for that reason; the hook module's entity count is unchanged, which is itself evidence the fix added no new symbol.",
+      "mechanical": false,
+      "ts": "2026-08-17T01:07:34.311717+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-deliver",
+      "why": "The result artifact exists at the path the handoff named, states plainly that B6 pre-dates the gate and was repaired as completion of an already-agreed rule, enumerates what the render now refuses with the one judgment call flagged for challenge, and carries the Stop-hook refusal. Return status is lowercase on its own line.",
+      "mechanical": false,
+      "ts": "2026-08-17T01:09:33.415621+00:00"
+    }
+  ]
+}

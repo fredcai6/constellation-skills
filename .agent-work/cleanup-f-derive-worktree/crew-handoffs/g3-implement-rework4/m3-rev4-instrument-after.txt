@@ -1,0 +1,32 @@
+arm PREGATE   999b7663   sha256=37cf424e9711 bytes=74877
+arm REWORK2   7d12c29d   sha256=f0cde2e7b4c6 bytes=84999
+arm WORKTREE  worktree   sha256=6267b32fdff6 bytes=94930
+guard ok: 3 distinct arms, symbol present only in WORKTREE
+
+==============================================================================
+C1 B5 single-active
+  PREGATE   {"attribution_after": "c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c", "bound": false, "crew_keeps_own_gate": false, "parent_stop_leaks": false, "render_leaks_CREW-MARKER": true}
+  REWORK2   {"attribution_after": "c9b25095-7728-405e-bfe7-69c03d7343b0", "bound": true, "crew_keeps_own_gate": false, "parent_stop_leaks": true, "render_leaks_CREW-MARKER": true}
+  WORKTREE  {"attribution_after": "c9b25095-7728-405e-bfe7-69c03d7343b0#a8f0a946eaaa2fe6c", "bound": false, "crew_keeps_own_gate": true, "parent_stop_leaks": false, "render_leaks_CREW-MARKER": false}
+==============================================================================
+C2 B5 two-active (ambiguous scan)
+  PREGATE   {"bound_anything": false, "glob_first_is_crew": true, "render_leaks_CREW-MARKER": true, "render_leaks_THIRD-MARKER": false, "render_nonempty": true, "render_says_pick_it_up": true, "scan_matches": 2}
+  REWORK2   {"bound_anything": false, "glob_first_is_crew": true, "render_leaks_CREW-MARKER": true, "render_leaks_THIRD-MARKER": false, "render_nonempty": true, "render_says_pick_it_up": true, "scan_matches": 2}
+  WORKTREE  {"bound_anything": false, "glob_first_is_crew": true, "render_leaks_CREW-MARKER": false, "render_leaks_THIRD-MARKER": true, "render_nonempty": true, "render_says_pick_it_up": true, "scan_matches": 2}
+==============================================================================
+C3 B4 owns-nothing
+  PREGATE   {"bound": false, "parent_stop_leaks": false, "render_leaks_CREW-MARKER": true}
+  REWORK2   {"bound": false, "parent_stop_leaks": false, "render_leaks_CREW-MARKER": false}
+  WORKTREE  {"bound": false, "parent_stop_leaks": false, "render_leaks_CREW-MARKER": false}
+==============================================================================
+C4 #261 empty view
+  PREGATE   {"bound": true, "render_has_own_marker": true}
+  REWORK2   {"bound": true, "render_has_own_marker": true}
+  WORKTREE  {"bound": true, "render_has_own_marker": true}
+==============================================================================
+C5 cross-SESSION attribution
+  PREGATE   {"binding_keys_before": ["OTHER-SESSION-0000#a8f0a946eaaa2fe6c", "c9b25095-7728-405e-bfe7-69c03d7343b0"], "bound": true, "parent_stop_claims_it_as_own": true, "render_leaks_CREW-MARKER": true}
+  REWORK2   {"binding_keys_before": ["OTHER-SESSION-0000#a8f0a946eaaa2fe6c", "c9b25095-7728-405e-bfe7-69c03d7343b0"], "bound": true, "parent_stop_claims_it_as_own": true, "render_leaks_CREW-MARKER": true}
+  WORKTREE  {"binding_keys_before": ["OTHER-SESSION-0000#a8f0a946eaaa2fe6c", "c9b25095-7728-405e-bfe7-69c03d7343b0"], "bound": true, "parent_stop_claims_it_as_own": true, "render_leaks_CREW-MARKER": true}
+==============================================================================
+scratch: /tmp/g3rev4-19e575tu
