@@ -17,6 +17,7 @@ discriminates old from new.
 
 import importlib.util
 import io
+import errno
 import json
 import os
 import tempfile
@@ -212,16 +213,92 @@ class AtomicSaveTests(unittest.TestCase):
         unguarded call raised `AttributeError` for every save of an existing file —
         a dead engine on that platform, since every mutating verb ends in `save()`.
 
-        Simulates the Windows shape on any host by deleting the attribute, which is
-        exactly what a Windows interpreter presents. Runs everywhere on purpose: a
-        `skipUnless` here would make the guard untested precisely where it matters."""
+        Simulates the Windows shape on any host by making the call raise, which is
+        what a Windows interpreter effectively presents. Runs everywhere on purpose: a
+        `skipUnless` here would make the guard untested precisely where it matters.
+
+        **`create=True` is load-bearing and was added after CI proved it.** Without
+        it, `mock.patch.object` requires the attribute to already exist — so on
+        Windows, where `os.fchmod` is genuinely absent, the PATCH ITSELF raised
+        `AttributeError: <module 'os'> does not have the attribute 'fchmod'` and the
+        test errored before exercising anything. The one test proving the fallback
+        works could not run on the one platform that needs the fallback: a check that
+        cannot fail exactly where it matters. Recorded as its own triage candidate
+        (issue #567 lane A)."""
         self.path.write_text("{}\n", encoding="utf-8")
-        with mock.patch.object(E.os, "fchmod", side_effect=AttributeError("no fchmod")):
+        with mock.patch.object(E.os, "fchmod", create=True,
+                               side_effect=AttributeError("no fchmod")):
             E.save(self.path, SAMPLE)
         self.assertEqual(json.loads(self.path.read_text(encoding="utf-8")), SAMPLE,
                          "save() must still write the document when fchmod is absent")
         self.assertEqual(self._tmp_siblings(), [],
                          "the fchmod fallback path leaked a temp file")
+
+    # -- (4b) the Windows replace-busy retry ------------------------------- #
+
+    def test_a_windows_sharing_violation_is_retried_and_then_succeeds(self):
+        """POSIX `rename(2)` replaces a destination whoever holds it open; Windows
+        `MoveFileEx` FAILS when a reader has it open without `FILE_SHARE_DELETE`,
+        which CPython's `open()` does not pass. Measured in CI: two writers and three
+        readers on one spine produced `PermissionError(13, 'Access denied')` on
+        Windows while Linux passed clean.
+
+        Simulates that on any host: the first two `os.replace` calls raise with
+        `winerror` set to a Windows busy code, the third succeeds. The document must
+        land and no temp may survive."""
+        self.path.write_text("{}\n", encoding="utf-8")
+        real_replace = os.replace
+        calls = [0]
+
+        def flaky(src, dst):
+            calls[0] += 1
+            if calls[0] <= 2:
+                exc = PermissionError(13, "Access is denied")
+                exc.winerror = 5  # ERROR_ACCESS_DENIED
+                raise exc
+            return real_replace(src, dst)
+
+        with mock.patch.object(E.os, "replace", side_effect=flaky):
+            E.save(self.path, SAMPLE)
+        self.assertEqual(calls[0], 3, "the retry did not re-attempt the install")
+        self.assertEqual(json.loads(self.path.read_text(encoding="utf-8")), SAMPLE)
+        self.assertEqual(self._tmp_siblings(), [], "the retry path leaked a temp file")
+
+    def test_a_persistent_sharing_violation_RAISES_rather_than_losing_the_write(self):
+        """Fail-loud is the whole point. If every attempt loses the race, the error
+        propagates so the caller learns the write did not land — it must never return
+        as though it had."""
+        self.path.write_text('{"work_id": "old"}\n', encoding="utf-8")
+
+        def always_busy(src, dst):
+            exc = PermissionError(13, "Access is denied")
+            exc.winerror = 32  # ERROR_SHARING_VIOLATION
+            raise exc
+
+        with mock.patch.object(E.os, "replace", side_effect=always_busy):
+            with self.assertRaises(PermissionError):
+                E.save(self.path, SAMPLE)
+        self.assertEqual(json.loads(self.path.read_text(encoding="utf-8")),
+                         {"work_id": "old"},
+                         "a failed install must leave the previous document intact")
+        self.assertEqual(self._tmp_siblings(), [],
+                         "a persistently failed install leaked a temp file")
+
+    def test_a_non_busy_OSError_is_NOT_retried(self):
+        """The retry is deliberately narrow: only the two Windows busy codes. A real
+        permission problem or a vanished directory must fail on the FIRST attempt,
+        because retrying those turns a clear failure into a slow one."""
+        self.path.write_text("{}\n", encoding="utf-8")
+        calls = [0]
+
+        def other_error(src, dst):
+            calls[0] += 1
+            raise OSError(errno.ENOSPC, "No space left on device")
+
+        with mock.patch.object(E.os, "replace", side_effect=other_error):
+            with self.assertRaises(OSError):
+                E.save(self.path, SAMPLE)
+        self.assertEqual(calls[0], 1, "a non-busy OSError was retried; it must not be")
 
     # -- (5) line endings: the behaviour that is easiest to break silently -- #
 

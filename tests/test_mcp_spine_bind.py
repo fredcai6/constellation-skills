@@ -40,6 +40,7 @@ import ast
 import importlib.util
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -138,6 +139,105 @@ def _write_spine(path: Path, payload: dict) -> Path:
 
 def _text(result: dict) -> str:
     return "".join(b.get("text", "") for b in result["content"])
+
+
+def _norm(p) -> str:
+    """One comparable spelling of a path.
+
+    `normcase` folds Windows drive-letter and separator casing; `normpath` folds
+    separator direction and redundant components. On POSIX both are near no-ops, so
+    this changes nothing there.
+    """
+    return os.path.normcase(os.path.normpath(os.fspath(p)))
+
+
+def _paths_named_in(message: str) -> list[str]:
+    """Every quoted token in `message`, recovered to a real path and normalized.
+
+    The door's refusals interpolate paths with `!r`, so on Windows the message
+    carries a REPR: `'C:\\\\Users\\\\runneradmin\\\\...'` with the backslashes
+    doubled. A raw `str(path) in message` substring test therefore fails on Windows
+    even though the refusal names exactly the right path — which is precisely what CI
+    reported for nine tests in this module while the refusals themselves were
+    correct. `ast.literal_eval` undoes the repr so the comparison is path-to-path
+    rather than text-to-text.
+
+    The quoted token must LOOK like an absolute path — start with a separator or a
+    drive letter — because these messages also contain ordinary apostrophes
+    ("checkout's work area"), and naive quote-pairing matches those instead, which
+    silently yields garbage candidates like `"s work area ("` and then fails with a
+    misleading message.
+    """
+    candidates = re.findall(
+        r"""('(?:[A-Za-z]:)?[\\/][^']*'|"(?:[A-Za-z]:)?[\\/][^"]*")""", message
+    )
+    found: list[str] = []
+    for raw in candidates:
+        try:
+            value = ast.literal_eval(raw)  # undoes the repr's doubled backslashes
+        except (ValueError, SyntaxError):
+            value = raw[1:-1]
+        if isinstance(value, str) and value:
+            found.append(_norm(value))
+    return found
+
+
+#: The stable, PATH-INDEPENDENT signature of each containment decision. Asserting
+#: one of these proves WHICH rule fired, which is the boundary DECISION — a
+#: different and stronger property than "the refusal named the offending path", and
+#: the only one of the two that survives any path-spelling difference at all.
+_RULE_SIGNATURES = {
+    # rejection_class="path-escape": resolved outside `<own checkout>/.agent-work`.
+    "path-escape": "may only bind a spine inside its OWN checkout's work area",
+    # rejection_class="cross-checkout": lexically inside, but a different checkout.
+    "cross-checkout": "sits inside a DIFFERENT checkout",
+}
+
+
+def assert_refusal_rule(case: unittest.TestCase, message: str, rule: str) -> None:
+    """Assert the refusal came from `rule`, without reference to any path.
+
+    Added after CI (issue #567 lane A). Nine tests in this module asserted only that
+    the refusal named a path, by raw substring — which failed on Windows for a
+    spelling difference while the refusals were correct. Fixing the spelling proves
+    the refusal FIRES and NAMES the path. It does not by itself prove the boundary
+    DECISION is computed correctly under Windows path semantics, because a wrong
+    decision can still name a path correctly. This assertion covers that second
+    property: `path-escape` and `cross-checkout` are two different rules reaching
+    two different conclusions, and only one of them is right for a given input.
+    """
+    signature = _RULE_SIGNATURES[rule]
+    case.assertIn(
+        signature, message,
+        f"expected the {rule!r} rule to fire (signature {signature!r}); "
+        f"got: {message!r}",
+    )
+    for other, other_sig in _RULE_SIGNATURES.items():
+        if other != rule:
+            case.assertNotIn(
+                other_sig, message,
+                f"the {other!r} rule fired as well as {rule!r}; the two decisions are "
+                f"mutually exclusive, so a message carrying both means the boundary "
+                f"was evaluated twice with different answers",
+            )
+
+
+def assert_names_path(case: unittest.TestCase, message: str, expected, why: str = "") -> None:
+    """Assert `message` NAMES `expected`, comparing normalized paths.
+
+    This proves the refusal fires and names the offending path. It deliberately does
+    NOT prove the confinement boundary itself computes correctly under Windows path
+    semantics — `assert_refusal_class` covers the decision, path-independently.
+    """
+    want = _norm(expected)
+    got = _paths_named_in(message)
+    if want in got:
+        return
+    case.fail(
+        f"the refusal does not name {want!r}"
+        + (f" ({why})" if why else "")
+        + f"\n  paths it does name: {got!r}\n  full message: {message!r}"
+    )
 
 
 class _BoundInARepo(unittest.TestCase):
@@ -264,9 +364,9 @@ class ReachDeltaTests(_BoundInARepo):
         result = self.bind(str(outside))
         self.assertTrue(result["isError"])
         text = _text(result)
-        self.assertIn(str(self.boundary), text,
+        assert_names_path(self, text, self.boundary,
                       "the refusal does not NAME the boundary it enforced")
-        self.assertIn(str(outside.resolve()), text,
+        assert_names_path(self, text, outside.resolve(),
                       "the refusal does not name what the path resolved to")
         self.assertIn("outside", text)
 
@@ -296,7 +396,8 @@ class ReachDeltaTests(_BoundInARepo):
         loose = _write_spine(self.repo / "notes" / "spine.json", _spine_payload("loose-work"))
         result = self.bind(str(loose))
         self.assertTrue(result["isError"])
-        self.assertIn(str(self.boundary), _text(result))
+        assert_names_path(self, _text(result), self.boundary)
+        assert_refusal_rule(self, _text(result), "path-escape")
 
     def test_the_confinement_predicate_is_resolve_confined_reused(self):
         """Reuse, not a second differently-shaped check -- the failure
@@ -313,7 +414,7 @@ class ReachDeltaTests(_BoundInARepo):
         traversal = str(self.work / ".." / ".." / "elsewhere" / "spine.json")
         result = self.bind(traversal)
         self.assertTrue(result["isError"], "a `..` traversal escaped the boundary")
-        self.assertIn(str(outside.resolve()), _text(result),
+        assert_names_path(self, _text(result), outside.resolve(),
                       "the refusal reports the pre-resolution spelling, not what it resolves to")
 
     def test_the_root_is_show_toplevel_never_git_common_dir(self):
@@ -366,7 +467,8 @@ class SiblingWorktreeIsRefusedTests(_BoundInARepo):
                         "a sibling worktree's LIVE spine was bindable -- `.worktrees/` nests "
                         "inside the checkout, so a root that stops at the checkout admits "
                         "every other lane")
-        self.assertIn(str(self.boundary), _text(result))
+        assert_names_path(self, _text(result), self.boundary)
+        assert_refusal_rule(self, _text(result), "path-escape")
 
     def test_a_nested_checkout_inside_the_work_area_is_refused_by_the_cross_checkout_rule(self):
         """Lexical containment alone is not enough: a checkout can be NESTED
@@ -383,8 +485,12 @@ class SiblingWorktreeIsRefusedTests(_BoundInARepo):
                         "a spine in a checkout NESTED inside the work area was bindable -- "
                         "lexical containment passed and nothing asked which repo it is in")
         text = _text(result)
-        self.assertIn("checkout", text)
-        self.assertIn(str(self.repo.resolve()), text,
+        # The DECISION, path-independently: the cross-checkout rule must be the one
+        # that fired, not the plain containment rule -- this path IS lexically inside
+        # the boundary, so `path-escape` firing here would be the wrong answer
+        # reached for the wrong reason.
+        assert_refusal_rule(self, text, "cross-checkout")
+        assert_names_path(self, text, self.repo.resolve(),
                       "the refusal does not name the checkout this door belongs to")
 
 
@@ -478,7 +584,7 @@ class TheRootMustBeTheDoorsOwnWorktreeTests(unittest.TestCase):
             "linked worktree -- that is `--git-common-dir` behaviour, and it admits every "
             "lane in the repository")
         text = _text(result)
-        self.assertIn(str((self.lane_a / ".agent-work").resolve()), text,
+        assert_names_path(self, text, (self.lane_a / ".agent-work").resolve(),
                       "the refusal names a boundary other than this door's own worktree")
         self.assertNotIn(str((self.repo / ".agent-work").resolve()) + "'", text)
         self.assertEqual(self.mine.resolve(), self.module.SPINE, "the binding moved anyway")
@@ -489,7 +595,7 @@ class TheRootMustBeTheDoorsOwnWorktreeTests(unittest.TestCase):
         result = self.bind(theirs)
         self.assertTrue(result["isError"],
                         "a sibling lane's spine was bindable from this door")
-        self.assertIn(str((self.lane_a / ".agent-work").resolve()), _text(result))
+        assert_names_path(self, _text(result), (self.lane_a / ".agent-work").resolve())
         self.assertEqual(self.mine.resolve(), self.module.SPINE)
 
     def test_the_measured_reach_is_the_narrow_set_not_the_wide_one(self):
@@ -703,11 +809,11 @@ class ASymlinkCannotHideAnotherCheckoutTests(unittest.TestCase):
         # so without this the assertions below would pass on the escape itself.
         self.assertTrue(result["isError"], _text(result))
         text = _text(result)
-        self.assertIn(str(self.nested_spine.resolve()), text,
+        assert_names_path(self, text, self.nested_spine.resolve(),
                       "the refusal does not name the spine that would actually be driven")
-        self.assertIn(str(self.nested.resolve()), text,
+        assert_names_path(self, text, self.nested.resolve(),
                       "the refusal does not name the checkout the target belongs to")
-        self.assertIn(str(self.lane_a.resolve()), text,
+        assert_names_path(self, text, self.lane_a.resolve(),
                       "the refusal does not name this door's own checkout")
 
     def test_the_reach_including_symlinked_spellings_is_still_one_spine(self):
@@ -1355,7 +1461,7 @@ class TwoDoorRoundTripTests(_RealDoorInAStagedCheckout):
         door = self._door(self.repo / "scripts" / "mcp_spine_server.py", self.repo)
         is_err, text = door.text("spine_bind", spine_file=str(outside))
         self.assertTrue(is_err, "an unbound door bound a spine outside its own checkout")
-        self.assertIn(str((self.repo / ".agent-work").resolve()), text)
+        assert_names_path(self, text, (self.repo / ".agent-work").resolve())
         # And it is still unbound afterwards, not half-bound.
         is_err, text = door.text("spine_status")
         self.assertTrue(is_err)

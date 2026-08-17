@@ -20,6 +20,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PureWindowsPath
 
@@ -235,6 +236,78 @@ def _dominant_newline(path: Path) -> bytes:
     return b"\r\n" if crlf and not bare_lf else b"\n"
 
 
+#: Windows raises these when `MoveFileEx` cannot replace a destination another
+#: handle holds open: ERROR_ACCESS_DENIED and ERROR_SHARING_VIOLATION. Named
+#: rather than inlined so the retry below cannot silently widen to other errnos.
+_WINDOWS_REPLACE_BUSY = (5, 32)
+_REPLACE_ATTEMPTS = 12
+_REPLACE_BACKOFF_SECONDS = 0.01
+
+
+def _replace_with_retry(tmp_name: str, path: Path) -> None:
+    """Install the temp file over `path`, retrying briefly on a Windows sharing
+    violation. Raises rather than giving up quietly.
+
+    **POSIX and Windows differ here, and the difference is load-bearing for #613's
+    atomicity claim.** POSIX `rename(2)` replaces a destination regardless of who
+    has it open — an existing reader keeps reading the old inode and never sees a
+    torn document, which is the whole property `save()` was rewritten to get.
+    Windows `MoveFileEx` instead FAILS when the destination is open without
+    `FILE_SHARE_DELETE`, and CPython's `open()` does not pass that flag — so a
+    reader doing `load()`'s ordinary `Path(path).read_text()` makes a concurrent
+    `save()` raise `PermissionError(13)`.
+
+    Measured in CI (issue #567 lane A): with two writers and three readers on one
+    spine, the Windows writer failed with
+    `PermissionError(13, 'Access denied')` while Linux passed clean.
+
+    That is a REAL behavioural difference, not a test artifact — the failing
+    reader was doing exactly what `load()` does, and `run_crew.py`'s parent-lease
+    heartbeat reads a spine another process writes, which is #613's own scenario.
+
+    So the honest statement of what `save()` guarantees:
+
+    * **POSIX** — atomic. A concurrent reader sees the complete old document or the
+      complete new one, never a torn one, and the writer always completes.
+    * **Windows** — atomic when it succeeds, and it **fails loudly rather than
+      tearing** when it cannot. A reader's open handle can make the install fail;
+      this function retries for about %.0f ms first, because engine readers hold the
+      file only for the duration of one `read_text()`. If every attempt loses the
+      race the `PermissionError` propagates, so a caller learns the write did not
+      land instead of believing it did.
+
+    Fail-loud is the right trade and it is still a change from the old
+    `write_bytes`, which would have completed by overwriting in place — at the cost
+    of being the torn-read bug this replaced. Retrying does not weaken atomicity:
+    the temp file already holds the complete new document, so an attempt either
+    installs all of it or none of it, and a retry is idempotent.
+
+    The retry is deliberately narrow. Only the two Windows busy codes are retried,
+    by `winerror` where the platform provides it; every other `OSError` — a real
+    permission problem, a vanished directory — raises on the first attempt, because
+    retrying those would turn a clear failure into a slow one.
+    """
+    last: OSError | None = None
+    for attempt in range(_REPLACE_ATTEMPTS):
+        try:
+            os.replace(tmp_name, path)
+            return
+        except OSError as exc:
+            # `winerror` exists only on Windows; on POSIX nothing matches, so this
+            # loop runs exactly once and the behaviour is unchanged there.
+            if getattr(exc, "winerror", None) not in _WINDOWS_REPLACE_BUSY:
+                raise
+            last = exc
+            if attempt < _REPLACE_ATTEMPTS - 1:
+                time.sleep(_REPLACE_BACKOFF_SECONDS)
+    raise last  # type: ignore[misc]  # unreachable with last unset
+
+
+_replace_with_retry.__doc__ = _replace_with_retry.__doc__ % (
+    _REPLACE_ATTEMPTS * _REPLACE_BACKOFF_SECONDS * 1000,
+)
+
+
 def _restore_mode(fd: int, tmp_name: str, mode: int) -> None:
     """Give the temp file the target's existing permissions, on every platform.
 
@@ -321,7 +394,7 @@ def save(path: Path, data: dict) -> None:
             f.write(payload)
             f.flush()
             os.fsync(f.fileno())
-        os.replace(tmp_name, path)
+        _replace_with_retry(tmp_name, path)
         tmp_name = None
     finally:
         if tmp_name is not None:  # a failure anywhere above leaves no .tmp behind

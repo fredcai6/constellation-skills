@@ -12,8 +12,18 @@
 
 While writing tests for `spine_bind`, the implementer measured **four of its own tests
 reporting `PASSED` while their bodies raised `AttributeError`.** The raise happened inside a
-`subTest` block, and under this repo's pytest configuration the failure did not surface as a
-failure.
+`subTest` block.
+
+**REPRODUCED by the Admiral, with the detail that makes it invisible.** The test is reported
+as **`PASSED`**, and the failure surfaces only on a **separate `SUBFAILED(...)` line**. So a
+run is not silent about the failure — it reports it somewhere else, under a different token.
+Any instrument that greps for `FAILED` therefore misses it entirely, and the Admiral's own
+merge-gate instrument was doing exactly that until this candidate was raised; it has been
+fixed.
+
+That is the whole defect in one sentence: **the summary line says `PASSED` while the truth is
+on another line under a name nothing greps for.** It is worse than a silent failure, because
+the green summary is actively reassuring.
 
 ## Why this is the worst class of defect in this codebase
 
@@ -48,7 +58,11 @@ only as trustworthy as this mechanism.
    whose `subTest` support silently drops non-assertion exceptions; a custom
    `conftest.py` hook; or a helper in this repo that wraps `subTest` and catches broadly.
 3. **Then measure the blast radius, and this is the part that matters.** Count the `subTest`
-   call sites across `tests/` and state the number. Every one is a place where a raising body
+   call sites across `tests/` and state the number. **Measured, so the next reader does not
+   have to:** `grep -rc 'subTest' tests/*.py` reports **169 call sites across 25 files** at
+   `feat/567-a-spine-identity`. Every one is a place where a raising body may have been
+   reporting green. That is the number the audit has to work through, and it is large enough
+   that "we looked at a few" is not an answer. Every one is a place where a raising body
    may have been reporting green. `global-orchestrator.md`'s mechanical detector applies to
    the audit itself: *any guard that loops must assert what it looped over* — so the audit
    must state its own count, not just its findings.
