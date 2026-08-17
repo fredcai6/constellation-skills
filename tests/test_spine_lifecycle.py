@@ -16,9 +16,11 @@ from __future__ import annotations
 
 import ast
 import json
+import os
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -1176,3 +1178,1281 @@ class TestCloseWorkEndToEndRealEngine:
 
         assert result["work_id"] == "w1"
         assert "ready to PR" in result["message"]
+
+
+# =============================================================================
+# g1 (#574) -- verify + close primitives: done_refusal (pure), _engine_call (the
+# single in-process engine choke point) and _advance_and_release.
+#
+# House style as above: every guard gets a VIOLATING fixture that trips it and an
+# INNOCENT fixture that does not. EVERY fixture spine lives under `tmp_path` --
+# never a live spine, and never a live lease.
+# =============================================================================
+
+import gauge_reader  # noqa: E402
+
+G1_SESSION = "constellation/g1-fixture/implementer"
+
+
+def inspect_source(fn) -> str:
+    """A function's source text, for the source-level assertions below (the one
+    choke point, no subprocess, no second call path)."""
+    import inspect
+    return inspect.getsource(fn)
+
+
+def _g1_spine(*, gate_status="in-progress", satisfied=True, lease_status="active",
+              claimed_ago=300, items=None, tasks=None):
+    """A minimal single-gate gated spine the REAL engine will drive: an active
+    lease owned by `G1_SESSION`, one gate, one `check: null` postcondition whose
+    `satisfied` flag is the knob every refusal fixture below turns."""
+    now = datetime.now(timezone.utc)
+    claimed_at = (now - timedelta(seconds=claimed_ago)).isoformat()
+    default_tasks = {
+        "m1": {
+            "id": "m1", "title": "the gate", "imperative": "do the thing",
+            "preconditions": [],
+            "postconditions": [
+                {"id": "c1", "statement": "the thing is done", "check": None,
+                 "satisfied": satisfied},
+            ],
+            "constraints": [], "directives": None, "child_checklist": None,
+            "status": gate_status, "status_detail": {}, "result": None,
+            "finding": None, "evidence": [], "rework_count": 0,
+        },
+    }
+    return {
+        "work_id": "g1-fixture",
+        "type": "gated",
+        "items": ["m1"] if items is None else items,
+        "tasks": default_tasks if tasks is None else tasks,
+        "engine_session": {
+            "session_id": G1_SESSION, "claimed_by": "implementer", "worktree": ".",
+            "status": lease_status, "claimed_at": claimed_at,
+            "last_heartbeat": now.isoformat(),
+        },
+        "consolidation": None, "triage_candidates": [], "blockers": [],
+    }
+
+
+def _write_g1_spine(tmp_path: Path, spine: dict, name: str = "spine.json") -> Path:
+    path = tmp_path / name
+    path.write_text(json.dumps(spine, indent=2) + "\n", encoding="utf-8", newline="\n")
+    return path
+
+
+def _read_g1_spine(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _engine_main_call_lines() -> list[int]:
+    """The line of every AST call to `checklist_engine.main(...)` in
+    scripts/spine_lifecycle.py. AST, not text search: the module and
+    `_engine_call` both DISCUSS that call in prose, and prose is not a call
+    site."""
+    tree = ast.parse((ROOT / "scripts" / "spine_lifecycle.py").read_text(encoding="utf-8"))
+    return [
+        node.lineno
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "main"
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id == "checklist_engine"
+    ]
+
+
+def _function_line_span(name: str) -> tuple[int, int]:
+    """`(first, last)` source lines of a top-level function in
+    scripts/spine_lifecycle.py."""
+    tree = ast.parse((ROOT / "scripts" / "spine_lifecycle.py").read_text(encoding="utf-8"))
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name == name:
+            return node.lineno, node.end_lineno
+    raise AssertionError(f"{name} not found in scripts/spine_lifecycle.py")
+
+
+def _raw_engine_cli(argv: list[str]) -> str:
+    """The same argv run through the REAL engine CLI in a SEPARATE PROCESS, and
+    its combined output. The independent path the byte-identity assertions below
+    compare against, so "verbatim" is measured against the engine itself rather
+    than against another call into the same in-process helper."""
+    proc = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "checklist_engine.py"), *argv],
+        capture_output=True, text=True,
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+    )
+    return (proc.stdout + proc.stderr).strip()
+
+
+# --------------------------------------------------------------------------- #
+# done_refusal -- pure. Exactly the two new checks (tree clean, episode
+# captured). It must NOT call or fold in closeout_refusal: done_refusal runs
+# on the CURRENT state, before _advance_and_release runs, while the lease is
+# by definition still active -- closeout_refusal's own first check refuses
+# unless the lease has already been released, so folding it in here would
+# refuse every legitimate call. closeout_refusal's lease/terminality/archive
+# logic stays exclusively in close_work, downstream, after release.
+# --------------------------------------------------------------------------- #
+
+class TestDoneRefusal:
+    def test_innocent_all_clear_proceeds(self):
+        assert sl.done_refusal(
+            _terminal_spine(), tree_clean=True, episodes_captured=True,
+        ) is None
+
+    def test_innocent_all_clear_proceeds_even_with_an_active_lease(self):
+        # The real calling context: done_refusal runs BEFORE
+        # _advance_and_release, so the lease is still active by definition.
+        # That must not refuse -- done_refusal does not look at the lease.
+        spine = _terminal_spine(engine_session={"status": "active", "session_id": "s1"})
+        assert sl.done_refusal(spine, tree_clean=True, episodes_captured=True) is None
+
+    def test_violating_dirty_tree_refuses_with_the_exact_string(self):
+        msg = sl.done_refusal(
+            _terminal_spine(), tree_clean=False, episodes_captured=True,
+        )
+        assert msg == "close refused: the working tree has uncommitted changes"
+
+    def test_violating_no_episode_refuses_with_the_exact_string(self):
+        msg = sl.done_refusal(
+            _terminal_spine(), tree_clean=True, episodes_captured=False,
+        )
+        assert msg == "close refused: this run captured no episode"
+
+    def test_checks_run_in_order_tree_before_episode(self):
+        # Both new checks fail; the TREE is named, proving check 1 runs first.
+        msg = sl.done_refusal(
+            _terminal_spine(), tree_clean=False, episodes_captured=False,
+        )
+        assert msg == "close refused: the working tree has uncommitted changes"
+
+    def test_only_one_refusal_ever_comes_back(self):
+        # Every check failing at once still yields ONE message, not a list --
+        # "one actionable refusal, never a ritual to re-derive".
+        msg = sl.done_refusal(
+            _terminal_spine(engine_session={"status": "active", "session_id": "s1"},
+                            tasks={"m1": {"status": "in-progress"}}),
+            tree_clean=False, episodes_captured=False,
+        )
+        assert isinstance(msg, str)
+        assert msg.count("close refused:") == 1
+
+    def test_does_not_call_closeout_refusal(self):
+        # Source-text check, not merely eyeballed: done_refusal never
+        # references closeout_refusal at all.
+        import inspect
+        assert "closeout_refusal" not in inspect.getsource(sl.done_refusal)
+
+    def test_does_not_take_archive_exists(self):
+        with pytest.raises(TypeError):
+            sl.done_refusal(
+                _terminal_spine(), tree_clean=True, episodes_captured=True,
+                archive_exists=False,
+            )
+
+    def test_pure_no_filesystem_symbols(self):
+        import inspect
+        src = inspect.getsource(sl.done_refusal)
+        for banned in ("open(", "subprocess.", "Path("):
+            assert banned not in src
+
+
+# --------------------------------------------------------------------------- #
+# _engine_call -- the SINGLE in-process choke point. Never raises: an argv
+# argparse rejects exits 2 through SystemExit, which main()'s own try/except
+# (EngineError only) does not catch.
+# --------------------------------------------------------------------------- #
+
+class TestEngineCall:
+    def test_innocent_valid_argv_returns_output_and_zero(self, tmp_path):
+        path = _write_g1_spine(tmp_path, _g1_spine())
+        output, code = sl._engine_call(["--file", str(path), "current"])
+        assert code == 0
+        assert "m1" in output
+
+    def test_violating_malformed_argv_returns_nonzero_and_does_not_raise(self, tmp_path):
+        # `advance` with no gate id: argparse calls sys.exit(2), and main()'s own
+        # try/except catches EngineError ONLY -- so without the SystemExit clause
+        # this escapes the helper entirely instead of coming back as (output, code).
+        path = _write_g1_spine(tmp_path, _g1_spine())
+        output, code = sl._engine_call(["--file", str(path), "advance"])
+        assert code == 2
+        assert output  # argparse's usage text was captured, not printed past us
+        assert "usage" in output.lower()
+
+    def test_violating_unknown_flag_returns_nonzero_and_does_not_raise(self, tmp_path):
+        # The lane-A shape the handoff names: a flag that is not (or is no longer)
+        # in `parse_args`.
+        path = _write_g1_spine(tmp_path, _g1_spine())
+        output, code = sl._engine_call(
+            ["--file", str(path), "advance", "m1", "--no-such-flag"]
+        )
+        assert code == 2
+        assert output
+
+    def test_violating_unknown_verb_returns_nonzero_and_does_not_raise(self, tmp_path):
+        path = _write_g1_spine(tmp_path, _g1_spine())
+        output, code = sl._engine_call(["--file", str(path), "not-a-verb"])
+        assert code == 2
+
+    def test_violating_missing_spine_file_returns_nonzero_and_does_not_raise(self, tmp_path):
+        # `load()` runs BEFORE main()'s try/except, so a missing file raises an
+        # OSError from outside every engine-side handler.
+        output, code = sl._engine_call(["--file", str(tmp_path / "nope.json"), "current"])
+        assert code == 1
+        assert output
+
+    def test_violating_engine_refusal_returns_nonzero_with_the_refusal_text(self, tmp_path):
+        # An EngineError the engine handles itself: main() prints REFUSED and
+        # returns 1, so the text must come back as output, not as an exception.
+        path = _write_g1_spine(tmp_path, _g1_spine(satisfied=False))
+        output, code = sl._engine_call(
+            ["--file", str(path), "advance", "m1", "--mechanical",
+             "--session-id", G1_SESSION]
+        )
+        assert code == 1
+        assert "REFUSED:" in output
+        assert "postconditions unmet" in output
+
+    def test_captured_output_never_reaches_the_real_streams(self, tmp_path, capsys):
+        # The redirect is the point: a closeout primitive must not spray engine
+        # output onto its caller's stdout/stderr.
+        path = _write_g1_spine(tmp_path, _g1_spine())
+        sl._engine_call(["--file", str(path), "current"])
+        captured = capsys.readouterr()
+        assert captured.out == ""
+        assert captured.err == ""
+
+    def test_is_the_only_place_this_module_calls_checklist_engine_main(self):
+        # Close criterion: ONE choke point. Measured over the AST, not the text,
+        # so prose in a docstring cannot pass for a call site and a second real
+        # call path added later cannot hide behind one.
+        sites = _engine_main_call_lines()
+        assert len(sites) == 1, f"checklist_engine.main called at lines {sites}"
+        start, end = _function_line_span("_engine_call")
+        assert start <= sites[0] <= end, "the one call site is not inside _engine_call"
+
+    def test_advance_and_release_goes_through_the_choke_point_only(self):
+        body = inspect_source(sl._advance_and_release)
+        assert "_engine_call(" in body
+        # Never a second call path: no subprocess, no direct engine.main, no
+        # shelling out to the engine script.
+        assert "subprocess" not in body
+        assert "checklist_engine.main(" not in body
+        assert "checklist_engine.py" not in body
+
+
+# --------------------------------------------------------------------------- #
+# _advance_and_release -- advance the gate the run is inside, then release. A
+# refused advance comes back VERBATIM and the release is never attempted.
+# --------------------------------------------------------------------------- #
+
+class TestAdvanceAndRelease:
+    def test_innocent_terminal_gate_not_yet_advanced_ends_released(self, tmp_path):
+        # Close criterion 1: the gate is at its last postcondition, satisfied but
+        # not yet advanced. One call closes it and releases the lease.
+        path = _write_g1_spine(tmp_path, _g1_spine(gate_status="in-progress", satisfied=True))
+        result = sl._advance_and_release(path, G1_SESSION, root=tmp_path)
+        assert result["ok"] is True, result
+        after = _read_g1_spine(path)
+        assert after["engine_session"]["status"] == "released"
+        assert after["tasks"]["m1"]["status"] == "complete"
+
+    def test_innocent_pending_gate_is_started_first(self, tmp_path):
+        # Step 2 of the sequence: a gate still `pending` cannot be advanced, so
+        # it is started first.
+        path = _write_g1_spine(tmp_path, _g1_spine(gate_status="pending", satisfied=True))
+        result = sl._advance_and_release(path, G1_SESSION, root=tmp_path)
+        assert result["ok"] is True, result
+        after = _read_g1_spine(path)
+        assert after["tasks"]["m1"]["status"] == "complete"
+        assert after["engine_session"]["status"] == "released"
+
+    def test_innocent_already_terminal_spine_only_releases(self, tmp_path):
+        # active_id() is None: every gate is terminal, so the advance half has
+        # nothing to do and only the release is left.
+        path = _write_g1_spine(tmp_path, _g1_spine(gate_status="complete", satisfied=True))
+        result = sl._advance_and_release(path, G1_SESSION, root=tmp_path)
+        assert result["ok"] is True, result
+        after = _read_g1_spine(path)
+        assert after["engine_session"]["status"] == "released"
+        assert "released lease" in result["output"]
+
+    def test_innocent_relative_spine_path_resolves_against_root(self, tmp_path):
+        _write_g1_spine(tmp_path, _g1_spine())
+        result = sl._advance_and_release("spine.json", G1_SESSION, root=tmp_path)
+        assert result["ok"] is True, result
+        assert _read_g1_spine(tmp_path / "spine.json")["engine_session"]["status"] == "released"
+
+    def test_why_is_recorded_on_the_why_trail_when_given(self, tmp_path):
+        path = _write_g1_spine(tmp_path, _g1_spine())
+        result = sl._advance_and_release(
+            path, G1_SESSION, root=tmp_path, why="the gate's evidence is attached and green",
+        )
+        assert result["ok"] is True, result
+        trail = _read_g1_spine(path).get("why_trail") or []
+        assert any(
+            r.get("why") == "the gate's evidence is attached and green" for r in trail
+        ), trail
+
+    def test_blank_why_falls_back_to_mechanical(self, tmp_path):
+        # Not a why: whitespace records no understanding, so it must take the
+        # --mechanical branch rather than being passed as a why the engine would
+        # refuse as empty.
+        path = _write_g1_spine(tmp_path, _g1_spine())
+        result = sl._advance_and_release(path, G1_SESSION, root=tmp_path, why="   ")
+        assert result["ok"] is True, result
+        trail = _read_g1_spine(path).get("why_trail") or []
+        assert trail and trail[-1].get("mechanical") is True, trail
+
+    def test_violating_unmet_postcondition_passes_the_refusal_through_unchanged(self, tmp_path):
+        # Close criterion 2, load-bearing. The refusal text must be BYTE-IDENTICAL
+        # to the engine's own, and the release must never be attempted.
+        spine = _g1_spine(satisfied=False)
+        path = _write_g1_spine(tmp_path, spine)
+        pristine = _write_g1_spine(tmp_path, spine, name="pristine.json")
+
+        result = sl._advance_and_release(path, G1_SESSION, root=tmp_path)
+
+        assert result["ok"] is False
+        assert result["stage"] == "advance"
+
+        # The engine's own words, produced by a SEPARATE PROCESS running the real
+        # CLI over the same argv against an identical spine.
+        expected = _raw_engine_cli([
+            "--file", str(pristine), "advance", "m1", "--mechanical",
+            "--session-id", G1_SESSION,
+        ])
+        assert result["refusal"] == expected
+        assert "postconditions unmet" in result["refusal"]
+
+        # The release was NEVER attempted: the lease is still active and the gate
+        # is still open.
+        after = _read_g1_spine(path)
+        assert after["engine_session"]["status"] == "active"
+        assert after["tasks"]["m1"]["status"] == "in-progress"
+
+    def test_violating_refusal_carries_no_wording_of_our_own(self, tmp_path):
+        # A re-worded refusal is the defect: the returned text must be exactly what
+        # the engine emitted, with nothing prepended, appended, or paraphrased.
+        path = _write_g1_spine(tmp_path, _g1_spine(satisfied=False))
+        result = sl._advance_and_release(path, G1_SESSION, root=tmp_path)
+        assert result["refusal"].startswith("RAIL:") or result["refusal"].startswith("REFUSED:")
+        for invented in ("close refused", "spine_lifecycle", "SpineLifecycleError"):
+            assert invented not in result["refusal"]
+
+    def test_violating_refused_start_reports_stage_start_and_never_advances(self, tmp_path):
+        # A pending gate with an unmet PREcondition: `start` refuses, so neither
+        # the advance nor the release may happen.
+        spine = _g1_spine(gate_status="pending", satisfied=True)
+        spine["tasks"]["m1"]["preconditions"] = [
+            {"id": "p1", "statement": "upstream work is done", "check": None, "satisfied": False},
+        ]
+        path = _write_g1_spine(tmp_path, spine)
+
+        result = sl._advance_and_release(path, G1_SESSION, root=tmp_path)
+
+        assert result["ok"] is False
+        assert result["stage"] == "start"
+        assert "preconditions unmet" in result["refusal"]
+        after = _read_g1_spine(path)
+        assert after["tasks"]["m1"]["status"] == "pending"
+        assert after["engine_session"]["status"] == "active"
+
+    def test_violating_refused_release_reports_stage_release(self, tmp_path):
+        # Every gate is already terminal, so the advance half is skipped and the
+        # release is reached -- and refused, because this session does not own the
+        # lease. `stage` names which half failed and the engine's text says why.
+        path = _write_g1_spine(tmp_path, _g1_spine(gate_status="complete"))
+        result = sl._advance_and_release(path, "not-the-owner", root=tmp_path)
+        assert result["ok"] is False
+        assert result["stage"] == "release"
+        assert "does not own the lease" in result["refusal"]
+        after = _read_g1_spine(path)
+        assert after["engine_session"]["status"] == "active"
+
+    def test_violating_non_owner_is_refused_at_the_advance_before_any_release(self, tmp_path):
+        # The engine's actor-authority gate fires first for a non-owner, so the
+        # refusal is the ADVANCE's and the release is never attempted.
+        path = _write_g1_spine(tmp_path, _g1_spine())
+        result = sl._advance_and_release(path, "not-the-owner", root=tmp_path)
+        assert result["ok"] is False
+        assert result["stage"] == "advance"
+        assert "owned by active session" in result["refusal"]
+        after = _read_g1_spine(path)
+        assert after["engine_session"]["status"] == "active"
+        assert after["tasks"]["m1"]["status"] == "in-progress"
+
+    def test_no_second_advance_after_a_refused_one(self, tmp_path):
+        # The refusal returns; it never retries with a different flag. A run that
+        # quietly re-advanced with --why on refusal would defeat the whole point.
+        path = _write_g1_spine(tmp_path, _g1_spine(satisfied=False))
+        calls = []
+        real = sl._engine_call
+
+        def spy(argv):
+            calls.append(list(argv))
+            return real(argv)
+
+        sl._engine_call = spy
+        try:
+            result = sl._advance_and_release(path, G1_SESSION, root=tmp_path)
+        finally:
+            sl._engine_call = real
+        assert result["ok"] is False
+        verbs = [argv[2] for argv in calls]
+        assert verbs == ["advance"], verbs
+
+
+# --------------------------------------------------------------------------- #
+# HARD band -- close criterion 3, the finding this gate exists to cover.
+#
+# `advance`'s `require_why` is computed LIVE at the engine's CLI boundary from
+# `_trip_hard_band_reading` (checklist_engine._run_verb, ~:3369); it is not
+# derived from anything a caller passes. At/over the hard band the engine
+# REFUSES `--mechanical` outright, so `_advance_and_release` must never assume
+# the mechanical close succeeds. This is plausibly the exact scenario #574
+# cites: "an Admiral's closeout was refused at 23% context."
+#
+# What the fixture has to satisfy for the gauge to be read at all -- all four,
+# or the reading collapses to None and the band is silently inactive:
+#   * an ACTIVE lease, because `_checklist_owner` keys the gauge FILENAME off it
+#     (`gauge_reader.gauge_filename(owner_key(session_id))`);
+#   * `observed_at` NOT before the lease's `claimed_at`, or
+#     `_reading_predates_claim` reads the sample as a predecessor's;
+#   * a model in `gauge_reader._PROFILES`, or `read()` declines it as
+#     uncalibrated;
+#   * freshness inside `DEFAULT_MAX_AGE` (30 minutes).
+#
+# And the gate must already be IN-PROGRESS: `start` (not `advance`) is
+# TRIP_HARD_GUARDED (checklist_engine:83), so a hard-band fixture whose gate is
+# still `pending` is refused at the BEGIN with the begin-refused message and
+# never reaches the why-required refusal this test is about.
+# --------------------------------------------------------------------------- #
+
+HARD_BAND_MODEL = "claude-opus-5"  # hard threshold 150_000/1_000_000 = 0.15
+HARD_BAND_FILL = 0.92
+
+
+def _write_hard_band_gauge(spine_path: Path, *, fill=HARD_BAND_FILL,
+                           model=HARD_BAND_MODEL, session_id=G1_SESSION) -> Path:
+    """A gauge record at/over the hard band, beside `spine_path`, named for the
+    lease that owns the fixture spine -- `gauge_reader.gauge_filename` /
+    `owner_key`, never a hand-spelled filename, so this side and the engine's
+    read side cannot drift."""
+    gauge_path = spine_path.parent / gauge_reader.gauge_filename(
+        gauge_reader.owner_key(session_id)
+    )
+    gauge_path.write_text(
+        json.dumps({
+            "schema_version": 1,
+            "fill_fraction": fill,
+            "model": model,
+            "observed_at": datetime.now(timezone.utc).isoformat(),
+        }),
+        encoding="utf-8", newline="\n",
+    )
+    return gauge_path
+
+
+class TestAdvanceAndReleaseHardBand:
+    def test_the_fixture_really_is_in_the_hard_band(self, tmp_path):
+        # The negative control for this whole class: if the gauge were declined
+        # for any of the four reasons above, the tests below would pass by
+        # accident on a band that was never active.
+        spine = _g1_spine()
+        path = _write_g1_spine(tmp_path, spine)
+        gauge_path = _write_hard_band_gauge(path)
+        assert gauge_path.exists()
+
+        reading = gauge_reader.read(gauge_path)
+        assert reading is not None, "the gauge record itself was declined"
+        _, hard = gauge_reader.thresholds_for(reading.model)
+        assert reading.fill_fraction >= hard
+
+        # And the ENGINE, on this exact spine, agrees it is over the line.
+        assert checklist_engine._trip_hard_band_reading(spine, tmp_path, "m1") is not None
+
+    def test_violating_why_less_close_is_refused_instead_of_closing_silently(self, tmp_path):
+        path = _write_g1_spine(tmp_path, _g1_spine())
+        _write_hard_band_gauge(path)
+
+        result = sl._advance_and_release(path, G1_SESSION, root=tmp_path)  # no why
+
+        assert result["ok"] is False
+        assert result["stage"] == "advance"
+        # The engine's own why-required wording, verbatim -- not a paraphrase.
+        assert "cannot be closed silently" in result["refusal"]
+        assert "Closing the gate is NOT refused; only the silence is." in result["refusal"]
+        assert 'advance m1 --why "<understanding>"' in result["refusal"]
+
+        # It did NOT close silently, and the release never happened.
+        after = _read_g1_spine(path)
+        assert after["tasks"]["m1"]["status"] == "in-progress"
+        assert after["engine_session"]["status"] == "active"
+        # No mechanical marker was recorded either: a mechanical close over the
+        # line is exactly what leaves the next agent cold-starting from a
+        # pre-trip digest.
+        assert not (after.get("why_trail") or [])
+
+    def test_the_refusal_is_byte_identical_to_the_engines_own(self, tmp_path):
+        spine = _g1_spine()
+        path = _write_g1_spine(tmp_path, spine)
+        _write_hard_band_gauge(path)
+
+        pristine_dir = tmp_path / "pristine"
+        pristine_dir.mkdir()
+        pristine = _write_g1_spine(pristine_dir, spine)
+        _write_hard_band_gauge(pristine)
+
+        result = sl._advance_and_release(path, G1_SESSION, root=tmp_path)
+        expected = _raw_engine_cli([
+            "--file", str(pristine), "advance", "m1", "--mechanical",
+            "--session-id", G1_SESSION,
+        ])
+        assert result["refusal"] == expected
+
+    def test_innocent_the_same_fixture_closes_cleanly_once_a_why_is_supplied(self, tmp_path):
+        # THE SAME fixture, over the same line, after the same refusal: closing the
+        # gate was never what the engine refused -- only closing it in silence.
+        path = _write_g1_spine(tmp_path, _g1_spine())
+        _write_hard_band_gauge(path)
+
+        refused = sl._advance_and_release(path, G1_SESSION, root=tmp_path)
+        assert refused["ok"] is False
+
+        why = "postconditions attested and green; g2 picks up reap and child-plan release"
+        closed = sl._advance_and_release(path, G1_SESSION, root=tmp_path, why=why)
+
+        assert closed["ok"] is True, closed
+        after = _read_g1_spine(path)
+        assert after["tasks"]["m1"]["status"] == "complete"
+        assert after["engine_session"]["status"] == "released"
+        # The understanding actually landed on the append-only why_trail, which is
+        # the whole point of the refusal.
+        assert any(r.get("why") == why for r in (after.get("why_trail") or []))
+
+    def test_innocent_below_the_hard_band_a_mechanical_close_still_succeeds(self, tmp_path):
+        # The INNOCENT counterpart: identical fixture, identical call, a gauge
+        # BELOW the line. The mechanical close goes through -- so the refusal above
+        # is caused by the band and by nothing else in the fixture.
+        path = _write_g1_spine(tmp_path, _g1_spine())
+        _write_hard_band_gauge(path, fill=0.05)
+
+        result = sl._advance_and_release(path, G1_SESSION, root=tmp_path)
+
+        assert result["ok"] is True, result
+        after = _read_g1_spine(path)
+        assert after["tasks"]["m1"]["status"] == "complete"
+        assert after["engine_session"]["status"] == "released"
+        assert (after.get("why_trail") or [])[-1].get("mechanical") is True
+
+    def test_mechanical_is_never_assumed_to_have_succeeded(self, tmp_path):
+        # The regression this gate exists to prevent: a helper that fires
+        # `--mechanical` and then releases regardless would leave the lease closed
+        # on a gate that never closed.
+        path = _write_g1_spine(tmp_path, _g1_spine())
+        _write_hard_band_gauge(path)
+
+        calls = []
+        real = sl._engine_call
+
+        def spy(argv):
+            calls.append(list(argv))
+            return real(argv)
+
+        sl._engine_call = spy
+        try:
+            result = sl._advance_and_release(path, G1_SESSION, root=tmp_path)
+        finally:
+            sl._engine_call = real
+
+        assert result["ok"] is False
+        assert [argv[2] for argv in calls] == ["advance"], calls
+        assert "--mechanical" in calls[0]
+        assert "release" not in [argv[2] for argv in calls]
+
+
+# --------------------------------------------------------------------------- #
+# force_reap -- g2. A LIBRARY call into spine_rail._binding_transaction with
+# an identity mutate; spine_rail.py itself is never edited.
+# --------------------------------------------------------------------------- #
+
+sys.path.insert(0, str(ROOT / "scripts" / "hooks"))
+import spine_rail  # noqa: E402
+
+
+def _binding_entry(*, spine: Path, claimed_at=None) -> dict:
+    return {
+        "spine": str(spine),
+        "engine_session": {"session_id": "irrelevant-to-the-reaper"},
+        "worktree": str(spine.parent),
+        "claimed_at": claimed_at or datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def _write_binding_target(path: Path, *, status: str) -> Path:
+    """A standalone spine JSON -- only `engine_session.status` matters to
+    `_reap_binding_entries`, which reads the TARGET file, not the binding
+    entry's own denormalized copy."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps({"engine_session": {"session_id": "s1", "status": status}}),
+        encoding="utf-8", newline="\n",
+    )
+    return path
+
+
+class TestForceReap:
+    def test_innocent_a_released_targets_entry_is_gone_immediately(self, tmp_path):
+        # Close criterion: a binding-store entry whose target spine is already
+        # `released` is gone IMMEDIATELY after the call -- read via
+        # spine_rail.load_binding, not by waiting for another transaction.
+        target = _write_binding_target(
+            tmp_path / ".agent-work" / "some-work" / "spine.json", status="released"
+        )
+        # Precondition sanity: the fixture's target really does read
+        # "released" before force_reap ever runs -- the reap is conditional on
+        # this, not unconditional.
+        assert spine_rail.load_spine(target)["engine_session"]["status"] == "released"
+
+        spine_rail.save_binding(tmp_path, {"s1": {str(target): _binding_entry(spine=target)}})
+        before = spine_rail.load_binding(tmp_path)
+        assert str(target) in before.get("s1", {}), before
+
+        result = sl.force_reap(tmp_path)
+
+        assert result is not None, "fail-open path taken unexpectedly"
+        after = spine_rail.load_binding(tmp_path)
+        assert str(target) not in after.get("s1", {}), after
+
+    def test_violating_an_active_targets_entry_is_retained(self, tmp_path):
+        # Paired contrast: `_reap_binding_entries` only drops a "released"
+        # target -- an ACTIVE one must survive an identity-mutate force_reap
+        # unchanged, proving the reap is conditional, not a blanket wipe.
+        target = _write_binding_target(
+            tmp_path / ".agent-work" / "some-work" / "spine.json", status="active"
+        )
+        spine_rail.save_binding(tmp_path, {"s1": {str(target): _binding_entry(spine=target)}})
+
+        result = sl.force_reap(tmp_path)
+
+        assert result is not None
+        after = spine_rail.load_binding(tmp_path)
+        assert str(target) in after.get("s1", {}), after
+
+
+# --------------------------------------------------------------------------- #
+# _release_child_plans -- g2, #552's mechanism half: reap alone only clears
+# entries whose target already reads "released"; a child plan's own
+# still-active lease is invisible to that reap and must be released
+# explicitly. Three safety properties, each exercised by a NEGATIVE test
+# below: lineage not proximity, honest non-owner release, escape refusal.
+# --------------------------------------------------------------------------- #
+
+PARENT_SESSION = "constellation/cmdr-parent/commander"
+
+
+def _leased_plan(session_id: str, *, status: str = "active") -> dict:
+    """A minimal standalone plan/spine JSON carrying just enough shape to be
+    driven by the real engine's `release` verb -- what _release_child_plans
+    keys off (items/tasks content itself is irrelevant to it)."""
+    now = datetime.now(timezone.utc).isoformat()
+    return {
+        "work_id": "child-fixture",
+        "type": "gated",
+        "items": ["c1"],
+        "tasks": {
+            "c1": {
+                "id": "c1", "title": "x", "imperative": "x",
+                "preconditions": [], "postconditions": [], "constraints": [],
+                "directives": None, "child_checklist": None,
+                "status": "complete", "status_detail": {}, "result": None,
+                "finding": None, "evidence": [], "rework_count": 0,
+            },
+        },
+        "engine_session": {
+            "session_id": session_id, "claimed_by": "implementer", "worktree": ".",
+            "status": status, "claimed_at": now, "last_heartbeat": now,
+        },
+        "consolidation": None, "triage_candidates": [], "blockers": [],
+    }
+
+
+def _parent_spine_with_children(child_refs: list[str], *, session_id=PARENT_SESSION) -> dict:
+    """A parent spine whose tasks declare `child_refs` (each resolved
+    relative to work_dir) as their `child_checklist`. An empty list yields
+    one ordinary gate with no child_checklist at all -- the 0-children case."""
+    tasks: dict = {}
+    items: list[str] = []
+    for i, ref in enumerate(child_refs, start=1):
+        tid = f"g{i}"
+        items.append(tid)
+        tasks[tid] = {
+            "id": tid, "title": f"gate {i}", "imperative": "x",
+            "preconditions": [], "postconditions": [], "constraints": [],
+            "directives": None, "child_checklist": ref,
+            "status": "complete", "status_detail": {}, "result": None,
+            "finding": None, "evidence": [], "rework_count": 0,
+        }
+    if not items:
+        items = ["m1"]
+        tasks["m1"] = {
+            "id": "m1", "title": "gate", "imperative": "x",
+            "preconditions": [], "postconditions": [], "constraints": [],
+            "directives": None, "child_checklist": None,
+            "status": "complete", "status_detail": {}, "result": None,
+            "finding": None, "evidence": [], "rework_count": 0,
+        }
+    now = datetime.now(timezone.utc).isoformat()
+    return {
+        "work_id": "cmdr-parent",
+        "type": "gated",
+        "items": items,
+        "tasks": tasks,
+        "engine_session": {
+            "session_id": session_id, "claimed_by": "commander", "worktree": ".",
+            "status": "active", "claimed_at": now, "last_heartbeat": now,
+        },
+        "consolidation": None, "triage_candidates": [], "blockers": [],
+    }
+
+
+def _write_json(path: Path, data: dict) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8", newline="\n")
+    return path
+
+
+class TestReleaseChildPlans:
+    def test_innocent_zero_children_releases_nothing(self, tmp_path):
+        work_dir = tmp_path / "cmdr"
+        spine_path = _write_json(work_dir / "spine.json", _parent_spine_with_children([]))
+
+        result = sl._release_child_plans(spine_path, work_dir, root=tmp_path, reason="cmdr-parent closeout")
+
+        assert result == {"released": [], "unclaimed_active": []}
+        # The parent's own active lease must not have been touched either.
+        assert json.loads(spine_path.read_text())["engine_session"]["status"] == "active"
+
+    def test_innocent_one_declared_child_ends_released(self, tmp_path):
+        work_dir = tmp_path / "cmdr"
+        child_path = _write_json(work_dir / "g1-implementer-plan.json", _leased_plan("child-session-1"))
+        spine_path = _write_json(
+            work_dir / "spine.json",
+            _parent_spine_with_children(["g1-implementer-plan.json"]),
+        )
+
+        result = sl._release_child_plans(
+            spine_path, work_dir, root=tmp_path, reason="cmdr-parent closeout: parent cmdr-parent"
+        )
+
+        assert result["released"] == [str(child_path)]
+        assert result["unclaimed_active"] == []
+        after = json.loads(child_path.read_text())
+        assert after["engine_session"]["status"] == "released"
+
+    def test_innocent_two_declared_children_both_end_released(self, tmp_path):
+        work_dir = tmp_path / "cmdr"
+        c1 = _write_json(work_dir / "interrogation.json", _leased_plan("child-session-1"))
+        c2 = _write_json(work_dir / "execute.json", _leased_plan("child-session-2"))
+        spine_path = _write_json(
+            work_dir / "spine.json",
+            _parent_spine_with_children(["interrogation.json", "execute.json"]),
+        )
+
+        result = sl._release_child_plans(spine_path, work_dir, root=tmp_path, reason="cmdr-parent closeout")
+
+        assert sorted(result["released"]) == sorted([str(c1), str(c2)])
+        assert result["unclaimed_active"] == []
+        assert json.loads(c1.read_text())["engine_session"]["status"] == "released"
+        assert json.loads(c2.read_text())["engine_session"]["status"] == "released"
+
+    def test_release_never_echoes_the_childs_own_session_id(self, tmp_path):
+        # Property 2, positive half: the caller id passed to `release` is the
+        # PARENT's own session, never the child's -- `release` itself records
+        # no session_id anywhere in the persisted spine or journal (it is not
+        # a MUTATING_VERBS member -- checklist_engine.py:70-74 -- so no
+        # journal line is written for it at all), so the only way to observe
+        # WHICH id crossed the choke point is to watch the choke point.
+        work_dir = tmp_path / "cmdr"
+        _write_json(work_dir / "g1-implementer-plan.json", _leased_plan("child-session-1"))
+        spine_path = _write_json(work_dir / "spine.json", _parent_spine_with_children(["g1-implementer-plan.json"]))
+
+        calls = []
+        real = sl._engine_call
+
+        def spy(argv):
+            calls.append(list(argv))
+            return real(argv)
+
+        sl._engine_call = spy
+        try:
+            result = sl._release_child_plans(spine_path, work_dir, root=tmp_path, reason="cmdr-parent closeout")
+        finally:
+            sl._engine_call = real
+
+        assert result["released"], result
+        release_calls = [argv for argv in calls if "release" in argv]
+        assert len(release_calls) == 1, release_calls
+        argv = release_calls[0]
+        session_id = argv[argv.index("--session-id") + 1]
+        assert session_id != "child-session-1"
+        assert session_id == PARENT_SESSION
+        assert "--force" in argv
+        assert argv[argv.index("--reason") + 1] == "cmdr-parent closeout"
+
+    # ----------------------------------------------------------------- #
+    # NEGATIVE tests -- load-bearing. Each proves one safety property by
+    # reproducing the boundary, not by arguing for it.
+    # ----------------------------------------------------------------- #
+
+    def test_violating_a_spine_outside_work_dir_sharing_a_prefix_is_never_touched(self, tmp_path):
+        # Property 1 (directory proximity is the WRONG predicate), the sharp
+        # form: a sibling directory whose NAME merely shares a string prefix
+        # with work_dir ("cmdr-g" vs "cmdr-g2") is not "inside" it by any
+        # path-containment test, and must never be scanned at all.
+        work_dir = tmp_path / "cmdr-g"
+        sibling_dir = tmp_path / "cmdr-g2"
+        outside_spine = _write_json(sibling_dir / "spine.json", _leased_plan("sibling-session"))
+        spine_path = _write_json(work_dir / "spine.json", _parent_spine_with_children([]))
+
+        result = sl._release_child_plans(spine_path, work_dir, root=tmp_path, reason="x")
+
+        assert str(outside_spine) not in result["released"]
+        assert str(outside_spine) not in result["unclaimed_active"]
+        assert json.loads(outside_spine.read_text())["engine_session"]["status"] == "active"
+
+    def test_violating_unclaimed_active_json_is_left_alone_and_reported(self, tmp_path):
+        # Property 1, the ordinary form: an active-leased JSON genuinely
+        # UNDER work_dir that no task declares as its child_checklist must be
+        # left alone -- releasing it would seize a lease a different,
+        # still-working agent genuinely holds.
+        work_dir = tmp_path / "cmdr"
+        orphan_path = _write_json(work_dir / "some-other-agents-plan.json", _leased_plan("orphan-session"))
+        spine_path = _write_json(work_dir / "spine.json", _parent_spine_with_children([]))
+
+        result = sl._release_child_plans(spine_path, work_dir, root=tmp_path, reason="x")
+
+        assert result["released"] == []
+        assert result["unclaimed_active"] == [str(orphan_path)]
+        assert json.loads(orphan_path.read_text())["engine_session"]["status"] == "active"
+
+    def test_violating_a_symlink_inside_work_dir_escaping_outside_is_refused(self, tmp_path):
+        # Property 3: a symlink that lexically sits inside work_dir (and is
+        # even DECLARED as a child_checklist) but whose realpath walks
+        # outside it must be refused -- the real target's lease survives.
+        work_dir = tmp_path / "cmdr"
+        outside_dir = tmp_path / "outside"
+        real_target = _write_json(outside_dir / "real-spine.json", _leased_plan("outside-session"))
+
+        symlink_path = work_dir / "escape.json"
+        work_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            symlink_path.symlink_to(real_target)
+        except OSError:
+            pytest.skip("symlinks not supported on this platform/permission level")
+
+        spine_path = _write_json(work_dir / "spine.json", _parent_spine_with_children(["escape.json"]))
+
+        result = sl._release_child_plans(spine_path, work_dir, root=tmp_path, reason="x")
+
+        assert str(symlink_path) not in result["released"]
+        assert str(real_target) not in result["released"]
+        assert json.loads(real_target.read_text())["engine_session"]["status"] == "active"
+
+
+# =============================================================================
+# finish_work + open_pr (#574 g3) -- "I'm done" as one call, composing g1's
+# verify/close primitives and g2's reap + child-plan release with close_work
+# (unmodified). Every fixture spine lives under tmp_path -- never a live
+# spine, and never a live lease.
+# =============================================================================
+
+def _census_active_leases(root: Path) -> int:
+    """Structural active-lease census -- mirrors `_active_engine_session_spine`'s
+    scan predicate (any `*.json` under `root`, any depth, whose
+    `engine_session.status == 'active'`), generalized to COUNT every match
+    instead of returning the first. Read-only and defensive on the same
+    terms: a missing directory, an unreadable/non-JSON file, a non-dict
+    payload, or a missing/non-dict `engine_session` is skipped rather than
+    raised."""
+    if not root.exists():
+        return 0
+    count = 0
+    for candidate in sorted(root.rglob("*.json")):
+        try:
+            data = json.loads(candidate.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if not isinstance(data, dict):
+            continue
+        session = data.get("engine_session")
+        if isinstance(session, dict) and str(session.get("status", "")).strip().lower() == "active":
+            count += 1
+    return count
+
+
+class TestFinishWorkRefusals:
+    def test_violating_dirty_tree_refuses_stage_verify_with_no_mutation(self, tmp_path):
+        spine_path = _write_json(
+            tmp_path / ".agent-work" / "g3-verify" / "spine.json",
+            _g1_spine(gate_status="in-progress", satisfied=True),
+        )
+        before = spine_path.read_bytes()
+        archive_root = tmp_path / ".agent-work" / "archive"
+
+        result = sl.finish_work(
+            spine_path, root=tmp_path, session_id=G1_SESSION, today="2026-08-16",
+            tree_clean=False, episodes_captured=True, push=False,
+        )
+
+        assert result == {
+            "ok": False,
+            "refusal": "close refused: the working tree has uncommitted changes",
+            "stage": "verify",
+        }
+        assert spine_path.read_bytes() == before, "step 2 refusal must not mutate the spine file"
+        assert not archive_root.exists(), "step 2 refusal must not create an archive"
+
+    def test_violating_no_episode_refuses_stage_verify(self, tmp_path):
+        spine_path = _write_json(
+            tmp_path / ".agent-work" / "g3-verify2" / "spine.json",
+            _g1_spine(gate_status="in-progress", satisfied=True),
+        )
+        result = sl.finish_work(
+            spine_path, root=tmp_path, session_id=G1_SESSION, today="2026-08-16",
+            tree_clean=True, episodes_captured=False, push=False,
+        )
+        assert result == {
+            "ok": False,
+            "refusal": "close refused: this run captured no episode",
+            "stage": "verify",
+        }
+
+    def test_violating_unmet_postcondition_refuses_stage_advance_release_advance(self, tmp_path):
+        # done_refusal passes (tree_clean/episodes_captured both True); the
+        # top-level gate itself is not ready -- _advance_and_release refuses
+        # at its own "advance" substage, and finish_work must not raise.
+        spine_path = _write_json(
+            tmp_path / ".agent-work" / "g3-advance" / "spine.json",
+            _g1_spine(satisfied=False),
+        )
+        result = sl.finish_work(
+            spine_path, root=tmp_path, session_id=G1_SESSION, today="2026-08-16",
+            tree_clean=True, episodes_captured=True, push=False,
+        )
+        assert result["ok"] is False
+        assert result["stage"] == "advance-release:advance"
+        assert "postconditions unmet" in result["refusal"]
+        after = json.loads(spine_path.read_text())
+        assert after["engine_session"]["status"] == "active", "a refused advance must not release the lease"
+
+    def test_violating_archive_already_exists_refuses_stage_archive_without_raising(self, tmp_path):
+        # done_refusal passes and _advance_and_release succeeds (releasing the
+        # lease); close_work itself then refuses because the archive
+        # directory already exists -- finish_work must catch
+        # SpineLifecycleError and return the structured refusal, never raise.
+        work_id = "g3-archive"
+        spine_path = _write_json(
+            tmp_path / ".agent-work" / work_id / "spine.json",
+            _g1_spine(gate_status="in-progress", satisfied=True),
+        )
+        today = "2026-08-16"
+        archive_dir = tmp_path / ".agent-work" / "archive" / f"{today}-{work_id}"
+        archive_dir.mkdir(parents=True)
+
+        result = sl.finish_work(
+            spine_path, root=tmp_path, session_id=G1_SESSION, today=today,
+            tree_clean=True, episodes_captured=True, push=False,
+        )
+
+        assert result["ok"] is False
+        assert result["stage"] == "archive"
+        assert "archive" in result["refusal"]
+        # The advance-and-release half already ran (it is not this step's job
+        # to unwind it): the gate closed and the lease released.
+        after = json.loads(spine_path.read_text())
+        assert after["tasks"]["m1"]["status"] == "complete"
+        assert after["engine_session"]["status"] == "released"
+
+    def test_pure_no_hidden_wording_on_refusal(self, tmp_path):
+        # The verify-stage refusal text is exactly done_refusal's own words --
+        # finish_work does not prepend/append anything of its own.
+        spine_path = _write_json(
+            tmp_path / ".agent-work" / "g3-wording" / "spine.json",
+            _g1_spine(gate_status="in-progress", satisfied=True),
+        )
+        result = sl.finish_work(
+            spine_path, root=tmp_path, session_id=G1_SESSION, today="2026-08-16",
+            tree_clean=False, episodes_captured=True, push=False,
+        )
+        assert result["refusal"] == sl.done_refusal(
+            _g1_spine(), tree_clean=False, episodes_captured=True,
+        )
+
+
+class TestFinishWorkCompositionOrder:
+    def test_children_released_then_top_level_release_then_reap_then_archive(self, tmp_path):
+        # Close criterion, load-bearing: the ORDER finish_work calls its four
+        # composed steps in, not merely that all four eventually happen. Every
+        # composed function is monkeypatched with a spy that records its own
+        # name into a shared list, restored in a finally.
+        spine_path = _write_json(tmp_path / ".agent-work" / "g3-order" / "spine.json", {})
+        calls: list[str] = []
+
+        def fake_release_children(*args, **kwargs):
+            calls.append("release_child_plans")
+            return {"released": [], "unclaimed_active": []}
+
+        def fake_advance_and_release(*args, **kwargs):
+            calls.append("advance_and_release")
+            return {"ok": True, "output": "ok"}
+
+        def fake_force_reap(*args, **kwargs):
+            calls.append("force_reap")
+            return {"reaped": True}
+
+        def fake_close_work(*args, **kwargs):
+            calls.append("close_work")
+            return {"work_id": "g3-order", "branch": "b", "head": "h", "archive": "a"}
+
+        real = (sl._release_child_plans, sl._advance_and_release, sl.force_reap, sl.close_work)
+        sl._release_child_plans = fake_release_children
+        sl._advance_and_release = fake_advance_and_release
+        sl.force_reap = fake_force_reap
+        sl.close_work = fake_close_work
+        try:
+            result = sl.finish_work(
+                spine_path, root=tmp_path, session_id="s1", today="2026-08-16",
+                tree_clean=True, episodes_captured=True, push=False,
+            )
+        finally:
+            sl._release_child_plans, sl._advance_and_release, sl.force_reap, sl.close_work = real
+
+        assert result["ok"] is True, result
+        assert calls == [
+            "release_child_plans", "advance_and_release", "force_reap", "close_work",
+        ], calls
+
+
+class TestFinishWorkLeaseProofEndToEnd:
+    """THE #552 lease-proof end-to-end test -- this gate's actual reason to
+    exist (launch order Return Shape item 5)."""
+
+    def test_two_active_leases_become_zero_and_child_lands_in_archive(self, repo):
+        work_id = "g3-e2e"
+        work_dir = repo / ".agent-work" / work_id
+        child_rel = "child-plan.json"
+        parent_session = "constellation/g3-e2e/implementer"
+
+        # Child: a real single-gate plan, already terminal (complete), with
+        # its OWN lease still ACTIVE -- finish_work is what releases it.
+        _write_json(work_dir / child_rel, _leased_plan("child-session-1"))
+
+        # Parent: a real single-gate spine whose gate's postcondition is
+        # satisfiable (in-progress, satisfied=True) but not yet advanced,
+        # declaring the child via child_checklist, with its OWN lease active.
+        parent_spine = _g1_spine(gate_status="in-progress", satisfied=True)
+        parent_spine["work_id"] = work_id
+        parent_spine["tasks"]["m1"]["child_checklist"] = child_rel
+        parent_spine["engine_session"]["session_id"] = parent_session
+        spine_path = _write_json(work_dir / "spine.json", parent_spine)
+
+        # A real work area shape beside the spine (a tracked file, an empty
+        # dir) -- close_work's own convention, exercised end to end here too.
+        (work_dir / "crew-handoffs").mkdir(parents=True, exist_ok=True)
+        (work_dir / "crew-handoffs" / "note.md").write_text("hi\n", encoding="utf-8", newline="\n")
+        (work_dir / "evidence").mkdir(parents=True, exist_ok=True)
+
+        agent_work_root = repo / ".agent-work"
+        active_before = _census_active_leases(agent_work_root)
+        assert active_before == 2, "fixture precondition: parent + child both active"
+
+        today = "2026-08-16"
+        result = sl.finish_work(
+            spine_path, root=repo, session_id=parent_session, today=today,
+            tree_clean=True, episodes_captured=True, push=False,
+        )
+        assert result["ok"] is True, result
+        assert result["child_plans_released"], result
+
+        active_after = _census_active_leases(agent_work_root)
+        assert active_after == 0, "every lease must be released before finish_work returns"
+
+        archive_dir = repo / ".agent-work" / "archive" / f"{today}-{work_id}"
+        assert archive_dir.is_dir()
+        archived_child = archive_dir / child_rel
+        assert archived_child.is_file(), sorted(p.name for p in archive_dir.rglob("*"))
+        assert json.loads(archived_child.read_text())["engine_session"]["status"] == "released"
+
+
+class TestOpenPr:
+    def test_finish_work_never_calls_open_pr_unless_flagged(self, repo):
+        spine_path = _write_json(
+            repo / ".agent-work" / "g3-pr" / "spine.json",
+            _g1_spine(gate_status="in-progress", satisfied=True),
+        )
+        calls = []
+        real_open_pr = sl.open_pr
+
+        def spy(*args, **kwargs):
+            calls.append((args, kwargs))
+            return "https://example.invalid/pr/1"
+
+        sl.open_pr = spy
+        try:
+            result = sl.finish_work(
+                spine_path, root=repo, session_id=G1_SESSION, today="2026-08-16",
+                tree_clean=True, episodes_captured=True, push=False,
+            )
+        finally:
+            sl.open_pr = real_open_pr
+
+        assert result["ok"] is True, result
+        assert calls == [], "open_pr must never be called when open_pr=False (the default)"
+        assert result["pr"] is None
+
+    def test_finish_work_calls_open_pr_only_when_flagged(self, repo):
+        spine_path = _write_json(
+            repo / ".agent-work" / "g3-pr2" / "spine.json",
+            _g1_spine(gate_status="in-progress", satisfied=True),
+        )
+        calls = []
+        real_open_pr = sl.open_pr
+
+        def spy(work_id, branch, *, root):
+            calls.append((work_id, branch, root))
+            return "https://example.invalid/pr/2"
+
+        sl.open_pr = spy
+        try:
+            result = sl.finish_work(
+                spine_path, root=repo, session_id=G1_SESSION, today="2026-08-16",
+                tree_clean=True, episodes_captured=True, push=False, open_pr=True,
+            )
+        finally:
+            sl.open_pr = real_open_pr
+
+        assert result["ok"] is True, result
+        assert len(calls) == 1, calls
+        assert result["pr"] == "https://example.invalid/pr/2"
+
+    def test_open_pr_uses_body_file_never_a_body_flag(self, tmp_path, monkeypatch):
+        calls = []
+        captured_body = {}
+
+        def fake_run(argv, **kwargs):
+            calls.append(argv)
+            body_file = argv[argv.index("--body-file") + 1]
+            captured_body["text"] = Path(body_file).read_text(encoding="utf-8")
+
+            class _Result:
+                returncode = 0
+                stdout = "https://example.invalid/pr/3\n"
+                stderr = ""
+
+            return _Result()
+
+        monkeypatch.setattr(sl.subprocess, "run", fake_run)
+        url = sl.open_pr("w1", "feat/w1", root=tmp_path, body="hello\nworld")
+
+        assert url == "https://example.invalid/pr/3"
+        assert len(calls) == 1
+        argv = calls[0]
+        assert "--body-file" in argv
+        assert "--body" not in argv
+        assert captured_body["text"] == "hello\nworld"
+
+    def test_open_pr_cleans_up_its_temp_body_file(self, tmp_path, monkeypatch):
+        captured = {}
+
+        def fake_run(argv, **kwargs):
+            captured["path"] = Path(argv[argv.index("--body-file") + 1])
+
+            class _Result:
+                returncode = 0
+                stdout = "https://example.invalid/pr/4\n"
+                stderr = ""
+
+            return _Result()
+
+        monkeypatch.setattr(sl.subprocess, "run", fake_run)
+        sl.open_pr("w1", "feat/w1", root=tmp_path)
+        assert not captured["path"].exists()
+
+    def test_open_pr_returns_none_on_gh_failure_without_raising(self, tmp_path, monkeypatch):
+        def fake_run(argv, **kwargs):
+            class _Result:
+                returncode = 1
+                stdout = ""
+                stderr = "gh: not authenticated"
+
+            return _Result()
+
+        monkeypatch.setattr(sl.subprocess, "run", fake_run)
+        assert sl.open_pr("w1", "feat/w1", root=tmp_path) is None
+
+
+@requires_git
+class TestSpineDoneCli:
+    """scripts/spine_done_cli.py -- the reachable-today "one door verb". Every
+    invocation is a FRESH PROCESS (subprocess.run against `python3`), never an
+    in-process import -- the only trustworthy validation for engine/hook-
+    adjacent code (docs/agents/ORCHESTRATOR_CONTEXT.md)."""
+
+    CLI_PATH = str(ROOT / "scripts" / "spine_done_cli.py")
+
+    def _run_cli(self, args: list[str]) -> subprocess.CompletedProcess:
+        env = dict(os.environ)
+        env["PYTHONIOENCODING"] = "utf-8"
+        return subprocess.run(
+            ["python3", self.CLI_PATH, *args],
+            cwd=str(ROOT), capture_output=True, text=True, env=env,
+        )
+
+    def test_fresh_process_ok_path_exits_zero_and_prints_ok_json(self, repo):
+        work_id = "g3-cli-ok"
+        spine_path = _write_json(
+            repo / ".agent-work" / work_id / "spine.json",
+            _g1_spine(gate_status="in-progress", satisfied=True),
+        )
+        proc = self._run_cli([
+            "--file", str(spine_path), "--root", str(repo),
+            "--session-id", G1_SESSION, "--today", "2026-08-16",
+            "--tree-clean", "--episodes-captured", "--no-push",
+        ])
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+        payload = json.loads(proc.stdout)
+        assert payload["ok"] is True, payload
+        archive_dir = repo / ".agent-work" / "archive" / f"2026-08-16-{work_id}"
+        assert archive_dir.is_dir()
+
+    def test_fresh_process_refusal_path_exits_one(self, repo):
+        work_id = "g3-cli-refuse"
+        spine_path = _write_json(
+            repo / ".agent-work" / work_id / "spine.json",
+            _g1_spine(gate_status="in-progress", satisfied=True),
+        )
+        proc = self._run_cli([
+            "--file", str(spine_path), "--root", str(repo),
+            "--session-id", G1_SESSION, "--today", "2026-08-16",
+            "--tree-clean", "--no-push",
+        ])
+        assert proc.returncode == 1, proc.stdout + proc.stderr
+        payload = json.loads(proc.stdout)
+        assert payload["ok"] is False
+        assert payload["stage"] == "verify"
+
+    def test_fresh_process_never_touches_a_live_spine_path(self):
+        # Constraint check, not a functional one: this suite's own CLI
+        # invocations above only ever pass tmp_path-rooted --file/--root
+        # arguments -- grep the test source proves no argument literal
+        # points at this worktree's own .agent-work/epic-567-door spines.
+        source = inspect_source(TestSpineDoneCli._run_cli) + "".join(
+            inspect_source(getattr(TestSpineDoneCli, name))
+            for name in dir(TestSpineDoneCli)
+            if name.startswith("test_fresh_process") and name != "test_fresh_process_never_touches_a_live_spine_path"
+        )
+        assert ".agent-work/epic-567-door" not in source

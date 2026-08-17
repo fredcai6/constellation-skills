@@ -1,0 +1,48 @@
+{
+  "contract": 1,
+  "step": "context",
+  "files": [
+    {
+      "root": "skill",
+      "path": "references/global-orchestrator.md",
+      "rev": null
+    },
+    {
+      "root": "skill",
+      "path": "references/global-everyone.md",
+      "rev": null
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "rev": "17379bae4d32e7819f54810e5809f19b1a18a397"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/GLOSSARY.md",
+      "rev": "6594c7c8ec53d1c2f450ea24f6e634d4fe1e2629"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/engine-config.json",
+      "rev": null
+    }
+  ],
+  "repo_rev": {
+    "commit": "600de020525b5cce8ce9f3131f4a6f2b49cb4b47"
+  },
+  "run": {
+    "work_id": "epic-567-door/cmdr-g",
+    "generated_at": "2026-08-17T05:30:59Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease"
+    }
+  }
+}

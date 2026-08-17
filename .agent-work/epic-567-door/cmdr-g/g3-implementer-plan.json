@@ -1,0 +1,412 @@
+{
+  "work_id": "epic-567-door/cmdr-g/g3-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-finish-work-refusals",
+    "m2-composition-order",
+    "m3-lease-proof-e2e",
+    "m4-open-pr",
+    "m5-cli",
+    "m6-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the inherited global doctrine (constellation-implementer references/global-crew.md + references/global-everyone.md), docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, the g3 handoff at .agent-work/epic-567-door/cmdr-g/crew-handoffs/g3-implementer-handoff.md in full, and g1/g2's actual current source in scripts/spine_lifecycle.py (done_refusal :186, _engine_call :624, _advance_and_release :673, force_reap :753, _release_child_plans :798) plus close_work :447-608 -- their docstrings are the authoritative contract for what finish_work composes. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff + g1/g2 source loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "read global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md, g3 handoff in full, and g1/g2 actual current source (done_refusal, _engine_call, _advance_and_release, force_reap, _release_child_plans, close_work) in scripts/spine_lifecycle.py. Handoff is complete: task, intent, allowed scope, exclusions, required evidence, test mode, stop conditions all present."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-finish-work-refusals": {
+      "id": "m1-finish-work-refusals",
+      "title": "finish_work skeleton -- steps 1-6, refusal returns never raise",
+      "imperative": "Add finish_work(spine_path, *, root, session_id, today, tree_clean, episodes_captured, why=None, push=True, open_pr=False) -> dict to scripts/spine_lifecycle.py, composing done_refusal (step 2, refuse+stop, no mutation), _release_child_plans (step 3, before top-level release and before reap), _advance_and_release (step 4, refuse+stop on failure, stage f'advance-release:{substage}'), force_reap (step 5, after every release), close_work wrapped in try/except SpineLifecycleError -> {'ok': False, 'refusal': str(exc), 'stage': 'archive'} (step 6, never propagates the exception). Add TestFinishWorkRefusals to tests/test_spine_lifecycle.py: one test per refusal stage (verify/advance-release/archive), each asserting the exact stage string, that finish_work never raises, and (for the verify-stage refusal) that nothing on disk was mutated -- byte-identical spine file before/after, no archive directory created. Push/PR steps are exercised in m4/m5, not here.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "finish_work exists with the composition of steps 1-6; each refusal stage returns the structured dict and never raises SpineLifecycleError for a normal closeout refusal; tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k TestFinishWorkRefusals"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-finish-work-refusals-1"
+        }
+      ],
+      "constraints": [
+        "do not modify done_refusal/_advance_and_release/force_reap/_release_child_plans/close_work",
+        "fixtures under tmp_path only",
+        "test-after allowed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-finish-work-refusals-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k TestFinishWorkRefusals",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-composition-order": {
+      "id": "m2-composition-order",
+      "title": "Composition-order test -- children before top-level release before reap",
+      "imperative": "Add TestFinishWorkCompositionOrder to tests/test_spine_lifecycle.py: a spy/call-order assertion (monkeypatch sl._release_child_plans, sl._advance_and_release, sl.force_reap, sl.close_work with recording wrappers restored in a finally) proving the ORDER finish_work calls them in: _release_child_plans before _advance_and_release before force_reap before close_work. This is close criterion 2 (ORDER, not just eventual coverage) -- required even though m3's end-to-end test also demonstrates the ordering's effect.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "finish_work composes the four steps",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "finish_work composes _release_child_plans -> _advance_and_release -> force_reap -> close_work in that order, per source"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "a passing test asserts the exact call order across the four composed functions",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k TestFinishWorkCompositionOrder"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-composition-order-1"
+        }
+      ],
+      "constraints": [
+        "fixtures under tmp_path only",
+        "test-after allowed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-composition-order-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k TestFinishWorkCompositionOrder",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-lease-proof-e2e": {
+      "id": "m3-lease-proof-e2e",
+      "title": "THE #552 lease-proof end-to-end test -- this gate's reason to exist",
+      "imperative": "Add TestFinishWorkLeaseProofEndToEnd to tests/test_spine_lifecycle.py: build a fixture work area under tmp_path (a real git repo, matching the existing `repo` fixture) with a top-level spine AND a nested child plan declared via child_checklist. Claim both leases. Drive both to their terminal gate (postconditions satisfiable, matching the _g1_spine / _leased_plan house style already in this file -- direct JSON construction of a genuinely active, in-progress-or-terminal spine is legitimate fixture-building, not a shortcut). Run a structural active-lease census (mirror _active_engine_session_spine's scan predicate, generalized to count every active lease under the work dir rather than returning the first) BEFORE finish_work: expect 2 active. Call finish_work with push=False. Run the census AFTER: expect 0 active. Assert the archive directory exists and contains the child plan file. This is the concrete proof of the launch order's Return Shape item 5.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "finish_work composes children-release + top-level-release + reap + archive in order",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "finish_work composition order confirmed by m2's spy test"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the lease-proof test passes: 2 active leases before, 0 after, archive contains the child plan file",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k TestFinishWorkLeaseProofEndToEnd"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-lease-proof-e2e-1"
+        }
+      ],
+      "constraints": [
+        "fixtures under tmp_path only -- never a live spine",
+        "test-after allowed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-lease-proof-e2e-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k TestFinishWorkLeaseProofEndToEnd",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-open-pr": {
+      "id": "m4-open-pr",
+      "title": "open_pr helper -- off by default, --body-file never a heredoc",
+      "imperative": "Add open_pr(work_id, branch, *, root, title=None, body=None) -> str | None to scripts/spine_lifecycle.py: writes body to a NamedTemporaryFile, calls `gh pr create --title ... --body-file <path> --head <branch>` via subprocess.run, parses the PR URL from the last non-blank stdout line, returns None on failure (never raises). Add TestOpenPr to tests/test_spine_lifecycle.py: (a) finish_work does not call open_pr (or subprocess for a gh call) unless open_pr=True is explicitly passed -- spy/mock assertion, zero calls when omitted or False; (b) open_pr's subprocess.run call uses --body-file, never --body, verified via a mocked subprocess.run's captured argv; (c) open_pr returns None on a mocked gh failure (non-zero exit) without raising.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "finish_work step 8 wired to call open_pr only when open_pr=True",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "finish_work step 8 wired: pr_url = open_pr_fn(...) if open_pr else None"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "open_pr exists, uses --body-file, never called unless open_pr=True; tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k TestOpenPr"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-open-pr-1"
+        }
+      ],
+      "constraints": [
+        "mock subprocess.run for gh -- never a real network/GitHub call",
+        "fixtures under tmp_path only",
+        "test-after allowed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-open-pr-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k TestOpenPr",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-cli": {
+      "id": "m5-cli",
+      "title": "scripts/spine_done_cli.py -- thin CLI wrapping finish_work",
+      "imperative": "Create scripts/spine_done_cli.py (new file, not fenced): a thin CLI with --file, --root, --session-id, --today, --why, --tree-clean (bool flag, or auto-detect via `git status --porcelain` when omitted), --episodes-captured, --no-push, --open-pr. Prints the returned dict as JSON to stdout; exits 1 if result['ok'] is False, else 0. Argument parsing plus one call into finish_work, nothing else. Add TestSpineDoneCli to tests/test_spine_lifecycle.py: a FRESH-PROCESS smoke run (subprocess.run(['python3', 'scripts/spine_done_cli.py', ...]), not an in-process import) against a tmp_path fixture proving both the ok=0 path and a refusal=exit-1 path.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "finish_work is complete and tested",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "finish_work complete and tested (m1-m4)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "scripts/spine_done_cli.py exists, thin, fresh-process smoke test passes both exit-0 and exit-1 paths",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k TestSpineDoneCli"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-cli-1"
+        }
+      ],
+      "constraints": [
+        "never run the CLI against a live spine -- tmp_path fixtures only",
+        "checklist_engine.py/mcp_spine_server.py/spine_rail.py untouched"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-cli-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k TestSpineDoneCli",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-verify": {
+      "id": "m6-verify",
+      "title": "Full verification sweep + IMPLEMENTER_RESULT",
+      "imperative": "Run the handoff's verification commands: full tests/test_spine_lifecycle.py suite (state pre/post counts vs the pre-change 104), the fenced-file diff --stat for checklist_engine.py/mcp_spine_server.py/spine_rail.py (must be empty), the wiring grep for finish_work/open_pr callers (state the count -- expect only tests + spine_done_cli.py). Confirm scripts/spine_done_cli.py: git check-ignore exit 1 (untracked-until-staged, new file). Assemble and write the full IMPLEMENTER_RESULT to .agent-work/epic-567-door/cmdr-g/crew-handoffs/g3-implementer-result.md per the handoff's Return Format, including Workflow Feedback (the tree_clean/episodes_captured signature gap, any other friction) and Map Impact.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-m5 all complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-m5 all complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green, fenced-file diff empty, counts stated",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q && test -z \"$(git diff --stat -- scripts/checklist_engine.py scripts/mcp_spine_server.py scripts/hooks/spine_rail.py)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT written to .agent-work/epic-567-door/cmdr-g/crew-handoffs/g3-implementer-result.md with a stated return status",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT written to .agent-work/epic-567-door/cmdr-g/crew-handoffs/g3-implementer-result.md with return status: complete"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q && test -z \"$(git diff --stat -- scripts/checklist_engine.py scripts/mcp_spine_server.py scripts/hooks/spine_rail.py)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/epic-567-door/cmdr-g/g3/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-17T06:53:18.930734+00:00",
+    "last_heartbeat": "2026-08-17T07:00:39.263511+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T07:00:44.230501+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "context loaded; handoff verified complete against the checklist",
+      "mechanical": false,
+      "ts": "2026-08-17T06:53:36.587812+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-finish-work-refusals",
+      "why": "finish_work added composing done_refusal/_release_child_plans/_advance_and_release/force_reap/close_work per handoff part (a) steps 1-6; TestFinishWorkRefusals covers all three refusal stages (verify/advance-release:advance/archive) plus a no-mutation and no-invented-wording check; pytest -k TestFinishWorkRefusals: 5 passed",
+      "mechanical": false,
+      "ts": "2026-08-17T06:58:30.179521+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-composition-order",
+      "why": "TestFinishWorkCompositionOrder monkeypatches all four composed functions with recording spies and asserts calls == [release_child_plans, advance_and_release, force_reap, close_work]; pytest -k TestFinishWorkCompositionOrder: 1 passed",
+      "mechanical": false,
+      "ts": "2026-08-17T06:58:37.954322+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-lease-proof-e2e",
+      "why": "TestFinishWorkLeaseProofEndToEnd builds a real-git-repo fixture with a parent spine + a declared child plan, both with active leases (census=2); calls finish_work(push=False); census after=0; archive dir contains the released child plan file. pytest -k TestFinishWorkLeaseProofEndToEnd: 1 passed. This is the #552 proof the launch order's Return Shape item 5 asks for.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:58:46.482002+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-open-pr",
+      "why": "open_pr added: writes body via tempfile.mkstemp, gh pr create --body-file (never --body), returns parsed URL or None on failure, cleaned up in finally. TestOpenPr: default-off spy, flagged-on spy, --body-file content verification, temp-file cleanup, gh-failure returns None. pytest -k TestOpenPr: 5 passed",
+      "mechanical": false,
+      "ts": "2026-08-17T06:58:54.277989+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-cli",
+      "why": "scripts/spine_done_cli.py created (new file, git check-ignore exit 1): thin argparse wrapper, --tree-clean/--tree-dirty (auto-detect via git status --porcelain when omitted), --episodes-captured, --no-push, --open-pr; prints JSON, exit 1 on refusal. TestSpineDoneCli: two fresh-process subprocess.run(['python3', ...]) smoke tests (ok/exit-0 and refusal/exit-1), plus a constraint check that no test literal names a live epic-567-door spine. pytest -k TestSpineDoneCli: 3 passed. Manually re-verified with a standalone tmp fixture outside pytest: exit=0, archive created.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:59:03.608878+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-verify",
+      "why": "Full suite green (119 passed, pre-change 104, +15 new). Fenced-file diff empty for checklist_engine.py/mcp_spine_server.py/spine_rail.py. New CLI file untracked-but-not-ignored (git check-ignore exit 1). IMPLEMENTER_RESULT written with Return status: complete.",
+      "mechanical": false,
+      "ts": "2026-08-17T07:00:39.263495+00:00"
+    }
+  ]
+}

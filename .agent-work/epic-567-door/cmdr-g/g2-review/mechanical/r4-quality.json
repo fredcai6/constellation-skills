@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4-quality",
+  "mechanical": {
+    "run": "g2-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r4-quality",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g2-review-r4-quality@e0894db818463f36e1a2ca9605acbfecc9118462",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g2-review",
+    "generated_at": "2026-08-17T06:43:31Z"
+  }
+}

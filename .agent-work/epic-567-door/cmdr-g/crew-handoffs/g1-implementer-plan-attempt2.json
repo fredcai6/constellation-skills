@@ -1,0 +1,231 @@
+{
+  "work_id": "epic-567-door/cmdr-g/g1-implementer-attempt2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-fix-done-refusal",
+    "m2-verify",
+    "m3-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the handoff is complete",
+      "imperative": "Read the g1-implementer-handoff.md in full, including the REWORK NOTE under function (a) done_refusal, which supersedes an earlier incorrect draft. Verify task, intent, scope, exclusions, required evidence, test mode, stop conditions are all present. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff loaded and complete, including the load-bearing REWORK NOTE",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-fix-done-refusal": {
+      "id": "m1-fix-done-refusal",
+      "title": "done_refusal, _engine_call, _advance_and_release match the corrected (REWORK NOTE) contract",
+      "imperative": "Found a prior partial implementation in scripts/spine_lifecycle.py where done_refusal delegated to closeout_refusal and took an archive_exists argument -- exactly the bug the REWORK NOTE names to remove. Removed the delegation and the archive_exists parameter so done_refusal covers only the two new checks (tree_clean, episodes_captured), in order, returning None when both pass. Rewrote TestDoneRefusal in tests/test_spine_lifecycle.py to match: dropped the delegation/archive_exists tests, added a source-text assertion that 'closeout_refusal' never appears in inspect.getsource(sl.done_refusal). _engine_call and _advance_and_release were already correct against the corrected contract (they do not touch done_refusal's body) and needed no functional change.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "handoff loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "done_refusal has no archive_exists param and never references closeout_refusal in its own source",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k 'TestDoneRefusal or TestEngineCall or TestAdvanceAndRelease'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-fix-done-refusal-1"
+        }
+      ],
+      "constraints": [
+        "done_refusal stays pure: no Path/open/subprocess",
+        "closeout_refusal and close_work are not modified"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-fix-done-refusal-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k 'TestDoneRefusal or TestEngineCall or TestAdvanceAndRelease'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-verify": {
+      "id": "m2-verify",
+      "title": "Full suite green, fenced files untouched, live-spine validation clean",
+      "imperative": "Run the handoff's verification commands: full tests/test_spine_lifecycle.py suite, the fenced-file diff (checklist_engine.py/mcp_spine_server.py/spine_rail.py must be empty), and validate_spine.py against the Commander's execute.json (read-only).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green AND no diff to any fenced file AND execute.json still validates",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q && test -z \"$(git diff -- scripts/checklist_engine.py scripts/mcp_spine_server.py scripts/hooks/spine_rail.py)\" && PYTHONIOENCODING=utf-8 py scripts/validate_spine.py .agent-work/epic-567-door/cmdr-g/execute.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-verify-1"
+        }
+      ],
+      "constraints": [
+        "never target a live spine as a fixture"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q && test -z \"$(git diff -- scripts/checklist_engine.py scripts/mcp_spine_server.py scripts/hooks/spine_rail.py)\" && PYTHONIOENCODING=utf-8 py scripts/validate_spine.py .agent-work/epic-567-door/cmdr-g/execute.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-result": {
+      "id": "m3-result",
+      "title": "IMPLEMENTER_RESULT written to the handoff's delivery path",
+      "imperative": "Write the full IMPLEMENTER_RESULT to .agent-work/epic-567-door/cmdr-g/crew-handoffs/g1-implementer-result.md per the handoff's Return Format, lowercase status, mandatory Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "result file written and non-empty",
+          "check": {
+            "kind": "command",
+            "command": "test -s /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease/.agent-work/epic-567-door/cmdr-g/crew-handoffs/g1-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-result-1"
+        }
+      ],
+      "constraints": [
+        "Return status lowercase",
+        "Workflow Feedback section mandatory"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease/.agent-work/epic-567-door/cmdr-g/crew-handoffs/g1-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/epic-567-door/cmdr-g/g1/implementer/attempt-2",
+    "status": "released",
+    "claimed_at": "2026-08-17T06:13:39.485635+00:00",
+    "last_heartbeat": "2026-08-17T06:15:09.318947+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T06:15:14.004791+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff read in full including the REWORK NOTE under (a) done_refusal: it must not call/fold in closeout_refusal and must not take archive_exists -- the earlier draft did both, which is the bug. Task, intent, scope, exclusions, required evidence, test mode, and stop conditions are all present and internally consistent.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:13:46.343399+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-fix-done-refusal",
+      "why": "done_refusal rewritten to the corrected two-check contract (no closeout_refusal call, no archive_exists param); TestDoneRefusal rewritten with a source-text no-delegation assertion. _engine_call and _advance_and_release needed no code change; their existing tests still pass unmodified.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:13:53.238090+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-verify",
+      "why": "Full suite: 95 passed (up from 59 pre-change). Fenced-file diff (checklist_engine.py, mcp_spine_server.py, spine_rail.py) is empty. validate_spine.py on the Commander's live execute.json (read-only) reports OK.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:14:01.124099+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-result",
+      "why": "IMPLEMENTER_RESULT written to the handoff's delivery path with all required evidence, lowercase status, and the mandatory Workflow Feedback section.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:15:09.318931+00:00"
+    }
+  ]
+}

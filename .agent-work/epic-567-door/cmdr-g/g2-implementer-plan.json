@@ -1,0 +1,316 @@
+{
+  "work_id": "epic-567-door/cmdr-g/g2-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-force-reap",
+    "m2-release-child-plans-happy",
+    "m3-release-child-plans-negative",
+    "m4-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the handoff is complete",
+      "imperative": "Read the inherited global doctrine (constellation-implementer references/global-crew.md + references/global-everyone.md), docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, the g2 handoff in full, and the map anchors it names: scripts/hooks/spine_rail.py's _reap_binding_entries (:311-366) and _binding_transaction (:397-436) docstrings, load_binding (:135), binding_path (:82); scripts/spine_lifecycle.py's _active_engine_session_spine (:180-269, contrast only) and close_work's spine/journal exclusion pattern (:517-523). Verify the handoff carries task, protected intent, allowed scope, exclusions, required evidence, test mode, stop conditions -- block and return if incomplete. Record the pre-change test count. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff read in full and complete; map anchors read; pre-change test count recorded (95 passed)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "never edit scripts/checklist_engine.py, scripts/mcp_spine_server.py, scripts/hooks/spine_rail.py",
+        "never run against a live spine file; fixtures under tmp_path only",
+        "reuse g1's _engine_call for all engine calls -- no second call path"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-force-reap": {
+      "id": "m1-force-reap",
+      "title": "force_reap -- library call into spine_rail._binding_transaction with an identity mutate",
+      "imperative": "Add a module-level `sys.path.insert(0, str(Path(__file__).resolve().parent / 'hooks'))` beside the module's existing self-directory insert, then `import spine_rail` alongside the module's other sibling imports. Add `force_reap(project_dir) -> dict | None` to scripts/spine_lifecycle.py: `return spine_rail._binding_transaction(Path(project_dir), lambda reaped: reaped)`. Zero edits to spine_rail.py. Add TestForceReap to tests/test_spine_lifecycle.py: (a) an innocent test proving the fixture's precondition holds (target spine's engine_session.status == 'released') and that after the call spine_rail.load_binding(project_dir) no longer carries that entry -- immediately, not via a second transaction; (b) a paired violating/contrast test that an ACTIVE target's binding entry survives the call unchanged.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "force_reap exists, calls spine_rail._binding_transaction with an identity mutate, no edit to spine_rail.py; its tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k ForceReap && test -z \"$(git diff -- scripts/hooks/spine_rail.py)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-force-reap-1"
+        }
+      ],
+      "constraints": [
+        "fixtures under tmp_path only -- never this repo's real .agent-work/.spine-rail-binding.json",
+        "test-after allowed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-force-reap-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k ForceReap && test -z \"$(git diff -- scripts/hooks/spine_rail.py)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-release-child-plans-happy": {
+      "id": "m2-release-child-plans-happy",
+      "title": "_release_child_plans -- structural lineage + honest non-owner release (happy path)",
+      "imperative": "Add `_release_child_plans(spine_path, work_dir, *, root, reason) -> dict` to scripts/spine_lifecycle.py, returning {'released': [...], 'unclaimed_active': [...]}. Load the parent spine at spine_path; collect each task's child_checklist (resolved relative to work_dir, then Path.resolve()'d, kept only if strictly inside work_dir via is_relative_to -- this is property 3, applied at collection time too). Exclude the bound spine itself (and its journal) from the scan, mirroring close_work's spine/journal exclusion. Scan every *.json under work_dir (resolved, containment-checked again at scan time); for each with engine_session.status == 'active' AND whose resolved path is in the declared-children set, release it through g1's _engine_call with `release --session-id <caller> --force --reason <reason>` where <caller> is the PARENT spine's OWN engine_session.session_id (never the child's) -- append its path to released on exit 0, else to unclaimed_active as a fail-safe. Add TestReleaseChildPlans covering 0, 1, and 2 declared children: each declared child ends released (engine_session.status == 'released' on disk), the returned released list names them by path, and unclaimed_active is empty (proving the parent's own active spine is excluded from the scan, not falsely reported).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 landed -- force_reap exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 landed: force_reap green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "_release_child_plans releases 0/1/2 declared children via _engine_call --force --reason, never echoing a child's own session_id; its happy-path tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k ReleaseChildPlans"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-release-child-plans-happy-1"
+        }
+      ],
+      "constraints": [
+        "no read of a child's own engine_session.session_id for use as the caller id",
+        "fixtures under tmp_path only",
+        "route release through _engine_call only -- no second call path"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-release-child-plans-happy-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k ReleaseChildPlans",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-release-child-plans-negative": {
+      "id": "m3-release-child-plans-negative",
+      "title": "The three safety properties -- NEGATIVE tests, load-bearing",
+      "imperative": "Add three NEGATIVE tests to TestReleaseChildPlans in tests/test_spine_lifecycle.py, none requiring further production changes if m2's implementation already holds the properties: (1) a spine OUTSIDE work_dir whose directory shares a work_id PREFIX with work_dir (e.g. work_dir 'cmdr-g' vs sibling 'cmdr-g2') is never touched -- its lease stays active, and it appears in neither released nor unclaimed_active; (2) an active-leased JSON INSIDE work_dir that NO task declares as a child_checklist is left alone (status stays active) and IS reported in unclaimed_active; (3) a symlink inside work_dir pointing at a spine OUTSIDE it -- declared as a child_checklist -- is refused: the real target's lease stays active, and neither the symlink path nor the real target appears in released. Skip test 3 gracefully if the platform cannot create symlinks. Run the full ReleaseChildPlans class and confirm all pass.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 landed -- _release_child_plans happy path green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 landed: happy path green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all three negative tests pass, proving lineage-not-proximity, honest non-owner release, and escape refusal are real",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k ReleaseChildPlans"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-release-child-plans-negative-1"
+        }
+      ],
+      "constraints": [
+        "a measured negative is a real result -- if a property cannot be reproduced, say so plainly with what was tried",
+        "widening the child-identification predicate or releasing an unclaimed_active file is not this run's authority"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-release-child-plans-negative-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q -k ReleaseChildPlans",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-verify": {
+      "id": "m4-verify",
+      "title": "Full suite green, fence untouched, wiring grep stated, IMPLEMENTER_RESULT written",
+      "imperative": "Run the handoff's verification commands: full tests/test_spine_lifecycle.py suite (state pre/post counts), the fenced-file diff --stat for checklist_engine.py/mcp_spine_server.py/spine_rail.py (must be empty), the wiring grep for force_reap/_release_child_plans callers (state the count -- tests only, g3 not yet built), and the _engine_call/checklist_engine.main grep (main appears only inside _engine_call). Write the full IMPLEMENTER_RESULT to .agent-work/epic-567-door/cmdr-g/crew-handoffs/g2-implementer-result.md per the handoff's Return Format.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 landed -- all negative tests green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 landed: all negative tests green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green AND no diff to any fenced file",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q && test -z \"$(git diff -- scripts/checklist_engine.py scripts/mcp_spine_server.py scripts/hooks/spine_rail.py)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT written to the handoff's delivery path",
+          "check": {
+            "kind": "command",
+            "command": "test -s /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease/.agent-work/epic-567-door/cmdr-g/crew-handoffs/g2-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verify-2"
+        }
+      ],
+      "constraints": [
+        "Return status lowercase",
+        "Workflow Feedback section mandatory"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease && PYTHONIOENCODING=utf-8 py -m pytest tests/test_spine_lifecycle.py -q && test -z \"$(git diff -- scripts/checklist_engine.py scripts/mcp_spine_server.py scripts/hooks/spine_rail.py)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s /home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease/.agent-work/epic-567-door/cmdr-g/crew-handoffs/g2-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/epic-567-door/cmdr-g/g2/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-17T06:33:11.472282+00:00",
+    "last_heartbeat": "2026-08-17T06:38:56.874894+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T06:39:02.209920+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff read in full: task (force_reap + _release_child_plans), protected intent (zero active leases after archive, but never steal a live lease), test mode (test-after allowed, negatives load-bearing), close criteria (5 numbered tests), allowed scope (spine_lifecycle.py + its test file only), specific exclusions (checklist_engine.py/mcp_spine_server.py/spine_rail.py untouched), constraints (fixtures under tmp_path only), map anchors (spine_rail's _reap_binding_entries/_binding_transaction docstrings read, checklist_engine's release()/parse_args read to confirm --force --reason shape), required evidence, wiring grep, authority, stop conditions -- all present. Read source directly: _binding_transaction (spine_rail.py:397-436) loads+reaps+mutates+persists-if-differs, confirming an identity mutate suffices. release() (checklist_engine.py:1133-1148): ownership check is 'session_id != sess.get(session_id) and not force' -- with force=True the check never fires regardless of what session_id is passed, but echoing the child's own id would let a FUTURE accidental drop of --force slip through as if genuinely owned -- this is the real danger the handoff's honest-non-owner rule guards against. parse_args confirms release takes --session-id (required), --force, --reason. journal entries record the passed --session-id verbatim (append_journal_entry), so an honest caller id matters for the audit trail, not just the ownership check. Pre-change baseline: 95 passed, tests/test_spine_lifecycle.py 1774 lines.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:33:29.743698+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-force-reap",
+      "why": "force_reap lands as a two-line library call into spine_rail._binding_transaction with an identity mutate (lambda reaped: reaped) -- the mutate is not a no-op because _binding_transaction persists the reaped map whenever it differs from what it loaded, so handing it straight back makes the load-time reap durable NOW. Added a module-level sys.path insert for hooks/ beside the module's existing self-directory insert, and a top-level 'import spine_rail' alongside the module's other sibling imports -- zero edits to spine_rail.py (git diff --stat empty). Two tests: an innocent test proving the fixture precondition (target reads released before the call, asserted via spine_rail.load_spine) and that spine_rail.load_binding no longer carries the entry immediately after -- and a paired violating/contrast test that an ACTIVE target's entry survives unchanged, proving the reap is conditional rather than a blanket wipe. 2 new tests green, 104 total (95 baseline + 2 + 7 from the next gate's ReleaseChildPlans work done in the same working session but not yet advanced).",
+      "mechanical": false,
+      "ts": "2026-08-17T06:35:57.676935+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-release-child-plans-happy",
+      "why": "_release_child_plans lands: loads the parent spine, builds a declared_children set from every task's child_checklist (resolved relative to work_dir, then .resolve()'d, kept only if is_relative_to(work_dir) -- property 3 applied even at declaration time), excludes the bound spine's own resolved path from the scan (mirroring close_work's spine/journal exclusion -- without it the parent's own active lease would falsely show up as unclaimed_active, since nothing declares itself as its own child), then walks every *.json under work_dir once: active-leased + declared -> release via _engine_call's single choke point with --session-id <parent's own engine_session.session_id> --force --reason <reason>, appended to released on exit 0 else to unclaimed_active as a fail-safe; active-leased + undeclared -> unclaimed_active; anything else skipped. The caller id is read from the PARENT spine dict passed in, never from any child's own data -- confirmed by grep of the diff (no occurrence of reading a child's session_id). 0/1/2-children happy-path tests plus a spy-based test proving the exact --session-id/--force/--reason argv crossing the _engine_call choke point (release is not in MUTATING_VERBS -- checklist_engine.py:70-74 -- so it writes no journal line; a spy on the choke point is the only way to observe which id was used, corrected from my m0 assumption that journaling covers it). 7 new tests green, 104 total; fenced-file diff empty.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:36:22.885256+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-release-child-plans-negative",
+      "why": "The three NEGATIVE tests needed no production change beyond m2's implementation -- each reproduces the boundary directly: (1) test_violating_a_spine_outside_work_dir_sharing_a_prefix_is_never_touched -- a sibling directory 'cmdr-g2' beside work_dir 'cmdr-g' (string prefix match, path-containment mismatch) is never scanned at all, since resolved_work_dir.rglob is structurally scoped to work_dir; its active lease survives untouched and appears in neither list. (2) test_violating_unclaimed_active_json_is_left_alone_and_reported -- an active-leased JSON genuinely under work_dir that no task's child_checklist names is left with status active and IS named in unclaimed_active, proving lineage (not proximity) gates release. (3) test_violating_a_symlink_inside_work_dir_escaping_outside_is_refused -- a symlink lexically inside work_dir, even DECLARED as a child_checklist, whose .resolve() walks outside work_dir is excluded from declared_children at collection time (is_relative_to check) and would be skipped again at scan time if reached; the real external target's lease stays active and neither the symlink's nor the target's path appears in released. All three run individually by name (pytest -v) and the full ReleaseChildPlans class (7 tests) is green. 104/104 total, fenced-file diff still empty.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:36:52.311596+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-verify",
+      "why": "All verification commands run: full suite 104 passed (95 baseline + 2 ForceReap + 7 ReleaseChildPlans); fenced-file diff --stat empty for checklist_engine.py/mcp_spine_server.py/spine_rail.py; wiring grep shows force_reap/_release_child_plans referenced only in their own module (definitions + docstring prose) and in tests/test_spine_lifecycle.py (9 call sites) -- zero production callers, expected since g3's finish_work does not exist yet; checklist_engine.main appears exactly once in spine_lifecycle.py, inside _engine_call, confirming the single choke point still holds after this gate's additions. git check-ignore exits 1 for both changed files (tracked, not ignored). IMPLEMENTER_RESULT written in full to the handoff's delivery path with all required evidence pasted (three negative test bodies + passing output, force_reap immediacy test + output, full suite pre/post counts, fenced-diff output, session_id-read grep, git check-ignore results), assumptions, one out-of-scope observation (rglob follows directory symlinks, only the file-symlink case was in the close criteria), and workflow feedback naming the MUTATING_VERBS correction.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:38:56.874875+00:00"
+    }
+  ]
+}

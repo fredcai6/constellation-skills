@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "zc-consolidate",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-g",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 1,
+    "spine-step": "zc-consolidate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-g-zc-consolidate@f44a02971276fde5b70970e3194c17edb56a5cb1",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-g",
+    "generated_at": "2026-08-17T05:35:54Z"
+  }
+}

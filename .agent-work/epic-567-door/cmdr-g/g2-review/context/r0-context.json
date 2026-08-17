@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r0-context",
+  "files": [],
+  "repo_rev": {
+    "commit": "600de020525b5cce8ce9f3131f4a6f2b49cb4b47"
+  },
+  "run": {
+    "work_id": "g2-review",
+    "generated_at": "2026-08-17T06:42:26Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease"
+    }
+  }
+}

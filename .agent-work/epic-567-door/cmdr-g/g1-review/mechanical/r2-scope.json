@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r2-scope",
+  "mechanical": {
+    "run": "g1-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r2-scope",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g1-review-r2-scope@812bad1e06677c26eb25da7f13c2a977914e26fb",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g1-review",
+    "generated_at": "2026-08-17T06:20:27Z"
+  }
+}
