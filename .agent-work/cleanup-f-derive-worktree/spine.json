@@ -723,8 +723,13 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
-      "status_detail": {},
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "Publication authority. archive.c2 requires the branch PUSHED, c2b requires an OPEN or MERGED pull request, and c3 requires the lease released after the closing advance. LAUNCH_ORDER-5 says: 'Park at archive. Do not merge. Publication is mine and nothing is queued behind you.' This branch has no upstream and no PR. A push to origin and a PR are both outward-facing publication of the Admiral's epic work, so I did not push, did not open one, did not waive c2/c2b to manufacture a terminal spine, and did not move the work area (spine.json lives in it and moving it while the spine is non-terminal would strand the next leg's --file path). Everything else is done: nine of ten steps complete, branch clean, code through 684502ab, five episodes tracked under episodes/active/, REPLAN_INPUT.json verifying, 21 triage recommendations routed and none filed. Worth the Admiral's attention when ruling: c2b's OWN text says 'Open the PR even if the work is unfinished; declare FINAL or PENDING in its title and hand the merge up', so a PENDING PR may be the mechanism for handing the merge UP rather than publication competing with the Admiral's -- but resolving that ambiguity in my own favour on an outward-facing action is not mine to do.",
+        "authority_needed": "admiral-568-cleanup",
+        "next_action": "Rule one of three, all cheap: (1) authorize publication and a leg pushes, opens a PENDING PR, moves the work area, advances archive and releases the lease; (2) waive c2 and c2b with the fence as the recorded reason and the same leg finishes the rest; or (3) take the branch and close the spine as part of publication. Then resume archive. Full statement in .agent-work/cleanup-f-derive-worktree/FLOAT_TO_ADMIRAL-4.md; the return is crew-handoffs/execute-commander-result.md.",
+        "prior_status": "in-progress"
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -744,7 +749,14 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "archive",
+      "blocker": "Publication authority. archive.c2 requires the branch PUSHED, c2b requires an OPEN or MERGED pull request, and c3 requires the lease released after the closing advance. LAUNCH_ORDER-5 says: 'Park at archive. Do not merge. Publication is mine and nothing is queued behind you.' This branch has no upstream and no PR. A push to origin and a PR are both outward-facing publication of the Admiral's epic work, so I did not push, did not open one, did not waive c2/c2b to manufacture a terminal spine, and did not move the work area (spine.json lives in it and moving it while the spine is non-terminal would strand the next leg's --file path). Everything else is done: nine of ten steps complete, branch clean, code through 684502ab, five episodes tracked under episodes/active/, REPLAN_INPUT.json verifying, 21 triage recommendations routed and none filed. Worth the Admiral's attention when ruling: c2b's OWN text says 'Open the PR even if the work is unfinished; declare FINAL or PENDING in its title and hand the merge up', so a PENDING PR may be the mechanism for handing the merge UP rather than publication competing with the Admiral's -- but resolving that ambiguity in my own favour on an outward-facing action is not mine to do.",
+      "authority_needed": "admiral-568-cleanup",
+      "next_action": "Rule one of three, all cheap: (1) authorize publication and a leg pushes, opens a PENDING PR, moves the work area, advances archive and releases the lease; (2) waive c2 and c2b with the fence as the recorded reason and the same leg finishes the rest; or (3) take the branch and close the spine as part of publication. Then resume archive. Full statement in .agent-work/cleanup-f-derive-worktree/FLOAT_TO_ADMIRAL-4.md; the return is crew-handoffs/execute-commander-result.md."
+    }
+  ],
   "origin": {
     "work_id": "cleanup-f-derive-worktree",
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
@@ -755,7 +767,7 @@
     "session_id": "commander-cleanup-f-derive-worktree",
     "status": "active",
     "claimed_at": "2026-08-17T01:36:26.599038+00:00",
-    "last_heartbeat": "2026-08-17T02:04:21.762565+00:00",
+    "last_heartbeat": "2026-08-17T02:06:54.999686+00:00",
     "claimed_by": "commander",
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
     "previous_session_id": null,
