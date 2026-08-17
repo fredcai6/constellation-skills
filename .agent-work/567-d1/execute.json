@@ -903,7 +903,8 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
         }
       ],
       "constraints": [
@@ -931,11 +932,21 @@
           "a non-empty disposition file per issue under .agent-work/567-d1/dispositions/, each quoting the grep that establishes it"
         ]
       },
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-integrate": {
@@ -947,7 +958,8 @@
           "id": "p1",
           "statement": "g4-review returned a verdict",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g4-review returned APPROVE with no blockers."
         }
       ],
       "postconditions": [
@@ -961,7 +973,8 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1"
         },
         {
           "id": "c2",
@@ -970,7 +983,8 @@
             "kind": "command",
             "command": "test -s .agent-work/567-d1/dispositions/596.md && test -s .agent-work/567-d1/dispositions/526.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard.log 2>&1 || true; } && ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard.log | sed 's/^E *//' | grep -qv '^skills/workbench/'"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-2"
         }
       ],
       "constraints": [],
@@ -996,11 +1010,32 @@
           "a non-empty disposition file per issue under .agent-work/567-d1/dispositions/, each quoting the grep that establishes it"
         ]
       },
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/567-d1/dispositions/596.md && test -s .agent-work/567-d1/dispositions/526.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard.log 2>&1 || true; } && ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard.log | sed 's/^E *//' | grep -qv '^skills/workbench/'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g5-final": {
@@ -1274,7 +1309,7 @@
     "session_id": "commander-567-d1-execute",
     "status": "active",
     "claimed_at": "2026-08-17T18:02:30.383334+00:00",
-    "last_heartbeat": "2026-08-17T22:00:51.278675+00:00",
+    "last_heartbeat": "2026-08-17T22:14:36.188114+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -1420,6 +1455,20 @@
       "why": "Both issues disposed with evidence, and the split verdicts are the interesting part. #596 reproduces in a narrower and sharper form than the issue frames it, repaired. #526 splits three ways: defect 1 as literally written does NOT reproduce and the crew says it never did in the skill corpus; widened to the property the issue actually cared about -- close-criteria phrasing that assumes a layout rather than resolving it from the repo -- it reproduces once under a different script name, and that was fixed; defect 2 reproduces and is fixed. That is what an honest disposition looks like: a measured negative on the literal claim, and the widened search that found what the issue was really about rather than stopping at the convenient null. Verified myself: gate c2 exit 0 under dash, adoption suite green, all JSON parses, and the edited REVIEW_SURVEY template is byte-identical across all three copies including the .baseline mirror.",
       "mechanical": false,
       "ts": "2026-08-17T22:00:51.144479+00:00"
+    },
+    {
+      "id": "w-21",
+      "gate": "g4-review",
+      "why": "APPROVE, no blockers, and the reviewer tested each of the three stop conditions rather than reporting their absence: every negative survived a widened search, the repair reinvents no successor playbook, and no fenced file was needed. Its observation 1 is the kind worth acting on immediately -- the new re-review convention said 'one flat sibling per finding the previous round raised', which describes NEITHER of this run's two re-reviews: g3 round 2 appended nothing and re-ran a base check in the fresh file, g1b round 2 appended five siblings against two findings. The actual practice is that the new file's base checks are themselves fresh, so a finding that maps onto one is rechecked there, and only a finding with no base-check home needs an appended sibling.",
+      "mechanical": false,
+      "ts": "2026-08-17T22:14:26.402206+00:00"
+    },
+    {
+      "id": "w-22",
+      "gate": "g4-integrate",
+      "why": "Integrated. Gate c2 re-run in my own hands under dash: exit 0. One fix-now taken: I tightened the new re-review convention in skills/reviewer/SKILL.md to say what this run actually did, per the reviewer's observation 1 -- the new round file's base checks are fresh, so a finding that maps onto one is rechecked there rather than duplicated as a sibling, and append is for a finding with no base-check home. Guard and the retirement/adoption suites re-run green after that edit. The reviewer's observation 2 is staged rather than taken: three doctrine files assert facts owned by COMMANDER_SPINE.template.json with no check tying them, which is the exact coupling that caused #596 in the first place, and the census pins the prose to itself so a wrong-but-stable claim stays approved indefinitely. By the two-bin rule those claims are in neither bin. Fixing it needs tooling or a docs/agents/* rule, and that promotion is the human's call.",
+      "mechanical": false,
+      "ts": "2026-08-17T22:14:36.188094+00:00"
     }
   ],
   "amendments": [

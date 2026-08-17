@@ -1,0 +1,291 @@
+{
+  "work_id": "567-d1",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r7-playbook",
+    "r8-fence-case",
+    "r9-convention",
+    "r10-census"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md + global-everyone.md (esp. 'Verify claimed side-effects against the world', 'Scoped nulls'), docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g4 reviewer handoff, and commit 96f1198f's diff. Note for later checks: GLOSSARY defines 'harvest' narrowly as writing INTO the episode store, and CREW_CONTEXT mandates that any looping guard assert what it looped over.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Both issues disposed with grep-backed verdicts, and every verdict reproduces independently. #596 crux CONFIRMED at source: COMMANDER_SPINE.template.json's feedback gate has exactly ONE postcondition (c1, command running verify_episode_captured.py) and no reference to any export, so the old commander-delegated clause 'A FENCE.md citation without the staged export still fails the gate' was FALSE as written; the repair replaces it with the measured statement. #526 splits correctly: defect 1 negative, defect-1-widened positive (1 bare command-check ref), defect 2 positive. Handoff's ask -- a disposition backed by a grep, including a negative -- is met by both files.",
+      "evidence": [
+        {
+          "id": "e-r1-handoff-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/567-d1/crew-handoffs/g4-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "8 tracked files touched. 7 sit squarely in allowed scope, including all three mirrors of REVIEW_SURVEY.template.json as the three-copy rule requires (md5 d8c1fb421b78799a1cae8662c04fe467 identical across skills/, .agent-work/templates/, and .baseline/constellation-reviewer/ -- I re-measured). ZERO fenced files touched: no docs/agents/**, no skills/workbench/**, no scripts/*, no episodes/**, no map/INDEX.md, no tests/test_cli_retirement_guard.py. skills/admiral/references/fleet-doctrine.md is admiral-owned source, not a regenerated per-role copy (skills/_shared/ holds only global-*/windows/design-it-twice/skill-goodness/stand-up-work-area), so CREW_CONTEXT's 'never edit per-role copies' rule is not engaged. The one out-of-scope file, tests/data/store_mentions.approved.txt, is ACCEPTED: handoff constraint 4 ('any edit to skills/** must keep the guard green') is unsatisfiable without moving the census in lockstep, it is not on the fence list, the implementer disclosed it in disposition 596.md section 7 rather than slipping it in, and commit aeba10ae earlier in this same lane set the precedent (skills/** + the same census in one commit -- verified).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every negative survives a widened re-run, and each widened search carries a positive control so an empty result cannot be mistaken for a clean one (CREW_CONTEXT: 'any guard that loops must assert what it looped over'). (1) #526 defect 1: adding .agent-work/templates/ and its .baseline/ mirror to the implementer's grep yields NO new hits (3, all in docs/CONSTELLATION_OVERVIEW.md, all naming the package); 'code_map' anywhere under skills/ or the overlay = 0; widened to ANY build.py/check.py across skills/ + overlay + specs/ = 0. (2) The stronger claim 'and never did, in the skill corpus' HOLDS against history: git log --all -S 'code_map' -- skills/ = 0 and -- .agent-work/templates/ = 0 over 1792 revisions, while the same probe without a pathspec returns 10 commits, so the search demonstrably reaches. (3) #526 defect 2's negative, re-run against the PRE-change tree (96f1198f^) and widened from skills/reviewer/ to all of skills/ + docs/agents/ + .agent-work/templates/ with four extra patterns (round file, re-drive, rework round, review-2) = 0 hits; post-change the same pattern set finds exactly the new paragraph, proving it can hit. (4) #596 crux verified at source, not from the report. (5) All close criteria re-run: cli_retirement_guard exit 1 with violations ONLY in skills/workbench/ (2 of them, so the extraction is non-empty); test_mcp_adoption 172 passed 2 skipped; test_retirement_guard 16 passed; 41 JSON files parse. (6) The resolver claim reproduces byte-for-byte in both layouts with no leftover token.",
+      "evidence": [
+        {
+          "id": "e-r3-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "git log --oneline --all -S 'code_map' -- skills/ (widened from the implementer's -S 'code_map/build.py')",
+            "result": "0 commits across 1792 revisions on all refs; positive control without the pathspec returns 10, proving the probe can hit",
+            "verdict": "negative survives widening"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r3-evidence-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "pre-change census of kind:command script refs over all 20 shipped skills/**/templates/*.json",
+            "result": "PRE 17 refs = 16 resolver-token + 1 bare (skills/reviewer/templates/REVIEW_SURVEY.template.json r6-fowler.c1); POST 17 refs = 17 token, 0 bare",
+            "verdict": "implementer's 16/1 census reproduces exactly"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every handoff constraint holds. (1) NO issues filed; two candidates staged under .agent-work/567-d1/triage-candidates/ (feedback-export-template-claims-a-writer-that-is-gone.md, prose-names-vendored-script-paths-corpus-wide.md), matching the human's 'we've been ballooning out tracking' ruling. (2) Nothing promoted into docs/agents/* -- 0 files touched there. (3) episodes/ untouched -- 0 files. (4) Guard stays green: violations confined to skills/workbench/. (5) Compact-format JSON edited as raw text, not round-tripped: each of the three copies is a 1-line +/- change, so blame survives and no reflow occurred. (6) The evidenced negative for #526 defect 1 was left as a complete disposition with no manufactured fix, exactly as constraint 6 requires. Deliberate-scope calls (collect_feedback.py and agent_work_root.py left alone) are stated with reasons in 596.md section 6, as the handoff demanded either way.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Nothing for the Commander to reconcile, and the Map Impact notes check out against the diff. I reproduced the implementer's map claim rather than accepting it: scripts/map_orient.py orient --root . --work-id 567-d1 returns DEGRADED-UNPARSEABLE with anchor_count 0 (map/ids.jsonl empty, map/INDEX.md unparseable -- both already staged as the triage candidate map-ids-jsonl-empty.md), so framing Map Impact against the handoff's named entry points is the honest move, not an evasion. The change is doctrine prose plus one command-check string; it adds no module, shifts no boundary, and changes no interface. The single executable change (r6-fowler.c1's script path) resolves byte-identically in this source repo, so there is no behaviour delta here at all -- it only stops the check being wrong in a consuming project. The claimed 'decision candidates' are genuinely deferred rather than decided: both concern fenced files and are staged as candidates. Architecture-significant work would demand more; this is not that.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/567-d1/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/567-d1/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from 567-d1 alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard/scripts/verify_fowler_pass.py .agent-work/567-d1/g4-review/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Full 12-smell pass rendered; verify_fowler_pass.py exits 0 on .agent-work/567-d1/g4-review/FOWLER_PASS.json (smells=12, flagged=['shotgun-surgery'], overridden=['long-method','duplicated-code','speculative-generality']). The record path was moved off the template's work-id-level default to the per-gate path the handoff names, through the engine's amend/retext-check repair path with authority constellation/567-d1/lane-d1/commander-delegated -- never by hand-editing the survey. The diff carries no executable code, so each smell was judged against its doctrine-artifact analogue rather than the pass being skipped (a skip would have needed an independent co-sign I cannot self-grant). One smell FLAGGED: shotgun-surgery -- one change of fact about the feedback gate's postconditions fanned out across three doctrine files plus two census entries, with no mechanical tie back to COMMANDER_SPINE.template.json, so the same silent-staleness that caused #596 can recur. Raised as a triage candidate, not a blocker: the change is correct and complete for today's tree, and closing the coupling needs tooling or a docs/agents rule the human owns. Three overrides each name a specific documented standard and why it subordinates the smell.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard/scripts/verify_fowler_pass.py .agent-work/567-d1/g4-review/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r7-playbook": {
+      "id": "r7-playbook",
+      "title": "Repair does not reinvent a successor playbook",
+      "imperative": "Check the #596 repair against docs/agents/ORCHESTRATOR_CONTEXT.md 'The Retired Learning Playbook' hard bound: 'There is to be no successor playbook and no read-and-apply loop.'",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No successor playbook. Checked against ORCHESTRATOR_CONTEXT.md 'The Retired Learning Playbook' (read-only, unmodified). That section retires .agent-work/LESSONS.md and .agent-work/AGENT_FEEDBACK.md, and scripts/verify_retirement.py RETIRED_NAMES agrees exactly (LESSONS.md, AGENT_FEEDBACK.md, apply_lessons_delta, verify_lessons_applied, verify_agent_feedback, lessons-auditor) -- CONSTELLATION_FEEDBACK.md appears in neither, so the implementer's rescope-rather-than-delete framing is right. Against the hard bound 'no successor playbook and no read-and-apply loop': the repair creates no file, no store, and nothing an agent is told to consult -- it only DELETES claims about what gates enforce. I searched for a read-back path and found none: the only consumers of CONSTELLATION_FEEDBACK.collected.json are scripts/collect_feedback.py's own dedupe sidecar and the archive c4 deny-glob. The surviving channel runs consuming-project export -> maintainer, never store -> agent behaviour, so it is not the retired loop wearing a new name.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r8-fence-case": {
+      "id": "r8-fence-case",
+      "title": "Fence case still answered; archive c4 still consistent",
+      "imperative": "Confirm a fenced Commander's learning still reaches the Admiral under the new text, and that archive c4's deny-glob on .agent-work/CONSTELLATION_FEEDBACK.md remains consistent with it.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The fence case keeps an answer, and c4 stays consistent -- both EXECUTED, not read off the report. Learning route: a fenced Commander's episodes go to episodes/, a tracked path inside its own worktree, and the commit carries them out; the new delegated text states exactly that and the feedback gate's single postcondition (verify_episode_captured.py) is what proves it. The export route survives too: I ran the real evaluate_git_change_policy from scripts/checklist_engine.py over archive c4's actual policy and got .agent-work/staged-feedback/<work-id>/CONSTELLATION_FEEDBACK.md ALLOWED, .agent-work/staged-feedback/<work-id>/FENCE.md ALLOWED, .agent-work/CONSTELLATION_FEEDBACK.md DENIED, .agent-work/CONSTELLATION_FEEDBACK.collected.json DENIED. The mechanism is _glob_match's basename fallback firing only for separator-free patterns, so the deny globs anchor at the root and cannot reach the nested staging dir. So 'stage it under .agent-work/staged-feedback/<work-id>/' and 'c4 deny-globs it out of your commit outright' are simultaneously true, and the two sides are symmetric: the Admiral text tells the Admiral to look in both places the delegated text tells the Commander to write.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r9-convention": {
+      "id": "r9-convention",
+      "title": "Re-review convention vs what this run actually did",
+      "imperative": "Judge the new skills/reviewer/SKILL.md paragraph against .agent-work/567-d1/g1b-review/ and g3-review/ round 1 and 2 files: does the written convention describe what actually worked?",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The convention's decisive claim is right and evidence-backed; one clause is narrower than the practice it was drawn from. CONFIRMED against this run: g1b review.json BLOCK (10 items, fails on r4-quality and r7-attack) then review-2.json APPROVE (12 items, override_reason None); g3 review.json BLOCK (7 items, fail on r3-evidence) then review-2.json APPROVE (7 items, override_reason None). Both rounds used a NEW file, left round 1 untouched, and consolidated APPROVE with NO override -- which is precisely the implementer's argument for why the re-consolidate-with-override-reason shape is the wrong one, since re-driving the old file would have forced either a fail-to-pass downgrade or an override written for a finding that was fixed. The issue named two shapes and the written convention picks the one the evidence supports, with the reason stated. GAP (non-blocking, worth the Commander's eye): 'Add this round's rechecks with append, one flat sibling per finding the previous round raised' does not describe either round. g3 round 2 appended NOTHING and re-ran base check r3-evidence in the fresh file; g1b round 2 appended FIVE siblings against TWO prior findings. The practice is actually: a finding that maps onto a base check is rechecked there, because the new file's base checks are fresh and pending, so recording pass is not a downgrade; a finding with no base-check home gets an appended sibling. As written the clause over-prescribes -- following it literally yields a redundant sibling beside an already-fresh base check. Harmless in effect, and the append-is-a-sibling mechanics it teaches are correct and needed (I relied on them to append r7-r10 here), so this is incomplete prose, not a false model.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r10-census": {
+      "id": "r10-census",
+      "title": "store_mentions.approved.txt delta is 1:1, nothing silently dropped",
+      "imperative": "Confirm the census delta corresponds exactly to the new store mentions the edits introduce and nothing else was dropped.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Census delta is exactly 1:1 with the prose edits and nothing was silently dropped. git show --numstat reports 3 insertions / 3 deletions on tests/data/store_mentions.approved.txt: the admiral SKILL.md entry plus its reason comment (harvest -> collect), and the commander-delegated SKILL.md entry (text only, its comment already accurate). No entry was removed without a replacement. fleet-doctrine.md correctly needed NO census edit -- only its episodes/-bearing line is keyed and the rewrite was authored to leave that line byte-identical, which is why exactly two violations appeared mid-edit rather than three. Both guarding tests are green (16 passed), and they are complementary: test_canon_is_clean catches an edited line that is no longer approved, test_every_approved_entry_exists_verbatim catches a census entry that no longer exists in the tree, so a silent drop in either direction would have gone red.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. Both dispositions are backed by evidence that reproduces independently, and every negative survives a widened re-run with a positive control. #596's crux is confirmed at source: the feedback gate has exactly one postcondition (verify_episode_captured.py) and no export check, so the old commander-delegated clause was false as written; the repair replaces it with the measured fact, reinvents no successor playbook (checked against ORCHESTRATOR_CONTEXT's hard bound and verify_retirement.py's RETIRED_NAMES), leaves the fence case answered via committed episodes, and stays consistent with archive c4 -- which I proved by running the real evaluate_git_change_policy, not by reading the report. #526's 'does not reproduce, and never did in the skill corpus' holds against 1792 revisions on all refs, widened past the implementer's own greps to the overlay and .baseline mirrors; the 16-of-17 command-check census reproduces exactly; the survey-reuse negative holds corpus-wide against the pre-change tree. Scope is clean, all three template copies are byte-identical, and the census delta is 1:1 with nothing dropped. Two non-blocking observations recorded: the new re-review convention's 'one flat sibling per finding' clause describes neither round this run actually ran, and the doctrine-vs-spine coupling that caused #596 is uncorrected (triage candidate raised)."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r6-fowler",
+      "statement": "Doctrine prose asserts facts owned by COMMANDER_SPINE.template.json with nothing tying the two together. #596 happened because three doctrine sites claimed the feedback gate enforced an export it never checked. This gate corrected all three by hand, but the coupling is unchanged: if the spine's postcondition set moves again, skills/commander-delegated/SKILL.md, skills/admiral/SKILL.md and skills/admiral/references/fleet-doctrine.md go stale silently, and the approval census makes the fan-out five files rather than three. Candidate work: a check that reads the spine template's real postconditions and fails when a doctrine site's claim about them no longer holds. Out of scope here -- the fix is tooling or a docs/agents rule, and docs/agents promotion is the human's call."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/567-d1/g4/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-17T22:02:57.390030+00:00",
+    "last_heartbeat": "2026-08-17T22:13:45.474716+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T22:13:45.527192+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-17T22:10:15.650530+00:00",
+      "reason": "The handoff names the Fowler record at .agent-work/567-d1/g4-review/FOWLER_PASS.json, per-gate, not the template's work-id-level default; the triage candidate fowler-record-path-collides-across-gates.md is why. Corrected through the engine as the template's REPAIR PATH directs, never by hand-editing the survey.",
+      "authority": "constellation/567-d1/lane-d1/commander-delegated",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}

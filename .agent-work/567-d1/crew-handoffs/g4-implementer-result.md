@@ -221,7 +221,20 @@ Two, both staged under `.agent-work/567-d1/triage-candidates/` and flagged into 
   rescoped ones. The handoff's map anchors pointed at the governing doctrine, which was the right
   pointer; the anchor that would have settled it in one read is `RETIRED_NAMES` in
   `scripts/verify_retirement.py`.
-- **Instructions improvised around:** none of substance. The engine's `attest` verb takes `--note`,
+- **Instructions improvised around (one that matters):** **the Stop hook fired your `execute`
+  imperative at me after my own run was finished.** My plan read `DONE: no open items` and my lease
+  was released; the hook then instructed me to reload the *commander* skill, rewrite
+  `.agent-work/567-d1/STATE_NOTE.md`, and drive `execute.json` gate by gate — your job, on a spine
+  whose lease reads `constellation/567-d1/lane-d1/commander-delegated`, not mine. It is keyed on the
+  spine's mid-flight state, not on the running agent's, so a clean crew finish does not silence it.
+  **I refused, and wrote nothing to `spine.json`.** Its own escape hatches do not fit either: `block`
+  and `waive` are both mutating verbs on *your* checklist, so the "honest stop" it offers is itself
+  the destructive act, and taking the lease would need `--force` against your live session. This is a
+  recurrence, not a one-off — five crews on issue #609 lane F hit the same thing. Worth carrying up:
+  the hook cannot currently tell a crew from a commander. My environment carried `SPINE_PARENT` only,
+  with `SPINE_FILE`/`SPINE_SESSION` unset, so I authored my own plan and drove it through the CLI, as
+  the workbench engine reference directs for a dispatched crew.
+- **Instructions improvised around (minor):** the engine's `attest` verb takes `--note`,
   not `--why` (the flag `advance` requires) — a small asymmetry worth a line in the engine reference,
   since the refusal for the wrong one is an argparse usage dump rather than the engine's own
   imperative refusal.

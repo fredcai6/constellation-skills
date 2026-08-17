@@ -1,0 +1,29 @@
+I'm not going to act on that hook. Here's why, with the check that settles it:
+
+```
+$ py scripts/checklist_engine.py --file .agent-work/567-d1/spine.json current
+LEASE active: constellation/567-d1/lane-d1/commander-delegated (by commander, heartbeat 2026-08-17T17:59:18)
+ACTIVE execute [in-progress] — ... reload the constellation-commander skill ... drive execute.json gate by gate ...
+
+$ py scripts/checklist_engine.py --file .../g4-implementer-attempt-1-.../IMPLEMENTER_PLAN.json current
+LEASE released: constellation/567-d1/g4/implementer/attempt-1
+DONE: no open items.
+```
+
+The open `execute` gate is **the Commander's**, on a spine another live session holds the lease for. I am the `g4` implementer crew (`SPINE_PARENT=constellation/567-d1/lane-d1/commander-delegated`, `SPINE_FILE` unset — nothing was ever bound to me). The hook is keyed on the spine's mid-flight state, not on which agent is running, so it fires at a crew that has cleanly finished.
+
+Following it would mean loading the commander skill and advancing my parent's gates — and every mutating verb there needs `--force` against a live lease, which is exactly what the lease exists to prevent. Its own escape hatches don't help: `block` and `waive` are also mutating verbs on that same checklist, so the "sanctioned honest stop" it offers is the destructive act. This is a known recurrence — five crews on issue #609 lane F hit it — and it's now recorded in my memory and in the result's Workflow Feedback for the Commander to carry up.
+
+My own run is genuinely complete, not paused:
+
+- Plan driven `m0 → m1-596 → m2-526 → m3-verify-result`, engine-journaled, lease released last.
+- `.agent-work/567-d1/crew-handoffs/g4-implementer-result.md` (16 KB) — `Return status: complete`.
+- `.agent-work/567-d1/dispositions/596.md` (18 KB) and `526.md` (12 KB).
+- Gate closing check passes in the anchored form you re-run; `test_mcp_adoption` 172 passed, `test_retirement_guard` 16 passed, the five suites reading the edited template 313 passed.
+
+Two things still need **your** decision, both flagged in the result:
+
+1. **`tests/data/store_mentions.approved.txt` was edited** — outside the handoff's allowed-scope list, not fenced. The #596 sites are census-keyed line-for-line, so the prose edits fire `tests/test_retirement_guard.py`; I moved the census in lockstep on gate `g1b`'s precedent (`aeba10ae`). If you read that as a breach, the three #596 prose edits must be reverted with it.
+2. **The handoff's printed closing check can never pass** (unanchored grep matches pytest's own summary line). Your `g4-integrate` check is already correct; the handoff carries the stale copy.
+
+Nothing of mine is pending. The next move on `execute` is the Commander's.
