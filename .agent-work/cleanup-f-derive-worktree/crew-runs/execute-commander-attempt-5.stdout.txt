@@ -1,0 +1,9 @@
+**Lane F is done except for one ruling, and that ruling is now recorded in the engine rather than only in prose.**
+
+`archive` is **`blocked`**, bubbled to `admiral-568-cleanup` with the blocker, the authority, and the next action. That is the honest exit the hook asks for: I am not waiting on a crew and not abandoning the run — the remaining postconditions require actions the frozen order reserves to you.
+
+**What is blocked and why:** `c2` wants the branch pushed, `c2b` an OPEN or MERGED PR, `c3` the lease released after the closing `advance`. `LAUNCH_ORDER-5` says publication is yours. No upstream, no PR. I did not push, did not open one, did not waive `c2`/`c2b` to manufacture a terminal spine, and did not move the work area — `spine.json` lives in it and moving it while the spine is non-terminal would strand the next leg's `--file` path.
+
+**Unblock with one of three, then `resume archive`:** authorize publication; or waive `c2`/`c2b` with the fence as the recorded reason; or take the branch and close the spine yourself. `FLOAT_TO_ADMIRAL-4.md` has the full statement — including that `c2b`'s own text asks for a PENDING PR precisely to *hand the merge up*, which may be exactly what your "do not merge" allows.
+
+**Everything else is complete and verified:** `execute.json` terminal (g3 closed on APPROVE with `main` re-measured at 3171/7/0 and the shipped tree at 3192/5/0, failure sets empty both ways; g4 withdrawn, g5 re-homed) · reconcile's six prose repairs · 21 triage recommendations with the scan-bind and B7 packaged to #610 carrying their shared question · run summary · five episodes tracked under `episodes/active/` · `REPLAN_INPUT.json` verifying with `D0`–`D28`, nothing auto-filed. Branch clean, lease held, `main` unmoved at `17c2cee5`.
