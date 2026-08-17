@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "cmdr-567-h -- issue #442, the rail and the HARD refusal read badly to the agent they are aimed at",
+      "spec_path": ".agent-work/567-h/LAUNCH_ORDER.md",
+      "intent_and_why": "Issue #442: the engine's RAIL banner and its HARD refusal remedy read badly to the agent they are aimed at -- agents read the banner as a possible prompt injection and discount the instruction it exists to deliver. Make a cold agent, no corpus loaded, shown only the rail line and a HARD refusal, able to state what it is being asked to do, and do it. Serves epic #567 ('the door is the interface'): an interface whose own instruction text is discounted by its reader is not an interface."
+    },
+    "definition_of_done": [
+      "A cold agent shown only the RAIL early banner or the HARD-refusal remedy text can state the ask in its own words and describe the mechanically correct next action.",
+      "If the current wording already achieves that, the honest-null clause is invoked with real fresh-agent evidence rather than a rewrite; if not, the identified strings are rewritten and re-measured.",
+      "Any rewrite states exactly what changed and why the #145 frozen-strings measurement survives it, and is validated in a fresh subprocess plus the full suite."
+    ],
+    "good_enough": {
+      "mandatory_quality": "The measurement uses genuinely fresh Agent-tool subagents (never fork), shown only the exact engine-emitted text, not paraphrased.",
+      "sufficient_evidence": "Verbatim transcripts from >=3 fresh cold-agent subjects, synthesized into a stated verdict (honest null, or specific failure modes).",
+      "appetite": "One focused Sonnet-tier session; float rather than silently overspend if the measurement needs more than roughly a third of budget."
+    },
+    "hard_constraints": [
+      "Sole writer of scripts/checklist_engine.py this wave; fenced from skills/** (except workbench), scripts/install_constellation.py, scripts/mcp_spine_server.py, scripts/run_crew.py, episodes/, map/INDEX.md",
+      "No issue filed mid-run -- triage candidates staged under .agent-work/567-h/triage-candidates/ only",
+      "No promotion of an observation into docs/agents/* -- human's call",
+      "map/INDEX.md not regenerated or hand-edited this wave -- Admiral-owned",
+      "Any candidate-generation or design subagent dispatch is fresh, never fork",
+      "In-session hook/engine observation after an edit is not evidence -- validate in a fresh subprocess with explicit paths"
+    ],
+    "fixed_decisions": [
+      "decision:honest-null-is-complete -- a measured negative on the stated question is a complete, successful deliverable (settled/human)",
+      "decision:frozen-strings-may-change-but-not-silently -- rewriting the RAIL/HARD strings is permitted, conditioned on stating exactly what changed and why #145 survives it (guess, settled at understand)",
+      "decision:in-session-hook-observation-is-not-evidence -- validate in a fresh subprocess (settled/project)",
+      "decision:map-index-is-admiral-owned (settled/doctrine)",
+      "decision:no-fork-for-design -- fresh subagents only for candidate generation/design (settled/doctrine)",
+      "decision:no-issue-filing-mid-run -- stage candidates locally (settled/human)",
+      "decision:no-doctrine-promotion (settled/project)",
+      "decision:reduce-complexity -- judge a change by whether it moves work off agents into mechanisms (settled/human)"
+    ],
+    "current_wave": {
+      "objective": "Ship #442 on feat/567-h-rail-readability, park at archive for the Admiral to merge.",
+      "exit_criteria": [
+        "g1-measure-baseline closed with an evidenced verdict (honest null, or specific failure modes)",
+        "If not honest null: rewrite gates closed with independent reviewer approval and re-measurement showing improvement",
+        "Fresh-process validation of the live mechanism",
+        "Full clean-env suite green on Linux modulo the pre-ruled MapTreeFreshnessTests exception"
+      ],
+      "issues": [
+        {
+          "id": "442",
+          "title": "The engine's RAIL banner and its HARD refusal remedy read badly to the agent they are aimed at",
+          "desired_outcome": "A cold agent, no corpus, shown only the rail line and a HARD refusal, states what it is being asked to do and can perform it, instead of discounting it as a possible prompt injection.",
+          "useful_now": "The epic's intent is one legible interface (the MCP door); an interface whose own instruction text is discounted by its reader is not an interface.",
+          "appetite": "One reasoning gate (g1: cold-agent baseline measurement) plus, only if the baseline fails, crew-gated rewrite/re-measure/validate gates.",
+          "acceptance_or_falsification_evidence": ">=3 fresh Agent-tool cold-agent transcripts reacting to the exact live-engine RAIL early banner and HARD-refusal text, synthesized into a stated verdict.",
+          "implementation_latitude": "Measurement design is the Commander's; wording of any rewritten strings is the Commander's, stated in the return; architecture/structural change and scope change float to the Admiral.",
+          "hard_constraints_no_gos": [
+            "Do not reopen issue #595's context-trip-vs-Stop-hook precedence (settled by lane C)",
+            "Do not silently reword the frozen _RAIL_STRINGS/_refresh_attach_hint text without stating the change and its #145 survival",
+            "No default/invented text outside the two named target strings (the RAIL early banner and the HARD-refusal remedy) unless the baseline measurement implicates the wrapping sentence"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/checklist_engine.py:459-475 _RAIL_STRINGS",
+            "scripts/checklist_engine.py:1680-1692 _refresh_attach_hint",
+            "scripts/checklist_engine.py:2144-2228 _trip_hard_gate raise",
+            "tests/test_checklist_engine.py (pins these strings verbatim)"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "No rewrite wave is required this run; the Commander proceeds directly to its own reconcile/triage/review/feedback/archive close-out steps rather than a second planning wave.",
+        "why_likely": "The baseline measurement itself returned honest null (see completed_outcomes/wave_evidence below), which the launch order's honest-null-is-complete ruling treats as a complete deliverable.",
+        "entry_conditions": []
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether true 'no constellation context, no corpus' isolation is achievable for a cold-agent subject dispatched via the Agent tool inside this harness, given CLAUDE.md/memory/skill listings are auto-injected regardless of prompt content.",
+        "affects": "Confidence bound on any future cold-agent measurement run the same way (not this run's verdict, since the leakage applied symmetrically across all four subjects)",
+        "settle_by": "A future measurement run outside this harness (e.g. a bare API call with no system prompt) or an explicit isolation mechanism if one is ever built",
+        "current_evidence": "Two of four subjects in this run's transcripts explicitly noticed and cited ambient repo context (memory rulings, skill/tool names) while reasoning about the text's plausibility",
+        "next_probe": "Not this run's scope -- noted in measurement-baseline.md as a methodology caveat"
+      }
+    ],
+    "parked_possibilities": [
+      "Rewriting the other four _RAIL_STRINGS positions (mid-flight, near-terminal, terminal, check-failure) and the SOFT _trip_advisory wording -- named out of scope by the launch order",
+      "Reopening #595's context-trip-vs-Stop-hook precedence -- forbidden, settled by lane C",
+      "map/INDEX.md regeneration -- Admiral-owned",
+      "Promoting the honest-null observation into docs/agents/* -- human's call, forbidden this run"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "442",
+      "outcome": "Honest null. g1-measure-baseline dispatched 4 fresh cold-agent Agent-tool subagents (2x the live RAIL 'early' banner for gate g1-measure-baseline, 2x the HARD-refusal EngineError text reconstructed verbatim from a real trip-ledger begin-refused event, tl-1: gate plan, fill 15.88%, why_ref w-3). All four subjects correctly restated the ask in their own words, correctly parsed the unfamiliar tokens as workflow-engine jargon, and described the mechanically correct next action -- none blindly executed the embedded Run: command. No wording-level failure mode (ambiguous referent, misleading verb, garden-path phrasing) was observed in any transcript. Per the launch order's honest-null-is-complete ruling, no rewrite was made; the four downstream rewrite/re-measure/validate gates (g2-implement, g2-review, g2-integrate, g3-measure-post, g4-validate) were amended out of execute.json via the engine's amend verb, reason: honest null on g1, authority commander.",
+      "evidence": ".agent-work/567-h/measurement-baseline.md (verbatim transcripts + synthesis + verdict)"
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "A cold agent shown only the live RAIL 'early' banner text can state the ask in its own words and name the mechanically correct next action (run checks, attest, advance the named gate).",
+      "expected": "Both subjects restate: run the current step's checks, then attest, then advance to the named gate.",
+      "observed": "Subject A1 and A2 both restated this accurately and unprompted, and both correctly identified `attest`/`advance` as engine-recording actions rather than misreading them.",
+      "source": "measurement-baseline.md, Subject A1/A2 transcripts"
+    },
+    {
+      "claim": "A cold agent shown only the HARD-refusal EngineError text (with a real gate id and why-id embedded via _refresh_attach_hint) can state the ask and does not blindly execute the embedded Run: command on the text's say-so alone.",
+      "expected": "Both subjects restate: context pressure means stop, close the current gate, and request a refresh so a fresh agent resumes; neither proposes to actually run the attach command without first verifying real engine state.",
+      "observed": "Subject B1 and B2 both restated this accurately and both explicitly declined to run the embedded command without independent verification, citing the lack of a corresponding real tool_result as one reason for caution.",
+      "source": "measurement-baseline.md, Subject B1/B2 transcripts"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "execute.json's plan (authored at the 'plan' step) decomposed the mission into a baseline-measure gate followed by four gates assuming a rewrite would be needed (g2-implement/g2-review/g2-integrate/g3-measure-post/g4-validate); the baseline measurement itself returned honest null, so none of those four gates had anything to implement, review, integrate, or validate.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "execute.json's own gate decomposition for this run",
+      "evidence": "measurement-baseline.md's Verdict section; the plan's own honest-null branch, which explicitly anticipated this outcome and named the remedy (amend the four gates out)",
+      "reason": "The plan was authored with this exact contingency named (the g1 gate's own imperative specifies the amend-out remedy for an honest null), so this is a revision the plan itself pre-authorized rather than an unplanned scope change -- applied via the engine's amend verb, not by hand-editing."
+    },
+    {
+      "id": "D1",
+      "signal": "Cold-agent subject dispatch via the Agent tool cannot achieve the launch order's stated 'no constellation context, no corpus' isolation inside this harness -- CLAUDE.md, memory, and the skill listing are auto-injected into every Agent-tool dispatch regardless of what the dispatching prompt contains.",
+      "classification": "evidence_only",
+      "affects": "Confidence bound on this and any future cold-agent measurement run the same way, not this run's verdict",
+      "evidence": "Two of four transcripts in measurement-baseline.md explicitly cite ambient repo context (memory rulings, skill/tool names) while reasoning about the text",
+      "reason": "The leakage applied symmetrically across all four subjects and both texts, so it does not favor one text over the other or manufacture a false honest-null; recorded as a methodology caveat rather than filed as an issue, per decision:no-issue-filing-mid-run."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py:459-475 _RAIL_STRINGS",
+      "scripts/checklist_engine.py:1680-1692 _refresh_attach_hint",
+      "scripts/checklist_engine.py:2144-2228 _trip_hard_gate raise",
+      "tests/test_checklist_engine.py",
+      "docs/CHECKLIST_ENGINE_DESIGN.md:117-136"
+    ],
+    "map_status": "DEGRADED-UNPARSEABLE in this worktree (map/ids.jsonl empty, no entry for scripts/checklist_engine.py); not regenerated this wave per decision:map-index-is-admiral-owned."
+  }
+}

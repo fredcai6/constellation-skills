@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "triage",
+  "mechanical": {
+    "run": "567-h",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 5,
+    "spine-step": "triage",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-h-triage@20947e5b8c0a736dd874d82981c50cc5506bd104",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-h",
+    "generated_at": "2026-08-17T17:47:15Z"
+  }
+}

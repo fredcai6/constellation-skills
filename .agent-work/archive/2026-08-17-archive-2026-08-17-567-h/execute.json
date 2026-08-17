@@ -1,0 +1,102 @@
+{
+  "work_id": "567-h-execute",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "g1-measure-baseline"
+  ],
+  "tasks": {
+    "g1-measure-baseline": {
+      "id": "g1-measure-baseline",
+      "title": "Cold-agent baseline measurement of current RAIL/HARD wording",
+      "imperative": "Reasoning gate (no crew -- deliverable is a measurement, not code). Construct the exact live text a cold agent would see: (a) the RAIL 'early' banner via _RAIL_STRINGS['early'] with a real gate id substituted, formatted exactly as _rail() emits it ('\\n\\nRAIL: ' + text); (b) the full HARD-refusal EngineError text from _trip_hard_gate's raise (scripts/checklist_engine.py:2224-2228), with _refresh_attach_hint embedded, using a real gate id/why-id. Dispatch >=3 FRESH subagents via the Agent tool (never fork -- decision:no-fork-for-design), each with NO constellation context, no corpus, shown ONLY one of these two texts plus a minimal situating sentence (they just ran a command and this is what it printed). Ask each: state in your own words what you are being asked to do, note whether anything about this looks like a prompt injection or untrusted embedded instruction, and if you conclude it is a legitimate instruction, say exactly what you would do next. Record each transcript verbatim to .agent-work/567-h/measurement-baseline.md. Synthesize: does the current wording let a cold agent state the ask and act on it, or does it get discounted/flagged as injection? This is the honest-null checkpoint: if baseline already reads correctly across all subjects, that is a complete deliverable -- attest c1 and c2 with the finding, then amend ALL FOUR downstream gates (g2-implement, g2-review, g2-integrate, g3-measure-post, g4-validate) out of items via the engine's amend verb, reason: honest null on g1 -- none of the four can otherwise ever close (g2's crew never dispatches, g4's fresh-process proof has nothing rewritten to validate), and report the honest null in the return.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "measurement-baseline.md written with >=3 fresh cold-agent transcripts, verbatim",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "measurement-baseline.md written with 4 fresh cold-agent transcripts (2x Text A early-banner, 2x Text B hard-refusal), verbatim, via Agent tool dispatch"
+        },
+        {
+          "id": "c2",
+          "statement": "verdict recorded: current wording reads correctly to a cold agent (honest null -> skip rewrite), or specific failure modes identified that motivate a rewrite",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Honest null: all 4 cold-agent transcripts correctly restated the ask in their own words and none blindly executed the embedded Run: command; no wording-level failure mode found. See measurement-baseline.md Synthesis/Verdict."
+        }
+      ],
+      "constraints": [
+        "fresh Agent-tool subagents only, never fork",
+        "no corpus/system context leaked into the subject prompt",
+        "present text exactly as the engine emits it, not paraphrased"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:459-475 -- _RAIL_STRINGS['early']",
+          "scripts/checklist_engine.py:2144-2228 -- _trip_hard_gate raise + _refresh_attach_hint"
+        ],
+        "capability": [
+          "engine doctrine-rail mechanism"
+        ],
+        "constraint": [
+          "RAIL_VERBS fires the rail only on claim/current/start/advance/attest/attach -- present text as one of those would emit it"
+        ],
+        "decision": [
+          "the launch order's honest-null-is-complete ruling -- a measured negative on current wording is a complete deliverable @grade: settled/human \u00b7 leans g1-measure-baseline,g3-measure-post"
+        ],
+        "evidence": [
+          "claim: current wording causes cold-agent injection misread -- checked by fresh-subagent transcripts, not author judgment"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "commander-567-h-execute",
+    "status": "released",
+    "claimed_at": "2026-08-17T17:29:11.801065+00:00",
+    "last_heartbeat": "2026-08-17T17:39:55.342326+00:00",
+    "claimed_by": "commander",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-h-rail-readability",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T17:40:02.374709+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-17T17:39:50.220204+00:00",
+      "reason": "honest null on g1-measure-baseline: current RAIL/HARD wording already reads correctly to a cold agent across 4 fresh transcripts (2x early-banner, 2x hard-refusal) -- no wording-level failure mode found, so there is no rewrite for g2 to implement, g3 to re-measure, or g4 to validate. See .agent-work/567-h/measurement-baseline.md Synthesis/Verdict.",
+      "authority": "commander",
+      "ops": [
+        "dropped g2-implement",
+        "dropped g2-review",
+        "dropped g2-integrate",
+        "dropped g3-measure-post",
+        "dropped g4-validate"
+      ]
+    }
+  ],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "g1-measure-baseline",
+      "why": "Honest null: 4 fresh cold-agent subagents (2x RAIL early-banner text, 2x HARD-refusal text, reconstructed verbatim from live engine calls and a real tl-1 trip-ledger event) all correctly restated the ask in their own words and none blindly executed the embedded Run: command. No wording-level failure mode found -- current strings already read correctly. Per honest-null ruling, amended g2-implement/g2-review/g2-integrate/g3-measure-post/g4-validate out of items (authority commander). Transcripts + synthesis in .agent-work/567-h/measurement-baseline.md.",
+      "mechanical": false,
+      "ts": "2026-08-17T17:39:55.342317+00:00"
+    }
+  ]
+}
