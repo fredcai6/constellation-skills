@@ -1315,8 +1315,14 @@ What R2 added beyond confirming B1 and B2:
 - **B1 is worse than I described.** Its reproduction shows the door **wrote a live lease into
   another checkout's spine.** So it is not merely "could bind" — it mutated a foreign
   checkout's state. My own reproduction stopped at the bind.
-- **B2 is narrower than I described:** the NUL byte kills the door **only when already
-  bound**. Worth keeping precise, since I had stated it unconditionally.
+- **B2:** R2 recorded that the NUL byte kills the door "only when already bound", and I
+  adopted that as a correction to my own unconditional statement. **The re-review then
+  disproved R2's refinement**: the unbound door dies too, via R4's refusal f-string rather
+  than the early-return path. So my ORIGINAL unconditional statement was right, R2's
+  narrowing was wrong, and I had already propagated the wrong version. The lesson is narrow
+  and real: I accepted a reviewer's *correction* without re-deriving it, having spent the
+  whole run refusing to accept reviewers' *claims* without re-deriving them. A correction is
+  a claim.
 
 #### The third gap: a HARDLINK defeats any path-based check, and it changes what we may CLAIM
 

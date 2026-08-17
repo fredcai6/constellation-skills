@@ -117,8 +117,13 @@ different route** — 13 of 13 attacks correct in a real linked-worktree topolog
 and its own reproduction of the root mutation matching mine exactly ("I agree the narrowed
 root is genuinely tested"). Genuine replication rather than corroboration. It sharpened both
 blockers: **B1 is worse than first described** — the door **wrote a live lease into another
-checkout's spine**, not merely bound it — and **B2 is narrower** (the NUL byte kills the door
-only when already bound).
+checkout's spine**, not merely bound it — and its refinement of **B2 was itself wrong** — it
+recorded that the NUL byte kills the door "only when already bound", and the re-review
+disproved that: **the unbound door dies too**, through R4's refusal f-string rather than the
+early-return path. I had repeated the narrower version here, so this is a corrected fact and
+not a new one. Worth naming because it is the one place in this run where a *reviewer's*
+finding needed correcting by a later reviewer, and I propagated it in between without
+re-deriving it.
 
 It also found a third gap that changes what this lane may *claim*, and I have taken it:
 **a hardlink defeats any path-based check.** A symlink has a target, so resolution reveals the
