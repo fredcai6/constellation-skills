@@ -279,8 +279,8 @@
   "engine_session": {
     "session_id": "constellation/epic-567-door",
     "status": "active",
-    "claimed_at": "2026-08-17T16:39:58.536463+00:00",
-    "last_heartbeat": "2026-08-17T16:39:58.536463+00:00",
+    "claimed_at": "2026-08-17T18:45:51.248764+00:00",
+    "last_heartbeat": "2026-08-17T18:45:51.248764+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,
