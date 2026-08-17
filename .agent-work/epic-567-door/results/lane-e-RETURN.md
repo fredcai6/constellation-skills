@@ -262,10 +262,12 @@ actually decides what to pass.
 
 ## 11. PR
 
-Opened after this file is committed — see the follow-up commit/push/PR sequence for the
-exact number and head sha (this file is written before that sequence runs, per the archive
-step's own ordering: commit all remaining work, including this file, before pushing and
-opening the PR).
+**PR #630**, opened against `main` from `feat/567-e-door-rejection-episodes`
+(https://github.com/fredcai6/constellation-skills/pull/630), head sha `7e4c99a27b1981b2c13225bc24b6080b5975cab7`
+at time of opening (before this file's own commit and the archive-move commit that follow).
+`gh pr create` hit the day's intermittent GitHub 503s twice before succeeding on the third
+attempt; each retry was gated on `gh pr view` confirming no PR yet existed, never on the
+failing command's own output.
 
 ## Float to the Admiral
 
