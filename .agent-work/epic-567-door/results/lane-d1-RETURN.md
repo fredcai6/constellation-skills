@@ -345,8 +345,13 @@ epic makes load-bearing. Staged, not taken: `docs/agents/*` is the human's call.
 
 ## 11. PR
 
-**Not yet opened at the time of writing** — see the handoff note below. Branch
-`feat/567-d1-doctrine-sweep-guard`, rebased on `origin/main` `5099eea1`, verified head `1037ab86`.
+**PR #631** — https://github.com/fredcai6/constellation-skills/pull/631
+**Head sha `f2de39c3692d9733933aa4a15e1a757d580f959b`**, state `OPEN`, `mergeable: MERGEABLE`
+(verified with `gh pr view`, against the world rather than against the create command's own output).
+
+Branch `feat/567-d1-doctrine-sweep-guard`, rebased on `origin/main` `5099eea1`. The suite tally in §6
+was measured at `1037ab86`; the commits since are the return artifact, reconcile/triage/feedback
+records and the episodes, which touch no source under test.
 
 **Merge sequencing, which is the Admiral's call and the one thing this lane cannot do for itself:**
 this lane merges **last**, and **lane D2 must merge first**. Until it does, the guard is red on
@@ -355,9 +360,17 @@ check with no edit required.
 
 ---
 
-## Handoff — what remains
+## Run state
 
-The `execute` step is complete: `execute.json` is driven to `g5-final`, its lease released, and
-`verify_iterative_role_artifacts.py commander --work-id 567-d1` returns ok. The remaining spine steps
-are **reconcile → triage → review → feedback → archive**, plus opening the PR. A fresh Commander picks
-these up from this artifact and from `.agent-work/567-d1/{notes-1.md, STATE_NOTE.md, REPLAN_INPUT.json}`.
+**The spine is driven to the end.** init → context → understand → plan → execute → reconcile →
+triage → review → feedback → archive, all closed through the engine. `execute.json`'s own lease was
+released at `g5-final`; the parent spine's lease is released as the final journaled action.
+
+Records produced after §6's suite run, none of them source under test:
+`.agent-work/567-d1/RECONCILE.md` (structural record folded directly — no packet map exists),
+`.agent-work/567-d1/TRIAGE.md` (19 candidates ranked, none filed),
+`.agent-work/567-d1/FEEDBACK.md`, and **7 episodes** under `episodes/active/567-d1-00{1..7}.md`,
+written through `apply_episode_delta.py --store-root episodes` — the only write path — with
+`verify_episode_captured.py … --phase archive` as the gate.
+
+**The one open dependency is not this lane's to close: lane D2 merges first.**
