@@ -26,7 +26,7 @@ are **CLOSED**, which is why nothing pairs onto them.
 | `567-a/hardlinks-defeat-path-based-containment` | **#559** | The documented limit of `spine_bind`'s path-based containment. Ruled deliberately **not** to close (inode containment adds surface and removes no agent work), so the comment is the record of an accepted limit. |
 | `567-a/engine-init-imperative-asserts-a-false-binding` | **#559** | The spine template's `init` imperative asserts a binding that did not exist. Lane D1 is rewriting exactly this text — **verify at closeout whether D1 resolved it**, and if so record as resolved instead. |
 | `567-a/launch-order-bootstrap-defects` | **#535** | Three bootstrap defects in the launch-order template, which is #535's subject. Lane F measures that template this wave. |
-| `567-a/map-ids-jsonl-empty-repo-wide` | **#544** | `map/ids.jsonl` empty repo-wide means every run orients DEGRADED. Same generated-map-artifact family as #544. |
+| `567-a/map-ids-jsonl-empty-repo-wide` | **#544** | `map/ids.jsonl` empty repo-wide means every run orients DEGRADED. **Its diagnosis is wrong and the comment must correct it:** rebuilding leaves the file empty and `map/` with no diff, because `render.py:728` writes it from *minted anchor ids* and this repo has none. Not stale-file rot — an unminted mind map. |
 | `567-a/verify-frame-refuses-every-anchor-when-degraded` | **#544** | `verify-frame` refuses the template it is paired with, under a degraded map — the downstream consequence of the same generated-map problem. |
 | `567-a/write-provenance-on-spine-journal` | **#369** | #369 is exactly "actor attribution": `claim --force` erases who wrote what. Recording *who* wrote each journal entry is its missing half. |
 | `567-g/no-instrument-distinguishes-own-fork-writes-from-tampering` | **#369** | Same finding as `epic/tc2` from the other side. **Merge both into one comment** rather than commenting twice. |
@@ -37,7 +37,7 @@ are **CLOSED**, which is why nothing pairs onto them.
 | `567-c/tc3-issue-595-advisory-wording-followup` | **#595** | #595's own suggested resolution point 2 was not taken. Belongs on #595. |
 | `567-c/tc4-issue-522-pin-test-pattern` | **#522** | #522 *is* "pin tests guard the literal wording, not the class of defect", and this candidate reproduced it live on PR #620. |
 | `567-a/a-guard-test-that-cannot-run-where-the-guard-is-needed` | **#575** | A test proving a platform fallback that cannot run on that platform — the Windows-proof issue is where this belongs. |
-| `567-g/newline-sensitive-byte-identity-assertions-windows-ci` | **#495** | The candidate names the #495 family itself. **Confirm #495 is open** — GitHub 503'd on that lookup and it has not been re-checked. |
+| `567-g/newline-sensitive-byte-identity-assertions-windows-ci` | **#495** | The candidate names the #495 family itself, and #495 is **confirmed OPEN**: "six repo JSON writers pass encoding but not newline, against CREW_CONTEXT's always-pass-newline rule" — the same defect, seen from Windows CI. |
 | `epic/tc1-fork-inherits-dispatcher-spine-identity` | **#559** | Same class as #559 but strictly worse, because a fork cannot tell it is not the dispatcher. |
 | `epic/tc3-launch-order-first-line-blocks-an-agent-that-cannot-cd` | **#535** | The bootstrap floor. **Merge with `567-a/launch-order-bootstrap-defects`** into one comment. |
 
@@ -79,8 +79,10 @@ are **CLOSED**, which is why nothing pairs onto them.
   `epic/tc2…` onto #369, and `567-a/launch-order-bootstrap-defects` with `epic/tc3…` onto #535.
   Commenting twice on one issue with the same finding is the ballooning the ruling exists to stop.
 - **Re-check every target's state immediately before commenting.** Four intended targets turned
-  out closed, and GitHub returned intermittent 503s all day — #495, #269 and #615 lookups all
-  failed at least once and must be retried, not assumed.
+  out closed (#482, #603, #145, #574), and GitHub returned intermittent 503s all day. Every
+  lookup that 503'd was retried to a real answer rather than assumed: **#495 OPEN**, **#615
+  OPEN**, **#269 CLOSED** (cited in the launch orders as a hazard record, never a pairing
+  target). No target in this table is unverified.
 - **`gh issue comment` is a delegated class with a recorded permission fallback:** on a harness
   veto, take one human approval in the moment, then batch the remaining equivalent comments
   rather than re-litigating each one (#408's shape). Log the veto as an `INCIDENT`.
