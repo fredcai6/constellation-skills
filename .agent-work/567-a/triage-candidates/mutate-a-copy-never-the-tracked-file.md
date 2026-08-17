@@ -8,7 +8,30 @@
 - **Severity:** high. The failure mode leaves a security fix silently reverted in a working
   tree, and it looks exactly like a healthy tree to anyone who does not run `git status`.
 
-## What happened
+## CORRECTION, applied after the fact — the framing below was wrong
+
+**The reviewer did not die.** It was working, mid-mutation, and went on to deliver a
+1057-line review with two real blocking defects. The Commander saw a dirty tree plus 6-8
+minutes without writes, concluded death, and restored the file underneath a live agent.
+`global-orchestrator.md` gives ten minutes as the floor precisely because "a threshold under
+ten adjudicates live agents dead".
+
+**The recommendation below still stands**, and if anything the correction sharpens it:
+
+> **"Crashed mid-mutation" and "working normally, mid-mutation" are byte-identical on
+> disk.** No filesystem probe can distinguish them.
+
+So in-place mutation is hazardous for *two* reasons, not one. The original reason: if the
+actor dies, a security fix is left silently reverted. The one this incident actually
+demonstrates: even when the actor is perfectly healthy, its normal working state is
+**indistinguishable from a crash**, so it invites a dispatcher to intervene destructively.
+The second is the more likely failure, because it needs nobody to die.
+
+The Commander made the same in-place mistake itself on `scripts/checklist_engine.py` and
+got away with it via a `cp` backup — so this is not a crew-discipline candidate, it is a
+handoff-template candidate that binds every tier including the one writing the handoffs.
+
+## What happened (as it was first — mis-)diagnosed
 
 Mutation testing is the right technique and this lane depended on it — it is how the
 implementing crew discovered that its own security fix was untestable (every test fixture
@@ -20,8 +43,8 @@ So I asked the reviewer to independently re-run the decisive mutation: swap the 
 restore. Standard practice, and the launch order sanctions it ("break the worktree copy for
 red-proofs").
 
-**The reviewer died between mutating and restoring.** No `REVIEW_RESULT` was written. What
-it left behind:
+**The Commander found the tree mid-mutation and wrongly concluded the reviewer had died**
+(see the correction above). What it saw:
 
 ```
 $ git status --short
