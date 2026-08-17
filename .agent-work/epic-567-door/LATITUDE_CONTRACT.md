@@ -10,8 +10,15 @@ next epic.
 ## Epic Intent
 
 One interface for agents: the MCP door. The CLI becomes an operator/debug path only.
-The outcome that must not be violated: **this epic reduces paths, it does not add
-mechanism.** Every lane ends net-mechanism-negative — something is deleted.
+The outcome that must not be violated: **this epic reduces complexity by removing a
+redundant path.**
+
+**Amended 2026-08-17 by Tommy.** The earlier wording — "every lane ends
+net-mechanism-negative, something is deleted" — was never his rule. It came from the
+Admiral's memory of the 2026-08-16 planning session and mis-stated his intent, then rode
+into all four wave-1 launch orders as a hard pre-ruling. Withdrawn. The goal is reducing
+complexity, and a lane whose whole job is removing a redundant path serves that even when
+its own line count rises.
 
 ## Success Shape
 
@@ -52,7 +59,7 @@ evidence on demand.
 
 **Wave 1 — unblock and independents (4 lanes, concurrent).** Boundary: `w1`.
 
-| Lane | Issues | Deliverable | Tier |
+| Lane | Issues | Deliverable (the "ends by deleting" column is withdrawn — see the amendment above) | Tier |
 |---|---|---|---|
 | A | #559 anchor + the bind-own-spine gap + #613's `save()`-atomicity half | per-dispatch spine identity; the door reaches the caller's own spine | Opus |
 | B | #432 | ExternalBackend refuses a spineless "success" — deletes the mtime-only path | Sonnet |
@@ -174,9 +181,15 @@ Each is overridable by the human at any checkpoint.
   generates N≥2 candidates under distinct named constraints before converging.
   **Convergence is human-only**: lane A returns a comparison and a recommendation; the
   Admiral surfaces it at the W1 checkpoint. `@grade: settled/doctrine · leans A`
-- `decision:every-lane-deletes` — the wave filter from 2026-08-16: a lane that adds
-  mechanism without removing any is not done. A lane that cannot delete anything says so
-  and surfaces it. `@grade: settled/human · leans all lanes`
+- ~~`decision:every-lane-deletes`~~ — **WITHDRAWN 2026-08-17 by Tommy**, who never set it:
+  *"I never said that every lane needs to end with something deleted, or at least never
+  intended that."* It was the Admiral's mis-recording of the 2026-08-16 session. Replaced by:
+- `decision:reduce-complexity` — judge a change by whether it reduces complexity, and in
+  particular by Tommy's test for trades of this kind: **does this choice reduce work on
+  agents by moving it into mechanisms?** Removing a redundant path counts even when the
+  removing lane's own line count rises. Do not over-engineer; note simplification
+  opportunities rather than building for them.
+  `@grade: settled/human · leans all lanes`
 - `decision:honest-null-is-complete` — a measured negative is a successful deliverable,
   stated with its evidence. `@grade: settled/human · leans all lanes`
 - `decision:worktrees-provisioned-by-admiral` — the Agent-tool `isolation:"worktree"` flag
