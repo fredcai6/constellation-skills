@@ -24,7 +24,8 @@
           "id": "c1",
           "statement": "plan intent and scope re-confirmed against the launch order and mission frame",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Plan intent and scope re-confirmed against LANE_A_LAUNCH_ORDER.md and MISSION_FRAME.md. Doctrine and deltas were read at the spine's context step; map DEGRADED repo-wide and discharged with five hash-pinned substitutes. Baseline not re-derived: the order's 15 CLI-fallback clauses and 11 <engine> tokens were re-measured at 600de020 and match. Scope confirmed unchanged after the cold critic: #559 anchor + the bind-own-spine gap + #613's atomicity half only."
         }
       ],
       "constraints": [
@@ -32,7 +33,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -82,7 +83,8 @@
           "id": "p1",
           "statement": "all three candidates delivered to crew-handoffs/",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "All three candidates delivered to crew-handoffs/: CANDIDATE_A_minimal-interface.md, CANDIDATE_B_no-new-tool.md, CANDIDATE_C_per-call-identity.md. Each written by a FRESH general-purpose agent under one named distinct constraint, none of which touched a spine, a checklist or a lease."
         }
       ],
       "postconditions": [
@@ -93,7 +95,8 @@
             "kind": "command",
             "command": "test -f .agent-work/epic-567-door/cmdr-a/DESIGN_CONVERGENCE.md && grep -q 'Recommendation' .agent-work/epic-567-door/cmdr-a/DESIGN_CONVERGENCE.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-converge-2"
         },
         {
           "id": "c2",
@@ -105,7 +108,12 @@
               "cite": "LAUNCH_ORDER:Pre-Rulings"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-converge-1",
+          "attested": {
+            "evidence": "e-g1-converge-1",
+            "note": null
+          }
         }
       ],
       "constraints": [
@@ -115,11 +123,34 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-converge-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Pre-Rulings",
+            "artifact": ".agent-work/epic-567-door/cmdr-a/DESIGN_CONVERGENCE.md",
+            "note": "Comparison and ONE recommendation produced (named hybrid, not a menu), then AMENDED after the cold critic inverted its central argument. Surfaced to the human as a decision, NOT ratified: decision:convergence-is-human-only reserves the pick. The single question I most want ruled is whether IDENTITY_TRADE.md section 2's confinement property is amendable at all -- if the human reads 'the door cannot be pointed at another run's spine' as settled rather than as a recorded trade, the recommendation is dead as written whatever its internals."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-converge-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/epic-567-door/cmdr-a/DESIGN_CONVERGENCE.md && grep -q 'Recommendation' .agent-work/epic-567-door/cmdr-a/DESIGN_CONVERGENCE.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "anchors": {
         "structural": [
@@ -759,6 +790,33 @@
         "rescoped g3-integrate",
         "rescoped g4-selfhost"
       ]
+    }
+  ],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "cmdr-567-a",
+    "status": "active",
+    "claimed_at": "2026-08-17T06:57:45.427991+00:00",
+    "last_heartbeat": "2026-08-17T06:58:04.982963+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-17T06:57:45.596366+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-converge",
+      "why": "Converged the 3-candidate panel to one named hybrid: candidate A's spine_bind with the session derived from work_id rather than origin.work_id, after running A's own stated falsifier and finding origin.work_id absent from 92% of live spines including the Admiral's own and IMPLEMENTER_PLAN.json. Then a cold critic inverted the central argument -- I had killed C on a measured 683-file reach and crowned A on an unmeasured 4205-file one -- so the containment root is narrowed to <own checkout>/.agent-work via --show-toplevel plus a cross-checkout refusal (683, cross-checkout 0), which also makes the isolation section's 'cannot drive a spine in another checkout' claim true where it had been false. The pick remains the human's.",
+      "mechanical": false,
+      "ts": "2026-08-17T06:58:04.982955+00:00"
     }
   ]
 }

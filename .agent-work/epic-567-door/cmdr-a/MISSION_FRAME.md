@@ -60,11 +60,21 @@ Cited as path/symbol, since no `struct:` ids exist. All in
   - `_unbound_refusal` (`:393`) — per-call binding check, deliberately uncached.
   - `_rebind_refusal` (`:920`) — refuses a rebind while a lease is held.
   - `_identity_violation` (`:443`) — the guard. Not to be re-specified this run.
-  - `_resolve_confined` (`~:330-380`) — the containment predicate, already
+  - `_resolve_confined` (`:322`) — the containment predicate, already
     parameterized on `bound_dir`.
-  - `_spine_open` (`~:1000-1042`) — mint-and-bind, today the only caller of the binder.
+  - `_spine_open` (`:968`) — mint-and-bind, today the only caller of the binder.
 - `scripts/checklist_engine.py` — the engine. Level: module.
-  - `save` (`:237`) and `load` (`:220`) — the atomicity change lands here.
+  - `save` (`:237`) and `load` (`:220`) — **line numbers pinned to base `600de020`,
+    not to HEAD.** The atomicity change adds `import tempfile`, which shifts both by
+    one (`load` → `:221`, `save` → `:238`). Pinned rather than updated because a
+    number that drifts as the branch moves is the defect
+    `global-everyone.md` §"Pin a claim to the revision you read it at" names. My own
+    anchor-verification script caught this drift, which is the check working.
+  - `save` is where the atomicity change lands. **`load` is OUT OF SCOPE** — it stays
+    `json.loads(read_text())` and still surfaces a missing or malformed document as an
+    unhandled traceback. The frame originally said the change "lands here" for both,
+    which was wrong; a cold critic caught it (M12). Adding a refusal to `load` is a
+    triage candidate, not this lane's work.
   - `_RAIL_STRINGS` and `_refresh_attach_hint` — **fenced to this lane but NOT my
     mission.** Lane C needs their text intact for a follow-up. Named here so the
     plan does not churn them.

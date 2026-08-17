@@ -362,7 +362,11 @@ path; no speculative abstraction", and the canonical path is already here:
 - `scripts/hooks/spine_rail.py:369` — `_replace_binding_atomically`: unique-temp
   atomic replace under a lock, described at `:1359` as "closing the
   lost-update/torn-write window".
-- `scripts/apply_episode_delta.py:1201` — "A single `os.replace()` is atomic on ..."
+- a third instance in `scripts/` carries the same "a single `os.replace()` is atomic"
+  comment. Named in the triage candidate rather than here — spelling its filename in a
+  tracked root-level file trips `test_retirement_guard.py::test_canon_is_clean`
+  (`unapproved-store-mention`), which the g3 crew caught against this very file. My
+  defect, my fix; the guard is right and the example was inessential.
 
 `spine_rail.py:163-170` even states my scope boundary in the repo's own words:
 "load-modify-save is atomic on the WRITE but not across the read-modify-write."
@@ -765,6 +769,46 @@ the convicting.
 I still take the waiver — the gate's demanded citation *format* is genuinely
 unavailable — but the critic is right that the waiver should not buy me out of the
 underlying property. Line numbers corrected.
+
+### F11 — I swept a live crew's in-progress work into my own commit
+
+Process hazard, mine, worth reporting because it is easy to repeat. I ran `git add -A`
+to commit my plan-step artifacts while **two implementer crews were working in the same
+worktree**. The g3 crew's `checklist_engine.py` atomicity change was uncommitted at that
+moment, so it went into `fe2eb504` — a commit whose message describes the cold-critic
+response and says nothing about implementing #613.
+
+Nothing is lost and the work is on the branch, but the provenance is now wrong: a
+reviewer reading `fe2eb504`'s message will not expect 48 lines of `save()` in it, and
+the crew's own commit will not contain its own work.
+
+**The cause is structural, not carelessness.** A Commander that commits from the same
+worktree its crews are editing cannot use `git add -A` safely — the crews have no lock
+and no way to tell it to wait. Two mitigations, neither of which I had in place:
+commit by explicit path rather than `-A`, or dispatch crews into their own worktrees.
+The launch order fences crews by *file*, which prevents them colliding with each other
+but does nothing about the dispatcher's own staging.
+
+I am not rewriting history to fix it — that would be worse than the untidiness, and the
+diff is what gets reviewed either way. Recorded and disclosed instead, and the g2/g3
+result files will state which commits actually carry their work.
+
+### F12 — the anchor check I substituted for the waiver immediately earned its keep
+
+Per the critic's N2 I did not let the `c6` waiver excuse the underlying property, and
+instead ran a real check: every ``symbol``(`:NNN`) anchor in the mission frame must
+appear on that line of a real source file. Result: **9 checked, 7 resolve, 2 do not** —
+`save:237` and `load:220`.
+
+Both "failures" are correct and informative: the g3 crew's `import tempfile` shifted
+`checklist_engine.py` by one line, so the frame's numbers were accurate at base
+`600de020` and stale against HEAD. Fixed by **pinning them to the revision** rather
+than by chasing them, which is what `global-everyone.md` §"Pin a claim to the revision
+you read it at" prescribes.
+
+So a check the gate could not express caught real drift within minutes of being written,
+in a document that had already been reviewed by a cold critic. That is the argument for
+substituting a check when a gate is unsatisfiable, rather than waiving and moving on.
 
 ### Accepted without argument
 
