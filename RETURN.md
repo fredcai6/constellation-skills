@@ -588,32 +588,78 @@ Written under `.agent-work/567-a/triage-candidates/`, **not filed as issues**
 
 ## 11. Workflow feedback
 
-**What worked.**
+### What worked, and the three that earned their cost
 
-- **Design-it-twice earned its cost twice over,** and both payoffs came from candidate
-  *honesty* rather than candidate cleverness. C's self-negation retired the issue's own
-  filed recommendation with numbers. A's named falsifier is what exposed the
-  `origin.work_id` defect — a single design pass would have shipped a feature that
-  worked on the author's own spine and refused the Admiral's.
-- **Fresh agents instead of forks.** Given lane G lost its mission to a fork that
-  believed it was the Commander, the "you have no spine, do not run the engine"
-  prohibition cost one paragraph per dispatch and I would repeat it every time.
-- **Write-as-you-go.** `notes-a.md` carries nine findings recorded when found. My
-  predecessor ran 47 minutes and wrote zero bytes; the discipline is the difference.
-- **The engine's rails are genuinely good.** The `init` step's RAIL banner, the refusal
-  recovery lines, and the check text that honestly states its own measured sensitivity
-  (0/4) and specificity (0/1) are unusually well built.
+- **Design-it-twice paid twice, and both payoffs came from candidate *honesty* rather than
+  cleverness.** Candidate C self-negated with arithmetic, which retired #559's own filed
+  recommendation on numbers rather than argument. Candidate A **named its own falsifier** — and
+  running it is what exposed the `origin.work_id` defect that would have shipped a feature
+  working on the author's spine and refusing the Admiral's. A single design pass produces
+  neither of those.
+- **The cold critic was the highest-value step of the run.** Five blocking findings, all
+  substantive. It re-derived my census independently, verified 17 of my line references (finding
+  2 wrong), and inverted my central argument with a measurement I had not taken. Its single most
+  useful sentence was structural, not detailed: *"a boundary argument decided by an axis where
+  only one side is measured is not an argument."*
+- **Two independent reviewers reaching the same `BLOCK` by different routes** is the strongest
+  evidence this run produced. Replication, not corroboration.
+- **Mutation testing found what tests could not.** The implementing crew's own green mutation
+  (`M3`) revealed that my security fix was **structurally untestable** — every fixture used a
+  topology where the two roots agree. **A mutation that comes back green is worth more than one
+  that comes back red.**
+- **Write-as-you-go.** `notes-a.md` carries 27 findings recorded when found. My predecessor on
+  this lane ran 47 minutes and wrote zero bytes.
 
-**What did not.**
+### What did not work
 
-- **Three of my first four bootstrap steps were unrunnable as written** (engine path
-  absent, notes filename occupied, cwd non-persistence). All three are cheap to check
-  and each blocks step one, where a commander has the least context to diagnose it.
-- **The `plan` step's `c6` gate punishes the better artifact,** measured above. I took
-  the recorded waiver the imperative sanctions, but an author who does not notice
-  learns — correctly, from the gate's feedback — to stop writing constraint anchors.
-- **`docs/agents/engine-config.json` does not exist** though the `context` imperative
-  names it. I substituted `docs/CHECKLIST_ENGINE_DESIGN.md` and recorded the
-  substitution, as the imperative allows.
-- **The cold plan critic was the slowest step of the run** by a wide margin, and it is
-  sequenced so nothing can proceed past it. Worth knowing when budgeting a lane.
+- **Three of my first four bootstrap steps were unrunnable as written** — the order's engine
+  path does not exist, the assigned notes filename was a tracked artifact of a previous lane
+  (clobbered and restored, zero lines lost), and the two-call isolation check cannot work in a
+  harness with no cwd persistence. Each blocks step one, where a commander has least context to
+  diagnose it. All three are cheap to check before dispatch.
+- **The `plan` step's `c6` gate punishes the better artifact.** Measured: a five-line frame with
+  zero anchors and one substitute citation returns `FRAME-OK` exit 0; my 15-anchor frame returns
+  `FRAME-REFUSED` exit 10. The mandated template *requires* graded `decision:` anchors, so
+  following it guarantees refusal under a degraded map. I took the sanctioned waiver and
+  substituted a real anchor check, which immediately caught genuine line drift.
+- **The engine cannot express parallelism.** I authored `g2` and `g3` as independent and ran
+  both crews in parallel successfully — then the engine refused to close `g3` because
+  `g2-implement` "must be worked first." Finished, reviewed work sat idle behind an unrelated
+  gate. My `p1` precondition literally read "no dependency on g2 — parallel-safe", which the
+  engine contradicts; the cold critic had already flagged it as a comment in a precondition slot.
+- **`docs/agents/engine-config.json` does not exist** though the `context` imperative names it.
+  Substituted and recorded.
+- **Crew wall-clock dominated everything.** Six crew dispatches, several over 20 minutes, and the
+  cold critic was the single slowest step while sequenced so nothing could proceed past it.
+
+### My own mistakes, since a retrospective that only indicts the tooling is worthless
+
+- **I declared a live reviewer dead and restored a file underneath it.** I used a 6-8 minute
+  no-write threshold; `global-orchestrator.md` says ten, *"so a threshold under ten adjudicates
+  live agents dead"*, and that paragraph exists because this nearly killed a healthy commander
+  before. I had read it and quoted its other half approvingly in the same note. No damage, by the
+  reviewer's md5-verified restores rather than by my care. **A dirty tree is not evidence of
+  death — "crashed mid-mutation" and "working normally" are byte-identical on disk.**
+- **I told two crews to mutate tracked files in place.** `decision:self-hosting-engine-edit`
+  already told me "against a COPY, never a live file"; I applied it to spine files and never
+  generalised it to source files, though I did use a `cp` backup for my own red-proof.
+- **My gate plan could not detect its own success.** All four command postconditions passed at
+  base with zero code written. I wrote a plan whose own `g3-review` imperative lectures the crew
+  that "a test that passes in both the healthy and the defective world is a check that cannot
+  fail" and did not apply it to the plan.
+- **I fenced `run_crew.py` out of both handoffs**, so neither crew owned `CREW_ALLOWED_TOOLS` —
+  and without that one entry the new tool is **silently denied to every dispatched crew**, the
+  exact population #559 exists for. The comment above that tuple describes this same failure from
+  the last time it happened. I applied the wiring-grep rule to the crews' symbols and not to the
+  grant that decides whether anyone can reach the tool.
+- **I ran six boundary attacks and reported the boundary sound. Not one used a symlink.** The
+  reviewer's value was not diligence on my list — it was bringing a shape that was not on it. A
+  list of attacks written by whoever drew the boundary inherits that person's blind spots.
+
+### One process suggestion, offered narrowly
+
+The two most valuable findings of this run — the green mutation and the symlink escape — both
+came from an agent **exceeding its brief**. My handoffs asked for red-proofs on named tests; they
+did not ask for mutation testing of the guard itself, or for attacks outside the enumerated list.
+Where a gate's deliverable is a security boundary, the handoff might say so explicitly: *"the
+enumerated attacks are a floor, not a specification; find a shape that is not on this list."*
