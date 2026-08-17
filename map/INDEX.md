@@ -3,9 +3,9 @@
 ## packages
 evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
-scripts: 58 modules, 1226 entities
+scripts: 58 modules, 1232 entities
 skills: 1 modules, 18 entities
-tests: 87 modules, 4862 entities
+tests: 90 modules, 4985 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -36,7 +36,7 @@ tests: 87 modules, 4862 entities
 
 - [examples.mcp-interactive-demo.make_demo_spine](examples.mcp-interactive-demo.make_demo_spine/INDEX.md) (4 entities, 2 holes): Generate this directory's throwaway demo spine.
 
-## scripts (58 modules, 1226 entities)
+## scripts (58 modules, 1232 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -72,14 +72,14 @@ tests: 87 modules, 4862 entities
 - [scripts.init_work_area](scripts.init_work_area/INDEX.md) (7 entities, 2 holes): Scaffold a Constellation work area: .agent-work/<work-id>/ and its subdirs.
 - [scripts.install_constellation](scripts.install_constellation/INDEX.md) (85 entities, 31 holes): HOLE: no docstring
 - [scripts.map_orient](scripts.map_orient/INDEX.md) (61 entities, 17 holes): Orient an agent against a repo's architecture map -- or REPORT that it cannot.
-- [scripts.mcp_spine_server](scripts.mcp_spine_server/INDEX.md) (30 entities, 3 holes): MCP front door for the checklist engine (issue #424, workstream F of epic #418).
+- [scripts.mcp_spine_server](scripts.mcp_spine_server/INDEX.md) (35 entities, 3 holes): MCP front door for the checklist engine (issue #424, workstream F of epic #418).
 - [scripts.measure_overread](scripts.measure_overread/INDEX.md) (10 entities, 2 holes): measure_overread.py -- count STRUCTURAL READS per agent run in a transcript.
 - [scripts.prove_docstring_only](scripts.prove_docstring_only/INDEX.md) (3 entities, 1 holes): Decide — not assert — whether a Python file's change is docstring-only.
 - [scripts.query_episodes](scripts.query_episodes/INDEX.md) (22 entities, 7 holes): Deterministic retrieval over the episode store (docs/EPISODE_STORE.md section 8).
 - [scripts.recover_crews](scripts.recover_crews/INDEX.md) (8 entities, 3 holes): Recovery classifier over the durable crew-run registry.
 - [scripts.run_crew](scripts.run_crew/INDEX.md) (65 entities, 12 holes): Safe crew launcher with a durable session-recovery registry.
 - [scripts.run_skill_eval](scripts.run_skill_eval/INDEX.md) (42 entities, 10 holes): Corpus skill-eval runner — the PURE, agent-free core (#106, gate g2).
-- [scripts.spine_lifecycle](scripts.spine_lifecycle/INDEX.md) (20 entities, 3 holes): Open and close Constellation work in one call each: `open_work` builds a worktree, a branch, a scaffolded work area, and a compiled, origin-stamped spine; `clos
+- [scripts.spine_lifecycle](scripts.spine_lifecycle/INDEX.md) (21 entities, 3 holes): Open and close Constellation work in one call each: `open_work` builds a worktree, a branch, a scaffolded work area, and a compiled, origin-stamped spine; `clos
 - [scripts.validate_spine](scripts.validate_spine/INDEX.md) (23 entities, 10 holes): Refuse a spine or spine template the engine cannot read, or that carries a check which cannot fail.
 - [scripts.verify_context_declaration](scripts.verify_context_declaration/INDEX.md) (7 entities, 1 holes): Lint: every declared `context_refs` path must appear verbatim in its own task's `imperative` prose.
 - [scripts.verify_coverage_ledger](scripts.verify_coverage_ledger/INDEX.md) (6 entities, 2 holes): Verify the removability coverage ledger against the installed-externals manifest.
@@ -109,7 +109,7 @@ tests: 87 modules, 4862 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (87 modules, 4862 entities)
+## tests (90 modules, 4985 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -122,6 +122,7 @@ tests: 87 modules, 4862 entities
 - [tests.test_bytecode_cache_provenance](tests.test_bytecode_cache_provenance/INDEX.md) (13 entities, 4 holes): #597 — a bytecode cache built in a different tree must be named, not suffered.
 - [tests.test_check_corpus_freshness](tests.test_check_corpus_freshness/INDEX.md) (15 entities, 14 holes): HOLE: no docstring
 - [tests.test_checklist_engine](tests.test_checklist_engine/INDEX.md) (635 entities, 484 holes): HOLE: no docstring
+- [tests.test_checklist_engine_atomic_save](tests.test_checklist_engine_atomic_save/INDEX.md) (25 entities, 16 holes): #613 (atomicity half): `checklist_engine.save()` must install the new document by ATOMIC RENAME, never by writing over the live target in place.
 - [tests.test_clamp_presence](tests.test_clamp_presence/INDEX.md) (3 entities, 3 holes): Presence test for issue #142 clamp restoration.
 - [tests.test_code_map](tests.test_code_map/INDEX.md) (348 entities, 191 holes): Tests for scripts/code_map/ — the derived code map (issue #456, gate g0).
 - [tests.test_commander_evidence_convention](tests.test_commander_evidence_convention/INDEX.md) (8 entities, 8 holes): Pin the g1-implement evidence convention (epic-559/b-instructions-to-checks, rework).
@@ -165,11 +166,12 @@ tests: 87 modules, 4862 entities
 - [tests.test_mcp_adoption](tests.test_mcp_adoption/INDEX.md) (72 entities, 36 holes): Adoption gate for the MCP door (issue #542 criterion 1, epic-418-followon g4a).
 - [tests.test_mcp_door_engine_cwd](tests.test_mcp_door_engine_cwd/INDEX.md) (24 entities, 15 holes): The door stands in the bound spine's own worktree for an engine call (issue #568, the g1b delta).
 - [tests.test_mcp_door_telemetry](tests.test_mcp_door_telemetry/INDEX.md) (18 entities, 4 holes): The MCP door's telemetry writes must never fail a call or kill the server (issue #604, cleanup-a-door gate g1).
-- [tests.test_mcp_door_unbound](tests.test_mcp_door_unbound/INDEX.md) (33 entities, 20 holes): The MCP door must fail CLOSED when nothing usable is bound (issue #603, cleanup-a-door gate g3).
+- [tests.test_mcp_door_unbound](tests.test_mcp_door_unbound/INDEX.md) (34 entities, 20 holes): The MCP door must fail CLOSED when nothing usable is bound (issue #603, cleanup-a-door gate g3).
 - [tests.test_mcp_friction_capture](tests.test_mcp_friction_capture/INDEX.md) (23 entities, 12 holes): Tests for the MCP door's own rejection capture (issue #541, epic-418-followon wave 2, gate g2).
-- [tests.test_mcp_identity](tests.test_mcp_identity/INDEX.md) (65 entities, 23 holes): DC2 (separation) and DC3 (inheritance fails closed) acceptance tests for the MCP front door (issue #424, workstream F, gate g3).
+- [tests.test_mcp_identity](tests.test_mcp_identity/INDEX.md) (68 entities, 23 holes): DC2 (separation) and DC3 (inheritance fails closed) acceptance tests for the MCP front door (issue #424, workstream F, gate g3).
 - [tests.test_mcp_imperative_equivalence](tests.test_mcp_imperative_equivalence/INDEX.md) (23 entities, 12 holes): DC4 acceptance test for the MCP front door (issue #424, workstream F, gate g2): the CLI projection and the MCP tool result carry the SAME imperative text for EV
 - [tests.test_mcp_lifecycle](tests.test_mcp_lifecycle/INDEX.md) (44 entities, 24 holes): Tests for the MCP lifecycle door -- `spine_open`/`spine_close` (`scripts/mcp_spine_server.py`'s `call_lifecycle_tool`, issue #559, C3/g3).
+- [tests.test_mcp_spine_bind](tests.test_mcp_spine_bind/INDEX.md) (87 entities, 49 holes): `spine_bind` -- binding the door to a spine that ALREADY EXISTS (epic #567 lane A, gate `g2-implement`).
 - [tests.test_mcp_spine_server](tests.test_mcp_spine_server/INDEX.md) (62 entities, 41 holes): Tests for scripts/mcp_spine_server.py (issue #424, workstream F: the MCP front door on the checklist engine).
 - [tests.test_measure_overread](tests.test_measure_overread/INDEX.md) (23 entities, 23 holes): Unit tests for scripts/measure_overread.py.
 - [tests.test_mutation_floor](tests.test_mutation_floor/INDEX.md) (32 entities, 18 holes): EXECUTED falsifiability for scripts/map_orient.py.
@@ -187,6 +189,7 @@ tests: 87 modules, 4862 entities
 - [tests.test_spine_origin_isolation](tests.test_spine_origin_isolation/INDEX.md) (32 entities, 17 holes): The `origin` stamp is PROVENANCE: written, and read by nothing (#315/#568/#609).
 - [tests.test_spine_provenance_check](tests.test_spine_provenance_check/INDEX.md) (34 entities, 32 holes): Provenance hardening for the eval `spine_completed` process check (issue #127).
 - [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (220 entities, 95 holes): Unit tests for scripts/hooks/spine_rail.py.
+- [tests.test_spine_session_id](tests.test_spine_session_id/INDEX.md) (7 entities, 3 holes): `spine_lifecycle.session_id_for` -- the ONE definition of the lease identity a spine for a `work_id` is driven under (epic #567 lane A, gate g2-implement).
 - [tests.test_state_note](tests.test_state_note/INDEX.md) (15 entities, 15 holes): HOLE: no docstring
 - [tests.test_validate_spine](tests.test_validate_spine/INDEX.md) (85 entities, 77 holes): Tests for scripts/validate_spine.py (epic-559/c1-spine-lint, #518, #562).
 - [tests.test_verify_coverage_ledger](tests.test_verify_coverage_ledger/INDEX.md) (12 entities, 12 holes): HOLE: no docstring

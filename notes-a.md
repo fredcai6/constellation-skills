@@ -956,6 +956,39 @@ has no packet map, which this one does not.
 Also checked and NOT changed: `docs/CHECKLIST_SCHEMA.md:115` lists `opened_by` as
 "`spine_open` or `init_work_area`". Binding does not open, so that row stays correct.
 
+### F17 — the engine cannot express the parallelism my plan relied on
+
+I authored `g2` and `g3` as independent gates and dispatched both crews in parallel under
+file fences. That was correct and it worked: the two crews never collided, and `g3`'s diff
+never touched `g2`'s file or vice versa. But when `g3`'s work came back first and I tried
+to close its gate, the engine refused:
+
+```
+REFUSED: g3-implement is not the active gate; start 'g2-implement' first
+Recovery: ... the checklist works gates in order and 'g2-implement' must be worked
+first -- run `current` to see g2-implement's legal next move
+```
+
+**A gated checklist is strictly sequential. There is no notion of parallel gates.** So a
+Commander that legitimately parallelizes crews — which is the right thing to do for
+wall-clock and which the doctrine encourages — still has to close the gates in authored
+order, and finished work sits idle waiting on an unrelated gate. Nothing is lost (the
+`attach` of `g3`'s `implementer-result` succeeded even while the gate was not active, so
+the evidence is recorded), but the plan cannot say what is actually true about the work.
+
+This also **deepens the critic's M10**. It flagged my `g3-implement` precondition —
+`"statement": "no dependency on g2 — different file, parallel-safe"` — as "a comment in a
+precondition slot" with no truth conditions. It is worse than decorative: it states a
+property the engine actively contradicts. I wrote a precondition asserting independence
+into a structure that cannot honour independence.
+
+Two honest options for a future plan, neither of which I can take now: author genuinely
+independent work as **separate spines** (which is what `spine_open` per work-id exists
+for), or order the gates by expected completion and accept that the order is a scheduling
+guess rather than a dependency claim. Recording it as workflow feedback rather than
+proposing an engine change — `add`/`drop`/`rescope` on a gated plan is mechanism I am not
+authorized to redesign.
+
 ### S9 — accepted as a real double standard, and answered honestly
 
 `decision:net-deletion` is `settled/human`, cited in nine gate anchor blocks, and
