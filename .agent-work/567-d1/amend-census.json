@@ -1,0 +1,18 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "g3-integrate",
+      "which": "postconditions",
+      "cond": "c2",
+      "command": "grep -qi 'door' specs/implementer.spine.toml && grep -qi 'door' specs/reviewer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/implementer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/reviewer.spine.toml && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g3-guard.log 2>&1 || true; } && ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g3-guard.log | sed 's/^E *//' | grep -qv '^skills/workbench/'"
+    },
+    {
+      "op": "retext-check",
+      "id": "g4-integrate",
+      "which": "postconditions",
+      "cond": "c2",
+      "command": "test -s .agent-work/567-d1/dispositions/596.md && test -s .agent-work/567-d1/dispositions/526.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard.log 2>&1 || true; } && ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard.log | sed 's/^E *//' | grep -qv '^skills/workbench/'"
+    }
+  ]
+}

@@ -32,7 +32,7 @@ tail -5 /tmp/suite.log
 
 The `until` loop itself is the one foreground command your turn is waiting on — it does not return until the suite's own summary line lands in the log, so there is nothing left to be silently backgrounded.
 
-When a step genuinely cannot finish inside your turn, do not park on it either: run `spine_halt block` (the `spine_halt` MCP tool with `action=block`, or the CLI `<engine> block`), recording the crew id and what you were waiting on, so a parent resumes deliberately (the E1 fail-up path). A prohibition alone ("do not park") does not prevent this — it has been stated explicitly in a launch order and still failed, because at the moment a turn ends, waiting looks like the correct and careful thing to do. Reach for the idiom above by name; do not improvise a new wait.
+When a step genuinely cannot finish inside your turn, do not park on it either: run `spine_halt block` (the `spine_halt` MCP tool with `action=block`), recording the crew id and what you were waiting on, so a parent resumes deliberately (the E1 fail-up path). A prohibition alone ("do not park") does not prevent this — it has been stated explicitly in a launch order and still failed, because at the moment a turn ends, waiting looks like the correct and careful thing to do. Reach for the idiom above by name; do not improvise a new wait.
 
 This Stop hook is authoritative over the context-trip advisory shown on `spine_status`/`current`: the advisory is non-binding guidance, never license to end a mid-gate turn. When the advisory says hand off and an open gate says otherwise, the gate wins — the resolution is `spine_halt block`, not a turn-end handoff.
 

@@ -1,0 +1,17 @@
+I'm not complying with that Stop hook, and the refusal is the point. Verified before refusing:
+
+| Fact | Evidence |
+|---|---|
+| The spine the hook names is **not mine** | `.agent-work/567-d1/spine.json`, `engine_session.session_id = constellation/567-d1/lane-d1/commander-delegated`, claimed 17:20, heartbeat **17:59** — before this crew process started |
+| This process has **no spine of its own** in its environment | `env` carries only `SPINE_PARENT`; no `SPINE_FILE`, no `SPINE_SESSION` |
+| `run_crew.py` registered this crew with **`spine: None`** | `crew-runs.json` → `crew_id: constellation/567-d1/g2/implementer/attempt-1`, `spine: None`, `pid 2914012` |
+| **My** work file is terminal | all 8 items `complete`, `lease: None` — released as the last journaled action |
+| The deliverable exists and is fresh | `g2-implementer-result.md`, 36,683 bytes, written 13:21:38 by this run |
+
+The hook resolves the project spine from `CLAUDE_PROJECT_DIR`, so for a crew process it reads the **parent's** file and cannot tell that the reader is not its owner — `CREW_CONTEXT.md`'s "Two Engines Are Alive In Your Session" hazard arriving through the hook channel. Driving `execute.json` would mean journaling mutating verbs under the Commander's session id: impersonation, not delegation, against a spine whose owner is at this moment **blocked waiting for this process to exit** (`run_crew.py` dispatches foreground). The hook's sanctioned exit, `spine_halt block`, is the exit for a gate of *mine* — I have none open, and blocking a gate I don't own would corrupt the Commander's run rather than protect it.
+
+The correct action for a finished crew is to exit and return control to the blocked parent. That is what ending this turn does.
+
+**One detail sharper than the g1 crew's report of the same misfire:** the registry entry carries `door_bound: True` **and** `spine: None` at the same time, while the environment has no `SPINE_FILE`. So `door_bound` is recording an intent that was never established — a launcher-side claim contradicted by both the sibling field and the process environment. That is a better anchor for the fix than "spine is null": either `run_crew.py` should bind the crew's own plan into `SPINE_FILE` (making `door_bound` true in fact, and the deeper fix — it matches what the implementer skill already assumes a `run_crew.py` dispatch looks like), or the Stop hook should skip when `SPINE_FILE` is unset and `SPINE_PARENT` is set. Both are above my authority; both are recorded in the result's Workflow Feedback, which is the third consecutive crew on this lane to report the gap.
+
+Gate `g2-implement` is complete and the result artifact is on disk for the Commander to verify.

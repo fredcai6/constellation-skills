@@ -313,7 +313,8 @@
               "status": "complete"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
         }
       ],
       "constraints": [
@@ -354,11 +355,21 @@
           "guard GREEN; the specificity proof's RED-then-GREEN at a reworded site; full suite tally with the ^FAILED grep"
         ]
       },
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-review": {
@@ -370,7 +381,8 @@
           "id": "p1",
           "statement": "g2-implement returned complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g2-implement closed complete; 23 files changed, gate check exit 0 in my own hands."
         }
       ],
       "postconditions": [
@@ -419,7 +431,7 @@
           "guard GREEN; the specificity proof's RED-then-GREEN at a reworded site; full suite tally with the ^FAILED grep"
         ]
       },
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -644,7 +656,7 @@
           "statement": "both specs name the door AND name the second-checklist truth, and the guard reports NO violation anywhere outside lane D2's fenced skills/workbench/ files -- the whole-corpus green is g5-final's, after the rebase",
           "check": {
             "kind": "command",
-            "command": "grep -qi 'door' specs/implementer.spine.toml && grep -qi 'door' specs/reviewer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/implementer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/reviewer.spine.toml && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g3-guard.log 2>&1 || true; } && ! grep -oE '(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g3-guard.log | grep -qv '^skills/workbench/'"
+            "command": "grep -qi 'door' specs/implementer.spine.toml && grep -qi 'door' specs/reviewer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/implementer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/reviewer.spine.toml && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g3-guard.log 2>&1 || true; } && ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g3-guard.log | sed 's/^E *//' | grep -qv '^skills/workbench/'"
           },
           "satisfied": false
         }
@@ -827,7 +839,7 @@
           "statement": "both dispositions exist and are non-empty, and the guard reports NO violation anywhere outside lane D2's fenced skills/workbench/ files",
           "check": {
             "kind": "command",
-            "command": "test -s .agent-work/567-d1/dispositions/596.md && test -s .agent-work/567-d1/dispositions/526.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard.log 2>&1 || true; } && ! grep -oE '(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard.log | grep -qv '^skills/workbench/'"
+            "command": "test -s .agent-work/567-d1/dispositions/596.md && test -s .agent-work/567-d1/dispositions/526.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard.log 2>&1 || true; } && ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard.log | sed 's/^E *//' | grep -qv '^skills/workbench/'"
           },
           "satisfied": false
         }
@@ -1133,7 +1145,7 @@
     "session_id": "commander-567-d1-execute",
     "status": "active",
     "claimed_at": "2026-08-17T18:02:30.383334+00:00",
-    "last_heartbeat": "2026-08-17T19:58:37.752703+00:00",
+    "last_heartbeat": "2026-08-17T20:23:19.524664+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -1209,6 +1221,13 @@
       "why": "Integrated. Gate c2 re-run in my own hands under dash: exit 0. The guard is now placeholder-agnostic with its verb set tied to the engine's own registry, walks the tracked overlay, and remains RED for the right reason. Three triage candidates staged from this gate plus one escalation: the g1b re-reviewer finished its work and was then refused permission to end its turn by the Stop hook, which resolved a spine from disk with SPINE_FILE unset and handed it THIS Commander's spine -- whose in-progress step was the crew's own dispatch. It refused, calling it impersonation rather than delegation, and it was right. The hook's sanctioned escapes -- block and waive -- both write to the parent's spine, so the prescribed honest stop is itself the destructive act. Sixth reproduction in this lane across three gates and both roles; the lane-H precedent the launch order warned about is not one agent's accident, it is what the hook instructs. Staged with priority; hook code and run_crew.py are outside this lane.",
       "mechanical": false,
       "ts": "2026-08-17T19:58:29.317169+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g2-implement",
+      "why": "The sweep landed and the mandate is inverted. Verified in my own hands: zero CLI-fallback clauses and zero <engine> tokens in skills/ outside lane D2's fenced files AND in the tracked overlay including its .baseline/ mirrors; adoption suite green; the guard's non-workbench site list empty; 41 JSON files parse; both pre-ruled survivors untouched by git diff. The specificity proof is the item that closes #559 and it is genuinely discriminating: the reintroduced clause is flagged at skills/interrogator/SKILL.md:28, one line BELOW the reworded text at :27 that describes the same mechanism in the same words and is flagged by nothing in either direction -- the guard separates the two sentences, not the two files. The replacement wording is better than the order asked for: it removes the 'by default ... otherwise' framings too, on the reasoning that leaving them keeps the two-path idea alive in grammar after the second path is gone, and where an <engine> command was the only instruction for a real action it was converted to the equivalent door call rather than deleted. The crew also found a TENTH mandating assertion my handoff's table of nine missed.",
+      "mechanical": false,
+      "ts": "2026-08-17T20:23:19.395908+00:00"
     }
   ],
   "amendments": [
@@ -1236,6 +1255,15 @@
         "retext-check g3-integrate.c2",
         "retext-check g4-integrate.c2",
         "retext-check g5-final.c2"
+      ]
+    },
+    {
+      "ts": "2026-08-17T20:21:41.522005+00:00",
+      "reason": "My own rescoped g3/g4 checks had a false positive and would have failed on a correctly-swept tree. They extracted every '(skills|specs|.agent-work)/...' substring from the guard's output and required none outside skills/workbench/ -- but the guard's CENSUS line, which every failure message carries by design, reads 'scanned 3098 texts across 216 files (101 under skills/, 2 under specs/, 113 under .agent-work/templates/)', and '.agent-work/templates/' matches that pattern. So the check saw the guard's own self-description as a violation. Verified after g2's sweep: the log's ONLY non-workbench match is that census fragment; every real site is skills/workbench/. Anchored on the site-line format instead ('^E <path>'), and re-verified in dash in both directions: exit 0 on the swept tree, exit 1 against a planted skills/charter/SKILL.md site. Recorded rather than quietly patched, because it is the third defect this run has found in its own checks and the pattern is the same each time -- a check authored from what the output should say rather than run against what it does say.",
+      "authority": "commander-delegated, LAUNCH_ORDER 'Inherited Latitude': implementation choices inside this lane's own files",
+      "ops": [
+        "retext-check g3-integrate.c2",
+        "retext-check g4-integrate.c2"
       ]
     }
   ]

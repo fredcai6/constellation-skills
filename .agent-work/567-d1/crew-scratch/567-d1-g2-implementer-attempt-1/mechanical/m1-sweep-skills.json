@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-sweep-skills",
+  "mechanical": {
+    "run": "567-d1-g2-implementer-attempt-1",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m1-sweep-skills",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-d1-g2-implementer-attempt-1-m1-sweep-skills@f332442fb8dfe15a6034e5f63ff3e9df0a783ad5",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-d1-g2-implementer-attempt-1",
+    "generated_at": "2026-08-17T20:01:13Z"
+  }
+}

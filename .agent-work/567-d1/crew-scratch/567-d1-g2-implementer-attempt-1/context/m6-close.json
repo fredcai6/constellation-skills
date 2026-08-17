@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m6-close",
+  "files": [],
+  "repo_rev": {
+    "commit": "ae9eb92c5929c6195c17cb4b2788ca289e6c60ee"
+  },
+  "run": {
+    "work_id": "567-d1-g2-implementer-attempt-1",
+    "generated_at": "2026-08-17T20:18:15Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard"
+    }
+  }
+}
