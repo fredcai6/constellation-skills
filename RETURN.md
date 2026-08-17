@@ -370,39 +370,100 @@ behaviour. I touched no hooks, and `CLAUDE_PROJECT_DIR` resolving once at sessio
 
 ## 7. What was deleted
 
-*(pending implementation)*
+**The relaunch-your-own-server advice is gone from both refusal paths.** `_HOW_TO_BIND`
+and `_HOW_TO_REBIND` (`scripts/mcp_spine_server.py:421-428`) used to end:
 
-Accounting as designed, for the Admiral to check against the final diff:
+> "…or relaunch this door with SPINE_FILE set to an existing spine file"
 
-- `_HOW_TO_REBIND` (`:387-390`) collapses into `_HOW_TO_BIND` — the two differ only in
-  "bind"/"rebind" and both end in the same clause, "or relaunch this door with
-  SPINE_FILE set to an existing spine file", which exists *only* because there was no
-  in-band way to bind an existing spine.
-- **A whole documented recovery path stops being the answer: relaunch the server.**
-  This is the deletion that matters. Today the only way out of "named but unusable"
-  without minting is to kill the door and restart it with a different environment —
-  advice a model *inside* that server usually cannot follow. After this it is one call.
-- One inline rule becomes one named function with two callers (`session_id_for`). Not a
-  deletion of lines but of the *possibility* of a second definition, which is what
-  `decision:net-deletion` is actually protecting.
+That clause existed **only** because there was no in-band way to bind an existing spine.
+It is now:
 
-**Stated honestly: net line count goes UP, not down.** `run_crew`'s launch-time
-`--spine` env-pair binding stays (it is better than this path when available),
-`SPINE_FILE`/`SPINE_SESSION` stay, and the CLI stays. What this lane deletes is not
-lines — it is **the reason the 15 `CLI fallback` clauses and 11 `<engine>` tokens
-cannot be deleted.** Those counts were re-measured at `600de020` and match the order's
-table exactly. Wave 2 does the deleting; this lane removes the blocker, and that is the
-honest shape of its contribution to `decision:net-deletion`.
+> "Call `spine_bind` with the path to a spine that already exists, or `spine_open` to mint
+> a spine and bind this process to it."
+
+The deletion that matters is not the words but the **recovery path they described**:
+telling a model to kill and relaunch the MCP server it is running inside — advice, as the
+new docstring puts it, "a model running INSIDE that door usually cannot follow." The way
+out of an unbound door is now a call. Both constants were deliberately **kept** rather than
+collapsed into one, because `_unbound_refusal`'s docstring argues the bind/rebind split "is
+not cosmetic": an unbound door has no path to name, so a message promising to name one
+invites a fabricated path.
+
+Also deleted, in the sense `decision:net-deletion` is actually protecting: **the
+possibility of a second definition of a spine's session identity.**
+`constellation/<work_id>` was an inline f-string inside `open_work`; it is now
+`spine_lifecycle.session_id_for()` with two callers. Not fewer lines — fewer places for
+truth to diverge. Candidates A and B proposed this independently, which is the evidence the
+seam is real rather than hypothetical.
+
+### The honest accounting, because the pre-ruling deserves a straight answer
+
+**Net line count goes UP: 13,129 insertions against 112 deletions.** Most of that is tests
+(`tests/test_mcp_spine_bind.py` alone is 1,059 lines) and this lane's own records. Nobody
+should read this lane as net-negative on mechanism.
+
+**What it actually deletes is the reason the deletions cannot happen yet.** Epic #567's
+deliverable is 15 `CLI fallback` clauses across 11 files and 11 `<engine>` tokens across 7
+files — both counts re-measured at `600de020` and matching the order's table exactly. Every
+one of them is currently load-bearing, because for an agent whose door is unbound the CLI is
+**the only path**: 10 of the door's 11 tools refuse, and the one that answers mints. You
+cannot delete the only path. Wave 2 does the deleting; this lane removes the blocker.
+
+**The critic called this a double standard and it was right to.** I convicted candidate C on
+"what do you delete — nothing" while never printing what candidate A deletes, and
+`decision:net-deletion` is graded `settled/human`, cited in nine gate anchor blocks and
+delivered by none of them. So: stated plainly rather than dressed up, and the human may
+reasonably judge one deleted clause insufficient for a `settled/human` ruling. That
+judgement is theirs, not mine to declare satisfied.
 
 ## 8. Touched paths
 
-*(final list pending)* **`scripts/hooks/*` is NOT touched** — stated explicitly because
-the Admiral needs it for merge sequencing, and because concurrent lanes editing hook
-code can break every live session.
+**`scripts/hooks/*` is NOT touched.** Verified by command —
+`git diff --name-only 600de020..HEAD -- scripts/hooks/` is empty. Stated first because the
+Admiral needs it for merge sequencing: concurrent lanes editing hook code can break every
+live session, since all sessions execute the main checkout's hooks.
 
-## 9. PR
+**Source (5 files):**
 
-*(pending)* Not merged, per the order.
+| path | what | fenced to me? |
+|---|---|---|
+| `scripts/mcp_spine_server.py` | `+539` — `spine_bind`, `_spine_bind`, `_own_checkout_for_binding`, `_unusable_spine_reason`, the refusal set, `BINDS_WITHOUT_A_BOUND_SPINE` | **yes**, sole writer |
+| `scripts/checklist_engine.py` | `+51` — `save()` atomicity only | **yes**, sole writer |
+| `scripts/spine_lifecycle.py` | `+27` — `session_id_for()` extracted; `open_work` calls it | no |
+| `scripts/run_crew.py` | `+9` — one `CREW_ALLOWED_TOOLS` entry | **no — see the collision flag below** |
+| `map/INDEX.md` | `19` lines — regenerated; my code made it stale | no |
+
+**Tests (8 files):** `tests/test_mcp_spine_bind.py` (new, 1059), 
+`tests/test_checklist_engine_atomic_save.py` (new, 295), `tests/test_spine_session_id.py`
+(new, 78), `tests/test_mcp_identity.py`, `tests/test_mcp_lifecycle.py`,
+`tests/test_mcp_door_unbound.py`, `tests/test_mcp_spine_server.py`,
+`tests/test_crew_launcher.py`.
+
+**Records:** `notes-a.md`, `RETURN.md`, `.agent-work/epic-567-door/cmdr-a/**`,
+`.agent-work/567-a/triage-candidates/**`, and the `IDENTITY_TRADE.md` amendment under
+`.agent-work/archive/`.
+
+### Merge-collision flag for the Admiral
+
+**`scripts/run_crew.py` is not in my File Ownership, and lane `567-b-external-backend`
+almost certainly owns it.** I edited it anyway, and I want that visible rather than
+discovered:
+
+- **The change:** one entry appended to the `CREW_ALLOWED_TOOLS` tuple at
+  `scripts/run_crew.py:629` — `"mcp__spine__spine_bind"` — plus its comment.
+- **Why it was not optional:** that tuple is passed straight to `--allowedTools` on every
+  crew dispatch. Without the entry a dispatched crew is **silently denied** the new tool,
+  and an `ExternalBackend` crew's door is unbound *by construction* — so `spine_bind` is
+  its only route to its own plan file. Omitting it ships the feature inert for the exact
+  population #559 is about. The drift-guard test caught it; the comment directly above the
+  tuple describes this same failure from the last time it happened.
+- **Resolving a conflict:** trivial in either direction, as long as the final tuple contains
+  `"mcp__spine__spine_bind"`. `tests/test_crew_launcher.py`'s count control (11 → 12) must
+  move with it.
+
+Also disclosed: the implementing crew edited `tests/test_mcp_spine_server.py`, which its
+handoff did not list. It declared the edit as unavoidable and narrowing. I accept it and
+flag it rather than let it pass unmentioned.
 
 ## 10. Triage candidates
 
