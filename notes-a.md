@@ -546,7 +546,39 @@ two things I would not have got from a single pass.
    evidence test: "one adapter = a hypothetical seam; two = a real one." I am
    taking that extraction on their agreement rather than on my own judgement.
 
-### Method note
+## F9 — self-hosting baseline, taken BEFORE the engine edit
+
+`decision:self-hosting-engine-edit` asks for two proofs before the PR opens. Both
+are comparisons, so they are worth nothing without a "before". Taken at `3e4b0e20`,
+worktree engine still unedited:
+
+```
+$ py scripts/checklist_engine.py --file .agent-work/epic-567-door/cmdr-a/spine.json current
+worktree-engine current on live spine -> exit 0
+
+$ cp .../cmdr-a/spine.json <scratch>/spine-copy.json
+$ py scripts/checklist_engine.py --file <scratch>/spine-copy.json advance plan \
+      --session-id cmdr-567-a --mechanical
+REFUSED: plan: postconditions unmet ['c1','c2','c3','c4','c5','c6'] Recovery: ...
+advance-on-copy -> exit 1
+
+$ git status --short .agent-work/epic-567-door/cmdr-a/spine.json
+(no output — live spine unmodified)
+```
+
+Three things this establishes, none of which I could assert afterwards:
+
+1. Read-only `current` on the live spine already exits 0 under the worktree engine,
+   so if it stops doing so after the edit, the edit caused it.
+2. A mutating verb against a **copy** refuses **sanely** — a coherent refusal
+   naming the six unmet postconditions with a recovery line, not a traceback. That
+   is the behaviour the ruling asks me to preserve, so I now know what preserving it
+   looks like.
+3. The copy test provably did not touch the live spine. That is the part of the
+   ruling most easily violated by accident, and the `git status` line is the proof
+   rather than my assurance.
+
+Re-run after the edit and compare. Both commands go in the return verbatim.
 
 I used **fresh general-purpose agents, not forks**, on the strength of lane G's
 incident, and told each one in its prompt that it has no spine and must not run the
