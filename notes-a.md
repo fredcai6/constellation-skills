@@ -1234,6 +1234,64 @@ instance: `main()`'s `except KeyError` means *any* unhandled exception in a life
 dispatch kills the door, so the whole surface is one broad `except Exception` away from
 being fail-closed.
 
+#### F27 — a SECOND reviewer reached the same BLOCK independently, and found a third gap
+
+A relaunched reviewer ran while the first one's review already sat at the deliverable path.
+It did the right thing: rather than clobber, it **appended `APPENDIX R2`** as an independent
+second reproduction (1651 lines total). **Both reviews reached `BLOCK` on the same two
+findings by separate routes.** Two independent agents, two methods, one conclusion — that is
+much stronger evidence than either alone, and it is the first time this run got genuine
+replication rather than corroboration.
+
+What R2 added beyond confirming B1 and B2:
+
+- **13 of 13 attacks correct** in a real `git worktree` topology with the door running in a
+  linked worktree — including a case nobody had constructed: a **nested linked worktree of
+  the same repository**. Mechanical reach: 1 of 6 candidates admitted.
+- **All 40 `--file` injections** across the nine pass-through tools refused, with the foreign
+  spine verified untouched afterwards; `--sess=` / `--s=` prefix abbreviations refused against
+  the post-rebind session. So `_identity_violation` genuinely survives a rebind, tested at the
+  spelling level its docstring says defeated six predecessors.
+- **Ten mutations on a mirror copy, all RED** — and MUT-5 reproduced *my* exact 7 failures
+  including the non-vacuity control. Its verdict, which I want on the record because it is the
+  independent confirmation I asked for: **"I agree the narrowed root is genuinely tested."**
+- **B1 is worse than I described.** Its reproduction shows the door **wrote a live lease into
+  another checkout's spine.** So it is not merely "could bind" — it mutated a foreign
+  checkout's state. My own reproduction stopped at the bind.
+- **B2 is narrower than I described:** the NUL byte kills the door **only when already
+  bound**. Worth keeping precise, since I had stated it unconditionally.
+
+#### The third gap: a HARDLINK defeats any path-based check, and it changes what we may CLAIM
+
+R2's non-blocking third finding is the most conceptually interesting thing in either review.
+`candidate.resolve().parent` closes symlinks because a symlink has a target to follow. **A
+hardlink has no target.** It is a second *name* for the same inode, so a hardlink in
+`<own checkout>/.agent-work/` pointing at a nested checkout's spine genuinely *is* a file in
+our work area — `resolve()` returns the path you gave it, and
+`git rev-parse --show-toplevel` on its parent correctly answers "our checkout." There is no
+resolution step that reveals anything, because nothing is being hidden: both names are equally
+real.
+
+**So path-based containment cannot enforce "one checkout's work-area tree per process" in
+full, and no amount of resolving fixes that.** The honest options are to compare inodes
+(`st_dev`/`st_ino`) against the tree, which is a different and much heavier check, or to state
+the property with its limit attached.
+
+I take the second, and it is a genuine narrowing of what this lane may claim:
+
+> **one checkout's work-area tree per process, enforced by path** — with the stated limit that
+> an attacker who can already create a hardlink inside the door's own `.agent-work/` can
+> present a foreign checkout's spine as a local one.
+
+That residual is small (it needs write access to the work area *and* the same filesystem) and
+strictly smaller than the symlink hole being fixed, but `decision:isolation-not-fencing`'s
+whole point is that the property must be **stated truthfully rather than asserted
+optimistically** — and I have now been caught once already claiming a property the code did
+not have. Stating the limit is the difference between a boundary and a boast.
+
+Recorded as a triage candidate rather than fixed: inode-identity containment is a different
+mechanism, not a refinement of this one, and choosing it is beyond a rework dispatch.
+
 #### F26 — I reproduced B1 myself, and my first attempt FAILED to reproduce it
 
 I did not take the escape on the reviewer's word. My **first** attempt was refused:
