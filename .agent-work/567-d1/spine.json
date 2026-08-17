@@ -378,7 +378,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute closed complete: execute.json driven through g5-final, its own lease released, verify_iterative_role_artifacts.py commander --work-id 567-d1 returns ok, and the full suite ran green in a clean detached worktree at 1037ab86 apart from the permitted MapTreeFreshnessTests and this lane's guard on lane D2's two un-merged files. The implemented change is committed and pushed at befb8b5a."
         }
       ],
       "postconditions": [
@@ -392,7 +393,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -619,12 +620,12 @@
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard",
     "opened_by": "init_work_area"
   },
-  "refusals": 3,
+  "refusals": 4,
   "engine_session": {
     "session_id": "constellation/567-d1/lane-d1/commander-delegated",
     "status": "active",
     "claimed_at": "2026-08-17T17:20:59.187959+00:00",
-    "last_heartbeat": "2026-08-17T22:22:18.663170+00:00",
+    "last_heartbeat": "2026-08-17T22:23:32.904079+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -689,6 +690,28 @@
       "model": "claude-opus-5",
       "why_ref": "w-5",
       "ts": "2026-08-17T22:22:09.712297+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "reconcile",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.4902,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-17T22:23:25.648366+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "reconcile",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.4939,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-17T22:23:32.873018+00:00"
     }
   ]
 }
