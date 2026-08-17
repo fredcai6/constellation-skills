@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "triage",
+  "mechanical": {
+    "run": "issue-610-stand-up-work-area",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 11,
+    "spine-step": "triage",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 1,
+    "context-manifest-ref": "ctx-issue-610-stand-up-work-area-triage@523de248718168312e632f28def95d754981e3cf",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-610-stand-up-work-area",
+    "generated_at": "2026-08-17T14:24:33Z"
+  }
+}

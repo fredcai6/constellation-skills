@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g2-wire-bundles",
+  "mechanical": {
+    "run": "issue-610-stand-up-work-area",
+    "project": "constellation-skills",
+    "spine-step": "g2-wire-bundles",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-610-stand-up-work-area-g2-wire-bundles@0b05303a3820e44f79c58c188750b4c459ea3578",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "issue-610-stand-up-work-area",
+    "generated_at": "2026-08-17T05:28:10Z"
+  }
+}

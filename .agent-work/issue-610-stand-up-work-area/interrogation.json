@@ -1,0 +1,159 @@
+{
+  "work_id": "issue-610-stand-up-work-area",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "i0-context",
+    "q1",
+    "q2",
+    "q3",
+    "zc-consolidate"
+  ],
+  "tasks": {
+    "i0-context": {
+      "id": "i0-context",
+      "title": "Load baseline context",
+      "imperative": "Load issue #610 (the ruling text) and the code as it stands at origin/main 600de020. Read the glossary and the affected files: skills/admiral/templates/LAUNCH_ORDER.template.md, skills/admiral/references/fleet-doctrine.md, skills/commander/templates/COMMANDER_SPINE.template.json, skills/commander-delegated/SKILL.md, scripts/install_constellation.py's SKILL_REFERENCE_BUNDLES. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q1": {
+      "id": "q1",
+      "title": "What capability is being added/changed, and who currently stands up the work area?",
+      "kind": "fact",
+      "imperative": "Resolve from code: today, COMMANDER_SPINE.template.json's init imperative (line 10-13) tells the Commander to run init_work_area.py itself, i.e. the dispatched process scaffolds the work area it may be standing in. For a delegated Commander, LAUNCH_ORDER.template.md's Workspace section (line 41-47) and fleet-doctrine.md (line 116-136) already show the Admiral provisioning the worktree via `git worktree add` before dispatch and handing the Commander the path, with verify_worktree_isolation.py --here as the Commander's own arrival check. #610 makes provisioning uniformly the dispatcher's job (Admiral for delegated; the human/Commander itself for interactive, per skills/commander/'s own note 'same instructions, different hands') and retires the Commander's own init_work_area.py scaffolding call plus the arrival check's reason for being (nothing left to catch).",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "resolved as fact; see code_evidence in the task",
+      "evidence": [
+        {
+          "type": "code_evidence",
+          "value": "skills/commander/templates/COMMANDER_SPINE.template.json:10-13; skills/admiral/templates/LAUNCH_ORDER.template.md:41-47; skills/admiral/references/fleet-doctrine.md:116-136 (read at origin/main 600de020)"
+        }
+      ],
+      "code_evidence": "skills/commander/templates/COMMANDER_SPINE.template.json:10-13; skills/admiral/templates/LAUNCH_ORDER.template.md:41-47; skills/admiral/references/fleet-doctrine.md:116-136 (read at origin/main 600de020)",
+      "rework_count": 0
+    },
+    "q2": {
+      "id": "q2",
+      "title": "Does constellation-commander-delegated actually inherit the 'Start here' prose by reference, as #610's own text (and commander-core.md's provenance note) implies, or does it carry a second copy?",
+      "kind": "fact",
+      "imperative": "Resolve from code. skills/commander/SKILL.md points at references/commander-core.md for the full 'Start here' section (no local copy) -- clean single-source. skills/commander-delegated/SKILL.md, by contrast, carries its OWN 'Start here \u2014 drive the engine before you touch the problem' section (lines 10-20) that is a near-verbatim hand copy of commander-core.md's bullets 1-5, including the exact 'Instantiate spine.json from templates/COMMANDER_SPINE.template.json ... use the commander skill's scripts/init_work_area.py --spine' wording this issue retires. #610's own 'What this does not remove' / 'no second copy' framing is about templates only (delegated ships no templates and drives commander's), not about this prose, which IS duplicated today. Editing commander-core.md alone would silently leave commander-delegated/SKILL.md:14 asserting the old (now-wrong) recipe.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "resolved as fact; see code_evidence in the task",
+      "evidence": [
+        {
+          "type": "code_evidence",
+          "value": "skills/commander/SKILL.md:14-16 (pointer only); skills/commander-delegated/SKILL.md:10-20 (own full copy) at origin/main 600de020"
+        }
+      ],
+      "code_evidence": "skills/commander/SKILL.md:14-16 (pointer only); skills/commander-delegated/SKILL.md:10-20 (own full copy) at origin/main 600de020",
+      "rework_count": 0
+    },
+    "q3": {
+      "id": "q3",
+      "title": "Given q2's finding, does this issue's scope include fixing commander-delegated/SKILL.md's duplicated 'Start here' bullet 1 (and optionally collapsing the duplication into a pointer), or is that a separate/deferred concern?",
+      "kind": "decision",
+      "imperative": "This is a genuine scope choice, not resolvable from the issue text alone: #610 lists exactly three shipped-text changes (LAUNCH_ORDER.template.md Workspace, COMMANDER_SPINE.template.json init imperative, fleet-doctrine.md steps 1-2) and does not mention commander-delegated/SKILL.md at all -- plausibly an oversight given q2's finding, or plausibly deliberate (leave the pre-existing duplication for a separate cleanup). Leaving bullet 1 unedited ships a delegated Commander an instruction that contradicts the now-retired recipe on its very first command. Ask the human.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Human answer: fold in AND collapse to a pointer -- update commander-delegated/SKILL.md's Start-here content to the new recipe AND replace its local copy with a pointer to commander-core.md (matching commander/SKILL.md's existing clean pattern), so the two entry skills cannot drift apart again. Human also surfaced a related in-scope defect unprompted: .agent-work/templates/COMMANDER_SPINE.template.json (this repo's own project-local template overlay, which every Commander launched in this repo instantiates from) still carries a live init.c0 running verify_worktree_isolation.py --here <repo-root>, stale versus the shipped skills/commander/templates/ copy which already dropped c0 during epic 568 -- confirmed via check_skill_freshness.py (upstream-changed, local==baseline, safe mechanical resync). This is why #315 was re-homed to #610 and is the first thing this run's plan addresses.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "zc-consolidate": {
+      "id": "zc-consolidate",
+      "title": "Consolidate behind the finish gate",
+      "imperative": "Do NOT record this until joint understanding is reached. Write the interrogation record to .agent-work/issue-610-stand-up-work-area/INTERROGATION_RECORD.json (from templates/INTERROGATION_RECORD.template.json; each question typed fact|decision; each resolved decision carrying its human_answer; each resolved fact its code_evidence) and capture the counterpart's explicit sign-off. Run `py /home/tommy/.claude/skills/constellation-interrogator/scripts/verify_interrogation.py .agent-work/issue-610-stand-up-work-area/INTERROGATION_RECORD.json` -- it MUST exit 0. Record pass only after exit 0, then `consolidate`.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_interrogation.py exits 0 on the interrogation record -- refuses a self-answered decision or a consolidation with no joint-understanding sign-off",
+          "check": {
+            "kind": "command",
+            "command": "py /home/tommy/.claude/skills/constellation-interrogator/scripts/verify_interrogation.py .agent-work/issue-610-stand-up-work-area/INTERROGATION_RECORD.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-zc-consolidate-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-zc-consolidate-1",
+          "type": "command-check",
+          "payload": {
+            "statement": "interrogation verified"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-zc-consolidate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-interrogator/scripts/verify_interrogation.py .agent-work/issue-610-stand-up-work-area/INTERROGATION_RECORD.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": null,
+    "findings": []
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "interrogator-issue-610-stand-up-work-area",
+    "status": "released",
+    "claimed_at": "2026-08-17T05:00:16.870610+00:00",
+    "last_heartbeat": "2026-08-17T05:06:58.531720+00:00",
+    "claimed_by": "interrogator",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T05:07:02.880561+00:00"
+  }
+}

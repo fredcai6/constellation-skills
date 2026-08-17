@@ -119,24 +119,21 @@ See `windows.md` (hazard #3) for the base fact, its grounding, and why a
 git-level probe alone returns a false green. **Admiral-specific process** —
 do not trust the flag; provision the worktree yourself before a parallel wave:
 
-1. For each Commander, run `git worktree add <path> -b <branch> <base>` from the
-   main checkout, and **log that command and its outcome in the ADMIRAL_LOG** — a
-   provisioned worktree is a material fleet action.
-2. Hand each Commander its **absolute** worktree path in the LAUNCH_ORDER
-   `## Workspace` field, with the instruction to **`cd` into that path first** and
-   then run `python <admiral-skill-dir>/scripts/verify_worktree_isolation.py --here <path>`
-   as its first step, pasting the result into its return report. The `cd` is load-bearing:
-   `--here` asserts about the directory the Commander is standing in, so running it
-   before arrival fails with `fatal: not a git repository` — a true rc=1 for a reason
-   that has nothing to do with isolation.
-3. Gate the wave: `python <admiral-skill-dir>/scripts/verify_worktree_isolation.py <path1> <path2> ...`
+1. Stand up each Commander's worktree and work area — provision the worktree,
+   scaffold `.agent-work`, instantiate its `spine.json`, and hand it the spine path
+   in the LAUNCH_ORDER `## Workspace` field — per the shared recipe in
+   `stand-up-work-area.md`. That doc is the single source for this step; do not
+   restate it here.
+2. Gate the wave: `python <admiral-skill-dir>/scripts/verify_worktree_isolation.py <path1> <path2> ...`
    must exit 0 (every path a real, registered worktree, distinct from each other
    and from the main checkout) before you launch. A non-zero exit means isolation
    is not real — fix it; do not launch.
 
-The gate is the **mechanical guarantee**; `--here` is the Commander's own
-risk-reduction, surfaced as evidence in its report rather than a hard refusal
-(Agent-tool dispatch has no engine chokepoint to refuse at).
+The gate above is the **mechanical guarantee** for the wave. The Commander no
+longer runs an arrival check of its own or reports one back — it never scaffolds
+its own worktree, so there is nothing left for a self-check to catch (the
+`verify_worktree_isolation.py --here` script itself is untouched and still
+available; it is simply no longer part of the Commander's own first step).
 
 **Sweep on the right boundary.** Remove a worktree (`git worktree remove <path>`
 then `git worktree prune`) only after its Commander's PR is **merged**, or the

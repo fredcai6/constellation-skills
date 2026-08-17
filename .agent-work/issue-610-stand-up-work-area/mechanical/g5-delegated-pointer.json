@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g5-delegated-pointer",
+  "mechanical": {
+    "run": "issue-610-stand-up-work-area",
+    "project": "constellation-skills",
+    "spine-step": "g5-delegated-pointer",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-610-stand-up-work-area-g5-delegated-pointer@a9ddc1bc393cc9bd875b3e779f1cf444840dee58",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "issue-610-stand-up-work-area",
+    "generated_at": "2026-08-17T05:31:38Z"
+  }
+}

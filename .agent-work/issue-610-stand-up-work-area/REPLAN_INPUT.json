@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Issue #610: one shared stand-up-work-area instruction set",
+      "spec_path": "https://github.com (issue #610)",
+      "intent_and_why": "The Admiral (or the human, in an interactive run) stands up the worktree and work area as one shared instruction set; the Commander's init gate stops meaning 'scaffold your own work area' and starts meaning 'claim the lease on the spine you were given.'"
+    },
+    "definition_of_done": [
+      "skills/_shared/stand-up-work-area.md exists and is wired into the commander and admiral reference bundles",
+      "The Commander's init imperative (commander-core.md + COMMANDER_SPINE.template.json) is claim-only, no self-scaffolding",
+      "LAUNCH_ORDER.template.md and fleet-doctrine.md cite the shared doc instead of restating the recipe",
+      "commander-delegated/SKILL.md's duplicated Start-here collapses to a pointer at commander-core.md",
+      "This repo's own .agent-work/templates/COMMANDER_SPINE.template.json is resynced, dropping the stale c0 precondition"
+    ],
+    "good_enough": {
+      "mandatory_quality": "Every edit verified by a command check (grep/JSON-diff/dict-equality), not eyeballed",
+      "sufficient_evidence": "Postcondition command checks re-run and passing on every gate",
+      "appetite": "One bounded issue, one wave, seven gates"
+    },
+    "hard_constraints": [
+      "verify_worktree_isolation.py's gate-mode (Admiral's pre-wave check) is not removed",
+      "the --here arrival-check script itself is not removed, only retired as a Commander first-step instruction",
+      "do not touch .baseline/ or the other 7 unrelated stale project-local templates"
+    ],
+    "fixed_decisions": [
+      "Six-part scope signed off by Tommy in INTERROGATION_RECORD.json",
+      "commander-delegated/SKILL.md collapses to a pointer, not just a content fix, per Tommy's explicit instruction"
+    ],
+    "current_wave": {
+      "objective": "Ship the shared stand-up-work-area instruction set and retire the Commander's self-scaffolding recipe everywhere it appears",
+      "exit_criteria": [
+        "All 7 gates (g1-g7) advanced complete with passing command-check evidence",
+        "No stray init_work_area.py self-run reference remains under skills/commander*/"
+      ],
+      "issues": [
+        {
+          "id": "610",
+          "title": "One shared stand-up-work-area instruction set",
+          "desired_outcome": "A single doc both the Admiral and the human-led Commander cite for worktree/work-area stand-up; the Commander's init gate is claim-only everywhere.",
+          "useful_now": "It is the root cause of the #315 recurrence: a duplicated recipe drifted, leaving this repo's own local template stale with a c0 precondition the shipped template had already dropped.",
+          "appetite": "One bounded issue, seven reasoning gates, no crews (doc/template prose only)",
+          "acceptance_or_falsification_evidence": "Each gate's command-check postcondition passes on re-run; g7's sweep finds zero stray init_work_area.py self-run references and confirms local/shipped template content-identity",
+          "implementation_latitude": "Free to choose exact prose/wording; may not remove verify_worktree_isolation.py's gate-mode or the --here script itself; may not touch .baseline/ or the other 7 unrelated stale templates",
+          "hard_constraints_no_gos": [
+            "do not remove verify_worktree_isolation.py's gate-mode",
+            "do not touch .baseline/ or the 7 unrelated stale templates"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "skills/_shared/stand-up-work-area.md",
+            "skills/commander/references/commander-core.md",
+            "skills/commander/templates/COMMANDER_SPINE.template.json",
+            "skills/admiral/templates/LAUNCH_ORDER.template.md",
+            "skills/admiral/references/fleet-doctrine.md",
+            "skills/commander-delegated/SKILL.md",
+            "scripts/install_constellation.py",
+            ".agent-work/templates/COMMANDER_SPINE.template.json"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "A reinstall (install_constellation.py) propagates the shipped skill changes into ~/.claude/skills, so future runs in this repo pick up the claim-only init imperative from the installed copy, not just the source repo",
+        "why_likely": "The shipped skill source is now correct; the installed copy is the thing that actually drives future agents per the dogfooding hazard noted in ORCHESTRATOR_CONTEXT.md",
+        "entry_conditions": ["This run's changes are committed/merged"]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether the other 7 unrelated stale project-local templates (found via check_skill_freshness.py) warrant their own cleanup issue",
+        "affects": "Whether a follow-on triage candidate should be filed",
+        "settle_by": "Triage step of this run, with the human",
+        "current_evidence": "check_skill_freshness.py flags them as upstream-changed, out of scope for #610 per Tommy's explicit instruction",
+        "next_probe": "Ask the human at triage whether to file a follow-on issue"
+      }
+    ],
+    "parked_possibilities": [
+      "Updating .baseline/ to reflect the new agreed COMMANDER_SPINE.template.json shape (explicitly deferred, not this issue)"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "610",
+      "outcome": "skills/_shared/stand-up-work-area.md authored and wired into SKILL_REFERENCE_BUNDLES for commander+admiral; commander-core.md and COMMANDER_SPINE.template.json (shipped) go claim-only; LAUNCH_ORDER.template.md and fleet-doctrine.md cite the shared doc (4-spot cleanup, not just 1); commander-delegated/SKILL.md's Start-here collapses to a pointer, delegated-specific fencing content preserved separately; local .agent-work/templates/COMMANDER_SPINE.template.json resynced to byte-identical with the shipped template's init task.",
+      "evidence": "All 7 gates (g1-g7) in execute.json advanced complete, each with a passing command-check postcondition re-run at advance time; g7's sweep found zero stray init_work_area.py self-run references and confirmed local/shipped init-task dict equality."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The shared doc is reachable from both commander and admiral installed skills, and from no unrelated skill",
+      "expected": "stand-up-work-area.md present in SKILL_REFERENCE_BUNDLES['commander'] and ['admiral'] only",
+      "observed": "Verified by g2's command check: present in both, absent from all 9 other _GLOBAL_ORCHESTRATOR consumers (cartographer, docent, scout, triage, explorer, to-initial-issues, replan, diagnose, commander-delegated)",
+      "source": "g2-wire-bundles postcondition c1, re-run at advance"
+    },
+    {
+      "claim": "No doc contradicts itself by referencing a retired recipe",
+      "expected": "Zero '--here' references remain in LAUNCH_ORDER.template.md; fleet-doctrine.md's steps 1-2 point at the shared doc while step 3's gate-mode command stays literally present",
+      "observed": "Both checks passed; the scope grew from 1 named spot to 4 coupled ones (Workspace instruction, an ordering callout, a stale-premise paragraph, a return-report evidence clause) after the cold plan critic's exploratory grep surfaced the second --here occurrence",
+      "source": "g4-admiral-docs postconditions c1/c2, re-run at advance"
+    },
+    {
+      "claim": "The local .agent-work/templates/COMMANDER_SPINE.template.json resync is a pure drop of the stale c0 block plus the new claim-only imperative, nothing else diverges",
+      "expected": "local init task == shipped init task (dict equality)",
+      "observed": "Confirmed equal after the edit; check_skill_freshness.py now correctly reports this template both-changed (not up-to-date, since .baseline/ update is out of scope; not upstream-changed, since local moved too)",
+      "source": "g6-local-resync postcondition c1 and g7-verify-sweep postcondition c2, re-run at advance"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "g2's original postcondition command (importing install_constellation.py via importlib.util.spec_from_file_location without registering the module in sys.modules first) crashed on the module's own @dataclass(frozen=True) decorators (AttributeError: 'NoneType' object has no attribute '__dict__') -- a bug in the CHECK, not in the underlying work",
+      "classification": "evidence_only",
+      "affects": "This run's own execute.json authoring quality, not the shipped deliverable",
+      "evidence": "Reproduced by running the check command directly before amending; fixed by adding sys.modules['ic']=m before exec_module and retexting the check via the engine's amend --delta (retext-check), authority human",
+      "reason": "No issue is warranted -- the fix was applied within the same wave via the engine's own amendment mechanism, not a code defect"
+    },
+    {
+      "id": "D1",
+      "signal": "g7's original c2 postcondition ran check_skill_freshness.py's raw exit code as a pass/fail gate, which could never pass: 7 unrelated pre-existing templates are intentionally out of scope and stay stale, and the resynced template itself correctly reads 'both-changed' rather than 'up-to-date' (since updating .baseline/ is explicitly out of scope)",
+      "classification": "evidence_only",
+      "affects": "This run's own execute.json authoring quality, not the shipped deliverable",
+      "evidence": "Retexted to the actual correctness signal (local/shipped init-task content equality) via the engine's amend --delta, authority human",
+      "reason": "No issue is warranted -- caught and fixed within the same wave before it could block a real exit"
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {"id": "U-forecast-reinstall", "kind": "forecast"},
+    {"id": "U-uncertainty-other-templates", "kind": "uncertainty"},
+    {"id": "U-parked-baseline-update", "kind": "parked"}
+  ],
+  "repo_state": {
+    "anchors": [
+      "skills/_shared/stand-up-work-area.md",
+      "skills/commander/references/commander-core.md",
+      "skills/commander/templates/COMMANDER_SPINE.template.json",
+      "skills/admiral/templates/LAUNCH_ORDER.template.md",
+      "skills/admiral/references/fleet-doctrine.md",
+      "skills/commander-delegated/SKILL.md",
+      "scripts/install_constellation.py",
+      ".agent-work/templates/COMMANDER_SPINE.template.json"
+    ],
+    "map_status": "DEGRADED-UNPARSEABLE at HEAD 600de020 (map/ids.jsonl empty, map/INDEX.md unparseable) -- discharged with hash-pinned substitutes at context/orient; escalated as a triage candidate this run"
+  }
+}

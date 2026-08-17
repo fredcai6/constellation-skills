@@ -1,0 +1,35 @@
+{
+  "goal": "Issue #610: the Admiral (or, in human-led runs, the human/Commander itself) stands up the worktree and work area as one shared instruction set; the Commander receives a spine path and drives it, and its init gate stops meaning 'scaffold your own work area' and starts meaning 'claim the lease on the spine you were given'.",
+  "mode": "interactive",
+  "questions": [
+    {
+      "id": "q1",
+      "kind": "fact",
+      "question": "What capability is being added/changed, and who currently stands up the work area?",
+      "status": "resolved",
+      "resolution": "Today COMMANDER_SPINE.template.json's init imperative tells the Commander to scaffold its own work area via init_work_area.py. #610 makes provisioning (git worktree add, .agent-work scaffold, spine instantiation) uniformly the dispatcher's job -- the Admiral for a delegated Commander, the human/Commander itself for an interactive run ('same instructions, different hands') -- and the Commander's init gate becomes claim-only.",
+      "code_evidence": "skills/commander/templates/COMMANDER_SPINE.template.json:10-13; skills/admiral/templates/LAUNCH_ORDER.template.md:41-47; skills/admiral/references/fleet-doctrine.md:116-136 (read at origin/main 600de020)"
+    },
+    {
+      "id": "q2",
+      "kind": "fact",
+      "question": "Does constellation-commander-delegated inherit the 'Start here' prose by reference (as #610's 'no second copy' framing implies), or does it carry a second copy?",
+      "status": "resolved",
+      "resolution": "commander/SKILL.md points at commander-core.md for 'Start here' -- single source. commander-delegated/SKILL.md carries its OWN full copy of that section (lines 10-20), a near-verbatim hand duplicate including the exact 'run init_work_area.py yourself' wording #610 retires. #610's 'no second copy' claim is about templates only, not this prose, which is duplicated today.",
+      "code_evidence": "skills/commander/SKILL.md:14-16 (pointer only); skills/commander-delegated/SKILL.md:10-20 (own full copy), at origin/main 600de020"
+    },
+    {
+      "id": "q3",
+      "kind": "decision",
+      "question": "Given q2's finding, does #610's scope include fixing commander-delegated/SKILL.md's duplicated 'Start here' bullet 1, or is that separate/deferred?",
+      "status": "resolved",
+      "resolution": "In scope: fold the content fix in AND collapse the duplication into a pointer to commander-core.md (matching commander/SKILL.md's existing pattern), so the two entry skills can't drift apart again.",
+      "human_answer": "agree fold it in and push a pointer to both skills. there's a lot of overlap here and we should be using a lot of pointers to keep them in sync. [Also, unprompted:] .agent-work/templates/COMMANDER_SPINE.template.json -- your project-local overlay -- still carries a live c0 running verify_worktree_isolation.py --here <repo-root>. That's the occurrence that falsified the 'zero occurrences in any template' claim during lane F, and it's exactly why #315 was re-homed. The shipped and installed templates are clean; this one isn't, and it's the first thing #610's wave should look at, since every Commander launched in this repo instantiates from it."
+    }
+  ],
+  "signoff": {
+    "by": "Tommy (human, interactive mode)",
+    "statement": "Yes, that's the shared understanding -- confirmed the six-part scope (shared stand-up-work-area.md doc wired into commander+admiral bundles; COMMANDER_SPINE.template.json init goes claim-only; LAUNCH_ORDER.template.md Workspace names the spine path instead of cd+--here; fleet-doctrine.md steps 1-2 point at the shared doc; commander-delegated/SKILL.md Start-here collapses to a pointer at commander-core.md, both updated; this repo's own .agent-work/templates/COMMANDER_SPINE.template.json resynced as a local dogfood fix, not touching .baseline/ or the other 7 unrelated stale templates) and that verify_worktree_isolation.py's gate-mode and the --here arrival-check script are untouched."
+  },
+  "consolidated": true
+}
