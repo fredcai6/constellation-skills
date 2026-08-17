@@ -1107,6 +1107,58 @@ Disclosed: both edits are **outside** the fences I wrote for either crew
 part of its review, and flagged to the Admiral as a probable collision with lane
 `567-b-external-backend`.
 
+### F21 — I verified the mission and the boundary myself, in a live process
+
+`global-everyone.md`: never accept a claimed side-effect on the strength of the claim. So
+rather than take the crews' test output, I imported the door in a fresh process with
+`SPINE_FILE`/`SPINE_SESSION` stripped and drove it directly.
+
+**The mission case — a spine with `origin: None`, the shape of the Admiral's own spine and
+of `IMPLEMENTER_PLAN.json`:**
+
+```
+door starts UNBOUND: True | SESSION: ''
+spine_bind advertised: True | exempt from unbound gate: True
+
+spine_bind {"spine_file": ".../.agent-work/zz-bindprobe/spine.json"}
+  isError: False
+  {"SPINE_FILE": ".../zz-bindprobe/spine.json",
+   "SPINE_SESSION": "constellation/zz-bindprobe",
+   "work_id": "zz-bindprobe", "already_bound": false,
+   "note": "this door now drives that spine; call spine_status to see where it is"}
+
+AFTER: SPINE   = .../.agent-work/zz-bindprobe/spine.json
+AFTER: SESSION = 'constellation/zz-bindprobe'
+os.environ mirrors: both set
+```
+
+An unbound door bound an existing spine, derived the session from the **top-level
+`work_id`**, moved **both** identity roots, and mirrored both into `os.environ`. That is the
+lane's exit criterion, observed rather than inferred — and on the exact spine shape the
+original design would have refused.
+
+**The boundary — six attacks, six refusals, each naming the boundary:**
+
+| attempt | refused |
+|---|---|
+| a spine in `/tmp`, wholly outside the checkout | yes |
+| inside the checkout but outside `.agent-work/` | yes |
+| `.agent-work/../../etc/passwd` (traversal) | yes |
+| a directory rather than a file | yes |
+| a file holding `[]` (JSON, not an object) | yes |
+| spine-shaped but no `work_id` anywhere | yes |
+
+Every refusal opens by naming the boundary — *"this door may only bind a spine inside its
+OWN checkout's work area ('…/.agent-work')"* — which is the shape
+`decision:isolation-not-fencing` asks for: the caller learns what the property *is*, not
+merely that it was stopped.
+
+The probe artifacts were removed afterwards and `git status` is clean of them. I did **not**
+test the cross-checkout refusal by hand (it needs a linked-worktree topology to be
+meaningful); that is the one the crew built `TheRootMustBeTheDoorsOwnWorktreeTests` for and
+the one I asked the reviewer to re-mutate independently, precisely because it is the guard
+whose absence the tests could not previously see.
+
 ### S9 — accepted as a real double standard, and answered honestly
 
 `decision:net-deletion` is `settled/human`, cited in nine gate anchor blocks, and
