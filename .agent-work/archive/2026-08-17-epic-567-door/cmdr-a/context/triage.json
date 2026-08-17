@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "triage",
+  "files": [],
+  "repo_rev": {
+    "commit": "7ea4c8d6f919535147ce5177404945dbe9d469cd"
+  },
+  "run": {
+    "work_id": "epic-567-door/cmdr-a",
+    "generated_at": "2026-08-17T08:41:42Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-commander",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity"
+    }
+  }
+}

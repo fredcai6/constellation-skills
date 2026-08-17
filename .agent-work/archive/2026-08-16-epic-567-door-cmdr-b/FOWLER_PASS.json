@@ -1,0 +1,20 @@
+{
+  "work_id": "epic-567-door/cmdr-b",
+  "diff_ref": "uncommitted working tree, scripts/run_crew.py + tests/test_crew_launcher.py, g1-review (#432 / epic #567 lane B)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, .agent-work/epic-567-door/cmdr-b/MISSION_FRAME.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "flagged", "finding": "main()'s --verify-result branch grows by ~30 lines (a nested result_deficient/spine_verified message-priority check) on top of an already-large main() (~178 lines total). Not blocking -- it follows the exact inline-if-print-return style already used by the adjacent pre-existing STALE/absent branches in the same function, and ExternalBackend.verify() itself (~48 code lines, one 3-way branch) matches the size/shape of the file's existing finalize_from_exit_code precedent (~80 code lines, same category: backend verdict computation). Observation for a future pass: extracting a `_verify_result_refusal_message(entry, args)` helper out of main() would shrink it further, but is out of this gate's Allowed Scope.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "overridden", "finding": "", "override": {"repo_standard": "MISSION_FRAME.md Decision Anchors & Decision Pressure (the @grade: guess / settle: convention from references/global-everyone.md 'Decision fixedness') requires every guess-grade decision to carry its settle-experiment and rationale inline until settled; CREW_CONTEXT.md's 'Verification Discipline' section likewise requires justifying verification-design choices, not just asserting them.", "reason": "ExternalBackend.verify()'s docstring and the dispatch()/main() inline comments are dense because they record WHY each branch exists (AND-not-OR semantics, .get()-not-bracket, message-priority ordering) -- rationale for six MISSION_FRAME.md decision anchors graded 'guess' this run, per the repo's own decision-fixedness doctrine. The code itself is not confusing or masked by these comments (short branches, self-describing names: effective_spine, has_result, result_ok, spine_verified) -- they document design rationale the repo standard requires captured, not a cover for otherwise-illegible logic."}}
+  ],
+  "rail_exception": null
+}
