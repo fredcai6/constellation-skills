@@ -441,7 +441,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -468,7 +468,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile is complete: advanced this leg after four -- in the end six -- stale claim sites were repaired and the structural record reconciled directly against docs/CHECKLIST_SCHEMA.md, which g2 had already made current."
         }
       ],
       "postconditions": [
@@ -476,7 +477,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Every candidate is routed, none left unrouted, and the record is .agent-work/cleanup-f-derive-worktree/TRIAGE_RECOMMENDATIONS.md. 21 recommendations T1-T22 covering execute.json's tc1-tc12 and everything the five g3 crews raised. Two are fixed-now with their commit shas -- tc10's two files at 684502ab, plus two more members of the same claim family (init_work_area.py's instantiate_spine docstring and tc9's test_worktree_derivation.py docstring) that no file list had named; all four clear every rung of the fix-now ladder, being prose-only, adjacent to work already open, covered by the full suite, and carrying no architecture impact. The other nineteen are recommend-and-defer for one stated reason: this run was granted no issue-filing authority, so the deferral is the recorded form of asking. T13 is the one the Admiral asked for as a package: the SessionStart scan-bind and B7's cross-session blindness routed to #610's wave TOGETHER, written so the wave inherits the QUESTION -- what the scan-bind is for when nobody has claimed the spine -- with each observation carrying its own measurement and reproduction. The document opens by warning that execute.json's tc1 and the launch order's tc1 are different findings with the same name, and routes everything by content rather than by id, because that collision is tc7's own defect reaching the closeout."
         },
         {
           "id": "c2",
@@ -485,17 +487,39 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Inherited Latitude",
+            "detail": "No issue filed; every deferred candidate is recommend-and-defer. LAUNCH_ORDER-5 grants no issue-filing authority and none was sought, so the citation records the DEFERRAL itself, not a filing approval. ADMIRAL_RULING-4 governs T13: tc1 and the B7 cross-session widening route to #610's wave as ONE package, carrying the question -- what the scan-bind is for when nobody has claimed the spine -- and not just the symptom."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-triage-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "triage",
+            "why_ref": "w-6"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -667,12 +691,12 @@
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
     "opened_by": "init_work_area"
   },
-  "refusals": 12,
+  "refusals": 14,
   "engine_session": {
     "session_id": "commander-cleanup-f-derive-worktree",
     "status": "active",
     "claimed_at": "2026-08-17T01:36:26.599038+00:00",
-    "last_heartbeat": "2026-08-17T01:56:03.495235+00:00",
+    "last_heartbeat": "2026-08-17T02:00:14.236508+00:00",
     "claimed_by": "commander",
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/cleanup-f-derive-worktree",
     "previous_session_id": null,
@@ -713,6 +737,20 @@
       "why": "execute is done: three gates closed on independent APPROVEs, two skipped on recorded Admiral rulings, and every closing number re-measured by the leg that closed it. The gate that mattered was g3 -- the worktree stops answering ownership -- and it cost five reviews and four reworks because deleting _foreign_worktree widened the population reaching decide_session_start's fall-through and nobody had enumerated what the bad guard was incidentally preventing. That is the lane's finding and it is recorded as D26. g4 is withdrawn by ADMIRAL_RULING-1 R2 rather than deferred; g5 re-homes #315 to #610's wave under R3. REPLAN_INPUT.json now carries g1, g2 and g3 as completed outcomes, an empty open-issue set, 23 wave-evidence rows and D0-D26, and verify_iterative_role_artifacts.py commander passes on it. Nothing was auto-filed: every discrepancy stays evidence for the Admiral's replan.",
       "mechanical": false,
       "ts": "2026-08-17T01:47:40.214415+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "Reconcile closes on four prose repairs named by the order and a fifth found by grepping the claim family rather than the file list. No packet map exists here, so the structural record was reconciled directly; docs/CHECKLIST_SCHEMA.md was already current -- g2 wrote it, supersession language and all -- so this step brought the CODE PROSE into line with a design doc that was already right, not the reverse. All prose: the diff's only non-comment lines are docstrings, and the suite is 3192 passed / 5 skipped / 0 failed, identical to g3's close, with MapTreeFreshnessTests green so the tracked map still matches a fresh build. The one claim I would not infer -- that the explorer fixture's cwd no longer decides anything -- I measured: claim from /tmp and start from / against a spine stamped origin.worktree /totally/elsewhere both return rc=0, and that measurement is quoted in the comment it justifies. Committed at 684502ab. Begun over the governor's line and recorded as tl-6: the substance was already done and committed before the first start was deferred.",
+      "mechanical": false,
+      "ts": "2026-08-17T01:56:56.583029+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "Triage closes with 21 recommendations in TRIAGE_RECOMMENDATIONS.md and nothing unrouted. Four fixed-now, all prose in one claim family, all clearing every rung of the ladder; nineteen recommend-and-defer, for the single reason that no issue-filing authority was granted this run -- the deferral is the recorded form of asking, and the user-decision evidence cites the launch order for the deferral itself rather than for an approval nobody gave. The Admiral's package is T13: the SessionStart scan-bind and B7's cross-session blindness go to #610's wave together, written so the wave inherits the question -- what is the scan-bind FOR when nobody has claimed the spine -- with each observation carrying its own measurement and reproduction. The document warns in its opening that two different findings on this lane are both called tc1, and routes by content throughout. The most valuable rows are the cheap ones: T1, because an empty map/ids.jsonl is why every Commander in this repo orients DEGRADED and it will not self-heal; T8, because a claim wrapped across two comment lines defeats every grep this doctrine prescribes; and T11, because a test that measures its own observer is indistinguishable from a regression at a gate whose postcondition is a green suite.",
+      "mechanical": false,
+      "ts": "2026-08-17T02:00:14.236499+00:00"
     }
   ],
   "trip_ledger": [
@@ -770,6 +808,50 @@
       "model": "claude-opus-5",
       "why_ref": "w-5",
       "ts": "2026-08-17T01:52:36.615366+00:00"
+    },
+    {
+      "id": "tl-6",
+      "gate": "reconcile",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.1753,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-17T01:56:40.633466+00:00"
+    },
+    {
+      "id": "tl-7",
+      "gate": "triage",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1803,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-17T01:57:02.364945+00:00"
+    },
+    {
+      "id": "tl-8",
+      "gate": "triage",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1816,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-17T01:57:35.179806+00:00"
+    },
+    {
+      "id": "tl-9",
+      "gate": "triage",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2007,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-17T02:00:05.172554+00:00"
     }
   ]
 }

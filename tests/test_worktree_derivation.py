@@ -269,9 +269,11 @@ def test_derivation_is_lexical_not_realpath(impl_name, tmp_path):
     `_is_valid_claim_target` checks lexically and then re-checks the RESOLVED
     path as a symlink-escape guard; if the derivation resolved symlinks itself,
     both checks would return the same value and the second could never fail.
-    A `realpath` here would also make `origin_worktree_refusal` impure while its
-    purity test -- which reads only that predicate's own `__code__.co_names`, and
-    is not transitive -- stayed green.
+    A `realpath` here USED TO carry a second cost: it made
+    `origin_worktree_refusal` impure while that predicate's purity test -- which
+    read only its own `__code__.co_names`, and was not transitive -- stayed
+    green. Both the predicate and its purity test were deleted in #609 g2, so
+    that half is history; the first reason above is the whole live reason today.
     """
     derive = IMPLEMENTATIONS[impl_name]
     real = tmp_path / "real-worktree"
