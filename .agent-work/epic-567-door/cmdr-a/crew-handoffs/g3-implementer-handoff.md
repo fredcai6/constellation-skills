@@ -37,12 +37,46 @@ parent-heartbeat test — which is #613's exact scenario.
 
 ## Protected Intent
 
-- **Reuse the repo's own canonical pattern. Do not invent one.** Mirror
-  `scripts/hooks/gauge_writer_hook.py:513` `_atomic_write_json`: write a temp file in
-  the **same directory** as the target, then `os.replace(tmp, path)` — atomic on
-  POSIX and Windows alike. Same-directory matters: `os.replace` is only atomic
-  within one filesystem. (Read that hook for the pattern; **do not edit it** — see
-  Exclusions.)
+- **The write is specified below, exactly. An earlier draft of this handoff told you
+  to mirror `scripts/hooks/gauge_writer_hook.py:513` `_atomic_write_json`. Do NOT do
+  that — that pattern is defective for this use and a cold critic caught it.**
+
+  `_atomic_write_json` uses a **fixed** temp name, `path.with_name(path.name + ".tmp")`
+  — one temp path per target. With two concurrent writers of one spine (which
+  `run_crew.py`'s `_parent_lease_heartbeat` daemon thread makes a **supported** case,
+  see `tests/test_crew_launcher.py:3211-3225` "the shared-spine case"), both writers
+  open the *same* temp path. The loser's file handle then still points at the inode
+  `os.replace` just installed as the live spine, so its buffered flush writes
+  **directly into the live target after the rename**. Measured by the critic:
+
+  ```
+  installed: b'{"a": "S"}LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL"}'
+  parses: NO -> JSONDecodeError Extra data: line 1 column 11 (char 10)
+  errors: ["FileNotFoundError: ... 'probe2.json.tmp' -> 'probe2.json'"]
+  ```
+
+  That is **worse than the bug we are fixing**: today's tear is transient and the
+  next successful write heals it, whereas an installed unparseable document is
+  permanent. The loser's `os.replace` also raises `FileNotFoundError`, which
+  `save()`'s callers have never had to handle.
+
+  **Write it this way instead:**
+
+  1. `tempfile.mkstemp(dir=path.parent, prefix=path.name + ".", suffix=".tmp")` — a
+     **unique** temp name per writer, in the **same directory** (`os.replace` is only
+     atomic within one filesystem).
+  2. Write the payload to that fd.
+  3. When the target already exists, `os.fchmod` the temp to the target's current
+     mode — a fresh `mkstemp` file is `0600` and a bare rename would silently change
+     the spine's permissions.
+  4. `f.flush()` then `os.fsync(fd)` **before** the rename. Without this the rename
+     can be durable before the data is, so the "survives a crash" half of the claim
+     is not actually delivered.
+  5. `os.replace(tmp, path)`.
+  6. Unlink the temp in a `finally` so no `.tmp` survives a failure.
+
+  Report the fixed-name hazard in `gauge_writer_hook.py` as a **triage candidate** in
+  your result — it is the same bug there, in a file you must not edit.
 - **`save()`'s existing line-ending behaviour is preserved exactly.** `save` calls
   `_dominant_newline(path)` (`:224`) to preserve CRLF files, and that function reads
   the **existing** file. It must therefore still be consulted **before** the original
@@ -75,6 +109,30 @@ A test that passes against **both** the old and the new implementation is a chec
 that cannot fail. You must show the new test **failing against the old
 `write_bytes` implementation** — the red-proof — and then passing against the new
 one. Paste both runs.
+
+### The test must be DETERMINISTIC, not a thread race
+
+A cold critic raised this and it is right: a threaded race against the old
+`write_bytes` is **timing-dependent**, so it can come out green against the old
+implementation by luck and thereby **fake its own red-proof**. A flaky red is not a
+red.
+
+So make the primary assertion mechanical:
+
+- **Assert `save()` never opens the target path for writing** — only a temp sibling.
+  Patch or wrap `builtins.open` / `os.open` for the duration of one `save()` call,
+  collect the paths opened for writing, and assert the target is not among them.
+  This fails cleanly and deterministically against the old code, which opens the
+  target directly.
+- **Assert the target's inode changes exactly once** across a save (`os.stat().st_ino`
+  before and after). A rename swaps the inode; an in-place write does not. Also
+  deterministic.
+- **Assert no `*.tmp` sibling remains** after success and after a forced failure.
+
+A concurrency test is still welcome **in addition** — two writers, then assert the
+installed document always parses — but it is the *supporting* evidence, not the
+load-bearing check. Say clearly in your result which assertions are deterministic
+and which are racy.
 
 The engine under edit is not the engine in play: **break the worktree copy** to get
 the red-proof (revert it after), and never modify the installed copy at

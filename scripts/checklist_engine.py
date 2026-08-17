@@ -19,6 +19,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PureWindowsPath
 
@@ -235,8 +236,8 @@ def _dominant_newline(path: Path) -> bytes:
 
 
 def save(path: Path, data: dict) -> None:
-    """Write the checklist as JSON, PRESERVING the line ending the file already
-    uses, and write BYTES so nothing translates them again.
+    """Write the checklist as JSON ATOMICALLY, PRESERVING the line ending the file
+    already uses, and write BYTES so nothing translates them again.
 
     Text mode (`newline=None`, what this used to do) rewrites every ending to the
     platform's — CRLF on Windows, LF on POSIX. One engine verb would then rewrite a
@@ -245,14 +246,58 @@ def save(path: Path, data: dict) -> None:
 
     **A file that does not exist yet, or one with MIXED endings, gets LF.** Mixed is
     not a preference the engine can read, so it normalises rather than guesses.
+
+    **The new document is installed by rename, never written over the live file
+    (#613).** This used to end in `Path(path).write_bytes(payload)`, which opens the
+    target with O_TRUNC and only then writes: a reader running concurrently could
+    observe a truncated spine and raise `JSONDecodeError` on state that is perfectly
+    valid on disk (`tests/test_crew_launcher.py` had to tolerate exactly that in its
+    parent-heartbeat poll), and a crash mid-write left the spine permanently corrupt
+    — on the only record that the work happened. So: write a UNIQUE temp sibling
+    (unique, because two concurrent writers sharing one fixed temp name can install a
+    durably unparseable document — worse than the tear this fixes), `fsync` it so the
+    rename cannot become durable before the data is, then `os.replace` it into place.
+    A reader now sees the complete old document or the complete new one.
+
+    **Atomicity here is not mutual exclusion.** The WRITE is atomic; the
+    read-modify-write is not. Two callers that each `load()` → mutate → `save()` still
+    clobber each other, and the loser's update goes missing from a file that is
+    perfectly well-formed — so nothing raises and nothing notices. Guarding that is a
+    separate job (locking or compare-and-swap) and is deliberately not done here; see
+    `scripts/hooks/spine_rail.py`'s binding-store transaction for the same
+    distinction drawn in the same words.
     """
+    path = Path(path)
     payload = (json.dumps(data, indent=2) + "\n").encode("utf-8")
+    # Read the EXISTING file's endings and mode BEFORE anything replaces it.
     eol = _dominant_newline(path)
     if eol != b"\n":
         # json.dumps escapes any literal CR as \r, so no b"\r" survives in the
         # serialised bytes and this replace cannot produce b"\r\r\n".
         payload = payload.replace(b"\n", eol)
-    Path(path).write_bytes(payload)
+    try:
+        mode = path.stat().st_mode & 0o7777
+    except OSError:
+        mode = None  # new file: keep whatever mkstemp's 0600 gives it
+    # Same directory as the target -- `os.replace` is only atomic within one
+    # filesystem.
+    fd, tmp_name = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp",
+                                    dir=str(path.parent))
+    try:
+        with os.fdopen(fd, "wb") as f:
+            if mode is not None:
+                os.fchmod(f.fileno(), mode)  # mkstemp makes 0600; don't narrow it
+            f.write(payload)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_name, path)
+        tmp_name = None
+    finally:
+        if tmp_name is not None:  # a failure anywhere above leaves no .tmp behind
+            try:
+                os.unlink(tmp_name)
+            except OSError:
+                pass
 
 
 def load_config(cl: dict, base: Path | None) -> dict:

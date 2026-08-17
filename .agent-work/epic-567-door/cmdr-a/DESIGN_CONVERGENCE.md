@@ -8,6 +8,37 @@ Closing the gate that produced it does not settle it. Where I have already
 implemented the recommendation, that is stated plainly below along with how to
 revert it.
 
+> ## AMENDED after a cold plan critic — read this first
+>
+> A cold critic (no authoring context) found 5 blocking defects in this document and
+> the gate plan. Two changed the design, and the most important one **inverted this
+> document's central argument.** The amendments are folded into the sections below;
+> this box records what changed so a reader is not misled by a version they may have
+> seen earlier. Full critique: `crew-handoffs/COLD_PLAN_CRITIC.md`.
+>
+> 1. **The containment root was too wide, and the comparison that chose it was
+>    unmeasured on one side.** The original recommendation used
+>    `_primary_checkout_for_lifecycle()`, which resolves `--git-common-dir` and
+>    therefore jumps to the primary checkout — and `.worktrees/` nests *inside* it.
+>    **Measured: 4205 reachable spine-shaped files, 3505 of them in other lanes'
+>    checkouts** — a strict superset of the 683 I used to disqualify candidate C for
+>    "maximum reach". I killed C on a number and crowned A on a sentence. The root is
+>    now `<the door's own checkout>/.agent-work/` via `--show-toplevel`, plus a
+>    cross-checkout refusal: **683, and zero cross-worktree.**
+> 2. **The isolation section contradicted itself.** It said a sibling worktree's live
+>    spine was reachable and, 18 lines later, that another checkout was not. A linked
+>    worktree *is* another checkout. Fix 1 makes the reassuring sentence true; that is
+>    the purpose of fix 1, not tidiness.
+> 3. **One claim about guard strength was overstated** — see "Why A over B", corrected.
+> 4. Two line references in this document were wrong and are corrected
+>    (`_spine_open` is at `:968`; `_resolve_confined` at `:322`).
+>
+> Adopting fix 1 rather than only floating it is sanctioned:
+> `decision:isolation-not-fencing` is graded `guess/admiral`, and a `guess` is revisited
+> **freely** once its `settle:` experiment has run. Its recorded `settle:` was "name the
+> property in the design doc and have the reviewer attack it" — which is exactly what
+> happened. Regraded `settled/measured`.
+
 ## The question, in one sentence
 
 Where and how does a running MCP door acquire a binding to a spine file that
@@ -57,9 +88,21 @@ port) would be one adapter, and one adapter is a hypothetical seam.
 | | A — `minimal-interface` | B — `no-new-tool` | C — `per-call-identity` |
 |---|---|---|---|
 | Shape | one new tool `spine_bind(spine_file)` | `spine_open` becomes adopt-or-mint on `work_id` | calls may name their own spine, confined to a bound **root** |
-| Reach added | any spine-shaped JSON inside this door's own checkout | any spine under `<root>/.agent-work/<work_id>` for any nameable `work_id` | **124 spines**, 99 unleased, **674** legal `--from-child` targets |
+| Reach added *(one predicate, see note)* | **683**, cross-checkout **0** *(amended; was 4205/3505)* | any spine under `<root>/.agent-work/<work_id>` for any nameable `work_id` | **683**, 51 leased, **674** legal `--from-child` targets |
 | New env var | no | no | yes (`SPINE_ROOT`) |
 | Verdict | **winner, with one correction** | strong runner-up, self-refuted | **well-argued negative** |
+
+> **Note on the counts, because an earlier version of this table compared numbers that
+> were not comparable** (the critic's M9). Every reach figure above and below now uses
+> **one predicate**, stated once: a parseable JSON dict with an `items` list, a `tasks`
+> dict, and a truthy `work_id` (from `origin.work_id` or the top level) — i.e. exactly
+> the population the corrected rule will bind. Measured **2026-08-16 in this worktree**.
+> The tree is live and grows while you measure it: the critic's independent re-run
+> differed by +1 and then +2 within seven minutes, as concurrent lanes wrote spine
+> files. **Treat every number here as a snapshot, not a property of the population.**
+> The earlier "124 spines" figure was files literally *named* `spine.json`, a different
+> predicate over a different root, and comparing it to the 52-file census was comparing
+> nothing.
 
 ### Four-axis comparison
 
@@ -196,10 +239,56 @@ Two smaller borrowings from the other two candidates, both earned:
   the crew case needs only two files of extra reach, which is the yardstick any
   future widening should be measured against.
 
-Why A over B, in one line: both widen reach, but A widens it behind a tool that
-exists only to widen it, with nine named refusals and its own honest description —
-while B widens it behind an argument on a tool that promises creation, guarded by
-the module's weakest guard.
+Why A over B, in one line — **corrected after the critic, which caught this as
+overstated**: both widen reach; **A makes the widening legible and adds `R8` (refuse a
+bind onto a demonstrably-live identity); the guard is the same guard.**
+
+The original wording said B was "guarded by the module's weakest guard" as though A
+were not. Wrong. `spine_bind` **is** a rebind and sits behind the same
+`_rebind_refusal`, which fails open in the same three documented directions including
+"no lease" — and releasing a lease is one call. So the sequence I held against B
+(release, bind another lane's spine, drive it) is reachable through `spine_bind` too.
+What actually separates them is smaller, and worth stating precisely:
+
+- A's capability lives behind a tool whose entire declared purpose is to bind, with
+  its refusal set enumerated and its reach stated in its own description — versus an
+  argument on a tool whose description promises creation.
+- A adds `R8`, a genuinely new refusal: it declines a bind onto an identity another
+  live process is holding. That closes the "two agents on one lease" failure
+  `IDENTITY_TRADE.md` names rather than inheriting it.
+- **After the amendment A's root is narrower than B's** — `683` and no cross-checkout
+  reach, against any spine under `<root>/.agent-work/<work_id>` for any nameable
+  `work_id`.
+
+That is real security-usability value and a real reduction in reach. It is not the
+stronger *guard* I originally claimed, and the human should weigh the corrected
+version.
+
+### The population objection, now answered with a count rather than an exception
+
+The critic's sharpest simplicity finding: I called "every dispatch that can call
+`spine_bind` could have been launched bound" the strongest objection on the table and
+rebutted it by naming **one** exception (the Admiral), while this same document killed
+candidate C's per-dispatch option with "a launcher that knows the work area's path can
+set `SPINE_FILE` in the same breath." Fair hit on the argument, so I went and counted.
+The population is **structural, not broken launchers**, and `scripts/run_crew.py` says
+so itself:
+
+- **`ExternalBackend` — the Agent-tool dispatch path — refuses `--spine` outright**
+  (`:1673-1680`): "ExternalBackend spawns no process and builds no environment, so
+  nothing binds the value into a child's SPINE_FILE/SPINE_SESSION." It then prints an
+  **unconditional** warning (`:1709-1715`) that the crew's door is UNBOUND, above a
+  comment calling out-of-band binding *"impossible by construction"*. The repo already
+  knows the capability is missing and ships a permanent warning in place of it — and
+  that comment's premise is now **stale**, because the previous lane made binding late.
+- **Any orchestrator whose spine is created after its door.** The Admiral and this
+  Commander both mint their spine with `init_work_area.py` mid-session. `SPINE_FILE`
+  cannot name a file that does not exist yet, and "relaunch the door" means killing the
+  session and losing the run. That is not a launcher fix.
+
+So the population is not one caller shape. It is every Agent-tool crew dispatch plus
+every orchestrator that mints its own spine, and for both, `SPINE_FILE`-at-launch is
+unavailable rather than merely inconvenient.
 
 ## The isolation property — what replaces "one file per process"
 
@@ -209,36 +298,71 @@ Stated explicitly, as `decision:isolation-not-fencing` requires.
 successful `spine_open` (mint).
 
 **After:** one spine per process, decided at launch, at mint, **or by one confined
-binding to a spine that already exists inside this door's own checkout, whose
-session identity the spine itself dictates.** The count never rises above one.
-Only the moment of decision moves — which is exactly what
+binding to a spine that already exists inside the door's own checkout's work-area
+tree, whose session identity the spine itself dictates.** The count never rises above
+one. Only the moment of decision moves — which is exactly what
 `decision:bind-on-open-over-new-verb` already did once.
 
-**What an agent can reach that it could not before, said plainly:** any readable
-JSON object that is spine-shaped and carries a `work_id`, anywhere inside the
-primary checkout of this door's own repository — including a sibling worktree's
-live spine — may become the spine this process drives. Before, an unbound door
-could reach nothing at all, and a bound door could reach only what it was launched
+Said as a property in one line: **one checkout's work-area tree per process.**
+
+**What an agent can reach that it could not before, said plainly and now with the
+number beside it:** any readable spine-shaped JSON object carrying a `work_id`, under
+`<the door's own checkout>/.agent-work/`. Measured in this tree: **683 files — 651
+archived records, 32 live; 51 carry an `engine_session` marked active.** Before, an
+unbound door could reach nothing at all, and a bound door only what it was launched
 with or what it minted. **That is a real widening on a security boundary.** It is
 named here rather than left for the tests to certify.
 
-**What still holds it in** — four things, none of them new machinery:
+**What it deliberately does NOT reach — this is the amendment, and it is the reason
+the "another checkout" bullet below is now true.** The earlier version of this design
+used `_primary_checkout_for_lifecycle()` (`:797`), which resolves `--git-common-dir`
+and therefore lands on the **primary** checkout, with `.worktrees/` nested inside it.
+Measured, that root reaches **4205** spine-shaped files, **3505 of them inside other
+lanes' checkouts**, 307 under an active lease. The root is now derived with
+**`--show-toplevel`** — from the door's own script when unbound, from `SPINE.parent`
+when bound — and a candidate whose own `--show-toplevel` differs from the door's is
+**refused**. One flag is the whole difference between reaching one checkout and
+reaching every worktree in the repository.
 
-1. The containment root confines **which** spines: `_primary_checkout_for_lifecycle()`,
-   the same expression `_spine_open` already uses, via the same `_resolve_confined`
-   predicate with a different `bound_dir`.
-2. `work_id` confines **which identities**: identity is a function of the spine,
-   never of a model-supplied string. `IDENTITY_TRADE.md` §3 Option B settled that a
+| root | reachable | cross-checkout | active lease |
+|---|---|---|---|
+| `--git-common-dir` (original design) | 4205 | 3505 | 307 |
+| `--show-toplevel` + cross-checkout refusal (**adopted**) | **683** | **0** | 51 |
+
+A further narrowing is available and I am deliberately **not** taking it unilaterally:
+651 of the 683 sit under `archive/`, and an archived spine is a closed record that is
+never a legitimate bind target, so excluding it would cut reach to **32**. I leave that
+to the human and the reviewer, because it introduces a second notion of "what is
+bindable" keyed on path rather than structure — and this document has already been
+wrong once by adding reach without measuring it.
+
+**What still holds it in** — five things, only one of which is new machinery:
+
+1. The containment root confines **which** spines: `<own checkout>/.agent-work/`,
+   through the same `_resolve_confined` predicate with a different `bound_dir` — the
+   reuse `_spine_open` already demonstrates by passing `wt_root`.
+2. **A cross-checkout refusal** confines it further: a candidate whose own
+   `--show-toplevel` differs from the door's is rejected. This is the one genuinely
+   new guard, and it exists because without it item 1 is not enough — `.worktrees/`
+   nests inside the primary checkout, so a root derived the obvious way silently
+   admits every sibling lane.
+3. `work_id` confines **which identities**: identity is a function of the spine, never
+   of a model-supplied string. `IDENTITY_TRADE.md` §3 Option B settled that a
    caller-supplied identity buys nothing, because "any string it can supply, it can
    supply its parent's."
-3. `R8` refuses a bind onto an identity that is demonstrably live — the "two agents
-   on one lease" failure `IDENTITY_TRADE.md` names, closed rather than inherited.
-4. `_rebind_refusal` still forbids orphaning a lease this process holds.
+4. `R8` refuses a bind onto an identity that is demonstrably live — the "two agents on
+   one lease" failure `IDENTITY_TRADE.md` names, closed rather than inherited.
+5. `_rebind_refusal` still forbids orphaning a lease this process holds — though see
+   "Why A over B" for the honest limit of that guard: it fails open on "no lease", for
+   `spine_bind` exactly as for `spine_open`.
 
-**What an agent still cannot do:** drive two spines at once; drive a spine in
-another checkout; name its own identity; or point any of the nine pass-through
-tools anywhere — `_identity_violation` is untouched and still an equality check
-against `SPINE` at call time.
+**What an agent still cannot do:** drive two spines at once; **drive a spine in another
+checkout, including a sibling worktree** (true because of item 2 — in the earlier
+version of this design this bullet was flatly false, and a cold critic caught it 18
+lines from the sentence that contradicted it); reach outside `.agent-work/`; name its
+own identity; or point any of the nine pass-through tools anywhere —
+`_identity_violation` is untouched and still an equality check against `SPINE` at call
+time.
 
 **Which side of the trade this takes:** the **env-binding** side, unchanged.
 Identity stays process state — two globals, one binder, one equality check — and

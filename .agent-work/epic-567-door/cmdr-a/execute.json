@@ -180,6 +180,24 @@
             }
           },
           "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the IDENTITY_TRADE.md amendment the identity pin's own failure message demands is present in this diff (B4: an obligation stated only in a design doc the implementer need not satisfy is not an obligation)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && git diff 600de020..HEAD --stat -- '*IDENTITY_TRADE.md' | grep -q IDENTITY_TRADE"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the identity-pin exemption is keyed on (tool, property), proven by a test asserting a spine_bind.session_id property would STILL be an offender (S6: a tool-wide skip would let a future identity argument through unseen)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && py -m pytest tests/test_mcp_identity.py -k 'session_id' --collect-only -q 2>/dev/null | grep -q '::'"
+          },
+          "satisfied": false
         }
       ],
       "constraints": [
@@ -318,16 +336,34 @@
       "postconditions": [
         {
           "id": "c1",
-          "statement": "the door's own suites pass in a fresh process",
+          "statement": "the door, identity, unbound-door AND spine_lifecycle/adoption suites pass in a fresh process (S5: spine_lifecycle.py is inside g2's fence and touches open_work, which mints every spine in the fleet, yet no postcondition exercised it)",
           "check": {
             "kind": "command",
-            "command": "py -m pytest tests/test_mcp_lifecycle.py tests/test_mcp_identity.py tests/test_mcp_door_unbound.py -q"
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && py -m pytest tests/test_mcp_lifecycle.py tests/test_mcp_identity.py tests/test_mcp_door_unbound.py tests/test_mcp_spine_server.py tests/test_spine_lifecycle.py tests/test_mcp_adoption.py -q"
           },
           "satisfied": false
         },
         {
           "id": "c2",
-          "statement": "the reach-delta negative test exists and is named in the review",
+          "statement": "spine_bind tests EXIST and are collected -- at least 5 (B3: every command postcondition in the first draft of this plan passed at base with zero code written, so nothing would have gone red if spine_bind were never written; this check exits non-zero when the tests are absent)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && test $(py -m pytest tests/ -k spine_bind --collect-only -q 2>/dev/null | grep -c '::') -ge 5"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the reach-delta negative test EXISTS and is collected -- a test proving a target outside the containment boundary or in another checkout is refused (S2: this is the lane's first-class deliverable and was a check:null attestation)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && test $(py -m pytest tests/ -k 'spine_bind and (outside or escape or foreign or checkout or confine)' --collect-only -q 2>/dev/null | grep -c '::') -ge 1"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "the mutation proof is pasted in the review: deleting the confinement argument turns the reach-delta test RED. A green suite is not evidence the reach did not widen.",
           "check": null,
           "satisfied": false
         }
@@ -539,11 +575,35 @@
       "postconditions": [
         {
           "id": "c1",
-          "statement": "the engine suite passes in a fresh process",
+          "statement": "the engine and crew-launcher suites pass in a fresh process",
           "check": {
             "kind": "command",
-            "command": "py -m pytest tests/test_checklist_engine.py -q"
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && py -m pytest tests/test_checklist_engine.py tests/test_crew_launcher.py -q"
           },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the new atomicity tests EXIST and are collected -- at least 3 (S4: the new module was named in g3's fence but run by no command, so the save() claim had no check that executed its proof)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && test $(py -m pytest tests/ -k 'atomic or torn or fsync or replace' --collect-only -q 2>/dev/null | grep -c '::') -ge 3"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the FENCED regions are byte-identical: no diff hunk in checklist_engine.py touches _RAIL_STRINGS or _refresh_attach_hint, which lane C needs intact (S10: asserted in all nine gates' anchors and checked nowhere, when byte-identity is trivially checkable)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && test $(git diff 600de020..HEAD -- scripts/checklist_engine.py | grep -c '_RAIL_STRINGS\\|_refresh_attach_hint') -eq 0"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "the red-proof is pasted: the new test FAILS against the old bare write_bytes. Its primary assertions are deterministic (save never opens the target for writing; the target inode changes exactly once), not a thread race that could fake its own red.",
+          "check": null,
           "satisfied": false
         }
       ],
@@ -608,22 +668,22 @@
       "postconditions": [
         {
           "id": "c1",
-          "statement": "read-only current on the live spine exits 0 under the edited engine",
+          "statement": "read-only `current` on the LIVE spine exits 0 under the edited engine, with ABSOLUTE paths for both the engine and the spine (S3: the relative-path version's verdict was a function of the harness cwd -- run verbatim from the primary checkout it raised FileNotFoundError, and it also passed at base since `current` never calls save())",
           "check": {
             "kind": "command",
-            "command": "py scripts/checklist_engine.py --file .agent-work/epic-567-door/cmdr-a/spine.json current >/dev/null"
+            "command": "py /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity/scripts/checklist_engine.py --file /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity/.agent-work/epic-567-door/cmdr-a/spine.json current"
           },
           "satisfied": false
         },
         {
           "id": "c2",
-          "statement": "a mutating advance against a COPY behaves sanely; pasted into the return",
+          "statement": "a MUTATING verb (advance) run against a COPY of a spine -- never a live spine file -- refuses or succeeds sanely rather than crashing. This is the only proof that exercises save(). Pasted into the return, with git status showing the live spine unmodified.",
           "check": null,
           "satisfied": false
         },
         {
           "id": "c3",
-          "statement": "fresh-process validation recorded with its command and output",
+          "statement": "fresh-process validation recorded with its command and output; NOT an in-session observation and NOT a fixture that hand-injects the value it is trying to prove the harness delivers",
           "check": null,
           "satisfied": false
         },
@@ -632,7 +692,7 @@
           "statement": "the full suite passes in a fresh process",
           "check": {
             "kind": "command",
-            "command": "py -m pytest tests/test_mcp_lifecycle.py tests/test_mcp_identity.py tests/test_mcp_door_unbound.py tests/test_checklist_engine.py tests/test_crew_launcher.py -q"
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity && py -m pytest tests/ -q"
           },
           "satisfied": false
         }
@@ -687,5 +747,18 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": []
+  "blockers": [],
+  "amendments": [
+    {
+      "ts": "2026-08-17T06:52:02.552814+00:00",
+      "reason": "Cold plan critic returned 5 blocking findings. B3: all four command postconditions in the frozen plan passed at BASE with zero code written (61 passed, 456 passed, exit 0), so the g2/g3 chain closed on crew self-reports alone and nothing would have gone red if spine_bind were never written. This delta adds postconditions that FAIL when the work is absent: collection-count checks on the new tests, the reach-delta negative test (S2, was check:null), the new atomicity module (S4, was run by no command), the spine_lifecycle/adoption suites (S5, g2 touches open_work which mints every spine in the fleet), the fenced _RAIL_STRINGS byte-identity check (S10, asserted in nine gates and checked nowhere), the IDENTITY_TRADE.md amendment and the property-scoped pin exemption (B4, grep -c IDENTITY_TRADE execute.json was 0), and absolute paths on the self-hosting proof (S3, the relative form's verdict was a function of the harness cwd and passed at base anyway since current never calls save).",
+      "authority": "commander cmdr-567-a under LAUNCH_ORDER Inherited Latitude (test strategy and evidence shape are mine to decide); findings from the cold plan critic required by the plan step's c5",
+      "ops": [
+        "rescoped g2-implement",
+        "rescoped g2-integrate",
+        "rescoped g3-integrate",
+        "rescoped g4-selfhost"
+      ]
+    }
+  ]
 }

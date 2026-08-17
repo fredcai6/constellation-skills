@@ -603,6 +603,188 @@ Three things this establishes, none of which I could assert afterwards:
 
 Re-run after the edit and compare. Both commands go in the return verbatim.
 
+## F10 — the cold critic was the highest-value step of the run
+
+5 blocking, 10 serious, 7 minor, 3 notes. It re-derived my census independently
+(53/4/49/0 against my 52/4/48/0 — the delta is the live tree growing while it
+measured, which is its own finding S1), reproduced candidate C's 674 exactly, and
+verified all four load-bearing claims I asked it to check. It also verified 17 of my
+line references and found 2 wrong. Full text:
+`crew-handoffs/COLD_PLAN_CRITIC.md`. My dispositions:
+
+### B1 — ACCEPTED, and it inverted my own central argument
+
+**I killed candidate C on measured reach and crowned candidate A on unmeasured
+reach.** C's cell in my comparison table carried three bolded numbers; A's carried a
+sentence. The critic measured the other side:
+
+| root | spine-shaped with a `work_id` | active lease |
+|---|---|---|
+| A as I designed it (`_primary_checkout_for_lifecycle()`) | **4205** | 307 |
+| — of those, inside other lanes' `.worktrees/` | **3505** | — |
+| C's static `SPINE_ROOT` default, which I called "maximum reach" | **683** | 51 |
+
+A's root is a strict **superset** of the reach I used to disqualify C, by ~6x on this
+predicate. The cause is one flag: `_primary_checkout_for_lifecycle` resolves
+`--git-common-dir`, which jumps to the primary checkout from *any* worktree, and
+`.worktrees/` nests inside it. That function's own docstring says so; I read it and
+did not draw the consequence.
+
+**Fix adopted:** the root becomes `<the door's own checkout>/.agent-work/`, derived
+with `--show-toplevel` rather than `--git-common-dir`, plus an explicit refusal for
+any candidate whose own `--show-toplevel` differs from the door's. Measured **683**
+and, more importantly, **zero** cross-worktree targets. The property is now sayable
+in one line: **one checkout's work-area tree per process.**
+
+I am allowed to make this change rather than only float it:
+`decision:isolation-not-fencing` is graded `guess/admiral`, and a `guess` is revisited
+**freely** once its `settle:` experiment runs. Its recorded `settle:` was "name the
+property in the design doc and have the reviewer attack it." That is exactly what just
+happened. So I revisit, adopt the narrower root, and regrade to `settled/measured`.
+
+### B2 — ACCEPTED. My own document contradicted itself 18 lines apart
+
+I wrote "including a sibling worktree's live spine — may become the spine this process
+drives" and then, in the same section, "what an agent still cannot do: ... drive a
+spine in another checkout." A linked worktree **is** another checkout, so the
+reassuring bullet — the one a human skimming for the security summary reads — was
+false. B1's narrowed root is what makes it true. Same fix, and that is the point of
+the fix rather than tidiness.
+
+### B3 — ACCEPTED, and it is the most uncomfortable finding
+
+The critic ran all four of my `command` postconditions against the base commit with
+**no code written**: `61 passed`, `456 passed`, `exit 0`. Every one passes at base.
+The rest of the g2/g3 chain is crew self-reports (`implementer-result status=complete`,
+`review-result verdict=APPROVE`) and Commander attestations (`check: null`).
+
+> "**Nothing in the 9 gates would go red if `spine_bind` were never written.**"
+
+That is correct. I wrote a plan whose `g3-review` imperative lectures the crew that "a
+test that passes in both the healthy and the defective world is a check that cannot
+fail" — and did not apply it to the plan itself. Fix: node-id postconditions that exit
+4 ("no tests ran") when the test is absent, plus mutation postconditions.
+
+### B5 — ACCEPTED, and it would have shipped a WORSE bug than the one I was fixing
+
+I mandated `gauge_writer_hook.py:513`'s pattern by name and forbade inventing one.
+That function uses a **fixed** temp name, `path.name + ".tmp"`. With two writers on one
+spine — which `run_crew.py`'s `_parent_lease_heartbeat` daemon thread makes a
+**supported** case (`tests/test_crew_launcher.py:3211-3225`, "the shared-spine case") —
+both open the same temp path, and the loser's handle still points at the inode
+`os.replace` just installed as the live spine. Its buffered flush then writes
+**straight into the live file after the rename**. The critic ran it:
+
+```
+installed: b'{"a": "S"}LLLLLLLLLLLLLLLLLLLLLLLLLLLLLL"}'
+parses: NO -> JSONDecodeError Extra data: line 1 column 11
+errors: ["FileNotFoundError: ... 'probe2.json.tmp' -> 'probe2.json'"]
+```
+
+**Today's tear is transient and heals on the next write. An installed unparseable
+document is permanent.** So "reuse the repo's own canonical pattern, do not invent
+one" — a rule I took from `global-everyone.md`'s "one canonical path" — was the wrong
+instinct here, because the canonical path was itself defective. Reuse is not a
+substitute for reading what you are reusing. Also unaddressed by my spec: no `fsync`
+before the rename (so the "survives a crash" half was not actually delivered) and mode
+loss from a fresh `mkstemp`.
+
+Handoff rewritten: unique `tempfile.mkstemp(dir=path.parent)`, `os.fchmod` to the
+existing mode, `flush()` + `os.fsync(fd)`, `os.replace`, temp unlinked in `finally`.
+The `gauge_writer_hook.py` hazard is now its own triage candidate — it is the same bug
+there, in a file I must not edit.
+
+The critic also caught that my red-proof design was **timing-dependent** and could
+fake its own red by coming out green against the old code by luck. Its deterministic
+substitute is better and is now the required primary assertion: `save()` must never
+open the target path for writing (only a temp sibling), and the target inode must
+change exactly once.
+
+### B4 — ACCEPTED. `grep -c "IDENTITY_TRADE" execute.json` → 0
+
+I called the amendment and the pin exemption "undodgeable" in a document the
+implementer is not required to satisfy. That is not an obligation. Both are now
+explicit deliverables in the handoff, along with the critic's **S6**: that pin's
+positive control *reimplements the detector inline* instead of calling it, so the
+moment the real pin gains an exemption the control silently stops controlling for it.
+Extracting the detector is now required — without it the exemption I am adding is
+unguarded by construction. That is a check that cannot fail, hiding inside the very
+pin I was being careful about.
+
+### S7 — the one blocking-grade objection I REJECT, with a measurement
+
+The critic's sharpest simplicity finding: I answered "the tool's whole population is
+dispatches that could have been launched bound" by naming **one** exception (the
+Admiral) rather than by counting the population, while my own document had killed
+candidate C's option with "a launcher that knows the work area's path can set
+`SPINE_FILE` in the same breath."
+
+Fair hit on the argument. But the count answers it, and I went and got it. The
+population is **structural, not broken launchers**, and `scripts/run_crew.py` says so
+itself:
+
+- **`ExternalBackend` — the Agent-tool dispatch path — REFUSES `--spine` outright**
+  (`:1673-1680`): "ExternalBackend spawns no process and builds no environment, so
+  nothing binds the value into a child's SPINE_FILE/SPINE_SESSION." It then prints an
+  **unconditional** warning (`:1709-1715`) that the crew has an UNBOUND MCP door. The
+  comment above it (`:1702-1708`) says binding out-of-band is *"impossible by
+  construction (module-import-time env read in mcp_spine_server.py)"* — so the repo
+  already knows the capability is missing and ships a permanent warning in place of
+  it. **That premise is also now stale**: the previous lane made binding late, which
+  is precisely why the verb is buildable at all.
+- **Any orchestrator whose spine is created AFTER its door.** The Admiral and I both
+  mint our spine with `init_work_area.py` during the session. `SPINE_FILE` cannot name
+  a file that does not exist yet, and "relaunch the door" means killing the session
+  and losing the run. This is not a launcher fix.
+
+So the population is not one. It is every Agent-tool crew dispatch plus every
+orchestrator that mints its own spine — and for both, `SPINE_FILE` at launch is not
+merely inconvenient but unavailable. I record S7 as the strongest argument against my
+recommendation and as **answered**.
+
+### S8 — ACCEPTED as a correction to my wording, not to the design
+
+I wrote that B widens reach "guarded by the module's weakest guard" while A has "nine
+named refusals". `spine_bind` is itself a rebind and sits behind the **same**
+`_rebind_refusal`, with the same documented fail-open on "no lease". So the honest
+claim is narrower: **A makes the widening legible and adds `R8` (refuse a
+demonstrably-live identity); the guard is the same guard.** Corrected in the design
+document. The distinction the run turns on is the tool's description and its refusal
+list, not guard strength — which is still worth something, but less than I claimed.
+
+### N2 — PARTLY ACCEPTED: my `c6` waiver is legitimate in form, a dodge in effect
+
+The critic agrees the premise is true and the disclosure exemplary, but points out I
+conflated "no map ids exist" with "this frame's anchors cannot be verified." My
+anchors are `path:symbol:line` and are **mechanically checkable** — it checked 17 in
+four minutes and found **2 wrong** (`_spine_open` is at `:968`, not `~:1000-1042`;
+`_resolve_confined` at `:322`, not `~:330-380`). Both verified. That is the same defect
+class my frame had just convicted the launch order of, committed in the document doing
+the convicting.
+
+I still take the waiver — the gate's demanded citation *format* is genuinely
+unavailable — but the critic is right that the waiver should not buy me out of the
+underlying property. Line numbers corrected.
+
+### Accepted without argument
+
+S4 (the new atomicity module is in no command), S5 (`spine_lifecycle.py` is in g2's
+fence and none of its suites run, though it touches `open_work`, which mints every
+spine in the fleet), S10 (`constraint:rail-strings-untouched` asserted in all nine
+gates and checked nowhere, when byte-identity is trivially checkable), M7, M8
+(`session_id_for` written in the present tense for code that does not exist), M9 (52
+and 124 printed as commensurable under different unstated predicates), M10, M12.
+
+### S9 — accepted as a real double standard, and answered honestly
+
+`decision:net-deletion` is `settled/human`, cited in nine gate anchor blocks, and
+delivered by none — while I convicted C on exactly that axis without ever saying what
+A deletes. The honest answer, which is in the return: **this lane's net line count
+goes UP.** What it deletes is not lines but *the reason the 15 `CLI fallback` clauses
+and 11 `<engine>` tokens cannot be deleted*. Wave 2 does the deleting. I state that
+rather than dressing it up, and flag that the human may reasonably judge it
+insufficient.
+
 I used **fresh general-purpose agents, not forks**, on the strength of lane G's
 incident, and told each one in its prompt that it has no spine and must not run the
 engine or touch any checklist. All three complied; nothing outside their assigned
@@ -675,6 +857,37 @@ The gap is not "dispatched Task-tool crew can't reach their plan" (#559 as
 written). It is more general and simpler: **there is no verb that binds a door
 to an existing spine file.** `spine_open` mints; nothing attaches. Every role
 that did not personally launch its own door is affected, top tier included.
+
+### F1 addendum — how much of the surface is closed, proven two ways
+
+I measured two tools refusing (`spine_status`, `spine_lease`). Rather than poke the
+mutating tools against a live system to count the rest, I read the gate. It is
+uniform, in `main()` at `:1723`:
+
+```python
+unbound = None if nm in BINDS_WITHOUT_A_BOUND_SPINE else _unbound_refusal()
+...
+elif unbound is not None:
+    result = _tool_error(unbound, tool=nm, rejection_class="unbound-door")
+```
+
+One computation, applied to every tool name, **before dispatch and before any
+required-argument check**. `BINDS_WITHOUT_A_BOUND_SPINE` is `{"spine_open"}`
+(`:1425`). So of the 11 door tools, **10 refuse and exactly 1 is reachable — and the
+reachable one mints.** That is the whole door surface closed to an agent with an
+existing spine, established from the code rather than from eleven experiments on
+live state.
+
+The comment above that line is worth quoting because it states the intent the fix
+must extend rather than fight:
+
+> "`spine_open` is exempt because it is the way OUT of this state -- it mints a spine
+> and binds this process to it."
+
+There is a way out of the unbound state for work that does not exist yet, and none
+for work that does. The set is the extension point, and its own comment (`:1417-1425`)
+says it was made a set rather than an `!=` precisely so "the exemption is a listed
+fact a reader can find". It was built to be added to.
 
 ## F2 — the whole mechanism already exists; only the VERB is missing
 

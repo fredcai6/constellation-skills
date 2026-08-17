@@ -42,6 +42,77 @@ top-level `work_id`.** Refuse only when neither is present.
 
 Re-derive the census yourself before you start; do not take the numbers on trust.
 
+## AMENDMENT after the cold plan critic — read this before the sections below
+
+A cold critic reviewed the design and found five blocking defects. Three change your
+task. Where this amendment and any later section disagree, **this amendment wins.**
+
+### A1 — The containment root is NARROWER than the design document says
+
+`DESIGN_CONVERGENCE.md` names `_primary_checkout_for_lifecycle()` (`:797`) as the
+root. **Do not use it.** That function resolves `git rev-parse --git-common-dir`,
+which jumps to the **primary** checkout from any worktree — and `.worktrees/` nests
+*inside* the primary checkout, so that root admits every other lane's checkout.
+Measured in this tree:
+
+| root | spine-shaped files with a `work_id` | with an active lease |
+|---|---|---|
+| `_primary_checkout_for_lifecycle()` (as designed) | **4205** | 307 |
+| of those, inside other lanes' `.worktrees/` | **3505** | — |
+| `<the door's own checkout>/.agent-work/` (**use this**) | **683** | 51 |
+
+The design killed candidate C for a 683-file root and then crowned a 4205-file one
+without printing the number. **Use the narrow root:**
+
+- Derive the door's own checkout with `git rev-parse --show-toplevel` from the door
+  script's own directory (`Path(__file__).resolve().parent`) when nothing is bound,
+  and from `SPINE.parent` when something is. **`--show-toplevel`, not
+  `--git-common-dir`** — that one flag is the whole difference between "my checkout"
+  and "the primary checkout and every worktree under it".
+- Confine the candidate to `<that toplevel>/.agent-work/`.
+- **Additionally refuse any candidate whose own `git rev-parse --show-toplevel`
+  differs from the door's own.** This is what makes the isolation claim true rather
+  than aspirational, and the module already has a `_git_rev_parse` helper.
+
+The resulting property, which you should put in the tool description: **one
+checkout's work-area tree per process.**
+
+### A2 — One design claim was false and the narrow root is what makes it true
+
+`DESIGN_CONVERGENCE.md` says, 18 lines apart, both "including a sibling worktree's
+live spine may become the spine this process drives" **and** "what an agent still
+cannot do: drive a spine in another checkout." A linked worktree *is* another
+checkout, so the second was false. A1's root and its cross-checkout refusal make the
+second sentence true. That is the point of A1 — not tidiness.
+
+### A3 — Two obligations were stated only in prose; they are now yours explicitly
+
+The critic found `grep -c "IDENTITY_TRADE" execute.json` → **0**. An obligation
+stated only in a document you are not required to satisfy is not an obligation. So,
+required deliverables, each of which must appear in your diff:
+
+1. **The `IDENTITY_TRADE.md` amendment.** The pin's own failure message
+   (`tests/test_mcp_identity.py:832-836`) says: "If the identity trade was
+   deliberately re-opened, update ... IDENTITY_TRADE.md in the same change — this
+   test exists so that cannot happen silently." Find that file under
+   `.agent-work/archive/` and add a section recording what changed and the new
+   measured reach from A1.
+2. **The pin exemption must be keyed on `(tool, property)`, not on the tool alone.**
+   Add a test asserting that a hypothetical `spine_bind.session_id` property would
+   **still** be an offender. A tool-wide skip would let a future identity argument
+   through unseen.
+3. **`tests/test_mcp_identity.py`'s positive control currently reimplements the
+   detector loop inline** (`:845-853`) instead of calling it, so the moment the real
+   pin gains an exemption the control silently stops controlling for it. **Extract
+   the detector into one module-level function called by both the pin and its
+   control.** Without this, the exemption you add is unguarded by construction.
+
+### A4 — Do not rename the argument to dodge the pin
+
+Stated in Authority already, restated here because it is the cheap wrong answer:
+the argument is `spine_file`. Renaming it to `work_file`/`plan_path` passes the pin
+and is the spelling game `_identity_violation`'s docstring records losing six times.
+
 ## Protected Intent
 
 Violating any of these fails the gate regardless of test results.

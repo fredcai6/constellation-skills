@@ -3245,10 +3245,12 @@ class ParentLeaseHeartbeatTests(unittest.TestCase):
         """Poll `predicate` instead of a fixed sleep, so the test only proceeds
         once the background thread has actually done the thing, whatever the
         host's real scheduling speed -- a fixed sleep would either flake under
-        load or waste time when the thread is fast. A transient exception (the
-        predicate reads the SAME spine file the heartbeat thread is mid-write
-        to -- `checklist_engine.save` writes plain bytes, non-atomically) is
-        treated as "not yet", not a failure -- only a timeout is."""
+        load or waste time when the thread is fast. A transient exception is
+        treated as "not yet", not a failure -- only a timeout is. That tolerance
+        is now belt-and-braces: `checklist_engine.save` installs the spine by
+        atomic rename (#613), so the predicate reading the SAME file the
+        heartbeat thread is mid-write to sees the whole old document or the
+        whole new one, never a torn one."""
         def _safe() -> bool:
             try:
                 return bool(predicate())
