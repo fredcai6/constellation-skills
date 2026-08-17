@@ -3,9 +3,74 @@
 Worktree `/home/tommy/projects/constellation-skills/.worktrees/567-a-spine-identity`,
 branch `feat/567-a-spine-identity`, base `600de020`. **Not merged.**
 
-**Read §3 first.** It is the artifact the human converges on, and
-`decision:convergence-is-human-only` means the design pick below is *not* settled by my
-having recommended it.
+---
+
+# FOR THE HUMAN — one question to rule on, one weakness to weigh
+
+`decision:convergence-is-human-only`: I generated and compared; **you pick.** Nothing below
+is settled by my having recommended it. Written for a reader who has seen none of this run.
+
+## THE QUESTION: is `IDENTITY_TRADE.md` §2's confinement property amendable?
+
+That document records a deliberate trade: the MCP door binds one spine from its environment,
+and **identity is not a per-call argument.** §2 states the property that bought — *the door
+cannot be pointed at another run's spine* — and a test pin enforces it, with a failure
+message saying the trade must not be re-opened "silently."
+
+**This lane re-opens half of it.** `spine_bind` lets a call name a **spine** (confined to the
+door's own checkout's work-area tree). It still does **not** let a call name an **identity** —
+the session is derived from the spine's own `work_id`, never supplied — so
+`IDENTITY_TRADE.md` §3's Option B ("a caller-supplied identity buys nothing, because any
+string a subagent can supply it can supply its parent's") stands untouched.
+
+**What turns on your answer:**
+
+- **If §2 is a recorded trade, amendable on evidence** → the work merges as built. The
+  amendment is in this PR (134 lines), written because the pin's own failure text demands it
+  in the same change. Epic #567 unblocks: the CLI stops being the only path, and wave 2 can
+  delete the 15 `CLI fallback` clauses and 11 `<engine>` tokens.
+- **If §2 is settled and not mine to unsettle** → **this design is dead as written**, whatever
+  its internals look like, and no amount of test coverage saves it. The fallback is a
+  launcher fix plus a better refusal message: zero new tools, zero new boundary surface. I
+  argue against that below, but it is a coherent position and you are the one who can take it.
+
+**The strongest argument against my recommendation**, which I could not fully dismiss: every
+dispatch that *can* call `spine_bind` is arguably one that could have been launched bound
+instead, since `run_crew --spine` already puts that exact string into a child's environment.
+**What defeats it, measured:** `ExternalBackend` — the Agent-tool dispatch path — *refuses*
+`--spine` outright, spawns no process and builds no environment, and ships a permanent
+warning that such a crew's door is unbound. And an orchestrator that mints its own spine
+mid-session (you, at `init`; me, at `init`) cannot be launched bound at all — `SPINE_FILE`
+cannot name a file that does not yet exist, and "relaunch the door" means killing the
+session. So the population is structural, not broken launchers. That is the crux of the
+argument, and if you reject it the design falls.
+
+## THE WEAKNESS, not softened
+
+**This lane's net line count goes UP.** ~2.3k insertions across source and tests; 112
+deletions. `decision:net-deletion` is graded `settled/human` and says the lane must end with
+something deleted.
+
+What it actually deletes is **one refusal clause** — the advice telling a model to relaunch
+the MCP server it is running inside, which a model inside that server generally cannot follow
+— and **the reason the epic's 26 fallback clauses and tokens cannot be deleted.** Wave 2 does
+that deleting; this lane removes the blocker.
+
+A cold critic called this a double standard and was right: I convicted a rival candidate on
+"what do you delete — nothing" while never printing what mine deletes. **You may reasonably
+judge one clause insufficient against a `settled/human` ruling.** I am not going to argue it
+was secretly net-negative; it was not.
+
+**A second, smaller one:** the isolation property is enforced **by path**, so an actor who can
+already create a **hardlink** inside the door's own `.agent-work/` can present a foreign
+checkout's spine as a local one. A hardlink has no target to resolve, so no path-based check
+can see it. Closing that means containment by inode — a different mechanism, not a
+refinement. I state the limit rather than the unqualified claim because I was already caught
+once claiming a property the code did not have.
+
+---
+
+**Read §3 next.** It is the design comparison the question above is about.
 
 ## 1. Verdict
 
