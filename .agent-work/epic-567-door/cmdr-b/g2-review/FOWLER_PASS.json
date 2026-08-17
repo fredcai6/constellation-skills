@@ -1,0 +1,20 @@
+{
+  "work_id": "epic-567-door/cmdr-b/g2-review",
+  "diff_ref": "uncommitted working tree, tests/test_work_id_nesting.py + tests/test_crew_delivery_addressing.py (one keyword-arg addition each) + episodes/active/epic-567-door_cmdr-b-003.md (restate-assertion only) -- g2-review, rework of #621's 6 net regressions, epic #567 lane B",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, docs/EPISODE_STORE.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "Both call sites add a similarly-shaped keyword arg (accept_mtime_only_risk=\"test: ... not spine-driving\") but the two reason strings are independently authored and scenario-specific (registry addressing vs identity-free delivery discovery) -- a shared phrasing convention, not duplicated logic or a copy-pasted block. Not a smell.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "Callers now pass one more of RC.verify_external_result's pre-existing optional keyword-only args (added by g1, PR #621); the function signature itself is untouched by this gate.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The accept_mtime_only_risk reason strings are load-bearing function arguments (recorded on the entry, printed to stdout+stderr per decision:default-refuse-not-default-warn), not comments masking confusing code -- the two test bodies they annotate are short and self-describing.", "override": null}
+  ],
+  "rail_exception": null
+}

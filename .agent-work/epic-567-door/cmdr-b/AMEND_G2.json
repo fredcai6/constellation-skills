@@ -1,0 +1,34 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "id": "g2-implement",
+      "title": "Rework: 6 net regressions found by Admiral against main",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence: attach g2-implement --type implementer-result --field status=<value>, lowercase.",
+      "postconditions": [
+        {"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)", "check": {"kind": "artifact", "evidence_type": "implementer-result", "match": {"status": "complete"}}}
+      ]
+    },
+    {
+      "op": "add",
+      "id": "g2-review",
+      "title": "Rework: review",
+      "after": "g2-implement",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "postconditions": [
+        {"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}}
+      ]
+    },
+    {
+      "op": "add",
+      "id": "g2-integrate",
+      "title": "Rework: integrate",
+      "after": "g2-review",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command yourself, then advance this gate. BLOCK: send the implementer back for rework or raise a blocker if unresolvable.",
+      "postconditions": [
+        {"id": "c1", "statement": "all six regression tests pass locally, plus the full run_crew launcher and episode/map suites", "check": {"kind": "command", "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend && python -m pytest tests/test_work_id_nesting.py tests/test_crew_delivery_addressing.py tests/test_episode_observations.py tests/test_code_map.py tests/test_crew_launcher.py -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}}
+      ]
+    }
+  ]
+}

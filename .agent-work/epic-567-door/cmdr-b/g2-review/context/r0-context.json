@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r0-context",
+  "files": [],
+  "repo_rev": {
+    "commit": "13f6363287edbe80520a84b7011cbad7522aad1c"
+  },
+  "run": {
+    "work_id": "epic-567-door/cmdr-b/g2-review",
+    "generated_at": "2026-08-17T06:54:13Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-reviewer",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-b-external-backend"
+    }
+  }
+}

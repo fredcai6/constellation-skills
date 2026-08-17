@@ -105,7 +105,10 @@ class CrewRegistryAddressingTests(unittest.TestCase):
             (root / entry["result"]).write_text("done\n", encoding="utf-8")
 
             entries = RC.load_registry_for_resume(entry["session_name"], root)
-            fresh, verified = RC.verify_external_result(entries, entry["session_name"], root)
+            fresh, verified = RC.verify_external_result(
+                entries, entry["session_name"], root,
+                accept_mtime_only_risk="test: exercising registry addressing (nested vs flat work_id), not spine-driving",
+            )
             self.assertTrue(fresh, "the result artifact was written, so it must read fresh")
             return json.loads(registry.read_text(encoding="utf-8"))[0]
 
