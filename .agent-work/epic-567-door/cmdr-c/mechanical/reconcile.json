@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-c",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 1,
+    "spine-step": "reconcile",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-c-reconcile@56a4d78d07700e30f9b0c3831ebb06f07822e0cd",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-c",
+    "generated_at": "2026-08-17T05:53:13Z"
+  }
+}

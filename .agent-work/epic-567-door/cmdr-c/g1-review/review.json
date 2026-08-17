@@ -1,0 +1,230 @@
+{
+  "work_id": "epic-567-door/cmdr-c/g1-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a-trip-mechanic",
+    "r4b-no-third-mechanism",
+    "r4c-glossary"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g1-reviewer-handoff.md, and the diff (git diff + implementer result).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 8 close criteria verified independently: (1) _mid_flight_reason states Stop-hook authority over SOFT-band advisory -- confirmed by diff. (2) spine_halt block named as sanctioned exit, replacing vaguer 'use the engine's block verb' -- confirmed. (3) crew-dispatch.md's spine_halt block section gained the same precedence sentence -- confirmed by diff. (4) Net-deletion honored: redundant 'Keep working the gate -- do not end your turn to wait.' and 'do not just stop.' collapsed into one precedence statement plus one closing 'do not end your turn to hand off' clause, not merely appended around -- confirmed by reading the diff hunk. (5)/(exclusions) verified in r2. (6) decide_stop control flow, load_nudges/save_nudges, count>=3 branch untouched -- confirmed: git diff -U0 shows the ONLY hunk in spine_rail.py spans lines 1491-1499, entirely inside _mid_flight_reason; decide_stop is at line 1679, load_nudges/save_nudges at 593/597, count>=3 at 1736 -- none touched. (7) python3 -c ast.parse confirms file still parses -- PARSE_OK reproduced independently. (8) Prose reads clearly to the cold-reader audience of this string, which is an agent that has already seen the SOFT-band advisory via spine_status/current before triggering the Stop hook, so that term is not unintroduced jargon in context.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Only two files touched (git diff --name-only, git status --porcelain, independently reproduced): scripts/hooks/spine_rail.py and skills/commander/references/crew-dispatch.md. Neither scripts/checklist_engine.py nor scripts/mcp_spine_server.py appear anywhere in the diff or status -- specific exclusion respected, no exceptions triggered. Within spine_rail.py the sole hunk (git diff -U0) spans lines 1491-1499, entirely inside _mid_flight_reason's string literals; _owning_session_reason (line 1502) is untouched, consistent with the implementer's stated reason for leaving it alone (different scenario: foreign-owned gate). Within crew-dispatch.md the inserted paragraph sits between the '## A harness-backgrounded command is never awaitable' header (line 13) and the next '## Backend: CLI vs Agent-tool harness' header (line 39), immediately adjacent to the existing spine_halt block guidance -- inside the allowed section. The lone untracked .agent-work/epic-567-door/ entry is this run's own work area, not a scope violation.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Test mode is evidence-only (prose/doctrine change, no test surface), matching the handoff's own allowance. All three claimed evidence items reproduced independently in this review, byte-for-byte matching the implementer's pasted output: (1) git diff --stat -- 2 files changed, 9 insertions(+), 4 deletions(-). (2) python3 -c ast.parse -- PARSE_OK. (3) git status --porcelain -- exactly the two allowed files modified plus the expected untracked .agent-work/ work area. The evidence demonstrates the actual claimed behavior (string-literal-only change, file still valid Python, scope contained) rather than merely asserting it.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Appended one sibling check per handoff constraint (r4a-trip-mechanic, r4b-no-third-mechanism, r4c-glossary), to be visited and independently verified later in survey order; this umbrella item confirms the per-rule breakdown was created.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture divergence: no packet map exists for this repo (context step DEGRADED-UNPARSEABLE, confirmed by handoff's own Map Confidence Flags), and the change adds no new callable symbol, signature, or code path -- string literals only inside an already-wired function (_mid_flight_reason) plus adjacent doc prose. Verified the implementer's Map Impact claims against the diff: no new decision surfaced (decision:stop-hook-is-authoritative and decision:no-third-mechanism were already ruled/settled, this gate only ships them in text), no trust limitations/drift found (independently confirmed via grep -- old 'Keep working the gate' phrasing does not recur elsewhere in the file). Nothing for Commander to reconcile; no triage candidate.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/epic-567-door/cmdr-c/g1-review/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/epic-567-door/cmdr-c/g1-review/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from epic-567-door/cmdr-c/g1-review alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-567-door/cmdr-c/g1-review/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass completed across all 12 smells; record written to .agent-work/epic-567-door/cmdr-c/g1-review/FOWLER_PASS.json and verify_fowler_pass.py exits 0 (fowler pass ok: smells=12, flagged=['duplicated-code'], overridden=[]). 11 smells absent (long-method, large-class, feature-envy, data-clumps, primitive-obsession, long-parameter-list, shotgun-surgery, divergent-change, message-chains, speculative-generality, comments-as-deodorant) -- this is an 11-line prose-only diff with no structural code change. One smell flagged, non-blocking: duplicated-code -- the Stop-hook-authoritative-over-advisory precedence statement is written out independently in both spine_rail.py's refusal message and crew-dispatch.md's doc paragraph. Judged non-blocking because the two locations serve genuinely different audiences/moments (enforcement-time refusal text vs. proactive doc read before the fork) and the task explicitly scoped both edits; flagged rather than overridden because there is no documented repo standard sanctioning duplicate precedence prose specifically, just a task-scoped reason -- logged as an out-of-scope triage candidate (light) for a future single-source-of-truth consideration, not a defect in this change.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-567-door/cmdr-c/g1-review/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a-trip-mechanic": {
+      "id": "r4a-trip-mechanic",
+      "title": "No change to WHEN Stop hook fires",
+      "imperative": "Verify decision:trip-mechanic-untouched: decide_stop's control flow, gate-open detection, and the nudge/3-strike escape hatch (load_nudges/save_nudges, count>=3) are byte-identical to before. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "decision:trip-mechanic-untouched holds. git diff -U0 on spine_rail.py shows exactly one hunk, spanning lines 1491-1499, entirely inside _mid_flight_reason's return string. decide_stop (defined at line 1679, well outside the hunk) was read in full: its control flow (binding lookup, mid-flight aggregation, own/foreign-owner routing), gate-open detection (_entry_mid_flight_view / _mid_flight_gate), and the nudge/3-strike escape hatch (load_nudges at 593, save_nudges at 597, the count >= 3 branch at 1736) are unchanged -- no hunk touches any of these line ranges, so they are byte-identical to the pre-change tree by construction, not just by inspection. The Stop hook fires under exactly the same conditions as before; only the string _mid_flight_reason returns changed.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b-no-third-mechanism": {
+      "id": "r4b-no-third-mechanism",
+      "title": "No new advisory/precedence mechanism invented",
+      "imperative": "Verify decision:no-third-mechanism: the change subordinates one existing mechanism (Stop hook) over another (SOFT advisory) in text only, and does not invent a new signal, flag, or code path. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "decision:no-third-mechanism holds. The entire diff is string-literal text inside _mid_flight_reason's existing return statement plus one added Markdown paragraph in crew-dispatch.md -- verified no new function, variable, conditional branch, flag, or state field was introduced anywhere in the diff (git diff shows no changed line outside of quoted string content and prose). The change subordinates the existing SOFT-band advisory to the existing Stop hook purely by stating the precedence in text; the advisory mechanism itself (spine_status/current's trip rendering) and the Stop hook mechanism (decide_stop) are both structurally untouched, confirmed in r4a. No third mechanism was invented.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4c-glossary": {
+      "id": "r4c-glossary",
+      "title": "Glossary terms used correctly",
+      "imperative": "Verify spine, gate, lease, trip are used per docs/agents/GLOSSARY.md definitions in the new prose. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Checked the new/changed prose against docs/agents/GLOSSARY.md definitions. 'gate' used correctly in both files ('gate {aid} is still open', 'an open gate says otherwise, the gate wins' -- matches 'One step in a spine'). 'spine' used correctly ('in the MIDDLE of the spine' -- matches 'The gated checklist file the engine drives a run through'). 'trip' used correctly ('SOFT-band context-trip advisory', 'the context-trip advisory' -- matches 'The event where a gauge reading crosses a band (SOFT or HARD)'). 'lease' does not appear in the new text; not required since this message isn't about lease ownership, and no misuse occurs. spine_halt block is named as the engine verb, matching checklist-engine.md's block verb, not a glossary term itself but used consistently with it.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "All 10 survey items (r0-r6 plus appended r4a/r4b/r4c) recorded pass. Two allowed files touched, scope respected, specific exclusions (checklist_engine.py, mcp_spine_server.py) confirmed untouched. All close criteria independently verified against the diff: Stop-hook authority stated, spine_halt block named as sanctioned exit, crew-dispatch.md precedence added, net-deletion honored, decide_stop/nudge/3-strike escape hatch byte-identical (single hunk confined to _mid_flight_reason lines 1491-1499), file still parses, glossary terms used correctly, no third mechanism invented. Fowler pass: 11/12 smells absent, one flagged (duplicated-code, non-blocking, logged as a light triage candidate for a possible future single-source-of-truth). No blockers."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r6-fowler",
+      "statement": "Light triage candidate, non-blocking: the Stop-hook-authoritative-over-advisory precedence statement is now written out independently in two places (scripts/hooks/spine_rail.py's _mid_flight_reason, and skills/commander/references/crew-dispatch.md). If the precedence ruling (decision:stop-hook-is-authoritative) is ever revised, both copies need manual sync; nothing enforces they stay in agreement. Consider a single source of truth (e.g. one doc fragment referenced from both, or a generated string) if a third location ever needs the same sentence."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "reviewer-g1-1786945440",
+    "status": "released",
+    "claimed_at": "2026-08-17T05:44:00.978772+00:00",
+    "last_heartbeat": "2026-08-17T05:48:53.358571+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T05:49:33.361425+00:00"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "work_id": "epic-567-door/cmdr-c/g1-review",
+  "diff_ref": "uncommitted working-tree diff: scripts/hooks/spine_rail.py (_mid_flight_reason, lines ~1488-1499) and skills/commander/references/crew-dispatch.md (2 sentences after the existing spine_halt block guidance), 2 files / 9 insertions(+) / 4 deletions(-)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, g1-reviewer-handoff.md's Task Statement and Close Criteria",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "flagged", "finding": "The precedence statement ('Stop hook is authoritative over the context-trip advisory; spine_halt block is the resolution') is now written out in full, independently, in two places: the _mid_flight_reason return string in spine_rail.py and the new paragraph in crew-dispatch.md. Not classic code duplication (no shared logic to extract), but a maintenance-sync risk: if the precedence ruling (decision:stop-hook-is-authoritative) is ever revised, both copies must be updated by hand and nothing enforces that they stay in sync. Non-blocking: the task explicitly required both an enforcement-time message (for the agent that already hit the refusal) and a read-ahead doc (for a Commander before it hits the fork live) -- these are genuinely different audiences/moments, which is why prose restatement rather than a single shared source was the given scope. Worth a light triage note for a future gate to consider a single source of truth if a third location ever needs the same sentence.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

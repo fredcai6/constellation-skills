@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4c-glossary",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-c/g1-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r4c-glossary",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-c/g1-review-r4c-glossary@4c659e14fdc376531d36c9552c593050f9bcd118",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-c/g1-review",
+    "generated_at": "2026-08-17T05:48:33Z"
+  }
+}
