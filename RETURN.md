@@ -27,6 +27,28 @@ Shipped:
   that half.
 - 1,432 lines of new tests across three new modules; full suite green.
 
+**The independent reviewer returned `BLOCK`, and it was right to.** It passed every
+condition the handoff named as blocking — its own root mutation went RED both spellings
+including the non-vacuity control, all four pins held with planted-regression controls, a
+spine with `origin: None` binds, full suite 3263 green — and then blocked on two defects it
+found by *attacking*:
+
+- **The isolation property was false as written.** The cross-checkout guard asked git about
+  `candidate.parent` **unresolved**, while `_resolve_confined` resolves. A symlink inside
+  the door's own `.agent-work/` pointing at a spine in another checkout satisfies **both**
+  checks. The reviewer bound a linked worktree's spine and a separate repository's spine
+  that way. The bug is not in the root the critic made me narrow, nor in the containment
+  predicate — it is in the **mismatch between two guards that resolve paths differently**,
+  and it is my design's second guard defeating its own first. One-token fix; no live breach
+  (zero such nested checkouts exist today, and every escape with a real file behind it is
+  correctly refused), but the *stated property* was untrue and stating an attackable
+  property was the whole point of `decision:isolation-not-fencing`.
+- **A NUL byte in `spine_file` killed the door process** — unhandled `ValueError`,
+  `main()` catches only `KeyError` — on the one tool reachable while nothing is bound.
+
+Both are in rework as of this return. **See §9 for the current gate state; do not read this
+as merge-ready until that section says so.**
+
 Four things I would want read even if nothing else is:
 
 1. **I ran the winning candidate's own falsifier and it failed.** Candidate A derived the
