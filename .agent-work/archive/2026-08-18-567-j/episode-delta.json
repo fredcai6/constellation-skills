@@ -1,0 +1,247 @@
+{
+  "work_id": "567-j",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-j",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-j-feedback@unavailable-gauge-silent",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 1,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/567-j/MISSION_FRAME.md",
+          ".agent-work/567-j/map-orientation.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "The plan step's mission frame cited graded pre-ruling decisions from the launch order plus two file-path substitutes, in a repo the context step had already confirmed carries no parseable architecture map."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The plan.c6 verify-frame gate was expected to pass against the substitutes hash-pinned in the DEGRADED-UNPARSEABLE map-orientation.json receipt, or to be waivable by the driving session when it did not."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "verify-frame refused every citation with 'no map was read', because a DEGRADED-UNPARSEABLE orientation carries no map inventory at all for any anchor id to be a member of. Attempting to self-waive plan.c6 (spine_evidence action=waive, authority=human) was refused unconditionally by the door: 'a crew must not waive its own bound spine check -- always ask up', regardless of the authority value passed."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The run blocked at spine_halt action=block, and drove a live cross-session handshake with the Admiral: this session released its own lease, the Admiral claimed the same spine as admiral, waived plan.c6 with the full reason, and released; this session then reclaimed and resumed. Neither the door's own refusal text nor any doctrine read this session named the release-claim-waive-release-reclaim sequence -- it was derived live, over SendMessage, by two sessions working it out together."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "spine_lease action=release on the blocked session; the Admiral bound to the same spine file, claimed as admiral, ran spine_evidence action=waive with authority=human, released; the blocked session reclaimed with spine_lease action=claim and resumed with spine_halt action=resume."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-j",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": "ctx-567-j-execute@unavailable-gauge-silent",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/567-j/crew-handoffs/g1-implement-result.md",
+          ".agent-work/567-j/crew-handoffs/g1-reviewer-result.md",
+          ".agent-work/567-j/crew-handoffs/g2-implement-result.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Three crews (g1-implement, g1-review, g2-implement) were dispatched via run_crew.py with --handoff/--result and no --spine, the shape documented for a crew whose job is a described task rather than a spine-driven one."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A crew given no --spine was expected to find no spine bound to its own MCP door, or to have SPINE_FILE/SPINE_SESSION cleared entirely, since crew-runs.json records spine: null for all three."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "All three dispatched crews independently reported the same shape unprompted: the spawned child's environment still carried the dispatching Commander's own live SPINE_FILE/SPINE_SESSION unchanged, so spine_status returned the Commander's own execute-gate content instead of a no-spine-bound refusal. One crew attempted spine_bind toward its own authored plan and was correctly refused by the door, because releasing its held lease to rebind would have released the Commander's real, live lease out from under it."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Each of the three crews spent part of its own turn diagnosing the mismatch before falling back to the documented alternate path (author its own IMPLEMENTER_PLAN.json/REVIEW_SURVEY.json and drive it through checklist_engine.py's bundled CLI directly), rather than doing so from the first turn."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Each crew authored its own plan/survey checklist from the shipped template and drove it through the bundled checklist_engine.py CLI, never touching the parent Commander's spine."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-j",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": "ctx-567-j-execute@unavailable-gauge-silent",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/567-j/crew-handoffs/g4-verify-implementer-result.md",
+          "docs/agents/ORCHESTRATOR_CONTEXT.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "g4-verify required dispatching one real crew with no --model flag and reading its crew-runs.json entry to prove a role-default resolution this same wave's own change built."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Dispatching via py <skill-install-path>/run_crew.py, the pattern used for every other crew this run, was expected to exercise the code under test."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "That dispatch refused with the OLD message ('a crew needs an explicit tier ... no default is invented'), because the installed skill copy of run_crew.py is not the worktree's own edited copy carrying this wave's fix -- exactly the class of mistake docs/agents/ORCHESTRATOR_CONTEXT.md's own 'the engine under edit is not the engine in play' section names, made on the one dispatch meant to prove the fix works."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "One dispatch attempt and its refusal output were spent before the mismatch was noticed and corrected; no gate had to reopen because the mistake was caught before any evidence was recorded as passing."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Re-dispatched via py scripts/run_crew.py (this worktree's own copy, repo-relative) instead of the installed skill path; the registry entry then showed model=sonnet with no --model given, the intended proof."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-j",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": "ctx-567-j-execute@unavailable-gauge-silent",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 1,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/567-j/crew-handoffs/g3-implement-handoff.md",
+          ".agent-work/567-j/crew-handoffs/g3-implement-result.md",
+          ".agent-work/567-j/crew-handoffs/g3-implement-rework-handoff.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "g3-implement's handoff named exactly two existing tests to rewrite for the new resolved-default behavior after wiring resolve_model into CrewSpec.__post_init__, the file's single crew-dispatch construction choke point."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Naming the two tests the handoff author (the Commander) had found by reading the file was expected to be the complete rewrite set."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "After wiring the choke point and rewriting exactly the two named tests, the full suite surfaced three more pre-existing failures in two other test classes, because any existing test constructing a CrewSpec with a falsy or arbitrary model string against a role/harness pair the new table happened to populate now collided with the new validation. The implementer stopped and returned Return status: blocked rather than rewrite tests outside the named/authorized set."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "One full implement-attempt cycle (dispatch, IMPLEMENTER_RESULT, read, decide) was spent before rework; the Commander ruled within its own file ownership (no float to the Admiral needed) and re-dispatched with an addendum handoff naming the three additional rewrites plus one further symmetry fix (an --abandon --relaunch reason-threading gap the same attempt had separately flagged)."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "A grep of existing test fixtures (model=\"...\") against the new table's populated role/harness keys, run BEFORE authoring the handoff rather than discovered by the implementer at the pytest-run stage, would have surfaced the full rewrite set up front."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-j",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "understand",
+        "context-manifest-ref": "ctx-567-j-understand@unavailable-gauge-silent",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "scripts/run_crew.py",
+          ".agent-work/567-j/notes-1.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "The launch order's Mission described issue #633 as run_crew.py silently reading --model from the host's ~/.claude/settings.json when the flag is unset, citing 15 unintended Opus crew sessions from a single Sonnet-tiered lane as the measurement."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A direct read of scripts/run_crew.py at the understand step was expected to confirm that framing before any code was written."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "CrewLaunchSpec.__post_init__ already raised CrewLaunchError unconditionally when model was falsy (decision:refuse-a-tierless-dispatch, issue #611, already merged before this wave's base commit) -- the exact silent-host-default failure mode the launch order described was already closed. The Admiral independently confirmed mid-run: the 15 Opus crews came from a Commander writing 'Opus' into the crew-dispatch handoff's free-text Suggested Model Tier field, with reasons -- an unconstrained field, not an inherited default -- and corrected the issue's public framing."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "None to the fix itself: wiring the new resolve_model resolver into CrewLaunchSpec's single construction choke point closes the defect regardless of which upstream path fed the value, so no replan was needed. The cost was entirely in how the issue's own record described its cause, corrected in this run's return rather than repeated."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Stated the corrected framing (free-text handoff field, not host-default inheritance) explicitly in the run's own return rather than silently proceeding on the launch order's original wording."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-j",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": "ctx-567-j-execute@unavailable-gauge-silent",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": [
+          ".agent-work/567-j/crew-handoffs/g2-reviewer-result.md",
+          ".agent-work/567-j/g2-review/review.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "A g2-review reviewer crew self-bootstrapped its own REVIEW_SURVEY.json from templates/REVIEW_SURVEY.template.json, per the documented fallback for a crew whose SPINE_FILE points at its dispatching parent rather than a spine of its own."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Recording the r6-fowler survey item's postcondition command from the template was expected to instantiate to a runnable command the same way the survey's <work-id> token does."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "REVIEW_SURVEY.template.json's r6-fowler check command carries a <reviewer-skill-dir> placeholder that the survey's own instantiation convention never substitutes; the first record attempt refused with 'command postconditions unmet' until the check text was retexted via amend --delta to the real repo-root-relative path (scripts/verify_fowler_pass.py does not live under skills/reviewer/scripts/)."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "One refused record attempt plus one amend --delta call, per reviewer crew that self-bootstraps a survey this way. A separate g1-review reviewer crew hit and worked around the identical refusal earlier in the same run."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "amend --delta with a retext-check op, replacing <reviewer-skill-dir> with the real repo-root-relative path before the r6-fowler check would pass."
+        }
+      }
+    }
+  ]
+}

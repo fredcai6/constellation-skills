@@ -1,0 +1,123 @@
+{
+  "work_id": "567-l",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-l",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-l-feedback@unavailable-gauge-silent",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/567-l/triage-candidates/tc1-self-waive-refused-two-occurrences-this-wave.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "At plan.c6 (map_orient.py verify-frame), the gate's own imperative named the check waivable for a trivial local/mechanical change and instructed calling waive with a recorded reason, so the Commander attempted spine_evidence action=waive on its own bound spine with authority=human."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The waive call was expected to succeed, since the check's own text described this exact escape and the reasoning (context oriented DEGRADED-UNPARSEABLE, no map to resolve anchors against regardless of frame quality) was sound."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The door refused unconditionally, regardless of the authority value passed: 'a crew must not waive its own bound spine check -- always ask up.' The refusal's own recovery text named two routes for a parent to act instead, and both were already-filed defects (session-id impersonation #632, claim --force erasing actor attribution #369), so neither was usable. This was the SECOND time this exact refusal fired in one wave of epic-567-door -- lane J hit it earlier at the same check, independently, in a different lane."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Recovery required a full cross-session round trip: spine_halt(block) naming the blocker and proposing the recovery sequence, releasing the lease, messaging the Admiral, waiting for it to claim/waive/release under its own identity, then reclaiming and resuming. Roughly one message exchange and a few minutes of wall-clock wait, not itself expensive, but it stalled the whole run at a check the gate's own text called waivable for exactly this case."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "spine_halt(action=block, task_id=plan) naming the blocker and proposing release-claim-waive-release-reclaim explicitly in the block reason, then spine_lease(release). The Admiral bound to the same spine.json, claimed it under its own real identity, waived plan.c6 with authority=admiral, released. The Commander then reclaimed and called spine_halt(action=resume)."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-l",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "understand",
+        "context-manifest-ref": "ctx-567-l-feedback@unavailable-gauge-silent",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/567-l/MISSION_FRAME.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "The Commander described map/INDEX.md as an 'unfilled template' when discharging the DEGRADED map-orientation receipt and again in the mission frame, reasoning from map_orient.py's own diagnostic text ('content but no citable anchor id (unfilled template?)')."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The diagnostic's own wording was expected to be an accurate description of map/INDEX.md's state, since it was the only signal available without independently reading the file's actual size and freshness."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The Admiral corrected this directly: map/INDEX.md is not unfilled -- it is a fully built 31KB source scan across 167 module directories, regenerated on merged main twice on the day of this run and currently fresh (confirmed independently by a Cartographer reconcile at the epic's own closeout). What is actually empty is map/ids.jsonl, because it is written from minted anchor ids and this repo has never minted any. map_orient.py's DEGRADED-UNPARSEABLE verdict is real and correctly blocks anchor resolution, but its own diagnostic phrase conflated 'no ids to cite' with 'the build never ran,' which are different failure conditions with different fixes."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Caught and corrected before the run's own return artifact was written, so no downstream artifact carried the wrong characterization forward. Had it gone uncorrected, a future reader might have concluded map/INDEX.md needed a rebuild when the actual gap is that anchor-id minting has never been authored at all."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The mission frame's map-confidence section and its DEGRADED-substitution note were edited to state the distinction plainly: INDEX.md is fresh and built, ids.jsonl is the empty piece, and the two are not the same defect."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-l",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": "ctx-567-l-feedback@unavailable-gauge-silent",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "scripts/check_role_spine_bookends.py",
+          "tests/test_check_role_spine_bookends.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "The launch order asked the lint to reuse scripts/check_skill_freshness.py's drift-detection machinery if it fits, and to say so if it does not, rather than reimplementing without checking first."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "check_skill_freshness.py's three-way baseline/upstream/local comparison seemed plausibly reusable for detecting a role spine template's repo-vs-installed drift, since both are freshness checks over the same corpus of skill templates."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "check_skill_freshness.py's check() function compares a PROJECT's own .agent-work/templates/{.baseline,local} against installed upstream, driven by a per-project TEMPLATES_MANIFEST.json. It has no notion of 'this repo's own skill source vs. the installed corpus' -- the shape this lint needed -- and this repo (the skill source itself) has no reason to carry a project-scope manifest of its own templates. The two checks are freshness checks over superficially the same domain but structurally different reference frames (project-customization drift vs. source-vs-installed drift)."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One read-through of check_skill_freshness.py's check()/update_baseline()/_load_manifest() before deciding not to reuse it, rather than discovering the mismatch mid-implementation."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Wrote scripts/check_role_spine_bookends.py as a small standalone script: globs skills/*/templates/*_SPINE.template.json in the repo, fails on zero declared bookends, and separately compares the declared bookend id set against the installed corpus copy for drift. Left check_skill_freshness.py untouched."
+        }
+      }
+    }
+  ]
+}

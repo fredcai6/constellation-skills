@@ -1,3 +1,4 @@
+import argparse
 import ast
 import importlib.util
 import contextlib
@@ -4063,6 +4064,32 @@ def _write_mcp_config(path: Path, command: str) -> None:
     }, indent=2) + "\n", encoding="utf-8")
 
 
+class IsSelfInstallTests(unittest.TestCase):
+    """`is_self_install` is pure: no filesystem or subprocess access, just a
+    read of the two args that decide whether this run targets the checkout's
+    own default install locations."""
+
+    def test_true_when_dest_and_project_are_both_none(self):
+        installer = load_installer()
+        args = argparse.Namespace(dest=None, project=None)
+        self.assertTrue(installer.is_self_install(args))
+
+    def test_false_when_dest_is_set(self):
+        installer = load_installer()
+        args = argparse.Namespace(dest=Path("/tmp/elsewhere"), project=None)
+        self.assertFalse(installer.is_self_install(args))
+
+    def test_false_when_project_is_set(self):
+        installer = load_installer()
+        args = argparse.Namespace(dest=None, project=Path("/tmp/some-project"))
+        self.assertFalse(installer.is_self_install(args))
+
+    def test_false_when_both_are_set(self):
+        installer = load_installer()
+        args = argparse.Namespace(dest=Path("/tmp/elsewhere"), project=Path("/tmp/some-project"))
+        self.assertFalse(installer.is_self_install(args))
+
+
 class RepoMcpConfigWiringTests(unittest.TestCase):
     """M2 g3-rework: `install_constellation.py` must wire this checkout's own
     `.mcp.json` (M2 job 2's `MCP_INTERPRETER_PLACEHOLDER`) AS PART OF
@@ -4251,8 +4278,12 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
 
     def test_default_mcp_config_path_points_at_this_checkouts_own_mcp_json(self):
         """No override at all resolves to REPO_ROOT/.mcp.json -- the same
-        default `wire_mcp_interpreter.py` uses -- so a real CLI run (which
-        never passes `mcp_config_path`) finds this checkout's own file."""
+        default `wire_mcp_interpreter.py` uses. `default_mcp_config_path()`
+        itself is unconditional and unchanged; the real CLI entry point now
+        only *calls* wiring with this path when `is_self_install(args)` holds
+        (no `--dest`/`--project` override) -- see
+        `test_a_dest_outside_the_checkout_never_touches_this_checkouts_own_mcp_json`
+        below for that guard."""
         installer = load_installer()
         self.assertEqual(installer.REPO_ROOT / ".mcp.json", installer.default_mcp_config_path())
 
@@ -4263,6 +4294,58 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
         text = INSTALLER.read_text(encoding="utf-8")
         self.assertIn('if __name__ == "__main__":', text)
         self.assertIn("wire_repo_mcp_config=True", text)
+
+    def test_a_dest_outside_the_checkout_never_touches_this_checkouts_own_mcp_json(self):
+        """The confirmed bug: a real CLI-shaped run (`wire_repo_mcp_config=True`,
+        no `mcp_config_path` override) that declares `--dest` somewhere else
+        must not rewrite THIS checkout's own tracked `.mcp.json` -- `is_self_install`
+        is False, so the whole `apply_repo_mcp_config_wiring` call must be
+        skipped, not just redirected.
+
+        `default_mcp_config_path(repo_root: Path = REPO_ROOT)` is a plain
+        Python default argument -- evaluated once, at `def`, and never re-read
+        from the module global afterward, so a bare
+        `mock.patch.object(installer, "REPO_ROOT", ...)` after `load_installer()`
+        is inert for it (confirmed by a standalone repro: reassigning a module
+        global does not retroactively change a function's already-bound
+        default) -- and would also be wrong here regardless, since
+        `install_skills` reads `REPO_ROOT` directly (not as a bound default) to
+        find this checkout's real `skills/`/`scripts/` sources, so patching it
+        would break the install half of this same call. This test instead
+        redirects only `default_mcp_config_path`'s bound default via
+        `__defaults__`, restored in `finally` -- exercising the real,
+        unmodified `default_mcp_config_path()` end to end against a throwaway
+        fixture standing in for "this checkout", never this repo's own tracked
+        file, regardless of whether the guard under test is correct."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture_checkout = Path(tmp) / "fixture-checkout"
+            fixture_checkout.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=str(fixture_checkout), capture_output=True)
+            fixture_mcp_config = fixture_checkout / ".mcp.json"
+            _write_mcp_config(fixture_mcp_config, "<python-interpreter>")
+            before = fixture_mcp_config.read_bytes()
+
+            dest = Path(tmp) / "dest-outside-the-checkout" / "skills"
+
+            original_defaults = installer.default_mcp_config_path.__defaults__
+            installer.default_mcp_config_path.__defaults__ = (fixture_checkout,)
+            try:
+                code = installer.main(
+                    ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                     "--skills", "workbench"],
+                    env={}, out=lambda _: None, wire_repo_mcp_config=True,
+                )
+            finally:
+                installer.default_mcp_config_path.__defaults__ = original_defaults
+
+            self.assertEqual(0, code)
+            after = fixture_mcp_config.read_bytes()
+            self.assertEqual(
+                before, after,
+                f"fixture .mcp.json must stay byte-identical when --dest is set; "
+                f"before={before!r} after={after!r}",
+            )
 
 
 class WireMcpInterpreterReuseTests(unittest.TestCase):

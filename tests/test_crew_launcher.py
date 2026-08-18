@@ -776,22 +776,32 @@ class LaunchTests(unittest.TestCase):
 
 
 class MandatoryModelTests(unittest.TestCase):
-    """decision:refuse-a-tierless-dispatch: `CrewSpec.__post_init__` refuses a
-    falsy `model` for every fresh/relaunch construction, same style as its
-    "needs a job"/"needs a completion contract" invariants immediately above
-    it. No default is ever invented -- fail closed. `--resume` and a bare
-    `--abandon` construct no `CrewSpec` at all (confirmed by reading
+    """g2/g3-implement (#633): `CrewSpec.__post_init__` resolves `model`/
+    `reason` via `resolve_model` for every fresh/relaunch construction, same
+    choke point as its "needs a job"/"needs a completion contract" invariants
+    immediately above it. A role/harness pair WITH a `ROLE_MODEL_TIERS` entry
+    now resolves an unrequested `model` to that pair's declared default
+    instead of unconditionally refusing -- only an undeclared role/harness
+    pair, an out-of-set requested model, or a non-default requested model
+    given with no `reason` still refuses. `--resume` and a bare `--abandon`
+    construct no `CrewSpec` at all (confirmed by reading
     `CliBackend.resume`/`abandon_crew` directly), so neither is touched by
-    this refusal."""
+    this resolution."""
 
-    def test_crew_spec_refuses_falsy_model_directly(self):
-        with self.assertRaises(RC.CrewLaunchError) as ctx:
-            RC.CrewSpec(
-                work_id="issue-1", gate="g1", role="reviewer",
-                handoff="h.md", result="r.md", worktree=".", attempt=1,
-                model=None,
-            )
-        self.assertIn("explicit tier", str(ctx.exception))
+    def test_crew_spec_with_falsy_model_resolves_the_role_default(self):
+        """g3-implement (#633): `reviewer`/`claude` IS in `ROLE_MODEL_TIERS`, so
+        a falsy `model` no longer refuses -- `__post_init__` resolves it to the
+        role's declared default via `resolve_model`. The still-refusing case
+        for a role/harness pair genuinely absent from the table is covered by
+        `test_unpopulated_harness_is_refused_by_name_even_with_model_given`
+        below."""
+        spec = RC.CrewSpec(
+            work_id="issue-1", gate="g1", role="reviewer",
+            handoff="h.md", result="r.md", worktree=".", attempt=1,
+            model=None,
+        )
+        self.assertEqual("sonnet", spec.model)
+        self.assertIsNone(spec.reason)
 
     def test_fresh_dispatch_with_model_records_it(self):
         """Green half: an explicit --model succeeds and the registry entry
@@ -813,34 +823,37 @@ class MandatoryModelTests(unittest.TestCase):
             self.assertEqual(1, len(reg))
             self.assertEqual("sonnet", reg[0]["model"])
 
-    def test_fresh_dispatch_with_no_model_is_refused_and_writes_no_registry_entry(self):
-        """Red half, through the real CLI entrypoint: no --model given -> REFUSED,
-        exit 1, and -- because the refusal fires in `CrewSpec.__post_init__`,
-        BEFORE `CliBackend.dispatch` reserves scratch or writes the running
-        registry entry (issue #525 ordering) -- the registry stays empty, not a
-        half-written `running` record."""
+    def test_fresh_dispatch_with_no_model_resolves_the_role_default(self):
+        """g3-implement (#633): `reviewer`/`claude` IS in `ROLE_MODEL_TIERS`, so
+        a fresh dispatch through the real CLI entrypoint with no --model given
+        no longer refuses -- `CrewSpec.__post_init__` now resolves it to the
+        role's declared default (`resolve_model`), and the built registry
+        entry carries that resolved default, not a refusal."""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             handoff = write_handoff(root, "issue-1", "g1", "reviewer")
             result = result_rel("issue-1", "g1", "reviewer")
             with fake_launch(RC, 0, write_result_at=root / result) as calls:
-                stderr = io.StringIO()
-                with contextlib.redirect_stderr(stderr):
+                with contextlib.redirect_stdout(io.StringIO()):
                     code = RC.main([
                         "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
                         "--role", "reviewer", "--handoff", handoff, "--result", result,
                     ])
-            self.assertEqual(1, code)
-            self.assertIn("REFUSED", stderr.getvalue())
-            self.assertIn("explicit tier", stderr.getvalue())
-            self.assertEqual([], calls)  # nothing spawned
-            self.assertEqual([], RC.load_registry(RC.registry_path("issue-1", root)))
+            self.assertEqual(0, code)
+            self.assertEqual(1, len(calls))  # spawned, unlike the old refusal
+            reg = RC.load_registry(RC.registry_path("issue-1", root))
+            self.assertEqual(1, len(reg))
+            self.assertEqual("sonnet", reg[0]["model"])
+            self.assertNotIn("reason", reg[0])
 
-    def test_abandon_relaunch_with_no_model_is_refused_even_though_one_was_stored(self):
-        """RULED, no re-litigation: `--abandon --relaunch` requires an explicit
-        --model -- no inherit-from-`abandoned.get("model")` fallback, unlike
-        `reasoning_effort`'s existing inherit-on-relaunch. A stored `model` on
-        the abandoned entry must NOT quietly satisfy the new requirement."""
+    def test_abandon_relaunch_with_no_model_resolves_the_role_default(self):
+        """g3-implement (#633): `reviewer`/`claude` IS in `ROLE_MODEL_TIERS`, so
+        `--abandon --relaunch` with no explicit --model no longer refuses --
+        no inherit-from-`abandoned.get("model")` fallback (unchanged: this is
+        NOT the `reasoning_effort` inherit-on-relaunch shape), just the role's
+        declared default resolved fresh, same as any other unrequested model.
+        The stored `model="opus"` on the abandoned entry is NOT inherited --
+        the relaunch attempt resolves to the default (`sonnet`), not `opus`."""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             handoff = write_handoff(root, "issue-1", "g1", "reviewer")
@@ -854,18 +867,163 @@ class MandatoryModelTests(unittest.TestCase):
             }]
             RC.save_registry(RC.registry_path("issue-1", root), entries)
             with fake_launch(RC, 0, write_result_at=root / result) as calls:
-                stderr = io.StringIO()
-                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+                with contextlib.redirect_stdout(io.StringIO()):
                     code = RC.main([
                         "--root", str(root),
                         "--abandon", "constellation/issue-1/g1/reviewer/attempt-1",
                         "--relaunch", "--handoff", handoff, "--result", result,
                     ])
-            self.assertEqual(1, code)
-            self.assertIn("explicit tier", stderr.getvalue())
-            self.assertEqual([], calls)  # nothing spawned for the relaunch attempt
+            self.assertEqual(0, code)
+            self.assertEqual(1, len(calls))  # spawned, unlike the old refusal
             reg = RC.load_registry(RC.registry_path("issue-1", root))
-            self.assertEqual(1, len(reg))  # only the abandoned original, no attempt-2
+            self.assertEqual(2, len(reg))  # abandoned original + relaunched attempt-2
+            self.assertEqual("sonnet", reg[1]["model"])
+            self.assertNotIn("reason", reg[1])
+
+    def test_abandon_relaunch_with_reason_succeeds_and_entry_carries_reason(self):
+        """g3-implement (#633, ruling): `--abandon --relaunch` threads
+        `args.reason` into its `CrewSpec(...)` construction exactly parallel
+        to the fresh-launch path -- mirrors
+        `test_non_default_in_set_model_with_reason_succeeds_and_entry_carries_reason`
+        above, for the relaunch call site."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            entries = [{
+                "session_name": "constellation/issue-1/g1/implementer/attempt-1",
+                "crew_id": "constellation/issue-1/g1/implementer/attempt-1",
+                "work_id": "issue-1", "gate": "g1", "role": "implementer", "attempt": 1,
+                "worktree": ".", "status": "running", "abandoned": False,
+                "handoff": handoff, "result": result, "model": "sonnet",
+            }]
+            RC.save_registry(RC.registry_path("issue-1", root), entries)
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root),
+                        "--abandon", "constellation/issue-1/g1/implementer/attempt-1",
+                        "--relaunch", "--handoff", handoff, "--result", result,
+                        "--model", "haiku", "--reason", "cheap smoke-test lane",
+                    ])
+            self.assertEqual(0, code)
+            self.assertEqual(1, len(calls))  # spawned, unlike the old refusal
+            reg = RC.load_registry(RC.registry_path("issue-1", root))
+            self.assertEqual(2, len(reg))  # abandoned original + relaunched attempt-2
+            self.assertEqual("haiku", reg[1]["model"])
+            self.assertEqual("cheap smoke-test lane", reg[1]["reason"])
+
+    def test_explicit_out_of_set_model_is_refused_by_name(self):
+        with self.assertRaises(RC.CrewLaunchError) as ctx:
+            RC.CrewSpec(
+                work_id="issue-1", gate="g1", role="implementer",
+                handoff="h.md", result="r.md", worktree=".", attempt=1,
+                model="gpt-5",
+            )
+        message = str(ctx.exception)
+        self.assertIn("gpt-5", message)
+        self.assertIn("implementer", message)
+        self.assertIn("sonnet", message)
+        self.assertIn("haiku", message)
+
+    def test_unpopulated_harness_is_refused_by_name_even_with_model_given(self):
+        with self.assertRaises(RC.CrewLaunchError) as ctx:
+            RC.CrewSpec(
+                work_id="issue-1", gate="g1", role="implementer",
+                handoff="h.md", result="r.md", worktree=".", attempt=1,
+                model="sonnet", launcher="codex",
+            )
+        message = str(ctx.exception)
+        self.assertIn("implementer", message)
+        self.assertIn("codex", message)
+
+    def test_non_default_in_set_model_with_no_reason_is_refused(self):
+        with self.assertRaises(RC.CrewLaunchError) as ctx:
+            RC.CrewSpec(
+                work_id="issue-1", gate="g1", role="implementer",
+                handoff="h.md", result="r.md", worktree=".", attempt=1,
+                model="haiku",
+            )
+        message = str(ctx.exception)
+        self.assertIn("haiku", message)
+        self.assertIn("implementer", message)
+        self.assertIn("sonnet", message)  # names the default it would override
+        self.assertIn("reason", message)
+
+    def test_non_default_in_set_model_with_reason_succeeds_and_entry_carries_reason(self):
+        """(d): a resolved non-default tier's `--reason` is threaded end-to-end
+        -- CLI flag -> `CrewSpec` -> `build_entry` -- and lands in the durable
+        registry entry beside `model`."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--handoff", handoff, "--result", result,
+                        "--model", "haiku", "--reason", "cheap smoke-test lane",
+                    ])
+            self.assertEqual(0, code)
+            self.assertEqual(1, len(calls))
+            reg = RC.load_registry(RC.registry_path("issue-1", root))
+            self.assertEqual(1, len(reg))
+            self.assertEqual("haiku", reg[0]["model"])
+            self.assertEqual("cheap smoke-test lane", reg[0]["reason"])
+
+    def test_default_tier_dispatch_never_requires_or_records_a_reason_key(self):
+        """(e): a default-tier dispatch, whether the default is EXPLICIT
+        (--model sonnet) or RESOLVED (no --model at all, covered by
+        `test_fresh_dispatch_with_no_model_resolves_the_role_default` above),
+        never requires --reason and never writes a "reason" key into the
+        registry entry."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main([
+                        "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
+                        "--role", "implementer", "--handoff", handoff, "--result", result,
+                        "--model", "sonnet",
+                    ])
+            self.assertEqual(0, code)
+            self.assertEqual(1, len(calls))
+            reg = RC.load_registry(RC.registry_path("issue-1", root))
+            self.assertEqual(1, len(reg))
+            self.assertEqual("sonnet", reg[0]["model"])
+            self.assertNotIn("reason", reg[0])
+
+    def test_old_shape_registry_entry_with_model_and_no_reason_key_resumes_cleanly(self):
+        """A `crew-runs.json` entry from before `reason` existed (a `model` key
+        present, no `reason` key at all) must round-trip through `resume_crew`
+        without error -- `CliBackend.resume` reads `entry.get("model")`
+        directly and never constructs a fresh `CrewSpec`, so an absent
+        `reason` key is simply never looked up."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "reviewer")
+            result = result_rel("issue-1", "g1", "reviewer")
+            session = "constellation/issue-1/g1/reviewer/attempt-1"
+            stdout, stderr = RC.run_log_paths("issue-1", "g1", "reviewer", 1, root)
+            entries = [{
+                "session_name": session, "crew_id": session,
+                "work_id": "issue-1", "gate": "g1", "role": "reviewer", "attempt": 1,
+                "worktree": ".", "status": "running", "abandoned": False,
+                "handoff": handoff, "result": result, "model": "opus",
+                "stdout": RC._relativize(str(stdout), root),
+                "stderr": RC._relativize(str(stderr), root),
+            }]  # deliberately no "reason" key
+            RC.save_registry(RC.registry_path("issue-1", root), entries)
+            with fake_launch(RC, 0, write_result_at=root / result):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = RC.main(["--root", str(root), "--resume", session])
+            self.assertEqual(0, code)
+            reg = RC.load_registry(RC.registry_path("issue-1", root))
+            self.assertEqual("opus", reg[0]["model"])
+            self.assertNotIn("reason", reg[0])
 
     def test_resume_needs_no_model_at_all(self):
         """`--resume` constructs no `CrewSpec` (`CliBackend.resume` reads the
@@ -910,6 +1068,120 @@ class MandatoryModelTests(unittest.TestCase):
                     "--abandon", "constellation/issue-1/g1/reviewer/attempt-1",
                 ])
             self.assertEqual(0, code)
+
+
+class ResolveModelTests(unittest.TestCase):
+    """g2-implement (#633): `resolve_model`'s five branches, pure, by direct
+    import -- no argv, no subprocess, no filesystem. `ROLE_MODEL_TIERS` and
+    `resolve_model` are additive-only this gate: nothing in `run_crew.py`
+    calls either yet (that wiring is g3), so every case here constructs its
+    own inputs and calls the function directly."""
+
+    CLAUDE_ROLES = (
+        "commander", "implementer", "reviewer", "critic", "cartographer",
+    )
+
+    def test_every_populated_claude_role_resolves_to_its_own_default(self):
+        for role in self.CLAUDE_ROLES:
+            resolved = RC.resolve_model(role, "claude", None, None)
+            self.assertEqual("sonnet", resolved.model)
+            self.assertIsNone(resolved.reason)
+        resolved = RC.resolve_model("admiral", "claude", None, None)
+        self.assertEqual("opus", resolved.model)
+        self.assertIsNone(resolved.reason)
+
+    def test_blank_string_requested_also_resolves_to_default(self):
+        resolved = RC.resolve_model("implementer", "claude", "", None)
+        self.assertEqual("sonnet", resolved.model)
+        self.assertIsNone(resolved.reason)
+
+    def test_out_of_set_model_is_refused_by_name(self):
+        with self.assertRaises(RC.CrewLaunchError) as ctx:
+            RC.resolve_model("implementer", "claude", "gpt-5", None)
+        message = str(ctx.exception)
+        self.assertIn("gpt-5", message)
+        self.assertIn("implementer", message)
+        self.assertIn("sonnet", message)
+        self.assertIn("haiku", message)
+
+    def test_codex_harness_refuses_by_name_branch_one(self):
+        with self.assertRaises(RC.CrewLaunchError) as ctx:
+            RC.resolve_model("implementer", "codex", None, None)
+        message = str(ctx.exception)
+        self.assertIn("implementer", message)
+        self.assertIn("codex", message)
+
+    def test_local_harness_refuses_by_name_branch_one(self):
+        with self.assertRaises(RC.CrewLaunchError) as ctx:
+            RC.resolve_model("implementer", "local", None, None)
+        message = str(ctx.exception)
+        self.assertIn("implementer", message)
+        self.assertIn("local", message)
+
+    def test_unknown_role_under_known_harness_refuses_by_name_branch_one(self):
+        with self.assertRaises(RC.CrewLaunchError) as ctx:
+            RC.resolve_model("scout", "claude", None, None)
+        message = str(ctx.exception)
+        self.assertIn("scout", message)
+        self.assertIn("claude", message)
+
+    def test_non_default_in_set_choice_with_no_reason_is_refused(self):
+        with self.assertRaises(RC.CrewLaunchError) as ctx:
+            RC.resolve_model("implementer", "claude", "haiku", None)
+        message = str(ctx.exception)
+        self.assertIn("haiku", message)
+        self.assertIn("implementer", message)
+        self.assertIn("sonnet", message)  # names the default it would override
+        self.assertIn("reason", message)
+
+    def test_non_default_in_set_choice_with_reason_succeeds_and_carries_reason(self):
+        resolved = RC.resolve_model(
+            "implementer", "claude", "haiku", "cheap smoke-test lane"
+        )
+        self.assertEqual("haiku", resolved.model)
+        self.assertEqual("cheap smoke-test lane", resolved.reason)
+
+    def test_default_tier_explicit_choice_never_requires_a_reason(self):
+        resolved = RC.resolve_model("implementer", "claude", "sonnet", None)
+        self.assertEqual("sonnet", resolved.model)
+        self.assertIsNone(resolved.reason)
+
+    def test_default_tier_explicit_choice_passes_reason_through_if_given(self):
+        """A reason is never REQUIRED for a default-tier explicit choice, but
+        one given anyway is not discarded either."""
+        resolved = RC.resolve_model("implementer", "claude", "sonnet", "why not")
+        self.assertEqual("sonnet", resolved.model)
+        self.assertEqual("why not", resolved.reason)
+
+    def test_resolved_model_is_a_frozen_dataclass(self):
+        resolved = RC.resolve_model("implementer", "claude", None, None)
+        with self.assertRaises(Exception):
+            resolved.model = "haiku"
+
+    def test_role_model_tiers_allowed_values_are_frozenset(self):
+        self.assertIsInstance(
+            RC.ROLE_MODEL_TIERS["claude"]["implementer"]["allowed"], frozenset
+        )
+
+    def test_codex_and_local_harnesses_are_declared_empty(self):
+        self.assertEqual({}, RC.ROLE_MODEL_TIERS["codex"])
+        self.assertEqual({}, RC.ROLE_MODEL_TIERS["local"])
+
+    def test_commander_tier_is_sonnet_or_opus_haiku_excluded(self):
+        """#567 lane L, human ruling verbatim: 'commander should be sonnet or
+        opus allowed, haiku can't handle it.' Upward-only change from the
+        original {sonnet, haiku}: default stays sonnet, opus is added, haiku
+        is removed. Every other row (including admiral's opus-only row) is
+        untouched by this gate."""
+        self.assertEqual(
+            {"default": "sonnet", "allowed": frozenset({"sonnet", "opus"})},
+            RC.ROLE_MODEL_TIERS["claude"]["commander"],
+        )
+        resolved = RC.resolve_model("commander", "claude", "opus", "epic-567 ruling")
+        self.assertEqual("opus", resolved.model)
+        with self.assertRaises(RC.CrewLaunchError) as ctx:
+            RC.resolve_model("commander", "claude", "haiku", None)
+        self.assertIn("haiku", str(ctx.exception))
 
 
 class EntryLivenessTests(unittest.TestCase):
@@ -2152,7 +2424,11 @@ class ExternalDispatchTests(unittest.TestCase):
             )
 
     def test_cli_parser_persists_model_and_reasoning_effort_to_external_registry(self):
-        """The CLI path, not a reconstructed CrewSpec, owns external metadata."""
+        """The CLI path, not a reconstructed CrewSpec, owns external metadata.
+        g3-implement (#633): an arbitrary model string no longer passes
+        through -- `"haiku"` is `implementer`'s allowed, non-default tier, so
+        this also pins that a `--reason` given alongside a real `--model`
+        persists to the registry entry too."""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             handoff = write_handoff(root, "issue-1", "g1", "implementer")
@@ -2162,14 +2438,19 @@ class ExternalDispatchTests(unittest.TestCase):
                     code = RC.main([
                         "--root", str(root), "--work-id", "issue-1", "--gate", "g1",
                         "--role", "implementer", "--handoff", handoff, "--result", result,
-                        "--backend", "external", "--model", "gpt-5.6",
+                        "--backend", "external", "--model", "haiku",
+                        "--reason", "budget-constrained dispatch, haiku sufficient for this handoff",
                         "--reasoning-effort", "xhigh",
                     ])
             self.assertEqual(0, code)
             self.assertEqual([], calls)
             entry = RC.load_registry(RC.registry_path("issue-1", root))[0]
             self.assertEqual("external", entry["backend"])
-            self.assertEqual("gpt-5.6", entry["model"])
+            self.assertEqual("haiku", entry["model"])
+            self.assertEqual(
+                "budget-constrained dispatch, haiku sufficient for this handoff",
+                entry["reason"],
+            )
             self.assertEqual("xhigh", entry["reasoning_effort"])
 
     def test_external_dispatch_refuses_spine(self):
@@ -3025,7 +3306,7 @@ class BackendEquivalenceTests(unittest.TestCase):
             result = result_rel("issue-1", "g1", "implementer")
             spec = RC.CrewSpec(
                 work_id="issue-1", gate="g1", role="implementer", handoff=handoff,
-                result=result, worktree=".", attempt=1, model="opus",
+                result=result, worktree=".", attempt=1, model="sonnet",
             )
             entries: list[dict] = []
             with fake_launch(RC, 0, write_result_at=root / result) as calls:
@@ -3035,7 +3316,7 @@ class BackendEquivalenceTests(unittest.TestCase):
             self.assertEqual("external", entry["backend"])
             self.assertEqual("external", entry["dispatch"])
             self.assertIsNone(entry["pid"])
-            self.assertEqual("opus", entry["model"])
+            self.assertEqual("sonnet", entry["model"])
             self.assertEqual("running", entry["status"])
 
     def test_external_dispatch_missing_handoff_refuses_with_record_wording(self):

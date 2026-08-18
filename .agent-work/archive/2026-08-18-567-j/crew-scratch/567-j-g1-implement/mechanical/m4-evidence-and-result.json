@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-evidence-and-result",
+  "mechanical": {
+    "run": "567-j-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m4-evidence-and-result",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-j-g1-implement-m4-evidence-and-result@e6e29c34d0e246f59c1ffb43f26df9be147b55f4",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-j-g1-implement",
+    "generated_at": "2026-08-18T05:21:10Z"
+  }
+}

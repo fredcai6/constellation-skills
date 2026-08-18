@@ -1,0 +1,755 @@
+{
+  "work_id": "567-j",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-verify"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope (MISSION_FRAME.md + LAUNCH_ORDER.md, already loaded this session) before driving gates. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Plan intent/scope reconfirmed: two bounded fixes (#619 installer self-install gating, #633 role-harness model tier resolver)."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Installer: gate .mcp.json self-wiring on declared destination",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md: add a pure `is_self_install(args) -> bool` predicate to scripts/install_constellation.py returning `args.dest is None and args.project is None`; change main()'s wire_repo_mcp_config tail so the whole apply_repo_mcp_config_wiring(...) call is SKIPPED (not just its default-path argument changed) unless `mcp_config_path is not None or is_self_install(args)` -- guard against ever calling apply_repo_mcp_config_wiring(None, ...), which would AttributeError on mcp_config_path.is_file(). Add a test proving a real-CLI-shaped main() call with --dest outside the repo and no mcp_config_path override leaves the repo's actual .mcp.json byte-identical (git diff proof at gN-integrate, not just the unit test). Update ONLY the docstring of test_default_mcp_config_path_points_at_this_checkouts_own_mcp_json (the function it tests, default_mcp_config_path(), is unchanged and pure -- its assertion stays as-is); state plainly in the change notes that --scope user with no --dest still wires the checkout's own .mcp.json (matches is_self_install and today's behavior; the mission's 'my own checkout's dev loop' framing and this predicate diverge for --scope user, and that divergence is accepted, not a regression, this wave). Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT: `attach g1-implement --type implementer-result --field status=complete`.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "none \u2014 first gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "first gate, no dependency"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "sole writer this wave: scripts/install_constellation.py, tests covering it",
+        "do not touch SCRIPT_RUNTIME_COMPANIONS/SKILL_SCRIPT_BUNDLES (unrelated bundle wiring)",
+        "do not regenerate map/INDEX.md"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/install_constellation.py (substitute, map-orientation.json) -- default_mcp_config_path(), apply_repo_mcp_config_wiring(), main()'s wire_repo_mcp_config branch"
+        ],
+        "capability": [
+          "skill installation -- real (non-dry-run) install additionally wires the installer checkout's own .mcp.json interpreter command"
+        ],
+        "constraint": [
+          ".mcp.json is git-tracked and read directly before wiring ever runs (#539) -- self-install wiring must keep working unconditionally on no-dest/no-project"
+        ],
+        "decision": [
+          "decision:map-index-is-admiral-owned -- do not regenerate/hand-edit map/INDEX.md @grade: settled/doctrine \u00b7 leans g1-implement"
+        ],
+        "evidence": [
+          "claim:mcp-dest-untouched -- a real install with --dest outside the repo leaves the repo's own .mcp.json byte-identical, checked by git diff before/after plus a unit test",
+          "claim:mcp-self-install-still-wires -- a real install with no --dest still wires the checkout's own .mcp.json exactly as before, checked by the existing RepoMcpConfigWiringTests suite unmodified"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Installer: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from g1-implement's anchors and IMPLEMENTER_RESULT. Specifically verify: (a) apply_repo_mcp_config_wiring is never called with mcp_config_path=None, (b) every pre-existing RepoMcpConfigWiringTests case (all pass explicit mcp_config_path) is unmodified and still green, (c) the new test proves a real --dest-elsewhere run leaves the repo's tracked .mcp.json byte-identical via git diff, not just an in-memory assertion. Dispatch a subagent invoking constellation-reviewer. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received, e-g1-implement-1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Installer: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify claimed side-effects yourself -- re-run the new byte-identical-.mcp.json proof in your own shell (a real main() invocation, --dest outside the repo, git diff .mcp.json before/after), then advance (re-runs the test command). BLOCK: return for rework or raise a blocker. Log out-of-scope finds as triage candidates under .agent-work/567-j/triage-candidates/.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT e-g1-review-1 received, APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/test_install_constellation.py green, including the new --dest-elsewhere-leaves-repo-mcp-untouched proof",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/test_install_constellation.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/test_install_constellation.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Crew launcher: pure role x harness model-tier resolver",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md: add `ROLE_MODEL_TIERS: dict[str, dict[str, dict[str, object]]]` to scripts/run_crew.py, keyed harness -> role -> {\"default\": str, \"allowed\": frozenset[str]}, populated ONLY for harness \"claude\": admiral {default opus, allowed {opus}}; commander, implementer, reviewer, critic, cartographer {default sonnet, allowed {sonnet, haiku}}. Add harness keys \"codex\" and \"local\" as empty dicts -- the shape must express them, do not invent model identifiers for either (no codex/local dispatch exists anywhere in this repo). Add a small `ResolvedModel` dataclass (model: str, reason: str | None) and a pure, zero-I/O `resolve_model(role: str, harness: str, requested: str | None, reason: str | None) -> ResolvedModel` living beside build_crew_argv. Branches: (role, harness) absent from the table -> CrewLaunchError naming both the role and the harness (refuse, do not guess -- this is what makes an unpopulated codex/local dispatch refuse rather than invent); requested falsy -> ResolvedModel(default, None), no reason needed; requested given and not in allowed -> CrewLaunchError naming the requested model, the role, and the full allowed set (mirror the duplicate-crew-guard's named-refusal phrasing house style); requested in allowed but != default and reason falsy -> CrewLaunchError naming the model, the default it overrides, and that --reason is required; requested in allowed and (== default or reason given) -> ResolvedModel(requested, reason). Do NOT wire this into CrewLaunchSpec or build_parser yet -- this gate adds tested, unreferenced code only, so the full existing suite stays green untouched. Write a full unit-test class exercising every branch by direct import/call, zero subprocess/filesystem/argv. Dispatch a subagent invoking constellation-implementer. Wait for and integrate IMPLEMENTER_RESULT: `attach g2-implement --type implementer-result --field status=complete`.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 fully integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "sole writer this wave: scripts/run_crew.py, tests covering it",
+        "no new file/module -- lives beside build_crew_argv in run_crew.py",
+        "do not wire call sites yet (that is g3)"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/run_crew.py (substitute, map-orientation.json) -- build_crew_argv, CrewLaunchSpec"
+        ],
+        "capability": [
+          "crew dispatch -- launches an implementer/reviewer/etc subagent via a CLI launcher (--command, default claude), one explicit model tier per dispatch"
+        ],
+        "constraint": [
+          "--command/DEFAULT_LAUNCHER is already the declared (never detected) harness signal -- resolve_model's harness param is spec.launcher's value, no new detection or flag"
+        ],
+        "decision": [
+          "decision:ship-todays-tiers -- claude harness values: admiral opus; commander/implementer/reviewer/critic/cartographer sonnet, haiku allowed below each @grade: settled/human \u00b7 leans g2-implement",
+          "decision:fail-closed-cheaper -- unset model resolves from role, never host settings @grade: settled/human \u00b7 leans g2-implement",
+          "decision:refuse-by-name -- model outside a role's allowed set refused by name @grade: settled/doctrine \u00b7 leans g2-implement",
+          "decision:reason-on-deviation -- non-default in-set choice requires --reason @grade: settled/human \u00b7 leans g2-implement,g3-implement",
+          "decision:harness-dimension-is-required -- table expresses codex/local, not only claude; declared via --command, not detected @grade: settled/human \u00b7 leans g2-implement",
+          "decision pressure: codex/local rows stay empty -- no verified real model identifiers exist for either harness in this repo yet"
+        ],
+        "evidence": [
+          "claim:refuse-by-name -- a --model outside the role's allowed set is refused, naming the model, the role, and the allowed set",
+          "claim:reason-recorded -- an in-set non-default --model requires --reason"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Crew launcher: pure resolver review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from g2-implement's anchors and IMPLEMENTER_RESULT. Verify: every branch of resolve_model is exercised by a test with no I/O; the codex/local rows are genuinely empty (no invented model strings); resolve_model is not yet called from anywhere else in the file (this gate is additive-only); the full existing suite is untouched and green. Dispatch a subagent invoking constellation-reviewer. Wait for and integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received, e-g2-implement-1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Crew launcher: pure resolver integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify yourself -- read resolve_model, confirm it is unreferenced outside its own tests, then advance (re-runs the test command). BLOCK: return for rework or raise a blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT e-g2-review-1, APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/test_crew_launcher.py green, including the new resolve_model unit-test class",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/test_crew_launcher.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2",
+          "waived": {
+            "authority": "human",
+            "reason": "Suite carries exactly one pre-existing, unrelated failure: ScratchDirResumeTests::test_resume_of_legacy_entry_without_worktree_key_does_not_crash_and_leaves_scratch_dir_unbound, caused by CREW_SCRATCH_DIR leaking into this dispatched crew's own environment -- named explicitly in LAUNCH_ORDER.md Inherited Context as a known failure this lane's change does not touch, with an explicit instruction not to 'fix' run_crew.py to silence it (that would be a real regression to fix a false one). Verified independently: same single failure, same assertion, present before any g1/g2 edit (confirmed via baseline diff in g2-implement-result.md) and after (229 passed, 1 failed, identical test name).",
+            "evidence": "e-g2-integrate-2",
+            "forced": false
+          }
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1",
+          "attested": {
+            "evidence": "e-g2-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/test_crew_launcher.py -q",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "waiver",
+          "payload": {
+            "cond": "c1",
+            "authority": "human",
+            "reason": "Suite carries exactly one pre-existing, unrelated failure: ScratchDirResumeTests::test_resume_of_legacy_entry_without_worktree_key_does_not_crash_and_leaves_scratch_dir_unbound, caused by CREW_SCRATCH_DIR leaking into this dispatched crew's own environment -- named explicitly in LAUNCH_ORDER.md Inherited Context as a known failure this lane's change does not touch, with an explicit instruction not to 'fix' run_crew.py to silence it (that would be a real regression to fix a false one). Verified independently: same single failure, same assertion, present before any g1/g2 edit (confirmed via baseline diff in g2-implement-result.md) and after (229 passed, 1 failed, identical test name).",
+            "forced": false
+          },
+          "produced_by": "human",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "Crew launcher: wire resolve_model into the one construction choke point",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md: add `reason: str | None = None` field to CrewLaunchSpec and `--reason` to build_parser() (plain optional flag). In CrewLaunchSpec.__post_init__, REPLACE the existing `if not self.model: raise CrewLaunchError(...)` block with a call to resolve_model(role=self.role, harness=self.launcher, requested=self.model, reason=self.reason), then set self.model/self.reason from the returned ResolvedModel (check whether CrewLaunchSpec is a frozen dataclass; if frozen, use object.__setattr__ for the two field writes, if not, plain assignment) -- this is the ONLY choke point, so this single edit automatically covers every CrewLaunchSpec construction site in the file (main()'s fresh-launch and abandon+relaunch paths, AND the launch_crew()/record_external_attempt() public wrapper functions -- confirmed by the plan critic that neither of those two is called from main() but both build a CrewLaunchSpec directly and must not bypass resolution). resume_crew() is UNTOUCHED -- it replays an already-resolved model/reason verbatim from a prior registry entry, never re-resolves, never requires --model/--reason (preserves existing resume behavior for legacy entries with no reason key). Thread spec.reason into build_entry() at both call sites (~1553, ~1708 in the pre-change file) as a new keyword; in build_entry, add `if reason: entry[\"reason\"] = reason` beside the existing `if model: entry[\"model\"] = model` line (same 'recorded when present' shape). Thread args.reason into main()'s CrewLaunchSpec construction. Update CrewLaunchSpec's docstring/error text so it no longer claims 'no default is invented' unconditionally -- name that a role/harness WITH a table entry now resolves a default, and only an undeclared role/harness or an out-of-set/unreasoned choice refuses. Rewrite the two existing tests that currently assert a no-model dispatch is refused for a POPULATED role (grep MandatoryModelTests for both the fresh-dispatch and the abandon-relaunch cases) to instead assert resolved-default behavior; add tests for: out-of-set model refused by name, unpopulated harness/role (e.g. launcher=\"codex\") refused by name, non-default in-set model with no --reason refused, non-default in-set model WITH --reason recorded in the registry entry beside model, default-tier dispatch never requires/records a reason. Dispatch a subagent invoking constellation-implementer. Wait for and integrate IMPLEMENTER_RESULT: `attach g3-implement --type implementer-result --field status=complete`.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 integrated -- resolve_model exists and is tested",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 fully integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "sole writer this wave: scripts/run_crew.py, tests covering it",
+        "resume_crew() stays untouched -- no re-resolution of a stored entry",
+        "CrewLaunchSpec is the single choke point -- no per-call-site resolution in main()"
+      ],
+      "anchors": {
+        "inherits": "g2-implement anchors, plus: claim:role-default-resolves -- a crew dispatched with no --model runs at its role's table default, not the host's settings default, checked by a run_crew.py unit test and, at g4, one real dispatch inspected via the registry entry"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "Crew launcher: wiring review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from g3-implement's anchors and IMPLEMENTER_RESULT. Verify: (a) launch_crew() and record_external_attempt() (grep for both) go through resolve_model via CrewLaunchSpec.__post_init__, not bypassed; (b) resume_crew() genuinely never calls resolve_model or requires --model/--reason; (c) an old-shape crew-runs.json entry (model present, no reason key) round-trips through any reader without error; (d) both rewritten MandatoryModelTests cases plus the five new tests are present and each exercises a distinct branch; (e) the full existing suite is green, not just the two touched test files. Dispatch a subagent invoking constellation-reviewer. Wait for and integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received, e-g3-implement-1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "Crew launcher: wiring integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify yourself -- grep for every CrewLaunchSpec( construction site and confirm each passes through __post_init__'s resolve_model call (or is resume_crew, which is exempt by design), then advance (re-runs the test command). BLOCK: return for rework or raise a blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT e-g3-review-1, APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/test_crew_launcher.py green, including rewritten MandatoryModelTests and the five new wiring tests",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/test_crew_launcher.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1",
+          "waived": {
+            "authority": "human",
+            "reason": "Same documented pre-existing failure as g2-integrate (ScratchDirResumeTests CREW_SCRATCH_DIR leak, named in LAUNCH_ORDER.md Inherited Context, explicit instruction not to 'fix' run_crew.py to silence it). Verified independently: grep shows all 4 CrewSpec( sites, resume_crew()/both backends' resume() untouched, py -m pytest tests/test_crew_launcher.py -q -> 236 passed, 1 failed (identical single pre-existing failure).",
+            "evidence": "e-g3-integrate-1",
+            "forced": false
+          }
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1",
+          "attested": {
+            "evidence": "e-g3-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "waiver",
+          "payload": {
+            "cond": "c1",
+            "authority": "human",
+            "reason": "Same documented pre-existing failure as g2-integrate (ScratchDirResumeTests CREW_SCRATCH_DIR leak, named in LAUNCH_ORDER.md Inherited Context, explicit instruction not to 'fix' run_crew.py to silence it). Verified independently: grep shows all 4 CrewSpec( sites, resume_crew()/both backends' resume() untouched, py -m pytest tests/test_crew_launcher.py -q -> 236 passed, 1 failed (identical single pre-existing failure).",
+            "forced": false
+          },
+          "produced_by": "human",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-verify": {
+      "id": "g4-verify",
+      "title": "Final verification: real no-model crew dispatch + full suite in a clean detached worktree",
+      "imperative": "Reasoning gate, no crew tasks -- I hold the context and the required evidence is verification, not new code. (1) Dispatch one real, trivial crew through scripts/run_crew.py with NO --model flag, role=implementer (a populated claude-harness role), and read back the resulting crew-runs.json entry's \"model\" field directly (not the code) to prove it resolved to the role's table default (sonnet) rather than any host setting. (2) Run the full suite (py -m pytest tests/ -q) on Linux in a CLEAN DETACHED WORKTREE of this branch (never the working copy) per Inherited Context; unset SPINE_FILE/SPINE_SESSION/SPINE_PARENT/CREW_SCRATCH_DIR for that run. Paste the tally and the ^FAILED grep. MapTreeFreshnessTests may fail; nothing else may. Attest c1 and c2 with the pasted evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1, g2, g3 all integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1, g2, g3 all integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "a crew dispatched with no --model is proven, from its crew-runs.json registry entry, to have run at its role's table default",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Real crew dispatched via THIS worktree's scripts/run_crew.py with NO --model flag (role=implementer, default harness=claude). Registry entry (crew-runs.json, crew_id constellation/567-j/g4-verify/implementer/attempt-1): model=sonnet, status=completed, exit_code=0, result_present=true, result_fresh=true. sonnet is implementer's declared ROLE_MODEL_TIERS default, proven from the registry, not the code."
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green in a clean detached worktree of this branch on Linux, MapTreeFreshnessTests the only permitted failure",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Full suite (py -m pytest tests/ -q) run in a clean detached worktree (/tmp/567-j-suite-verify, git worktree add --detach at commit 0a47ef39) with SPINE_FILE/SPINE_SESSION/SPINE_PARENT/CREW_SCRATCH_DIR unset: 3398 passed, 6 skipped, 1219 subtests passed, 1 failed in 140.89s. The one failure: tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build -- the exact pre-authorized failure named in LAUNCH_ORDER.md Inherited Context (map/INDEX.md is Admiral-owned, decision:map-index-is-admiral-owned). Nothing else failed. Worktree removed after the run."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "commander-567-j-execute",
+    "status": "released",
+    "claimed_at": "2026-08-18T05:10:27.103888+00:00",
+    "last_heartbeat": "2026-08-18T06:12:09.202598+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-18T06:12:14.173933+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-18T05:10:35.786799+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "IMPLEMENTER_RESULT complete: is_self_install() added, wire_repo_mcp_config guard fixed to skip the call entirely unless mcp_config_path given or is_self_install(args); 206 tests pass with a real TDD red/green proof of the byte-identical .mcp.json assertion.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:22:38.439489+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "REVIEW_RESULT APPROVE: is_self_install guard verified never reachable with mcp_config_path=None; TDD red-proof independently reproduced; scope, evidence, and Fowler pass all clean. One triage candidate staged (handoff recipe wording).",
+      "mechanical": false,
+      "ts": "2026-08-18T05:29:12.448833+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Verified myself: py -m pytest tests/test_install_constellation.py -q -> 206 passed, 506 subtests passed. Independently re-ran the real-world proof against this repo's actual tracked .mcp.json (py scripts/install_constellation.py --agent codex --scope user --dest /tmp/g1-real-dest-proof --skills workbench): sha256 before=after=ce8f91b8..., git diff --stat .mcp.json empty. g1 closed.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:29:39.681176+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-implement",
+      "why": "IMPLEMENTER_RESULT complete: ROLE_MODEL_TIERS + ResolvedModel + resolve_model added beside build_crew_argv, all 5 branches, additive-only (0 non-test call sites). 229 passed, 1 pre-existing unrelated failure (the documented ScratchDirResumeTests CREW_SCRATCH_DIR-leak failure named in Inherited Context -- confirmed pre-existing via baseline diff). TDD red/green proof reproduced.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:38:13.831575+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-review",
+      "why": "REVIEW_RESULT APPROVE: table values, branch order, additive-only, frozenset types all verified independently. Reviewer applied a real can-this-fail mutation test (flipped implementer's default sonnet->haiku, 4 tests correctly went red, restored). 229 passed, 1 pre-existing unrelated failure confirmed identical.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:46:56.759805+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-integrate",
+      "why": "c1 waived (pre-existing documented failure, unrelated to this gate's change). g2 closed.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:47:25.894788+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-implement",
+      "why": "Attempt 2 (rework): resolve_model wired into CrewSpec.__post_init__, the single choke point (4 construction sites all covered by Python semantics). Two Commander rulings within file ownership resolved attempt 1's stop condition: (1) 3 additional pre-existing tests rewritten preserving original intent, not weakened validation; (2) abandon-relaunch path now symmetric with fresh-launch for --reason threading. 236 passed, 1 known-unrelated pre-existing failure (CREW_SCRATCH_DIR leak, named in launch order Inherited Context).",
+      "mechanical": false,
+      "ts": "2026-08-18T05:58:57.843373+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g3-review",
+      "why": "REVIEW_RESULT APPROVE: all 4 CrewSpec construction sites confirmed routed through __post_init__/resolve_model; resume_crew()/both backends' resume() confirmed zero-diff; both main() reason threading sites symmetric; the 3 reworked tests confirmed to preserve original testing intent.",
+      "mechanical": false,
+      "ts": "2026-08-18T06:07:00.134974+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g3-integrate",
+      "why": "g3 closed. c1 waived for the documented pre-existing failure.",
+      "mechanical": false,
+      "ts": "2026-08-18T06:07:12.806040+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g4-verify",
+      "why": "Both proofs complete: role-default resolution from the registry, and full suite green in a clean detached worktree with only the pre-authorized MapTreeFreshnessTests failure. execute.json fully closed.",
+      "mechanical": false,
+      "ts": "2026-08-18T06:12:09.202592+00:00"
+    }
+  ]
+}

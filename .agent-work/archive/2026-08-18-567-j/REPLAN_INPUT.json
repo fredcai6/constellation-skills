@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Lane J -- launcher declared defaults (#619 + #633)",
+      "spec_path": "LAUNCH_ORDER.md",
+      "intent_and_why": "A launcher must take a declared value, not a machine-local one: the installer must stop rewriting its own checkout's tracked .mcp.json on a run declared elsewhere, and run_crew.py must resolve an unset model from a declared per-role/per-harness tier table instead of any host default."
+    },
+    "definition_of_done": [
+      "A real install with --dest outside the repo leaves the repo's .mcp.json byte-identical",
+      "A crew dispatched with no --model runs at its role's table default, proven from the registry entry",
+      "A model outside a role's allowed set is refused by name; a non-default in-set choice requires and records a reason",
+      "Full suite green on Linux in a clean detached worktree, MapTreeFreshnessTests the only permitted failure"
+    ],
+    "good_enough": {
+      "mandatory_quality": "Each fix test-led, TDD red/green proof reproduced independently by the reviewer",
+      "sufficient_evidence": "Full pytest suite plus one real crew dispatch inspected via its registry entry, not the code",
+      "appetite": "One focused session, two bounded changes with clear acceptance tests (per LAUNCH_ORDER Budget)"
+    },
+    "hard_constraints": [
+      "No changes to scripts/checklist_engine.py, scripts/mcp_spine_server.py, any *SPINE*.template.json, specs/ -- fenced to lane K",
+      "No hand-edit of map/INDEX.md -- Admiral-owned (#544)",
+      "No issue filing mid-run -- stage triage candidates only"
+    ],
+    "fixed_decisions": [
+      "decision:ship-todays-tiers -- claude harness: admiral opus; commander/implementer/reviewer/critic/cartographer sonnet, haiku allowed below",
+      "decision:fail-closed-cheaper -- unset model resolves from role, never host settings",
+      "decision:refuse-by-name -- model outside allowed set refused by name",
+      "decision:reason-on-deviation -- non-default in-set choice requires --reason, recorded in the registry",
+      "decision:harness-dimension-is-required -- table expresses codex/local; harness declared via --command, not detected"
+    ],
+    "current_wave": {
+      "objective": "Ship both fixes with crew-gated implement/review/integrate cycles",
+      "exit_criteria": [
+        "g1 (installer self-install gating) closed complete",
+        "g2 (pure resolve_model resolver) closed complete",
+        "g3 (wired into CrewLaunchSpec.__post_init__, the single choke point) closed complete",
+        "g4 (real no-model dispatch proof + full suite in a clean detached worktree) closed complete"
+      ],
+      "issues": [
+        {
+          "id": "619",
+          "title": "installer rewrites the calling repo's own .mcp.json regardless of --dest",
+          "desired_outcome": "wire_repo_mcp_config only fires for a plain self-install (no --dest/--project)",
+          "useful_now": "confirmed live bug on main, reproduced by the previous wave's lane D2",
+          "appetite": "one gate (g1)",
+          "acceptance_or_falsification_evidence": "git diff .mcp.json empty after a real --dest-elsewhere install",
+          "implementation_latitude": "predicate name/logic and guard condition fixed by the handoff; test structure free",
+          "hard_constraints_no_gos": ["default_mcp_config_path() signature/behavior stays unchanged"],
+          "local_unknowns": [],
+          "anchors": ["scripts/install_constellation.py"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "633",
+          "title": "run_crew.py's model tier is free text with no per-role default or allowed set",
+          "desired_outcome": "role x harness tier table resolved at the single CrewLaunchSpec choke point",
+          "useful_now": "corrected mid-run by the Admiral: the actual defect is the handoff's free-text Suggested Model Tier field, not a silently-inherited host default (decision:refuse-a-tierless-dispatch, #611, already closed that failure mode)",
+          "appetite": "three gates (g2 pure resolver, g3 wiring, g4 proof)",
+          "acceptance_or_falsification_evidence": "a no-model dispatch's registry entry shows the role's table default; an out-of-set model is refused by name",
+          "implementation_latitude": "table shape and where it lives are mine; tier values themselves are fixed",
+          "hard_constraints_no_gos": ["resume_crew() must never re-resolve a stored entry"],
+          "local_unknowns": [],
+          "anchors": ["scripts/run_crew.py"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "lane K's checklist_engine.py / mcp_spine_server.py changes rebase on this lane's merge (merge-position: first, per LAUNCH_ORDER)",
+        "why_likely": "explicitly stated in LAUNCH_ORDER.md Workspace section",
+        "entry_conditions": ["this lane's PR merged to main"]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "whether install_constellation.py's --scope user + no --dest self-install-wiring divergence from the mission's 'my own checkout's dev loop' framing should itself become a follow-on fix",
+        "affects": "a possible future installer refinement",
+        "settle_by": "human/Admiral triage of the staged candidate, if any is warranted",
+        "current_evidence": "accepted as pre-existing, documented behavior this wave, not a new divergence",
+        "next_probe": "none planned this wave"
+      }
+    ],
+    "parked_possibilities": [
+      "populating real codex/local model identifiers into ROLE_MODEL_TIERS once a harness for either is actually dispatched through run_crew.py"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "619",
+      "outcome": "g1 closed: is_self_install() added; apply_repo_mcp_config_wiring skipped entirely (not just re-pathed) unless mcp_config_path given or is_self_install(args); real-world proof against this repo's tracked .mcp.json reproduced independently (byte-identical hash before/after a --dest-elsewhere install).",
+      "evidence": "tests/test_install_constellation.py::RepoMcpConfigWiringTests (206 passed, 506 subtests) plus a live py scripts/install_constellation.py --dest /tmp/... run against this repo's real .mcp.json (sha256 identical before/after)"
+    },
+    {
+      "issue_id": "633",
+      "outcome": "g2 closed: ROLE_MODEL_TIERS + ResolvedModel + resolve_model added beside build_crew_argv, all five branches, additive-only, 13 new tests, mutation-tested by the reviewer (flipped a default, confirmed tests actually fail).",
+      "evidence": "tests/test_crew_launcher.py::ResolveModelTests (13 passed); reviewer's mutation test flipped implementer's default sonnet->haiku, 4 tests correctly went red, restored"
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "a real install with --dest outside the repo leaves the repo's .mcp.json byte-identical",
+      "expected": "no rewrite of a machine-probed interpreter into a declared-elsewhere destination's caller checkout",
+      "observed": "sha256 identical before/after; git diff --stat .mcp.json empty; reproduced independently by both the reviewer and the Commander outside the test suite",
+      "source": "tests/test_install_constellation.py::RepoMcpConfigWiringTests plus a live py scripts/install_constellation.py --dest /tmp/... run"
+    },
+    {
+      "claim": "resolve_model resolves every populated claude-harness role to its own default with no --model given",
+      "expected": "role default from ROLE_MODEL_TIERS, never a host setting",
+      "observed": "13/13 new ResolveModelTests pass; reviewer's mutation test (flipped implementer's default) correctly turned 4 tests red, confirming real assertions",
+      "source": "tests/test_crew_launcher.py::ResolveModelTests"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "g3-implement attempt 1 stopped at a genuine scope gap: wiring resolve_model into the shared CrewLaunchSpec.__post_init__ choke point broke 3 more pre-existing tests beyond the 2 the handoff named, because it changed the premise of any test constructing a CrewSpec with a falsy or arbitrary model string against a role/harness pair the table now populates.",
+      "classification": "evidence_only",
+      "affects": "this gate's own handoff completeness, not the current wave's exit or forecast",
+      "evidence": ".agent-work/567-j/crew-handoffs/g3-implement-result.md (attempt 1, Return status: blocked)",
+      "reason": "Resolved in-gate by a Commander ruling within file ownership (rework handoff authorizing the 3 additional rewrites plus a symmetric --reason fix on the abandon-relaunch path); does not invalidate the wave's decomposition or forecast, and does not warrant an issue -- a handoff-authoring lesson (pre-grep test fixtures for model= before wiring a shared choke point) worth carrying forward, not a structural finding."
+    },
+    {
+      "id": "D1",
+      "signal": "the plan's original framing of #633 (run_crew.py silently inheriting the host's ~/.claude/settings.json default) was wrong -- the Admiral independently confirmed decision:refuse-a-tierless-dispatch (#611) already closed that exact failure mode before this wave began; the actual defect is a free-text Suggested Model Tier field in the crew-dispatch handoff with no per-role default or allowed set.",
+      "classification": "evidence_only",
+      "affects": "how #633 is described in this lane's return and in the issue's own public record",
+      "evidence": "cross-session message from the Admiral (constellation/epic-567-door), corroborated by direct read of scripts/run_crew.py:CrewLaunchSpec.__post_init__ before any code was written this wave",
+      "reason": "Does not change the fix (resolve_model wired into the single choke point closes the defect regardless of which upstream path fed the value); Admiral has already corrected the issue's public framing, so no further action needed from this lane beyond stating the corrected framing in the return."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": ["scripts/install_constellation.py", "scripts/run_crew.py"],
+    "map_status": "No architecture map exists in this repo (skill-source repo; map/ids.jsonl empty; map/INDEX.md stale/unparseable; DEGRADED-UNPARSEABLE per map_orient.py; waived by the Admiral this wave, decision:map-index-is-admiral-owned)"
+  }
+}

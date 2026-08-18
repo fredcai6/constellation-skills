@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "init",
+  "mechanical": {
+    "run": "567-l",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 1,
+    "spine-step": "init",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-l-init@85ac9445247d66809fbab41f241a5a4b6a460f86",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-l",
+    "generated_at": "2026-08-18T06:32:41Z"
+  }
+}

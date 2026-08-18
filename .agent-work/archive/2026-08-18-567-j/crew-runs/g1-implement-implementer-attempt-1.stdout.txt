@@ -1,0 +1,11 @@
+The run is complete: the implementer plan (5 gates) was driven to done through the checklist engine, the fix and tests are in place, all 206 tests pass, and the result artifact is written.
+
+Summary:
+- Added `is_self_install(args)` to `scripts/install_constellation.py`, and gated `main()`'s `apply_repo_mcp_config_wiring` call on `mcp_config_path is not None or is_self_install(args)` — a plain self-install still wires the checkout's own `.mcp.json`; a run with `--dest`/`--project` elsewhere no longer touches it.
+- Added `IsSelfInstallTests` (4 tests) and a new regression test proving the bug fix (byte-identical fixture `.mcp.json` across a CLI-shaped `--dest` run), red-proofed against the reverted guard.
+- Updated only the docstring of the existing `default_mcp_config_path` test, per the handoff.
+- Notable deviation, recorded in Workflow Feedback: the handoff's literal "monkeypatch `installer.REPO_ROOT`" test recipe doesn't work — Python binds that default argument once at `def` time, so the patch is inert (and actively breaks skill installation if applied more broadly). I used a `__defaults__` patch on `default_mcp_config_path` instead, confirmed working and safe.
+
+Note: this crew's `SPINE_FILE`/`SPINE_SESSION` env pointed at the parent Commander's own spine (a known misfit — inherited env, `spine: null` in `crew-runs.json`). I never mutated that spine; I authored and drove my own `IMPLEMENTER_PLAN.json` through the CLI engine instead, per prior-established guidance for this exact situation.
+
+Result artifact: `.agent-work/567-j/crew-handoffs/g1-implement-result.md`.

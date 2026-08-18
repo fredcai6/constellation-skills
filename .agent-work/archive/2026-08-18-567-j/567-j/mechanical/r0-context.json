@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r0-context",
+  "mechanical": {
+    "run": "567-j",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-j-r0-context@817192b6e523b1c68f3b99124a7321a9e980309b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-j",
+    "generated_at": "2026-08-18T06:01:11Z"
+  }
+}

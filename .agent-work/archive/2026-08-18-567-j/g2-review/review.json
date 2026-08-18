@@ -1,0 +1,194 @@
+{
+  "work_id": "567-j",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g2-implement handoff, g2-reviewer handoff, g2-implement-result.md, the diff (scripts/run_crew.py + tests/test_crew_launcher.py), and re-ran the full test suite.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Table values exact match: admiral->opus/{opus}; commander/implementer/reviewer/critic/cartographer->sonnet/{sonnet,haiku}; codex/local empty dicts. ResolvedModel frozen dataclass with model/reason fields (confirmed frozen by test_resolved_model_is_a_frozen_dataclass and by dataclass(frozen=True) in source). resolve_model(role, harness, requested, reason) signature matches exactly. All 5 branches present in required order: (1) tier is None -> refuse naming role+harness; (2) falsy requested -> default, no reason; (3) requested not in allowed -> refuse naming requested/role/allowed set; (4) requested!=default and no reason -> refuse naming requested/default/--reason; (5) else -> ResolvedModel(requested, reason). Error messages name role/harness/model/default/allowed-set as required. Additive-only confirmed by grep: zero call sites outside definitions+ResolveModelTests. No filesystem/subprocess/env access in resolve_model body (pure dict lookups + raises). Full suite: 229 passed, 1 failed -- identical to the single pre-existing CREW_SCRATCH_DIR-leak failure named in the handoff, reproduced independently by re-running the suite myself.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Diff confined to scripts/run_crew.py (new ROLE_MODEL_TIERS/ResolvedModel/resolve_model beside build_crew_argv) and tests/test_crew_launcher.py (new ResolveModelTests class only). CrewLaunchSpec, build_parser, build_entry, main, resume_crew: zero diff -- grep of the diff shows only one docstring mention of CrewLaunchSpec.__post_init__ (prose, not an edit to that function). No new file/module created. Fenced paths (map/INDEX.md, checklist_engine.py, mcp_spine_server.py, *SPINE*.template.json, specs/) untouched by this diff. install_constellation.py/test_install_constellation.py show uncommitted changes in the working tree but are unrelated to and outside this diff's two target files (pre-existing g1 lane work sharing the same uncommitted tree, per handoff's 'Uncommitted working tree' framing).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently re-ran: 'py -m pytest tests/test_crew_launcher.py -q' -> 229 passed, 1 failed (identical single pre-existing CREW_SCRATCH_DIR-leak failure, verified same test/assertion). 'py -m pytest tests/test_crew_launcher.py -k ResolveModelTests -v' -> all 13 named tests pass, matching the IMPLEMENTER_RESULT's list exactly. Verification-discipline check (CREW_CONTEXT.md): mutated implementer role's declared default from sonnet to haiku in ROLE_MODEL_TIERS, re-ran ResolveModelTests -> 4 tests went red (test_blank_string_requested_also_resolves_to_default, test_default_tier_explicit_choice_never_requires_a_reason, test_every_populated_claude_role_resolves_to_its_own_default, test_non_default_in_set_choice_with_no_reason_is_refused), confirming the suite asserts against real behavior, not vacuous; restored original file via backup copy, re-ran to confirm 13 passed again. Wiring greps re-run independently, matching IMPLEMENTER_RESULT's claimed call-site counts exactly.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Constraints checked: resolve_model parameter order is exactly role, harness, requested, reason (matches handoff and g3's positional-compatibility requirement). ROLE_MODEL_TIERS 'allowed' values are frozenset (verified in source literal and by test_role_model_tiers_allowed_values_are_frozenset). Docstring/comment style matches the surrounding house style in build_crew_argv (dense rationale comments, inline decision-anchor citations, explicit branch enumeration). No stray debug code, no commented-out code, no unused imports introduced. dataclass(frozen=True) correctly used for ResolvedModel; frozen-ness independently verified by attempted mutation raising in the test and confirmed by reading the decorator.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture map exists in this repo (DEGRADED-UNPARSEABLE, waived by the Admiral, decision:map-index-is-admiral-owned) -- handoff's Map Anchors section correctly names this and points to decision candidates instead. Implementer's Map Impact notes are consistent with the diff: structural anchor (new module-level table/function beside build_crew_argv), no observable capability change (unwired, dead-code-by-design this gate), all five decision anchors consumed as given with none revisited. No contradiction between the diff and the cited decision anchors (ship-todays-tiers, fail-closed-cheaper, refuse-by-name, reason-on-deviation, harness-dimension-is-required) -- all five map exactly onto the five resolve_model branches. Nothing here requires Commander reconciliation beyond what the handoff already scoped to g3 (wiring into CrewLaunchSpec.__post_init__).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/567-j/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/<work-id>/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/projects/constellation-skills/.worktrees/567-j-launcher-declared-defaults/scripts/verify_fowler_pass.py .agent-work/567-j/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Rendered a verdict on all 12 Fowler baseline smells against the scripts/run_crew.py + tests/test_crew_launcher.py diff, recorded to .agent-work/567-j/FOWLER_PASS.json: 11 absent, 1 overridden (speculative-generality -- codex/local empty-dict scaffolding is subordinate to decision:harness-dimension-is-required, settled/human, mandating the shape express every harness --command can already name so branch 1 fails closed by name instead of silently guessing). Zero flagged. Fixed the survey's r6-fowler c1 postcondition's unsubstituted <reviewer-skill-dir> placeholder via amend/retext-check (authority commander) to the real script path. verify_fowler_pass.py .agent-work/567-j/FOWLER_PASS.json exited 0: 'fowler pass ok: smells=12, flagged=[], overridden=[speculative-generality]'.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python <reviewer-skill-dir>/scripts/verify_fowler_pass.py .agent-work/567-j/FOWLER_PASS.json",
+            "exit": 2,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/projects/constellation-skills/.worktrees/567-j-launcher-declared-defaults/scripts/verify_fowler_pass.py .agent-work/567-j/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "g2-implement's ROLE_MODEL_TIERS/ResolvedModel/resolve_model additions match the g2-implement-handoff's exact table values, dataclass shape, function signature, and five-branch order/semantics -- independently verified by reading the diff and by a mutation test (broke implementer's default tier, confirmed 4 tests went red, restored). Additive-only confirmed by grep (zero call sites outside definitions + ResolveModelTests); no filesystem/subprocess/env access in resolve_model's body. Scope respected: CrewLaunchSpec/build_parser/build_entry/main/resume_crew show zero diff; no new file/module; fenced paths untouched. Full suite re-run independently: 229 passed, 1 failed -- the identical single pre-existing CREW_SCRATCH_DIR-leak failure named in the handoff (same test, same assertion). All 13 ResolveModelTests individually pass, matching the claimed names. Fowler pass complete: 11/12 smells absent, 1 overridden (speculative-generality, subordinate to decision:harness-dimension-is-required) with a logged standard+reason; verify_fowler_pass.py exits 0. No blockers found."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/567-j/g2-review/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-18T05:40:21.213579+00:00",
+    "last_heartbeat": "2026-08-18T05:45:40.148407+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-18T05:46:24.200932+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-18T05:45:20.726481+00:00",
+      "reason": "r6-fowler's c1 postcondition command carried the unsubstituted <reviewer-skill-dir> template placeholder (skills/reviewer/scripts/verify_fowler_pass.py does not exist -- the script lives at repo-root scripts/verify_fowler_pass.py); correcting the check text to the real, executable, absolute path so the postcondition can actually be evaluated, per global-everyone.md's absolute-installed-path convention.",
+      "authority": "commander",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}

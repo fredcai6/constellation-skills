@@ -1,0 +1,179 @@
+{
+  "work_id": "567-j",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, g3-implement-handoff.md, g3-implement-rework-handoff.md, g3-implement-result.md, g3-reviewer-handoff.md, and the diff (scripts/run_crew.py + tests/test_crew_launcher.py). Independently re-ran the full test suite.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "CrewSpec.__post_init__ calls resolve_model(role=self.role, harness=self.launcher, requested=self.model, reason=self.reason) exactly once -- confirmed by independent wiring grep (1 real call site at line 1483; other 3 grep hits are prose/docstring). Old flat 'if not self.model: raise' block is gone, replaced not duplicated -- grep for 'explicit tier'/'no default is invented'/'decision:refuse-a-tierless-dispatch' returns zero hits in the current source. All 4 CrewSpec( construction sites confirmed by independent grep (launch_crew L2002, record_external_attempt L2068, main() abandon-relaunch L2363, main() fresh-launch L2387) -- all resolve through __post_init__ by Python construction semantics; the two wrapper functions (launch_crew/record_external_attempt) correctly were not required to add a --reason param this gate and still resolve safely (reason defaults None, refused only if a non-default model with no reason is passed, matching intended fail-closed behavior). Both main() CrewSpec sites pass reason=args.reason -- confirmed in diff (lines 2365/2388 region), symmetric as required. Old-shape crew-runs.json entry (model key, no reason key) round-trips cleanly -- independently re-ran test_old_shape_registry_entry_with_model_and_no_reason_key_resumes_cleanly, PASSED.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "resume_crew()/CliBackend.resume()/ExternalBackend.resume() show zero diff -- confirmed independently by comparing every hunk header's new-file line range against the current source's function line ranges (CliBackend.resume 1687-1763, ExternalBackend.resume 1835-1945, resume_crew 2010-2035); all 12 hunks fall outside these ranges. g3's scripts/run_crew.py hunks are confined to: the g2 resolve_model/ROLE_MODEL_TIERS definition (unchanged from g2, single addition-only hunk, not re-touched -- constraint satisfied), build_entry (reason param + docstring + write, both call sites in CliBackend.dispatch/ExternalBackend.dispatch threading spec.reason -- necessarily part of 'thread spec.reason into build_entry() at both call sites' from the implement handoff even though the reviewer handoff's Allowed Scope line names only 'build_entry' itself), CrewSpec (docstring, reason field, __post_init__), build_parser (--reason flag), and main()'s two CrewSpec(...) sites. No other function touched. Fenced paths (map/INDEX.md, checklist_engine.py, mcp_spine_server.py, *SPINE*.template.json, specs/) untouched -- absent from git status. install_constellation.py/test_install_constellation.py show uncommitted changes but are pre-existing g1 lane work sharing the same uncommitted tree, unrelated to this diff's two target files (same framing as g2-review's r2-scope finding). Test file changes confined to MandatoryModelTests (the named rewrites/new tests), one ExternalDispatchTests test, and one BackendEquivalenceTests test -- matching the handoffs' named list; the additional ResolveModelTests-class tests visible in the diff are g2's, already reviewed at g2-review, sharing the same uncommitted tree.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently reran: py -m pytest tests/test_crew_launcher.py -q -> 236 passed, 1 failed (identical single pre-existing ScratchDirResumeTests::test_resume_of_legacy_entry_without_worktree_key_does_not_crash_and_leaves_scratch_dir_unbound CREW_SCRATCH_DIR-leak failure named in the handoff -- own re-run's traceback confirms the ambient CREW_SCRATCH_DIR leaking from this very reviewer crew's own env, same defect class as claimed). py -m pytest -k 'MandatoryModelTests or ExternalDispatchTests or BackendEquivalenceTests' -v -> all 36 named/adjacent tests PASSED individually, matching claimed names. Wiring grep (1 real resolve_model call site) and all 4 CrewSpec( sites reproduced independently, matching g3-implement-result exactly. Old-shape round-trip test independently reran, PASSED. Verification-discipline mutation test (CREW_CONTEXT.md): mutated implementer's declared default from sonnet to haiku in ROLE_MODEL_TIERS, reran MandatoryModelTests -> 2 tests went red (test_default_tier_dispatch_never_requires_or_records_a_reason_key, test_non_default_in_set_model_with_no_reason_is_refused), confirming the suite asserts real behavior; restored original file via backup, reran to confirm 13 passed again.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All three named rewritten tests preserve original testing intent, verified by reading full bodies: (1) test_crew_spec_with_falsy_model_resolves_the_role_default asserts role='reviewer' -> model='sonnet', reason=None -- matches close-criteria's exact ask. (2) test_cli_parser_persists_model_and_reasoning_effort_to_external_registry still asserts an explicit --model/--reasoning-effort pair persists (backend='external', model, reasoning_effort), now using in-table 'haiku' for 'implementer' with --reason, AND asserts entry['reason'] persists too -- not just model. (3) test_external_dispatch_records_without_spawning_returns_none: 'returns none' refers to the exit code (assertIsNone(code)) and 'nothing spawned' (assertEqual([], calls)) -- both assertions byte-for-byte unchanged; only the model value moved from opus to sonnet (implementer's default, needs no reason), the smallest change preserving intent. New test_abandon_relaunch_with_reason_succeeds_and_entry_carries_reason confirms Ruling 2's symmetry fix (relaunch path threads --reason exactly parallel to fresh-launch). Constraints: resolve_model's positional/keyword signature and ROLE_MODEL_TIERS shape unchanged from g2 (single addition-only hunk, verified under r2-scope). No stray debug code, no commented-out code, no unused imports introduced in the diff. Docstring/comment style (dense rationale, decision-anchor citations) matches surrounding house style.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture map exists in this repo (DEGRADED-UNPARSEABLE, waived by the Admiral, decision:map-index-is-admiral-owned) -- handoff correctly names this instead of pointing at a map. decision:refuse-a-tierless-dispatch (#611) is superseded in scope exactly as declared: an absent --model no longer hard-refuses when the role/harness pair has a table entry (test_crew_spec_with_falsy_model_resolves_the_role_default, test_fresh_dispatch_with_no_model_resolves_the_role_default, test_abandon_relaunch_with_no_model_resolves_the_role_default all confirm resolution instead of refusal); it still refuses when no table entry exists (test_unpopulated_harness_is_refused_by_name_even_with_model_given still raises). No contradiction between the diff and its cited decision anchors. Nothing here requires Commander reconciliation beyond what the handoff already scoped to g3 (wiring resolve_model into CrewSpec.__post_init__).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged standard + reason. Record the pass to .agent-work/567-j/g3-review/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/567-j/g3-review/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/projects/constellation-skills/.worktrees/567-j-launcher-declared-defaults/scripts/verify_fowler_pass.py .agent-work/567-j/g3-review/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Rendered a verdict on all 12 Fowler baseline smells against g3's scripts/run_crew.py + tests/test_crew_launcher.py diff, recorded to .agent-work/567-j/g3-review/FOWLER_PASS.json: 10 absent, 1 flagged (long-parameter-list -- build_entry now 19 keyword-only params, non-blocking observation, raised as a triage candidate for a future parameter-object refactor), 1 overridden (shotgun-surgery -- the 6-site --reason threading matches the exact established touch-point set every other optional dispatch parameter (model/reasoning_effort/spine/parent) already uses, per global-crew.md's match-surrounding-conventions standard). verify_fowler_pass.py .agent-work/567-j/g3-review/FOWLER_PASS.json exited 0: 'fowler pass ok: smells=12, flagged=[long-parameter-list], overridden=[shotgun-surgery]'.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/projects/constellation-skills/.worktrees/567-j-launcher-declared-defaults/scripts/verify_fowler_pass.py .agent-work/567-j/g3-review/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "g3-implement wires g2's resolve_model into CrewSpec.__post_init__, the single choke point every CrewSpec construction passes through, replacing the flat tierless-dispatch refusal. Independently verified: exactly 1 real resolve_model call site (wiring grep); all 4 CrewSpec( construction sites (launch_crew, record_external_attempt, main() abandon-relaunch, main() fresh-launch) resolve through __post_init__ by Python's own semantics; resume_crew()/CliBackend.resume()/ExternalBackend.resume() show zero diff (all 12 hunk headers fall outside their line ranges); both main() CrewSpec sites now symmetrically pass reason=args.reason; an old-shape crew-runs.json entry round-trips cleanly. All three named rewritten tests preserve their original testing intent (resolved-default for role=reviewer; explicit --model/--reason persistence including the reason field; external backend's no-spawn/None-return assertions byte-for-byte unchanged) -- verified by reading full test bodies, not just names. Full suite independently re-run: 236 passed, 1 failed -- the identical single pre-existing CREW_SCRATCH_DIR-leak failure named in the handoff (own re-run's traceback confirms this reviewer crew's own ambient CREW_SCRATCH_DIR leaking, same defect class). Mutation test (mutated implementer's default tier) sent 2 tests red, confirming the suite asserts real behavior; restored and reconfirmed green. Fowler pass: 10/12 absent, 1 flagged as a non-blocking triage candidate (long-parameter-list on build_entry, now 19 kwargs), 1 overridden (shotgun-surgery, the 6-site --reason threading matches the file's own established per-field convention); verify_fowler_pass.py exits 0. No architecture map exists (waived); decision:refuse-a-tierless-dispatch's superseded-in-scope framing holds exactly as declared. No blockers found."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r6-fowler",
+      "statement": "build_entry() has grown to 19 keyword-only parameters (18 pre-g3, +1 for reason this gate). Each is independently meaningful and the shape matches the file's own per-field convention (model/reasoning_effort/spine/parent), so it is not a defect in this diff -- but a future gate that touches build_entry again should consider extracting a parameter object (e.g. a DispatchMetadata bundle for model/reason/reasoning_effort/spine/parent) rather than adding a 20th kwarg."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/567-j/g3-review/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-18T06:01:08.906998+00:00",
+    "last_heartbeat": "2026-08-18T06:06:03.790233+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-18T06:06:06.905592+00:00"
+  }
+}

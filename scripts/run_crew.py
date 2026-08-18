@@ -834,6 +834,86 @@ def build_crew_argv(
     return argv
 
 
+# g2-implement (#633): role x harness model-tier table. Keyed harness -> role
+# -> {"default": <tier>, "allowed": frozenset(<tiers>)}. Only "claude" is
+# populated today -- "codex" and "local" are declared as EMPTY dicts so the
+# shape expresses every harness this launcher's `--command` can name, without
+# inventing a model identifier for a dispatch path that does not exist yet
+# (decision:harness-dimension-is-required). `resolve_model` below refuses,
+# rather than guesses, for any (role, harness) with no entry here -- that is
+# what makes an unpopulated codex/local dispatch fail closed instead of
+# silently picking something. Populating either harness is g3+ work, not
+# this gate's.
+ROLE_MODEL_TIERS: dict[str, dict[str, dict[str, object]]] = {
+    "claude": {
+        "admiral": {"default": "opus", "allowed": frozenset({"opus"})},
+        "commander": {"default": "sonnet", "allowed": frozenset({"sonnet", "opus"})},
+        "implementer": {"default": "sonnet", "allowed": frozenset({"sonnet", "haiku"})},
+        "reviewer": {"default": "sonnet", "allowed": frozenset({"sonnet", "haiku"})},
+        "critic": {"default": "sonnet", "allowed": frozenset({"sonnet", "haiku"})},
+        "cartographer": {"default": "sonnet", "allowed": frozenset({"sonnet", "haiku"})},
+    },
+    "codex": {},
+    "local": {},
+}
+
+
+@dataclass(frozen=True)
+class ResolvedModel:
+    """The tier `resolve_model` picked, and the `--reason` (if any) that
+    justified deviating from the role's declared default."""
+    model: str
+    reason: str | None
+
+
+def resolve_model(
+    role: str, harness: str, requested: str | None, reason: str | None
+) -> ResolvedModel:
+    """PURE role x harness model-tier resolution (g2-implement, #633). No
+    filesystem/subprocess/env access -- additive-only this gate, nothing in
+    this module calls it yet (that wiring is g3).
+
+    Not wired into `CrewLaunchSpec.__post_init__` here: that function's
+    existing tierless-dispatch refusal (issue #611) still requires a truthy
+    `model` from every caller unchanged. This function is the piece a later
+    gate uses to let a declared role default satisfy that requirement instead
+    of always refusing -- the wiring itself is g3's job, not this one's.
+
+    Branches, in this exact order (decision:ship-todays-tiers,
+    decision:fail-closed-cheaper, decision:refuse-by-name,
+    decision:reason-on-deviation):
+      1. `(role, harness)` has no entry in `ROLE_MODEL_TIERS` -> refuse,
+         naming both the role and the harness.
+      2. `requested` is falsy -> the role's declared default, no reason.
+      3. `requested` is truthy and not in the tier's `allowed` set -> refuse,
+         naming the requested model, the role, and the full allowed set.
+      4. `requested` is truthy, in `allowed`, not equal to the default, and
+         `reason` is falsy -> refuse, naming the requested model, the default
+         it would override, and that `--reason` is required.
+      5. `requested` is truthy, in `allowed`, and (equal to the default, or
+         `reason` is truthy) -> the requested tier, with `reason` carried
+         through (never required just because one was given)."""
+    tier = ROLE_MODEL_TIERS.get(harness, {}).get(role)
+    if tier is None:
+        raise CrewLaunchError(
+            f"no model tier declared for role {role!r} under harness "
+            f"{harness!r} -- refusing rather than guessing"
+        )
+    if not requested:
+        return ResolvedModel(tier["default"], None)
+    if requested not in tier["allowed"]:
+        raise CrewLaunchError(
+            f"model {requested!r} is not an allowed tier for role {role!r}: "
+            f"allowed tiers are {sorted(tier['allowed'])!r}"
+        )
+    if requested != tier["default"] and not reason:
+        raise CrewLaunchError(
+            f"model {requested!r} overrides role {role!r}'s declared default "
+            f"{tier['default']!r} -- refusing without --reason"
+        )
+    return ResolvedModel(requested, reason)
+
+
 _CLI_DRIFT_MARKERS = ("unknown option", "unrecognized arguments", "unknown command")
 
 # ISSUE #454. Same defect class as run_skill_eval's marker sniff: every marker
@@ -1120,6 +1200,7 @@ def build_entry(
     pid: int | None,
     dispatch: str | None = None,
     model: str | None = None,
+    reason: str | None = None,
     reasoning_effort: str | None = None,
     spine: str | None = None,
     parent: str | None = None,
@@ -1142,6 +1223,11 @@ def build_entry(
                      alone look like evidence the cli path never received
                      `--model`, rather than what it was -- the same field,
                      recorded on one path and lost on the other.
+      * `reason`   — recorded when present (issue #633, g3-implement), same
+                     "recorded when present" shape as `model` above: the
+                     justification for a non-default resolved tier, or absent
+                     entirely for a default-tier dispatch, which never
+                     requires or records one.
       * `reasoning_effort` — optional launcher metadata, recorded for recovery
                              and inspection AND forwarded by the cli backend as
                              the launcher's real `--effort` flag (`build_crew_argv`);
@@ -1211,6 +1297,8 @@ def build_entry(
         entry["dispatch"] = dispatch
     if model:
         entry["model"] = model
+    if reason:
+        entry["reason"] = reason
     if reasoning_effort:
         entry["reasoning_effort"] = reasoning_effort
     if scratch:
@@ -1352,7 +1440,17 @@ class CrewSpec:
 
     `parent` is nullable and never required (E1 fail-up, issue #559): a
     dispatch with no `--parent` must still work -- it is recorded, bound, and
-    named as `UNKNOWN_PARENT`, never invented as some other identity."""
+    named as `UNKNOWN_PARENT`, never invented as some other identity.
+
+    `model`/`reason` are resolved HERE too (issue #633, g3-implement), via
+    `resolve_model`: a role/harness pair WITH a `ROLE_MODEL_TIERS` entry now
+    resolves an unrequested `model` to that pair's declared default instead of
+    unconditionally refusing -- only an undeclared role/harness pair, an
+    out-of-set requested model, or a non-default requested model given with no
+    `reason` still refuses. `resume_crew()` is the one deliberate exception:
+    it replays a prior registry entry's already-resolved `model`/`reason`
+    verbatim and never constructs a fresh `CrewSpec` from user-supplied input,
+    so it never reaches this resolution."""
     work_id: str
     gate: str
     role: str
@@ -1365,6 +1463,7 @@ class CrewSpec:
     model: str | None = None
     reasoning_effort: str | None = None
     launcher: str = DEFAULT_LAUNCHER
+    reason: str | None = None
 
     def __post_init__(self) -> None:
         validate_work_id(self.work_id)
@@ -1381,12 +1480,11 @@ class CrewSpec:
                 "neither --result nor --spine given (a spine-only dispatch is "
                 "judged on its spine reaching a terminal state instead)"
             )
-        if not self.model:
-            raise CrewLaunchError(
-                "a crew needs an explicit tier: refusing a dispatch with no "
-                "--model given (no default is invented -- decision:refuse-a-"
-                "tierless-dispatch)"
-            )
+        resolved = resolve_model(
+            role=self.role, harness=self.launcher, requested=self.model, reason=self.reason
+        )
+        self.model = resolved.model
+        self.reason = resolved.reason
 
 
 # The thread `_parent_lease_heartbeat` starts is named so tests can assert its
@@ -1554,7 +1652,7 @@ class CliBackend(CrewBackend):
             work_id=spec.work_id, gate=spec.gate, role=spec.role, attempt=spec.attempt,
             worktree=spec.worktree, handoff=spec.handoff, result=spec.result, root=root,
             started=started, backend=self.name, pid=os.getpid(), spine=spec.spine,
-            parent=spec.parent, model=spec.model,
+            parent=spec.parent, model=spec.model, reason=spec.reason,
             reasoning_effort=spec.reasoning_effort, scratch=str(scratch),
         )
         # Durable record BEFORE the crew starts (so a parent loss leaves a durable
@@ -1709,7 +1807,7 @@ class ExternalBackend(CrewBackend):
             work_id=spec.work_id, gate=spec.gate, role=spec.role, attempt=spec.attempt,
             worktree=spec.worktree, handoff=spec.handoff, result=spec.result, root=root,
             started=started, backend=self.name, pid=None,
-            dispatch=DISPATCH_EXTERNAL, model=spec.model, spine=spec.spine,
+            dispatch=DISPATCH_EXTERNAL, model=spec.model, reason=spec.reason, spine=spec.spine,
             reasoning_effort=spec.reasoning_effort,
             parent=spec.parent,
         )
@@ -2030,6 +2128,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--gate")
     p.add_argument("--role")
     p.add_argument("--model")
+    p.add_argument("--reason")
     p.add_argument("--reasoning-effort", dest="reasoning_effort")
     p.add_argument("--worktree", default=".")
     p.add_argument(
@@ -2266,7 +2365,7 @@ def main(argv: list[str] | None = None) -> int:
                 worktree=worktree, attempt=attempt, model=args.model,
                 reasoning_effort=args.reasoning_effort or abandoned.get("reasoning_effort"),
                 launcher=args.command,
-                spine=spine, parent=parent,
+                spine=spine, parent=parent, reason=args.reason,
             )
             exit_code, entry = backend.dispatch(spec, root=root, entries=entries)
             if backend.name == BACKEND_EXTERNAL:
@@ -2289,7 +2388,7 @@ def main(argv: list[str] | None = None) -> int:
             work_id=args.work_id, gate=args.gate, role=args.role, handoff=args.handoff,
             result=args.result, worktree=args.worktree, attempt=attempt,
             model=args.model, launcher=args.command, spine=args.spine, parent=args.parent,
-            reasoning_effort=args.reasoning_effort,
+            reasoning_effort=args.reasoning_effort, reason=args.reason,
         )
         exit_code, entry = backend.dispatch(spec, root=root, entries=entries)
         if backend.name == BACKEND_EXTERNAL:

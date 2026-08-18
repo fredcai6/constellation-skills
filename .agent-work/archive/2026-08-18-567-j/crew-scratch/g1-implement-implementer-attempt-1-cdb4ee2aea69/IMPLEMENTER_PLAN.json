@@ -1,0 +1,287 @@
+{
+  "work_id": "567-j-g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-is-self-install",
+    "m2-guard-main",
+    "m3-bug-proof-test",
+    "m4-evidence-and-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (skills/constellation-implementer/references/global-crew.md and references/global-everyone.md), then project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the handoff at .agent-work/567-j/crew-handoffs/g1-implement-handoff.md. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md, and the g1-implement handoff read; handoff verified complete (task, protected intent, test mode, close criteria, allowed scope, exclusions, constraints, map anchors, deliverable checks, required evidence, wiring grep, verification commands, authority, stop conditions, return format all present)"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-is-self-install": {
+      "id": "m1-is-self-install",
+      "title": "Add is_self_install() with its own unit tests",
+      "imperative": "In scripts/install_constellation.py add a pure function `is_self_install(args: argparse.Namespace) -> bool` returning `args.dest is None and args.project is None`, placed near main(). Add `IsSelfInstallTests` to tests/test_install_constellation.py: True when dest=None,project=None; False when either is set -- zero filesystem/subprocess, constructing a plain argparse.Namespace (no need to invoke build_parser()). Test-after is allowed per the handoff's Test Mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "is_self_install unit tests pass",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/test_install_constellation.py -k IsSelfInstallTests -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-is-self-install-1"
+        }
+      ],
+      "constraints": [
+        "do not touch SCRIPT_RUNTIME_COMPANIONS, SKILL_SCRIPT_BUNDLES, or anything else in the file",
+        "predicate name and exact boolean logic are fixed by the handoff -- do not redesign"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-is-self-install-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/test_install_constellation.py -k IsSelfInstallTests -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-guard-main": {
+      "id": "m2-guard-main",
+      "title": "Gate main()'s wire_repo_mcp_config call on mcp_config_path override or self-install",
+      "imperative": "In main()'s tail, change `if wire_repo_mcp_config:` so the entire apply_repo_mcp_config_wiring call is skipped unless `mcp_config_path is not None or is_self_install(args)` -- exact condition fixed by the handoff. Never call apply_repo_mcp_config_wiring(None, ...). Add a code comment near the guard noting --scope user with no --dest still satisfies is_self_install and still wires the checkout's own .mcp.json -- accepted, not a second bug this wave. Do not touch default_mcp_config_path() itself. Verify every existing RepoMcpConfigWiringTests case still passes unmodified.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "is_self_install exists and is tested",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "is_self_install merged and green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "existing RepoMcpConfigWiringTests all pass unmodified under the new guard",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/test_install_constellation.py -k RepoMcpConfigWiringTests -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-guard-main-1"
+        }
+      ],
+      "constraints": [
+        "only touch the wire_repo_mcp_config guard in main()'s tail",
+        "apply_repo_mcp_config_wiring's first positional arg is a Path, never None, when called"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-guard-main-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/test_install_constellation.py -k RepoMcpConfigWiringTests -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-bug-proof-test": {
+      "id": "m3-bug-proof-test",
+      "title": "Add the byte-identical CLI-shaped regression test and update the docstring",
+      "imperative": "Add one new test to RepoMcpConfigWiringTests proving the confirmed bug is fixed: call installer.main() with CLI-shaped args (--agent claude --scope user --dest <tmp-outside-the-repo> --skills workbench), wire_repo_mcp_config=True, no mcp_config_path override (resolves via the real default_mcp_config_path()). Never touch this checkout's own real tracked .mcp.json: default_mcp_config_path()'s repo_root parameter is bound to REPO_ROOT at module-definition time (a Python default-argument is evaluated once, at def, not re-read from the module global afterward), so a plain mock.patch.object(installer, 'REPO_ROOT', ...) after load_installer() is inert for this function -- confirmed by a standalone repro. Redirect default_mcp_config_path()'s bound default safely and verifiably by patching installer.default_mcp_config_path.__defaults__ to a throwaway git-initialized fixture directory's path (restoring the original tuple in a finally), and additionally patch installer.REPO_ROOT to the same fixture dir for symbolic consistency with the handoff wording. Snapshot the fixture .mcp.json bytes before the call, assert byte-identical after. Update ONLY the docstring of test_default_mcp_config_path_points_at_this_checkouts_own_mcp_json to note the real CLI entry point now only calls wiring with this path when is_self_install holds -- its assertion body stays unchanged.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "guard is in place and existing tests pass",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "guard is in place; RepoMcpConfigWiringTests (11) and full suite (205) green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full test_install_constellation.py suite passes, including the new byte-identical regression test",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/test_install_constellation.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-bug-proof-test-1"
+        }
+      ],
+      "constraints": [
+        "pre-authorized to touch RepoMcpConfigWiringTests and the named docstring only",
+        "do not change default_mcp_config_path()'s own signature/behavior"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-bug-proof-test-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/test_install_constellation.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-evidence-and-result": {
+      "id": "m4-evidence-and-result",
+      "title": "Gather required evidence and write IMPLEMENTER_RESULT",
+      "imperative": "Run the full verification command (py -m pytest tests/test_install_constellation.py -q) foreground and capture its output. Run `grep -rn \"is_self_install\" scripts/` and the wiring grep (`grep -rn \"is_self_install\" --include=*.py . | grep -v \"def is_self_install\"`), stating the non-test, non-definition call-site count. Quote the byte-identical test's exact before/after fixture content or hash. Write .agent-work/567-j/crew-handoffs/g1-implement-result.md per templates/IMPLEMENTER_RESULT.template.md including Workflow Feedback (note the REPO_ROOT monkeypatch inertness finding).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all implementation steps green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1/m2/m3 all complete, 206 tests green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "result artifact written with full pytest output, wiring grep count, and byte-identical evidence",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/567-j/crew-handoffs/g1-implement-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-evidence-and-result-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-evidence-and-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/567-j/crew-handoffs/g1-implement-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/567-j/g1-implement/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-18T05:18:23.139178+00:00",
+    "last_heartbeat": "2026-08-18T05:22:01.526914+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-18T05:22:04.363329+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-18T05:18:35.843331+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-is-self-install",
+      "why": "is_self_install added as a pure predicate mirroring the handoff's fixed boolean logic; 4 new unit tests cover all dest/project combinations, zero fs/subprocess",
+      "mechanical": false,
+      "ts": "2026-08-18T05:19:07.374951+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-guard-main",
+      "why": "guard now skips apply_repo_mcp_config_wiring unless an explicit mcp_config_path override was passed or is_self_install(args) holds; all 11 pre-existing RepoMcpConfigWiringTests pass unmodified since every one of them passes mcp_config_path explicitly; full suite (205 tests) also green",
+      "mechanical": false,
+      "ts": "2026-08-18T05:19:33.069030+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-bug-proof-test",
+      "why": "new test_a_dest_outside_the_checkout_never_touches_this_checkouts_own_mcp_json added to RepoMcpConfigWiringTests, red-proofed against the reverted (unconditional) guard (fixture .mcp.json command flipped <python-interpreter> -> py) and green against the fix (byte-identical, sha256 0dccb1d7835a390786641aec75f6edd196939fe67691921addff962a98915c40, 254 bytes); docstring-only update on test_default_mcp_config_path_points_at_this_checkouts_own_mcp_json, its assertion body unchanged; full suite 206 passed",
+      "mechanical": false,
+      "ts": "2026-08-18T05:21:06.424168+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-evidence-and-result",
+      "why": "IMPLEMENTER_RESULT.md written at .agent-work/567-j/crew-handoffs/g1-implement-result.md with full pytest output (206 passed), wiring grep (1 non-test call site), and quoted byte-identical fixture content + sha256",
+      "mechanical": false,
+      "ts": "2026-08-18T05:22:01.526905+00:00"
+    }
+  ]
+}
