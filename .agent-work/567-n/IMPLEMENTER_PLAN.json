@@ -213,7 +213,8 @@
           "id": "c1",
           "statement": "RETURN.md written and PR opened",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "constraints": [
@@ -221,7 +222,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -235,13 +236,14 @@
   "refusals": 0,
   "engine_session": {
     "session_id": "impl-567n-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-18T12:18:33.492542+00:00",
-    "last_heartbeat": "2026-08-18T12:26:02.549522+00:00",
+    "last_heartbeat": "2026-08-18T12:27:16.294372+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-18T12:27:22.772030+00:00"
   },
   "why_trail": [
     {
@@ -271,6 +273,13 @@
       "why": "full suite: 3432 passed, 5 skipped, 1222 subtests passed in 141.92s; 0 FAILED/ERROR; MapTreeFreshnessTests green too (2/2)",
       "mechanical": false,
       "ts": "2026-08-18T12:25:55.628068+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-return",
+      "why": "RETURN.md written, committed 4ac452c2, pushed, PR #640 opened against main",
+      "mechanical": false,
+      "ts": "2026-08-18T12:27:16.294365+00:00"
     }
   ]
 }
