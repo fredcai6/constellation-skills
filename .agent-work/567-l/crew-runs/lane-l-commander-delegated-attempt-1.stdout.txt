@@ -1,0 +1,10 @@
+My assigned work is done and verified terminal — `spine_status` confirms `constellation/567-l`: **DONE, no open items, lease released**. The Stop hook's complaint is about a *different* spine, `constellation/epic-567-door`, which is not mine to drive.
+
+That epic-level spine belongs to the Admiral, and it's not idle — it's a separate, live session (`567` in `ListAgents`) that I already exchanged messages with this turn: it claimed `constellation/epic-567-door`, performed the `plan.c6` waiver under its own identity, and released, all while its heartbeat kept advancing. I am the delegated Commander for lane L only; my system prompt is explicit that my parent is `constellation/epic-567-door` and that I ask up to it, not drive it. Binding to and driving that spine myself would put two drivers on one spine — exactly what doctrine forbids ("never run a Commander's issue yourself" applies in the inverse here: a lane Commander must not take on the Admiral's epic-execute work), and it would race against a session that's actively using it.
+
+So I'm not going to claim or advance `epic-567-door`. To summarize where things stand:
+
+- **Lane L: complete.** All three changes delivered, full suite green (one pre-approved exception), pushed to PR #637 at `a1e72143d1a11cbfc9e6af8ea8b07f25ce481b87`, spine archived, lease released.
+- **Epic-567-door: not mine.** It's being actively driven by a separate live Admiral session I already reported the lane-L result to.
+
+If you want me to pick up epic-level orchestration too, that's a different, much bigger role (constellation-admiral) and would need to be assigned explicitly — not inferred from a stop hook that doesn't distinguish which spine belongs to which session.
