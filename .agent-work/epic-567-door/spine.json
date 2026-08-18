@@ -138,13 +138,15 @@
           "id": "c1",
           "statement": "every epic issue dispositioned (merged, honest-null closed, deferred with ruling, or escalated)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Every epic member issue holds one of c1's four dispositions, re-checked against GitHub after wave 3 rather than carried from the wave-2 ledger. CLOSED as delivered: #559, #561 (auto-closed on merge), #619 and #633 (closed at this closeout with evidence comments naming the mechanism and the proof). MERGED and closing at the pairing pass: #565, #596, #526, #541, #432, #595. HONEST NULL: #535 (the mechanism was already shipped; lane F cited its own launch as proof). DEFERRED WITH RULING: #613, behind #615. PARKED: #575. PARTLY DELIVERED AND DELIBERATELY OPEN: #634, with a comment recording exactly what shipped (the bookend freeze, the templates, the drift lint) and the four things that did not (the crew half, the execute.json migration, acceptance-versus-completion, and that `current` does not render the freeze). ESCALATED to the human, not closed: #442 and #565's premise, because in both cases this epic's measurements contradict a claim he wrote. Filed this session and left open as new work: #632, #636."
         },
         {
           "id": "c2",
           "statement": "ADMIRAL_LOG current through the last wave: all rulings, incidents, merges, transition exits, and errors logged",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "ADMIRAL_LOG is current through wave 3. It carries the human's rulings including the two that overturned my readings (the child-plan exception is a failure not a limit; inheritance launders the tier defect rather than fixing it); all three wave transitions w1/w2/w3 with one audit line each; every launch, adjudication and merge with its gated sha; the two material exceptions with measured and inferred separated; six ADMIRAL ERRORs of mine \u2014 the liveness probe that reported five live lanes dead, three fencing gaps, the crew-tier escalation the human caught, the gate-4-of-17 misreport that nearly cost a lane, and the retracted lease-lapse finding that never existed; both c6 waivers under admiral authority with the reproduction that justified each; the union resolutions of two registry conflicts; and the lane findings that corrected me three times by reading code I had reasoned about."
         },
         {
           "id": "c3",
@@ -153,7 +155,8 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-admiral/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-567-door"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-3"
         }
       ],
       "constraints": [],
@@ -187,7 +190,7 @@
         }
       },
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {
         "blocker": "Wave 1 delivered and closed out (PRs #620 #621 #622 #623, none merged), but execute's c1 (every epic issue dispositioned) cannot be met by the Admiral. Two surfaced-class human rulings block it: (a) the contract delegates merge 'gated on the check exit code', which is unsatisfiable because main has been red for five commits and CI is windows-latest only (baseline 122 failed/3070 passed) -- adopting merge-on-failure-set-delta is a change to the gate itself; (b) lane A's spine_bind design cannot be accepted or rejected without a ruling on whether IDENTITY_TRADE.md section 2's confinement property is amendable, and if it is settled the design is dead as written. Also surfaced: whether lane A's one-clause deletion satisfies the settled/human net-deletion filter, and the scope of the subTest-reads-PASSED finding (169 call sites across 25 files) which undercuts every suite-green claim in the wave.",
         "authority_needed": "human",
@@ -229,6 +232,17 @@
             "reason": "The human added scope after wave 2 closed: #619 (installer writes a machine-probed interpreter into a tracked file), #633 (crew model tier from a per-role, per-harness table) and #634 (one spine per agent, frozen bookends and a mutable middle). He ruled \"file it now and do it now\", so the epic has a wave 3 and execute is not finished. Closeout's c1-c4 attestations are superseded rather than wrong \u2014 the episodes are applied and the reconcile is done, but repo hygiene genuinely has to run again over wave 3's branches and worktrees, and the epic summary now describes an epic that has not ended. Reopening is also the honest demonstration of #634 itself: this run's own plan changed mid-flight, and the engine's only way to express that is a cascading reopen of a frozen middle.",
             "ts": "2026-08-18T04:35:30.377992+00:00"
           }
+        },
+        {
+          "id": "e-execute-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-admiral/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-567-door",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 1
@@ -290,12 +304,12 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "blocked",
+      "status": "pending",
       "status_detail": {
         "blocker": "Closeout postcondition c5 requires the epic summary to be accepted by the human, and that is the only gate left \u2014 c1 (episodes), c2 (store carries this work id), c3 (architecture reconcile) and c4 (repo hygiene) are all attested. Three decisions are genuinely his and cannot be made inside this turn: (1) whether #442 closes as an evidenced honest null, given its premise did not reproduce across 11 cold subjects in four framings; (2) whether #565 closes as delivered with a correcting comment, given it calls a sentence false that this epic measured to be true; and (3) how much of the triage pairing to post \u2014 the candidate count grew 24 to 60, all are committed files on main so none is at risk, and the proposal is one grouped comment per target issue (~14) rather than 60.</blocker>\n<parameter name=\"next_action\">On acceptance: post the grouped pairing comments per .agent-work/epic-567-door/CLOSEOUT_PAIRING_INDEX.md, close the issues the human rules on, then attest closeout c5, run the final advance on closeout, and release this lease as the last action. The epic summary is at .agent-work/epic-567-door/EPIC_SUMMARY.md and origin/main is green at d832accd (3374 passed, 0 failed).</next_action>\n</invoke>\n",
         "authority_needed": "human (Tommy)",
         "next_action": "",
-        "prior_status": "pending"
+        "resume_reason": "Wave 3 is merged and verified. The block was taken at the wave-2 acceptance checkpoint, when closeout was the only remaining gate; the human then added scope, execute reopened, and the reopen cascaded complete and in-progress gates back to pending while leaving this blocked one blocked. origin/main is now a8f59c69 at 3418 passed / 0 failed, all five wave-2 PRs and both wave-3 PRs merged, every epic deliverable verified present on main. The blocker no longer holds."
       },
       "result": null,
       "finding": null,
@@ -305,20 +319,13 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [
-    {
-      "item": "closeout",
-      "blocker": "Closeout postcondition c5 requires the epic summary to be accepted by the human, and that is the only gate left \u2014 c1 (episodes), c2 (store carries this work id), c3 (architecture reconcile) and c4 (repo hygiene) are all attested. Three decisions are genuinely his and cannot be made inside this turn: (1) whether #442 closes as an evidenced honest null, given its premise did not reproduce across 11 cold subjects in four framings; (2) whether #565 closes as delivered with a correcting comment, given it calls a sentence false that this epic measured to be true; and (3) how much of the triage pairing to post \u2014 the candidate count grew 24 to 60, all are committed files on main so none is at risk, and the proposal is one grouped comment per target issue (~14) rather than 60.</blocker>\n<parameter name=\"next_action\">On acceptance: post the grouped pairing comments per .agent-work/epic-567-door/CLOSEOUT_PAIRING_INDEX.md, close the issues the human rules on, then attest closeout c5, run the final advance on closeout, and release this lease as the last action. The epic summary is at .agent-work/epic-567-door/EPIC_SUMMARY.md and origin/main is green at d832accd (3374 passed, 0 failed).</next_action>\n</invoke>\n",
-      "authority_needed": "human (Tommy)",
-      "next_action": ""
-    }
-  ],
+  "blockers": [],
   "refusals": 1,
   "engine_session": {
     "session_id": "constellation/epic-567-door",
     "status": "active",
     "claimed_at": "2026-08-17T18:45:51.248764+00:00",
-    "last_heartbeat": "2026-08-18T04:35:30.378001+00:00",
+    "last_heartbeat": "2026-08-18T07:07:26.133254+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,
@@ -352,6 +359,13 @@
       "reopen": true,
       "reason": "The human added scope after wave 2 closed: #619 (installer writes a machine-probed interpreter into a tracked file), #633 (crew model tier from a per-role, per-harness table) and #634 (one spine per agent, frozen bookends and a mutable middle). He ruled \"file it now and do it now\", so the epic has a wave 3 and execute is not finished. Closeout's c1-c4 attestations are superseded rather than wrong \u2014 the episodes are applied and the reconcile is done, but repo hygiene genuinely has to run again over wave 3's branches and worktrees, and the epic summary now describes an epic that has not ended. Reopening is also the honest demonstration of #634 itself: this run's own plan changed mid-flight, and the engine's only way to express that is a cascading reopen of a frozen middle.",
       "ts": "2026-08-18T04:35:30.377997+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "Three waves, eleven lanes, seven PRs merged this session, and the epic's claim is now true rather than nearly true. origin/main at a8f59c69 runs 3418 passed / 0 failed in a clean detached worktree \u2014 3191 when the epic began. Zero CLI-fallback clauses survive in skills/, specs/ or the tracked overlay, and a 718-line guard fails if any return. The understanding that closes execute for the second time is the human's, not mine: I had recorded the three unsweepable child-plan sites as a documented limit of the door's isolation property, and he rejected that \u2014 an exception to the single access point is a failure. Chasing it found the real shape, and it was not what anyone predicted: the mutable middle was already built, and what was missing was the freeze on the closing bookend, so a Commander could delete its own archive and an Admiral its own closeout in one unforced call. That is now refused, red-proofed by performing it before and after. Wave 3 also closed the two launcher defects that let a machine-local default stand in for a declared one \u2014 a probed interpreter written into the calling repo's tracked file regardless of --dest, and a crew tier taken from an unconstrained free-text field. What remains is named rather than absorbed: #634 stays open for the crew half, the execute.json migration, and the fact that the freeze protects a run's completion but not its acceptance.",
+      "mechanical": false,
+      "ts": "2026-08-18T07:07:26.133231+00:00"
     }
   ]
 }
