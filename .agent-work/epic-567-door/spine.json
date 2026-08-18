@@ -291,7 +291,8 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-admiral/scripts/verify_episode_captured.py epic-567-door --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-closeout-2"
         },
         {
           "id": "c3",
@@ -314,13 +315,14 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-closeout-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {
         "blocker": "Closeout postcondition c5 requires the epic summary to be accepted by the human, and that is the only gate left \u2014 c1 (episodes), c2 (store carries this work id), c3 (architecture reconcile) and c4 (repo hygiene) are all attested. Three decisions are genuinely his and cannot be made inside this turn: (1) whether #442 closes as an evidenced honest null, given its premise did not reproduce across 11 cold subjects in four framings; (2) whether #565 closes as delivered with a correcting comment, given it calls a sentence false that this epic measured to be true; and (3) how much of the triage pairing to post \u2014 the candidate count grew 24 to 60, all are committed files on main so none is at risk, and the proposal is one grouped comment per target issue (~14) rather than 60.</blocker>\n<parameter name=\"next_action\">On acceptance: post the grouped pairing comments per .agent-work/epic-567-door/CLOSEOUT_PAIRING_INDEX.md, close the issues the human rules on, then attest closeout c5, run the final advance on closeout, and release this lease as the last action. The epic summary is at .agent-work/epic-567-door/EPIC_SUMMARY.md and origin/main is green at d832accd (3374 passed, 0 failed).</next_action>\n</invoke>\n",
         "authority_needed": "human (Tommy)",
@@ -342,6 +344,17 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-closeout-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-admiral/scripts/verify_episode_captured.py epic-567-door --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -353,13 +366,14 @@
   "refusals": 2,
   "engine_session": {
     "session_id": "constellation/epic-567-door",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-17T18:45:51.248764+00:00",
-    "last_heartbeat": "2026-08-18T12:50:45.421880+00:00",
+    "last_heartbeat": "2026-08-18T12:51:22.822961+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-18T12:51:26.755592+00:00"
   },
   "why_trail": [
     {
@@ -410,6 +424,13 @@
       "why": "Three waves and twelve lanes are merged, and the cleanup wave repaired the one deliverable that had turned on the run: wave 3's model-tier table refused this epic's own closing dispatch because its key set named the roles someone expected rather than the seven live doctrine names. Lane N declared the missing role at the human's ruled tier and wrote a guard that scans doctrine for the property that matters, proven to red on the real defect. The corpus reinstall the human called for made K's bookend freeze and L's lint live rather than inert, and exposed that lane M's deletion target did not exist -- skills/workbench is the installer's shipping unit for the checklist engine, the spine rail and the gauge hook, so M was closed unsent and the real coupling filed as #639. main is 3431 passed / 0 failed at c30ef5ae in a clean detached worktree, every branch was gated on its exact head, and the w4 boundary exits with decision=stop: nothing further to launch, closeout next.",
       "mechanical": false,
       "ts": "2026-08-18T12:40:36.010493+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "closeout",
+      "why": "The epic closes on a deliverable that was twice deleted and twice regrown, and the reason it regrew was a test mandating the text: nine assertions in test_mcp_adoption.py required each imperative field to carry its exact CLI command, so every prior sweep was reverted by a red suite telling the deleter it had broken a rule. Inverting that mandate and guarding it in 718 lines is what made the third removal hold \u2014 the corpus now has one agent-facing path to the engine where it had two, proven by a cartographer who had never seen the epic. The run's own lesson is narrower and sharper than its subject: three separate times I measured a real population and attached it to a mechanism I had not checked \u2014 the tier table's key set drawn from expected roles rather than the seven live ones, lane M's deletion target censused from the repo tree rather than the installed package, and a referrer count whose exclusion filter dropped the tracked overlay manifest along with the archive noise. Each was caught by something outside my own reasoning: a refusal, the human's sequencing of a reinstall, and an implausible number. Closeout is measured rather than carried \u2014 34 episodes with the capture gate green, a reconcile that is an evidenced honest null because no packet map or minted anchor exists to compare against, a feedback sweep with five candidates marked and none filed, every branch merged and every worktree swept, and the human's acceptance attached as e-closeout-1.",
+      "mechanical": false,
+      "ts": "2026-08-18T12:51:22.822947+00:00"
     }
   ],
   "trip_ledger": [
