@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "execute",
+  "files": [],
+  "repo_rev": {
+    "commit": "da6a50d9ef2c19b35b430e9c1e31ab1d6b0b05db"
+  },
+  "run": {
+    "work_id": "epic-567-door/cmdr-g",
+    "generated_at": "2026-08-17T07:50:31Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-g-closeout-lease"
+    }
+  }
+}

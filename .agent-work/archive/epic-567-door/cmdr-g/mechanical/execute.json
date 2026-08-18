@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "execute",
+  "mechanical": {
+    "run": "epic-567-door/cmdr-g",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 7,
+    "spine-step": "execute",
+    "rework-count": 3,
+    "failed-commands": 0,
+    "reopens": 3,
+    "context-manifest-ref": "ctx-epic-567-door/cmdr-g-execute@82d0719084bd58770d14886bde269205993e93cd",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-567-door/cmdr-g",
+    "generated_at": "2026-08-17T08:27:02Z"
+  }
+}

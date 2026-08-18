@@ -1,0 +1,18 @@
+My lane's own spine is verified terminal — `spine_status` against my bound spine (`constellation/567-d1/lane-d1/commander-delegated`) reports:
+
+```
+LEASE released
+DONE: no open items
+```
+
+The Stop hook's feedback is describing a **different** spine: `constellation/epic-567-door`, actively leased by role `admiral`. That's not my spine, not my role, and not something I have authority to plan waves on, dispatch Commanders for, or merge PRs against — those are the Admiral's job, and I am the D1 lane's delegated crew, not the Admiral.
+
+This is a known, documented artifact of this environment, not a live gate I need to satisfy: hooks resolve against the **main checkout** regardless of which worktree the session is running in (issue #269, cited in my own launch order), so the Stop hook is reading whatever spine the main checkout currently has under an active engine lease — right now that's the epic spine the Admiral is mid-flight on — and presenting its imperatives to me as if they were mine. My predecessor already flagged this exact class of defect as a triage candidate (`dispatched-crew-spine-is-not-bound.md`, an "impersonation hazard" where a hook resolves the wrong spine from disk and hands a crew someone else's in-progress state), including the warning that the hook's own sanctioned escapes (`block`, `waive`) write to *that* spine — meaning acting on this feedback at all, even to "honestly stop," would mean mutating the Admiral's live epic spine without authorization. I won't do that.
+
+**My actual deliverable is complete and verified:**
+- The retirement guard is fully green (19/19, no exclusion) and red-proofed against a fresh reintroduction.
+- The full suite is green in a clean detached worktree at `9af6ddcc` (1 failed — the permitted `MapTreeFreshnessTests` exception — 3373 passed).
+- PR #631 is pushed and `MERGEABLE` at that head.
+- The return artifact is appended (not rewritten) at `.agent-work/epic-567-door/results/lane-d1-RETURN.md` §12.
+
+There is nothing further within my scope to do. I'm ending this turn on that basis; if the epic-level wave/transition machinery genuinely needs attention, that's for the Admiral's own session against its own bound spine, not for me to take on here.
