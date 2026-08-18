@@ -527,3 +527,91 @@ Everything above the addendum still binds: file ownership (plus F-2's grant), no
 `docs/agents/*` promotion, `map/INDEX.md` is Admiral-owned, the return path, and the merge
 position — **you merge last**, so rebase on the merged `main` before your final gate. Lane F is
 already merged (`e3b2d41a`).
+
+---
+
+# ADMIRAL ADDENDUM 2 — 2026-08-17, for the Commander finishing this lane
+
+Your predecessor delivered nearly all of #559 and its work is committed and rebased. **One thing
+remains, it is small, and it is now unblocked by your predecessor's own change.**
+
+## Your predecessor's residual, and the fact it got wrong
+
+Its return says the guard is green everywhere except `skills/workbench/SKILL.md` and
+`skills/workbench/references/checklist-engine.md` — *"both D2's, which D2 deletes."*
+
+**Lane D2 has merged, and it did not delete them.** PR **#629** is in `main` (and in your
+branch's history — verified). D2 **trimmed** the teaching half from 289 lines to 124 and kept
+those two files, because deleting them outright broke two pre-existing suites that pin specific
+sections as the corpus's sole written authority for content the door does not restate. D2 was
+right to keep them, and it was structurally unable to remove the clauses: the paragraph carrying
+them was pinned by `test_mcp_adoption.py`'s Tier2 test — **your file**, which your predecessor has
+now inverted. Its own comment records the consequence: *"`skills/workbench/SKILL.md` came OFF this
+list with the inversion."*
+
+So the text is free to sweep for the first time, and only you can do it.
+
+## RULING — `skills/workbench/**` is YOURS. The fence is lifted.
+
+File ownership in this wave was a **concurrency control**, not a permanent boundary: one writer
+per file *at a time*. D2 is finished and merged, so there is no second writer. The Admiral's
+fence was the thing that made this residual unreachable — that error is mine, not yours and not
+D2's.
+
+**Scope, exactly:** the four `CLI fallback` occurrences in those two files (2 in each), which
+your predecessor counted as 10 addresses. Nothing else in `skills/workbench/**` is in scope —
+D2's trimming decisions stand, and every section it retained is retained because a named test
+pins it. **Do not re-delete what D2 kept.**
+
+**Two of those occurrences carry a sentence that is TRUE**, and this matters for the wording:
+
+> *"CLI fallback, always available, and the only path for an in-session dispatched crew member
+> driving its own plan or survey"*
+
+#565 calls both halves of that sentence false. **They are not.** This wave measured four
+independent times that a child plan — a Commander's `execute.json`, an Interrogator's
+`interrogation.json`, an in-session crew's own plan — **cannot** be driven through the door: your
+predecessor proved a door refuses to bind a second checklist while holding its own lease and that
+releasing the lease breaks `archive`'s own requirement; lanes F and H drove their `execute.json`
+under hand-supplied CLI session ids; lane E's implementer did the same with `IMPLEMENTER_PLAN.json`.
+
+So apply the same disposition your predecessor's **F-1 ruling** already got for its three
+second-checklist sites: **the phrase goes, the true content stays.** "Fallback" is the wrong word
+because a fallback implies a working primary and there is none. State the real constraint plainly.
+Deleting an agent's only path and leaving nothing behind trades a documentation problem for a
+hidden-fallback problem.
+
+## Acceptance
+
+Your predecessor already proved the residual is the whole of it: with `skills/workbench/` removed
+in a scratch copy, the guard is **fully green, 19 passed**. So the bar is simply that the guard is
+fully green **on the real tree**, with no scratch copy and no exclusion.
+
+Then: full suite in a clean detached worktree of your branch (`env -u SPINE_FILE -u SPINE_SESSION
+-u SPINE_PARENT -u CREW_SCRATCH_DIR`), push, and open the PR. Append to the existing
+`results/lane-d1-RETURN.md` rather than rewriting it — your predecessor's account of the sweep,
+the guard and its own mistakes is the epic's most valuable single artifact and must survive intact.
+
+## BUDGET — crews run at Sonnet. This is a human ruling and it is not discretionary.
+
+**Pass `--model sonnet` on every `run_crew.py` dispatch you make.** Your predecessor spawned
+**15** crew sessions and every one ran on **Opus**, because `run_crew.py` inherits this host's
+`settings.json` default (`"model": "opus"`) when `--model` is unset — so a Sonnet-tiered lane
+silently ran an Opus subtree. Six of those 15 were abandoned and retried, which is pure waste.
+The human raised the spend directly and ruled Sonnet for all remaining work. That error was the
+Admiral's: the launch order named a tier for the lane and said nothing about the crews the lane
+dispatches.
+
+**You are running at Sonnet yourself**, for the same reason — what remains is a bounded, fully
+specified text change, not design work.
+
+Given the size of this task, consider whether it needs a crew dispatch at all. A four-occurrence
+edit in two files, with an existing guard as the acceptance test, may be smaller than the
+machinery of dispatching for it. Right-sizing down is explicitly sanctioned.
+
+## Unchanged
+
+Everything above still binds, including Addendum 1's rulings (F-1 wording, your ownership of
+`tests/test_mcp_adoption.py`, `tests/data/store_mentions.approved.txt` and the
+`.agent-work/templates/` overlay, and the baseline-repair landmine — never
+`--update-baseline --skills-root ~/.claude/skills`, always a shadow root built from repo source).
