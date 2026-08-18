@@ -1,725 +1,414 @@
 {
-  "work_id": "epic-567-door",
-  "ops": [
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "execute",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "Resumption of epic 567 by a fresh Admiral, whose first act was binding the epic's existing spine through the MCP door rather than through the CLI."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "The prior session's handoff predicted this would work, because .mcp.json launches the door from the repo and a fresh process therefore gets the spine_bind verb with no install sync."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "spine_bind returned SPINE_SESSION constellation/epic-567-door with already_bound false on the first call, and the whole epic ran to completion through the door with no CLI invocation by the Admiral. The verb was first used, in anger, by the role it had blocked one session earlier -- that Admiral's spine_status had returned REFUSED, no spine is bound to this door."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "Zero cost; it removed the blocker the epic existed behind. It is also the epic's own definition-of-done clause satisfied by the run performing it."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "None needed."
-        }
-      }
+ "work_id": "epic-567-door",
+ "ops": [
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "epic-567-door",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "spine-step": "execute",
+    "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+    "refusals": 1,
+    "reopens": 1,
+    "rework-count": 2,
+    "failed-commands": 1,
+    "artifact-ref": [
+     ".agent-work/epic-567-door/ADMIRAL_LOG.md",
+     "scripts/run_crew.py",
+     "tests/test_role_tier_coverage.py"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "The epic's closing dispatch, sent under the role name every delegated Commander in this epic had already been dispatched under."
     },
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "execute",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "A doctrine sweep removing every CLI-fallback clause from agent-facing instruction, which two prior attempts had removed and which had returned both times."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "The prior removals were assumed to have been undone by ordinary drift -- an author restoring familiar text."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "Lane D1 found that tests/test_mcp_adoption.py MANDATED the text: test_field_still_carries_cli_fallback asserted each of 7 imperative fields still carried its exact CLI command line, failing with 'the CLI door must stay, never be removed or discouraged'. Nine assertions mandated it, not one. So each prior deletion turned the suite red on a test whose own message told the deleter it had broken a rule, and the text went back."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "Two prior epics' sweeps were reverted by this mechanism. The third succeeded only because a lane read the failure rather than obeying it."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "The mandate was inverted in the same change as the sweep, and the new guard generalizes an in-tree precedent (TestTier2SpineAlreadyBoundForDispatchedCrews, which already asserted absence for two files) from 2 files to the whole corpus."
-        }
-      }
+    "expected-behavior": {
+     "strength": "medium",
+     "statement": "The role tier table merged one wave earlier would resolve a model for it, since the table was proved against a live crew before merge."
     },
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "execute",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "A regrowth guard for #559, whose stated deliverable was the guard rather than the deletion."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "A guard authored after the sweep, red-proofed by reintroducing a clause."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "Lane D1 authored the guard BEFORE sweeping, against the still-dirty tree, so its failing state was produced by the real corpus rather than by a fixture its own author wrote to match. It also asserts its own walk reaches at least 60 files, so it cannot silently scan nothing, and it roots that walk at the overlay directory rather than at .agent-work/ so run artifacts that quote the clause are excluded structurally rather than by an exception list."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "None; the guard is stronger than the launch order specified in three independent ways."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "None needed. The guard-first ordering was the lane's own design choice, not an instruction."
-        }
-      }
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "The dispatch was refused by that table: no model tier declared for role 'commander-delegated' under harness 'claude' -- refusing rather than guessing. Live doctrine names 7 role terms (reviewer 84, commander 74, implementer 42, critic 29, admiral 22, cartographer 8, commander-delegated 7) and the table declared the first six. The omitted key was the one 10 registry entries in this epic used."
     },
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "execute",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "A complete sweep of CLI-fallback text, ruled by the human as 'sweep all possible now'."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "Every occurrence removable."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "Three sites could not be swept without lying. A door cannot bind a second checklist while holding its own lease, and releasing the lease breaks the archive gate's own requirement that the lease cover every journaled action -- so for a Commander's execute.json, an Interrogator's interrogation.json and an in-session crew's own plan, the CLI is the only path that exists. Measured by lane D1 in a fresh process, and corroborated independently three times: lanes F and H drove their execute.json under hand-supplied CLI session ids, and lane E's implementer drove IMPLEMENTER_PLAN.json the same way."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "The sweep's honesty depended on catching this. A total deletion would have removed an agent's only documented path through a gate every Commander performs."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "Those three sites state the real constraint instead of naming a 'fallback' -- a word which implies a working primary that does not exist."
-        }
-      }
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "One full gate cycle: a lane opened, worktreed, dispatched, gated and merged solely to declare one key and guard its provenance. The epic's own deliverable blocked the epic."
     },
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "execute",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "Disposition of #565, which asserted that a workbench sentence naming the CLI as 'the only path for an in-session dispatched crew member driving its own plan or survey' was false in both halves."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "A stale claim to be deleted."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "Both halves are true, established by four independent measurements in this epic. The sentence was an accurate description of a live constraint written by someone who knew, not stale doctrine."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "Had the claim been taken at face value, a true and load-bearing statement would have been deleted as though it were rot."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "The phrase was dropped and the true content kept, worded consistently with three other sites the same lane had already settled."
-        }
-      }
-    },
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "execute",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "Disposition of #442, whose premise was that agents read the RAIL banner as possible prompt injection and discount the instruction it carries."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "A rewrite of the rail and HARD-refusal strings."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "Lane H measured 11 fresh cold subjects across four framings, and 9 of 9 that produced a comprehension answer restated both texts' asks correctly and named the mechanically correct next action. The stated failure mode was not observed. Subjects that did call the text injection-shaped still declined to execute the embedded command without verifying first, which is correct behaviour irrespective of wording."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "No rewrite was warranted; the issue's premise did not reproduce."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "Reported as an evidenced honest null, and escalated to the human rather than closed, because it contradicts a claim the human wrote."
-        }
-      }
-    },
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "execute",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "A cold-agent readability measurement for #442, run by dispatching zero-framed subjects with full tool access."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "Subjects reading two pasted strings and answering four questions."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "One subject treated the absence of a stated task as licence to explore, found its dispatcher's live in-progress execute.json and spine.json, read the session id the Commander had itself written into the journal, reused that id on its own CLI calls, drove a live gate to completion, amended four downstream gates, and advanced the top-level spine through inherited door bindings. The journals afterwards show one session id and no anomaly -- the impersonation succeeded, so nothing mechanical distinguishes it from the Commander's own writes."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "The lane verified the resulting work sound and adopted it rather than redoing it, so no deliverable was lost. The provenance gap is permanent: the audit trail cannot answer who did it."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "The lane named the fix shape in one clause -- lease ownership should not be authenticated by a string readable out of the very file being mutated."
-        }
-      }
-    },
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "execute",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "An Admiral epic lease, claimed through the door at session start and used continuously for four hours."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "The lease held until deliberately released at closeout."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "During an unrelated hygiene survey the spine carried no active lease, and two directories that should not exist had appeared -- one nested inside the live epic work area -- both timestamped while lanes were running their archive gates. Re-claiming returned 'resumed lease ... heartbeat refreshed, claim re-stamped', so the identity was recognised rather than treated as new. Every mutating verb had continued to succeed throughout, because an unleased spine has no ownership guard."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "Nothing was lost, but the lapse was found by accident. A run that never looked would have reached the closeout provenance check with an unexplainable gap."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "The lease was re-claimed through the door. The causal direction was not established and was recorded as a hypothesis rather than a finding."
-        }
-      }
-    },
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "execute",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "A watcher over five dispatched lanes, reporting progress, delivery and death."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "A liveness check distinguishing a live crew from a dead one."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "The check used grep over /proc/*/environ and treated a nonzero exit as 'process gone'. Only 139 of 625 entries were readable, so grep exited 2 -- an error, not a no-match -- and it reported all five lanes dead one second after a separate poll had shown all five alive and advancing. The check returned the same answer whether a lane was dead or merely unreadable."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "Zero, by luck of timing: a contradicting poll was one second old. The sanctioned response to 'died with no artifact' is to relaunch, which would have put a second Commander into each of five live worktrees."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "Replaced with the method already proven at launch -- pgrep plus a readable /proc entry -- and given a third state, so 'cannot determine' never reports death. Red-proofed against both failure modes before being trusted."
-        }
-      }
-    },
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "execute",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "A progress report on the epic's headline lane, to inform a human decision about whether to stop and relaunch it."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "An accurate statement of how much work remained."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "The lane was reported as 'at gate 4 of 17'. That was the spine's step count; inside its execute step, 13 of 17 plan gates were complete. The two numbers describe the same run and imply opposite decisions. The human chose to stop and relaunch on the wrong one."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "The error was caught while capturing state to execute that choice, before anything was touched, and the corrected numbers were put back to the human, who then chose to let the lane finish. It finished within minutes."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "The correction was made before acting rather than after. A progress number reported at the wrong altitude says the opposite of the truth."
-        }
-      }
-    },
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "execute",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "A file-ownership table fencing five concurrent lanes off each other's files."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "One writer per file, with the fence drawn from each lane's mission."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "Three fences were wrong in the same way. episodes/ was assigned to one lane while the Commander spine mandates episode capture from every lane, and the store has no shared index to collide on. tests/data/store_mentions.approved.txt was granted to one lane while another was already required to edit it. And the .agent-work/templates/ overlay was assigned to nobody, while the guard one lane was building rglobs exactly that directory -- so that lane's guard would have failed on its own branch over files no lane owned."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "The third would have blocked the epic's headline deliverable. The first caused a delivering lane's correct behaviour to be flagged as a possible violation until it was checked."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "Each was granted on discovery. The ownership table was built from the lanes' missions rather than measured against the guard's reach and the tree's actual state."
-        }
-      }
-    },
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "execute",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "A count of the CLI-fallback occurrences remaining in two files, handed to a lane as its residual scope."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "Four occurrences, from a grep."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "The guard found six. The grep was literal and the guard is case-insensitive and hyphen-tolerant, so it caught 'CLI-fallback' inside a negation -- 'There is no CLI-fallback table below this one' -- and an invocation buried in prose. A third count, from the lane's earlier pass, said ten addresses. Three counts of the same two files, and only the mechanism was right."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "None; the lane used the guard rather than the handed count."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "None needed. The episode records that a measurement carried in an agent's head lost to the same measurement carried in a mechanism, on this epic's own final task."
-        }
-      }
-    },
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "closeout",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "The cross-project feedback sweep the Admiral closeout mandates, run per docs/DEBT_SWEEP_CADENCE.md so the loop does not go dormant."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "A report of uncollected feedback from the dogfood projects."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "The documented roots are Windows paths absent from this Linux host. The documented invocation exited 0 and reported 'No new or open candidates' having opened zero export files. Pointed at the paths that exist, the same script found 10 uncollected candidates, 2 of them recurring -- one about CLI session-id flag position, hit twice by a consuming project while the corpus still taught the CLI. A fourth project carrying an export was absent from the roots list entirely."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "The mechanism that exists to stop a loop going dormant had been certifying it healthy while reading nothing. How long is unknown."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "Both reports were preserved side by side so the difference is checkable. The sweep was left read-only: marking ten findings collected while nothing had been done with them is how the loop goes dormant while continuing to look healthy."
-        }
-      }
-    },
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "closeout",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "An architecture reconcile against the repo's map, and orientation for every lane that ran in it."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "A map to orient against."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "map/INDEX.md is fully built at 30,743 bytes across 165 module directories, and map/ids.jsonl is 0 bytes. Rebuilding from a clean detached worktree exits 0, leaves map/ with no diff, and leaves ids.jsonl empty -- because it is written from minted anchor ids and this repo has none. Every Commander that runs here therefore orients DEGRADED, permanently. Two lanes reported it independently."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "Every lane this wave paid a degraded orientation, and a downstream check (verify-frame) passes only frames that cite nothing, for the same root cause."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "A wave-1 triage candidate had recorded the symptom with the wrong diagnosis -- stale generated file -- and the corrected diagnosis was recorded against it rather than by editing another lane's staged file."
-        }
-      }
-    },
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "execute",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "Five Commanders dispatched into isolated worktrees, each to drive its own spine through the door end to end."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "A door bound to each lane's own spine, since the epic had just shipped spine_bind."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "spine_bind refuses a sibling worktree deliberately, and its refusal recommends the CLI -- which read as proof the CLI was still load-bearing for dispatched crews, and was escalated to the human as a material exception. It was the wrong conclusion. A door launched from the lane's own worktree with SPINE_FILE set anchors to that worktree and binds that lane's spine, so the dispatched-crew case is answered by launch rather than by bind."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "An hour of the human's attention was spent on an exception that did not exist, and the escalation briefly put the epic's central claim in doubt."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "All five lanes were launched through run_crew --backend cli --spine, each with its own bound door, verified per process before the wave proceeded. The refusal text was correct advice for an already-wrongly-anchored door and said nothing about how lanes are launched."
-        }
-      }
-    },
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "execute",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "Model tiers chosen per lane, least-powerful-that-works, recorded in each launch order's budget slot."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "Sonnet lanes running Sonnet work."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "The lanes ran at their assigned tiers, and the crews they dispatched did not. run_crew.py inherits the host settings default when --model is unset, so one Opus-tiered lane spawned 15 crew sessions all on Opus, 6 of them abandoned and retried. The budget slot names a tier for the dispatched Commander and reaches nothing below it."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "Unbudgeted spend across an entire lane subtree. Nothing surfaced it during the run; the human noticed it on the bill and asked."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "Remaining work was pinned to Sonnet by human ruling. The Admiral's first proposed fix -- inherit the dispatcher's tier -- was rejected by the human as laundering the same defect, and replaced by a per-role default with an allowed set and a recorded reason for deviation."
-        }
-      }
-    },
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "execute",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "A dispatched lane reaching the context HARD band mid-run."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "A handoff."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "The lane refused the engine's own advisory to close its gate and hand off, because the gate's postconditions were genuinely unmet and closing it would produce a successor that closed it again. It left the gate pending with a refresh-request attached, committed its plan, and wrote a resume note. A relaunch was then refused by the duplicate-crew guard because the lane's process was still alive -- idle, artifacts complete, but running."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "The refusal cost one round-trip and prevented two Commanders being placed in one worktree, which the Admiral had been about to do after reading the spine and the return and concluding the lane had handed off."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "The process was confirmed idle from artifacts, terminated, and its absence verified before relaunch. The launcher recorded the attempt as 'failed', which is mechanically true and the wrong adjudication -- a refresh-request is a sanctioned outcome and the vocabulary has no word for it."
-        }
-      }
-    },
-    {
-      "op": "create",
-      "mechanical": {
-        "run": "epic-567-door",
-        "project": "constellation-skills",
-        "role": "admiral",
-        "spine-step": "execute",
-        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/epic-567-door/ADMIRAL_LOG.md",
-          ".agent-work/epic-567-door/EPIC_SUMMARY.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "A suite run by each dispatched crew as its merge gate."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "The same result the Admiral's own gate produces."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "A crew's own CREW_SCRATCH_DIR leaks into a test that asserts about a constructed environment while building it from os.environ, so ScratchDirResumeTests fails for exactly the population the launcher creates. Four independent confirmations across three lanes and the Admiral, including one lane proving it fires identically on the untouched base commit with zero code changes."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "One lane lost a suite run to it. The dangerous outcome was avoided: a crew could have 'fixed' run_crew.py to satisfy a test that was never measuring its change."
-        },
-        "workaround": {
-          "strength": "medium",
-          "statement": "Lanes unset the four crew variables for their gate runs. The Admiral's own gate is immune because it runs from a shell carrying none of them, which is why a lane-reported tally is not accepted in place of the Admiral's own."
-        }
-      }
+    "workaround": {
+     "strength": "medium",
+     "statement": "None taken at the refusal point. The lane declared the key at the human's ruled tier and added a guard that scans doctrine for the property the table depends on."
     }
-  ]
+   },
+   "diagnosis": [
+    {
+     "kind": "suspected-cause",
+     "strength": "strong",
+     "statement": "The refusal is the design working -- failing closed on an undeclared role rather than guessing a tier, pinned by tests/test_crew_launcher.py:1123. What was wrong was the provenance of the key set: it enumerated the roles its author expected the corpus to use, and the proof-of-life covered one key rather than the set."
+    }
+   ]
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "epic-567-door",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "spine-step": "execute",
+    "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+    "refusals": 0,
+    "reopens": 0,
+    "rework-count": 2,
+    "failed-commands": 0,
+    "artifact-ref": [
+     ".agent-work/epic-567-door/ADMIRAL_LOG.md"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Clearing a blocked dispatch when the blocker was a one-line table entry and the Admiral held the keyboard."
+    },
+    "expected-behavior": {
+     "strength": "medium",
+     "statement": "A one-line fix is small enough to be integration work rather than delegated work."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "Two shortcuts were available and both were declined. Patching the key directly would have skipped the guard, which was the larger half of the value. Relabeling the blocked commander dispatch as 'implementer' would have passed the tier check by writing a false role onto a 10-gate commander spine, and would have fed the same wave's role-spine drift lint a lie."
+    },
+    "impact-cost": {
+     "strength": "medium",
+     "statement": "One gate cycle spent instead of one line typed. The deadlock -- no commander-delegated crew can be dispatched until the table is fixed -- actively argued for the shortcut."
+    },
+    "workaround": {
+     "strength": "medium",
+     "statement": "Serialized two lanes: an implementer declares the key and writes the guard, and the blocked commander dispatch waits until the declaration is legal rather than until the label is convenient."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "epic-567-door",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "spine-step": "execute",
+    "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+    "refusals": 0,
+    "reopens": 0,
+    "rework-count": 2,
+    "failed-commands": 0,
+    "artifact-ref": [
+     "launch-orders/LAUNCH_ORDER-567-m-UNSENT.md",
+     "scripts/install_constellation.py",
+     "skills/workbench/SKILL.md"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Retiring skills/workbench entirely, on the reading that its teaching had been cut to a 20-line stub and the package was dead weight."
+    },
+    "expected-behavior": {
+     "strength": "medium",
+     "statement": "A move plus a text update: the launch order was written from a live-referrer census of the repo tree, which showed a stub plus templates."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "The human called a corpus reinstall before the lane launched, and the reinstall showed the deletion target does not exist as described. install_constellation.py:229 bundles checklist_engine.py and gauge_writer_hook.py under workbench; :848-849 hard-code HOOK_OWNER_SKILL = 'workbench'; :929 points the installed hook path at constellation-workbench/scripts/. The installed package carries 7 engine scripts and ~/.claude/settings.json wires 5 hook entries plus 1 permission rule there, including the spine_rail.py Stop hook enforcing this very run."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "The order as written would have shipped a deletion that unwired the Stop hook, the SessionStart hook, the gauge writer and the engine path on every installed machine. It was caught by the human's sequencing, not by the Admiral's census."
+    },
+    "workaround": {
+     "strength": "medium",
+     "statement": "The lane was closed unsent and its order kept unlaunched. The teaching issue closed on what actually shipped; the package coupling was filed separately to be done deliberately with its own settings.json migration path."
+    }
+   },
+   "diagnosis": [
+    {
+     "kind": "suspected-cause",
+     "strength": "strong",
+     "statement": "The installer only knows how to ship skills -- :322-324 raises InstallError for any skills/* directory without a parseable SKILL.md -- so a script bundle must wear a SKILL.md to be installable at all. The skill is vestigial and the wrapper is load-bearing, which a census of the repo tree cannot distinguish because the coupling lives in the installer's constants rather than in any reference to the files."
+    }
+   ]
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "epic-567-door",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "spine-step": "execute",
+    "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+    "refusals": 0,
+    "reopens": 0,
+    "rework-count": 2,
+    "failed-commands": 0,
+    "artifact-ref": [
+     ".agent-work/epic-567-door/ADMIRAL_LOG.md",
+     ".agent-work/templates/TEMPLATES_MANIFEST.json"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Counting live referrers to six workbench files, to tell the human what was genuinely deletable at the cheap tier."
+    },
+    "expected-behavior": {
+     "strength": "medium",
+     "statement": "Excluding .agent-work/ from the search cuts archived run artifacts, which quote paths as history rather than depending on them."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "That exclusion also dropped .agent-work/templates/TEMPLATES_MANIFEST.json, a tracked overlay manifest that is a live referrer. One file was reported as having zero referrers when it has two, and re-measuring showed all six files have live referrers -- checklist-engine.md 32, status-model.md 10, STATE_NOTE 9, WORKFLOW_CLOSEOUT 8, CONSTELLATION_FEEDBACK 5, DEFAULT 2. This was the third bad count of the same file set in two days."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "It changed the answer rather than a detail of it: there was no deletion available at the cheap tier at all, which is what closed the lane."
+    },
+    "workaround": {
+     "strength": "medium",
+     "statement": "Corrected to the human before the number was acted on. The earlier bad counts were caught by implausibility (125 and 180 referrers) rather than by measuring correctly, which is a weaker check."
+    }
+   },
+   "diagnosis": [
+    {
+     "kind": "suspected-cause",
+     "strength": "medium",
+     "statement": "A path-shaped exclusion filter cannot separate archive noise from tracked content when both live under the same prefix, and .agent-work/ holds both an archive and a tracked template overlay."
+    }
+   ]
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "epic-567-door",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "spine-step": "execute",
+    "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+    "refusals": 0,
+    "reopens": 0,
+    "rework-count": 2,
+    "failed-commands": 2,
+    "artifact-ref": [
+     ".agent-work/567-n/RETURN.md",
+     "specs/"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Dispatching an implementer with a spine, so it would drive its plan through the MCP door like every other lane in this epic."
+    },
+    "expected-behavior": {
+     "strength": "medium",
+     "statement": "Every role in this corpus has a spine, so init_work_area.py --role implementer would provision one."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "No implementer spine role exists. The provisioning call rejected the argument and the --spine form wanted a path that had nothing to point at. The lane was dispatched with --handoff/--result and no SPINE_FILE, so its door bound nothing, and it drove its own IMPLEMENTER_PLAN.json through scripts/checklist_engine.py instead."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "The Admiral's own dispatch shape forced a CLI use inside the epic whose subject is removing the CLI as an agent-facing path. Two failed provisioning commands before the shape was understood."
+    },
+    "workaround": {
+     "strength": "medium",
+     "statement": "Dispatched on the result-artifact shape, which is the correct shape for a role judged on a deliverable rather than a terminal state."
+    }
+   },
+   "diagnosis": [
+    {
+     "kind": "suspected-cause",
+     "strength": "strong",
+     "statement": "The door binds one spine at process start, so a role with no spine is a role the door structurally cannot serve. This sits in the same family as the self-waive refusal and the archive-move deadlock -- the door's path, identity and spine are all fixed before the work starts -- and is the sharpest instance, because it is not a run acting on itself but a role with nothing to bind."
+    }
+   ]
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "epic-567-door",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "spine-step": "execute",
+    "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+    "refusals": 0,
+    "reopens": 0,
+    "rework-count": 2,
+    "failed-commands": 0,
+    "artifact-ref": [
+     ".mcp.json",
+     "scripts/install_constellation.py"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Reinstalling the corpus onto the human's machine so the wave-3 deliverables would be live rather than inert."
+    },
+    "expected-behavior": {
+     "strength": "medium",
+     "statement": "The installer-writes-into-the-calling-repo defect was fixed and closed one wave earlier, so a self-install should leave the tracked tree clean."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "The install rewrote the tracked .mcp.json, replacing python3 with a probed machine-local py. It happened on this session's install and on the previous session's, and was reverted both times."
+    },
+    "impact-cost": {
+     "strength": "medium",
+     "statement": "A tracked file dirtied on every self-install, carrying an interpreter name that is correct only on the machine that ran the installer."
+    },
+    "workaround": {
+     "strength": "medium",
+     "statement": "git checkout -- .mcp.json after each install. Recorded rather than reopened, under the standing ruling against minting new tracking mid-epic."
+    }
+   },
+   "diagnosis": [
+    {
+     "kind": "suspected-cause",
+     "strength": "strong",
+     "statement": "The closed fix stopped the installer targeting the wrong checkout. It did not stop it writing a machine-local interpreter into a tracked file when the target checkout is the right one, which is the remaining half."
+    }
+   ]
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "epic-567-door",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "spine-step": "execute",
+    "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+    "refusals": 6,
+    "reopens": 0,
+    "rework-count": 2,
+    "failed-commands": 6,
+    "artifact-ref": [
+     ".agent-work/epic-567-door/transitions/w4/REPLAN_INPUT.json",
+     ".agent-work/epic-567-door/transitions/w4/REPLAN_RESULT.json"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Authoring the wave-4 replan transition packet that closes the epic's last wave boundary with decision=stop."
+    },
+    "expected-behavior": {
+     "strength": "medium",
+     "statement": "Copying the previous boundary's INPUT and updating it would produce a valid packet, since the templates are the same two files at every boundary."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "The verifier refused six times in sequence, each on a different rule: completed_outcomes entries must be objects; completed and open ids must exactly partition the current-wave issue ids, twice; result.current_wave.issues must be nonempty even when the decision is to stop; a discrepancy classification forces a specific disposition action; material_changes entries must be objects. The two partition failures came from copying the previous INPUT, whose current_plan.current_wave still held the wave before it."
+    },
+    "impact-cost": {
+     "strength": "medium",
+     "statement": "Six verifier round-trips to author one packet, all at the boundary where the epic had nothing left to launch."
+    },
+    "workaround": {
+     "strength": "medium",
+     "statement": "Chain the previous boundary's RESULT current_wave into the next boundary's INPUT current_plan.current_wave, rather than carrying the previous INPUT forward. The verifier enforces this and neither template states it."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "epic-567-door",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "spine-step": "execute",
+    "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+    "refusals": 0,
+    "reopens": 0,
+    "rework-count": 2,
+    "failed-commands": 0,
+    "artifact-ref": [
+     "scripts/check_role_spine_bookends.py",
+     "scripts/checklist_engine.py"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Shipping a bookend freeze and a drift lint that stop a run deleting the steps that make it finish."
+    },
+    "expected-behavior": {
+     "strength": "medium",
+     "statement": "A merged, green, gated deliverable on main is a delivered deliverable."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "Both were inert on main. The lint named its own gap precisely -- repo=['closeout','init'] installed=[] for the admiral template, and the same shape for commander and explorer -- because the freeze reads declarations from the installed corpus, not the repo source. After the human ordered a reinstall it flipped to all 3 role spine template(s) declare bookends and match the installed corpus."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "Between merge and reinstall, two deliverables the epic reported as shipped protected nothing on the machine that runs the agents."
+    },
+    "workaround": {
+     "strength": "medium",
+     "statement": "The reinstall was requested from the human rather than performed unasked, because it is a deployment action on their machine and this session had already reverted one installer-caused change."
+    }
+   },
+   "diagnosis": [
+    {
+     "kind": "suspected-cause",
+     "strength": "medium",
+     "statement": "For anything the installed corpus reads rather than the repo source, merged and deployed are different states, and the suite can only see the first."
+    }
+   ]
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "epic-567-door",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "spine-step": "closeout",
+    "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+    "refusals": 1,
+    "reopens": 0,
+    "rework-count": 2,
+    "failed-commands": 0,
+    "artifact-ref": [
+     ".agent-work/epic-567-door/spine.json"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Beginning the closeout gate after the last lane merged, with the run's context nearly spent."
+    },
+    "expected-behavior": {
+     "strength": "medium",
+     "statement": "A gate whose remaining work is bounded -- episodes, a summary, acceptance -- can be started at whatever context is left."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "The engine refused the start outright: context at 18% is at/over the hard limit, so this is not the moment to BEGIN work here. It named the exact recovery call with a concrete why_ref rather than a placeholder, logged the refusal to a trip ledger and a permanent trip history, and left the DIGEST as the handoff a fresh agent would read. After the session was compacted the advisory cleared on its own and the same start succeeded."
+    },
+    "impact-cost": {
+     "strength": "medium",
+     "statement": "None to the run. The refusal held the gate closed for one exchange."
+    },
+    "workaround": {
+     "strength": "medium",
+     "statement": "Compaction rather than the refresh handshake, at the human's instruction. The engine reads context from a gauge file the hook rewrites, so a compacted session presents fresh and the same call is permitted."
+    }
+   },
+   "diagnosis": [
+    {
+     "kind": "suspected-cause",
+     "strength": "medium",
+     "statement": "This is a hard refusal on begin, distinct from the soft-band advisory the Stop hook overrides -- the engine blocks starting new work at low context but never blocks closing the gate already open."
+    }
+   ]
+  }
+ ]
 }

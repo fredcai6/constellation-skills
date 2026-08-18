@@ -1,7 +1,7 @@
 # Epic #567 — the door is the interface. Summary for acceptance.
 
-Three waves, eleven lanes, seven PRs merged this session. `origin/main` at **`a8f59c69`**.
-Every figure below was measured, not recalled.
+Four waves, twelve lanes, eight PRs. `origin/main` at **`519226cc`**; the last gated tree is
+**`c30ef5ae`**. Every figure below was measured, not recalled.
 
 ---
 
@@ -22,8 +22,8 @@ archive  <engine>: False | CLI fallback: False | checklist_engine.py: False
 And a cartographer dispatched *after* the sweep, which had never seen the epic, closed its report
 with: *"no CLI fallback used or needed at any gate."*
 
-**Suite: 3191 at epic start → 3418 now.** 227 net-new tests, from an epic whose subject was
-removing a path.
+**Suite: 3191 at epic start → 3431 now.** 240 net-new tests, from an epic whose subject was
+removing a path. Zero failures, in a clean detached worktree, map index included.
 
 ## The finding that made it possible
 
@@ -45,6 +45,7 @@ CLI. period."*
 | 1 | A B C G | `spine_bind`; ExternalBackend refuses a spineless success; Stop hook outranks the context advisory; `finish_work` + lease-release-on-archive |
 | 2 | D1 D2 E F H | the complete sweep + the regrowth guard; workbench teaching half 289→124; door refusals captured as episode friction; two evidenced honest nulls |
 | 3 | J K L | installer stops rewriting the calling repo; role×harness tier table with allowed sets and recorded reasons; **declared bookends**; a drift lint |
+| 4 | N (M closed unsent) | the tier table's missing role declared and its provenance guarded, 313 lines |
 
 ## The thing I would put in front of you first
 
@@ -92,24 +93,58 @@ the capability I called missing, J found the refusal I said was absent.
   the Commander's `archive` and the Explorer's `route` have no human-acceptance postcondition, so
   for those roles the sign-off gate still sits in the mutable middle.
 - **#632** helper environment inheritance · **#636** the registry losing concurrent dispatches.
-- **#442** and **#565** — both rest on premises this epic's measurements contradict. Yours to rule.
+- **#442** rests on a premise this epic's measurements contradict. Yours to rule.
+- **#639** — the installer ships only skills, so the engine bundle rides inside a vestigial one.
+- **#638** — the door binds one spine, at one path, under one identity, at process start. Three
+  instances this epic: the self-waive refusal, the archive-move deadlock, and — sharpest — an
+  **implementer has no spine at all**, so my own dispatch shape forced a CLI use inside the epic
+  whose subject is removing the CLI.
 - **#613** deferred behind #615 · **#575** parked.
 
-## Two things I need from you
+## The cleanup wave, and what your reinstall caught
 
-**1. A corpus reinstall.** K's bookends and L's lint are **inert until the installed skills are
-refreshed**. The lint names the gap precisely today:
+**The epic's own wave-3 deliverable blocked its closing dispatch.** The tier table refused
+`commander-delegated` — the role every delegated Commander in this epic ran under. The refusal was
+correct: it failed closed rather than guessing. What was wrong was the key set's provenance. Live
+doctrine names **7** role terms; the table declared **6**, and the one it omitted was the one 10
+registry entries used. I did not patch it myself, and I refused the other shortcut — relabeling the
+blocked dispatch `implementer` to slip past the check would have written a false role onto a 10-gate
+commander spine and fed the same wave's drift lint a lie. Lane N declared the key at your ruled tier
+and wrote a guard that scans doctrine for **the property that matters** — a role doctrine hands a
+model-tier-bearing dispatch artifact to — asserting `scanned ⊆ declared`, and proved it red on the
+real bug rather than a fixture.
+
+**Your reinstall order is the reason lane M did not ship a deletion that would have unwired your
+Stop hook.** I wrote M's launch order from a census of the repo tree. The installed package is a
+different object:
 
 ```
-repo=['closeout','init'] installed=[]   admiral
-repo=['archive','init']  installed=[]   commander
-repo=['init','route']    installed=[]   explorer
+install_constellation.py:229   "workbench": ("checklist_engine.py", "gauge_writer_hook.py")
+                        :848   HOOK_OWNER_SKILL = "workbench"
+                        :929   hooks load from <target>/constellation-workbench/scripts/
+~/.claude/settings.json        5 hook entries + 1 permission at that path
 ```
 
-It is a deployment action on your machine and this session already reverted one installer-caused
-change, so I have not done it. J's #619 fix is now on `main`, so it should be clean.
+`skills/workbench` is the installer's **shipping unit for the checklist engine, the spine rail and
+the gauge hook**. The skill is vestigial; the wrapper is load-bearing, because the installer can
+only ship *skills* — a script bundle must wear a `SKILL.md` to be installable at all. **#565 closed**
+on its real subject (the teaching, 289 → 124 → 20 lines). **#639 filed** for the package coupling,
+to be done deliberately with its own `settings.json` migration path.
 
-**2. Acceptance**, which is the last gate on the spine.
+The reinstall also made two wave-3 deliverables real. The lint flipped from `repo=[...] installed=[]`
+on all three roles to **`all 3 role spine template(s) declare bookends and match the installed
+corpus`** — K's freeze and L's lint were **inert until deployed**, and the suite could not see it.
+
+**I was wrong three times about the same six files.** I told you `DEFAULT.template.json` had zero
+live referrers. It has two. My exclusion filter dropped `.agent-work/` to cut archive noise and took
+the tracked overlay manifest out with it — the one referrer that decides the question. All six files
+have live referrers. There was no deletion available at the cheap tier **at all**, which is what
+closed lane M.
+
+## What I need from you
+
+**Acceptance** — the last gate on the spine. The reinstall is done and verified (20 skills,
+`CORPUS.json sha256:106de882…`).
 
 ## One diagnosis worth carrying forward
 

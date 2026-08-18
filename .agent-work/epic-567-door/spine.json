@@ -320,7 +320,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {
         "blocker": "Closeout postcondition c5 requires the epic summary to be accepted by the human, and that is the only gate left \u2014 c1 (episodes), c2 (store carries this work id), c3 (architecture reconcile) and c4 (repo hygiene) are all attested. Three decisions are genuinely his and cannot be made inside this turn: (1) whether #442 closes as an evidenced honest null, given its premise did not reproduce across 11 cold subjects in four framings; (2) whether #565 closes as delivered with a correcting comment, given it calls a sentence false that this epic measured to be true; and (3) how much of the triage pairing to post \u2014 the candidate count grew 24 to 60, all are committed files on main so none is at risk, and the proposal is one grouped comment per target issue (~14) rather than 60.</blocker>\n<parameter name=\"next_action\">On acceptance: post the grouped pairing comments per .agent-work/epic-567-door/CLOSEOUT_PAIRING_INDEX.md, close the issues the human rules on, then attest closeout c5, run the final advance on closeout, and release this lease as the last action. The epic summary is at .agent-work/epic-567-door/EPIC_SUMMARY.md and origin/main is green at d832accd (3374 passed, 0 failed).</next_action>\n</invoke>\n",
         "authority_needed": "human (Tommy)",
@@ -341,7 +341,7 @@
     "session_id": "constellation/epic-567-door",
     "status": "active",
     "claimed_at": "2026-08-17T18:45:51.248764+00:00",
-    "last_heartbeat": "2026-08-18T12:40:36.010512+00:00",
+    "last_heartbeat": "2026-08-18T12:44:08.521314+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,
