@@ -14,6 +14,7 @@ each fails on a *different* rung, which is why none was quietly pulled into scop
 | 1 | [`current` does not render the bookend freeze](current-does-not-render-the-bookend-freeze.md) | missing capability anchor; ungrounded claim | **verifiable now** — the property test that should cover it is structurally blind to the field, so "it works" cannot be shown in this context | high |
 | 2 | [human confirmation sits in the mutable middle](human-confirmation-sits-in-the-mutable-middle.md) | structure/constraint mismatch | **no architecture/production-default impact** — it changes what a run must prove before it may close | high |
 | 3 | [the gauge writer overwrote its parent's reading](gauge-writer-overwrites-parent-reading.md) | bug | **adjacent to current scope** — gauge/hook code, a cold-start area this run never opened | medium |
+| 4 | [the crew registry loses concurrent dispatches](crew-registry-loses-concurrent-dispatches.md) | bug | **adjacent to current scope** — `scripts/run_crew.py` is fenced to lane J this wave | high |
 
 ## Why each is deferred rather than fixed, in one line
 
@@ -23,6 +24,9 @@ each fails on a *different* rung, which is why none was quietly pulled into scop
    That is the human's, and it is wider than #634 asked for.
 3. Observed with a diff, not diagnosed. I did not read the gauge writer's source, so I have an
    effect and no cause — filing a fix from that would be guessing.
+4. `scripts/run_crew.py` is **lane J's file** this wave. Route it to lane J's owner rather than to
+   a backlog — that lane already has the file open. Measured, not inferred: three crews ran and
+   wrote results and stdout, and only one registry entry survived.
 
 ## Also carried, and NOT a triage candidate
 
