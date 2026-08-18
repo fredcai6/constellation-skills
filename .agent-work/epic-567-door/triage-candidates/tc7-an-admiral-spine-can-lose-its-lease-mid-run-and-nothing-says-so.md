@@ -59,3 +59,21 @@ Either a mutating verb should refuse (or at minimum warn) when the caller's iden
 holds the lease it started under, or lease loss should be journaled as an event rather than
 being a silent state change in a JSON field. The first is a guard; the second is provenance.
 Both are cheaper than an unexplained gap at closeout.
+
+## Second observation, independent of the first
+
+**2026-08-17, closeout.** The cartographer dispatched for the architecture reconcile
+(`.agent-work/567-carto/spine.json`) shows the same thing: `context` complete, `packets`
+**in-progress**, process **alive and writing** (last write one minute before the check), and
+`lease: None`.
+
+This is a different spine, a different role, a different process, and a fresh work area minted
+minutes earlier — so it is not an artifact of the Admiral's long-running session, and it is not
+explained by anything specific to the epic spine. Two spines, two roles, same silent state.
+
+It also rules out one of the two causal directions floated above: this spine had **no archive gate
+run against it** when the lease went absent, so archiving cannot be the whole cause.
+
+**And the run continues regardless**, which is the point — an unleased spine has no ownership
+guard, so every mutating verb keeps succeeding and nothing tells the holder that the thing
+protecting its work has gone.
