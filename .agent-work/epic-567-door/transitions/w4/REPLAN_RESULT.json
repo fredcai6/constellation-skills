@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "decision": "stop",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Wave 3's exit criteria are met, and the one that failed at this boundary has been repaired inside it. J's install proof holds, K's bookend freeze is on main and now installed, L's lint reports all three role spines matching. J's tier table refused the epic's own closing dispatch -- lane N declared the missing role at the human's tier and added a 313-line guard that scans doctrine rather than a hand-typed list, proven to red on the real defect by stashing the fix. main is 3431 passed / 0 failed at c30ef5ae in a clean detached worktree.",
+    "epic_done": "The epic is complete. All four definition-of-done clauses hold. The clause that failed at the w3 boundary -- no agent-facing file teaches the CLI as a path for agents -- was ruled work rather than a documented limit, became lane K, and shipped. `git grep 'CLI fallback'` over skills/, specs/ and the tracked overlay returns zero, a 718-line guard fails if it returns, and a cartographer that had never seen the epic closed its report with 'no CLI fallback used or needed at any gate'. What remains open is named and dispositioned, not unfinished: #634, #638, #639, #632, #636 are filed with their diagnoses; #565 is closed on its actual subject; #442 the human closed directly.",
+    "good_enough": "The quality boundary held and tightened. Every branch was gated on its exact head in a clean detached worktree, never a working copy; main was re-gated after every merge. The wave-3 constraint that every dispatch pass --model explicitly is now enforced by the table itself rather than by the launch order's prose."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "D-role-key",
+      "action": "repair_current_wave",
+      "reason": "Repaired inside wave 3 by lane N rather than deferred: a fail-closed guard whose key set is unmeasured blocks every delegated dispatch, and the guard that prevents recurrence was the valuable half. Merged as PR #640.",
+      "issue_created": false
+    },
+    {
+      "id": "D-workbench-bundle",
+      "action": "revise_plan",
+      "reason": "Lane M's premise was false, so the lane was closed unsent by human ruling and replaced with one honest edit to the package's own description and body. The real coupling -- the installer can only ship skills, so a script bundle must wear a SKILL.md -- is filed as #639 to be done deliberately after this epic, with a settings.json migration path for consuming repos.",
+      "issue_created": true
+    },
+    {
+      "id": "D-implementer-no-door",
+      "action": "record_evidence_only",
+      "reason": "#638 already carries the diagnosis. Recorded in the ADMIRAL_LOG as the sharpest instance of it: not a run acting on itself, but a role the door structurally cannot serve, forced by the Admiral's own dispatch shape.",
+      "issue_created": false
+    },
+    {
+      "id": "D-mcp-probe",
+      "action": "record_evidence_only",
+      "reason": "Recorded rather than reopened, per the standing ruling that tracking has been ballooning and candidates get paired or recorded rather than freshly minted.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Nothing further is launched. The epic proceeds to closeout and human acceptance.",
+    "exit_criteria": [
+      "Every epic issue dispositioned -- merged, honest-null closed, deferred with a ruling, or escalated.",
+      "The ADMIRAL_LOG current through the last wave and archived under .agent-work/archive/.",
+      "One episode per distinct thing that happened, written through apply_episode_delta.py and proven with verify_episode_captured.py.",
+      "A collect_feedback.py sweep over the dogfood roots, this being a self-maintenance epic.",
+      "Human acceptance, which is the last gate on the spine."
+    ],
+    "issues": [
+      {
+        "id": "CLOSEOUT",
+        "title": "Close the epic: episodes, feedback sweep, hygiene, summary, acceptance",
+        "desired_outcome": "The spine reaches a terminal closeout with every observation routed -- one episode per distinct thing that happened, a fresh collect_feedback.py sweep over the dogfood roots, branches and worktrees dispositioned, the ADMIRAL_LOG archived, and the epic summary accepted by the human.",
+        "useful_now": "The run cannot close with unrouted observations, and this epic generated a great deal: a fail-closed guard that blocked its own author, a package everyone read as dead that ships the engine, and six owned Admiral errors of one repeating class.",
+        "appetite": "The Admiral, no dispatch. Nothing here needs a Commander.",
+        "acceptance_or_falsification_evidence": "verify_episode_captured.py passes; the feedback sweep runs and reports what it read; git worktree list shows only main; the human accepts the summary at gate c5.",
+        "implementation_latitude": "Choose how many episodes and how they are cut, as long as each is one distinct thing that happened rather than a summary or a rule.",
+        "hard_constraints_no_gos": [
+          "Write episodes only through apply_episode_delta.py with --store-root episodes; never hand-edit the store.",
+          "An episode is a record of what happened, not a rule for a later agent to follow -- rules belong in docs/agents and are the human's call.",
+          "Release the engine lease as the very last action, after closeout's own final advance.",
+          "Do not file further issues; #634, #638, #639, #632 and #636 already carry the open diagnoses."
+        ],
+        "local_unknowns": [],
+        "anchors": [
+          "episodes/",
+          ".agent-work/epic-567-door/ADMIRAL_LOG.md"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether prototyper should carry a declared tier or intentionally inherit its dispatcher's.",
+      "affects": "The completeness of ROLE_MODEL_TIERS",
+      "settle_by": "A human doctrine ruling, or by giving PROTOTYPE_HANDOFF.template.md a model-tier field so the gap measures itself",
+      "current_evidence": "Lane N found it is dispatched under its own bounded contract but carries no model-tier field, so no signal reaches it and no ruling grounds a tier. It declared nothing rather than guess.",
+      "next_probe": "Ask the human, or add the field."
+    },
+    {
+      "unknown": "Whether the empty codex and local harness rows are correct as fail-closed defaults.",
+      "affects": "Every dispatch under a non-Claude harness, all of which refuse today",
+      "settle_by": "A human ruling",
+      "current_evidence": "decision:harness-dimension-is-required treats an empty row as deliberate. Lane N was told to report a view and not act, and reported no strong one.",
+      "next_probe": "Raise it when a second harness is actually used."
+    }
+  ],
+  "revised_parked": [
+    "#575 Windows proof of the .mcp.json launch line.",
+    "Sweeping the 41 pre-existing stale leases.",
+    "#613's parent-heartbeat half, behind #615.",
+    "#574's reserved PR-opening question.",
+    "#639's settings.json migration for consuming repos."
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "U-closeout",
+      "action": "keep",
+      "reason": "It is the only thing left, and its hygiene half genuinely re-ran after the cleanup wave."
+    },
+    {
+      "id": "U-parked-575",
+      "action": "keep",
+      "reason": "Parked by the 2026-08-16 rescope; nothing at this boundary disturbs it."
+    },
+    {
+      "id": "U-prototyper-tier",
+      "action": "keep",
+      "reason": "A real same-shape gap found by lane N and deliberately not guessed at. Carried as uncertainty, not work."
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "current_wave.issues",
+      "before": "Lane M retires skills/workbench: delete the dead package and rehome its live referrers.",
+      "after": "Lane M closed unsent; replaced by one edit to the package's own description and body, plus issue #639.",
+      "reason": "Its deletion target did not exist. skills/workbench is the installer's shipping unit for the checklist engine, the spine rail and the gauge hook (install_constellation.py:229/:848/:849), five hook entries and one permission rule are wired at that path on a consuming machine, and re-measurement showed all six content files carry live referrers (32, 10, 9, 8, 5, 2)."
+    },
+    {
+      "surface": "current_wave.issues",
+      "before": "Wave 3 is J, K and L; the next boundary is closeout.",
+      "after": "Lane N was opened inside the boundary to repair wave 3's own deliverable before closeout could proceed.",
+      "reason": "J's model-tier table refused the epic's closing dispatch -- no tier declared for commander-delegated, the role every delegated dispatch in this epic used. The refusal was correct; the key set's provenance was not. Repairing it inside the wave was cheaper than carrying a blocker into closeout."
+    },
+    {
+      "surface": "wave_forecast",
+      "before": "A corpus reinstall is owed to the human and pending their go-ahead.",
+      "after": "The corpus was reinstalled, making K's bookend freeze and L's lint live rather than inert.",
+      "reason": "The human called it before the last lane. It flipped the drift lint from repo=[...] installed=[] on all three roles to all three matching -- and in the same pass exposed that the lane about to run had a false premise."
+    }
+  ],
+  "wave_review_comment": "Wave 3 shipped and then blocked the run with its own deliverable. J's model-tier table refused the epic's closing dispatch -- no tier declared for commander-delegated -- and the refusal was the design working: it failed closed rather than guessing. What was wrong was the key set's provenance, drawn from the roles someone expected the corpus to use rather than the seven live doctrine names. Lane N declared the missing role at the human's ruled tier and, more usefully, wrote a guard that scans doctrine for the property that matters -- a role handed a model-tier-bearing dispatch artifact -- and asserts the table covers it, proven to red on the real defect by stashing the fix. It found a second gap of the same shape in prototyper and refused to invent a tier for it.\n\nThe human's call to reinstall the corpus before the last lane is what turned two inert deliverables live and, in the same pass, killed that lane: skills/workbench is not dead weight but the installer's shipping unit for the checklist engine, the spine rail and the gauge hook, with five hook entries wired at that path on a consuming machine. The lane was closed unsent, #565 closed on its actual subject, and the real coupling filed as #639.\n\nmain is 3431 passed / 0 failed at c30ef5ae. Decision: stop -- nothing further to launch, closeout next.",
+  "revised_epic_body": "# Epic #567 -- the door is the interface\n\n**Status at the w4 boundary: complete, pending human acceptance.** Three waves, twelve lanes, eight PRs merged. origin/main at c30ef5ae, 3431 passed / 0 failed in a clean detached worktree.\n\n## Definition of done\n\n1. A fresh door reaches an existing spine without the CLI -- **met** (spine_bind, wave 1, proven by the Admiral it first blocked).\n2. No agent-facing file teaches the CLI as a path for agents -- **met** (zero `CLI fallback` clauses in skills/, specs/ and the tracked overlay; a 718-line guard fails if any returns; a cold cartographer confirmed 'no CLI fallback used or needed at any gate').\n3. The regrowth mechanism is understood and stopped -- **met** (test_mcp_adoption.py had been *mandating* the CLI text across nine assertions; inverted).\n4. A launcher takes declared defaults, not machine-local ones -- **met** (#619 and #633, plus the commander-delegated repair and its doctrine-scanning guard).\n\n## Open deliberately, each with its diagnosis filed\n\n- **#634** the crew half of one-spine-per-agent, the execute.json migration, and that the freeze protects a run's completion but not its acceptance.\n- **#638** the door's path, identity and spine fixed at process start -- one defect behind both the self-waive refusal and the archive-move deadlock, and behind an implementer having no door for its own plan.\n- **#639** the installer can only ship skills, so the checklist engine must wear a SKILL.md.\n- **#632** helper environment inheritance. **#636** the registry losing concurrent dispatches. **#575** parked.\n\n## Closed this epic\n\n#559, #535, #611, #619, #633, #565. #442 the human closed directly.\n\nNext: closeout -- episodes, the feedback sweep, hygiene, summary, acceptance.",
+  "escalation": null
+}

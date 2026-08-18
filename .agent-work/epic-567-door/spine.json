@@ -138,13 +138,15 @@
           "id": "c1",
           "statement": "every epic issue dispositioned (merged, honest-null closed, deferred with ruling, or escalated)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Every epic issue dispositioned. Closed this epic: #559 (guard, not deletion), #535, #611, #619, #633, #565 (closed on its actual subject, the teaching); #442 the human closed directly. Merged and green: 8 PRs across three waves plus PR #640. Open with their diagnoses filed rather than left implicit: #634 (crew half of one-spine-per-agent, the execute.json migration, and that the freeze protects a run's completion but not its acceptance), #638 (the door's path/identity/spine fixed at process start), #639 (the installer can only ship skills, so the checklist engine must wear a SKILL.md), #632, #636. Parked with a ruling: #575, #613 behind #615. Lane M closed unsent with its reason recorded and its unsent order kept."
         },
         {
           "id": "c2",
           "statement": "ADMIRAL_LOG current through the last wave: all rulings, incidents, merges, transition exits, and errors logged",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "ADMIRAL_LOG current through the last wave. Logged since the wave-3 entries: the INCIDENT where wave 3's own tier table refused the epic's closing dispatch, with the measured 7-vs-6 role-term provenance; the ruling that I would not patch it myself and would not relabel lane M's dispatch to slip past it; lane N's MERGE (PR #640, gated GREEN-EXCEPT-MAP at 0f26c7d6, main re-gated GREEN at c30ef5ae) including that its guard design was better than the one I sketched; the human ruling on workbench after the reinstall exposed it as the engine's shipping unit; my third bad referrer count on that same file set; lane M closed unsent; the finding that my own dispatch shape forced lane N onto the CLI; and the w4 TRANSITION line with decision=stop, verified."
         },
         {
           "id": "c3",
@@ -153,7 +155,8 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-admiral/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-567-door"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-4"
         }
       ],
       "constraints": [],
@@ -187,7 +190,7 @@
         }
       },
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {
         "blocker": "Wave 1 delivered and closed out (PRs #620 #621 #622 #623, none merged), but execute's c1 (every epic issue dispositioned) cannot be met by the Admiral. Two surfaced-class human rulings block it: (a) the contract delegates merge 'gated on the check exit code', which is unsatisfiable because main has been red for five commits and CI is windows-latest only (baseline 122 failed/3070 passed) -- adopting merge-on-failure-set-delta is a change to the gate itself; (b) lane A's spine_bind design cannot be accepted or rejected without a ruling on whether IDENTITY_TRADE.md section 2's confinement property is amendable, and if it is settled the design is dead as written. Also surfaced: whether lane A's one-clause deletion satisfies the settled/human net-deletion filter, and the scope of the subTest-reads-PASSED finding (169 call sites across 25 files) which undercuts every suite-green claim in the wave.",
         "authority_needed": "human",
@@ -245,6 +248,17 @@
             "reason": "The human added a final cleanup after wave 3: retire skills/workbench entirely rather than leave a 20-line stub whose only reason to exist is that install_constellation.py raises InstallError for any skills/* directory without a SKILL.md. This is #565's remainder \u2014 the issue is still open precisely because deregistration was floated and not built \u2014 so it is epic work with a PR, not closeout hygiene, and execute is the honest place for it. Closeout c1-c4 are attested and will need re-attesting afterward: the episodes and reconcile stand, the hygiene must re-run over a new branch and worktree.",
             "ts": "2026-08-18T11:55:28.412499+00:00"
           }
+        },
+        {
+          "id": "e-execute-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-admiral/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-567-door",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 2
@@ -322,12 +336,12 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 1,
+  "refusals": 2,
   "engine_session": {
     "session_id": "constellation/epic-567-door",
     "status": "active",
     "claimed_at": "2026-08-17T18:45:51.248764+00:00",
-    "last_heartbeat": "2026-08-18T11:55:28.412508+00:00",
+    "last_heartbeat": "2026-08-18T12:40:36.010512+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,
@@ -375,6 +389,26 @@
       "reopen": true,
       "reason": "The human added a final cleanup after wave 3: retire skills/workbench entirely rather than leave a 20-line stub whose only reason to exist is that install_constellation.py raises InstallError for any skills/* directory without a SKILL.md. This is #565's remainder \u2014 the issue is still open precisely because deregistration was floated and not built \u2014 so it is epic work with a PR, not closeout hygiene, and execute is the honest place for it. Closeout c1-c4 are attested and will need re-attesting afterward: the episodes and reconcile stand, the hygiene must re-run over a new branch and worktree.",
       "ts": "2026-08-18T11:55:28.412504+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "execute",
+      "why": "Three waves and twelve lanes are merged, and the cleanup wave repaired the one deliverable that had turned on the run: wave 3's model-tier table refused this epic's own closing dispatch because its key set named the roles someone expected rather than the seven live doctrine names. Lane N declared the missing role at the human's ruled tier and wrote a guard that scans doctrine for the property that matters, proven to red on the real defect. The corpus reinstall the human called for made K's bookend freeze and L's lint live rather than inert, and exposed that lane M's deletion target did not exist -- skills/workbench is the installer's shipping unit for the checklist engine, the spine rail and the gauge hook, so M was closed unsent and the real coupling filed as #639. main is 3431 passed / 0 failed at c30ef5ae in a clean detached worktree, every branch was gated on its exact head, and the w4 boundary exits with decision=stop: nothing further to launch, closeout next.",
+      "mechanical": false,
+      "ts": "2026-08-18T12:40:36.010493+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "closeout",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1822,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-7",
+      "ts": "2026-08-18T12:40:53.013049+00:00"
     }
   ]
 }

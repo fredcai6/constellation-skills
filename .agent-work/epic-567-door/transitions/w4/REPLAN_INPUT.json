@@ -1,0 +1,247 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic: the door is the interface \u2014 finish the MCP migration (#567)",
+      "spec_path": ".agent-work/epic-567-door/LATITUDE_CONTRACT.md",
+      "intent_and_why": "One interface for agents: the MCP door. The CLI becomes an operator and debug path only. The outcome that must not be violated is that this epic reduces complexity by removing a redundant path."
+    },
+    "definition_of_done": [
+      "A dispatched crew drives its own spine through the door end to end.",
+      "No agent-facing file teaches the CLI as a path for agents.",
+      "A guard refuses reintroduction of the CLI-fallback text.",
+      "ExternalBackend refuses a spineless success."
+    ],
+    "good_enough": {
+      "mandatory_quality": "The merge gate is the full suite green on Linux in a clean detached worktree of the branch, never a working copy. Engine and hook behaviour is validated in a fresh process with explicit paths.",
+      "sufficient_evidence": "Behaviour-level red-proofs against the shipped path rather than a fixture, plus a re-verify of main after each merge.",
+      "appetite": "Two waves planned; a third added by the human after wave 2."
+    },
+    "hard_constraints": [
+      "No lane files an issue during the run.",
+      "No lane promotes an observation into docs/agents/*.",
+      "No lane regenerates map/INDEX.md (#544).",
+      "Design work is never dispatched as a fork.",
+      "Every dispatch and every crew passes --model explicitly."
+    ],
+    "fixed_decisions": [
+      "Wave-1 and wave-2 lane identities remain stable and their branches are merged and kept (#412).",
+      "The workbench directory stays a template-only package; the four templates do not move.",
+      "#613's heartbeat half is deferred behind #615.",
+      "#574's PR-opening question stays reserved for the human."
+    ],
+    "current_wave": {
+      "objective": "Close the gap that keeps a second path to the engine alive, and stop launchers taking machine-local defaults, so the epic's own claim is true rather than nearly true.",
+      "exit_criteria": [
+        "A role's authored gates are driven through the door in its own spine, with no second plan file and no invented session id -- or an evidenced finding that this costs more mechanism than it removes.",
+        "A real install with --dest outside the repo leaves the repo's tracked .mcp.json byte-identical.",
+        "A crew dispatched with no --model runs at its role's default rather than the host's, proven from the registry.",
+        "Each lane returns to results/lane-<x>-RETURN.md; no lane files an issue; no lane regenerates map/INDEX.md.",
+        "main is re-verified green on Linux in a clean detached worktree after the last merge."
+      ],
+      "issues": [
+        {
+          "id": "J",
+          "title": "A launcher must take declared defaults, not machine-local ones (#619 + #633)",
+          "desired_outcome": "install_constellation.py stops writing a probed interpreter into a tracked .mcp.json and stops touching the calling repo's file at all when --dest points elsewhere; and run_crew.py resolves a crew's model from a per-role, per-harness table with an allowed set and a recorded reason, never from the host's settings.json.",
+          "useful_now": "Both already cost real work this epic: an install silently dirtied a tracked file in a repo it was not targeting, and 15 crew sessions ran a tier above the one their lane was assigned, 6 of them abandoned and retried.",
+          "appetite": "One Commander at Sonnet tier. Two files, one idea.",
+          "acceptance_or_falsification_evidence": "A real (non-dry-run) install with --dest outside the repo leaves the repo's .mcp.json byte-identical, proven by git diff. And a crew dispatched with no --model runs at its role's default rather than the host default, proven from the registry entry rather than from the code.",
+          "implementation_latitude": "Choose the table's shape and where it lives; choose how the harness dimension is expressed.",
+          "hard_constraints_no_gos": [
+            "Ship the table at today's honest tiers, not the target ones: admiral opus, commander sonnet, implementer sonnet, reviewer sonnet, with haiku in the allowed sets. The human's direction is commanders at Sonnet and crews at Haiku or local, and he said explicitly we are not there yet.",
+            "The table must express Codex and local models, not only Claude Code. Which entry applies is a function of the harness the agent is running in.",
+            "An unset model resolves from the role and fails closed toward the cheaper tier.",
+            "A model outside a role's allowed set is refused by name, the way the duplicate-crew guard refuses.",
+            "A non-default choice requires a reason, recorded in the registry beside the model.",
+            "Do not regenerate or hand-edit map/INDEX.md (#544).",
+            "Do not file an issue; stage candidates under .agent-work/567-j/triage-candidates/.",
+            "Pass --model sonnet explicitly on every crew you dispatch."
+          ],
+          "local_unknowns": [
+            "Whether the harness an agent is running in can be detected, or must be declared.",
+            "Whether install_constellation.py's caller-mutation is one bug with the probed interpreter or two separate ones."
+          ],
+          "anchors": [
+            "scripts/install_constellation.py",
+            "scripts/run_crew.py",
+            "skills/admiral/templates/LAUNCH_ORDER.template.md",
+            "tests"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "K",
+          "title": "One spine per agent: frozen bookends, mutable middle, for every planning role (#634)",
+          "desired_outcome": "A role's authored gates land in its own spine instead of a second file, the steps at the start and finish stay frozen, the middle can be added to, dropped from or rescoped during the run by the agent that owns the spine, and a reader can reconstruct how the plan changed.",
+          "useful_now": "This is the one exception epic #567 could not sweep. A Commander's execute.json, an Interrogator's interrogation.json and an in-session crew's own plan all reach the engine outside the door, under hand-invented session ids.",
+          "appetite": "One Commander at Opus tier, design-it-twice before converging. Convergence is human-only: return a comparison and a recommendation.",
+          "acceptance_or_falsification_evidence": "A Commander drives its authored gates through the door in its own spine, with no second plan file and no invented session id, proven in a fresh process. An evidenced finding that this cannot be had without adding more mechanism than it removes is a complete deliverable.",
+          "implementation_latitude": "Choose the mechanism. spine_amend already re-plans a gated checklist under a named authority; whether that is the seam or whether the middle needs a different expression is yours to determine.",
+          "hard_constraints_no_gos": [
+            "Build it for every planning role -- Admiral, Commander and crew -- not for Commanders with a note to generalise later. The human said so directly.",
+            "SELF-HOSTING: this changes the rule the Admiral's own live spine runs under. Before merging, a read-only status on the live spine must exit 0, and a mutating verb must be proven against a COPY of a spine, never the live file.",
+            "Establish what spine_advance --from_child was for before removing or reshaping it. If that seam exists so a different agent's plan can feed a parent gate, it survives this change and constrains it.",
+            "Frozen means frozen: the bookend steps stay fixed. Only the middle is mutable.",
+            "Do not regenerate or hand-edit map/INDEX.md (#544).",
+            "Do not file an issue; stage candidates under .agent-work/567-k/triage-candidates/.",
+            "Design work goes to fresh agents, never a fork. Pass --model sonnet on every crew you dispatch."
+          ],
+          "local_unknowns": [
+            "What spine_advance --from_child was built for.",
+            "Whether gated spines carry invariants -- why_trail, trip ledger, postcondition evaluation across a grown step -- that appending would break.",
+            "Whether the plan-change record is a use of the existing why_trail and spine_amend authority, or needs its own shape."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "scripts/mcp_spine_server.py",
+            "skills/commander/templates/COMMANDER_SPINE.template.json",
+            "skills/admiral/templates/ADMIRAL_SPINE.template.json",
+            "specs"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Closeout re-runs after wave 3: hygiene over the new branches and worktrees, the triage pairing pass, and the epic summary rewritten to describe an epic that finished rather than one that stopped.",
+        "why_likely": "Closeout c1-c4 were attested at the wave-2 boundary and cascaded back to pending when execute reopened; the episodes and the reconcile stand, the hygiene does not.",
+        "entry_conditions": [
+          "Both wave-3 lanes are dispositioned and main is green."
+        ]
+      },
+      {
+        "outcome": "#559 and #565 can close once a role's own plan is door-reachable.",
+        "why_likely": "Both are open against this gap rather than against anything wave 2 left undone.",
+        "entry_conditions": [
+          "Lane K lands, or returns an evidenced null that changes the premise."
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "What spine_advance --from_child was built for.",
+        "affects": "Lane K's scope, and whether the parent/child seam survives.",
+        "settle_by": "Lane K's first gate.",
+        "current_evidence": "The verb consumes a child checklist's consolidation as evidence, so someone deliberately built the seam.",
+        "next_probe": "Read it at source and in its tests before proposing to remove or reshape it."
+      },
+      {
+        "unknown": "Whether the harness an agent runs in can be detected or must be declared.",
+        "affects": "How the per-harness dimension of the model table is expressed.",
+        "settle_by": "Lane J's design.",
+        "current_evidence": "The human wants the same table to express Codex and local models, chosen by the harness the agent is in.",
+        "next_probe": "Establish what a running agent can know about its own harness before choosing between detection and declaration."
+      },
+      {
+        "unknown": "Whether a gated spine can grow its middle without breaking why_trail, the trip ledger or postcondition evaluation.",
+        "affects": "Whether lane K's change is a use of spine_amend or a deeper engine change.",
+        "settle_by": "Lane K's design-it-twice comparison.",
+        "current_evidence": "spine_amend already re-plans a gated checklist under a named authority; capture --append is refused on gated checklists.",
+        "next_probe": "Prove a grown middle against a copy of a live spine, never the live one."
+      }
+    ],
+    "parked_possibilities": [
+      "#575 Windows proof of the .mcp.json launch line.",
+      "Sweeping the 41 pre-existing stale leases.",
+      "#613's parent-heartbeat half, behind #615.",
+      "#574's reserved PR-opening question."
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "J",
+      "outcome": "The installer stops rewriting the calling repo, and a role x harness model-tier table with allowed sets and recorded reasons replaces the host default (#619, #633).",
+      "evidence": "Merged in wave 3. A real install with --dest outside the repo leaves the tracked .mcp.json byte-identical. The table then refused this epic's own closing dispatch by name -- fail-closed working as designed -- and lane N repaired its key set inside this boundary."
+    },
+    {
+      "issue_id": "K",
+      "outcome": "Declared bookends freeze a run's first and last gate while leaving the middle mutable (#634's spine half).",
+      "evidence": "Measured before changing anything: a Commander standing at execute dropped archive, feedback and review in one unforced amend, exit 0, deleting its own independent-review step. Refused after the change. Now live on installed machines following the reinstall."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "Wave 3's tier table is correct and complete.",
+      "expected": "A dispatch resolves its role's declared default.",
+      "observed": "The epic's own next dispatch was REFUSED: no model tier declared for role 'commander-delegated' under harness 'claude'. The policy was right; the key set was drawn from expected roles, not dispatched ones.",
+      "source": "run_crew.py refusal on the lane M launch"
+    },
+    {
+      "claim": "skills/workbench is inert weight that can be deleted.",
+      "expected": "Seven files with few live referrers.",
+      "observed": "It is the installer's shipping unit for the checklist engine, the spine rail and the gauge hook; a consuming machine wires five hook entries and one permission rule at that path. Every one of the six content files has live referrers (32, 10, 9, 8, 5, 2).",
+      "source": "install_constellation.py:229/:848/:849, ~/.claude/settings.json, re-measured referrer counts"
+    },
+    {
+      "claim": "main is green after the cleanup wave.",
+      "expected": "Full suite passes in a clean detached worktree.",
+      "observed": "3431 passed, 6 skipped, 1222 subtests, 0 failed at c30ef5ae, map included.",
+      "source": "gate.sh on a clean detached worktree"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D-role-key",
+      "signal": "The tier table refused the role the corpus actually dispatches, blocking the epic's own closing dispatch.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "Wave 3's exit and every future delegated dispatch",
+      "evidence": "REFUSED: no model tier declared for role 'commander-delegated'; 7 role terms in live doctrine, 6 declared.",
+      "reason": "A fail-closed guard with an unmeasured key set is a blocker, not a risk."
+    },
+    {
+      "id": "D-workbench-bundle",
+      "signal": "The package slated for retirement is the installed home of the engine and the rail.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Lane M's entire premise",
+      "evidence": "HOOK_OWNER_SKILL = 'workbench'; five wired hook entries plus one permission rule; no file in it is unreferenced.",
+      "reason": "The lane's deletion target does not exist; the real coupling is that the installer can only ship skills."
+    },
+    {
+      "id": "D-implementer-no-door",
+      "signal": "An implementer dispatched without a spine has no door for its own plan, so it drove the CLI.",
+      "classification": "evidence_only",
+      "affects": "#638's family",
+      "evidence": "Lane N drove IMPLEMENTER_PLAN.json through scripts/checklist_engine.py because no SPINE_FILE was bound.",
+      "reason": "#638 already carries the diagnosis; this is the sharpest instance of it, recorded rather than re-filed."
+    },
+    {
+      "id": "D-mcp-probe",
+      "signal": "A self-install still writes a machine-local interpreter into the tracked .mcp.json.",
+      "classification": "evidence_only",
+      "affects": "Install fidelity",
+      "evidence": "python3 -> py on install; reverted, as the previous session also had to.",
+      "reason": "#619 as closed stopped the wrong-checkout targeting, not this; recorded rather than reopened, per the standing ruling against minting tracking."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {
+      "id": "U-closeout",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-parked-575",
+      "kind": "parked"
+    },
+    {
+      "id": "U-prototyper-tier",
+      "kind": "uncertainty"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/run_crew.py",
+      "scripts/install_constellation.py",
+      "scripts/mcp_spine_server.py",
+      "skills/admiral/templates",
+      "skills/commander/templates"
+    ],
+    "map_status": "map/INDEX.md fresh at origin/main and Admiral-owned; map/ids.jsonl empty because no anchors have ever been minted, so every run here orients DEGRADED"
+  }
+}
