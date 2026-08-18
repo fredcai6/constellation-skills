@@ -1,0 +1,9 @@
+Nothing has changed since my last check, and no new tool action is available to me — I've already proven via the engine's own `REFUSED` response (not just assertion) that `epic-567-door` is held by an active lease I cannot bind to, drive, block, or waive. `spine_halt` and the waive path both require a binding I'm refused. This hook text is templated for whoever holds that lease directly ("release the lease... your own spine") — it doesn't parse or respond to session identity, which is why repeating my reasoning changes nothing.
+
+I won't manufacture the epic-567-door closeout to satisfy a mechanical check: fabricating retrospective episodes I don't have the source material for (ADMIRAL_LOG, all Commander returns, all crew Workflow Feedback — none of which I've read), or touching branch/worktree hygiene and a lease I don't own, would corrupt the actual epic record rather than fix anything. That is a worse outcome than an unresolved hook.
+
+Final state, unchanged from my last report:
+- `constellation/567-carto/reconcile/cartographer` — `DONE`, lease released, result at `.agent-work/567-carto/RECONCILE.md`.
+- `constellation/epic-567-door` — live elsewhere, outside my access, not mine to close.
+
+This now needs a human or the Admiral session itself, not another loop of this subagent. Flagging for you directly: if this Stop hook keeps firing on cartographer-crew dispatches after their own spine is `DONE`, it's checking repo-wide engine state instead of the calling session's bound spine — worth fixing at the hook config rather than routing around it here.

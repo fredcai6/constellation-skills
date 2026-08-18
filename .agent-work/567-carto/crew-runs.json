@@ -5,7 +5,7 @@
     "gate": "reconcile",
     "role": "cartographer",
     "attempt": 1,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/567-carto/reconcile/cartographer/attempt-1",
     "backend": "cli",
     "door_bound": true,
@@ -18,10 +18,14 @@
     "stdout": ".agent-work/567-carto/crew-runs/reconcile-cartographer-attempt-1.stdout.txt",
     "stderr": ".agent-work/567-carto/crew-runs/reconcile-cartographer-attempt-1.stderr.txt",
     "started_at": "2026-08-18T01:11:36.935746+00:00",
-    "last_heartbeat": "2026-08-18T01:11:36.935746+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-18T01:20:17.085290+00:00",
+    "completed_at": "2026-08-18T01:20:17.085290+00:00",
     "abandoned": false,
     "model": "sonnet",
-    "scratch_dir": ".agent-work/567-carto/crew-scratch/reconcile-cartographer-attempt-1-64ab11912007"
+    "scratch_dir": ".agent-work/567-carto/crew-scratch/reconcile-cartographer-attempt-1-64ab11912007",
+    "exit_code": 0,
+    "result_present": true,
+    "result_fresh": true,
+    "verdict_source": "result"
   }
 ]
