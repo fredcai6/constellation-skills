@@ -1,0 +1,27 @@
+[
+  {
+    "crew_id": "constellation/567-k/lane-k/commander-delegated/attempt-1",
+    "work_id": "567-k",
+    "gate": "lane-k",
+    "role": "commander-delegated",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/567-k/lane-k/commander-delegated/attempt-1",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 309737,
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle",
+    "handoff": ".worktrees/567-k-one-spine-mutable-middle/.agent-work/567-k/LAUNCH_ORDER.md",
+    "result": ".worktrees/567-k-one-spine-mutable-middle/.agent-work/epic-567-door/results/lane-k-RETURN.md",
+    "spine": ".worktrees/567-k-one-spine-mutable-middle/.agent-work/567-k/spine.json",
+    "parent": "constellation/epic-567-door",
+    "stdout": ".agent-work/567-k/crew-runs/lane-k-commander-delegated-attempt-1.stdout.txt",
+    "stderr": ".agent-work/567-k/crew-runs/lane-k-commander-delegated-attempt-1.stderr.txt",
+    "started_at": "2026-08-18T04:46:13.891640+00:00",
+    "last_heartbeat": "2026-08-18T04:46:13.891640+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "model": "opus",
+    "scratch_dir": ".agent-work/567-k/crew-scratch/lane-k-commander-delegated-attempt-1-5d572aaaea17"
+  }
+]
