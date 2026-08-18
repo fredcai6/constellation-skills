@@ -487,7 +487,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage complete: 5 candidates staged, none filed, all recommend-and-defer."
         }
       ],
       "postconditions": [
@@ -652,7 +653,7 @@
     "session_id": "constellation/567-k/lane-k/commander-delegated",
     "status": "active",
     "claimed_at": "2026-08-18T04:46:31.340831+00:00",
-    "last_heartbeat": "2026-08-18T05:58:05.521749+00:00",
+    "last_heartbeat": "2026-08-18T06:02:05.283311+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
