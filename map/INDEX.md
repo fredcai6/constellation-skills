@@ -6,7 +6,7 @@ evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
 scripts: 60 modules, 1258 entities
 skills: 1 modules, 18 entities
-tests: 94 modules, 5247 entities
+tests: 95 modules, 5266 entities
 
 ## conftest (1 modules, 3 entities)
 
@@ -116,7 +116,7 @@ tests: 94 modules, 5247 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (94 modules, 5247 entities)
+## tests (95 modules, 5266 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -191,6 +191,7 @@ tests: 94 modules, 5247 entities
 - [tests.test_record_postcondition_wiring](tests.test_record_postcondition_wiring/INDEX.md) (29 entities, 26 holes): Tests for #422 (epic-418 workstream D, gate g2): `record()`'s new command-kind postcondition check (`scripts/checklist_engine.py`).
 - [tests.test_replan](tests.test_replan/INDEX.md) (28 entities, 28 holes): Strict public-interface tests for evidence-driven wave replanning.
 - [tests.test_retirement_guard](tests.test_retirement_guard/INDEX.md) (22 entities, 3 holes): Red-proofs for `scripts/verify_retirement.py` — the #403 retirement guard.
+- [tests.test_role_tier_coverage](tests.test_role_tier_coverage/INDEX.md) (19 entities, 11 holes): Coverage guard for #567 lane N -- `ROLE_MODEL_TIERS` must declare every role live doctrine actually hands a model-tier-bearing dispatch artifact.
 - [tests.test_run_skill_eval](tests.test_run_skill_eval/INDEX.md) (121 entities, 106 holes): Agent-free unit layer for scripts/run_skill_eval.py (#106, gate g2).
 - [tests.test_shipped_check_commands_resolve](tests.test_shipped_check_commands_resolve/INDEX.md) (14 entities, 10 holes): Every shipped command check must actually run after instantiation (epic-559/b-instructions-to-checks, rework r3).
 - [tests.test_shipped_examples_are_portable](tests.test_shipped_examples_are_portable/INDEX.md) (18 entities, 6 holes): A shipped example must run for the person who installed it.
