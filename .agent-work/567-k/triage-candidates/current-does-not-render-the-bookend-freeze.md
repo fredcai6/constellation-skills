@@ -2,43 +2,61 @@
 
 **Not filed.** `decision:no-issue-filing-mid-run` — staged only.
 
-## Observation
+## Observation — measured at `392b7917`
 
-`bookend: true` now changes what `amend` will accept, but the engine's projection — what `current`
-prints, which `global-everyone.md` calls "the complete gate briefing" and the **only** sanctioned
-way to read spine state — does not mention it. An agent deciding whether to re-plan cannot see
-which gates are frozen without opening `spine.json`, and opening `spine.json` to read state is
-itself named a violation in that same doctrine.
+`bookend: true` changes what `amend` will accept, but the engine's **projection** — what `current`
+prints — never mentions it. Verified directly against a copy of the shipped Commander template,
+which declares `init` and `archive`:
 
-So the freeze is discoverable only by attempting an `amend` and being refused.
+```
+$ ... py scripts/checklist_engine.py --file $COPY current | grep -i bookend
+(no output)
+```
 
-## This was predicted, in writing, by the doc I just reconciled
+`type`: **measured**, by running `current` and grepping its output. `rev`: `392b7917`.
 
-`docs/CHECKLIST_SCHEMA.md`'s Rendering section describes `TaskFieldCompleteness`, the property
-test that fails when a populated Task field goes unrendered — and names its own residual limit:
+## Why it matters
 
-> a field introduced only by a template — carried in a shipped checklist JSON but built by neither
-> the amend-task builder nor `append()` — is still invisible to the property and needs a human to
-> add it to the fixture.
+`global-everyone.md` calls `current` "the complete gate briefing" and names it the **only**
+sanctioned way to read spine state: *"Opening `spine.json` to read state is a violation."* So an
+agent deciding whether to re-plan its middle has no sanctioned way to learn which gates are frozen.
+The freeze is discoverable only by attempting an `amend` and being refused.
 
-`bookend` is exactly that field. The full suite passed at `eb94b150` **because** the property
-cannot see it, not because the field is rendered. This is a live instance of a
-check-that-cannot-fail that the codebase had already documented and accepted.
+That is a small but real instance of the thing #634 is trying to reduce: work left on the agent
+that a mechanism could carry.
 
-## Candidate remedy
+## Correction to an earlier draft of this candidate
 
-Render the frozen gates in `current` (one line, or a marker on the gate), and add `bookend` to the
-`TaskFieldCompleteness` fixture so the property covers it from then on.
+An earlier version of this file claimed the field was **invisible to the test suite**, citing
+`TaskFieldCompleteness`'s stated residual limit ("a field introduced only by a template … is still
+invisible to the property"). **That was wrong, and I am correcting it rather than shipping it.**
+
+That hole was already closed by #475's `TemplateOnlyFieldAllowlist`
+(`tests/test_checklist_engine.py:5841`), which walks the real shipped templates and fails on any
+template-only field not in a stated allowlist. The g2 crew hit that guard and registered `bookend`
+in it, with a comment explaining why. So the field **is** covered by a check that can fail — the
+suite passing at `392b7917` is genuine, not vacuous.
+
+What survives is the narrower, verified claim above: **registered is not rendered.** The allowlist
+proves the field is *known*; it says nothing about the projection showing it.
+
+I found this only because the g2 crew's Workflow Feedback named the guard, which is the argument
+for harvesting crew feedback rather than skimming it.
+
+## Possible fix (hypothesis, not a spec)
+
+Render the frozen gates in `current` — a marker on the gate, or one line naming which gates are
+frozen — so an agent can see the shape of its own plan without opening the file.
 
 ## Disposition
 
-`recommend-and-defer`. Not taken this run for two reasons, both scope rather than difficulty:
-rendering changes the projection every role reads, which is wider than #634's stated ask; and the
-declaration form is **still the human's to choose** (`decision:design-it-twice` — the comparison is
-returned unconverged), so rendering a field the human may replace would bake in the wrong name.
-Do this after the human picks the declaration form.
+`recommend-and-defer`. Fails the fix-now ladder on **no architecture/production-default impact**:
+the projection is what every role reads, so changing it is wider than #634's ask. It is also
+badly timed — the human has **not yet chosen the declaration form**
+(`decision:design-it-twice`, comparison returned unconverged), and rendering a field the human may
+replace would bake in the wrong name. **Do this after the declaration form is settled.**
 
 ## Not claimed
 
-I did not attempt the change or measure how large it is. I confirmed only that the suite passes
-without it and that the schema doc predicted the blind spot.
+I did not attempt the change or measure its size. I did not check whether the MCP door's
+`spine_status` differs from the CLI's `current` in this respect.

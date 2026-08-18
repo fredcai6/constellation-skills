@@ -499,17 +499,38 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape",
+            "summary": ".agent-work/epic-567-door/results/lane-k-RETURN.md, committed on the branch at bbad5846 \u2014 the exact path the order names",
+            "gates_closed": "spine: init, context, understand, plan, execute, reconcile, triage (review in progress). execute.json: all 8 \u2014 e0-context, g1-implement/review/integrate, g2-implement/review/integrate, g3-proof.",
+            "changes": "amend() freezes a declared bookend across add/drop/rescope/retext-check via one swappable helper; bookend added to rescope's overwritable tuple as a one-way retrofit latch; the three owned role spine templates declare their bookends, pinned by an exact-set test; MCP door prose only.",
+            "reconciled": "docs/CHECKLIST_SCHEMA.md \u2014 the Task key, rescope's widened overwritable list, and a new Bookends subsection. No packet map exists in this repo (orientation DEGRADED and discharged), so reconciliation was direct rather than via Cartographer.",
+            "triage": "5 candidates staged under .agent-work/567-k/triage-candidates/, ALL recommend-and-defer, NONE filed per decision:no-issue-filing-mid-run.",
+            "evidence": "full suite 3383 passed / 0 ^FAILED in a clean detached worktree; self-hosting proof read-only-live + mutating-on-copies; two independent reviewer APPROVEs, one with a red-proof.",
+            "floats": "TWO, needing an Admiral ruling: (1) the crew half of decision:every-planning-role, blocked on scripts/generate_spine.py which neither lane owns; (2) the execute.json->spine migration, which reaches lane J's files.",
+            "not_converged": "The design comparison is returned deliberately unconverged per decision:design-it-twice. Recommendation is B with the ship-time retrofit; the choice is the human's.",
+            "pr": "#635, head 392b7917 at open (branch now bbad5846), state OPEN, mergeable MERGEABLE, verified against the forge",
+            "authority": "Admiral ratifies now; the human ratifies at the epic return boundary"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -653,7 +674,7 @@
     "session_id": "constellation/567-k/lane-k/commander-delegated",
     "status": "active",
     "claimed_at": "2026-08-18T04:46:31.340831+00:00",
-    "last_heartbeat": "2026-08-18T06:02:05.283311+00:00",
+    "last_heartbeat": "2026-08-18T06:02:31.945250+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -708,6 +729,13 @@
       "why": "Three candidates, all recommend-and-defer, none filed \u2014 and the citation records the deferral itself rather than a filing approval, because none was sought and none was authorized. decision:no-issue-filing-mid-run is settled/human with the reason stated: \"we've been ballooning out tracking.\" The discipline worth naming is that I checked the fix-now ladder honestly instead of using the no-filing ruling as cover for skipping the check: each candidate fails a DIFFERENT rung, and candidate 1 is the one I would otherwise have been tempted to fix, since rendering the flag is a small edit. It fails \"verifiable now\" for an interesting reason \u2014 the property test that should have caught the omission is structurally blind to a template-only field, which the schema doc had already written down as its own residual limit. So I could have made the change and had no way to show it was right. It also fails on timing: the human has not yet chosen the declaration form, so rendering a name they may replace would bake in the wrong one. Two items are deliberately NOT in triage: the crew half of every-planning-role and the execute.json migration are scope floats needing an Admiral ownership ruling, and turning a float into a future issue would quietly convert a question I owe upward into a backlog entry nobody answers.",
       "mechanical": false,
       "ts": "2026-08-18T05:58:05.521737+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Run summary written to the exact path the order names and committed on the branch, with PR #635 open and verified against the forge rather than inferred. The summary is honest about what it is: delivered for Admiral, Commander and Explorer; NOT delivered for crew, with the reason at source rather than an apology; and deliberately unconverged on the design choice, which is the human's. I put my own mistakes in it \u2014 the mis-scoped gate plan, the proof gate whose postconditions could not fail, the question I silently closed, the off-by-one in my own handoff, and the verification command I got wrong \u2014 because the previous wave's most useful returns were the ones that indicted their own author, and because three of those five were caught by a critic or a crew rather than by me, which is itself the finding.",
+      "mechanical": false,
+      "ts": "2026-08-18T06:02:31.945241+00:00"
     }
   ]
 }
