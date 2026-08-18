@@ -138,15 +138,13 @@
           "id": "c1",
           "statement": "every epic issue dispositioned (merged, honest-null closed, deferred with ruling, or escalated)",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "Every epic member issue holds one of c1's four dispositions, re-checked against GitHub after wave 3 rather than carried from the wave-2 ledger. CLOSED as delivered: #559, #561 (auto-closed on merge), #619 and #633 (closed at this closeout with evidence comments naming the mechanism and the proof). MERGED and closing at the pairing pass: #565, #596, #526, #541, #432, #595. HONEST NULL: #535 (the mechanism was already shipped; lane F cited its own launch as proof). DEFERRED WITH RULING: #613, behind #615. PARKED: #575. PARTLY DELIVERED AND DELIBERATELY OPEN: #634, with a comment recording exactly what shipped (the bookend freeze, the templates, the drift lint) and the four things that did not (the crew half, the execute.json migration, acceptance-versus-completion, and that `current` does not render the freeze). ESCALATED to the human, not closed: #442 and #565's premise, because in both cases this epic's measurements contradict a claim he wrote. Filed this session and left open as new work: #632, #636."
+          "satisfied": false
         },
         {
           "id": "c2",
           "statement": "ADMIRAL_LOG current through the last wave: all rulings, incidents, merges, transition exits, and errors logged",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "ADMIRAL_LOG is current through wave 3. It carries the human's rulings including the two that overturned my readings (the child-plan exception is a failure not a limit; inheritance launders the tier defect rather than fixing it); all three wave transitions w1/w2/w3 with one audit line each; every launch, adjudication and merge with its gated sha; the two material exceptions with measured and inferred separated; six ADMIRAL ERRORs of mine \u2014 the liveness probe that reported five live lanes dead, three fencing gaps, the crew-tier escalation the human caught, the gate-4-of-17 misreport that nearly cost a lane, and the retracted lease-lapse finding that never existed; both c6 waivers under admiral authority with the reproduction that justified each; the union resolutions of two registry conflicts; and the lane findings that corrected me three times by reading code I had reasoned about."
+          "satisfied": false
         },
         {
           "id": "c3",
@@ -155,8 +153,7 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-admiral/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-567-door"
           },
-          "satisfied": true,
-          "satisfied_by": "e-execute-3"
+          "satisfied": false
         }
       ],
       "constraints": [],
@@ -190,13 +187,13 @@
         }
       },
       "child_checklist": null,
-      "status": "complete",
+      "status": "in-progress",
       "status_detail": {
         "blocker": "Wave 1 delivered and closed out (PRs #620 #621 #622 #623, none merged), but execute's c1 (every epic issue dispositioned) cannot be met by the Admiral. Two surfaced-class human rulings block it: (a) the contract delegates merge 'gated on the check exit code', which is unsatisfiable because main has been red for five commits and CI is windows-latest only (baseline 122 failed/3070 passed) -- adopting merge-on-failure-set-delta is a change to the gate itself; (b) lane A's spine_bind design cannot be accepted or rejected without a ruling on whether IDENTITY_TRADE.md section 2's confinement property is amendable, and if it is settled the design is dead as written. Also surfaced: whether lane A's one-clause deletion satisfies the settled/human net-deletion filter, and the scope of the subTest-reads-PASSED finding (169 call sites across 25 files) which undercuts every suite-green claim in the wave.",
         "authority_needed": "human",
         "next_action": "Human rules on the four checkpoint decisions; then merge in dependency order (A first -- it owns checklist_engine.py and mcp_spine_server.py and the other three are fenced off both), regenerate map/INDEX.md once on the final merged main, re-verify there in a fresh worktree, then close the member issues on verified-merged and drive closeout.",
         "resume_reason": "Human ruled q1-q3 at the W1 checkpoint: sections are amendable under his authority so lane A's question dissolved; the every-lane-deletes rule was the Admiral's invention and is withdrawn; and the merge gate is now the full suite green on Linux, Windows being the wrong yardstick. All four PRs merged in dependency order under that gate. Merged main at d437ab63 is green on Linux: 3344 passed, 0 failed, 0 SUBFAILED, up from 3191 before the wave.",
-        "reopen_reason": "The human added scope after wave 2 closed: #619 (installer writes a machine-probed interpreter into a tracked file), #633 (crew model tier from a per-role, per-harness table) and #634 (one spine per agent, frozen bookends and a mutable middle). He ruled \"file it now and do it now\", so the epic has a wave 3 and execute is not finished. Closeout's c1-c4 attestations are superseded rather than wrong \u2014 the episodes are applied and the reconcile is done, but repo hygiene genuinely has to run again over wave 3's branches and worktrees, and the epic summary now describes an epic that has not ended. Reopening is also the honest demonstration of #634 itself: this run's own plan changed mid-flight, and the engine's only way to express that is a cascading reopen of a frozen middle."
+        "reopen_reason": "The human added a final cleanup after wave 3: retire skills/workbench entirely rather than leave a 20-line stub whose only reason to exist is that install_constellation.py raises InstallError for any skills/* directory without a SKILL.md. This is #565's remainder \u2014 the issue is still open precisely because deregistration was floated and not built \u2014 so it is epic work with a PR, not closeout hygiene, and execute is the honest place for it. Closeout c1-c4 are attested and will need re-attesting afterward: the episodes and reconcile stand, the hygiene must re-run over a new branch and worktree."
       },
       "result": null,
       "finding": null,
@@ -213,8 +210,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "The human added scope after wave 2 closed: #619 (installer writes a machine-probed interpreter into a tracked file), #633 (crew model tier from a per-role, per-harness table) and #634 (one spine per agent, frozen bookends and a mutable middle). He ruled \"file it now and do it now\", so the epic has a wave 3 and execute is not finished. Closeout's c1-c4 attestations are superseded rather than wrong \u2014 the episodes are applied and the reconcile is done, but repo hygiene genuinely has to run again over wave 3's branches and worktrees, and the epic summary now describes an epic that has not ended. Reopening is also the honest demonstration of #634 itself: this run's own plan changed mid-flight, and the engine's only way to express that is a cascading reopen of a frozen middle.",
-            "ts": "2026-08-18T04:35:30.377984+00:00"
+            "reason": "The human added a final cleanup after wave 3: retire skills/workbench entirely rather than leave a 20-line stub whose only reason to exist is that install_constellation.py raises InstallError for any skills/* directory without a SKILL.md. This is #565's remainder \u2014 the issue is still open precisely because deregistration was floated and not built \u2014 so it is epic work with a PR, not closeout hygiene, and execute is the honest place for it. Closeout c1-c4 are attested and will need re-attesting afterward: the episodes and reconcile stand, the hygiene must re-run over a new branch and worktree.",
+            "ts": "2026-08-18T11:55:28.412442+00:00"
           }
         },
         {
@@ -229,8 +226,8 @@
           "ts": "",
           "superseded": {
             "by": "reopen:execute",
-            "reason": "The human added scope after wave 2 closed: #619 (installer writes a machine-probed interpreter into a tracked file), #633 (crew model tier from a per-role, per-harness table) and #634 (one spine per agent, frozen bookends and a mutable middle). He ruled \"file it now and do it now\", so the epic has a wave 3 and execute is not finished. Closeout's c1-c4 attestations are superseded rather than wrong \u2014 the episodes are applied and the reconcile is done, but repo hygiene genuinely has to run again over wave 3's branches and worktrees, and the epic summary now describes an epic that has not ended. Reopening is also the honest demonstration of #634 itself: this run's own plan changed mid-flight, and the engine's only way to express that is a cascading reopen of a frozen middle.",
-            "ts": "2026-08-18T04:35:30.377992+00:00"
+            "reason": "The human added a final cleanup after wave 3: retire skills/workbench entirely rather than leave a 20-line stub whose only reason to exist is that install_constellation.py raises InstallError for any skills/* directory without a SKILL.md. This is #565's remainder \u2014 the issue is still open precisely because deregistration was floated and not built \u2014 so it is epic work with a PR, not closeout hygiene, and execute is the honest place for it. Closeout c1-c4 are attested and will need re-attesting afterward: the episodes and reconcile stand, the hygiene must re-run over a new branch and worktree.",
+            "ts": "2026-08-18T11:55:28.412497+00:00"
           }
         },
         {
@@ -242,10 +239,15 @@
             "shell": "posix"
           },
           "produced_by": "engine",
-          "ts": ""
+          "ts": "",
+          "superseded": {
+            "by": "reopen:execute",
+            "reason": "The human added a final cleanup after wave 3: retire skills/workbench entirely rather than leave a 20-line stub whose only reason to exist is that install_constellation.py raises InstallError for any skills/* directory without a SKILL.md. This is #565's remainder \u2014 the issue is still open precisely because deregistration was floated and not built \u2014 so it is epic work with a PR, not closeout hygiene, and execute is the honest place for it. Closeout c1-c4 are attested and will need re-attesting afterward: the episodes and reconcile stand, the hygiene must re-run over a new branch and worktree.",
+            "ts": "2026-08-18T11:55:28.412499+00:00"
+          }
         }
       ],
-      "rework_count": 1
+      "rework_count": 2
     },
     "closeout": {
       "id": "closeout",
@@ -325,7 +327,7 @@
     "session_id": "constellation/epic-567-door",
     "status": "active",
     "claimed_at": "2026-08-17T18:45:51.248764+00:00",
-    "last_heartbeat": "2026-08-18T07:09:11.854614+00:00",
+    "last_heartbeat": "2026-08-18T11:55:28.412508+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,
@@ -366,6 +368,13 @@
       "why": "Three waves, eleven lanes, seven PRs merged this session, and the epic's claim is now true rather than nearly true. origin/main at a8f59c69 runs 3418 passed / 0 failed in a clean detached worktree \u2014 3191 when the epic began. Zero CLI-fallback clauses survive in skills/, specs/ or the tracked overlay, and a 718-line guard fails if any return. The understanding that closes execute for the second time is the human's, not mine: I had recorded the three unsweepable child-plan sites as a documented limit of the door's isolation property, and he rejected that \u2014 an exception to the single access point is a failure. Chasing it found the real shape, and it was not what anyone predicted: the mutable middle was already built, and what was missing was the freeze on the closing bookend, so a Commander could delete its own archive and an Admiral its own closeout in one unforced call. That is now refused, red-proofed by performing it before and after. Wave 3 also closed the two launcher defects that let a machine-local default stand in for a declared one \u2014 a probed interpreter written into the calling repo's tracked file regardless of --dest, and a crew tier taken from an unconstrained free-text field. What remains is named rather than absorbed: #634 stays open for the crew half, the execute.json migration, and the fact that the freeze protects a run's completion but not its acceptance.",
       "mechanical": false,
       "ts": "2026-08-18T07:07:26.133231+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "execute",
+      "reopen": true,
+      "reason": "The human added a final cleanup after wave 3: retire skills/workbench entirely rather than leave a 20-line stub whose only reason to exist is that install_constellation.py raises InstallError for any skills/* directory without a SKILL.md. This is #565's remainder \u2014 the issue is still open precisely because deregistration was floated and not built \u2014 so it is epic work with a PR, not closeout hygiene, and execute is the honest place for it. Closeout c1-c4 are attested and will need re-attesting afterward: the episodes and reconcile stand, the hygiene must re-run over a new branch and worktree.",
+      "ts": "2026-08-18T11:55:28.412504+00:00"
     }
   ]
 }
