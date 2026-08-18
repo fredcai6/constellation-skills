@@ -5,7 +5,7 @@
     "gate": "execute",
     "role": "implementer",
     "attempt": 1,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/567-n/execute/implementer/attempt-1",
     "backend": "cli",
     "door_bound": true,
@@ -18,10 +18,14 @@
     "stdout": ".agent-work/567-n/crew-runs/execute-implementer-attempt-1.stdout.txt",
     "stderr": ".agent-work/567-n/crew-runs/execute-implementer-attempt-1.stderr.txt",
     "started_at": "2026-08-18T12:02:50.698072+00:00",
-    "last_heartbeat": "2026-08-18T12:02:50.698072+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-18T12:28:30.974578+00:00",
+    "completed_at": "2026-08-18T12:28:30.974578+00:00",
     "abandoned": false,
     "model": "sonnet",
-    "scratch_dir": ".agent-work/567-n/crew-scratch/execute-implementer-attempt-1-e906f1579080"
+    "scratch_dir": ".agent-work/567-n/crew-scratch/execute-implementer-attempt-1-e906f1579080",
+    "exit_code": 0,
+    "result_present": true,
+    "result_fresh": true,
+    "verdict_source": "result"
   }
 ]
