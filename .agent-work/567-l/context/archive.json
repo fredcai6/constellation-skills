@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "archive",
+  "files": [],
+  "repo_rev": {
+    "commit": "25bffaba04080ff41751c224c218084cd9046d28"
+  },
+  "run": {
+    "work_id": "567-l",
+    "generated_at": "2026-08-18T06:55:44Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/567-j-launcher-declared-defaults",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-j-launcher-declared-defaults",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-j-launcher-declared-defaults"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-j-launcher-declared-defaults"
+    }
+  }
+}

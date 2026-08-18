@@ -486,17 +486,29 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape",
+            "note": "Full suite in a clean detached worktree of commit 25bffaba, env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR: 3417 passed, 6 skipped, 1 failed -- exactly MapTreeFreshnessTests, the pre-ruling's accepted exception. All 3 gates closed with integrated command-check evidence; reconcile recorded a reasoned no-op; triage staged one candidate recommend-and-defer."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -508,7 +520,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Honest reflection: followed the spine gate-by-gate throughout, no shortcuts taken past a red check. Improvised twice: (1) chose to run g1-g3 as CREW-WAIVED reasoning gates rather than dispatching crews, per the launch order's explicit invitation to weigh the machinery against the work's size -- not a deviation, a sanctioned latitude call, but worth naming since it departs from the doctrine's default (crews for code-producing gates). (2) hit the self-waive-refused engine gap at plan.c6 and had to work out a cross-session handshake with the Admiral that isn't documented anywhere in the engine or its doctrine -- captured as episode 567-l-001 and triage candidate tc1, and this is the second time it fired in one wave. Ambiguous: the launch order's 'update whatever test pins the table's contents' assumed a pinning test already existed for the commander tier row; none did, so I added one rather than leaving the widened row unpinned -- a reasonable reading but not the only one. Corrected: my own initial characterization of map/INDEX.md as an 'unfilled template' was wrong (it's fresh and fully built; only ids.jsonl is empty) -- the Admiral caught this before the return artifact was written, captured as episode 567-l-002. No crew Workflow Feedback to harvest since no crews were dispatched this run (see improvisation 1)."
         }
       ],
       "postconditions": [
@@ -519,17 +532,30 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py 567-l --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py 567-l --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -541,7 +567,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "feedback complete: 3 episodes captured and verified."
         }
       ],
       "postconditions": [
@@ -619,7 +646,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -635,12 +662,12 @@
     "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-j-launcher-declared-defaults",
     "opened_by": "init_work_area"
   },
-  "refusals": 9,
+  "refusals": 11,
   "engine_session": {
     "session_id": "constellation/567-l/lane-l/commander-delegated",
     "status": "active",
     "claimed_at": "2026-08-18T06:41:46.639795+00:00",
-    "last_heartbeat": "2026-08-18T06:48:11.050805+00:00",
+    "last_heartbeat": "2026-08-18T06:55:44.291167+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -695,6 +722,20 @@
       "why": null,
       "mechanical": true,
       "ts": "2026-08-18T06:48:01.561235+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-18T06:54:07.253342+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "3 episodes recorded (567-l-001 self-waive engine gap, 567-l-002 map/INDEX.md mischaracterization corrected by the Admiral, 567-l-003 check_skill_freshness.py shape mismatch), applied via apply_episode_delta.py --store-root episodes, guard still passes (RealStoreTests 2/2), verify_episode_captured.py confirms all 3 for work-id 567-l at phase feedback.",
+      "mechanical": false,
+      "ts": "2026-08-18T06:55:33.248035+00:00"
     }
   ]
 }
