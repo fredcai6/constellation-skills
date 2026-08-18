@@ -53,8 +53,9 @@ archive  <engine>: False | CLI fallback: False | checklist_engine.py: False
 Wave 1 (previous session): #623 `spine_bind`, #621 ExternalBackend refuses a spineless success,
 #620 Stop hook outranks the context advisory, #622 `finish_work` + lease-release-on-archive.
 
-**Suite: 3191 at epic start → 3352 at wave-2 launch → 3366 after wave 2's merges**, Linux, always
-verified in a clean detached worktree, and `main` re-verified after every merge.
+**Suite: 3191 at epic start → 3352 at wave-2 launch → 3374 after all five merges**, Linux, always
+verified in a clean detached worktree, and `main` re-verified after every merge. 183 net-new tests,
+from an epic whose subject was *removing* a path.
 
 ## Two of your issues rest on premises the epic disproved
 
@@ -107,8 +108,10 @@ That is **#615** and **#369** stated exactly. Paired onto both at closeout.
 
 - **Every crew a lane dispatched ran on Opus**, because `run_crew.py` inherits the host default when
   `--model` is unset and my launch orders tiered the *lane* only. 15 crew sessions, 6 of them
-  abandoned and retried. You caught it; no mechanism did. Staged as `tc8` with the fix that would
-  prevent it: default a crew's model to the dispatching session's own.
+  abandoned and retried. You caught it; no mechanism did. My first proposed fix — inherit the
+  dispatcher's tier — **you rejected**, correctly: it would make Opus commanders dispatch Opus crews,
+  laundering the escalation rather than removing it. `tc8` now records your design instead: a
+  per-role default, an allowed set per role, and a recorded reason for any deviation.
 - **Three fencing gaps of mine** — `episodes/`, `store_mentions.approved.txt`, and the
   `.agent-work/templates/` overlay — each a fence drawn from the plan instead of measured from the
   tree. The third would have failed D1's own guard on D1's own branch.
