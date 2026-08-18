@@ -542,7 +542,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "review complete; run summary written to .agent-work/epic-567-door/results/lane-k-RETURN.md and ratified by e-review-1 citing LAUNCH_ORDER:Return Shape. PR #635 open and mergeable."
         }
       ],
       "postconditions": [
@@ -559,7 +560,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -674,7 +675,7 @@
     "session_id": "constellation/567-k/lane-k/commander-delegated",
     "status": "active",
     "claimed_at": "2026-08-18T04:46:31.340831+00:00",
-    "last_heartbeat": "2026-08-18T06:02:31.945250+00:00",
+    "last_heartbeat": "2026-08-18T06:06:45.276339+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
