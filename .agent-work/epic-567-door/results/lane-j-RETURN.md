@@ -237,5 +237,7 @@ candidate 5 — cost real time at the one moment (execute closeout) every Comman
 
 ## 10. PR
 
-Opened against `main` from `feat/567-j-launcher-declared-defaults`. Number and head sha recorded
-after the `gh pr create` step below.
+Opened against `main` from `feat/567-j-launcher-declared-defaults`: **#637**
+(https://github.com/fredcai6/constellation-skills/pull/637), head sha
+`1430f3ecba858d68e027019358acabc39840c0e2`, confirmed `OPEN` via a fresh
+`gh pr view` query.
