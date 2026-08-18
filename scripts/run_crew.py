@@ -848,6 +848,7 @@ ROLE_MODEL_TIERS: dict[str, dict[str, dict[str, object]]] = {
     "claude": {
         "admiral": {"default": "opus", "allowed": frozenset({"opus"})},
         "commander": {"default": "sonnet", "allowed": frozenset({"sonnet", "opus"})},
+        "commander-delegated": {"default": "sonnet", "allowed": frozenset({"sonnet", "opus"})},
         "implementer": {"default": "sonnet", "allowed": frozenset({"sonnet", "haiku"})},
         "reviewer": {"default": "sonnet", "allowed": frozenset({"sonnet", "haiku"})},
         "critic": {"default": "sonnet", "allowed": frozenset({"sonnet", "haiku"})},

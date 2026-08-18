@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1-declare",
+  "files": [],
+  "repo_rev": {
+    "commit": "fbd5cdaa387980e8c8973bf08cdd28d4ed08d908"
+  },
+  "run": {
+    "work_id": "567-n",
+    "generated_at": "2026-08-18T12:18:42Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/567-n-role-key",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-n-role-key",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-n-role-key"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-n-role-key"
+    }
+  }
+}

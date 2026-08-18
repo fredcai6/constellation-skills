@@ -1,0 +1,276 @@
+{
+  "work_id": "567-n",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-declare",
+    "m2-guard",
+    "m3-verify",
+    "m4-return"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read references/global-crew.md and references/global-everyone.md, then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus LAUNCH_ORDER.md. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-declare": {
+      "id": "m1-declare",
+      "title": "Declare commander-delegated in ROLE_MODEL_TIERS (TDD)",
+      "imperative": "RED: add 'commander-delegated' to tests/test_crew_launcher.py's ResolveModelTests.CLAUDE_ROLES tuple and observe test_every_populated_claude_role_resolves_to_its_own_default fail (no tier declared). GREEN: add a commander-delegated row to scripts/run_crew.py's ROLE_MODEL_TIERS['claude'], identical shape to the commander row (default sonnet, allowed {sonnet, opus}), matching the file's existing style exactly. Re-run and observe green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red observed: CLAUDE_ROLES extended with commander-delegated, test fails pre-declaration -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "ResolveModelTests green after declaration",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python3 -m pytest -q tests/test_crew_launcher.py::ResolveModelTests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-declare-1"
+        }
+      ],
+      "constraints": [
+        "Only scripts/run_crew.py and tests/test_crew_launcher.py may change for this step",
+        "Do not touch codex/local harness rows or skills/workbench/**"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-declare-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python3 -m pytest -q tests/test_crew_launcher.py::ResolveModelTests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-guard": {
+      "id": "m2-guard",
+      "title": "Write the doctrine-coverage guard (new test file)",
+      "imperative": "RED: before authoring the guard's assertions, prove its scan basis by hand -- run the scan against the pre-declaration tree (git stash the m1 change or reason from evidence already captured) and confirm it reports commander-delegated as scanned-but-undeclared. GREEN: write tests/test_role_tier_coverage.py: scan skills/*/templates/*_HANDOFF.template.md for a 'model tier' field (role = filename stem before _HANDOFF), skills/*/SKILL.md for a role whose text names a ratified LAUNCH_ORDER as its frozen principal (role = that skill's own name: frontmatter), and specs/*.spine.toml stems -- union these, assert non-vacuous floors on every walk, and assert the union is a subset of ROLE_MODEL_TIERS['claude']. Include a fixture-based test proving the subset assertion can fail (mutates a local dict, not the real table).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "commander-delegated declared (m1 green)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: scan-vs-pre-declaration-state evidence captured showing commander-delegated as the gap -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "new guard test file green",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python3 -m pytest -q tests/test_role_tier_coverage.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-guard-1"
+        }
+      ],
+      "constraints": [
+        "Scan must not hardcode today's seven role names as a literal list",
+        "Scan must not red on .agent-work/** or docs/superpowers/plans/** archive noise"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-guard-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python3 -m pytest -q tests/test_role_tier_coverage.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-verify": {
+      "id": "m3-verify",
+      "title": "Full suite green (minus Admiral-owned map freshness)",
+      "imperative": "Run the full suite foreground to completion with SPINE_FILE/SPINE_SESSION/SPINE_PARENT/CREW_SCRATCH_DIR unset, per inherited hazards. Confirm green except MapTreeFreshnessTests (Admiral-owned, map/INDEX.md not regenerated by this lane).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 and m2 green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite run, only MapTreeFreshnessTests red",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python3 -m pytest -q 2>&1 | tail -40"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-verify-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python3 -m pytest -q 2>&1 | tail -40",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-return": {
+      "id": "m4-return",
+      "title": "Write RETURN.md and open the PR",
+      "imperative": "Write .agent-work/567-n/RETURN.md: declaration diff, the guard's design and how it survives both hazards, the scan's measured output (role terms found, file counts walked), and findings on empty harness rows / prototyper gap / etc. Commit, push, open a PR against main.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "suite verified (m3 green modulo the named exception)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RETURN.md written and PR opened",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "File no issue -- stage anything for later under .agent-work/567-n/triage-candidates/"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "impl-567n-1",
+    "status": "active",
+    "claimed_at": "2026-08-18T12:18:33.492542+00:00",
+    "last_heartbeat": "2026-08-18T12:26:02.549522+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "context loaded: global-crew, global-everyone, CREW_CONTEXT, GLOSSARY, LAUNCH_ORDER all read; handoff complete",
+      "mechanical": false,
+      "ts": "2026-08-18T12:18:39.838705+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-declare",
+      "why": "RED confirmed (CrewLaunchError for commander-delegated), then declared identical to commander row, GREEN confirmed 14 passed",
+      "mechanical": false,
+      "ts": "2026-08-18T12:18:59.065676+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-guard",
+      "why": "RED confirmed via git-stash of run_crew.py's declaration (guard failed naming exactly commander-delegated); GREEN confirmed with declaration restored, 13/13 new tests + 251 combined with test_crew_launcher.py pass",
+      "mechanical": false,
+      "ts": "2026-08-18T12:20:47.096724+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-verify",
+      "why": "full suite: 3432 passed, 5 skipped, 1222 subtests passed in 141.92s; 0 FAILED/ERROR; MapTreeFreshnessTests green too (2/2)",
+      "mechanical": false,
+      "ts": "2026-08-18T12:25:55.628068+00:00"
+    }
+  ]
+}

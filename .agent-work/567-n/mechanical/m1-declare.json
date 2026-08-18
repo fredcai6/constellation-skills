@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-declare",
+  "mechanical": {
+    "run": "567-n",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m1-declare",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-n-m1-declare@185ae6c02bce36af802cb37202a40c2d47b0caf0",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-n",
+    "generated_at": "2026-08-18T12:18:42Z"
+  }
+}

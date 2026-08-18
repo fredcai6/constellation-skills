@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-guard",
+  "mechanical": {
+    "run": "567-n",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m2-guard",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-n-m2-guard@0ee9df00df18bfa2058ed5f0d73eca941c9a478e",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-n",
+    "generated_at": "2026-08-18T12:19:03Z"
+  }
+}
