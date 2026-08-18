@@ -1078,7 +1078,7 @@ class ResolveModelTests(unittest.TestCase):
     own inputs and calls the function directly."""
 
     CLAUDE_ROLES = (
-        "commander", "implementer", "reviewer", "critic", "cartographer",
+        "commander", "commander-delegated", "implementer", "reviewer", "critic", "cartographer",
     )
 
     def test_every_populated_claude_role_resolves_to_its_own_default(self):
