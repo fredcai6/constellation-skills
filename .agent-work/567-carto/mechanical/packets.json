@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "packets",
+  "mechanical": {
+    "run": "567-carto",
+    "project": "constellation-skills",
+    "role": "cartographer",
+    "refusals": 1,
+    "spine-step": "packets",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-carto-packets@99976fe5de5da52f5aebfc11bece1da2c5325241",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-carto",
+    "generated_at": "2026-08-18T01:14:19Z"
+  }
+}

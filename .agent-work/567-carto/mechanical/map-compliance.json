@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "map-compliance",
+  "mechanical": {
+    "run": "567-carto",
+    "project": "constellation-skills",
+    "role": "cartographer",
+    "refusals": 2,
+    "spine-step": "map-compliance",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-carto-map-compliance@7bb4460f9eed1e9c5b3a7193d1c720a26d590c7b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-carto",
+    "generated_at": "2026-08-18T01:15:49Z"
+  }
+}

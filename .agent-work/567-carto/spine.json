@@ -1,0 +1,173 @@
+{
+  "work_id": "567-carto",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "context",
+    "packets",
+    "index-overlays",
+    "map-compliance"
+  ],
+  "tasks": {
+    "context": {
+      "id": "context",
+      "title": "Load map and context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas if present: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and the current map (index + touched packets). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context and current map loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-everyone.md, global-orchestrator.md, SKILL.md, map-model.md (installed skill refs), docs/agents/ORCHESTRATOR_CONTEXT.md and GLOSSARY.md. Measured current map truth at HEAD 148ae62e: docs/architecture/ is untracked with only generated/map.json (empty findings/nodes/relationships); no packets/overlays/decisions/index.md exist. map/INDEX.md is 31150 bytes, 167 module dirs (Admiral-owned, fresh). map/ids.jsonl is 0 bytes; confirmed via .code-map/statements.jsonl (167,950 statements) that 0 carry predicate \\\"anchored\\\" -- no anchors minted anywhere in the repo, so ids.jsonl is correctly empty by construction, not a bug. Reviewed two same-epic lane precedents (.agent-work/567-d1/RECONCILE.md, .agent-work/archive/2026-08-16-epic-567-door-cmdr-b/RECONCILE.md) confirming the established honest-null pattern for this no-packet-map repo."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "packets": {
+      "id": "packets",
+      "title": "Reconcile node packets",
+      "imperative": "Reconcile each touched node packet against the code with evidence; update wording, status/confidence, dependencies, and rationale.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "current map loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Current map loaded and measured at HEAD 148ae62e (see context gate digest)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "touched packets reflect current code",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Zero touched node packets exist to reconcile against: docs/architecture/ is untracked, no packets/overlays/decisions exist. Honest null confirmed and evidenced in .agent-work/567-carto/RECONCILE.md \u00a71-2, consistent with two lane-scoped reconciles earlier in this epic that reached the same finding."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "index-overlays": {
+      "id": "index-overlays",
+      "title": "Update index and overlays",
+      "imperative": "Update the index and overlays to match the reconciled packets.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "index and overlays consistent with packets",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Nothing to update: zero packets were reconciled at the prior gate (none exist), so there is no `docs/architecture/index.md` or `docs/architecture/overlays/*.yml` content for an index/overlay update to reflect. map/INDEX.md is the separate, Admiral-owned generated scan (already fresh per #544) and is out of scope per the closeout handoff's hard constraint against regenerating/hand-editing it. Consistent, vacuously-true postcondition given the packets-gate honest null."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "map-compliance": {
+      "id": "map-compliance",
+      "title": "Verify map compliance",
+      "imperative": "Verify map compliance. Record unresolved structural questions; flag future work as triage candidates.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map compliant; open structural questions recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Map compliant: no packets/overlays/decisions exist to violate compliance against, and map/INDEX.md (Admiral-owned) is untouched. Open structural question recorded: no minted anchors exist in this repo (0/167,950 statements), which is why map/ids.jsonl is permanently empty and every run orients DEGRADED -- staged as triage candidate tc1 (flagged this gate), not fixed here per hard constraints. Full verdict, evidence, and anchor-minting sizing written to .agent-work/567-carto/RECONCILE.md."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "map-compliance",
+      "statement": "Commission anchor minting so map/ids.jsonl stops being permanently empty (0 of 167,950 statements carry the `anchored` predicate; docs/architecture has zero packets/overlays/decisions). Candidate population measured this commit: 6,522 addressable definitions (3,688 methods, 2,044 functions, 717 classes, 33 class methods, 26 static methods, 14 properties) across 599 tracked .py files \u2014 a curation judgment pass, not a 6,522-comment mechanical task. Building the packet map is a further, larger, separate effort. Full sizing: .agent-work/567-carto/triage-candidates/tc1-commission-anchor-minting.md and .agent-work/567-carto/RECONCILE.md \u00a73. recommend-and-defer, not filed as an issue."
+    }
+  ],
+  "blockers": [],
+  "origin": {
+    "work_id": "567-carto",
+    "worktree": "/home/tommy/projects/constellation-skills",
+    "opened_by": "init_work_area"
+  },
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/567-carto/reconcile/cartographer",
+    "status": "released",
+    "claimed_at": "2026-08-18T01:11:47.641212+00:00",
+    "last_heartbeat": "2026-08-18T01:16:03.212723+00:00",
+    "claimed_by": "cartographer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-18T01:16:05.514958+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "context",
+      "why": "Loaded global doctrine and project deltas; independently measured current map truth at HEAD 148ae62e: no docs/architecture packet map exists (untracked, empty generated/map.json), map/ids.jsonl is 0 bytes because 0-of-167,950 statements in the code-map store carry the \"anchored\" predicate (no anchors minted anywhere), and map/INDEX.md (167 module dirs, 31150 bytes) is Admiral-owned and already fresh. This confirms the brief's claims and establishes there is no curated packet/overlay/decision structure to reconcile against.",
+      "mechanical": false,
+      "ts": "2026-08-18T01:14:12.464063+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "packets",
+      "why": "Zero touched node packets exist to reconcile: docs/architecture/ is untracked with no packets/overlays/decisions (only an empty generated/map.json). Honest null evidenced in .agent-work/567-carto/RECONCILE.md \u00a71-2, matching the pattern two lane-scoped reconciles already reached earlier in this epic.",
+      "mechanical": false,
+      "ts": "2026-08-18T01:15:39.240672+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "index-overlays",
+      "why": "No packets were reconciled (none exist), so there is nothing for the index/overlays to reflect \u2014 a consistent honest-null, not a skipped step. map/INDEX.md remains the separate, Admiral-owned generated artifact, untouched per hard constraint.",
+      "mechanical": false,
+      "ts": "2026-08-18T01:15:47.669405+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "map-compliance",
+      "why": "Map compliant given there is nothing curated to violate compliance against. One open structural question recorded and flagged as triage candidate tc1: no anchors are minted anywhere in this repo (0/167,950 statements), which is the direct, confirmed cause of a permanently empty map/ids.jsonl and permanent DEGRADED orientation. Full reconcile verdict, evidence commands/output, and the anchor-minting size/shape recommendation are written to .agent-work/567-carto/RECONCILE.md. No code changed, no map/INDEX.md edit, no anchors minted, no packet map built, no docs/agents promotion, no issue filed -- all per the closeout handoff's hard constraints.",
+      "mechanical": false,
+      "ts": "2026-08-18T01:16:03.212713+00:00"
+    }
+  ]
+}
